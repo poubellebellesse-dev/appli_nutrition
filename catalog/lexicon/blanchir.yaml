@@ -1,0 +1,6 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: blanchir
+terme: "Blanchir"
+definition: >
+  Plonger brièvement un aliment dans une grande quantité d'eau bouillante, puis l'égoutter,
+  pour attendrir sa texture, fixer sa couleur ou faciliter une étape suivante.

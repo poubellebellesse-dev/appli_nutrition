@@ -1,0 +1,74 @@
+id: saumon_poele_courgettes
+nom: "Saumon poêlé, courgettes et citron"
+description: >
+  Un pavé de saumon poêlé servi avec des courgettes fondantes et une pointe de citron.
+temps_prep_min: 10
+temps_cuisson_min: 15
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.2
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: saumon
+    quantite_g: 300
+    unite_affichage: "2 pavés"
+    optionnel: false
+  - food_id: courgette
+    quantite_g: 250
+    unite_affichage: "1 courgette"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Émincer la courgette en fines rondelles."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire chauffer l'huile d'olive dans une poêle et faire revenir les rondelles de courgette, saler, réserver."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Saler et poivrer les pavés de saumon, les saisir côté peau puis de l'autre côté."
+    lexicon_ids: []
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Déglacer la poêle avec le jus du demi-citron et napper le saumon de ce jus avant de servir avec les courgettes."
+    lexicon_ids: [deglacer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

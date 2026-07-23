@@ -1,0 +1,71 @@
+id: omelette_fines_herbes
+nom: "Omelette aux fines herbes"
+description: >
+  Une omelette moelleuse au persil frais, prête en quelques minutes, pour un repas rapide
+  à toute heure de la journée.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.8
+  leger_consistant: -0.2
+  chaud_froid: 0.7
+  texture: moelleux
+
+ingredients:
+  - food_id: oeuf
+    quantite_g: 120
+    unite_affichage: "2 œufs"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 10
+    unite_affichage: "1 noisette"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 5
+    unite_affichage: "1 cuillère à soupe ciselée"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 0.5
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Casser les œufs dans un saladier, saler, poivrer et battre à la fourchette jusqu'à obtenir un mélange homogène."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer le persil frais."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire fondre le beurre dans une poêle à feu moyen, verser les œufs battus et parsemer de persil."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Laisser prendre sans remuer, replier l'omelette en deux et servir aussitôt."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: rapide

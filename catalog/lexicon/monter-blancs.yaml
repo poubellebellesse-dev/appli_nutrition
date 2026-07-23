@@ -1,0 +1,6 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: monter_blancs
+terme: "Monter les blancs en neige"
+definition: >
+  Fouetter des blancs d'œuf, au fouet ou au batteur, jusqu'à ce qu'ils incorporent de l'air
+  et forment une mousse ferme qui tient sur le fouet retourné.

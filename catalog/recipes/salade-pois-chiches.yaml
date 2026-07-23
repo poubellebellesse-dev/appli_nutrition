@@ -1,0 +1,73 @@
+id: salade_pois_chiches
+nom: "Salade de pois chiches, tomate et persil"
+description: >
+  Une salade fraîche et rassasiante à base de pois chiches, idéale pour un repas léger.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.5
+  chaud_froid: -0.6
+  texture: croquant
+
+ingredients:
+  - food_id: pois_chiches
+    quantite_g: 400
+    unite_affichage: "1 boîte égouttée"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 200
+    unite_affichage: "2 tomates"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 50
+    unite_affichage: "1/2 oignon rouge"
+    optionnel: true
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "2 cuillères à soupe ciselées"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 15
+    unite_affichage: "1/4 de citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer finement l'oignon et couper les tomates en dés."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Dans un saladier, mélanger les pois chiches, les tomates, l'oignon émincé et le persil."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter l'huile d'olive, le jus de citron et le sel, puis mélanger avant de servir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: rapide

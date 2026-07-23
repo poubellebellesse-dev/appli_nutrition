@@ -1,0 +1,521 @@
+# ============================================================================
+# PROVISOIRE — sous-ensemble d'aliments pour amorcer la chaîne de build (P0).
+#
+# Il n'existe pas encore de table CIQUAL (ANSES) téléchargée dans ce dépôt.
+# Les valeurs nutritionnelles ci-dessous sont des ordres de grandeur usuels
+# (pour 100 g de partie comestible), PAS des valeurs vérifiées contre la
+# table CIQUAL officielle. Les `code_ciqual` sont des identifiants
+# provisoires (préfixe PROV-), pas de vrais codes CIQUAL.
+#
+# Le vrai import ira dans catalog/sources/ciqual/ (fichier ANSES en clair,
+# licence ouverte — voir docs/ARCHITECTURE.md §8.1) et remplacera ce
+# fichier ; le reste de la chaîne (build.mjs, schéma food/food_nutrient/
+# food_allergen) n'aura pas à changer.
+#
+# Allergènes : parmi les 14 allergènes réglementaires UE (règlement
+# 1169/2011 annexe II). Codes utilisés ici : gluten, crustaces, oeufs,
+# poissons, arachides, soja, lait, fruits_a_coque, celeri, moutarde,
+# sesame, sulfites, lupin, mollusques.
+# certitude ∈ { contient, traces }
+# ============================================================================
+
+foods:
+  - id: oeuf
+    code_ciqual: "PROV-00001"
+    nom: "Œuf de poule, entier, cru"
+    groupe: "œufs"
+    nutriments:
+      energie_kcal: 143
+      proteines_g: 12.6
+      lipides_g: 9.9
+      glucides_g: 0.7
+      fibres_g: 0
+      fer_mg: 1.8
+      calcium_mg: 50
+      sodium_mg: 140
+      vitamine_c_mg: 0
+    allergenes:
+      - code: oeufs
+        certitude: contient
+
+  - id: farine_ble
+    code_ciqual: "PROV-00002"
+    nom: "Farine de blé tendre T55"
+    groupe: "céréales et dérivés"
+    nutriments:
+      energie_kcal: 349
+      proteines_g: 10.3
+      lipides_g: 1.0
+      glucides_g: 76.3
+      fibres_g: 2.7
+      fer_mg: 1.2
+      calcium_mg: 15
+      sodium_mg: 2
+      vitamine_c_mg: 0
+    allergenes:
+      - code: gluten
+        certitude: contient
+
+  - id: lait_demi_ecreme
+    code_ciqual: "PROV-00003"
+    nom: "Lait demi-écrémé"
+    groupe: "lait et produits laitiers"
+    nutriments:
+      energie_kcal: 46
+      proteines_g: 3.3
+      lipides_g: 1.6
+      glucides_g: 4.8
+      fibres_g: 0
+      fer_mg: 0.02
+      calcium_mg: 120
+      sodium_mg: 44
+      vitamine_c_mg: 1
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: beurre_doux
+    code_ciqual: "PROV-00004"
+    nom: "Beurre doux"
+    groupe: "matières grasses"
+    nutriments:
+      energie_kcal: 717
+      proteines_g: 0.9
+      lipides_g: 81
+      glucides_g: 0.7
+      fibres_g: 0
+      fer_mg: 0.02
+      calcium_mg: 24
+      sodium_mg: 11
+      vitamine_c_mg: 0
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: huile_olive
+    code_ciqual: "PROV-00005"
+    nom: "Huile d'olive vierge extra"
+    groupe: "matières grasses"
+    nutriments:
+      energie_kcal: 900
+      proteines_g: 0
+      lipides_g: 100
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.6
+      calcium_mg: 1
+      sodium_mg: 2
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: sucre_blanc
+    code_ciqual: "PROV-00006"
+    nom: "Sucre blanc cristal"
+    groupe: "produits sucrés"
+    nutriments:
+      energie_kcal: 400
+      proteines_g: 0
+      lipides_g: 0
+      glucides_g: 100
+      fibres_g: 0
+      fer_mg: 0
+      calcium_mg: 1
+      sodium_mg: 1
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: sel_fin
+    code_ciqual: "PROV-00007"
+    nom: "Sel fin"
+    groupe: "condiments"
+    nutriments:
+      energie_kcal: 0
+      proteines_g: 0
+      lipides_g: 0
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.3
+      calcium_mg: 24
+      sodium_mg: 38758
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: poivre_noir
+    code_ciqual: "PROV-00008"
+    nom: "Poivre noir moulu"
+    groupe: "condiments"
+    nutriments:
+      energie_kcal: 251
+      proteines_g: 10.4
+      lipides_g: 3.3
+      glucides_g: 64
+      fibres_g: 25.3
+      fer_mg: 9.7
+      calcium_mg: 443
+      sodium_mg: 20
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: riz_blanc
+    code_ciqual: "PROV-00009"
+    nom: "Riz blanc, cru"
+    groupe: "céréales et dérivés"
+    nutriments:
+      energie_kcal: 365
+      proteines_g: 7.1
+      lipides_g: 0.7
+      glucides_g: 79
+      fibres_g: 1.3
+      fer_mg: 0.8
+      calcium_mg: 28
+      sodium_mg: 5
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: pates_spaghetti
+    code_ciqual: "PROV-00010"
+    nom: "Pâtes spaghetti, crues"
+    groupe: "céréales et dérivés"
+    nutriments:
+      energie_kcal: 371
+      proteines_g: 13
+      lipides_g: 1.5
+      glucides_g: 74.7
+      fibres_g: 3.2
+      fer_mg: 1.3
+      calcium_mg: 21
+      sodium_mg: 6
+      vitamine_c_mg: 0
+    allergenes:
+      - code: gluten
+        certitude: contient
+
+  - id: pomme_de_terre
+    code_ciqual: "PROV-00011"
+    nom: "Pomme de terre, crue"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 77
+      proteines_g: 2.0
+      lipides_g: 0.1
+      glucides_g: 17
+      fibres_g: 2.2
+      fer_mg: 0.8
+      calcium_mg: 12
+      sodium_mg: 6
+      vitamine_c_mg: 20
+    allergenes: []
+
+  - id: oignon
+    code_ciqual: "PROV-00012"
+    nom: "Oignon, cru"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 40
+      proteines_g: 1.1
+      lipides_g: 0.1
+      glucides_g: 9.3
+      fibres_g: 1.7
+      fer_mg: 0.2
+      calcium_mg: 23
+      sodium_mg: 4
+      vitamine_c_mg: 7.4
+    allergenes: []
+
+  - id: ail
+    code_ciqual: "PROV-00013"
+    nom: "Ail, cru"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 149
+      proteines_g: 6.4
+      lipides_g: 0.5
+      glucides_g: 33
+      fibres_g: 2.1
+      fer_mg: 1.7
+      calcium_mg: 181
+      sodium_mg: 17
+      vitamine_c_mg: 31
+    allergenes: []
+
+  - id: carotte
+    code_ciqual: "PROV-00014"
+    nom: "Carotte, crue"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 41
+      proteines_g: 0.9
+      lipides_g: 0.2
+      glucides_g: 9.6
+      fibres_g: 2.8
+      fer_mg: 0.3
+      calcium_mg: 33
+      sodium_mg: 69
+      vitamine_c_mg: 5.9
+    allergenes: []
+
+  - id: tomate
+    code_ciqual: "PROV-00015"
+    nom: "Tomate, crue"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 18
+      proteines_g: 0.9
+      lipides_g: 0.2
+      glucides_g: 3.9
+      fibres_g: 1.2
+      fer_mg: 0.3
+      calcium_mg: 10
+      sodium_mg: 5
+      vitamine_c_mg: 14
+    allergenes: []
+
+  - id: courgette
+    code_ciqual: "PROV-00016"
+    nom: "Courgette, crue"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 17
+      proteines_g: 1.2
+      lipides_g: 0.3
+      glucides_g: 3.1
+      fibres_g: 1.0
+      fer_mg: 0.4
+      calcium_mg: 16
+      sodium_mg: 8
+      vitamine_c_mg: 17
+    allergenes: []
+
+  - id: poivron_rouge
+    code_ciqual: "PROV-00017"
+    nom: "Poivron rouge, cru"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 31
+      proteines_g: 1.0
+      lipides_g: 0.3
+      glucides_g: 6
+      fibres_g: 2.1
+      fer_mg: 0.4
+      calcium_mg: 7
+      sodium_mg: 4
+      vitamine_c_mg: 128
+    allergenes: []
+
+  - id: champignon_paris
+    code_ciqual: "PROV-00018"
+    nom: "Champignon de Paris, cru"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 22
+      proteines_g: 3.1
+      lipides_g: 0.3
+      glucides_g: 3.3
+      fibres_g: 1.0
+      fer_mg: 0.5
+      calcium_mg: 3
+      sodium_mg: 5
+      vitamine_c_mg: 2.1
+    allergenes: []
+
+  - id: poulet_blanc
+    code_ciqual: "PROV-00019"
+    nom: "Blanc de poulet, cru"
+    groupe: "viandes"
+    nutriments:
+      energie_kcal: 120
+      proteines_g: 22.5
+      lipides_g: 2.6
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.4
+      calcium_mg: 5
+      sodium_mg: 63
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: boeuf_hache_5
+    code_ciqual: "PROV-00020"
+    nom: "Bœuf haché 5% MG, cru"
+    groupe: "viandes"
+    nutriments:
+      energie_kcal: 137
+      proteines_g: 21.4
+      lipides_g: 5
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 2.1
+      calcium_mg: 8
+      sodium_mg: 65
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: saumon
+    code_ciqual: "PROV-00021"
+    nom: "Saumon, cru"
+    groupe: "poissons"
+    nutriments:
+      energie_kcal: 208
+      proteines_g: 20.4
+      lipides_g: 13.4
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.3
+      calcium_mg: 9
+      sodium_mg: 59
+      vitamine_c_mg: 0
+    allergenes:
+      - code: poissons
+        certitude: contient
+
+  - id: lentilles_corail
+    code_ciqual: "PROV-00022"
+    nom: "Lentilles corail, crues"
+    groupe: "légumineuses"
+    nutriments:
+      energie_kcal: 340
+      proteines_g: 25
+      lipides_g: 1.1
+      glucides_g: 60
+      fibres_g: 8
+      fer_mg: 7.5
+      calcium_mg: 35
+      sodium_mg: 6
+      vitamine_c_mg: 1.5
+    allergenes: []
+
+  - id: pois_chiches
+    code_ciqual: "PROV-00023"
+    nom: "Pois chiches cuits, conserve égouttée"
+    groupe: "légumineuses"
+    nutriments:
+      energie_kcal: 139
+      proteines_g: 8.9
+      lipides_g: 2.6
+      glucides_g: 22.5
+      fibres_g: 7.6
+      fer_mg: 1.5
+      calcium_mg: 49
+      sodium_mg: 240
+      vitamine_c_mg: 1.3
+    allergenes: []
+
+  - id: yaourt_nature
+    code_ciqual: "PROV-00024"
+    nom: "Yaourt nature au lait entier"
+    groupe: "lait et produits laitiers"
+    nutriments:
+      energie_kcal: 61
+      proteines_g: 3.5
+      lipides_g: 3.3
+      glucides_g: 4.7
+      fibres_g: 0
+      fer_mg: 0.1
+      calcium_mg: 121
+      sodium_mg: 46
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: fromage_emmental_rape
+    code_ciqual: "PROV-00025"
+    nom: "Emmental râpé"
+    groupe: "lait et produits laitiers"
+    nutriments:
+      energie_kcal: 380
+      proteines_g: 28
+      lipides_g: 29
+      glucides_g: 0.5
+      fibres_g: 0
+      fer_mg: 0.3
+      calcium_mg: 970
+      sodium_mg: 380
+      vitamine_c_mg: 0
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: creme_fraiche
+    code_ciqual: "PROV-00026"
+    nom: "Crème fraîche épaisse 30% MG"
+    groupe: "lait et produits laitiers"
+    nutriments:
+      energie_kcal: 292
+      proteines_g: 2.2
+      lipides_g: 30
+      glucides_g: 3.4
+      fibres_g: 0
+      fer_mg: 0.1
+      calcium_mg: 80
+      sodium_mg: 30
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: persil
+    code_ciqual: "PROV-00027"
+    nom: "Persil frais"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 36
+      proteines_g: 3.0
+      lipides_g: 0.8
+      glucides_g: 3.0
+      fibres_g: 3.3
+      fer_mg: 6.2
+      calcium_mg: 138
+      sodium_mg: 34
+      vitamine_c_mg: 133
+    allergenes: []
+
+  - id: citron
+    code_ciqual: "PROV-00028"
+    nom: "Citron, pulpe crue"
+    groupe: "fruits"
+    nutriments:
+      energie_kcal: 29
+      proteines_g: 1.1
+      lipides_g: 0.3
+      glucides_g: 3.2
+      fibres_g: 2.8
+      fer_mg: 0.6
+      calcium_mg: 26
+      sodium_mg: 2
+      vitamine_c_mg: 53
+    allergenes: []
+
+  - id: amande_effilee
+    code_ciqual: "PROV-00029"
+    nom: "Amande effilée"
+    groupe: "fruits à coque et oléagineux"
+    nutriments:
+      energie_kcal: 579
+      proteines_g: 21.2
+      lipides_g: 49.9
+      glucides_g: 4.4
+      fibres_g: 12.5
+      fer_mg: 3.7
+      calcium_mg: 269
+      sodium_mg: 1
+      vitamine_c_mg: 0
+    allergenes:
+      - code: fruits_a_coque
+        certitude: contient
+
+  - id: levure_boulangere
+    code_ciqual: "PROV-00030"
+    nom: "Levure de boulanger fraîche"
+    groupe: "céréales et dérivés"
+    nutriments:
+      energie_kcal: 105
+      proteines_g: 8
+      lipides_g: 2
+      glucides_g: 3
+      fibres_g: 0
+      fer_mg: 5
+      calcium_mg: 12
+      sodium_mg: 51
+      vitamine_c_mg: 0
+    allergenes: []

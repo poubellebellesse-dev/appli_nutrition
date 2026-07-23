@@ -1,0 +1,19 @@
+{
+  "name": "appli-nutrition",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Application de nutrition et de planification de repas — 100% locale, sans IA, sans compte.",
+  "scripts": {
+    "build": "node --experimental-sqlite catalog/build.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1",
+    "tsx": "^4.19.3",
+    "yaml": "^2.7.0"
+  }
+}

@@ -1,0 +1,6 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: emincer
+terme: "Émincer"
+definition: >
+  Couper un aliment en tranches ou en lamelles fines et régulières, à l'aide d'un couteau
+  bien affûté, en général pour raccourcir un temps de cuisson ou obtenir une texture homogène.

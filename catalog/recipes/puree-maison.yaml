@@ -1,0 +1,61 @@
+id: puree_maison
+nom: "Purée de pommes de terre maison"
+description: >
+  Une purée onctueuse au beurre et au lait, préparée à partir de pommes de terre entières.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.6
+  chaud_froid: 0.8
+  texture: creme
+
+ingredients:
+  - food_id: pomme_de_terre
+    quantite_g: 800
+    unite_affichage: "6 pommes de terre"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 150
+    unite_affichage: "15 cl"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 40
+    unite_affichage: "4 noisettes"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les pommes de terre et les couper en morceaux réguliers."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les cuire dans une casserole d'eau salée jusqu'à ce qu'un couteau s'y enfonce facilement."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Égoutter, écraser au presse-purée, puis incorporer le beurre et le lait tiède jusqu'à obtenir une texture homogène."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: reconfortant

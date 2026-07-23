@@ -1,0 +1,79 @@
+id: dahl_lentilles_corail
+nom: "Dahl de lentilles corail"
+description: >
+  Un plat mijoté de lentilles corail et tomate, inspiré de la cuisine indienne,
+  généreux et réconfortant.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.2
+  chaud_froid: 0.7
+  texture: creme
+
+ingredients:
+  - food_id: lentilles_corail
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 300
+    unite_affichage: "3 tomates"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et l'ail."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir l'oignon et l'ail dans l'huile d'olive."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les tomates coupées en dés et les lentilles rincées, couvrir d'eau et laisser mijoter en remuant de temps en temps."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Saler, poivrer et servir bien chaud."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: indienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: reconfortant

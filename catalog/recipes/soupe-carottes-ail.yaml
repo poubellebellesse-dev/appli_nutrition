@@ -1,0 +1,70 @@
+id: soupe_carottes_ail
+nom: "Soupe de carottes à l'ail"
+description: >
+  Une soupe veloutée de carottes, relevée d'ail doux, à déguster bien chaude.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.3
+  chaud_froid: 0.9
+  texture: liquide
+
+ingredients:
+  - food_id: carotte
+    quantite_g: 600
+    unite_affichage: "8 carottes"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et l'ail."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Blanchir les carottes coupées en rondelles dans une casserole d'eau bouillante, puis égoutter."
+    lexicon_ids: [blanchir]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire suer l'oignon et l'ail dans l'huile d'olive, ajouter les carottes et couvrir d'eau à hauteur, saler."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Mixer finement jusqu'à obtenir une texture veloutée et rectifier l'assaisonnement."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: reconfortant

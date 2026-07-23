@@ -1,0 +1,6 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: deglacer
+terme: "Déglacer"
+definition: >
+  Verser un liquide (eau, jus, vin) dans une poêle ou une cocotte chaude après une cuisson,
+  et gratter les sucs attachés au fond avec une spatule pour les dissoudre dans le liquide.

@@ -1,0 +1,83 @@
+id: boeuf_hache_sauce_tomate
+nom: "Bœuf haché sauce tomate et champignons"
+description: >
+  Une sauce généreuse au bœuf haché, tomate et champignons, à servir avec des pâtes
+  ou du riz.
+temps_prep_min: 15
+temps_cuisson_min: 30
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: boeuf_hache_5
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: champignon_paris
+    quantite_g: 200
+    unite_affichage: "1 barquette"
+    optionnel: true
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 400
+    unite_affichage: "4 tomates"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon, l'ail et les champignons."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire chauffer l'huile d'olive dans une cocotte et faire dorer le bœuf haché en l'émiettant."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Déglacer la cocotte avec un peu d'eau pour décoller les sucs, puis ajouter l'oignon, l'ail et les champignons."
+    lexicon_ids: [deglacer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ajouter les tomates coupées en dés, saler, poivrer et laisser mijoter à couvert."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: reconfortant

@@ -1,0 +1,75 @@
+id: pates_ail_huile
+nom: "Spaghetti à l'ail et à l'huile d'olive"
+description: >
+  Un plat de pâtes simple et parfumé, inspiré de la cuisine italienne, prêt en moins
+  de vingt minutes.
+temps_prep_min: 5
+temps_cuisson_min: 12
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.7
+  leger_consistant: 0.1
+  chaud_froid: 0.6
+  texture: ferme
+
+ingredients:
+  - food_id: pates_spaghetti
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 15
+    unite_affichage: "4 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "2 cuillères à soupe ciselées"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "pour l'eau de cuisson"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Porter une grande casserole d'eau salée à ébullition et y plonger les spaghetti."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Émincer finement l'ail."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Dans une grande poêle, faire chauffer l'huile d'olive à feu doux et y faire dorer l'ail émincé sans le laisser brûler."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Égoutter les pâtes, les verser dans la poêle, ajouter le persil émincé et le poivre, puis mélanger hors du feu."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: rapide

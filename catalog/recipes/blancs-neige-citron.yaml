@@ -1,0 +1,62 @@
+id: blancs_neige_compote_citron
+nom: "Blancs en neige sucrés, sirop de citron"
+description: >
+  Un dessert léger à base de blancs montés en neige, sucrés et parfumés d'un sirop de citron.
+temps_prep_min: 15
+temps_cuisson_min: 5
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [gouter, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: 0.9
+  leger_consistant: -0.6
+  chaud_froid: -0.3
+  texture: moelleux
+
+ingredients:
+  - food_id: oeuf
+    quantite_g: 180
+    unite_affichage: "3 œufs (blancs uniquement)"
+    optionnel: false
+  - food_id: sucre_blanc
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Séparer les blancs des jaunes en récupérant uniquement les blancs d'œuf dans un saladier bien propre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Monter les blancs en neige avec une pincée de sucre jusqu'à obtenir une mousse ferme qui tient sur le fouet."
+    lexicon_ids: [monter_blancs]
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Presser le citron et chauffer le jus avec le reste du sucre jusqu'à obtenir un sirop léger."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Répartir les blancs en neige dans des coupelles et napper du sirop de citron tiède avant de servir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: gourmand

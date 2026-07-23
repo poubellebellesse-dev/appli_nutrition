@@ -13,3 +13,6 @@ dist/
 
 # Logs / temp
 *.log
+
+# Catalogue généré (reproductible via `npm run build`)
+app/public/catalog/*.db
