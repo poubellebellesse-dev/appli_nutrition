@@ -3,8 +3,13 @@
 // Rôle : le pipeline de sélection n'est pas du code figé, c'est un registre ordonné de couches
 // partageant un contrat commun (SelectionLayer). Deux natures ne doivent jamais être confondues
 // (§6.1 ENGINE) : EXCLUSION retire des candidats (intersection), SCORE ne retire rien et
-// repondère (somme pondérée). Zéro logique dans ce chunk : `apply`/`configure` ne sont
-// implémentées pour aucune couche (P1/P2) — LAYER_DESCRIPTORS ne porte que des métadonnées.
+// repondère (somme pondérée). LAYER_DESCRIPTORS (ci-dessous) ne porte que des métadonnées pour
+// les 14 couches du registre complet — les 10 couches de score restent NON implémentées (P2).
+//
+// P1a (implémenté ici) : les 4 couches d'EXCLUSION (allergenes, regime, temps, equipement) et la
+// passe d'exclusion qui les enchaîne (§6.4 ENGINE) — voir allergenes.ts, regime.ts, temps.ts,
+// equipement.ts, exclusion-pass.ts, réexportés plus bas pour offrir une surface unique
+// `engine/selection`.
 //
 // Dépendances autorisées : domain/ (§2 ENGINE : SEL --> DOM). LayerId/LayerKind sont déclarés
 // dans domain/ (pas ici) pour que guards/, qui ne connaît QUE domain/, puisse typer
@@ -96,3 +101,19 @@ export const LAYER_DESCRIPTORS: readonly LayerDescriptor[] = [
   { id: 'topic', kind: 'scoring', critical: false, defaultWeight: 0 }, // nul tant qu'aucune thématique n'est active (v2)
   { id: 'cost', kind: 'scoring', critical: false, defaultWeight: 0.05 }, // v3
 ]
+
+// ------------------------------------------------------------------------------------------
+// Couches d'exclusion & passe d'exclusion — implémentation P1a (§6.4 ENGINE).
+// Réexportées ici pour une surface unique `engine/selection` (les couches de score restent P2).
+// ------------------------------------------------------------------------------------------
+
+export { allergenLayer } from './allergenes.js'
+export type { AllergenLayerConfig } from './allergenes.js'
+export { dietLayer } from './regime.js'
+export type { DietLayerConfig } from './regime.js'
+export { timeLayer } from './temps.js'
+export type { TimeLayerConfig } from './temps.js'
+export { equipmentLayer } from './equipement.js'
+export type { EquipmentLayerConfig } from './equipement.js'
+export { EXCLUSION_LAYERS, runExclusionPass } from './exclusion-pass.js'
+export type { ExclusionPassResult } from './exclusion-pass.js'
