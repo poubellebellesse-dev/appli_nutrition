@@ -1,0 +1,72 @@
+ecran aujourd"hui 
+
+- le repas du jour plus de l'heure doit etre en pleine ecran
+- l'onglet le reste de la journée doit etre plus bas
+- l'onglet le reste de la journée etre cacher, un mouvement de doight vers le haut doit pouvoir montrer le reste de la journée
+- il doit y avoir des tags en dessou de la recette du jour (vegetrie, leger , cremeux ) 
+-  voir la recette ? 
+- avoir le droit de faire défiler a gauche ou a droite le repas d'ajourd'hui pour changer le repas.
+- après avoir swipper un certain nombre de fois ( l'utilisateur ne sais pas ce qu'il a envie) demander a l'utilisateur des prècision sur ce qu'il veut.
+- peut être oublier les autres repas, mettre en dessous de la photos du plat des tags pour que l'utilisateur puisse choisir facilement ce qu'il a envie aujourd"hui dans la selection. simple et efficasse 
+
+
+
+Ecran semaine 
+
+- marquer la semaine bien en haut 
+- le designe de chaque jour est ok
+- bonne idée de verouiller les recette
+- le bouton refaire sert a ?
+- le temps de preparation + cuisson est une bonne idée juste en dessous de la recette
+- mettre en préference le nombre de repas par jours de l'utilisateurs.
+- comment est interfacer après Changer ? image de recette en pleine ecran ou l'utilisateur peut faire défiler de gauche a droite 
+- pouvoir avoir la possibiliter de prevoir sur deux semaine ( si l'utilisateur veut prevoir en milieux de semaine ) 
+- je supose que la liste de course en bas permet de créer automatiquement la liste des courses pour les repas de la semaines 
+
+Ecran mes courses 
+
+- avoir plusierus type de façon de ranger. ( par type de produit, par date de repas, ect)
+- Partager la liste de course , Pourquoi ? 
+- imprimmer la liste de courses ??? pourquoi, quel but, quel pluvalue 
+- peut etre mettre la liste de courses en fonction des repas de la semaines ( type de rangement) 
+- la quantité est bien définit pour chaque elements
+- Avoir une liste avec case coché des aliments cheté ou non est ok 
+- peut être possibilité de d'ajouter dasn ses courses en manuelle 
+- peut etre si course en manuel faire le chemin inverse ( semaine -> courses .... courses -> repas sugéré dans la semaines )
+
+
+
+Ecran Recettes 
+
+- plus de filtre avec des tags + recherche filtré par recherche , completer par les lettre déja rentré 
+
+Ecran vider mon frigo 
+
+Ecran de la recette quand on clique dessus
+Ecran Savoir 
+
+- Le savier-vous ? avec possibilité de swap droite gauche 
+- ok pour les geste de cuisine après
+- Pour le chapitre Comprendre 
+-- possibilité de verifier les lien des soruces et des etudes 
+--- bien fait avec Chapitre . Les fibres -> titre qui résume ce que l'ont veut savoir en cliquant sur l'onglet Preuve forte modéré préliminaire 
+--- avoir la possibilité de choisir via une liste ordonnée dans les thémes sur la nouriture ( vitamines macro , glucide lipide proteinnes, ect je ne sais pas comment bien lister pour que cela ne soit aps lourd mais reste quand même complet et simple
+--- Possibilité de cliquer sur l'affirmation pour avoir un résumé plus complet au lieux d"une phrase. 
+--- possibilité de mettre des themes comme perdre du poid, prendre du poid, pour les sportif
+
+divers
+
+- mettre en option choix a l'ecran " repas leger ou repas lourd " 
+- pouvoir sortir les courses ou les recettes en API depuis 
+
+- Comment distinguer les repas du jour, les repas recommander du jour, la selection du repas mais aussi le repas déja décider ? ( dans Semaines ?) 
+- L'onglet du bas pour les differents ecran, doit pouvoir se tirer vers le haut si on veut d'autres fonctionnalité
+- Pour la premiere utilisation, pour voir les preference des personnes, faire defiller des recette, l'utilisateur dis si oui ou non ( comme tinder gauche ou droite ) il aimes les recette, il a envie de découvrir ou non .
+- Avoir en option au lancement de l'application soit le saviez vous sur un concepte de nutrition ( exemple: manger des kiwi est mieux pour la récuperation ect, manger moins de glucide le soir est meilleur pour la récuperation ect,)
+- mettre un mode pour les sportif acharner avec calorie pour chaque repas, suivis des calories, suivie est micro et macro vitamines
+- ajouter un onglet pour demander a l'utilisateur si il est fatiguer, a faim, de bonne humeur ect, pour lui proposer des repas en focntion ( exemple fatigué , manque peut être de vitamines (réponses déja preremplit, l'utilisateur clique juste sur les reponses qu'il veut )
+-- pouvoir demander le dernier repas/ les dernier repas consommé, pour les préférences, pour ajuster peut être les repas 
+
+definir ce qui est prioritaire (le gout des personnes, les sugestion ,ect). je dirais que les preferences des gens par defaut + option pour changer 
+
+- avoir des message (optionel) d'encouragement pour l'utilisateur.
