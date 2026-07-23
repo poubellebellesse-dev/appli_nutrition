@@ -89,11 +89,17 @@ Un geste invisible n'existe pas pour une partie des utilisateurs. Cette règle p
 - **Aide à la décision** : après ~4 changements, encart « Dites-moi ce que vous cherchez » avec
   pastilles Léger/Consistant · Chaud/Froid · Rapide/Mijoté · **Salé/Sucré/Salé-sucré** → alimente la
   couche `craving` (l'axe salé/sucré existe déjà : `recipe.axe_sucre_sale`). Envie exprimée →
-  `craving` passe **n°1** (§6.5 ENGINE)
+  `craving` passe **n°1** — spécifiquement dans ce contexte « Aujourd'hui » : la Semaine reste
+  pilotée par `nutri`, pas de « moment T » sur des jours futurs (symétrie précisée §6.5 ENGINE)
 - Poignée visible « Le reste de la journée » : les autres repas y vivent, hors de la vue principale
 - Carte « Le saviez-vous ? »
 - **Carte occasion** « idée pour… » à l'ouverture, throttlée (~1×/3-4 j), occasions **activées**
   seulement, écartable — jamais un repas imposé (§8.6 ARCHITECTURE)
+- **Toggles « Mes favoris » / variété** *(proposé, P3 — pas maquetté, session 2026-07-24)* :
+  pilotent les flags moteur `onlyFavorites` / `varietyMode` (P1c, §8.1 ENGINE). « Mes favoris »
+  restreint les candidats aux favoris **puis** score dedans — cohérent avec « favori = marque-page,
+  n'influence pas le moteur par défaut » (§4.3 ARCHITECTURE) : c'est un opt-in explicite, jamais un
+  poids ajouté en continu.
 
 > Détecter l'indécision *puis* proposer, plutôt qu'interroger d'emblée. C'est la nuance qui distingue
 > une aide d'un questionnaire.
@@ -175,7 +181,8 @@ Conçu pour être **lu debout, mains occupées, parfois de loin** — gros carac
 - Section **« Matériel »** : ustensiles et équipement, chacun cliquable → photo + définition
   (`equipment` niveau `informatif`)
 - **Alternatives** : substitution d'ingrédients **secondaires** (jamais le principal), quantités et
-  **allergènes recalculés** ; possibilité de créer une **variante perso** (« non vérifié »)
+  **allergènes recalculés** ; possibilité de créer une **variante perso** (« non vérifié »).
+  Alimentée à terme par `suggestAlternatives` *(proposé P1c/P2, socle en P1b — §8 ENGINE)*
 - **Notes** : commentaires locaux par recette et par étape, exportables (opt-in) avec le partage
 - Bas : « Ajouter à ma semaine »
 
@@ -256,3 +263,5 @@ puis garantis par le test de lint de contenu.
 | **Écran de partage** (fichier `.nutri-recipe` + carte-image) | Décidé, pas maquetté |
 | **Mode cuisine** (multi-recettes, suivi d'étape, timers) | Décidé, à spécifier — v1/v1.5 (§5bis ARCHI) |
 | **Thèmes d'accent curatés** | Décidé, jetons à définir |
+| **Toggles « Mes favoris » / variété** (Aujourd'hui, §4.1) | Proposé, pas maquetté — P3 |
+| **Sélecteur d'archétype** (onboarding + Paramètres, §ENGINE 6.3 bis) | Proposé, pas maquetté — P3 |

@@ -116,7 +116,11 @@ peut pas détruire les données personnelles.
 
 ```sql
 nutrient(id, code, nom, unite, vnr_adulte, categorie)
-food(id, code_ciqual, nom, groupe, sous_groupe, saison_mois[])
+food(id, code_ciqual, nom, groupe, sous_groupe, saison_mois[], toute_annee)
+    -- toute_annee : PROPOSÉ (session 2026-07-24, prérequis P1b-1, pas encore au schéma réel) —
+    --               true pour les staples (pâtes, riz, huile, sel…), exclus du calcul de la
+    --               couche `season` (voir docs/ENGINE.md §6.5, précision 3) pour qu'un plat de
+    --               pâtes ne se fasse pas passer pour un plat de saison
 food_nutrient(food_id, nutrient_id, valeur_pour_100g)
 allergen(id, code, nom)                          -- 14 allergènes réglementaires UE
 food_allergen(food_id, allergen_id, certitude)   -- 'contient' | 'traces'
@@ -261,8 +265,16 @@ Score = Σ (poids_i × critère_i)
 `S_criteres` est le seul critère qui dépend d'un choix explicite : tant qu'aucune thématique n'est
 activée, son poids vaut 0 et le moteur ignore complètement le volet santé.
 
-Poids par défaut définis en constantes, ajustables dans le profil (« je privilégie : équilibre /
-plaisir / rapidité / budget »).
+Poids par défaut définis en constantes, ajustables via un petit jeu d'**archétypes nommés** —
+choisis à l'onboarding, modifiables dans les Paramètres (P3). Généralise l'idée initiale de
+« je privilégie : équilibre / plaisir / rapidité / budget » sans changer le principe : peu de
+préréglages nommés, jamais un réglage curseur par critère. **Détail complet (liste ~6 proposée,
+mécanique) : `docs/ENGINE.md` §6.3 bis** — décision de la session du 2026-07-24, pas encore codée.
+
+> Le référentiel détaillé des critères de score (nommage, formules, précisions par couche) vit
+> désormais dans `docs/ENGINE.md` §6.5, qui fait foi en cas d'écart avec la table ci-dessus —
+> notamment sur `S_envie`/`craving`, dont le poids est **contextuel** (n°1 dans « Aujourd'hui »
+> seulement, socle bas en planning semaine, §6.5 ENGINE).
 
 ### 5.4 Étape 3 — Diversification
 
