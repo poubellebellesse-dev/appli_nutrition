@@ -1,6 +1,6 @@
 // data/catalog-loader.test.ts
 //
-// Preuve que loadCatalog() mappe correctement le catalog.db réel (10 recettes, 30 aliments,
+// Preuve que loadCatalog() mappe correctement le catalog.db réel (10 recettes, 76 aliments,
 // docs/ETAT.md §6) vers les types domaine de engine/domain/catalog.ts : nutriments/allergènes
 // bien rattachés à leur aliment, ingrédients/étapes/facettes bien rattachés à leur recette, et
 // les index de CatalogIndexes cohérents avec les données chargées.
@@ -42,8 +42,8 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     rmSync(fixtureDir, { recursive: true, force: true })
   })
 
-  it('charge 30 aliments et 10 recettes', () => {
-    expect(catalog.foods.size).toBe(30)
+  it('charge 76 aliments et 10 recettes', () => {
+    expect(catalog.foods.size).toBe(76)
     expect(catalog.recipes.size).toBe(10)
   })
 
@@ -61,6 +61,24 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     const huile = catalog.foods.get('huile_olive' as FoodId)
     expect(huile).toBeDefined()
     expect(huile?.allergenes).toEqual([])
+  })
+
+  it('mappe saisonMois et touteAnnee depuis la base — staple toute l’année (huile d’olive)', () => {
+    const huile = catalog.foods.get('huile_olive' as FoodId)
+    expect(huile).toBeDefined()
+    expect(huile?.touteAnnee).toBe(true)
+    expect(huile?.saisonMois).toEqual([])
+  })
+
+  it('mappe saisonMois et touteAnnee depuis la base — aliment saisonnier (tomate)', () => {
+    const tomate = catalog.foods.get('tomate' as FoodId)
+    expect(tomate).toBeDefined()
+    expect(tomate?.touteAnnee).toBe(false)
+    expect(tomate?.saisonMois.length).toBeGreaterThan(0)
+    for (const mois of tomate?.saisonMois ?? []) {
+      expect(mois).toBeGreaterThanOrEqual(1)
+      expect(mois).toBeLessThanOrEqual(12)
+    }
   })
 
   it('rattache ingrédients, étapes ordonnées et facettes à la bonne recette (omelette)', () => {
