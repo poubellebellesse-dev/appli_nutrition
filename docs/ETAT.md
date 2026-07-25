@@ -1,24 +1,24 @@
 # État du projet — récapitulatif et reprise
 
-> Fichier de reprise. À lire en premier au début d'une nouvelle session.
-> Dernière mise à jour : **2026-07-24** (session de conception P1b — scoring, archétypes,
-> variété adaptative ; voir `docs/RECAP_SESSION.md` pour le récit complet de la session).
+> État complet du projet. Pour un démarrage rapide, lire d'abord `docs/FICHE_REPRISE.md`.
+> Dernière mise à jour : **2026-07-24** (session 2 — P1b-1 codé : 7 fonctions de score, index
+> dérivés, saison en crédits, catalogue porté à 76 aliments, 5ᵉ couche d'exclusion ; conception
+> variety/radar/courses. Récit : `docs/RECAP_SESSION_2.md`).
 
 ---
 
 ## 1. En une phrase
 
 Application de nutrition et de planification de repas, **100 % locale, sans IA, sans compte**,
-utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0 et P1a du
-moteur terminés et committés ; P1b (scoring) conçu, reste à implémenter.**
+utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0, P1a et P1b-1 du moteur terminés (140 tests verts) ; P1b-2 = prochaine étape. Seuls P0 et P1a sont committés — le reste attend un lot de commits.**
 
 ---
 
 ## 2. Où en est-on
 
 ```
-Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── ▓▓ P1b ▓▓
-  ✅          ✅            ✅           ✅              ✅                                      ⬅ ICI (à coder)
+Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── ▓▓ P1b-2 ▓▓
+  ✅          ✅            ✅           ✅              ✅                                                 ⬅ ICI (à coder)
 ```
 
 | Livrable | Fichier | État |
@@ -30,7 +30,8 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Notes utilisateur | `Notes/Note designe.txt` | ✅ Traité et intégré |
 | Code — P0 (fondations) | `catalog/build.mjs`, `app/src/engine/{domain,api}`, `app/src/data/catalog-loader.ts` | ✅ Terminé (3 commits) |
 | Code — P1a (exclusion) | `app/src/engine/selection/{allergenes,regime,temps,equipement,exclusion-pass}.ts` | ✅ Terminé (1 commit), 60 tests verts |
-| Code — P1b (scoring) | `app/src/engine/nutrition/`, `app/src/engine/selection/` (couches de score) | ⬜ Conçu (§6 ci-dessous), pas codé — **prochaine étape** |
+| Code — P1b-1 (socle scoring) | `app/src/engine/nutrition/`, `app/src/engine/selection/scoring/` | ✅ Terminé, 140 tests verts (non committé) |
+| Code — P1b-2 (passe + archétypes) | `app/src/engine/selection/` (passe de score) | ⬜ Conçu — **prochaine étape** |
 
 ---
 
@@ -52,13 +53,14 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 - Mode avancé (macros) = **descriptif seul**, opt-in, jamais de compteur de reste.
 
 ### Moteur
-- **Registre de 14 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (corrige
-  la mention « 12 couches » de la spec initiale — le code fait foi, voir
-  `app/src/engine/domain/layer-ids.ts`).
-  - Exclusion (4) : `allergenes` 🔒 · `regime` 🔒 · `temps` · `equipement`
+- **Registre de 15 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (le code
+  fait foi, voir `app/src/engine/domain/layer-ids.ts`). Une 5ᵉ couche d'exclusion `exclusions`
+  (rejet perso, `excludedFoodIds`) a été ajoutée en session 2 — corrige aussi les anciennes
+  mentions « 12 » puis « 14 ».
+  - Exclusion (5) : `allergenes` 🔒 · `regime` 🔒 · `exclusions` · `temps` · `equipement`
   - Score (10) : `nutri` · `preference` · `craving` · `variety` · `season` · `pantry` · `habit` ·
     `occasion` · `topic` (v2, réserve) · `cost` (v3, réserve)
-  - `speed` **n'est pas une 15ᵉ couche** : c'est une modulation proposée de la fonction de score
+  - `speed` **n'est pas une 16ᵉ couche** : c'est une modulation proposée de la fonction de score
     (voir `docs/ENGINE.md` §6.5), activée par l'archétype « Rapide ».
 - **Fonction pure synchrone**, catalogue en RAM. Pas de `Date.now`/`Math.random` (PRNG à graine,
   tie-break stable par id de recette).
@@ -137,6 +139,11 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 9 | Cible iOS : PWA seule ou Capacitor + App Store ? | **PWA** par défaut (gratuit, pas de Mac) ; Capacitor si API native |
 | 10 | Noms définitifs des **archétypes** (§ENGINE 6.3 bis) | **Proposé, à confirmer** : Équilibre · Envie · Découverte · De saison · Mes goûts · Rapide (~6, pas de « budget » en v1) |
 | 11 | Token de push GitHub (pour que l'utilisateur pousse les commits Claude) | À fournir par l'utilisateur — voir `docs/RECAP_SESSION.md` § Reprendre ici |
+| 12 | Rattachement de `speed` au pipeline | 16ᵉ couche du registre ou modulation interne — à trancher en P1b-2 |
+| 13 | `requiredFoodIds` (miroir du rejet) : filtre dur ou gros bonus ? | **Dur en contexte « Aujourd'hui »** (proposé) |
+| 14 | Alcool : ingrédient de cuisine vs boisson | Ingrédient v1 (décidé) ; jamais dans le calcul nutritionnel ; boisson = article de courses |
+| 15 | Roue des goûts : rayons cuisine/saveur | v2 (v1 = 6 pôles sensoriels, gratuits) |
+| 16 | Table courses non alimentaire (10 rayons) | Conçue ; à coder **quand `buildShoppingList` existera** (P1c+), pas avant |
 
 ---
 
@@ -174,10 +181,18 @@ recette invalide.
 Conception détaillée : `docs/ENGINE.md` §6.5 et §6.3 bis, `docs/RECAP_SESSION.md`. Découpage
 retenu :
 
+### P1b-1 — Socle scoring ✅ terminé (non committé)
+
+- [x] `food.saison_mois` + `food.toute_annee` au schéma réel (build + loader), dimensions indépendantes
+- [x] Index dérivés à l'init du moteur : `recipeNutrients` (par portion), `recipeMainIngredient` (`engine/nutrition/`)
+- [x] 7 fonctions de score pures (`engine/selection/scoring/`) + `NEUTRAL_SCORE = 0.5`
+- [x] `season` en crédits pondérés par quantité ; catalogue porté à 76 aliments ; 5ᵉ couche d'exclusion `exclusions`
+- [x] 140 tests verts, typecheck propre
+
 | Sous-étape | Contenu |
 |---|---|
-| **P1b-1** | Prérequis données (`food.saison_mois` + flag « toute l'année/staple », §ARCHI 4.2) + index calculés à l'**init du moteur** (`recipeNutrients`, `recipeMainIngredient`, dans `engine/nutrition/`) + les 7 fonctions de score (`nutri` · `preference` · `craving` · `season` · `variety` + `speed` + `habit` minimal) + tests unitaires |
-| **P1b-2** | Passe de score pondérée (`runScoringPass`) + les 6 archétypes (proposé, §ENGINE 6.3 bis) + poids dynamiques contextuels (craving/occasion) + tie-break déterministe par id + CLI de scores |
+| ✅ **P1b-1** | Prérequis données (`food.saison_mois` + flag « toute l'année/staple », §ARCHI 4.2) + index calculés à l'**init du moteur** (`recipeNutrients`, `recipeMainIngredient`, dans `engine/nutrition/`) + les 7 fonctions de score (`nutri` · `preference` · `craving` · `season` · `variety` + `speed` + `habit` minimal) + tests unitaires |
+| **P1b-2** ⬅ prochaine étape | Passe de score pondérée (`runScoringPass`) + les 6 archétypes (proposé, §ENGINE 6.3 bis) + poids dynamiques contextuels (craving/occasion) + tie-break déterministe par id + CLI de scores |
 | **P1c** | Diversification (MMR) + explication (top 3) + `suggestMeals` bout-en-bout + flags `onlyFavorites`/`varietyMode` + `suggestAlternatives` |
 
 > ⚠️ Rappel du plan (§12 ENGINE) : **ne pas écrire d'UI avant la phase P3.** Le moteur doit produire
@@ -193,9 +208,11 @@ appli_nutrition/
 ├─ docs/
 │  ├─ ETAT.md            ← CE FICHIER — reprise de session
 │  ├─ ARCHITECTURE.md    ← périmètre · données · cadre légal
-│  ├─ ENGINE.md          ← moteur · 14 couches · API · plan de lancement
+│  ├─ FICHE_REPRISE.md   ← ⭐ à lire en premier — état condensé + prochaines étapes
+│  ├─ ENGINE.md          ← moteur · 15 couches · API · plan de lancement
 │  ├─ DESIGN.md          ← 8 écrans · navigation · badge de preuve
-│  ├─ RECAP_SESSION.md   ← récit de la session de conception P1b (2026-07-24)
+│  ├─ RECAP_SESSION.md   ← récit session 1 (conception P1b)
+│  ├─ RECAP_SESSION_2.md ← récit session 2 (P1b-1 codé, saison, contenu, 5ᵉ couche, conception variety/radar)
 │  └─ STRATEGIE_DISTRIBUTION.md
 ├─ app/src/
 │  ├─ engine/            ← moteur TS pur (domain, guards, selection, nutrition, planning, api)

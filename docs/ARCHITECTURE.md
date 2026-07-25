@@ -116,11 +116,13 @@ peut pas détruire les données personnelles.
 
 ```sql
 nutrient(id, code, nom, unite, vnr_adulte, categorie)
-food(id, code_ciqual, nom, groupe, sous_groupe, saison_mois[], toute_annee)
-    -- toute_annee : PROPOSÉ (session 2026-07-24, prérequis P1b-1, pas encore au schéma réel) —
-    --               true pour les staples (pâtes, riz, huile, sel…), exclus du calcul de la
-    --               couche `season` (voir docs/ENGINE.md §6.5, précision 3) pour qu'un plat de
-    --               pâtes ne se fasse pas passer pour un plat de saison
+food(id, code_ciqual, nom, groupe, saison_mois[], toute_annee)
+    -- saison_mois[] + toute_annee : RÉELS depuis P1b-1 (build.mjs + loader). Deux dimensions
+    --   INDÉPENDANTES et cumulables : saison_mois = pleine saison (production locale) ;
+    --   toute_annee = disponibilité (rayon/conservation). Un légume de garde porte les deux.
+    --   La couche `season` les combine en crédits pondérés par quantité (docs/ENGINE.md §6.5
+    --   précision 3). Un aliment sans saison_mois est exclu du calcul de saison.
+    --   `sous_groupe` de l'esquisse initiale n'existe PAS au schéma réel.
 food_nutrient(food_id, nutrient_id, valeur_pour_100g)
 allergen(id, code, nom)                          -- 14 allergènes réglementaires UE
 food_allergen(food_id, allergen_id, certitude)   -- 'contient' | 'traces'
@@ -204,6 +206,16 @@ meal_plan(id, date_debut)
 meal_plan_entry(plan_id, date, creneau, recipe_id, portions, verrouille)
 shopping_list(id, plan_id, genere_le)
 shopping_list_item(list_id, food_id, quantite_totale, unite, coche, prix_estime)
+
+-- Articles NON alimentaires (conçu session 2, PAS CODÉ — à créer quand buildShoppingList
+-- existera, P1c+). Table SÉPARÉE de food : aucun nutriment, aucun allergène structuré, jamais
+-- éligible comme ingrédient de recette. Branchée uniquement sur la liste de courses.
+shopping_extra_item(id, list_id, libelle, rayon, quantite, coche, note_allergene)
+    -- rayon ∈ 10 valeurs (texte libre, pas d'enum figée) : hygiène & soin · cheveux/rasage/beauté
+    --   · nettoyage & maison · lessive & linge · vaisselle & cuisine jetable · maison & bureau
+    --   · animaux · bébé · pharmacie & premiers soins · vêtements & textile
+    -- note_allergene : texte libre OPTIONNEL (« contient : arachide ») — informatif, jamais
+    --   filtrant ; le système structuré des 14 allergènes UE reste réservé à food (ce qu'on mange)
 
 user_price(food_id, prix_par_kg, saisi_le)        -- v3
 consent(version_texte, accepte_le)
@@ -322,6 +334,21 @@ bascule et synchronisation du service), **suivi d'étape** (taper une étape mar
 ⚠️ Sur **iOS-PWA les timers en arrière-plan sont non fiables** : garder l'écran allumé (Wake Lock
 API), décompte in-app, notification best-effort. Argument de plus pour Capacitor si le mode cuisine
 devient central. L'interdiction de `Date.now` ne vise que `engine/` — l'UI utilise l'heure réelle.
+
+### Fonctionnalités conçues en session 2 (non codées) — voir docs/RECAP_SESSION_2.md
+
+- **Rejet personnel d'aliments** — `HardConstraints.excludedFoodIds` est désormais LU par une 5ᵉ
+  couche d'exclusion `exclusions` (exclusion dure). Miroir `requiredFoodIds` (« je veux ça »)
+  décidé, non codé : filtre dur en contexte « Aujourd'hui » seulement.
+- **Courses non alimentaires** — table `shopping_extra_item` (10 rayons, ci-dessus) pour faire les
+  courses complètes, pas seulement l'alimentaire. Conçue, non codée.
+- **Roue des goûts (radar)** — lecture visuelle des 3 axes sensoriels en 6 pôles, par plat et par
+  profil ; partage via la carte-image Canvas (§8.7). v1 = pôles sensoriels ; rayons cuisine = v2.
+- **Conseils vin & modes recette/repas** (chantier B, en file) — conseil vin = métadonnée
+  éditoriale, jamais dans le score ni le calcul nutritionnel, masquable. Mode recette (plat unique)
+  vs repas (entrée+plat+dessert avec accords). L'alcool reste un ingrédient de cuisine, jamais
+  compté dans le calcul nutritionnel d'un repas ; comme boisson, c'est un article de courses.
+- **Scan produit** (OpenFoodFacts, opt-in, jamais les notes façon Yuka) — v2+++++.
 
 ---
 

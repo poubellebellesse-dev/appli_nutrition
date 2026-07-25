@@ -302,7 +302,7 @@ commun. Mais elles se répartissent en deux natures qu'il ne faut jamais confond
 
 | Nature | Effet sur l'ensemble | Composition | Exemples |
 |---|---|---|---|
-| **Exclusion** | **Retire** des candidats | Intersection | allergènes · régime · temps · équipement |
+| **Exclusion** | **Retire** des candidats | Intersection | allergènes · régime · exclusions perso · temps · équipement |
 | **Score** | **Ne retire rien**, repondère | Somme pondérée | préférences · envies · santé · frigo · habitude… |
 
 > **Le piège à éviter.** Si « préférences » était une couche d'exclusion, détester les champignons
@@ -316,7 +316,7 @@ flowchart TB
     IN["SuggestionRequest"] --> EX
 
     subgraph EXC["COUCHES D'EXCLUSION — réduisent l'ensemble"]
-        EX["allergènes 🔒 → régime 🔒 → temps → équipement"]
+        EX["allergènes 🔒 → régime 🔒 → exclusions → temps → équipement"]
     end
 
     EX -->|candidats| SC
@@ -366,8 +366,9 @@ candidats et une configuration, elle retourne un résultat. C'est ce qui la rend
 ```ts
 export const LAYERS: readonly SelectionLayer[] = [
   // — exclusion, dans l'ordre de priorité de MOTIF —
-  allergenLayer,     // 🔒 critical
-  dietLayer,         // 🔒 critical
+  allergenLayer,          // 🔒 critical
+  dietLayer,              // 🔒 critical
+  personalExclusionLayer, // exclusions personnelles (HardConstraints.excludedFoodIds)
   timeLayer,
   equipmentLayer,    // seulement l'équipement `requis`
 
@@ -385,7 +386,7 @@ export const LAYERS: readonly SelectionLayer[] = [
 ]
 ```
 
-**14 couches au registre (4 exclusion + 10 score), dont `topic` (v2) et `cost` (v3) en réserve à
+**15 couches au registre (5 exclusion + 10 score), dont `topic` (v2) et `cost` (v3) en réserve à
 poids nul — mais cinq couches de score réellement actives au premier lancement** : `topic`,
 `cost` et `habit` démarrent à 0, `occasion` est nul hors période. La complexité perçue n'augmente
 pas avec le nombre de couches.
@@ -395,6 +396,9 @@ pas avec le nombre de couches.
 > 10 score) depuis le début. Le code (`app/src/engine/domain/layer-ids.ts`) implémente les 14 et
 > le signale déjà en commentaire. **Le code fait foi** ; toute occurrence de « 12 couches » dans
 > ce document et dans ETAT.md est une coquille corrigée par cette note, pas une décision qui change.
+> Mise à jour (session 2) : une 5ᵉ couche d'exclusion `exclusions` (rejet personnel,
+> `excludedFoodIds`) a été ajoutée — le registre est désormais à **15** (5 exclusion + 10 score).
+> Le code fait foi.
 
 Les poids sont normalisés (`Σ = 1`) avant application. L'utilisateur les module via un petit jeu
 d'**archétypes nommés** — voir §6.3 bis ci-dessous, qui généralise l'idée initiale de « quatre
@@ -486,7 +490,7 @@ Ajouter une fonctionnalité, c'est **ajouter une entrée au registre** — le pi
 | `preference` | Moyenne des préférences sur ingrédients et facettes, **pondérée par la quantité** et saturée (précision 4) | 0.25 |
 | `craving` | 1 − distance euclidienne sur les **axes sensoriels demandés uniquement** ; poids **contextuel** (précision 2) | 0.20 |
 | `variety` | Décroissance exponentielle selon l'ancienneté de la dernière occurrence, **adaptative** (précision 5) | 0.15 |
-| `season` | Proportion d'ingrédients **réellement saisonniers** au mois du contexte (précision 3) | 0.10 |
+| `season` | Moyenne **pondérée par quantité** des crédits de saison des ingrédients (1 en saison · 0,5 dispo toute l'année hors saison · 0 sinon) — précision 3 | 0.10 |
 | `pantry` | Taux de couverture des ingrédients par `user_pantry` | 0.05 † |
 | `habit` | Quatre signaux statistiques locaux (§7.5), module aussi `variety` (précision 5) | 0.00 ‡ |
 | `occasion` | Appartenance à une occasion active dans la fenêtre de dates | 0.05 § |
@@ -497,7 +501,7 @@ Ajouter une fonctionnalité, c'est **ajouter une entrée au registre** — le pi
 † `pantry` passe en **poids dominant** en mode « vider le frigo » (§10.2)
 ‡ `habit` croît avec le volume d'historique — démarrage à froid propre
 § `occasion` vaut 0 hors de la fenêtre d'une occasion activée
-¶ `speed` **n'est pas une 15ᵉ couche du registre** (le registre reste à 14, `LAYER_DESCRIPTORS`
+¶ `speed` **n'est pas une 16ᵉ couche du registre** (le registre reste à 15, `LAYER_DESCRIPTORS`
 inchangé) — c'est un **signal de score doux**, listé ici pour la lisibilité de la table, distinct
 du filtre dur `temps` (§6.3, exclusion) ; poids nul par défaut, **activé par l'archétype
 « Rapide »** (§6.3 bis). Son rattachement précis au pipeline (couche à part entière ajoutée en
@@ -521,11 +525,16 @@ P1b-2, ou modulation interne d'une couche existante) reste à trancher à l'impl
    (pas les 3 axes systématiquement) ; la **texture** est **catégorielle** (match / pas-match), pas
    un axe numérique — elle est traitée hors du calcul euclidien, puis recombinée.
 
-3. **`season` ne compte que les ingrédients réellement saisonniers.** Les staples (pâtes, riz,
-   huile, sel…) sont marqués « toute l'année » (§ARCHI 4.2, prérequis data P1b-1) et **exclus du
-   dénominateur** — sinon un plat de pâtes se ferait passer pour un plat de saison. Un plat sans
-   aucun ingrédient saisonnier obtient un `season` **neutre** (ni bonus ni malus), pas un score nul
-   punitif.
+3. **`season` combine deux dimensions indépendantes en crédits, pondérés par la quantité.**
+   `toute_annee` (disponibilité : rayon, conservation) et `saison_mois` (pleine saison : production
+   locale) ne sont PAS exclusifs — un légume de garde porte les deux (carotte : dispo toute l'année
+   ET de pleine saison sept.–avril). Chaque ingrédient dont `saison_mois` est renseignée rapporte un
+   **crédit** : **1** en pleine saison ce mois-ci, **0,5** hors saison mais `toute_annee`, **0** hors
+   saison sans disponibilité. Les ingrédients sans `saison_mois` (sel, huile, pâtes…) sont **exclus
+   du calcul**. Le score est la **moyenne des crédits pondérée par la quantité** (même motif que
+   `preference`, précision 4) — 5 g de persil ne pèsent pas autant que 400 g de courgettes. Aucun
+   ingrédient à saison renseignée → `season` **neutre** (0,5), pas un score nul punitif. Le
+   demi-crédit distingue « disponible mais pas à son meilleur » de « hors saison pour de bon ».
 
 4. **`preference` est pondérée par la quantité.** L'**ingrédient principal** d'une recette est
    défini comme **le non-optionnel de plus forte quantité** (`recipe_ingredient.optionnel = false`,
@@ -586,6 +595,31 @@ L'équipement se déclare en deux niveaux dans le catalogue :
 | `informatif` | **Aucun effet moteur** — ustensile du lexique matériel, jamais chargé en RAM | Fouet, fourchette, spatule |
 
 Sans cette distinction, ne pas posséder de mixeur supprimerait la moitié du catalogue.
+
+### 6.5 ter — Décisions de conception (session 2, 2026-07-24 — non codées)
+
+Tranchées mais pas encore implémentées ; l'implémentation devra les suivre. Récit :
+`docs/RECAP_SESSION_2.md`.
+
+- **`variety` — trois réglages séparés.** (1) *Vitesse d'oubli* : TAU devient réglable à trois crans
+  3 / 7 / 14 jours (défaut 7). (2) *Rythme du changement* : bascule explicite (« Surprends-moi » /
+  « Mes classiques ») **brusque** (dès le repas suivant) ; dérive apprise **graduelle** (~4 repas),
+  **repoussée** avec la refonte de `habit` ; mode par défaut stable. (3) *Restes* : chaque entrée
+  d'historique porte une **origine** `choisi` / `reste` — `variety` lit tout (un reste mangé lasse),
+  `habit` ne compte que les `choisi` (un reste n'est pas une préférence). Champ à ajouter sur
+  `MealHistoryEntry` **avant** que l'historique se remplisse.
+- **Rejet absolu codé, miroir à venir.** La couche `exclusions` lit `excludedFoodIds` (exclusion
+  dure, un aliment exclu en ingrédient optionnel n'exclut pas la recette). Son miroir
+  **`requiredFoodIds`** (« je veux ça ») est décidé : filtre **dur en contexte « Aujourd'hui »**
+  seulement (exiger un aliment précis vide vite le panier — dangereux en réglage permanent). À
+  implémenter en sibling de `exclusions`.
+- **Roue des goûts (radar).** Lecture visuelle des 3 axes sensoriels dépliés en 6 pôles
+  (Salé↔Sucré · Léger↔Consistant · Chaud↔Froid), par plat et — moyennée — par profil ; même affinité
+  que `habit` apprend, pas un second calcul. Rayons cuisine/saveur = v2. Partage via carte Canvas
+  (§8.7 ARCHITECTURE).
+- **Conseils vin & modes recette/repas** — chantier de conception B, en file. Conseil vin =
+  métadonnée éditoriale (jamais dans le score, jamais nutritionnelle, masquable). Mode *recette*
+  (plat unique) vs *repas* (entrée+plat+dessert avec accords).
 
 ### 6.6 Diversification
 
@@ -1133,7 +1167,7 @@ gantt
 |---|---|---|
 | **P0** Fondations | Repo, Vite, TS strict, Vitest, `build.mjs`, import CIQUAL | `catalog.db` généré depuis 10 recettes de test ; le build échoue sur une recette invalide |
 | **P1** Domaine & nutrition | L1 + L2 + guards | Besoins énergétiques conformes à Mifflin-St Jeor sur 20 cas de référence ; 4 garde-fous couverts à 100 % |
-| **P2** Sélection | Registre de 14 couches + banc CLI | `engine:try` retourne 5 suggestions expliquées et diversifiées ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
+| **P2** Sélection | Registre de 15 couches + banc CLI | `engine:try` retourne 5 suggestions expliquées et diversifiées ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
 | **P3** Planning & API | L4 + L5 + restes + courses | Un planning 7 jours cohérent et une liste de courses agrégée, produits **entièrement en CLI** |
 | **P4** Coquille PWA | React, routage, SQLite/OPFS, consentement, sauvegarde | Installation sur iPhone et PC ; données conservées après 8 jours sans ouverture |
 | **P5** Parcours principal | Onboarding, suggestions, planning, courses, tips | Un utilisateur non accompagné planifie sa semaine et obtient sa liste |
@@ -1172,7 +1206,7 @@ le plus cher dans le plus incertain.
 
 | # | Décision | Retenu |
 |---|---|---|
-| 1 | Pipeline en dur ou registre de couches ? | **Registre de 14 couches** à contrat commun (§6.2) |
+| 1 | Pipeline en dur ou registre de couches ? | **Registre de 15 couches** à contrat commun (§6.2) |
 | 2 | « Vider le frigo » : filtre ou score ? | **Score**, avec un mode où son poids devient dominant |
 | 3 | Suivi des préférences | **Signaux uniquement**, jamais un journal alimentaire (§6.5 ARCHI) |
 | 4 | Média du lexique | **WebP animée**, boucle muette ~3 s, ~80 Ko (§8.5 ARCHI) |
