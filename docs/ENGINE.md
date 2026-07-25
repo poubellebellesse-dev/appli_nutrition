@@ -233,10 +233,10 @@ c'est un bug de sécurité : l'écran affiche une erreur, il ne dégrade pas.
 ### 5.1 `nutrition/`
 
 ```ts
-// Besoin énergétique — Mifflin-St Jeor + facteur d'activité
-computeEnergyNeeds(profile: UserProfile): Kcal
+// Besoin énergétique — Mifflin-St Jeor + facteur d'activité. CODÉ (P1b-2).
+computeEnergyNeeds(profile: UserProfile): Kcal | null
 
-// Apports de référence, par profil (VNR ANSES/EFSA)
+// Apports de référence, par profil (VNR ANSES/EFSA). CODÉ (P1b-2), deux modes — voir note ci-dessous.
 resolveReferenceIntakes(profile: UserProfile, catalog: Catalog): NutrientVector
 
 // Agrégation d'une recette → vecteur nutritionnel par portion
@@ -248,6 +248,26 @@ scaleRecipe(recipe: Recipe, portions: number): ScaledRecipe
 // Écart entre apports cumulés et cible restante sur la période
 computeGap(consumed: NutrientVector, target: NutrientVector): NutrientGap
 ```
+
+> **`computeEnergyNeeds` (CODÉ, `engine/nutrition/energy-needs.ts`)** : BMR de Mifflin-St Jeor ×
+> facteur d'activité (PAL). Constante de sexe **+5** (M) / **−161** (F) / **−78** pour `'NP'` — la
+> MOYENNE des deux, seule valeur qui ne range pas d'office dans une case quelqu'un qui a refusé de
+> répondre. Âge = milieu de la tranche (`AgeBracket`, union fermée désormais : `18_29`→24,
+> `30_49`→40, `50_64`→57, `65_plus`→72) ; PAL fixé par `ActivityLevel` (union fermée : `sedentaire`
+> 1.2 · `peu_actif` 1.375 · `actif` 1.55 · `tres_actif` 1.725 — pas de palier « athlète », aucune
+> tranche mineure : la VNR du catalogue est une VNR ADULTE). `tailleCm`/`poidsKg` à `null` →
+> retourne **`null`** : on ne devine jamais un gabarit corporel. N'applique NI le plancher
+> calorique (post-condition séparée, §5.2) NI `facteurPortion` (ajuste une portion SERVIE, pas un
+> besoin journalier) — deux règles qui migrent facilement par accident vers le premier endroit qui
+> parle de calories.
+>
+> **`resolveReferenceIntakes` (CODÉ, `engine/nutrition/reference-intakes.ts`), deux modes** : **VNR
+> à plat** par défaut — chaque nutriment prend directement son `vnrAdulte` — retenu dès que
+> `computeEnergyNeeds` retourne `null`. **Ré-échelonné** quand l'énergie personnalisée est
+> disponible : `ratio = besoin / vnrAdulte(énergie)` appliqué **aux seuls nutriments
+> `categorie === 'macronutriment'`** — minéraux et vitamines gardent leur VNR à plat, ce sont des
+> besoins ABSOLUS (fer, calcium, vitamine C…), pas des proportions caloriques ; manger davantage ne
+> demande pas plus de fer.
 
 `NutrientVector` est un `Float64Array` indexé par position de nutriment, **pas** un objet. Sur
 200 recettes × 40 nutriments, la différence de performance et de pression mémoire est réelle, et
@@ -270,13 +290,30 @@ assertScoringLayersNeverExclude(trace: PipelineTrace): void
 assertNoTherapeuticClaim(explanations: readonly Explanation[]): void
 ```
 
-| Garde-fou | Vérifie | Référence |
-|---|---|---|
-| `assertNoDeclaredAllergen` | Aucune suggestion ne contient un allergène déclaré | §5.2 ARCHI |
-| `assertCalorieFloor` | Aucun jour < 1 200 kcal (F) / 1 500 (H) | §6.5 ARCHI |
-| `assertCriticalLayersRan` | Les couches `critical` ont bien été exécutées | §6.3 |
-| `assertScoringLayersNeverExclude` | **Aucune** couche de score n'a réduit l'ensemble | §6.1 ARCHI · §6.3 |
-| `assertNoTherapeuticClaim` | Aucune explication ne contient le lexique banni | §6.2 ARCHI |
+| Garde-fou | Vérifie | Référence | État |
+|---|---|---|---|
+| `assertNoDeclaredAllergen` | Aucune suggestion ne contient un allergène déclaré | §5.2 ARCHI | **CODÉ** (P1a) — signature adaptée, voir note |
+| `assertCalorieFloor` | Aucun jour < 1 200 kcal (F) / 1 500 (H) | §6.5 ARCHI | signature seule (P2/P3) |
+| `assertCriticalLayersRan` | Les couches `critical` ont bien été exécutées | §6.3 | signature seule (P2/P3) |
+| `assertScoringLayersNeverExclude` | **Aucune** couche de score n'a réduit l'ensemble | §6.1 ARCHI · §6.3 | **CODÉ** (P1b-2) |
+| `assertNoTherapeuticClaim` | Aucune explication ne contient le lexique banni | §6.2 ARCHI | signature seule (P2/P3) |
+
+> **Écart assumé pour `assertNoDeclaredAllergen` (P1a)** : implémenté aujourd'hui sur
+> `(candidates: ReadonlySet<RecipeId>, catalog: Catalog, constraints: HardConstraints): void`
+> plutôt que sur la signature littérale ci-dessus (`SuggestionResult` n'existe pas encore comme
+> valeur PRODUITE — `suggestMeals` n'est pas câblé, §8). Se réaligne sur la signature ci-dessus dès
+> que `suggestMeals` sera câblé (P1c) ; seul l'appelant change, pas le garde-fou.
+>
+> **`assertScoringLayersNeverExclude` (CODÉ, `engine/guards/index.ts`) et l'extension de
+> `PipelineTrace` qu'il a rendue nécessaire.** Avant cette couche, `PipelineTrace` ne typait
+> `excludedCandidateCounts` que par `ExclusionLayerId` : une couche de SCORE ne pouvait
+> STRUCTURELLEMENT pas y figurer, donc ce garde-fou était incapable d'observer la violation qu'il
+> est censé attraper. Deux champs ont été ajoutés à `PipelineTrace` (`domain/result.ts`) :
+> `scoringCandidateCount` (nombre de candidats soumis à la passe de score) et
+> `scoringLayerCounts` (nombre de scores RENDUS, par couche de score exécutée — une couche non
+> exécutée, poids ≤ 0, n'y apparaît pas). Le garde-fou compare chaque entrée de la seconde au
+> premier : un écart, dans un sens ou l'autre, signale qu'une couche de score a réduit (ou
+> « halluciné ») l'ensemble des candidats.
 
 ```mermaid
 flowchart LR
@@ -382,15 +419,16 @@ export const LAYERS: readonly SelectionLayer[] = [
   pantryLayer,       // 0.05 — dominant en mode « vider le frigo »
   habitLayer,        // 0.00 → croît avec l'historique (§7.5)
   occasionLayer,     // 0.05 — nul hors période
+  speedLayer,        // 0.00 → relevée par l'archétype « Rapide » (§6.3 bis)
   topicLayer,        // 0.00 — nul tant qu'aucune thématique active
   costLayer,         // 0.05 — v3
 ]
 ```
 
-**16 couches au registre (6 exclusion + 10 score), dont `topic` (v2) et `cost` (v3) en réserve à
-poids nul — mais cinq couches de score réellement actives au premier lancement** : `topic`,
-`cost` et `habit` démarrent à 0, `occasion` est nul hors période. La complexité perçue n'augmente
-pas avec le nombre de couches.
+**17 couches au registre (6 exclusion + 11 score), dont `topic` (v2) et `cost` (v3) en réserve à
+poids nul — mais six couches de score réellement actives au premier lancement** : `topic`,
+`cost`, `habit` et `speed` démarrent à 0, `occasion` est nul hors période. La complexité perçue
+n'augmente pas avec le nombre de couches.
 
 > Correction de comptage (session du 2026-07-24) : la prose de ce document et d'ETAT.md disait
 > longtemps « registre de 12 couches », alors que la liste ci-dessus en énumère 14 (4 exclusion +
@@ -401,8 +439,13 @@ pas avec le nombre de couches.
 > `excludedFoodIds`) a été ajoutée — le registre est désormais à **15** (5 exclusion + 10 score).
 > Le code fait foi.
 > Mise à jour (session du 2026-07-25) : une 6ᵉ couche d'exclusion `requis` (miroir dur, lit
-> `MealContext.requiredFoodIds`) a été ajoutée — le registre est désormais à **16** (6 exclusion +
+> `MealContext.requiredFoodIds`) a été ajoutée — le registre est passé à **16** (6 exclusion +
 > 10 score). Le code fait foi.
+> Mise à jour (session du 2026-07-25, suite) : `speed` a rejoint le registre comme couche de score
+> à part entière — le registre est désormais à **17** (6 exclusion + 11 score). Voir §6.5, note ¶
+> révisée : la précédente affirmation « `speed` n'est pas une 17ᵉ couche du registre » est fausse
+> depuis cette décision. Le code (`app/src/engine/domain/layer-ids.ts`,
+> `app/src/engine/selection/index.ts`) fait foi.
 
 Les poids sont normalisés (`Σ = 1`) avant application. L'utilisateur les module via un petit jeu
 d'**archétypes nommés** — voir §6.3 bis ci-dessous, qui généralise l'idée initiale de « quatre
@@ -424,28 +467,37 @@ préréglages nommés, **jamais douze curseurs**.
 2. **Aucune couche de score ne peut réduire l'ensemble des candidats.** Vérifié par
    `assertTopicsNeverExclude`, étendu à toutes les couches `kind: 'scoring'`.
 
-### 6.3 bis — Archétypes *(proposé / à affiner — conception P1b, pas codé)*
+### 6.3 bis — Archétypes *(CODÉ, P1b-2 — mécanique moteur ; sélecteur UI reste P3)*
 
 > Généralise et remplace l'idée initiale de « quatre préréglages nommés » (§6.3, §13). Le principe
-> ne change pas : peu de choix nommés, jamais un tableau de bord de curseurs. Décision de la
-> session du 2026-07-24, détaillée dans `docs/RECAP_SESSION.md`.
+> ne change pas : peu de choix nommés, jamais un tableau de bord de curseurs. Décision de
+> conception de la session du 2026-07-24 (`docs/RECAP_SESSION.md`), **codée et noms validés par
+> l'utilisateur en session du 2026-07-25** (`app/src/engine/selection/archetypes.ts`,
+> `ArchetypeId` dans `app/src/engine/domain/archetype-ids.ts` — placé en `domain/`, pas
+> `selection/`, pour que `SuggestionRequest.archetype` puisse le référencer sans faire dépendre
+> `domain/` de `selection/`, §2/§3).
 
 Un **archétype = un vecteur de poids nommé** appliqué aux couches de **score** uniquement. Un
 archétype ne touche **jamais** les couches critiques (`allergenes` 🔒, `regime` 🔒) — elles restent
-actives et non pondérables, quel que soit l'archétype choisi (invariant §6.3).
+actives et non pondérables, quel que soit l'archétype choisi (invariant §6.3) ; la table des
+surcharges (`ARCHETYPE_WEIGHT_OVERRIDES`) est typée pour n'accepter qu'un `ScoringLayerId` en clé,
+ce qui rend une surcharge d'une couche d'exclusion une erreur de compilation plutôt qu'un cas à
+intercepter au runtime.
 
-**Jeu proposé, ~6 archétypes, noms à confirmer** :
+**Jeu CODÉ, 6 archétypes, noms validés, table des surcharges appliquées telles quelles** :
 
-| Archétype | Effet dominant |
-|---|---|
-| **Équilibre** *(défaut)* | Poids de référence du §6.5, aucune couche mise en avant |
-| **Envie** | `craving` ↑ |
-| **Découverte** | `variety` ↑ |
-| **De saison** | `season` ↑ |
-| **Mes goûts** | `preference` ↑ |
-| **Rapide** | `speed` ↑ (§6.5) |
+| Archétype | `ArchetypeId` | Surcharge (`ARCHETYPE_WEIGHT_OVERRIDES`) | Effet dominant |
+|---|---|---|---|
+| **Équilibre** *(défaut)* | `equilibre` | `{}` — aucune surcharge | Poids de référence du §6.5, aucune couche mise en avant |
+| **Envie** | `envie` | `{ craving: 0.40 }` | `craving` ↑ |
+| **Découverte** | `decouverte` | `{ variety: 0.35 }` | `variety` ↑ |
+| **De saison** | `de_saison` | `{ season: 0.30 }` | `season` ↑ |
+| **Mes goûts** | `mes_gouts` | `{ preference: 0.40 }` | `preference` ↑ |
+| **Rapide** | `rapide` | `{ speed: 0.30 }` | `speed` ↑ (§6.5) |
 
-Pas d'archétype « budget » en v1 — `cost` reste une couche de réserve pour v3 (§6.3).
+Pas d'archétype « budget » en v1 — `cost` reste une couche de réserve pour v3 (§6.3). La
+normalisation Σ = 1 déjà en place dans `runScoringPass` (§6.4) fait le reste : relever une couche
+abaisse mécaniquement la part des autres, sans recalcul manuel des overrides.
 
 **Cycle de vie** : choisi par l'utilisateur à la **première utilisation** (onboarding) et
 modifiable ensuite dans les **Paramètres** — les deux volets UI sont **P3**, hors périmètre P1b.
@@ -498,27 +550,38 @@ Ajouter une fonctionnalité, c'est **ajouter une entrée au registre** — le pi
 | `pantry` | Taux de couverture des ingrédients par `user_pantry` | 0.05 † |
 | `habit` | Quatre signaux statistiques locaux (§7.5), module aussi `variety` (précision 5) | 0.00 ‡ |
 | `occasion` | Appartenance à une occasion active dans la fenêtre de dates | 0.05 § |
-| `speed` *(proposé, nouveau)* | 1 − durée normalisée dans la fenêtre de temps demandée — plus court fait un peu mieux | **0.00** ¶ |
+| `speed` | 1 − durée normalisée dans la fenêtre de temps demandée — plus court fait un peu mieux | **0.00** ¶ |
 | `topic` | Écart aux critères des thématiques actives | **0.00** |
 | `cost` | 1 − dépassement du budget par portion (v3) | 0.05 |
 
 † `pantry` passe en **poids dominant** en mode « vider le frigo » (§10.2)
 ‡ `habit` croît avec le volume d'historique — démarrage à froid propre
 § `occasion` vaut 0 hors de la fenêtre d'une occasion activée
-¶ `speed` **n'est pas une 17ᵉ couche du registre** (le registre reste à 16, `LAYER_DESCRIPTORS`
-inchangé) — c'est un **signal de score doux**, listé ici pour la lisibilité de la table, distinct
-du filtre dur `temps` (§6.3, exclusion) ; poids nul par défaut, **activé par l'archétype
-« Rapide »** (§6.3 bis). Son rattachement précis au pipeline (couche à part entière ajoutée en
-P1b-2, ou modulation interne d'une couche existante) reste à trancher à l'implémentation.
+¶ **Tranché et CODÉ (session du 2026-07-25) : `speed` EST une couche du registre à part entière**
+(la 17ᵉ, 6 exclusion + 11 score — `LAYER_DESCRIPTORS`, `app/src/engine/selection/index.ts` ;
+implémentation `app/src/engine/selection/scoring/speed.ts`), distincte du filtre dur `temps` (§6.3,
+exclusion) ; poids nul par défaut, **activée par l'archétype « Rapide »** (§6.3 bis, poids brut
+0.30). La précédente affirmation « `speed` n'est pas une 17ᵉ couche du registre » est **fausse** et
+retirée par cette mise à jour.
 
 #### Huit précisions de calcul (session du 2026-07-24)
 
-1. **`nutri` compare au profil-cible, jamais à la consommation.** Il n'y a pas de journal
-   alimentaire (§6.5 ARCHI) : la cible est soit l'accumulateur du plan en cours dans `planWeek`
-   (l'état nutritionnel cumulé de §7.1), soit — pour une suggestion isolée hors plan — la part du
-   créneau courant dans la référence journalière (`resolveReferenceIntakes` divisée par le nombre
-   de créneaux du jour). `nutri` reste un **signal d'équilibre du plan**, jamais un compteur de ce
-   qui a été mangé.
+1. **`nutri` compare au profil-cible, jamais à la consommation, et pénalise selon le SENS du
+   nutriment (CODÉ, P1b-2).** Il n'y a pas de journal alimentaire (§6.5 ARCHI) : la cible est soit
+   l'accumulateur du plan en cours dans `planWeek` (l'état nutritionnel cumulé de §7.1, non câblé
+   à ce stade), soit — pour une suggestion isolée hors plan, cas CODÉ — la référence journalière
+   (`resolveReferenceIntakes`, §5.1) multipliée par la **part du créneau**, une table FIXE codée
+   (`MEAL_SLOT_SHARE`, `engine/selection/scoring/nutri.ts` — décision nouvelle, absente de la
+   conception initiale, qui remplace l'idée d'un partage égal entre créneaux) :
+   `petit_dejeuner` 0,25 · `dejeuner` 0,35 · `diner` 0,30 · `gouter` 0,10 (Σ = 1). L'écart lui-même
+   n'est plus symétrique comme dans une première version : la colonne `nutrient.sens`
+   (`NutrientSense` ∈ {`cible`, `plancher`, `plafond`}, union fermée — §4.2 ARCHITECTURE) dit à
+   `scoreNutri` quel côté de l'écart pénalise réellement — `cible` pénalise les deux sens (énergie,
+   macronutriments), `plancher` ne pénalise que le manque (fibres, fer, calcium, vitamine C — un
+   excès n'est jamais pire), `plafond` ne pénalise que le dépassement (sodium — être en dessous
+   n'est jamais pire). Un écart symétrique sur un plancher/plafond punirait un plat riche en fer
+   pour sa richesse, ce qui est absurde — c'est le défaut que `sens` corrige. `nutri` reste un
+   **signal d'équilibre du plan**, jamais un compteur de ce qui a été mangé.
 
 2. **`craving` est CONTEXTUEL, pas seulement pondéré.** Il passe n°1 **uniquement dans le contexte
    « Aujourd'hui »** — une suggestion ponctuelle avec une envie posée (pastilles) — et **reste à
@@ -571,12 +634,22 @@ P1b-2, ou modulation interne d'une couche existante) reste à trancher à l'impl
 #### Poids dynamiques — `craving` et `occasion` prennent la tête quand c'est pertinent
 
 Deux couches ont un **poids contextuel**, pas fixe :
-- **`craving` passe n°1** (≈ 0.40 après renormalisation) **dès qu'une envie est exprimée dans le
-  contexte « Aujourd'hui »** (pastilles Léger/Chaud/Salé…), et retombe à son socle bas sinon — y
-  compris pour tous les créneaux de `planWeek`, qui n'a pas de « moment T » (précision 2
-  ci-dessus). Sans envie, la distance à l'axe est neutre : un poids élevé permanent n'aurait aucun
-  effet.
-- **`occasion` passe n°2** pendant une occasion **activée et dans la fenêtre**, 0 hors période.
+- **`craving` passe n°1 — CODÉ (P1b-2, `runScoringPass`, `engine/selection/scoring-pass.ts`)**
+  (poids brut `CRAVING_DYNAMIC_WEIGHT = 0.50`, ≈ 0.40 après renormalisation avec les couches de
+  référence actives — la valeur *exacte* dépend des couches réellement actives, seul le fait que
+  `craving` devienne le poids le plus élevé est garanti et testé) **dès qu'une envie est
+  RÉELLEMENT exprimée dans le contexte « Aujourd'hui »** — l'objet `envie` non nul ET au moins un
+  de ses trois axes non nul (pastilles Léger/Chaud/Salé…), pas un objet d'envie vide — et retombe
+  à son socle bas sinon — y compris pour tous les créneaux de `planWeek`, qui n'a pas de « moment
+  T » (précision 2 ci-dessus). La garantie « contexte Aujourd'hui seulement » est obtenue
+  STRUCTURELLEMENT : `planWeek` (non câblé, P1c) ne remplira pas `envie` pour un jour futur, sans
+  qu'aucun drapeau explicite de contexte n'existe ni ne soit nécessaire — même principe que
+  `MealContext.requiredFoodIds` (§6.5 ter). Sans envie, la distance à l'axe est neutre : un poids
+  élevé permanent n'aurait aucun effet.
+- **`occasion` doit aussi passer n°2** pendant une occasion **activée et dans la fenêtre**, 0 hors
+  période — mais **la couche `occasion` n'est PAS implémentée** (absente de `SCORING_LAYERS`,
+  `scoring-pass.ts` ; reste une entrée de réserve dans `LAYER_DESCRIPTORS`, P2) : aucune bascule
+  n'est câblée pour elle à ce stade.
 
 Conséquence assumée : quand l'utilisateur formule une envie **dans « Aujourd'hui »**, le moment
 prime sur l'équilibre nutritionnel — `nutri` reste un score, jamais un garde-fou (le plancher
@@ -870,6 +943,28 @@ export interface Engine {
 }
 ```
 
+> **`createEngine` est désormais RÉEL (CODÉ, P1b-2), dans la limite de ce qui est implémentable à
+> ce stade.** À l'appel, il enrichit le catalogue reçu (`attachDerivedIndexes`, §6.5 précision 8 —
+> `recipeNutrients`/`recipeMainIngredient` peuplés) et expose `version` (constante
+> `ENGINE_VERSION`, voir note ci-dessous), `catalogVersion`, `layers` (`LAYER_DESCRIPTORS`) et
+> `layer(id)` — ce dernier distingue deux échecs : un id **déclaré** au registre mais pas encore
+> implémenté (P2 : `pantry`/`occasion`/`topic`/`cost`) vs un id **inconnu** (absent de
+> `LAYER_DESCRIPTORS`). Les 8 méthodes d'orchestration (`suggestMeals`, `planWeek`, `rerollSlot`,
+> `planLeftovers`, `buildShoppingList`, `analyzeWeek`, `scaleRecipe`, `suggestSubstitutions`)
+> lèvent chacune explicitement « non implémenté (P1c) » — leur câblage est le lot suivant.
+>
+> **Limite d'API constatée — point ouvert, pas tranché.** `createEngine` garde le catalogue
+> enrichi dans sa fermeture mais ne l'expose PAS : `Engine` ne rend que
+> `version`/`catalogVersion`/`layers`/`layer()`. Un appelant qui veut lancer les passes lui-même
+> (`runExclusionPass`/`runScoringPass`, §6.4) ou utiliser une couche seule (§6.8) avec un catalogue
+> enrichi doit donc rappeler `attachDerivedIndexes` lui-même — c'est ce que fait le banc CLI
+> `engine:try` (§11.3), avec le coût dupliqué documenté dans son en-tête de fichier (négligeable
+> sur le catalogue de test, réel sur un catalogue de 1000+ recettes).
+>
+> `ENGINE_VERSION` (constante `'0.1.0'`, `engine/api/index.ts`) est codée en dur, faute de
+> mécanisme d'injection depuis `package.json` — peut diverger silencieusement du numéro de version
+> réel du dépôt si l'un est mis à jour sans l'autre (dette connue, voir `docs/FICHE_REPRISE.md`).
+
 ### 8.1 Requête
 
 ```ts
@@ -878,9 +973,10 @@ export interface SuggestionRequest {
   readonly constraints: HardConstraints     // allergies · régime · exclusions
   readonly context: MealContext             // créneau · date · temps · envies · garde-manger
   readonly history: MealHistory             // N derniers jours, pour la variété
+  readonly preferences: ReadonlyMap<FoodId, number> // -2…+2, couche `preference` — CODÉ, OBLIGATOIRE, voir note
   readonly activeTopics: readonly TopicId[] // [] par défaut
   readonly weights?: Partial<ScoreWeights>
-  readonly archetype?: ArchetypeId          // P3, PROPOSÉ — voir §6.3 bis ; défaut = Équilibre
+  readonly archetype?: ArchetypeId          // §6.3 bis — CODÉ ; défaut = 'equilibre' ; sélecteur UI = P3
   readonly onlyFavorites?: boolean          // P1c, PROPOSÉ — restreint les candidats à user_favorite avant scoring
   readonly varietyMode?: 'auto' | 'surprise' | 'classiques' // P1c, PROPOSÉ — override explicite de `variety` (précision 5, §6.5)
   readonly limit?: number                   // défaut 5
@@ -888,10 +984,20 @@ export interface SuggestionRequest {
 }
 ```
 
-> `archetype`, `onlyFavorites` et `varietyMode` sont des champs **proposés dans cette session**,
-> pas encore dans le code. `onlyFavorites` restreint l'ensemble de candidats à `user_favorite`
-> **avant** le passage des couches de score — cohérent avec « favori = marque-page, n'influence
-> pas le moteur par défaut » (§10.1 : c'est un opt-in explicite, pas un poids ajouté en continu).
+> **`preferences` (CODÉ, OBLIGATOIRE — §6.5 précision 4).** `ReadonlyMap<FoodId, number>`, échelle
+> **−2 (déteste) … +2 (adore)**, lignes `user_preference` de `cible_type = 'food'` (§4.3
+> ARCHITECTURE). Ce champ manquait ENTIÈREMENT de la conception initiale : la couche `preference`
+> pesait 0,25 sans aucune source de données avant son ajout. Une Map **vide** est le cas légitime
+> « aucune préférence connue » : la couche rend alors `NEUTRAL_SCORE` pour tout candidat, plutôt
+> que de traiter l'absence comme un cas particulier côté couche.
+>
+> `onlyFavorites` et `varietyMode` restent des champs **proposés**, pas encore dans le code.
+> `onlyFavorites` restreint l'ensemble de candidats à `user_favorite` **avant** le passage des
+> couches de score — cohérent avec « favori = marque-page, n'influence pas le moteur par défaut »
+> (§10.1 : c'est un opt-in explicite, pas un poids ajouté en continu). `archetype`, lui, est
+> désormais **CODÉ** (`domain/request.ts`) — voir §6.3 bis pour la table des surcharges et
+> `selection/archetypes.ts` pour la résolution ; seul le SÉLECTEUR UI (onboarding/Paramètres) reste
+> P3.
 
 > `MealContext.requiredFoodIds` (couche `requis`, **CODÉ**) vit dans `context`, pas dans
 > `constraints` (`HardConstraints`), alors que son miroir `excludedFoodIds` y est : `WeekPlanRequest`
@@ -910,7 +1016,7 @@ export interface SuggestionResult {
 export interface ScoredSuggestion {
   readonly recipeId: RecipeId
   readonly score: number                    // 0 → 100
-  readonly breakdown: ScoreBreakdown        // par critère
+  readonly breakdown: ScoreBreakdown        // contribution PONDÉRÉE par couche, voir note ci-dessous
   readonly explanations: readonly Explanation[]
   readonly portions: number
   readonly nutrition: NutrientSummary
@@ -930,6 +1036,14 @@ export interface EngineDiagnostics {
 > `diagnostics` porte tout ce qu'il faut pour **rejouer une suggestion à l'identique**. C'est
 > l'auditabilité exigée par le principe 4 : face à une suggestion contestée, on rejoue exactement
 > le même calcul. Affiché derrière un écran développeur, jamais dans le parcours normal.
+
+> **`ScoreBreakdown` stocke la CONTRIBUTION PONDÉRÉE de chaque couche (CODÉ, `runScoringPass`,
+> `engine/selection/scoring-pass.ts`)** — poids normalisé × score brut de la couche —, **pas** son
+> score brut. Avantage direct : la somme des entrées du breakdown est EXACTEMENT le score final,
+> donc « part du score final, 0 → 1 » (§6.7) se lit DIRECTEMENT depuis le breakdown, sans recalcul
+> ni accès aux poids. Conséquence assumée : le score BRUT d'une couche n'est plus récupérable
+> depuis le breakdown seul (contribution / poids le retrouve, mais ce n'est pas ce que la structure
+> stocke) — un besoin futur de score brut (debug, tests) doit le lire ailleurs.
 
 ### 8.3 Contrat d'erreur
 
@@ -1139,15 +1253,26 @@ Un catalogue de test figé (~20 recettes) + un jeu de requêtes → sorties enre
 Toute modification du scoring fait apparaître le diff exact. C'est le filet de sécurité contre les
 régressions silencieuses de pondération.
 
-### 11.3 Banc d'essai en ligne de commande
+### 11.3 Banc d'essai en ligne de commande — **CODÉ** (`app/src/cli/try-engine.ts`, script npm `engine:try`)
 
 ```bash
 npm run engine:try -- --slot diner --temps 30 --envie "leger,chaud" --seed 42
 ```
 
-Affiche les suggestions, le détail du score et les motifs de rejet — **sans navigateur ni UI**.
+Affiche, dans l'ordre, l'en-tête de contexte effectif (avec une commande « à rejouer » où tous les
+défauts implicites sont rendus explicites), l'**entonnoir d'exclusion** (§6.8), les **poids
+appliqués** (après archétype, bascule d'envie, normalisation), puis le **classement** avec la
+contribution de chaque couche par candidat — ou le **motif de rejet dominant** si 0 candidat après
+exclusion — **sans navigateur ni UI**. Options : `--slot --date --temps --envie --archetype
+--allergies --regime --exclus --requis --pref --limit --seed`.
+
+`suggestMeals` n'étant pas encore câblé (§8, P1c), le banc appelle directement `runExclusionPass`
+puis `runScoringPass` — il n'assemble aucun `SuggestionResult`. Date par défaut **fixe en dur**
+(`2026-06-15`), jamais l'horloge système, pour rester reproductible d'un run à l'autre (§1) —
+notamment vis-à-vis de la couche `season`, sensible au mois.
+
 Cet outil permet de valider et calibrer tout le produit avant d'écrire le premier composant React.
-À construire en phase 1, il servira jusqu'à la fin du projet.
+Construit en phase 1, il servira jusqu'à la fin du projet.
 
 ---
 
@@ -1185,7 +1310,7 @@ gantt
 |---|---|---|
 | **P0** Fondations | Repo, Vite, TS strict, Vitest, `build.mjs`, import CIQUAL | `catalog.db` généré depuis 10 recettes de test ; le build échoue sur une recette invalide |
 | **P1** Domaine & nutrition | L1 + L2 + guards | Besoins énergétiques conformes à Mifflin-St Jeor sur 20 cas de référence ; 4 garde-fous couverts à 100 % |
-| **P2** Sélection | Registre de 16 couches + banc CLI | `engine:try` retourne 5 suggestions expliquées et diversifiées ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
+| **P2** Sélection | Registre de **17** couches + banc CLI | Banc CLI **outillé** (`engine:try`, CODÉ — §11.3) : affiche le classement par couches actives et les motifs de rejet. Diversification (§6.6) et explication top 3 (§6.7) restent en cours — critère de sortie complet (« 5 suggestions expliquées et diversifiées ») pas encore atteint ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
 | **P3** Planning & API | L4 + L5 + restes + courses | Un planning 7 jours cohérent et une liste de courses agrégée, produits **entièrement en CLI** |
 | **P4** Coquille PWA | React, routage, SQLite/OPFS, consentement, sauvegarde | Installation sur iPhone et PC ; données conservées après 8 jours sans ouverture |
 | **P5** Parcours principal | Onboarding, suggestions, planning, courses, tips | Un utilisateur non accompagné planifie sa semaine et obtient sa liste |
@@ -1224,7 +1349,7 @@ le plus cher dans le plus incertain.
 
 | # | Décision | Retenu |
 |---|---|---|
-| 1 | Pipeline en dur ou registre de couches ? | **Registre de 16 couches** à contrat commun (§6.2) |
+| 1 | Pipeline en dur ou registre de couches ? | **Registre de 17 couches** à contrat commun (§6.2) |
 | 2 | « Vider le frigo » : filtre ou score ? | **Score**, avec un mode où son poids devient dominant |
 | 3 | Suivi des préférences | **Signaux uniquement**, jamais un journal alimentaire (§6.5 ARCHI) |
 | 4 | Média du lexique | **WebP animée**, boucle muette ~3 s, ~80 Ko (§8.5 ARCHI) |
@@ -1245,7 +1370,7 @@ le plus cher dans le plus incertain.
 | 1 | `NutrientVector` en `Float64Array` ou objet ? | **Float64Array** — l'API reste lisible derrière des accesseurs |
 | 2 | Nombre de nutriments suivis | **~40** (macros, fibres, 12 minéraux, 13 vitamines, AG saturés/insaturés) |
 | 3 | Historique de variété | **21 jours** glissants |
-| 4 | Réglage des poids exposé ? | **Non** — un petit jeu d'**archétypes nommés** (§6.3 bis, généralise les « 4 préréglages » initiaux, proposé ~6), jamais 14 curseurs |
+| 4 | Réglage des poids exposé ? | **Non** — un petit jeu d'**archétypes nommés** (§6.3 bis, généralise les « 4 préréglages » initiaux). **Tranché et CODÉ** : 6 archétypes, noms validés. Jamais un curseur par couche |
 | 5 | Restes en v1 ou v2 ? | **v1** — structurant pour le planificateur, coûteux à ajouter après |
 | 6 | Substitutions en v1 ou v1.5 ? | **v1.5** — coût de contenu, pas de code |
 | 7 | Volume du lexique | **30-40 gestes**, dérivés automatiquement des étapes de recette |

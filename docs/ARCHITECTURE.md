@@ -115,7 +115,12 @@ peut pas détruire les données personnelles.
 ### 4.2 Tables catalogue (lecture seule)
 
 ```sql
-nutrient(id, code, nom, unite, vnr_adulte, categorie)
+nutrient(id, code, nom, unite, vnr_adulte, categorie, sens)
+    -- sens ∈ {'cible','plancher','plafond'} : RÉEL depuis P1b-2 (CHECK en base, build.mjs).
+    --   Dit à la couche `nutri` quel côté de l'écart pénalise : 'cible' punit les deux sens
+    --   (énergie, macros) ; 'plancher' ne punit que le manque (fibres, fer, calcium, vitamine C) ;
+    --   'plafond' ne punit que le dépassement (sodium). Corrige un écart auparavant SYMÉTRIQUE qui
+    --   pénalisait un plat riche en fer pour sa richesse (docs/ENGINE.md §6.5 précision 1).
 food(id, code_ciqual, nom, groupe, saison_mois[], toute_annee)
     -- saison_mois[] + toute_annee : RÉELS depuis P1b-1 (build.mjs + loader). Deux dimensions
     --   INDÉPENDANTES et cumulables : saison_mois = pleine saison (production locale) ;
@@ -188,6 +193,9 @@ user_profile(id, tranche_age, sexe, taille_cm, poids_kg, niveau_activite,
 user_allergy(allergen_id, severite)               -- contrainte d'éviction, pas une pathologie
 user_diet(code)
 user_preference(cible_type, cible_id, score)      -- -2 (déteste) … +2 (adore)
+    -- lignes cible_type='food' : lues par SuggestionRequest.preferences (ReadonlyMap<FoodId,
+    --   number>, docs/ENGINE.md §8.1, CODÉ P1b-2) — champ OBLIGATOIRE consommé par la couche de
+    --   score `preference` (§6.5 ENGINE précision 4). Map vide = aucune préférence connue.
 user_active_topic(topic_id, active_le)            -- filtre d'affichage choisi, révocable (§5.3)
 user_favorite(recipe_id, ajoute_le)               -- marque-page rapide ; n'influence pas le moteur par défaut
 user_recipe_note(recipe_id, etape_ordre, texte, cree_le)  -- commentaire local par recette/étape
@@ -297,14 +305,24 @@ mécanique) : `docs/ENGINE.md` §6.3 bis** — décision de la session du 2026-0
 
 > Le référentiel détaillé des critères de score (nommage, formules, précisions par couche) vit
 > désormais dans `docs/ENGINE.md` §6.5, qui fait foi en cas d'écart avec la table ci-dessus —
-> notamment sur `S_envie`/`craving`, dont le poids est **contextuel** (n°1 dans « Aujourd'hui »
-> seulement, socle bas en planning semaine, §6.5 ENGINE).
+> notamment sur `S_nutri` (l'écart pénalise selon le **sens** du nutriment — `cible`/`plancher`/
+> `plafond`, §4.2 — et la cible du créneau est dérivée d'une table fixe de part par créneau, pas
+> d'un partage égal entre créneaux) et sur `S_envie`/`craving`, dont le poids est **contextuel**
+> (n°1 dans « Aujourd'hui » seulement, socle bas en planning semaine, §6.5 ENGINE).
 
 ### 5.4 Étape 3 — Diversification
 
 Renvoyer les 5 meilleurs scores produit souvent 5 variations du même plat. Correction :
-regroupement par ingrédient principal + famille de cuisine, puis sélection du meilleur
-représentant de chaque groupe (*maximal marginal relevance* simplifié).
+**pertinence marginale maximale (MMR)** — à chaque tour, on retient la recette qui maximise
+`score − λ · similarité(r, déjà retenues)`.
+
+> ⚠️ Cette esquisse décrivait auparavant un **regroupement** par ingrédient principal + famille de
+> cuisine avec un représentant par groupe. Ce n'est pas ce qui a été implémenté : `docs/ENGINE.md`
+> §6.6 spécifie une boucle MMR pondérée sur **trois** signaux (ingrédient principal 0,5 · profil
+> sensoriel 0,3 · famille de cuisine 0,2), c'est elle qui a été codée (P1c,
+> `engine/selection/{similarity,diversify}.ts`) et **c'est ENGINE.md qui fait foi**. Différence de
+> fond : le MMR arbitre en continu score contre redondance, là où un regroupement écarte d'office
+> tout un groupe même quand ses membres sont excellents.
 
 ### 5.5 Étape 4 — Explication
 

@@ -10,15 +10,20 @@
 ## 1. En une phrase
 
 Application de nutrition et de planification de repas, **100 % locale, sans IA, sans compte**,
-utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0, P1a et P1b-1 du moteur terminés, plus rang 0 (origine `choisi`/`reste` + facette `service`), `variety` à TAU réglable et la 6ᵉ couche d'exclusion `requis` livrés depuis (158 tests verts, 23 fichiers, typecheck propre) ; P1b-2 = prochaine étape. Tout est committé (4 commits).**
+utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0, P1a, P1b-1 et
+désormais P1b-2 du moteur terminés** — passe de score pondérée (`runScoringPass`), 6 archétypes
+codés et noms validés, poids dynamique de `craving`, `speed` en 17ᵉ couche du registre,
+`createEngine` réel, banc CLI `engine:try`, second garde-fou (`assertScoringLayersNeverExclude`)
+(303 tests verts, 29 fichiers, typecheck propre) ; **P1c = prochaine étape**. Tout est committé
+(6 commits depuis la dernière mise à jour de ce document).
 
 ---
 
 ## 2. Où en est-on
 
 ```
-Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── ▓▓ P1b-2 ▓▓
-  ✅          ✅            ✅           ✅              ✅                                                 ⬅ ICI (à coder)
+Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── ▓▓ P1c ▓▓
+  ✅          ✅            ✅           ✅              ✅                                                              ⬅ ICI (à coder)
 ```
 
 | Livrable | Fichier | État |
@@ -32,7 +37,8 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Code — P1a (exclusion) | `app/src/engine/selection/{allergenes,regime,temps,equipement,exclusion-pass}.ts` | ✅ Terminé (1 commit), 60 tests verts |
 | Code — P1b-1 (socle scoring) | `app/src/engine/nutrition/`, `app/src/engine/selection/scoring/` | ✅ Terminé et committé, 140 tests verts |
 | Code — rang 0 + `variety` TAU + `requis` | `app/src/engine/domain/{planning,request}.ts`, `app/src/engine/selection/scoring/variety.ts`, `app/src/engine/selection/requis.ts` | ✅ Terminé et committé, 158 tests verts (23 fichiers), typecheck propre |
-| Code — P1b-2 (passe + archétypes) | `app/src/engine/selection/` (passe de score) | ⬜ Conçu — **prochaine étape** |
+| Code — P1b-2 (passe de score + archétypes) | `app/src/engine/selection/scoring-pass.ts`, `archetypes.ts`, `app/src/engine/domain/archetype-ids.ts`, `app/src/engine/guards/index.ts`, `app/src/engine/api/index.ts`, `app/src/cli/try-engine.ts`, `app/src/engine/nutrition/energy-needs.ts`, `reference-intakes.ts` | ✅ Terminé et committé, 303 tests verts (29 fichiers), typecheck propre |
+| Code — P1c (diversification, explication, `suggestMeals`) | `app/src/engine/selection/` (diversification + explication), `app/src/engine/api/index.ts` | ⬜ **Prochaine étape** |
 
 ---
 
@@ -54,30 +60,36 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 - Mode avancé (macros) = **descriptif seul**, opt-in, jamais de compteur de reste.
 
 ### Moteur
-- **Registre de 16 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (le code
+- **Registre de 17 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (le code
   fait foi, voir `app/src/engine/domain/layer-ids.ts`). Une 5ᵉ couche d'exclusion `exclusions`
-  (rejet perso, `excludedFoodIds`) a été ajoutée en session 2, puis une 6ᵉ couche `requis` (miroir
-  dur, `MealContext.requiredFoodIds`) en session 3 — corrige aussi les anciennes mentions « 12 »
-  puis « 14 » puis « 15 ».
+  (rejet perso, `excludedFoodIds`) a été ajoutée en session 2, une 6ᵉ couche `requis` (miroir
+  dur, `MealContext.requiredFoodIds`) en session 3, puis `speed` a rejoint le registre comme 11ᵉ
+  couche de SCORE — corrige aussi les anciennes mentions « 12 » puis « 14 » puis « 15 » puis « 16 ».
   - Exclusion (6) : `allergenes` 🔒 · `regime` 🔒 · `exclusions` · `requis` · `temps` · `equipement`
-  - Score (10) : `nutri` · `preference` · `craving` · `variety` · `season` · `pantry` · `habit` ·
-    `occasion` · `topic` (v2, réserve) · `cost` (v3, réserve)
-  - `speed` **n'est pas une 17ᵉ couche** : c'est une modulation proposée de la fonction de score
-    (voir `docs/ENGINE.md` §6.5), activée par l'archétype « Rapide ».
+  - Score (11) : `nutri` · `preference` · `craving` · `variety` · `season` · `pantry` · `habit` ·
+    `occasion` · `speed` · `topic` (v2, réserve) · `cost` (v3, réserve)
+  - `speed` **EST désormais une couche du registre à part entière** (tranché et CODÉ) — poids par
+    défaut nul, relevée par l'archétype « Rapide » (`app/src/engine/selection/scoring/speed.ts`).
+    Voir `docs/ENGINE.md` §6.5.
 - **Fonction pure synchrone**, catalogue en RAM. Pas de `Date.now`/`Math.random` (PRNG à graine,
   tie-break stable par id de recette).
-- **Sécurité = post-conditions** : le moteur lève plutôt que de retourner un résultat non sûr.
+- **Sécurité = post-conditions** : le moteur lève plutôt que de retourner un résultat non sûr. Deux
+  garde-fous CODÉS (`assertNoDeclaredAllergen`, `assertScoringLayersNeverExclude`) sur cinq —
+  détail : `docs/ENGINE.md` §5.2.
 - **Anticipation sans IA** = 4 statistiques locales (couche `habit`), réversibles.
-- **Poids dynamiques** : `craving` passe **n°1** dès qu'une envie est exprimée, **uniquement dans
-  le contexte « Aujourd'hui »** (suggestion ponctuelle) ; il reste à son socle bas en `planWeek`
-  (pas de « moment T » pour les jours futurs — la semaine reste pilotée par `nutri`). Symétrie :
-  **Aujourd'hui = envie · Semaine = équilibre.** `occasion` passe **n°2** pendant une occasion
-  active (0 hors période). Détail complet : `docs/ENGINE.md` §6.5.
+- **Poids dynamiques** : `craving` passe **n°1 — CODÉ** dès qu'une envie est RÉELLEMENT exprimée,
+  **uniquement dans le contexte « Aujourd'hui »** (suggestion ponctuelle) ; il reste à son socle
+  bas en `planWeek` (pas de « moment T » pour les jours futurs — la semaine reste pilotée par
+  `nutri`). Symétrie : **Aujourd'hui = envie · Semaine = équilibre.** `occasion` **devrait** passer
+  n°2 pendant une occasion active (0 hors période) mais la couche `occasion` **n'est pas
+  implémentée**. Détail complet : `docs/ENGINE.md` §6.5.
 - **Équipement à trois niveaux** : `requis` (exclusion) · `accelere` (score) · `informatif`
   (ustensile, **n'exclut jamais** — jamais chargé par le moteur).
-- **Archétypes** (P3, conception en §6 ci-dessous) : remplacent/généralisent l'idée initiale de
+- **Archétypes — CODÉS (P1b-2), noms validés** : remplacent/généralisent l'idée initiale de
   « 4 préréglages nommés » — un vecteur de poids nommé sur les couches de score, jamais sur les
-  couches critiques. Détail : `docs/ENGINE.md` §6.3 bis.
+  couches critiques (`equilibre` défaut, `envie`, `decouverte`, `de_saison`, `mes_gouts`,
+  `rapide`). Le sélecteur UI (onboarding/Paramètres) reste **P3**. Détail : `docs/ENGINE.md`
+  §6.3 bis.
 
 ### Design
 - **5 onglets** stables v1→v2 : Aujourd'hui · Semaine · Courses · Recettes · Savoir.
@@ -139,9 +151,9 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 7 | Chiffrement | Sans objet (aucune donnée de santé collectée) |
 | 8 | **Mode cuisine** (multi-recettes, timers par étape) en v1 ou v1.5 ? | Feature nouvelle, sizeable — après le socle P0 |
 | 9 | Cible iOS : PWA seule ou Capacitor + App Store ? | **PWA** par défaut (gratuit, pas de Mac) ; Capacitor si API native |
-| 10 | Noms définitifs des **archétypes** (§ENGINE 6.3 bis) | **Proposé, à confirmer** : Équilibre · Envie · Découverte · De saison · Mes goûts · Rapide (~6, pas de « budget » en v1) |
+| ~~10~~ | Noms définitifs des **archétypes** (§ENGINE 6.3 bis) | **Fermé, tranché et CODÉ** (session du 2026-07-25) — `equilibre` (défaut) · `envie` · `decouverte` · `de_saison` · `mes_gouts` · `rapide` (`ArchetypeId`, `domain/archetype-ids.ts`) ; table des surcharges dans `selection/archetypes.ts` — §3 |
 | 11 | Token de push GitHub (pour que l'utilisateur pousse les commits Claude) | À fournir par l'utilisateur — voir `docs/RECAP_SESSION.md` § Reprendre ici |
-| 12 | Rattachement de `speed` au pipeline | 17ᵉ couche du registre ou modulation interne — à trancher en P1b-2 |
+| ~~12~~ | Rattachement de `speed` au pipeline | **Fermé, tranché et CODÉ** — `speed` EST une couche du registre à part entière (11ᵉ couche de score, poids nul par défaut, relevée par l'archétype « Rapide ») ; le registre est désormais à 17 (6 exclusion + 11 score) — §3 |
 | ~~13~~ | `requiredFoodIds` (miroir du rejet) : filtre dur ou gros bonus ? | **Fermé, tranché et CODÉ** — dur en contexte « Aujourd'hui » seulement, couche `requis` (`MealContext.requiredFoodIds`, hors de `HardConstraints`) — §3 |
 | 14 | Alcool : ingrédient de cuisine vs boisson | Ingrédient v1 (décidé) ; une boisson alcoolisée n'est jamais un aliment du repas, mais un alcool employé **comme ingrédient** est agrégé dans le calcul nutritionnel comme les autres (option A, `docs/CONCEPTION_B_VIN_REPAS.md` §1.7) ; boisson servie = article de courses |
 | 15 | Roue des goûts : rayons cuisine/saveur | v2 (v1 = 6 pôles sensoriels, gratuits) |
@@ -151,6 +163,9 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 19 | Facette `service` : facette ouverte ou colonne dédiée ? | **Tranché** — facette `recipe_facet` (`docs/CONCEPTION_B_VIN_REPAS.md` §2.3, §4) |
 | 20 | Mode repas (entrée+plat+dessert) en v1 ou v1.5 ? | **Tranché** — v1.5, le quotidien reste le mode recette (`docs/CONCEPTION_B_VIN_REPAS.md` §4) |
 | 21 | Accord vin porté par service ou par le repas entier ? | **Tranché** — porté par le plat seul, un conseil par repas (`docs/CONCEPTION_B_VIN_REPAS.md` §4) |
+| 22 | Sens de l'écart nutritionnel (`nutrient.sens`) | **Tranché et CODÉ** (P1b-2) — union fermée `cible`/`plancher`/`plafond` (§4.2 ARCHITECTURE, §6.5 ENGINE précision 1) ; corrige l'écart symétrique de `scoreNutri` qui pénalisait un dépassement (fer, fibres) comme un manque |
+| 23 | Vocabulaire de `trancheAge`/`niveauActivite` (`UserProfile`) | **Tranché et CODÉ** (P1b-2) — unions fermées `AgeBracket` (`18_29`·`30_49`·`50_64`·`65_plus`, âges représentatifs 24/40/57/72) et `ActivityLevel` (`sedentaire` 1,2 · `peu_actif` 1,375 · `actif` 1,55 · `tres_actif` 1,725) ; pas de palier athlète, aucune tranche mineure — la VNR du catalogue est ADULTE |
+| 24 | Part du créneau dans la référence journalière (couche `nutri`) | **Tranché et CODÉ** (P1b-2) — table fixe `MEAL_SLOT_SHARE` : `petit_dejeuner` 0,25 · `dejeuner` 0,35 · `diner` 0,30 · `gouter` 0,10 (Σ=1) ; décision nouvelle, absente de la conception initiale (`docs/ENGINE.md` §6.5 précision 1) |
 
 ---
 
@@ -183,7 +198,7 @@ recette invalide.
 - [x] Garde-fou `assertNoDeclaredAllergen` (§5.2 ENGINE)
 - [x] 60 tests verts
 
-### P1b — Scoring — **conception §6.5/§6.3 bis ENGINE ; P1b-1 codé et committé, lots complémentaires livrés, P1b-2 = prochaine étape (⬅ ICI)**
+### P1b — Scoring — **conception §6.5/§6.3 bis ENGINE ; P1b-1 et P1b-2 codés et committés, P1c = prochaine étape (⬅ ICI)**
 
 Conception détaillée : `docs/ENGINE.md` §6.5 et §6.3 bis, `docs/RECAP_SESSION.md`. Découpage
 retenu :
@@ -203,11 +218,36 @@ retenu :
 - [x] 6ᵉ couche d'exclusion `requis` (miroir dur d'`exclusions`, `MealContext.requiredFoodIds`)
 - [x] 158 tests verts (23 fichiers), typecheck propre ; build 76 aliments / 10 recettes
 
+### P1b-2 — Passe de score & archétypes ✅ terminé et committé
+
+- [x] `SuggestionRequest.preferences` (`ReadonlyMap<FoodId, number>`, OBLIGATOIRE, −2…+2) — la
+  couche `preference` avait un poids sans aucune source de données avant cet ajout
+- [x] `nutrient.sens` (`NutrientSense` ∈ `cible`/`plancher`/`plafond`) — `scoreNutri` n'est plus
+  symétrique : corrige la pénalisation d'un plat riche en fer pour sa richesse
+- [x] `AgeBracket`/`ActivityLevel` fermés (`UserProfile`) ; `computeEnergyNeeds` (Mifflin-St Jeor ×
+  PAL, retourne `Kcal | null`) ; `resolveReferenceIntakes` à deux modes (VNR à plat / ré-échelonné
+  aux seuls macronutriments)
+- [x] Part du créneau dans la référence journalière — table fixe `MEAL_SLOT_SHARE` (décision
+  nouvelle, couche `nutri`)
+- [x] `runScoringPass` : résolution du poids effectif (`weights` explicite > bascule `craving` >
+  archétype > `defaultWeight`), couches à poids ≤ 0 non exécutées, normalisation Σ=1, breakdown =
+  contributions PONDÉRÉES, tie-break stable par id de recette
+- [x] Second garde-fou CODÉ `assertScoringLayersNeverExclude` + extension de `PipelineTrace`
+  (`scoringCandidateCount`, `scoringLayerCounts`) — sans elle le garde-fou ne pouvait pas observer
+  la violation qu'il devait attraper
+- [x] `createEngine` réel (`attachDerivedIndexes` à l'init, `version`/`catalogVersion`/`layers`/
+  `layer(id)`) ; les 8 méthodes d'orchestration lèvent « non implémenté (P1c) »
+- [x] 6 archétypes CODÉS, noms validés (`selection/archetypes.ts`, `domain/archetype-ids.ts`)
+- [x] `speed` rejoint le registre comme 11ᵉ couche de score (17 couches au total)
+- [x] Bascule dynamique de `craving` (poids brut 0.50, ≈0.40 normalisé, envie RÉELLEMENT exprimée)
+- [x] Banc CLI `engine:try` (`app/src/cli/try-engine.ts`)
+- [x] 303 tests verts (29 fichiers), typecheck propre
+
 | Sous-étape | Contenu |
 |---|---|
 | ✅ **P1b-1** | Prérequis données (`food.saison_mois` + flag « toute l'année/staple », §ARCHI 4.2) + index calculés à l'**init du moteur** (`recipeNutrients`, `recipeMainIngredient`, dans `engine/nutrition/`) + les 7 fonctions de score (`nutri` · `preference` · `craving` · `season` · `variety` + `speed` + `habit` minimal) + tests unitaires |
-| **P1b-2** ⬅ prochaine étape | Passe de score pondérée (`runScoringPass`) + les 6 archétypes (proposé, §ENGINE 6.3 bis) + poids dynamiques contextuels (craving/occasion) + tie-break déterministe par id + CLI de scores |
-| **P1c** | Diversification (MMR) + explication (top 3) + `suggestMeals` bout-en-bout + flags `onlyFavorites`/`varietyMode` + `suggestAlternatives` |
+| ✅ **P1b-2** | Passe de score pondérée (`runScoringPass`) + les 6 archétypes CODÉS (§ENGINE 6.3 bis) + poids dynamique CODÉ de `craving` (`occasion` reste non câblée, couche absente) + tie-break déterministe par id + banc CLI `engine:try` |
+| **P1c** ⬅ prochaine étape | Diversification (MMR) + explication (top 3) + `suggestMeals` bout-en-bout + flags `onlyFavorites`/`varietyMode` + `suggestAlternatives` |
 
 > ⚠️ Rappel du plan (§12 ENGINE) : **ne pas écrire d'UI avant la phase P3.** Le moteur doit produire
 > des repas crédibles en ligne de commande d'abord. Une UI branchée trop tôt rend douloureux le fait
@@ -223,7 +263,7 @@ appli_nutrition/
 │  ├─ ETAT.md            ← CE FICHIER — reprise de session
 │  ├─ ARCHITECTURE.md    ← périmètre · données · cadre légal
 │  ├─ FICHE_REPRISE.md   ← ⭐ à lire en premier — état condensé + prochaines étapes
-│  ├─ ENGINE.md          ← moteur · 16 couches · API · plan de lancement
+│  ├─ ENGINE.md          ← moteur · 17 couches · API · plan de lancement
 │  ├─ DESIGN.md          ← 8 écrans · navigation · badge de preuve
 │  ├─ RECAP_SESSION.md   ← récit session 1 (conception P1b)
 │  ├─ RECAP_SESSION_2.md ← récit session 2 (P1b-1 codé, saison, contenu, 5ᵉ couche, conception variety/radar)
@@ -231,8 +271,12 @@ appli_nutrition/
 │  └─ STRATEGIE_DISTRIBUTION.md
 ├─ app/src/
 │  ├─ engine/            ← moteur TS pur (domain, guards, selection, nutrition, planning, api)
+│  │  ├─ domain/archetype-ids.ts     ← `ArchetypeId` (§ENGINE 6.3 bis)
+│  │  ├─ nutrition/energy-needs.ts   ← `computeEnergyNeeds` (Mifflin-St Jeor × PAL, `Kcal | null`)
+│  │  ├─ nutrition/reference-intakes.ts ← `resolveReferenceIntakes` (VNR à plat / ré-échelonné)
+│  │  └─ selection/{scoring-pass,archetypes}.ts ← passe de score, archétypes (P1b-2)
 │  ├─ data/              ← catalog-loader.ts (pont SQLite → Catalog)
-│  └─ cli/               ← banc d'essai CLI (`catalog:list`)
+│  └─ cli/               ← `catalog:list` + banc d'essai du moteur `engine:try` (`try-engine.ts`, §ENGINE 11.3)
 ├─ catalog/               ← sources éditables (YAML/MD) + build.mjs → catalog.db
 ├─ tests/                 ← tests d'intégration (frontières engine/, catalogue réel)
 ├─ maquete claude design/
