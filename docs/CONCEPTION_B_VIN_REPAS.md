@@ -358,7 +358,8 @@ deux recettes sur le même créneau.
 
 ```sql
 meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille)
-    -- service : NULL en mode recette (un plat unique), sinon 'entree' | 'plat' | 'dessert'
+    -- service : NULL en mode recette (un plat unique), sinon 'entree' | 'plat' | 'dessert' |
+    --   'accompagnement' — même vocabulaire que la facette `service` (§2.3) et que `CourseKind`
     -- la clé s'étend à (plan_id, date, creneau, service)
 ```
 

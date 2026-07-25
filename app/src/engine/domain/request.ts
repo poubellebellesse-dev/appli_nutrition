@@ -32,10 +32,18 @@ export interface MealContext {
   readonly pantryFoodIds: readonly FoodId[]
 }
 
+/**
+ * Origine d'une entrée d'historique (§6.5 ter ENGINE, §2.7 CONCEPTION_B_VIN_REPAS) : `choisi` = le
+ * plat proposé a été retenu, `reste` = placement automatique d'un reste (§7.3 ENGINE). Champ
+ * OBLIGATOIRE — voir habit.ts / variety.ts pour l'asymétrie de lecture qu'il permet.
+ */
+export type MealOrigin = 'choisi' | 'reste'
+
 export interface MealHistoryEntry {
   readonly recipeId: RecipeId
   readonly date: string
   readonly creneau: MealSlot
+  readonly origine: MealOrigin
 }
 
 /** N derniers jours, pour la couche `variety` — fenêtre de 21 jours glissants par défaut (§13 ENGINE). */

@@ -19,6 +19,16 @@
 // avant d'avoir observé quoi que ce soit (§7.5 point 1 : « sans historique, le poids vaut 0 »,
 // transposé ici en signal neutre plutôt qu'en signal nul punitif, cohérent avec le reste du lot).
 //
+// ⚠️ Asymétrie avec `variety` (§6.5 ter ENGINE, §2.7 CONCEPTION_B_VIN_REPAS) : `habit` NE COMPTE
+// QUE les entrées d'origine `choisi`. Un reste mangé (`origine: 'reste'`, placement automatique
+// §7.3 ENGINE) n'est PAS une préférence exprimée — il ne doit ni faire monter l'affinité de la
+// recette concernée, ni faire baisser mécaniquement celle des autres en gonflant le dénominateur.
+// Le filtre `origine === 'choisi'` s'applique donc AVANT de fixer `validEntries` : la fréquence est
+// calculée sur les seules entrées `choisi`, jamais sur l'ensemble des entrées valides. Si aucune
+// entrée `choisi` ne subsiste (historique composé uniquement de restes, ou vide) → NEUTRAL_SCORE,
+// même démarrage à froid que l'historique réellement vide. Comparer à `variety`, qui lit TOUTES les
+// entrées quelle que soit l'origine — ne pas aligner l'un sur l'autre, l'asymétrie est volontaire.
+//
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
 import type { FoodId, MealHistory, RecipeId } from '../../domain/index.js'
@@ -35,7 +45,11 @@ export interface ScoreHabitArgs {
 }
 
 export function scoreHabit(args: ScoreHabitArgs): number {
-  const validEntries = args.history.entries.filter((entry) => entry.date <= args.today)
+  // Dénominateur restreint aux `choisi` (voir en-tête) : un reste ne compte ni au numérateur ni au
+  // dénominateur, pour ne pas faire baisser mécaniquement toutes les affinités.
+  const validEntries = args.history.entries.filter(
+    (entry) => entry.date <= args.today && entry.origine === 'choisi',
+  )
   if (validEntries.length === 0) return NEUTRAL_SCORE
 
   let matchCount = 0

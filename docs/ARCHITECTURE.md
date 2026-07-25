@@ -203,7 +203,10 @@ user_equipment(equipment_id)                      -- ce que l'utilisateur possè
 user_display(afficher_macros, occasions_actives[])  -- macros : false par défaut (§6.5)
 
 meal_plan(id, date_debut)
-meal_plan_entry(plan_id, date, creneau, recipe_id, portions, verrouille)
+meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille)
+    -- service : NULL en mode recette (un plat unique), sinon 'entree' | 'plat' | 'dessert' |
+    --   'accompagnement' (mode repas, §2.7 CONCEPTION_B_VIN_REPAS) ; la clé s'étend à
+    --   (plan_id, date, creneau, service)
 shopping_list(id, plan_id, genere_le)
 shopping_list_item(list_id, food_id, quantite_totale, unite, coche, prix_estime)
 
@@ -221,6 +224,13 @@ user_price(food_id, prix_par_kg, saisi_le)        -- v3
 consent(version_texte, accepte_le)
 app_meta(schema_version, catalog_version, dernier_export_le)
 ```
+
+**Historique — origine `choisi` / `reste`.** Chaque entrée d'historique consommée par le moteur
+(`MealHistoryEntry`) porte une origine : `choisi` (le plat proposé a été retenu) ou `reste`
+(placement automatique d'un reste, §7.3 ENGINE). La couche `variety` lit **toutes** les entrées
+quelle que soit l'origine (un reste mangé lasse autant qu'un plat choisi) ; la couche `habit` ne
+compte que les entrées `choisi` (un reste n'est pas une préférence exprimée) — §6.5 ter ENGINE,
+§2.7 CONCEPTION_B_VIN_REPAS.
 
 **Pas de chiffrement applicatif.** Aucune donnée de santé n'étant collectée, `user.db` ne contient
 que des préférences alimentaires et un gabarit corporel. Le chiffrement du système d'exploitation

@@ -4,7 +4,7 @@
 // en dépend (scaleRecipe, buildShoppingList — §8 ENGINE).
 
 import type { FoodId, RecipeId, TopicId } from './ids.js'
-import type { MealSlot, RecipeIngredient } from './catalog.js'
+import type { CourseKind, MealSlot, RecipeIngredient } from './catalog.js'
 import type { UserProfile } from './profile.js'
 import type { HardConstraints, MealHistory } from './request.js'
 import type { ScoreWeights } from './result.js'
@@ -37,6 +37,11 @@ export interface MealPlanEntry {
   readonly locked: boolean
   /** Placement automatique d'un reste (§7.3 ENGINE). */
   readonly isLeftover: boolean
+  /**
+   * `null` = mode recette (un plat unique, comportement actuel). Non-`null` = mode repas — ce
+   * créneau contient plusieurs `MealPlanEntry`, une par service (§2.1 CONCEPTION_B_VIN_REPAS).
+   */
+  readonly service: CourseKind | null
 }
 
 export interface WeekPlan {

@@ -24,6 +24,12 @@
 // `Date.now()` (§3 ENGINE — l'horloge vient de `today`). Une entrée d'historique postérieure à
 // `today` est ignorée (donnée incohérente, ne doit pas produire une ancienneté négative).
 //
+// Origine des entrées (§6.5 ter ENGINE, §2.7 CONCEPTION_B_VIN_REPAS) : `variety` lit TOUTES les
+// entrées d'historique, `choisi` comme `reste` — un reste mangé lasse tout autant qu'un plat
+// choisi, la lassitude ne se soucie pas de la raison du repas. C'est l'INVERSE de `habit`, qui ne
+// compte que les `choisi` (un reste n'est pas une préférence exprimée) — voir en-tête de habit.ts.
+// Asymétrie volontaire : ne pas « corriger » l'un en croyant aligner l'autre.
+//
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
 import type { FoodId, MealHistory, RecipeId } from '../../domain/index.js'

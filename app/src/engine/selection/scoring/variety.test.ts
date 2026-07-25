@@ -9,8 +9,8 @@ const RECIPE = 'tartiflette' as RecipeId
 const AUTRE_RECIPE = 'salade' as RecipeId
 const INGREDIENT_PRINCIPAL = 'reblochon' as FoodId
 
-function entry(recipeId: RecipeId, date: string): MealHistoryEntry {
-  return { recipeId, date, creneau: 'diner' }
+function entry(recipeId: RecipeId, date: string, origine: MealHistoryEntry['origine'] = 'choisi'): MealHistoryEntry {
+  return { recipeId, date, creneau: 'diner', origine }
 }
 
 function history(entries: readonly MealHistoryEntry[]): MealHistory {

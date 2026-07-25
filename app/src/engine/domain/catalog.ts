@@ -100,6 +100,15 @@ export type Month = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
  */
 export type MealSlot = 'petit_dejeuner' | 'dejeuner' | 'gouter' | 'diner'
 
+/**
+ * Service dans un repas composé — mode *repas* du §2.7 CONCEPTION_B_VIN_REPAS (entrée+plat+dessert,
+ * v1.5). À NE PAS CONFONDRE avec `MealSlot` ci-dessus : `MealSlot` est le CRÉNEAU de la journée
+ * (petit-déjeuner, déjeuner…), `CourseKind` est la PLACE d'un plat À L'INTÉRIEUR d'un même créneau
+ * quand celui-ci contient plusieurs recettes. Un créneau en mode recette (un plat unique, comportement
+ * actuel) n'a pas de `CourseKind` — voir `MealPlanEntry.service` (planning.ts).
+ */
+export type CourseKind = 'entree' | 'plat' | 'dessert' | 'accompagnement'
+
 export interface RecipeIngredient {
   readonly foodId: FoodId
   readonly quantiteG: Grams
