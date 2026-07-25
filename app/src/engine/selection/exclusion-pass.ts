@@ -6,7 +6,7 @@
 // rencontré = motif retenu (§6.3, §6.4 ENGINE). Point de départ : les recettes du créneau demandé
 // (`catalog.indexes.recipesBySlot`), comme le pseudo-code de §6.4.
 //
-// Portée P1a : seules les 4 couches d'exclusion sont câblées ici (`EXCLUSION_LAYERS`). Aucun
+// Portée P1a : seules les 5 couches d'exclusion sont câblées ici (`EXCLUSION_LAYERS`). Aucun
 // scoring, aucune agrégation en `SuggestionResult` — voir engine/api/index.ts (stub, P1b/P2).
 // `layers` reste paramétrable (au lieu de coder `EXCLUSION_LAYERS` en dur dans le corps de la
 // fonction) pour permettre des tests unitaires ciblés sur un sous-ensemble de couches.
@@ -17,12 +17,14 @@ import type { Catalog, RecipeId, RejectionEntry, SuggestionRequest } from '../do
 import type { CandidateSet, ExclusionLayerResult, SelectionLayer } from './index.js'
 import { allergenLayer } from './allergenes.js'
 import { dietLayer } from './regime.js'
+import { personalExclusionLayer } from './exclusions.js'
 import { timeLayer } from './temps.js'
 import { equipmentLayer } from './equipement.js'
 
 /**
  * Registre des couches d'exclusion, dans l'ordre de priorité de motif (§6.3 ENGINE) : allergènes
- * puis régime (toutes deux 🔒 `critical`), puis temps, puis équipement.
+ * puis régime (toutes deux 🔒 `critical`), puis exclusions (rejet personnel), puis temps, puis
+ * équipement.
  *
  * Chaque couche est déclarée ci-dessus avec son `Config` propre (`SelectionLayer<XConfig>`), ce
  * qui garde `configure`/`apply` entièrement typés pour qui l'utilise seule (§6.8 ENGINE). Le
@@ -36,6 +38,7 @@ import { equipmentLayer } from './equipement.js'
 export const EXCLUSION_LAYERS: readonly SelectionLayer[] = [
   allergenLayer as SelectionLayer,
   dietLayer as SelectionLayer,
+  personalExclusionLayer as SelectionLayer,
   timeLayer as SelectionLayer,
   equipmentLayer as SelectionLayer,
 ]

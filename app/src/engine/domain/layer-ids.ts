@@ -11,8 +11,13 @@
 // 12 couches", mais le bloc de code de §6.3 énumère 4 couches d'exclusion + 10 couches de score
 // = 14 entrées. Implémenté ici avec les 14 entrées listées (la liste explicite fait foi sur le
 // chiffre en prose) — voir aussi LAYER_DESCRIPTORS dans selection/index.ts.
+//
+// Registre étendu à 15 entrées (5 exclusion + 10 score) par l'ajout de la couche `exclusions`
+// (rejet personnel d'aliments, lit `HardConstraints.excludedFoodIds` — non critique, à la
+// différence d'`allergenes`/`regime`, car c'est un choix désactivable, pas une question de
+// sécurité alimentaire).
 
-export type ExclusionLayerId = 'allergenes' | 'regime' | 'temps' | 'equipement'
+export type ExclusionLayerId = 'allergenes' | 'regime' | 'exclusions' | 'temps' | 'equipement'
 
 export type ScoringLayerId =
   | 'nutri'

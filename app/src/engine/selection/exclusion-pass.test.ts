@@ -2,9 +2,9 @@
 //
 // Deux volets :
 //   1. Mécanique du pipeline (intersection successive, premier motif retenu, ordre du registre)
-//      prouvée avec des couches SYNTHÉTIQUES — indépendante de la sémantique réelle des 4
+//      prouvée avec des couches SYNTHÉTIQUES — indépendante de la sémantique réelle des 5
 //      couches, pour isoler le comportement de `runExclusionPass` lui-même.
-//   2. Câblage des 4 vraies couches via `EXCLUSION_LAYERS`, sur un petit catalogue en mémoire.
+//   2. Câblage des 5 vraies couches via `EXCLUSION_LAYERS`, sur un petit catalogue en mémoire.
 //
 // Le test sur les 10 VRAIES recettes (catalog.db, chargé via data/) vit dans
 // tests/exclusion-real-catalog.test.ts — pas ici, car ce fichier est sous engine/ et ne peut pas
@@ -18,7 +18,7 @@ import { makeCatalog, makeFood, makeIngredient, makeRecipe, makeRequest } from '
 
 /** Couche d'exclusion synthétique : rejette tout candidat dont l'id figure dans `rejects`. */
 function makeFakeExclusionLayer(
-  id: 'allergenes' | 'regime' | 'temps' | 'equipement',
+  id: 'allergenes' | 'regime' | 'exclusions' | 'temps' | 'equipement',
   rejects: ReadonlySet<string>,
   reason: string
 ): SelectionLayer {
@@ -111,9 +111,15 @@ describe('selection/exclusion-pass — mécanique du pipeline (§6.4 ENGINE, cou
   })
 })
 
-describe('selection/exclusion-pass — câblage des 4 vraies couches (EXCLUSION_LAYERS)', () => {
-  it('EXCLUSION_LAYERS contient les 4 couches, dans l’ordre de priorité de motif (§6.3 ENGINE)', () => {
-    expect(EXCLUSION_LAYERS.map((layer) => layer.id)).toEqual(['allergenes', 'regime', 'temps', 'equipement'])
+describe('selection/exclusion-pass — câblage des 5 vraies couches (EXCLUSION_LAYERS)', () => {
+  it('EXCLUSION_LAYERS contient les 5 couches, dans l’ordre de priorité de motif (§6.3 ENGINE)', () => {
+    expect(EXCLUSION_LAYERS.map((layer) => layer.id)).toEqual([
+      'allergenes',
+      'regime',
+      'exclusions',
+      'temps',
+      'equipement',
+    ])
   })
 
   it('applique allergènes puis régime puis temps sur un petit catalogue en mémoire', () => {

@@ -28,7 +28,7 @@ import { EngineSafetyError } from '../domain/index.js'
 //
 // ⚠️ Écart assumé par rapport à la signature littérale de la doc (docs/ENGINE.md §5.2 :
 // `(result: SuggestionResult, c: HardConstraints) => void`) : au P1a, `SuggestionResult` n'existe
-// pas encore comme valeur PRODUITE — aucun scoring n'est câblé (portée P1a = les 4 couches
+// pas encore comme valeur PRODUITE — aucun scoring n'est câblé (portée P1a = les 5 couches
 // d'exclusion + la passe d'exclusion, voir engine/selection/exclusion-pass.ts). Ce garde-fou est
 // donc branché directement sur la SORTIE DE LA PASSE D'EXCLUSION : l'ensemble des `RecipeId`
 // conservés, plus `Catalog` (nécessaire pour re-dériver les allergènes).
