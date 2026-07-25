@@ -159,4 +159,87 @@ describe('scoring/variety — scoreVariety', () => {
     expect(score).toBeGreaterThanOrEqual(0)
     expect(score).toBeLessThanOrEqual(1)
   })
+
+  describe('tauDays — cran réglable (§6.5 ter ENGINE)', () => {
+    // Valeurs de référence doc/ENGINE.md §6.5 ter : plat vu il y a exactement 7 jours,
+    // familiarity: 0 (le score EST la nouveauté).
+    it('TAU=3 → nouveauté ≈ 0.90 pour un plat vu il y a 7 jours', () => {
+      const score = scoreVariety({
+        recipeId: RECIPE,
+        mainIngredientId: null,
+        history: history([entry(RECIPE, '2026-07-17')]),
+        today: '2026-07-24',
+        familiarity: 0,
+        tauDays: 3,
+      })
+      expect(score).toBeCloseTo(0.9, 2)
+    })
+
+    it('TAU=7 → nouveauté ≈ 0.63 pour un plat vu il y a 7 jours', () => {
+      const score = scoreVariety({
+        recipeId: RECIPE,
+        mainIngredientId: null,
+        history: history([entry(RECIPE, '2026-07-17')]),
+        today: '2026-07-24',
+        familiarity: 0,
+        tauDays: 7,
+      })
+      expect(score).toBeCloseTo(0.63, 2)
+    })
+
+    it('TAU=14 → nouveauté ≈ 0.39 pour un plat vu il y a 7 jours', () => {
+      const score = scoreVariety({
+        recipeId: RECIPE,
+        mainIngredientId: null,
+        history: history([entry(RECIPE, '2026-07-17')]),
+        today: '2026-07-24',
+        familiarity: 0,
+        tauDays: 14,
+      })
+      expect(score).toBeCloseTo(0.39, 2)
+    })
+
+    it('non-régression : sans tauDays, résultat identique à tauDays: 7', () => {
+      const args = {
+        recipeId: RECIPE,
+        mainIngredientId: null,
+        history: history([entry(RECIPE, '2026-07-17')]),
+        today: '2026-07-24',
+        familiarity: 0,
+      }
+      const scoreParDefaut = scoreVariety(args)
+      const scoreExplicite7 = scoreVariety({ ...args, tauDays: 7 })
+      expect(scoreParDefaut).toBeCloseTo(scoreExplicite7, 10)
+    })
+
+    it('override "surprise" prime sur la modulation quel que soit le cran', () => {
+      for (const tauDays of [3, 7, 14] as const) {
+        const score = scoreVariety({
+          recipeId: RECIPE,
+          mainIngredientId: null,
+          history: history([entry(RECIPE, '2026-07-24')]), // vu aujourd'hui
+          today: '2026-07-24',
+          familiarity: 1, // demanderait normalement un bonus de familiarité
+          override: 'surprise',
+          tauDays,
+        })
+        expect(score).toBeCloseTo(0, 10) // se comporte comme familiarity=0, quel que soit tauDays
+      }
+    })
+
+    it('override "classics" prime sur la modulation quel que soit le cran', () => {
+      for (const tauDays of [3, 7, 14] as const) {
+        const score = scoreVariety({
+          recipeId: RECIPE,
+          mainIngredientId: null,
+          history: history([entry(RECIPE, '2026-07-24')]), // vu aujourd'hui
+          today: '2026-07-24',
+          familiarity: 0, // demanderait normalement de la pure nouveauté
+          override: 'classics',
+          tauDays,
+        })
+        expect(score).toBeCloseTo(1, 10) // se comporte comme familiarity=1, quel que soit tauDays
+      }
+    })
+  })
 })

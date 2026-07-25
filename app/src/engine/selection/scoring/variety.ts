@@ -7,9 +7,13 @@
 // de la recette candidate, dont l'appelant fournit déjà `mainIngredientId` directement) : cette
 // fonction reste testable sans dépendre du catalogue complet, conformément au cadrage du lot.
 //
-// `recence = exp(-ageJours / TAU)`, TAU = 7 jours (constante nommée ci-dessous — pas de lien direct
-// avec les 21 jours de la fenêtre d'historique de §13, qui borne seulement la PROFONDEUR des
-// entrées considérées, décroissance différente). Jamais vu (aucune occurrence pertinente dans
+// `recence = exp(-ageJours / TAU)`, TAU réglable à TROIS CRANS — 3, 7 ou 14 jours, défaut 7 jours
+// (§6.5 ter ENGINE, « variety — trois réglages séparés ») — via `ScoreVarietyArgs.tauDays`
+// (`VarietyTau`, union littérale fermée : le réglage a trois positions, pas un curseur libre).
+// Absent → `VARIETY_RECENCY_TAU_DAYS_DEFAULT` (constante nommée ci-dessous). Ne pas confondre avec
+// les 21 jours de la fenêtre d'historique de §13 : TAU règle la VITESSE D'OUBLI (décroissance d'un
+// plat individuel), la fenêtre de 21 jours borne la PROFONDEUR des entrées considérées — deux
+// horloges indépendantes, l'une ne change pas l'autre. Jamais vu (aucune occurrence pertinente dans
 // l'historique fourni) → recence = 0. `nouveaute = 1 - recence`.
 //
 // Modulation par `habit` (précision 5) : `familiarity` ∈ [0, 1] — 0 = pure nouveauté (le score EST
@@ -35,8 +39,11 @@
 import type { FoodId, MealHistory, RecipeId } from '../../domain/index.js'
 import { clamp01 } from './index.js'
 
-/** Constante de décroissance de la récence (§6.5 précision 5) : 7 jours. */
-const VARIETY_RECENCY_TAU_DAYS = 7
+/** Cran de vitesse d'oubli de `variety` (§6.5 ter ENGINE) — trois positions, pas un curseur libre. */
+export type VarietyTau = 3 | 7 | 14
+
+/** Cran par défaut quand `tauDays` est absent (§6.5 ter ENGINE). */
+const VARIETY_RECENCY_TAU_DAYS_DEFAULT: VarietyTau = 7
 
 const MS_PER_DAY = 86_400_000
 
@@ -60,6 +67,8 @@ export interface ScoreVarietyArgs {
   /** Résout l'ingrédient principal des entrées d'historique — voir en-tête de fichier. */
   readonly mainIngredientByRecipe?: ReadonlyMap<RecipeId, FoodId>
   readonly override?: VarietyOverride
+  /** Cran de vitesse d'oubli — 3/7/14 jours. Absent → `VARIETY_RECENCY_TAU_DAYS_DEFAULT` (7). */
+  readonly tauDays?: VarietyTau
 }
 
 export function scoreVariety(args: ScoreVarietyArgs): number {
@@ -79,7 +88,8 @@ export function scoreVariety(args: ScoreVarietyArgs): number {
     if (bestAgeJours === null || age < bestAgeJours) bestAgeJours = age
   }
 
-  const recence = bestAgeJours === null ? 0 : Math.exp(-bestAgeJours / VARIETY_RECENCY_TAU_DAYS)
+  const tauDays = args.tauDays ?? VARIETY_RECENCY_TAU_DAYS_DEFAULT
+  const recence = bestAgeJours === null ? 0 : Math.exp(-bestAgeJours / tauDays)
   const nouveaute = 1 - recence
 
   const familiarity =
