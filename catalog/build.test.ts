@@ -68,6 +68,36 @@ describe('catalog/build.mjs — build réel (10 recettes valides)', () => {
       db.close()
     }
   })
+
+  // Décision utilisateur du jour : `nutrient.sens` pilote l'asymétrie de `scoreNutri`
+  // (docs/ENGINE.md §6.5) — round-trip écrite → relue depuis la base, sur les 9 nutriments réels.
+  // Build isolé (fixture temporaire dédiée) plutôt que de dépendre du build du test précédent :
+  // chaque test de ce fichier reste indépendant de l'ordre d'exécution des autres.
+  it('écrit sens dans nutrient, relisible depuis la base — sodium plafond, fer plancher', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-sens-'))
+    const dbPath = path.join(fixtureDir, 'catalog.db')
+    try {
+      const result = runBuild(['--out', dbPath])
+      expect(result.status).toBe(0)
+
+      const db = new DatabaseSync(dbPath, { readOnly: true })
+      try {
+        const rows = db.prepare('SELECT id, sens FROM nutrient').all() as { id: string; sens: string }[]
+        expect(rows).toHaveLength(9)
+        for (const row of rows) {
+          expect(['cible', 'plancher', 'plafond']).toContain(row.sens)
+        }
+
+        const sensById = new Map(rows.map((r) => [r.id, r.sens]))
+        expect(sensById.get('sodium')).toBe('plafond')
+        expect(sensById.get('fer')).toBe('plancher')
+      } finally {
+        db.close()
+      }
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
 })
 
 describe('catalog/build.mjs — fixtures invalides isolées', () => {

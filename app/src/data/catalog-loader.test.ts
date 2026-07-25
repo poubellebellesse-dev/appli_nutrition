@@ -123,6 +123,21 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     }
   })
 
+  // Décision utilisateur du jour : `Nutrient.sens` pilote l'asymétrie de `scoreNutri`
+  // (docs/ENGINE.md §6.5) — filet contre une donnée oubliée sur le catalogue réel.
+  it('les 9 nutriments portent un sens — sodium plafond, fer plancher', () => {
+    expect(catalog.nutrients).toHaveLength(9)
+    for (const nutrient of catalog.nutrients) {
+      expect(['cible', 'plancher', 'plafond']).toContain(nutrient.sens)
+    }
+
+    const sodium = catalog.nutrients.find((n) => n.id === ('sodium' as NutrientId))
+    expect(sodium?.sens).toBe('plafond')
+
+    const fer = catalog.nutrients.find((n) => n.id === ('fer' as NutrientId))
+    expect(fer?.sens).toBe('plancher')
+  })
+
   it('topics et substitutions sont des Map vides (tables absentes de catalog.db)', () => {
     expect(catalog.topics.size).toBe(0)
     expect(catalog.substitutions.size).toBe(0)

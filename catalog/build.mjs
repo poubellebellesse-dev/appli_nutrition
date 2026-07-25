@@ -60,16 +60,20 @@ const OUT_PATH = cliArgs.out
 // vnr_adulte = valeur nutritionnelle de référence adulte, indicative
 // (proche des NRV UE — règlement 1169/2011 annexe XIII), utilisée pour
 // contextualiser un apport, jamais comme cible à atteindre (§6.5 ARCHITECTURE).
+// sens = sens de l'écart pour scoreNutri (docs/ENGINE.md §6.5, engine/domain/catalog.ts
+// NutrientSense) : 'cible' pénalise des deux côtés, 'plancher' seulement en dessous (un excès de
+// fer/fibres n'est jamais pénalisé), 'plafond' seulement au-dessus (moins de sodium n'est jamais
+// pénalisé).
 const NUTRIENTS = [
-  { key: 'energie_kcal', id: 'energie', code: 'energie', nom: 'Énergie', unite: 'kcal', vnr_adulte: 2000, categorie: 'macronutriment' },
-  { key: 'proteines_g', id: 'proteines', code: 'proteines', nom: 'Protéines', unite: 'g', vnr_adulte: 50, categorie: 'macronutriment' },
-  { key: 'lipides_g', id: 'lipides', code: 'lipides', nom: 'Lipides', unite: 'g', vnr_adulte: 70, categorie: 'macronutriment' },
-  { key: 'glucides_g', id: 'glucides', code: 'glucides', nom: 'Glucides', unite: 'g', vnr_adulte: 260, categorie: 'macronutriment' },
-  { key: 'fibres_g', id: 'fibres', code: 'fibres', nom: 'Fibres alimentaires', unite: 'g', vnr_adulte: 25, categorie: 'macronutriment' },
-  { key: 'fer_mg', id: 'fer', code: 'fer', nom: 'Fer', unite: 'mg', vnr_adulte: 14, categorie: 'mineral' },
-  { key: 'calcium_mg', id: 'calcium', code: 'calcium', nom: 'Calcium', unite: 'mg', vnr_adulte: 800, categorie: 'mineral' },
-  { key: 'sodium_mg', id: 'sodium', code: 'sodium', nom: 'Sodium', unite: 'mg', vnr_adulte: 2000, categorie: 'mineral' },
-  { key: 'vitamine_c_mg', id: 'vitamine_c', code: 'vitamine_c', nom: 'Vitamine C', unite: 'mg', vnr_adulte: 80, categorie: 'vitamine' },
+  { key: 'energie_kcal', id: 'energie', code: 'energie', nom: 'Énergie', unite: 'kcal', vnr_adulte: 2000, categorie: 'macronutriment', sens: 'cible' },
+  { key: 'proteines_g', id: 'proteines', code: 'proteines', nom: 'Protéines', unite: 'g', vnr_adulte: 50, categorie: 'macronutriment', sens: 'cible' },
+  { key: 'lipides_g', id: 'lipides', code: 'lipides', nom: 'Lipides', unite: 'g', vnr_adulte: 70, categorie: 'macronutriment', sens: 'cible' },
+  { key: 'glucides_g', id: 'glucides', code: 'glucides', nom: 'Glucides', unite: 'g', vnr_adulte: 260, categorie: 'macronutriment', sens: 'cible' },
+  { key: 'fibres_g', id: 'fibres', code: 'fibres', nom: 'Fibres alimentaires', unite: 'g', vnr_adulte: 25, categorie: 'macronutriment', sens: 'plancher' },
+  { key: 'fer_mg', id: 'fer', code: 'fer', nom: 'Fer', unite: 'mg', vnr_adulte: 14, categorie: 'mineral', sens: 'plancher' },
+  { key: 'calcium_mg', id: 'calcium', code: 'calcium', nom: 'Calcium', unite: 'mg', vnr_adulte: 800, categorie: 'mineral', sens: 'plancher' },
+  { key: 'sodium_mg', id: 'sodium', code: 'sodium', nom: 'Sodium', unite: 'mg', vnr_adulte: 2000, categorie: 'mineral', sens: 'plafond' },
+  { key: 'vitamine_c_mg', id: 'vitamine_c', code: 'vitamine_c', nom: 'Vitamine C', unite: 'mg', vnr_adulte: 80, categorie: 'vitamine', sens: 'plancher' },
 ]
 
 // Les 14 allergènes réglementaires UE (règlement 1169/2011 annexe II).
@@ -289,7 +293,8 @@ CREATE TABLE nutrient (
   nom TEXT NOT NULL,
   unite TEXT NOT NULL,
   vnr_adulte REAL,
-  categorie TEXT
+  categorie TEXT,
+  sens TEXT NOT NULL CHECK (sens IN ('cible', 'plancher', 'plafond'))
 );
 
 CREATE TABLE food (
@@ -382,9 +387,9 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
   db.exec('BEGIN TRANSACTION;')
   try {
     const insertNutrient = db.prepare(
-      'INSERT INTO nutrient (id, code, nom, unite, vnr_adulte, categorie) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO nutrient (id, code, nom, unite, vnr_adulte, categorie, sens) VALUES (?, ?, ?, ?, ?, ?, ?)'
     )
-    for (const n of NUTRIENTS) insertNutrient.run(n.id, n.code, n.nom, n.unite, n.vnr_adulte, n.categorie)
+    for (const n of NUTRIENTS) insertNutrient.run(n.id, n.code, n.nom, n.unite, n.vnr_adulte, n.categorie, n.sens)
 
     const insertAllergen = db.prepare('INSERT INTO allergen (id, code, nom) VALUES (?, ?, ?)')
     for (const a of ALLERGENS) insertAllergen.run(a.id, a.code, a.nom)

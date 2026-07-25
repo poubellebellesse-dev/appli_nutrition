@@ -38,6 +38,7 @@ import type {
   Nutrient,
   NutrientCategory,
   NutrientId,
+  NutrientSense,
   Recipe,
   RecipeEnvergure,
   RecipeFacet,
@@ -60,6 +61,7 @@ interface NutrientRow {
   readonly unite: string
   readonly vnr_adulte: number | null
   readonly categorie: string | null
+  readonly sens: string
 }
 
 interface AllergenRow {
@@ -172,6 +174,7 @@ function loadNutrients(db: DatabaseSync): Nutrient[] {
     unite: row.unite,
     vnrAdulte: row.vnr_adulte,
     categorie: row.categorie as NutrientCategory | null,
+    sens: row.sens as NutrientSense,
   }))
 }
 

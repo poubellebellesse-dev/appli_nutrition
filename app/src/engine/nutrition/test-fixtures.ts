@@ -22,8 +22,9 @@ import type {
 } from '../domain/index.js'
 import { g, min } from '../domain/index.js'
 
-export function makeNutrient(id: string): Nutrient {
-  return { id: id as NutrientId, code: id, nom: id, unite: 'g', vnrAdulte: null, categorie: null }
+/** `sens` par défaut à `'cible'` : neutre pour ces tests d'agrégation, qui ne testent pas `scoreNutri`. */
+export function makeNutrient(id: string, sens: Nutrient['sens'] = 'cible'): Nutrient {
+  return { id: id as NutrientId, code: id, nom: id, unite: 'g', vnrAdulte: null, categorie: null, sens }
 }
 
 /**

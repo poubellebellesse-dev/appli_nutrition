@@ -27,6 +27,24 @@ export type NutrientVector = Float64Array
 /** Valeurs observées dans build.mjs NUTRIENTS ; colonne `categorie` TEXT nullable en base. */
 export type NutrientCategory = 'macronutriment' | 'mineral' | 'vitamine'
 
+/**
+ * Sens de l'écart nutritionnel — colonne `nutrient.sens`, CHECK en base sur ces trois valeurs
+ * exactement (build.mjs SCHEMA_SQL) : union littérale FERMÉE, à la différence de `Texture` ou
+ * `DietCode` qui restent des `string` ouverts faute de contrainte CHECK correspondante.
+ *
+ * Pourquoi ce champ existe : `scoreNutri` (engine/selection/scoring/nutri.ts) calculait un écart
+ * SYMÉTRIQUE (`|recette − cible| / cible`) pour tous les nutriments, ce qui punit un dépassement
+ * exactement comme un manque. Absurde pour un plancher (le fer, les fibres — plus n'est jamais
+ * pire) ou un plafond (le sodium — moins n'est jamais pire) : le moteur finissait par préférer
+ * structurellement les plats nutritionnellement moyens. `sens` dit à `scoreNutri` quel côté de
+ * l'écart compte réellement :
+ *  - `cible`    : viser la valeur pile — trop et pas assez pénalisent tous les deux (macros).
+ *  - `plancher` : ne pas être EN DESSOUS — un excès ne pénalise jamais (fibres, fer, calcium,
+ *    vitamine C : plus il y en a, mieux c'est en pratique).
+ *  - `plafond`  : ne pas être AU-DESSUS — être en dessous ne pénalise jamais (sodium).
+ */
+export type NutrientSense = 'cible' | 'plancher' | 'plafond'
+
 export interface Nutrient {
   readonly id: NutrientId
   readonly code: string
@@ -34,6 +52,7 @@ export interface Nutrient {
   readonly unite: string
   readonly vnrAdulte: number | null
   readonly categorie: NutrientCategory | null
+  readonly sens: NutrientSense
 }
 
 export type AllergenCertitude = 'contient' | 'traces'
