@@ -45,6 +45,8 @@ export function makeFood(id: string, allergenes: readonly FoodAllergen[] = []): 
     groupe: 'test',
     nutrimentsPour100g: new Map(),
     allergenes,
+    saisonMois: [],
+    touteAnnee: false,
   }
 }
 
@@ -144,6 +146,7 @@ export function makeRequest(
   overrides: {
     readonly allergies?: readonly string[]
     readonly diet?: DietCode | null
+    readonly excludedFoodIds?: readonly string[]
     readonly creneau?: SuggestionRequest['context']['creneau']
     readonly tempsDisponibleMin?: number | null
   } = {}
@@ -160,7 +163,7 @@ export function makeRequest(
     constraints: {
       allergies: (overrides.allergies ?? []) as readonly AllergenId[],
       diet: overrides.diet ?? null,
-      excludedFoodIds: [],
+      excludedFoodIds: (overrides.excludedFoodIds ?? []) as readonly FoodId[],
     },
     context: {
       creneau: overrides.creneau ?? 'diner',

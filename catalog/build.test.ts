@@ -45,6 +45,14 @@ function writeMinimalFixture(dir: string): void {
   writeFileSync(path.join(dir, 'sources', 'foods.yaml'), MINIMAL_FOODS_YAML, 'utf8')
 }
 
+/** Écrit une fixture foods.yaml isolée avec un seul aliment personnalisé (P1b-1 : saisonnalité). */
+function writeFoodsFixture(dir: string, foodYamlBody: string): void {
+  mkdirSync(path.join(dir, 'sources'), { recursive: true })
+  mkdirSync(path.join(dir, 'lexicon'), { recursive: true })
+  mkdirSync(path.join(dir, 'recipes'), { recursive: true })
+  writeFileSync(path.join(dir, 'sources', 'foods.yaml'), `foods:\n${foodYamlBody}`, 'utf8')
+}
+
 describe('catalog/build.mjs — build réel (10 recettes valides)', () => {
   it('génère catalog.db et le peuple avec les 10 recettes du catalogue', () => {
     const result = runBuild([])
@@ -161,6 +169,145 @@ facettes: []
 
       expect(result.status).not.toBe(0)
       expect(result.stderr).toContain('vocabulaire banni')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+})
+
+// P1b-1 : saisonnalité (`saison_mois`) et flag staple (`toute_annee`) sur `food`
+// (docs/ARCHITECTURE.md §4.2, docs/ENGINE.md §6.5 précision 3).
+describe('catalog/build.mjs — saisonnalité des aliments (P1b-1)', () => {
+  it('écrit saison_mois et toute_annee dans food, relisibles depuis la base', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-season-ok-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_seasonal
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Aliment saisonnier de test"
+    groupe: "test"
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+    saison_mois: [6, 7, 8]
+    toute_annee: false
+  - id: fixture_staple
+    code_ciqual: "PROV-FIXTURE-2"
+    nom: "Aliment toute l'année de test"
+    groupe: "test"
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+    toute_annee: true
+  - id: fixture_unset
+    code_ciqual: "PROV-FIXTURE-3"
+    nom: "Aliment sans saisonnalité renseignée"
+    groupe: "test"
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+`
+      )
+
+      const dbPath = path.join(fixtureDir, 'catalog.db')
+      const result = runBuild(['--sources', fixtureDir, '--out', dbPath])
+      expect(result.status).toBe(0)
+
+      const db = new DatabaseSync(dbPath, { readOnly: true })
+      try {
+        const seasonal = db
+          .prepare('SELECT saison_mois, toute_annee FROM food WHERE id = ?')
+          .get('fixture_seasonal') as { saison_mois: string; toute_annee: number }
+        expect(JSON.parse(seasonal.saison_mois)).toEqual([6, 7, 8])
+        expect(seasonal.toute_annee).toBe(0)
+
+        const staple = db
+          .prepare('SELECT saison_mois, toute_annee FROM food WHERE id = ?')
+          .get('fixture_staple') as { saison_mois: string; toute_annee: number }
+        expect(JSON.parse(staple.saison_mois)).toEqual([])
+        expect(staple.toute_annee).toBe(1)
+
+        // Ni saison_mois ni toute_annee renseignés → défaut neutre ([] / false), pas une erreur.
+        const unset = db
+          .prepare('SELECT saison_mois, toute_annee FROM food WHERE id = ?')
+          .get('fixture_unset') as { saison_mois: string; toute_annee: number }
+        expect(JSON.parse(unset.saison_mois)).toEqual([])
+        expect(unset.toute_annee).toBe(0)
+      } finally {
+        db.close()
+      }
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it.each([
+    ['0 (hors plage)', '[0]'],
+    ['13 (hors plage)', '[13]'],
+    ['6.5 (non entier)', '[6.5]'],
+  ])('échoue (exit != 0) sur un mois invalide : %s', (_label, monthsLiteral) => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-season-invalid-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_bad_month
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Aliment de test"
+    groupe: "test"
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+    saison_mois: ${monthsLiteral}
+`
+      )
+
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+
+      expect(result.status).not.toBe(0)
+      expect(result.stderr).toContain('fixture_bad_month')
+      expect(result.stderr).toContain('saison_mois')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  // `toute_annee` (disponibilité) et `saison_mois` (pleine saison) sont deux dimensions
+  // INDÉPENDANTES : un légume de garde porte légitimement les deux. Le build doit l'accepter.
+  it('accepte le double marquage toute_annee + saison_mois (légume de garde)', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-season-both-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_garde
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Légume de garde de test"
+    groupe: "test"
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+    saison_mois: [9, 10, 11, 12, 1, 2, 3, 4]
+    toute_annee: true
+`
+      )
+
+      const dbPath = path.join(fixtureDir, 'catalog.db')
+      const result = runBuild(['--sources', fixtureDir, '--out', dbPath])
+      expect(result.status).toBe(0)
+
+      const db = new DatabaseSync(dbPath, { readOnly: true })
+      try {
+        const garde = db
+          .prepare('SELECT saison_mois, toute_annee FROM food WHERE id = ?')
+          .get('fixture_garde') as { saison_mois: string; toute_annee: number }
+        expect(JSON.parse(garde.saison_mois)).toEqual([9, 10, 11, 12, 1, 2, 3, 4])
+        expect(garde.toute_annee).toBe(1)
+      } finally {
+        db.close()
+      }
     } finally {
       rmSync(fixtureDir, { recursive: true, force: true })
     }

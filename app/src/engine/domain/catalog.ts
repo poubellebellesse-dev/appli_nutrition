@@ -6,8 +6,9 @@
 // docs/ARCHITECTURE.md §4.2.
 //
 // Écarts assumés par rapport aux documents, documentés au fil du fichier :
-//  - `food` n'a ni `sous_groupe` ni `saison_mois` dans le schéma réel (contrairement à l'esquisse
-//    de §4.2 ARCHITECTURE) : ces colonnes n'existent pas dans build.mjs. Food suit le réel.
+//  - `food` a `saison_mois` et `toute_annee` dans le schéma réel depuis P1b-1 (§4.2 ARCHITECTURE,
+//    §6.5 ENGINE précision 3), mais toujours pas `sous_groupe` (hors périmètre P1b-1) : cette
+//    colonne n'existe pas dans build.mjs. Food suit le réel.
 //  - Plusieurs champs texte (axe_texture, recipe_facet.valeur, régime) n'ont AUCUNE contrainte
 //    CHECK en base : vocabulaire ouvert, typé `string` plutôt qu'en union littérale fermée.
 //  - `topics`/`substitutions` sur Catalog n'ont pas encore de table dans catalog.db (v1.5/v2,
@@ -58,6 +59,18 @@ export interface Food {
   /** `food_nutrient`, une ligne par nutriment — regroupé en Map propre, pas en lignes SQL. */
   readonly nutrimentsPour100g: ReadonlyMap<NutrientId, number>
   readonly allergenes: readonly FoodAllergen[]
+  /**
+   * Mois de PLEINE SAISON — production locale (P1b-1, §4.2 ARCHITECTURE). Vide = saisonnalité non
+   * renseignée, ce qui exclut l'aliment du calcul de la couche `season` (staple au sens de §6.5
+   * ENGINE précision 3 : pâtes, riz, huile, sel…). Indépendant de `touteAnnee`.
+   */
+  readonly saisonMois: readonly Month[]
+  /**
+   * DISPONIBILITÉ toute l'année (rayon, conservation longue) — dimension INDÉPENDANTE de
+   * `saisonMois` : un légume de garde porte légitimement les deux. Module le crédit d'un
+   * ingrédient hors saison dans `scoreSeason`, ne l'exclut pas.
+   */
+  readonly touteAnnee: boolean
 }
 
 // --- Recettes (table `recipe` + tables liées) -------------------------------------------------
@@ -171,7 +184,7 @@ export interface CatalogIndexes {
   readonly recipesByAllergen: ReadonlyMap<AllergenId, ReadonlySet<RecipeId>>
   readonly recipesByDiet: ReadonlyMap<DietCode, ReadonlySet<RecipeId>>
   readonly recipesBySlot: ReadonlyMap<MealSlot, ReadonlySet<RecipeId>>
-  /** Pré-agrégé au build — `aggregateRecipe` n'est jamais appelée au runtime (§5.1 ENGINE). */
+  /** Calculé à l'init du moteur (`createEngine`), pas au build — `aggregateRecipe` est une fonction pure de engine/nutrition/ (§6.5 ENGINE précision 8). */
   readonly recipeNutrients: ReadonlyMap<RecipeId, NutrientVector>
   /** Pour la diversification (§6.6 ENGINE). */
   readonly recipeMainIngredient: ReadonlyMap<RecipeId, FoodId>

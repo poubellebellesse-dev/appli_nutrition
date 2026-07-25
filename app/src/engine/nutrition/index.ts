@@ -2,12 +2,16 @@
 //
 // Rôle : besoins énergétiques (Mifflin-St Jeor + activité), apports de référence, agrégation
 // nutritionnelle d'une recette, mise à l'échelle des portions, écart apport/cible. Fonctions
-// PURES, sans état. `aggregateRecipe` n'est jamais appelée au runtime : les vecteurs sont
-// pré-calculés au build et livrés dans `catalog.db` (§5.1 ENGINE) — la fonction reste ici parce
-// que c'est elle que le script de build utilisera, et parce qu'elle est testable isolément.
+// PURES, sans état.
 //
-// Zéro logique dans ce chunk : seules les signatures et les types de retour sont posés, pour que
-// l'implémentation P1 s'écrive contre un contrat déjà figé.
+// Correction (P1b-1, §6.5 précision 8) : les deux affirmations qui vivaient ici auparavant sont
+// PÉRIMÉES. `aggregateRecipe` EST appelée au runtime — une fois, à `createEngine(catalog)`, via
+// `attachDerivedIndexes` (voir derived-indexes.ts) — jamais par `catalog/build.mjs`, pour ne pas
+// coupler le script de build au moteur ; ce n'est donc plus « zéro logique » dans ce chunk.
+// `computeRecipeNutrients` et `computeRecipeMainIngredient` peuplent
+// `CatalogIndexes.recipeNutrients` / `recipeMainIngredient` (jusqu'ici des `Map` vides posées par
+// `data/catalog-loader.ts`) ; `attachDerivedIndexes` assemble le tout dans un nouveau `Catalog`
+// immuable — c'est cette fonction que `createEngine` appellera en P1b-2 (non câblé ici).
 //
 // Dépendances autorisées : domain/ uniquement (§2 ENGINE : NUT --> DOM).
 
@@ -43,3 +47,12 @@ export type AggregateRecipe = (recipe: Recipe, catalog: Catalog) => NutrientVect
 export type ScaleRecipe = (recipe: Recipe, portions: number) => ScaledRecipe
 
 export type ComputeGap = (consumed: NutrientVector, target: NutrientVector) => NutrientGap
+
+// --- Index dérivés du catalogue — implémentation P1b-1 (§6.5 précision 8) ---------------------
+// Réexportés ici pour offrir une surface unique `engine/nutrition`, à l'identique de la
+// convention `engine/selection` (voir selection/index.ts).
+
+export { aggregateRecipe } from './aggregation.js'
+export { computeRecipeNutrients } from './recipe-nutrients.js'
+export { computeRecipeMainIngredient } from './main-ingredient.js'
+export { attachDerivedIndexes } from './derived-indexes.js'

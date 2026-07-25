@@ -25,6 +25,8 @@ function food(id: string, allergenId: string | null): Food {
     groupe: 'test',
     nutrimentsPour100g: new Map(),
     allergenes: allergenId ? [{ allergenId: allergenId as AllergenId, certitude: 'contient' }] : [],
+    saisonMois: [],
+    touteAnnee: false,
   }
 }
 

@@ -196,6 +196,23 @@ function validateCatalog({ foods, lexicon, recipes }) {
         errors.push(`Aliment '${food.id}' : certitude d'allergène invalide '${allergene.certitude}'`)
       }
     }
+
+    // Saisonnalité (P1b-1, docs/ARCHITECTURE.md §4.2, docs/ENGINE.md §6.5 précision 3).
+    // Ni `saison_mois` ni `toute_annee` renseignés n'est PAS une erreur : défaut neutre
+    // ([] / false), traité comme « saisonnalité non renseignée » par la couche `season`.
+    const saisonMois = food.saison_mois ?? []
+    for (const mois of saisonMois) {
+      if (!Number.isInteger(mois) || mois < 1 || mois > 12) {
+        errors.push(`Aliment '${food.id}' : mois de saison_mois invalide '${mois}' (doit être un entier de 1 à 12)`)
+      }
+    }
+    // `toute_annee` et `saison_mois` sont DEUX DIMENSIONS INDÉPENDANTES, pas un choix
+    // exclusif : `toute_annee` dit la DISPONIBILITÉ (rayon, conservation), `saison_mois` dit
+    // la PLEINE SAISON (goût, production locale). Une carotte est les deux à la fois — dispo
+    // toute l'année ET de pleine saison de septembre à avril. Les cumuler est donc valide et
+    // attendu ; c'est la couche `season` qui les combine en crédits (voir
+    // engine/selection/scoring/season.ts). Un aliment SANS `saison_mois` est un staple au sens
+    // de docs/ENGINE.md §6.5 précision 3 : exclu du calcul de saison.
   }
 
   // --- Lexique ---
@@ -279,7 +296,9 @@ CREATE TABLE food (
   id TEXT PRIMARY KEY,
   code_ciqual TEXT NOT NULL,
   nom TEXT NOT NULL,
-  groupe TEXT NOT NULL
+  groupe TEXT NOT NULL,
+  saison_mois TEXT NOT NULL,
+  toute_annee INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE food_nutrient (
@@ -370,7 +389,9 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
     const insertAllergen = db.prepare('INSERT INTO allergen (id, code, nom) VALUES (?, ?, ?)')
     for (const a of ALLERGENS) insertAllergen.run(a.id, a.code, a.nom)
 
-    const insertFood = db.prepare('INSERT INTO food (id, code_ciqual, nom, groupe) VALUES (?, ?, ?, ?)')
+    const insertFood = db.prepare(
+      'INSERT INTO food (id, code_ciqual, nom, groupe, saison_mois, toute_annee) VALUES (?, ?, ?, ?, ?, ?)'
+    )
     const insertFoodNutrient = db.prepare(
       'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g) VALUES (?, ?, ?)'
     )
@@ -379,7 +400,14 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
     )
     const nutrientByKey = new Map(NUTRIENTS.map((n) => [n.key, n.id]))
     for (const food of foods) {
-      insertFood.run(food.id, food.code_ciqual, food.nom, food.groupe)
+      insertFood.run(
+        food.id,
+        food.code_ciqual,
+        food.nom,
+        food.groupe,
+        JSON.stringify(food.saison_mois ?? []),
+        food.toute_annee ? 1 : 0
+      )
       for (const [key, valeur] of Object.entries(food.nutriments ?? {})) {
         insertFoodNutrient.run(food.id, nutrientByKey.get(key), valeur)
       }

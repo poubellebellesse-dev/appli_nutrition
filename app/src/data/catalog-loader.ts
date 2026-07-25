@@ -9,10 +9,10 @@
 // Écarts assumés, à corriger quand le pipeline amont évoluera :
 //  - `Catalog.version` : aucune table de version dans catalog.db aujourd'hui → valeur figée
 //    ci-dessous. À raccorder à une vraie colonne quand build.mjs en écrira une.
-//  - `CatalogIndexes.recipeNutrients` / `recipeMainIngredient` : Map vides. Leur calcul
-//    (`aggregateRecipe`, §5.1 ENGINE.md) est une fonction ENGINE appelée par le build ; ni
-//    build.mjs (chunks 1-2) ni ce loader ne la calculent aujourd'hui, et catalog.db ne stocke
-//    pas ces valeurs pré-agrégées. Les calculer ici dupliquerait de la logique moteur dans data/.
+//  - `CatalogIndexes.recipeNutrients` / `recipeMainIngredient` : Map vides ici. Leur calcul
+//    (`aggregateRecipe`, §6.5 ENGINE.md précision 8) est une fonction PURE de `engine/nutrition/`
+//    exécutée à `createEngine(catalog)`, pas au build ni dans ce loader — pour ne pas coupler
+//    data/ ni build.mjs au moteur. Peupler ces deux Map est la responsabilité de l'init moteur.
 //  - `topics` / `substitutions` : Map vides — tables absentes de catalog.db (voir l'en-tête de
 //    engine/domain/catalog.ts).
 //  - `recipesByAllergen` : un allergène "touche" une recette dès qu'il apparaît sur un de ses
@@ -73,6 +73,8 @@ interface FoodRow {
   readonly code_ciqual: string
   readonly nom: string
   readonly groupe: string
+  readonly saison_mois: string
+  readonly toute_annee: number
 }
 
 interface FoodNutrientRow {
@@ -209,6 +211,8 @@ function loadFoods(db: DatabaseSync): Map<FoodId, Food> {
       groupe: row.groupe,
       nutrimentsPour100g,
       allergenes,
+      saisonMois: parseJsonArray<Month>(row.saison_mois),
+      touteAnnee: row.toute_annee !== 0,
     })
   }
   return map
