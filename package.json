@@ -8,7 +8,8 @@
     "build": "node --experimental-sqlite catalog/build.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "catalog:list": "tsx app/src/cli/list-recipes.ts"
+    "catalog:list": "tsx app/src/cli/list-recipes.ts",
+    "engine:try": "tsx app/src/cli/try-engine.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
