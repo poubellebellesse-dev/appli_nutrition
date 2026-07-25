@@ -7,9 +7,9 @@
 // aurait de toute façon déjà exclu ces recettes en amont si `temps` est actif). Fenêtre `null` ou
 // ≤ 0 → NEUTRAL_SCORE (rien à comparer, couche inerte).
 //
-// Rappel (§6.5 note ¶) : `speed` n'est pas une 16ᵉ couche du registre (`LAYER_DESCRIPTORS` reste à
-// 15 entrées depuis l'ajout de `exclusions`, non touché ici) — poids par défaut 0, activé seulement
-// par l'archétype « Rapide » (P1b-2). Son rattachement précis au pipeline (couche à part entière
+// Rappel (§6.5 note ¶) : `speed` n'est pas une 17ᵉ couche du registre (`LAYER_DESCRIPTORS` compte
+// désormais 16 entrées depuis l'ajout de `requis`, non touché ici) — poids par défaut 0, activé
+// seulement par l'archétype « Rapide » (P1b-2). Son rattachement précis au pipeline (couche à part entière
 // vs. modulation interne d'une couche existante) reste ouvert, non tranché par ce lot.
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.

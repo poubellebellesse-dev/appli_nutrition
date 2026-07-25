@@ -30,6 +30,17 @@ export interface MealContext {
   readonly envie: CravingAxes | null
   /** Mode « vider le frigo » (§10.2 ENGINE). */
   readonly pantryFoodIds: readonly FoodId[]
+  /**
+   * Filtre DUR « je veux ça » (§6.5 ter ENGINE) — lu par la couche `requis`, miroir dur
+   * d'`excludedFoodIds`. Volontairement ICI et pas dans `HardConstraints`, alors même
+   * qu'`excludedFoodIds` (son miroir) y est : la décision §6.5 ter est un filtre dur en contexte
+   * *Aujourd'hui* SEULEMENT — exiger un aliment précis vide vite le panier de recettes, ce serait
+   * dangereux en réglage permanent. `WeekPlanRequest` (domain/planning.ts) ne contient pas de
+   * `MealContext` : placer le champ ici rend l'exigence STRUCTURELLEMENT inexprimable pour un plan
+   * de semaine, plutôt que de compter sur la discipline de l'appelant. L'asymétrie avec
+   * `excludedFoodIds` (réglage durable → `HardConstraints`) est VOLONTAIRE, pas un oubli.
+   */
+  readonly requiredFoodIds: readonly FoodId[]
 }
 
 /**

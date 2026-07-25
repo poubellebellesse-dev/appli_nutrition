@@ -2,9 +2,9 @@
 //
 // Deux volets :
 //   1. Mécanique du pipeline (intersection successive, premier motif retenu, ordre du registre)
-//      prouvée avec des couches SYNTHÉTIQUES — indépendante de la sémantique réelle des 5
+//      prouvée avec des couches SYNTHÉTIQUES — indépendante de la sémantique réelle des 6
 //      couches, pour isoler le comportement de `runExclusionPass` lui-même.
-//   2. Câblage des 5 vraies couches via `EXCLUSION_LAYERS`, sur un petit catalogue en mémoire.
+//   2. Câblage des 6 vraies couches via `EXCLUSION_LAYERS`, sur un petit catalogue en mémoire.
 //
 // Le test sur les 10 VRAIES recettes (catalog.db, chargé via data/) vit dans
 // tests/exclusion-real-catalog.test.ts — pas ici, car ce fichier est sous engine/ et ne peut pas
@@ -18,7 +18,7 @@ import { makeCatalog, makeFood, makeIngredient, makeRecipe, makeRequest } from '
 
 /** Couche d'exclusion synthétique : rejette tout candidat dont l'id figure dans `rejects`. */
 function makeFakeExclusionLayer(
-  id: 'allergenes' | 'regime' | 'exclusions' | 'temps' | 'equipement',
+  id: 'allergenes' | 'regime' | 'exclusions' | 'requis' | 'temps' | 'equipement',
   rejects: ReadonlySet<string>,
   reason: string
 ): SelectionLayer {
@@ -111,14 +111,33 @@ describe('selection/exclusion-pass — mécanique du pipeline (§6.4 ENGINE, cou
   })
 })
 
-describe('selection/exclusion-pass — câblage des 5 vraies couches (EXCLUSION_LAYERS)', () => {
-  it('EXCLUSION_LAYERS contient les 5 couches, dans l’ordre de priorité de motif (§6.3 ENGINE)', () => {
+describe('selection/exclusion-pass — câblage des 6 vraies couches (EXCLUSION_LAYERS)', () => {
+  it('EXCLUSION_LAYERS contient les 6 couches, dans l’ordre de priorité de motif (§6.3 ENGINE)', () => {
     expect(EXCLUSION_LAYERS.map((layer) => layer.id)).toEqual([
       'allergenes',
       'regime',
       'exclusions',
+      'requis',
       'temps',
       'equipement',
+    ])
+  })
+
+  it('une recette rejetable à la fois par `exclusions` et par `requis` porte le motif d’`exclusions` (priorité au premier motif rencontré)', () => {
+    const brocoli = makeFood('brocoli')
+    const tomate = makeFood('tomate')
+    const commonOpts = { tempsPrepMin: 5, tempsCuissonMin: 5 }
+    // Contient l'aliment exclu (brocoli) et ne contient PAS l'aliment requis (tomate) :
+    // rejetable par les deux couches — `exclusions` doit gagner (elle précède `requis`, §6.3).
+    const recette = makeRecipe('double_rejet', { ...commonOpts, ingredients: [makeIngredient('brocoli')] })
+    const catalog = makeCatalog([recette], [brocoli, tomate])
+    const req = makeRequest({ excludedFoodIds: ['brocoli'], requiredFoodIds: ['tomate'] })
+
+    const { candidates, rejections } = runExclusionPass(catalog, req)
+
+    expect(candidates.size).toBe(0)
+    expect(rejections).toEqual([
+      { recipeId: recette.id, layerId: 'exclusions', reason: expect.stringContaining('brocoli') },
     ])
   })
 

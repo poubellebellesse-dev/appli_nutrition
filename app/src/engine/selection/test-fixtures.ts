@@ -147,6 +147,7 @@ export function makeRequest(
     readonly allergies?: readonly string[]
     readonly diet?: DietCode | null
     readonly excludedFoodIds?: readonly string[]
+    readonly requiredFoodIds?: readonly string[]
     readonly creneau?: SuggestionRequest['context']['creneau']
     readonly tempsDisponibleMin?: number | null
   } = {}
@@ -171,6 +172,7 @@ export function makeRequest(
       tempsDisponibleMin: overrides.tempsDisponibleMin == null ? null : min(overrides.tempsDisponibleMin),
       envie: null,
       pantryFoodIds: [],
+      requiredFoodIds: (overrides.requiredFoodIds ?? []) as readonly FoodId[],
     },
     history: { windowDays: 21, entries: [] },
     activeTopics: [],

@@ -16,8 +16,13 @@
 // (rejet personnel d'aliments, lit `HardConstraints.excludedFoodIds` — non critique, à la
 // différence d'`allergenes`/`regime`, car c'est un choix désactivable, pas une question de
 // sécurité alimentaire).
+//
+// Registre étendu à 16 entrées (6 exclusion + 10 score) par l'ajout de la couche `requis` (miroir
+// dur d'`exclusions` — « je veux ça » plutôt que « je ne veux pas ça », lit
+// `MealContext.requiredFoodIds`, pas `HardConstraints` — voir domain/request.ts et
+// selection/requis.ts).
 
-export type ExclusionLayerId = 'allergenes' | 'regime' | 'exclusions' | 'temps' | 'equipement'
+export type ExclusionLayerId = 'allergenes' | 'regime' | 'exclusions' | 'requis' | 'temps' | 'equipement'
 
 export type ScoringLayerId =
   | 'nutri'

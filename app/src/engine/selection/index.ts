@@ -4,12 +4,12 @@
 // partageant un contrat commun (SelectionLayer). Deux natures ne doivent jamais être confondues
 // (§6.1 ENGINE) : EXCLUSION retire des candidats (intersection), SCORE ne retire rien et
 // repondère (somme pondérée). LAYER_DESCRIPTORS (ci-dessous) ne porte que des métadonnées pour
-// les 15 couches du registre complet — les 10 couches de score restent NON implémentées (P2).
+// les 16 couches du registre complet — les 10 couches de score restent NON implémentées (P2).
 //
-// P1a (implémenté ici) : les 5 couches d'EXCLUSION (allergenes, regime, exclusions, temps,
-// equipement) et la passe d'exclusion qui les enchaîne (§6.4 ENGINE) — voir allergenes.ts,
-// regime.ts, exclusions.ts, temps.ts, equipement.ts, exclusion-pass.ts, réexportés plus bas pour
-// offrir une surface unique `engine/selection`.
+// P1a (implémenté ici) : les 6 couches d'EXCLUSION (allergenes, regime, exclusions, requis,
+// temps, equipement) et la passe d'exclusion qui les enchaîne (§6.4 ENGINE) — voir allergenes.ts,
+// regime.ts, exclusions.ts, requis.ts, temps.ts, equipement.ts, exclusion-pass.ts, réexportés plus
+// bas pour offrir une surface unique `engine/selection`.
 //
 // Dépendances autorisées : domain/ (§2 ENGINE : SEL --> DOM). LayerId/LayerKind sont déclarés
 // dans domain/ (pas ici) pour que guards/, qui ne connaît QUE domain/, puisse typer
@@ -74,6 +74,9 @@ export interface LayerDescriptor {
 // Registre étendu à 15 entrées (5 exclusion + 10 score) par l'ajout de `exclusions` (rejet
 // personnel d'aliments, `HardConstraints.excludedFoodIds` — voir exclusions.ts).
 //
+// Registre étendu à 16 entrées (6 exclusion + 10 score) par l'ajout de `requis` (miroir dur
+// d'`exclusions`, `MealContext.requiredFoodIds` — voir requis.ts).
+//
 // L'ordre suit §6.3 : pour l'exclusion, l'ordre encode la priorité de MOTIF affiché en cas de
 // rejets multiples (§6.3 "Sur l'ordre des couches") ; pour le score, l'ordre est indifférent
 // (seuls les poids comptent, §6.3).
@@ -84,6 +87,7 @@ export const LAYER_DESCRIPTORS: readonly LayerDescriptor[] = [
   { id: 'allergenes', kind: 'exclusion', critical: true, defaultWeight: 0 }, // 🔒 indésactivable
   { id: 'regime', kind: 'exclusion', critical: true, defaultWeight: 0 }, // 🔒 indésactivable
   { id: 'exclusions', kind: 'exclusion', critical: false, defaultWeight: 0 }, // rejet personnel d'aliments
+  { id: 'requis', kind: 'exclusion', critical: false, defaultWeight: 0 }, // miroir dur, contexte Aujourd'hui seulement (§6.5 ter)
   { id: 'temps', kind: 'exclusion', critical: false, defaultWeight: 0 },
   { id: 'equipement', kind: 'exclusion', critical: false, defaultWeight: 0 }, // seulement l'équipement `requis` (§6.5 ENGINE)
 
@@ -117,6 +121,8 @@ export { dietLayer } from './regime.js'
 export type { DietLayerConfig } from './regime.js'
 export { personalExclusionLayer } from './exclusions.js'
 export type { FoodExclusionLayerConfig } from './exclusions.js'
+export { requiredFoodLayer } from './requis.js'
+export type { RequiredFoodLayerConfig } from './requis.js'
 export { timeLayer } from './temps.js'
 export type { TimeLayerConfig } from './temps.js'
 export { equipmentLayer } from './equipement.js'
