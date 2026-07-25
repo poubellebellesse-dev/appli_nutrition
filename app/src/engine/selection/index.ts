@@ -19,6 +19,11 @@
 // le 2026-07-25 (poids par défaut nul, relevée par l'archétype « Rapide » — voir archetypes.ts,
 // réexporté plus bas également).
 //
+// Diversification (§6.6 ENGINE, session du 2026-07-25) : POST-traitement après le classement, ni
+// une couche d'exclusion ni une couche de score (n'entre donc pas dans SCORING_LAYERS ni
+// LAYER_DESCRIPTORS) — voir similarity.ts (`similarity`, `buildSimilarityProfiles`) et
+// diversify.ts (`diversify`, MMR), réexportés plus bas.
+//
 // Dépendances autorisées : domain/ (§2 ENGINE : SEL --> DOM). LayerId/LayerKind/ArchetypeId sont
 // déclarés dans domain/ (pas ici) pour que guards/, qui ne connaît QUE domain/, puisse typer
 // PipelineTrace sans dépendre de selection/ — voir le commentaire dans domain/layer-ids.ts (même
@@ -182,3 +187,14 @@ export type { RankedCandidate, ScoringPassResult } from './scoring-pass.js'
 
 export type { ArchetypeId } from './archetypes.js'
 export { ARCHETYPE_WEIGHT_OVERRIDES, DEFAULT_ARCHETYPE, archetypeWeightOverride } from './archetypes.js'
+
+// ------------------------------------------------------------------------------------------
+// Similarité entre recettes & diversification par pertinence marginale maximale (§6.6 ENGINE) —
+// post-traitement APRÈS le classement de `rankScoredCandidates`, ni exclusion ni score : voir
+// similarity.ts / diversify.ts pour le détail. Réexportées ici pour la même surface unique.
+// ------------------------------------------------------------------------------------------
+
+export { SIMILARITY_WEIGHT_MAIN_INGREDIENT, SIMILARITY_WEIGHT_SENSORY, SIMILARITY_WEIGHT_CUISINE, similarity, buildSimilarityProfiles } from './similarity.js'
+export type { RecipeSimilarityProfile } from './similarity.js'
+export { DEFAULT_MMR_LAMBDA, diversify } from './diversify.js'
+export type { DiversifiedCandidate } from './diversify.js'

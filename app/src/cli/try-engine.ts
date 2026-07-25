@@ -31,12 +31,16 @@ import { attachDerivedIndexes } from '../engine/nutrition/index.js'
 import {
   ARCHETYPE_WEIGHT_OVERRIDES,
   DEFAULT_ARCHETYPE,
+  DEFAULT_MMR_LAMBDA,
   EXCLUSION_LAYERS,
+  buildSimilarityProfiles,
+  diversify,
   rankScoredCandidates,
   runExclusionPass,
   runScoringPass,
+  similarity,
 } from '../engine/selection/index.js'
-import type { RankedCandidate } from '../engine/selection/index.js'
+import type { DiversifiedCandidate, RankedCandidate } from '../engine/selection/index.js'
 import type {
   AllergenId,
   ArchetypeId,
@@ -127,7 +131,7 @@ function scoringLayerLabel(id: ScoringLayerId): string {
 
 class CliUsageError extends Error {}
 
-const KNOWN_FLAGS = [
+const KNOWN_VALUE_FLAGS = [
   'slot',
   'date',
   'temps',
@@ -140,27 +144,44 @@ const KNOWN_FLAGS = [
   'pref',
   'limit',
   'seed',
+  'lambda',
 ] as const
 
-function readRawArgs(argv: readonly string[]): Map<string, string> {
-  const raw = new Map<string, string>()
+/** Drapeaux sans valeur (présence = vrai) — `--no-mmr` compare le classement brut au classement
+ * diversifié (§6.6 ENGINE) sans avoir à répéter une valeur, comme `--flag` en ligne de commande usuelle. */
+const KNOWN_BOOLEAN_FLAGS = ['no-mmr'] as const
+
+const KNOWN_FLAGS = [...KNOWN_VALUE_FLAGS, ...KNOWN_BOOLEAN_FLAGS]
+
+interface RawArgs {
+  readonly values: ReadonlyMap<string, string>
+  readonly flags: ReadonlySet<string>
+}
+
+function readRawArgs(argv: readonly string[]): RawArgs {
+  const values = new Map<string, string>()
+  const flags = new Set<string>()
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i]!
     if (!token.startsWith('--')) {
       throw new CliUsageError(`argument inattendu '${token}' — toutes les options s'écrivent --nom valeur`)
     }
     const name = token.slice(2)
-    if (!(KNOWN_FLAGS as readonly string[]).includes(name)) {
+    if ((KNOWN_BOOLEAN_FLAGS as readonly string[]).includes(name)) {
+      flags.add(name)
+      continue
+    }
+    if (!(KNOWN_VALUE_FLAGS as readonly string[]).includes(name)) {
       throw new CliUsageError(`option inconnue --${name} — options valides : ${KNOWN_FLAGS.map((f) => `--${f}`).join(', ')}`)
     }
     const value = argv[i + 1]
     if (value === undefined || value.startsWith('--')) {
       throw new CliUsageError(`--${name} attend une valeur`)
     }
-    raw.set(name, value)
+    values.set(name, value)
     i++
   }
-  return raw
+  return { values, flags }
 }
 
 const MEAL_SLOTS: readonly MealSlot[] = ['petit_dejeuner', 'dejeuner', 'gouter', 'diner']
@@ -344,6 +365,17 @@ function parseSeed(raw: string | undefined): number {
   return value
 }
 
+/** §6.6 ENGINE : λ n'a de sens qu'en pénalité, jamais négatif (une similarité négative n'existe
+ * pas, `similarity` reste dans [0, 1] — voir engine/selection/similarity.ts). */
+function parseLambda(raw: string | undefined): number {
+  if (raw === undefined) return DEFAULT_MMR_LAMBDA
+  const value = Number(raw)
+  if (!Number.isFinite(value) || value < 0) {
+    throw new CliUsageError(`--lambda invalide '${raw}' — nombre réel ≥ 0 attendu`)
+  }
+  return value
+}
+
 interface CliOptions {
   readonly slot: MealSlot
   readonly date: string
@@ -358,26 +390,32 @@ interface CliOptions {
   readonly preferences: ReadonlyMap<FoodId, number>
   readonly limit: number
   readonly seed: number
+  /** §6.6 ENGINE — poids de la pénalité de redondance dans la diversification MMR. Sans effet si `noMmr`. */
+  readonly lambda: number
+  /** `--no-mmr` : désactive la diversification, affiche le classement brut par score (comparaison). */
+  readonly noMmr: boolean
 }
 
 function parseOptions(argv: readonly string[], catalog: Catalog): CliOptions {
   const raw = readRawArgs(argv)
-  const { envie, tokens: envieTokens } = parseEnvie(raw.get('envie'))
+  const { envie, tokens: envieTokens } = parseEnvie(raw.values.get('envie'))
 
   return {
-    slot: parseSlot(raw.get('slot')),
-    date: parseDate(raw.get('date')),
-    tempsDisponibleMin: parseTemps(raw.get('temps')),
+    slot: parseSlot(raw.values.get('slot')),
+    date: parseDate(raw.values.get('date')),
+    tempsDisponibleMin: parseTemps(raw.values.get('temps')),
     envieTokens,
     envie,
-    archetype: parseArchetype(raw.get('archetype')),
-    allergies: parseAllergies(raw.get('allergies'), catalog),
-    regime: parseRegime(raw.get('regime')),
-    exclus: parseFoodIdList(raw.get('exclus'), catalog, 'exclus'),
-    requis: parseFoodIdList(raw.get('requis'), catalog, 'requis'),
-    preferences: parsePreferences(raw.get('pref'), catalog),
-    limit: parseLimit(raw.get('limit')),
-    seed: parseSeed(raw.get('seed')),
+    archetype: parseArchetype(raw.values.get('archetype')),
+    allergies: parseAllergies(raw.values.get('allergies'), catalog),
+    regime: parseRegime(raw.values.get('regime')),
+    exclus: parseFoodIdList(raw.values.get('exclus'), catalog, 'exclus'),
+    requis: parseFoodIdList(raw.values.get('requis'), catalog, 'requis'),
+    preferences: parsePreferences(raw.values.get('pref'), catalog),
+    limit: parseLimit(raw.values.get('limit')),
+    seed: parseSeed(raw.values.get('seed')),
+    lambda: parseLambda(raw.values.get('lambda')),
+    noMmr: raw.flags.has('no-mmr'),
   }
 }
 
@@ -460,6 +498,8 @@ function buildReplayCommand(opts: CliOptions): string {
     const prefStr = [...opts.preferences.entries()].map(([id, v]) => `${id}:${v >= 0 ? '+' : ''}${v}`).join(',')
     parts.push(`--pref ${prefStr}`)
   }
+  if (opts.noMmr) parts.push('--no-mmr')
+  else if (opts.lambda !== DEFAULT_MMR_LAMBDA) parts.push(`--lambda ${opts.lambda}`)
   parts.push(`--limit ${opts.limit}`, `--seed ${opts.seed}`)
   return parts.join(' ')
 }
@@ -493,6 +533,13 @@ function printHeader(opts: CliOptions, catalog: Catalog, engineVersion: string, 
     }`
   )
   console.log(`Limit / seed : ${opts.limit} / ${opts.seed}`)
+  console.log(
+    `Diversif.    : ${
+      opts.noMmr
+        ? 'désactivée (--no-mmr) — classement brut par score'
+        : `MMR active, λ=${opts.lambda}${opts.lambda === DEFAULT_MMR_LAMBDA ? ' (DEFAULT_MMR_LAMBDA)' : ''} (§6.6 ENGINE)`
+    }`
+  )
   console.log('')
   console.log(`Rejouer : ${buildReplayCommand(opts)}`)
   console.log('')
@@ -560,6 +607,39 @@ function printRanking(
   })
   console.log('')
   console.log(`${ranked.length} candidat(s) classé(s) au total, ${top.length} affiché(s) (--limit ${limit}).`)
+}
+
+/**
+ * Classement APRÈS diversification MMR (§6.6 ENGINE) — même gabarit que `printRanking`, avec en
+ * plus la similarité MAXIMALE de chaque recette retenue avec les précédentes : c'est cette ligne
+ * qui rend l'effet de la diversification LISIBLE et calibrable (voir en-tête de fichier §6.6).
+ */
+function printDiversifiedRanking(
+  diversified: readonly DiversifiedCandidate[],
+  breakdowns: ReadonlyMap<RecipeId, ScoreBreakdown>,
+  catalog: Catalog,
+  lambda: number,
+  totalRanked: number
+): void {
+  console.log(`--- Classement diversifié (MMR, λ=${lambda}, §6.6 ENGINE) ---`)
+
+  diversified.forEach((entry, index) => {
+    const recipe = catalog.recipes.get(entry.recipeId)
+    const nom = recipe?.nom ?? entry.recipeId
+    const simLabel =
+      index === 0
+        ? '1er retenu — aucune pénalité (ensemble retenu vide)'
+        : `similarité max. avec les retenues précédentes : ${(entry.maxSimilarityToRetained * 100).toFixed(1)}%`
+    console.log(`#${index + 1}  ${nom} — ${(entry.score * 100).toFixed(1)}/100  [${simLabel}]`)
+
+    const breakdown = breakdowns.get(entry.recipeId) ?? {}
+    const contributions = (Object.entries(breakdown) as Array<[ScoringLayerId, number]>).sort((a, b) => b[1] - a[1])
+    for (const [id, contribution] of contributions) {
+      console.log(`      ${scoringLayerLabel(id).padEnd(14)} ${(contribution * 100).toFixed(1)}`)
+    }
+  })
+  console.log('')
+  console.log(`${totalRanked} candidat(s) classé(s) au total, ${diversified.length} retenu(s) après diversification.`)
 }
 
 /** 0 candidat après exclusion (§8.3 ENGINE, `NoViableRecipeError` côté API) : le cas que l'UI
@@ -631,7 +711,19 @@ function run(argv: readonly string[]): void {
   }
 
   const ranked = rankScoredCandidates(scoringResult.scores)
-  printRanking(ranked, scoringResult.breakdowns, catalog, opts.limit)
+
+  if (opts.noMmr) {
+    printRanking(ranked, scoringResult.breakdowns, catalog, opts.limit)
+    return
+  }
+
+  // Diversification MMR (§6.6 ENGINE) : `buildSimilarityProfiles` fait le pont Catalog → profils
+  // de similarité UNE fois pour tout le catalogue (voir similarity.ts) ; `similarityOf` est
+  // l'accesseur attendu par `diversify`, qui reste lui-même sans accès au `Catalog`.
+  const similarityProfiles = buildSimilarityProfiles(catalog)
+  const similarityOf = (a: RecipeId, b: RecipeId): number => similarity(similarityProfiles.get(a)!, similarityProfiles.get(b)!)
+  const diversified = diversify(ranked, opts.limit, opts.lambda, similarityOf)
+  printDiversifiedRanking(diversified, scoringResult.breakdowns, catalog, opts.lambda, ranked.length)
 }
 
 function main(): void {
