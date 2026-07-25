@@ -22,7 +22,7 @@ ouvertes uniquement les valeurs numériques, à calibrer au banc CLI (marquées 
    structurelle, comme `evidence_sheet_id NOT NULL` sur `topic_criterion`.
 4. **Le mode repas est une orchestration (L4), pas une couche de sélection.** Composer
    entrée + plat + dessert, c'est appeler trois fois le pipeline existant avec des budgets
-   partagés et un score d'accord entre services — le registre reste à 15 couches.
+   partagés et un score d'accord entre services — le registre reste à 16 couches.
 5. **Deux prérequis bloquants** avant tout code : une facette `service` au catalogue, et une
    migration `user.db` (colonne `service`) à faire **tant que la base est vide** — même fenêtre
    de tir que l'origine `choisi`/`reste` de `MealHistoryEntry`.
@@ -169,10 +169,11 @@ Trois lectures possibles :
 | **B — exclure le groupe `boissons alcoolisées` de l'agrégat** | Sous-estime l'énergie réellement servie ; crée un précédent « certains ingrédients ne comptent pas » | Faible en code, coûteux en cohérence |
 | **C — modéliser l'évaporation** | Le taux résiduel dépend du temps, de la surface, du couvercle — très variable | Élevé, et non auditable |
 
-**Retenu : option A** (validé le 2026-07-25). La formulation actuelle des docs est trop large ; elle
-sera reprise en « une boisson alcoolisée n'est jamais un aliment du repas ; un alcool employé
+**Retenu : option A** (validé le 2026-07-25). La formulation initiale des docs était trop large ;
+elle est reprise en « une boisson alcoolisée n'est jamais un aliment du repas ; un alcool employé
 **comme ingrédient** est agrégé comme les autres ». **Aucun changement de code** — la correction
-porte sur `ETAT.md` §3 et `FICHE_REPRISE.md`, qui portent encore la phrase trop large.
+porte sur la documentation. `ETAT.md` §4 est désormais corrigé ; `FICHE_REPRISE.md` est traité à
+part.
 
 ## 1.8 Courses — l'alcool ne s'ajoute jamais tout seul
 
@@ -212,7 +213,7 @@ flowchart TB
     C -->|1 appel par service| SEL
 
     subgraph L3["L3 selection/ — INCHANGÉ"]
-        SEL["15 couches : 5 exclusion + 10 score"]
+        SEL["16 couches : 6 exclusion + 10 score"]
     end
 
     SEL -->|candidats classés| C
@@ -225,7 +226,7 @@ flowchart TB
     style ERR fill:#7f1d1d,stroke:#dc2626,color:#fecaca
 ```
 
-**Le registre reste à 15 couches.** Composer un repas, c'est appeler le pipeline plusieurs fois avec
+**Le registre reste à 16 couches.** Composer un repas, c'est appeler le pipeline plusieurs fois avec
 des contraintes qui évoluent entre les appels — exactement ce que fait déjà `planWeek` d'un créneau
 à l'autre (§7.1 ENGINE). Une « couche accord » serait une erreur de nature : une couche note **un
 candidat**, pas une **combinaison**.
@@ -391,7 +392,7 @@ Le mode repas n'ajoute **aucun réglage global** : ni « je suis plutôt trois s
 | Document | Ajout |
 |---|---|
 | `ARCHITECTURE.md` | §4.2 table `recipe_pairing` + règle miroir · §4.3 colonne `service` sur `meal_plan_entry` · §6.2 troisième famille de lexique banni (incitation) · §2 périmètre v1/v1.5 du mode repas |
-| `ENGINE.md` | §7 `composeMeal` / `rerollCourse` · §8 API · §6.6 réemploi de la similarité pour l'accord · rappel « le registre reste à 15 couches » |
+| `ENGINE.md` | §7 `composeMeal` / `rerollCourse` · §8 API · §6.6 réemploi de la similarité pour l'accord · rappel « le registre reste à 16 couches » |
 | `DESIGN.md` | §4.6 section « Accords » repliée · §4.1/§4.2 entrée du mode repas · §7 deux écrans à maquetter |
 | `ETAT.md` | §3 correction de la ligne alcool (§1.7) · §4 nouvelles décisions ouvertes |
 
@@ -418,7 +419,7 @@ alcool, `FICHE_REPRISE.md` § décisions ouvertes) — voir §3 ci-dessus.
 
 | Rang | Lot | Dépendance |
 |---|---|---|
-| **0** | **Migration `user.db`** : `service` sur `meal_plan_entry` + origine `choisi`/`reste` sur `MealHistoryEntry` | **Aucune — à faire tout de suite**, la fenêtre se referme dès qu'un planning existe |
+| **0** ✅ | **Migration `user.db`** : `service` sur `meal_plan_entry` + origine `choisi`/`reste` sur `MealHistoryEntry` — **FAIT** | Aucune — l'urgence tenait à la fenêtre de tir : fait tant que la base était encore vide, avant qu'un planning ou un historique réel n'existe |
 | 1 | Facette `service` (schéma + build + loader + type) et annotation des recettes de test | Aucune |
 | 2 | `composeMeal` + `rerollCourse` + score d'accord + banc CLI | **Après P1c** (`suggestMeals` bout-en-bout) |
 | 3 | `recipe_pairing` + règle miroir + lexique d'incitation au test bloquant | Aucune — mais sans consommateur tant que la fiche recette n'existe pas (P5) |

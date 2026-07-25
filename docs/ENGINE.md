@@ -302,7 +302,7 @@ commun. Mais elles se répartissent en deux natures qu'il ne faut jamais confond
 
 | Nature | Effet sur l'ensemble | Composition | Exemples |
 |---|---|---|---|
-| **Exclusion** | **Retire** des candidats | Intersection | allergènes · régime · exclusions perso · temps · équipement |
+| **Exclusion** | **Retire** des candidats | Intersection | allergènes · régime · exclusions perso · requis · temps · équipement |
 | **Score** | **Ne retire rien**, repondère | Somme pondérée | préférences · envies · santé · frigo · habitude… |
 
 > **Le piège à éviter.** Si « préférences » était une couche d'exclusion, détester les champignons
@@ -316,7 +316,7 @@ flowchart TB
     IN["SuggestionRequest"] --> EX
 
     subgraph EXC["COUCHES D'EXCLUSION — réduisent l'ensemble"]
-        EX["allergènes 🔒 → régime 🔒 → exclusions → temps → équipement"]
+        EX["allergènes 🔒 → régime 🔒 → exclusions → requis → temps → équipement"]
     end
 
     EX -->|candidats| SC
@@ -369,6 +369,7 @@ export const LAYERS: readonly SelectionLayer[] = [
   allergenLayer,          // 🔒 critical
   dietLayer,              // 🔒 critical
   personalExclusionLayer, // exclusions personnelles (HardConstraints.excludedFoodIds)
+  requiredFoodLayer,      // miroir dur — MealContext.requiredFoodIds, contexte Aujourd'hui seulement
   timeLayer,
   equipmentLayer,    // seulement l'équipement `requis`
 
@@ -386,7 +387,7 @@ export const LAYERS: readonly SelectionLayer[] = [
 ]
 ```
 
-**15 couches au registre (5 exclusion + 10 score), dont `topic` (v2) et `cost` (v3) en réserve à
+**16 couches au registre (6 exclusion + 10 score), dont `topic` (v2) et `cost` (v3) en réserve à
 poids nul — mais cinq couches de score réellement actives au premier lancement** : `topic`,
 `cost` et `habit` démarrent à 0, `occasion` est nul hors période. La complexité perçue n'augmente
 pas avec le nombre de couches.
@@ -399,6 +400,9 @@ pas avec le nombre de couches.
 > Mise à jour (session 2) : une 5ᵉ couche d'exclusion `exclusions` (rejet personnel,
 > `excludedFoodIds`) a été ajoutée — le registre est désormais à **15** (5 exclusion + 10 score).
 > Le code fait foi.
+> Mise à jour (session du 2026-07-25) : une 6ᵉ couche d'exclusion `requis` (miroir dur, lit
+> `MealContext.requiredFoodIds`) a été ajoutée — le registre est désormais à **16** (6 exclusion +
+> 10 score). Le code fait foi.
 
 Les poids sont normalisés (`Σ = 1`) avant application. L'utilisateur les module via un petit jeu
 d'**archétypes nommés** — voir §6.3 bis ci-dessous, qui généralise l'idée initiale de « quatre
@@ -501,7 +505,7 @@ Ajouter une fonctionnalité, c'est **ajouter une entrée au registre** — le pi
 † `pantry` passe en **poids dominant** en mode « vider le frigo » (§10.2)
 ‡ `habit` croît avec le volume d'historique — démarrage à froid propre
 § `occasion` vaut 0 hors de la fenêtre d'une occasion activée
-¶ `speed` **n'est pas une 16ᵉ couche du registre** (le registre reste à 15, `LAYER_DESCRIPTORS`
+¶ `speed` **n'est pas une 17ᵉ couche du registre** (le registre reste à 16, `LAYER_DESCRIPTORS`
 inchangé) — c'est un **signal de score doux**, listé ici pour la lisibilité de la table, distinct
 du filtre dur `temps` (§6.3, exclusion) ; poids nul par défaut, **activé par l'archétype
 « Rapide »** (§6.3 bis). Son rattachement précis au pipeline (couche à part entière ajoutée en
@@ -596,23 +600,32 @@ L'équipement se déclare en deux niveaux dans le catalogue :
 
 Sans cette distinction, ne pas posséder de mixeur supprimerait la moitié du catalogue.
 
-### 6.5 ter — Décisions de conception (session 2, 2026-07-24 — non codées)
+### 6.5 ter — Décisions de conception (session 2, 2026-07-24 — partiellement codées)
 
-Tranchées mais pas encore implémentées ; l'implémentation devra les suivre. Récit :
+Tranchées ; une partie est désormais implémentée (détail par point ci-dessous). Récit :
 `docs/RECAP_SESSION_2.md`.
 
-- **`variety` — trois réglages séparés.** (1) *Vitesse d'oubli* : TAU devient réglable à trois crans
-  3 / 7 / 14 jours (défaut 7). (2) *Rythme du changement* : bascule explicite (« Surprends-moi » /
-  « Mes classiques ») **brusque** (dès le repas suivant) ; dérive apprise **graduelle** (~4 repas),
-  **repoussée** avec la refonte de `habit` ; mode par défaut stable. (3) *Restes* : chaque entrée
-  d'historique porte une **origine** `choisi` / `reste` — `variety` lit tout (un reste mangé lasse),
-  `habit` ne compte que les `choisi` (un reste n'est pas une préférence). Champ à ajouter sur
-  `MealHistoryEntry` **avant** que l'historique se remplisse.
-- **Rejet absolu codé, miroir à venir.** La couche `exclusions` lit `excludedFoodIds` (exclusion
-  dure, un aliment exclu en ingrédient optionnel n'exclut pas la recette). Son miroir
-  **`requiredFoodIds`** (« je veux ça ») est décidé : filtre **dur en contexte « Aujourd'hui »**
-  seulement (exiger un aliment précis vide vite le panier — dangereux en réglage permanent). À
-  implémenter en sibling de `exclusions`.
+- **`variety` — trois réglages séparés.**
+  (1) *Vitesse d'oubli* : TAU réglable à trois crans 3 / 7 / 14 jours (défaut 7) — **CODÉ**
+  (`ScoreVarietyArgs.tauDays`, type `VarietyTau`, `engine/selection/scoring/variety.ts`). Valeurs
+  vérifiées par test : un plat vu il y a 7 jours vaut en nouveauté **0,903** (TAU=3) · **0,632**
+  (TAU=7) · **0,393** (TAU=14).
+  (2) *Rythme du changement* : bascule explicite (« Surprends-moi » / « Mes classiques »)
+  **brusque** (dès le repas suivant) — **déjà assurée par l'override existant** (`VarietyOverride`,
+  force `familiarity` à 0 ou 1) ; dérive apprise **graduelle** (~4 repas) reste **repoussée** avec
+  la refonte de `habit`, mode par défaut stable.
+  (3) *Restes* : chaque entrée d'historique porte une **origine** `choisi` / `reste` — **CODÉ**
+  (`MealHistoryEntry.origine`, champ obligatoire) ; `variety` lit tout (un reste mangé lasse),
+  `habit` ne compte que les `choisi` (un reste n'est pas une préférence) — asymétrie volontaire.
+- **Rejet absolu codé, miroir désormais codé aussi.** La couche `exclusions` lit `excludedFoodIds`
+  (exclusion dure, un aliment exclu en ingrédient optionnel n'exclut pas la recette). Son miroir
+  **`requiredFoodIds`** (« je veux ça ») est **CODÉ** — couche `requis`
+  (`app/src/engine/selection/requis.ts`), sémantique CONJONCTIVE (tous les aliments demandés
+  doivent être présents ; un ingrédient optionnel SATISFAIT l'exigence) : filtre **dur en contexte
+  « Aujourd'hui » seulement**. Le champ vit dans `MealContext`, pas dans `HardConstraints` : comme
+  `WeekPlanRequest` n'a pas de `MealContext`, l'exigence devient **structurellement inexprimable**
+  pour un plan de semaine, plutôt que de compter sur la discipline de l'appelant — asymétrie
+  volontaire avec `excludedFoodIds` (réglage durable → `HardConstraints`).
 - **Roue des goûts (radar).** Lecture visuelle des 3 axes sensoriels dépliés en 6 pôles
   (Salé↔Sucré · Léger↔Consistant · Chaud↔Froid), par plat et — moyennée — par profil ; même affinité
   que `habit` apprend, pas un second calcul. Rayons cuisine/saveur = v2. Partage via carte Canvas
@@ -879,6 +892,11 @@ export interface SuggestionRequest {
 > pas encore dans le code. `onlyFavorites` restreint l'ensemble de candidats à `user_favorite`
 > **avant** le passage des couches de score — cohérent avec « favori = marque-page, n'influence
 > pas le moteur par défaut » (§10.1 : c'est un opt-in explicite, pas un poids ajouté en continu).
+
+> `MealContext.requiredFoodIds` (couche `requis`, **CODÉ**) vit dans `context`, pas dans
+> `constraints` (`HardConstraints`), alors que son miroir `excludedFoodIds` y est : `WeekPlanRequest`
+> n'a pas de `MealContext`, donc ce placement rend le filtre dur structurellement hors d'atteinte de
+> `planWeek` plutôt que de compter sur la discipline de l'appelant (§6.5 ter).
 
 ### 8.2 Réponse
 
@@ -1167,7 +1185,7 @@ gantt
 |---|---|---|
 | **P0** Fondations | Repo, Vite, TS strict, Vitest, `build.mjs`, import CIQUAL | `catalog.db` généré depuis 10 recettes de test ; le build échoue sur une recette invalide |
 | **P1** Domaine & nutrition | L1 + L2 + guards | Besoins énergétiques conformes à Mifflin-St Jeor sur 20 cas de référence ; 4 garde-fous couverts à 100 % |
-| **P2** Sélection | Registre de 15 couches + banc CLI | `engine:try` retourne 5 suggestions expliquées et diversifiées ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
+| **P2** Sélection | Registre de 16 couches + banc CLI | `engine:try` retourne 5 suggestions expliquées et diversifiées ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
 | **P3** Planning & API | L4 + L5 + restes + courses | Un planning 7 jours cohérent et une liste de courses agrégée, produits **entièrement en CLI** |
 | **P4** Coquille PWA | React, routage, SQLite/OPFS, consentement, sauvegarde | Installation sur iPhone et PC ; données conservées après 8 jours sans ouverture |
 | **P5** Parcours principal | Onboarding, suggestions, planning, courses, tips | Un utilisateur non accompagné planifie sa semaine et obtient sa liste |
@@ -1206,7 +1224,7 @@ le plus cher dans le plus incertain.
 
 | # | Décision | Retenu |
 |---|---|---|
-| 1 | Pipeline en dur ou registre de couches ? | **Registre de 15 couches** à contrat commun (§6.2) |
+| 1 | Pipeline en dur ou registre de couches ? | **Registre de 16 couches** à contrat commun (§6.2) |
 | 2 | « Vider le frigo » : filtre ou score ? | **Score**, avec un mode où son poids devient dominant |
 | 3 | Suivi des préférences | **Signaux uniquement**, jamais un journal alimentaire (§6.5 ARCHI) |
 | 4 | Média du lexique | **WebP animée**, boucle muette ~3 s, ~80 Ko (§8.5 ARCHI) |

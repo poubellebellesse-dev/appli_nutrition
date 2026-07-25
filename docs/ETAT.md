@@ -1,16 +1,16 @@
 # État du projet — récapitulatif et reprise
 
 > État complet du projet. Pour un démarrage rapide, lire d'abord `docs/FICHE_REPRISE.md`.
-> Dernière mise à jour : **2026-07-24** (session 2 — P1b-1 codé : 7 fonctions de score, index
-> dérivés, saison en crédits, catalogue porté à 76 aliments, 5ᵉ couche d'exclusion ; conception
-> variety/radar/courses. Récit : `docs/RECAP_SESSION_2.md`).
+> Dernière mise à jour : **2026-07-25** (session 3 — dette de commits vidée, puis rang 0
+> (origine `choisi`/`reste` + `service`), `variety` à TAU réglable, 6ᵉ couche `requis` ; conception
+> B validée (vin + modes repas). Sessions précédentes : `docs/RECAP_SESSION_2.md`).
 
 ---
 
 ## 1. En une phrase
 
 Application de nutrition et de planification de repas, **100 % locale, sans IA, sans compte**,
-utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0, P1a et P1b-1 du moteur terminés (140 tests verts) ; P1b-2 = prochaine étape. Seuls P0 et P1a sont committés — le reste attend un lot de commits.**
+utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0, P1a et P1b-1 du moteur terminés, plus rang 0 (origine `choisi`/`reste` + facette `service`), `variety` à TAU réglable et la 6ᵉ couche d'exclusion `requis` livrés depuis (158 tests verts, 23 fichiers, typecheck propre) ; P1b-2 = prochaine étape. Tout est committé (4 commits).**
 
 ---
 
@@ -30,7 +30,8 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Notes utilisateur | `Notes/Note designe.txt` | ✅ Traité et intégré |
 | Code — P0 (fondations) | `catalog/build.mjs`, `app/src/engine/{domain,api}`, `app/src/data/catalog-loader.ts` | ✅ Terminé (3 commits) |
 | Code — P1a (exclusion) | `app/src/engine/selection/{allergenes,regime,temps,equipement,exclusion-pass}.ts` | ✅ Terminé (1 commit), 60 tests verts |
-| Code — P1b-1 (socle scoring) | `app/src/engine/nutrition/`, `app/src/engine/selection/scoring/` | ✅ Terminé, 140 tests verts (non committé) |
+| Code — P1b-1 (socle scoring) | `app/src/engine/nutrition/`, `app/src/engine/selection/scoring/` | ✅ Terminé et committé, 140 tests verts |
+| Code — rang 0 + `variety` TAU + `requis` | `app/src/engine/domain/{planning,request}.ts`, `app/src/engine/selection/scoring/variety.ts`, `app/src/engine/selection/requis.ts` | ✅ Terminé et committé, 158 tests verts (23 fichiers), typecheck propre |
 | Code — P1b-2 (passe + archétypes) | `app/src/engine/selection/` (passe de score) | ⬜ Conçu — **prochaine étape** |
 
 ---
@@ -53,14 +54,15 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 - Mode avancé (macros) = **descriptif seul**, opt-in, jamais de compteur de reste.
 
 ### Moteur
-- **Registre de 15 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (le code
+- **Registre de 16 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (le code
   fait foi, voir `app/src/engine/domain/layer-ids.ts`). Une 5ᵉ couche d'exclusion `exclusions`
-  (rejet perso, `excludedFoodIds`) a été ajoutée en session 2 — corrige aussi les anciennes
-  mentions « 12 » puis « 14 ».
-  - Exclusion (5) : `allergenes` 🔒 · `regime` 🔒 · `exclusions` · `temps` · `equipement`
+  (rejet perso, `excludedFoodIds`) a été ajoutée en session 2, puis une 6ᵉ couche `requis` (miroir
+  dur, `MealContext.requiredFoodIds`) en session 3 — corrige aussi les anciennes mentions « 12 »
+  puis « 14 » puis « 15 ».
+  - Exclusion (6) : `allergenes` 🔒 · `regime` 🔒 · `exclusions` · `requis` · `temps` · `equipement`
   - Score (10) : `nutri` · `preference` · `craving` · `variety` · `season` · `pantry` · `habit` ·
     `occasion` · `topic` (v2, réserve) · `cost` (v3, réserve)
-  - `speed` **n'est pas une 16ᵉ couche** : c'est une modulation proposée de la fonction de score
+  - `speed` **n'est pas une 17ᵉ couche** : c'est une modulation proposée de la fonction de score
     (voir `docs/ENGINE.md` §6.5), activée par l'archétype « Rapide ».
 - **Fonction pure synchrone**, catalogue en RAM. Pas de `Date.now`/`Math.random` (PRNG à graine,
   tie-break stable par id de recette).
@@ -139,11 +141,16 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 9 | Cible iOS : PWA seule ou Capacitor + App Store ? | **PWA** par défaut (gratuit, pas de Mac) ; Capacitor si API native |
 | 10 | Noms définitifs des **archétypes** (§ENGINE 6.3 bis) | **Proposé, à confirmer** : Équilibre · Envie · Découverte · De saison · Mes goûts · Rapide (~6, pas de « budget » en v1) |
 | 11 | Token de push GitHub (pour que l'utilisateur pousse les commits Claude) | À fournir par l'utilisateur — voir `docs/RECAP_SESSION.md` § Reprendre ici |
-| 12 | Rattachement de `speed` au pipeline | 16ᵉ couche du registre ou modulation interne — à trancher en P1b-2 |
-| 13 | `requiredFoodIds` (miroir du rejet) : filtre dur ou gros bonus ? | **Dur en contexte « Aujourd'hui »** (proposé) |
-| 14 | Alcool : ingrédient de cuisine vs boisson | Ingrédient v1 (décidé) ; jamais dans le calcul nutritionnel ; boisson = article de courses |
+| 12 | Rattachement de `speed` au pipeline | 17ᵉ couche du registre ou modulation interne — à trancher en P1b-2 |
+| ~~13~~ | `requiredFoodIds` (miroir du rejet) : filtre dur ou gros bonus ? | **Fermé, tranché et CODÉ** — dur en contexte « Aujourd'hui » seulement, couche `requis` (`MealContext.requiredFoodIds`, hors de `HardConstraints`) — §3 |
+| 14 | Alcool : ingrédient de cuisine vs boisson | Ingrédient v1 (décidé) ; une boisson alcoolisée n'est jamais un aliment du repas, mais un alcool employé **comme ingrédient** est agrégé dans le calcul nutritionnel comme les autres (option A, `docs/CONCEPTION_B_VIN_REPAS.md` §1.7) ; boisson servie = article de courses |
 | 15 | Roue des goûts : rayons cuisine/saveur | v2 (v1 = 6 pôles sensoriels, gratuits) |
 | 16 | Table courses non alimentaire (10 rayons) | Conçue ; à coder **quand `buildShoppingList` existera** (P1c+), pas avant |
+| 17 | Accords vin masqués par défaut ou visibles et masquables ? | **Tranché** — masqués par défaut, `user_display.afficher_accords = false` (`docs/CONCEPTION_B_VIN_REPAS.md` §1.2, §4) |
+| 18 | Miroir sans alcool obligatoire au build (`recipe_pairing`) ? | **Tranché** — oui, contrainte structurelle miroir de `evidence_sheet_id NOT NULL` (`docs/CONCEPTION_B_VIN_REPAS.md` §1.3, §4) |
+| 19 | Facette `service` : facette ouverte ou colonne dédiée ? | **Tranché** — facette `recipe_facet` (`docs/CONCEPTION_B_VIN_REPAS.md` §2.3, §4) |
+| 20 | Mode repas (entrée+plat+dessert) en v1 ou v1.5 ? | **Tranché** — v1.5, le quotidien reste le mode recette (`docs/CONCEPTION_B_VIN_REPAS.md` §4) |
+| 21 | Accord vin porté par service ou par le repas entier ? | **Tranché** — porté par le plat seul, un conseil par repas (`docs/CONCEPTION_B_VIN_REPAS.md` §4) |
 
 ---
 
@@ -176,18 +183,25 @@ recette invalide.
 - [x] Garde-fou `assertNoDeclaredAllergen` (§5.2 ENGINE)
 - [x] 60 tests verts
 
-### P1b — Scoring — **conçu cette session, pas encore codé (⬅ ICI)**
+### P1b — Scoring — **conception §6.5/§6.3 bis ENGINE ; P1b-1 codé et committé, lots complémentaires livrés, P1b-2 = prochaine étape (⬅ ICI)**
 
 Conception détaillée : `docs/ENGINE.md` §6.5 et §6.3 bis, `docs/RECAP_SESSION.md`. Découpage
 retenu :
 
-### P1b-1 — Socle scoring ✅ terminé (non committé)
+### P1b-1 — Socle scoring ✅ terminé et committé
 
 - [x] `food.saison_mois` + `food.toute_annee` au schéma réel (build + loader), dimensions indépendantes
 - [x] Index dérivés à l'init du moteur : `recipeNutrients` (par portion), `recipeMainIngredient` (`engine/nutrition/`)
 - [x] 7 fonctions de score pures (`engine/selection/scoring/`) + `NEUTRAL_SCORE = 0.5`
 - [x] `season` en crédits pondérés par quantité ; catalogue porté à 76 aliments ; 5ᵉ couche d'exclusion `exclusions`
 - [x] 140 tests verts, typecheck propre
+
+### Lots livrés depuis P1b-1 ✅ terminés et committés (4 commits)
+
+- [x] Rang 0 — migration `user.db` (faite tant que la base était vide, §5/§2.7 CONCEPTION_B_VIN_REPAS) : `MealHistoryEntry.origine` (`choisi`/`reste`, obligatoire) + `MealPlanEntry.service` (`CourseKind`)
+- [x] `variety` — TAU réglable à trois crans (`VarietyTau` 3 | 7 | 14, défaut 7)
+- [x] 6ᵉ couche d'exclusion `requis` (miroir dur d'`exclusions`, `MealContext.requiredFoodIds`)
+- [x] 158 tests verts (23 fichiers), typecheck propre ; build 76 aliments / 10 recettes
 
 | Sous-étape | Contenu |
 |---|---|
@@ -209,10 +223,11 @@ appli_nutrition/
 │  ├─ ETAT.md            ← CE FICHIER — reprise de session
 │  ├─ ARCHITECTURE.md    ← périmètre · données · cadre légal
 │  ├─ FICHE_REPRISE.md   ← ⭐ à lire en premier — état condensé + prochaines étapes
-│  ├─ ENGINE.md          ← moteur · 15 couches · API · plan de lancement
+│  ├─ ENGINE.md          ← moteur · 16 couches · API · plan de lancement
 │  ├─ DESIGN.md          ← 8 écrans · navigation · badge de preuve
 │  ├─ RECAP_SESSION.md   ← récit session 1 (conception P1b)
 │  ├─ RECAP_SESSION_2.md ← récit session 2 (P1b-1 codé, saison, contenu, 5ᵉ couche, conception variety/radar)
+│  ├─ CONCEPTION_B_VIN_REPAS.md ← conception validée : accords vin, modes recette/repas (chantier B)
 │  └─ STRATEGIE_DISTRIBUTION.md
 ├─ app/src/
 │  ├─ engine/            ← moteur TS pur (domain, guards, selection, nutrition, planning, api)

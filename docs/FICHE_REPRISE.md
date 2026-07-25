@@ -1,9 +1,9 @@
 # ⭐ Fiche de reprise — appli_nutrition
 
 > **À lire en premier.** État condensé + prochaines étapes. Pour le détail : `ETAT.md` (état
-> complet), `RECAP_SESSION_2.md` (récit de la dernière session), `ENGINE.md` / `ARCHITECTURE.md`
-> (spécification, font foi).
-> Dernière mise à jour : **2026-07-24** (fin de session 2).
+> complet), `RECAP_SESSION_2.md` (récit de la session 2), `ENGINE.md` / `ARCHITECTURE.md`
+> (spécification, font foi), `CONCEPTION_B_VIN_REPAS.md` (chantier vin + modes repas).
+> Dernière mise à jour : **2026-07-25** (fin de session 3).
 
 ---
 
@@ -14,55 +14,93 @@ SQLite construit au build. On code le moteur en ligne de commande **avant toute 
 
 ## Où on en est
 
-- **P0** (fondations) ✅ · **P1a** (4 couches d'exclusion) ✅ — **committés**.
-- **P1b-1** (scoring, socle) ✅ **codé, PAS committé** :
-  - 7 fonctions de score pures dans `engine/selection/scoring/` (`nutri`, `preference`, `craving`,
-    `season`, `variety`, `speed`, `habit` minimal) + `NEUTRAL_SCORE = 0.5` partout.
-  - Index dérivés calculés **à l'init du moteur** : `recipeNutrients` (par portion),
-    `recipeMainIngredient`, via `attachDerivedIndexes` dans `engine/nutrition/`.
-  - `food.saison_mois` + `food.toute_annee` ajoutés au schéma réel (build + loader).
-- **Lots de session 2** ✅ **codés, PAS committés** :
-  - `season` réécrite en **crédits pondérés par quantité** (1 en saison · 0,5 dispo hors saison ·
-    0 sinon · staple exclu) ; `toute_annee` et `saison_mois` sont désormais **indépendants**.
-  - Catalogue de test porté à **76 aliments** (+ fromages, poissons, fruits de mer, alcools de
-    cuisine).
-  - **5ᵉ couche d'exclusion `exclusions`** (rejet perso, lit `excludedFoodIds`) → **registre à 15
-    couches** (5 exclusion + 10 score).
+Tout ce qui suit est **committé** — la session 3 a d'abord vidé la dette de commits laissée par la
+session 2, puis livré trois lots.
 
-**État vérifié : `npm test` → 140 verts (22 fichiers) · `npm run typecheck` propre · `npm run build`
-→ 76 aliments, 10 recettes. Rien n'est committé au-delà de P1a.**
+| Livré | Contenu |
+|---|---|
+| **P0** ✅ · **P1a** ✅ | Fondations, chaîne de build, 4 couches d'exclusion initiales |
+| **P1b-1** ✅ | Schéma saison/staple · index dérivés à l'init du moteur · 7 fonctions de score · `NEUTRAL_SCORE = 0.5` |
+| **Contenu** ✅ | Catalogue de test porté à **76 aliments** (fromages, poissons, fruits de mer, alcools de cuisine) |
+| **Couche `exclusions`** ✅ | Rejet personnel d'aliments (`excludedFoodIds`) |
+| **Rang 0** ✅ *(session 3)* | Origine `choisi`/`reste` sur `MealHistoryEntry` + `CourseKind` + `MealPlanEntry.service` — faits **pendant que `user.db` est vide**, donc gratuits |
+| **`variety` TAU** ✅ *(session 3)* | Vitesse d'oubli réglable à trois crans (3 / 7 / 14 j, défaut 7) |
+| **Couche `requis`** ✅ *(session 3)* | Miroir dur de `exclusions` — « je veux ça », conjonctif |
 
-## ▶ Reprendre ici — dans l'ordre
+**Le registre est passé à 16 couches** (6 exclusion + 10 score). Ordre de motif :
+`allergenes` 🔒 → `regime` 🔒 → `exclusions` → `requis` → `temps` → `equipement`.
 
-1. **Figer les commits locaux** (par lot, propres) puis **l'utilisateur pousse** (le shell agent ne
-   peut pas s'authentifier — voir « décisions ouvertes »). Découpage suggéré : (a) P1b-1 socle,
-   (b) saison crédits + 60 aliments, (c) contenu 76 + season pondérée + 5ᵉ couche, (d) mise à jour
-   des docs.
-2. **Doc de conception B** — vin + modes recette/repas (le seul chantier de conception non encore
-   documenté ; variety et radar le sont, voir artefacts de session).
-3. **Ajouter l'origine `choisi` / `reste`** sur `MealHistoryEntry` — prérequis de la refonte
-   `variety`, à faire **avant** que l'historique existe.
-4. **Réécrire `variety`** avec les paramètres verrouillés (TAU 3 crans · bascule brusque / dérive
-   graduelle repoussée · origine des repas). Détail : `ENGINE.md` §6.5 ter.
-5. **`requiredFoodIds`** — miroir dur du rejet, en sibling de `exclusions` (dur en contexte
-   « Aujourd'hui » seulement).
-6. **P1b-2** — passe de score pondérée + archétypes + poids dynamiques (craving/occasion) +
-   tie-break + CLI de scores.
-7. Plus tard : table courses non alimentaire (10 rayons, **quand `buildShoppingList` existera**,
-   pas avant — pas de consommateur aujourd'hui), roue radar (v1 = 6 pôles sensoriels), `suggestAlternatives`.
+**État vérifié : `npm test` → 158 verts (23 fichiers) · `npm run typecheck` propre · `npm run build`
+→ 76 aliments, 10 recettes.**
+
+> ⚠️ Vérifier `git status -sb` en début de session : les derniers commits peuvent ne pas être
+> poussés. Modèle en vigueur — **Claude committe, l'utilisateur pousse** (le shell agent ne peut pas
+> s'authentifier auprès de GitHub).
+
+## Deux acquis de session 3 à ne pas défaire
+
+1. **L'asymétrie `habit` / `variety`.** `habit` ne compte que les entrées d'origine `choisi` — un
+   reste mangé n'est pas une préférence exprimée. `variety` lit **toutes** les origines — un reste
+   mangé lasse quand même. Le filtre de `habit` s'applique **au dénominateur** : ne filtrer que le
+   numérateur ferait baisser mécaniquement toutes les affinités dès qu'on mange des restes. Un test
+   verrouille ça avec le piège chiffré (0,5 attendu ; 0,333 si le dénominateur est dilué).
+2. **`requiredFoodIds` vit dans `MealContext`, pas dans `HardConstraints`.** Son miroir
+   `excludedFoodIds` est pourtant dans `HardConstraints` : l'asymétrie est **volontaire**.
+   `WeekPlanRequest` n'ayant pas de `MealContext`, l'exigence devient *structurellement
+   inexprimable* pour un plan de semaine — c'est ainsi qu'on obtient « dur en contexte Aujourd'hui
+   seulement » par la forme, et non par la discipline de l'appelant.
+
+## ▶ Reprendre ici — **P1b-2**
+
+Toute la file de la session 2 est close. Il reste la tranche P1b-2, la plus grosse depuis P1a :
+elle transforme 7 fonctions de score isolées en une vraie passe de sélection. Découpage suggéré,
+à fichiers disjoints :
+
+| Sous-lot | Contenu |
+|---|---|
+| **a — la passe** | `runScoringPass` : accumulation pondérée sur les couches `kind: 'scoring'`, poids normalisés (Σ = 1), **tie-break stable par id de recette**, aucune réduction de l'ensemble (invariant à couvrir par test de propriété) |
+| **b — archétypes & poids contextuels** | Les ~6 archétypes (vecteurs de poids nommés, §6.3 bis) + `craving` n°1 quand une envie est posée **en contexte Aujourd'hui seulement**, `occasion` n°2 en période active, 0 hors période |
+| **c — banc CLI** | `engine:try` (§11.3) : suggestions, détail du score, motifs de rejet — sans navigateur. C'est l'outil qui servira jusqu'à la fin du projet |
+
+Prérequis inclus dans le lot a : **`createEngine` est encore un stub**. Son assemblage
+(`attachDerivedIndexes` appelé à l'init) est un livrable de P1b-2, pas un acquis.
+
+Ensuite : **P1c** — diversification (MMR), explication (top 3), `suggestMeals` bout-en-bout, flags
+`onlyFavorites` / `varietyMode`, `suggestAlternatives`.
+
+## Chantier B — vin & modes repas (conception livrée, code à venir)
+
+Document : `CONCEPTION_B_VIN_REPAS.md`, **8 décisions tranchées**. Le rang 0 de son ordre
+d'implémentation est fait (voir ci-dessus). Restent, dans l'ordre :
+
+1. Facette `service` au catalogue (`entree · plat · dessert · accompagnement`) + annoter les
+   recettes de test — il manque **2 entrées et 2 desserts** pour exercer le mode repas en CLI.
+2. `composeMeal` / `rerollCourse` + score d'accord entre services — **après P1c**.
+3. Table `recipe_pairing` + règle miroir sans alcool au build + lexique d'incitation — volontairement
+   après le point 2 : coder une table sans consommateur est ce qu'on a refusé pour les courses non
+   alimentaires.
+4. Affichage des accords (section repliée, réglage, message sanitaire) — P5.
 
 ## Décisions ouvertes (rappel)
 
 - **Noms définitifs des ~6 archétypes** (Équilibre · Envie · Découverte · De saison · Mes goûts ·
-  Rapide) — proposition, à confirmer.
-- **Rattachement de `speed`** au pipeline : 16ᵉ couche du registre ou modulation interne.
-- **Alcool** : ingrédient de cuisine (v1, décidé) ; **jamais** compté dans le calcul nutritionnel
-  d'un repas ; boisson = article de courses uniquement.
-- **`requiredFoodIds`** : dur vs gros bonus — reco *dur en contexte ponctuel*, à confirmer.
-- **Radar** : rayons cuisine/saveur = v2 (v1 = 6 pôles sensoriels, gratuits).
+  Rapide) — proposition, à confirmer **avant le sous-lot b**.
+- **Rattachement de `speed`** : couche à part entière (ce serait la **17ᵉ**) ou modulation interne —
+  à trancher en P1b-2.
+- **Radar** : rayons cuisine/saveur = v2 (v1 = 6 pôles sensoriels).
 - **Scan produit** (OpenFoodFacts, jamais Yuka) : opt-in **v2+++++**.
-- **Token de push GitHub** : à fournir par l'utilisateur pour que l'agent pousse lui-même (sinon
-  modèle « Claude committe, l'utilisateur pousse »).
+- **Token de push GitHub** : à fournir si on veut que l'agent pousse lui-même.
+
+Tranchées en session 3, ne plus rediscuter : `requiredFoodIds` (dur, contexte Aujourd'hui) ·
+alcool dans l'agrégat (un alcool **employé comme ingrédient** est compté comme les autres ; c'est la
+**boisson servie** qui n'est jamais un aliment du repas) · les 8 décisions du chantier B.
+
+## Dette connue
+
+- La table qui matérialisera l'historique en v1 devra porter la colonne d'**origine** — le type
+  `MealHistoryEntry` l'a, aucune table ne le modélise encore.
+- `roquefort` porte l'allergène `lait` mais pas `sulfites` — à revoir avec la table CIQUAL réelle.
+- Valeurs nutritionnelles du catalogue de test toujours en `PROV-` (ordres de grandeur).
 
 ## Artefacts de session 2 (privés, galerie claude.ai)
 
@@ -75,4 +113,4 @@ SQLite construit au build. On code le moteur en ligne de commande **avant toute 
 
 Plan ≤3 bullets avant toute tâche 2+ fichiers · TDD sur la logique moteur · échec 2× → stop ·
 jamais commit/push/install sans demande explicite · le code s'écrit via agents Sonnet, Claude
-planifie et vérifie.
+planifie et vérifie (tests + typecheck + relecture des diffs).

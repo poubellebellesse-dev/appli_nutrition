@@ -258,6 +258,8 @@ Une recette est **exclue sans appel** si l'une de ces conditions est vraie :
 |---|---|
 | Contient un allergène déclaré | `user_allergy` |
 | Incompatible avec le régime déclaré | `user_diet` |
+| Contient un aliment personnellement exclu (ingrédient non-optionnel seulement) | `HardConstraints.excludedFoodIds` |
+| Ne contient pas tous les aliments exigés (conjonctif ; un ingrédient optionnel satisfait l'exigence) | `MealContext.requiredFoodIds` — contexte « Aujourd'hui » seulement |
 | Temps de préparation > temps disponible | contexte |
 
 Ce filtre n'est **jamais** pondéré ni contournable. Une allergie n'est pas un critère de score.
@@ -345,19 +347,24 @@ bascule et synchronisation du service), **suivi d'étape** (taper une étape mar
 API), décompte in-app, notification best-effort. Argument de plus pour Capacitor si le mode cuisine
 devient central. L'interdiction de `Date.now` ne vise que `engine/` — l'UI utilise l'heure réelle.
 
-### Fonctionnalités conçues en session 2 (non codées) — voir docs/RECAP_SESSION_2.md
+### Fonctionnalités conçues en session 2 — état d'implémentation par point, voir docs/RECAP_SESSION_2.md
 
 - **Rejet personnel d'aliments** — `HardConstraints.excludedFoodIds` est désormais LU par une 5ᵉ
-  couche d'exclusion `exclusions` (exclusion dure). Miroir `requiredFoodIds` (« je veux ça »)
-  décidé, non codé : filtre dur en contexte « Aujourd'hui » seulement.
+  couche d'exclusion `exclusions` (exclusion dure). Son miroir `requiredFoodIds` (« je veux ça »)
+  est désormais **CODÉ** — 6ᵉ couche d'exclusion `requis` (`app/src/engine/selection/requis.ts`) :
+  filtre dur en contexte « Aujourd'hui » seulement. Le champ vit dans `MealContext`, pas dans
+  `HardConstraints` : `WeekPlanRequest` n'ayant pas de `MealContext`, l'exigence devient
+  structurellement inexprimable pour un plan de semaine (§6.5 ter ENGINE).
 - **Courses non alimentaires** — table `shopping_extra_item` (10 rayons, ci-dessus) pour faire les
   courses complètes, pas seulement l'alimentaire. Conçue, non codée.
 - **Roue des goûts (radar)** — lecture visuelle des 3 axes sensoriels en 6 pôles, par plat et par
   profil ; partage via la carte-image Canvas (§8.7). v1 = pôles sensoriels ; rayons cuisine = v2.
 - **Conseils vin & modes recette/repas** (chantier B, en file) — conseil vin = métadonnée
   éditoriale, jamais dans le score ni le calcul nutritionnel, masquable. Mode recette (plat unique)
-  vs repas (entrée+plat+dessert avec accords). L'alcool reste un ingrédient de cuisine, jamais
-  compté dans le calcul nutritionnel d'un repas ; comme boisson, c'est un article de courses.
+  vs repas (entrée+plat+dessert avec accords). Une boisson alcoolisée n'est jamais un aliment du
+  repas ; un alcool employé **comme ingrédient** de cuisine est agrégé dans le calcul nutritionnel
+  comme n'importe quel autre ingrédient (option A, `docs/CONCEPTION_B_VIN_REPAS.md` §1.7) ; comme
+  boisson, c'est un article de courses.
 - **Scan produit** (OpenFoodFacts, opt-in, jamais les notes façon Yuka) — v2+++++.
 
 ---
