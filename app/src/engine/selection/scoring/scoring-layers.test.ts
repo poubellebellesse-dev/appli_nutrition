@@ -1,12 +1,12 @@
 // engine/selection/scoring/scoring-layers.test.ts — filet générique contre une divergence
 // silencieuse entre `LAYER_DESCRIPTORS` (registre, docs/ENGINE.md §6.3) et l'implémentation des
-// 6 couches de score livrées à ce stade (`nutri`, `preference`, `craving`, `season`, `variety`,
-// `habit`).
+// 7 couches de score livrées à ce stade (`nutri`, `preference`, `craving`, `season`, `variety`,
+// `habit`, `speed`).
 //
 // Complète les tests dédiés de chaque fichier (nutri.test.ts, preference.test.ts, …) plutôt que
-// de les dupliquer : ici on ne vérifie QUE ce qui doit rester identique entre les 6 couches et le
+// de les dupliquer : ici on ne vérifie QUE ce qui doit rester identique entre les 7 couches et le
 // registre — nature, criticité, poids par défaut — et l'invariant §6.1 (aucune réduction de
-// l'ensemble des candidats) balayé sur les 6 en une seule fois.
+// l'ensemble des candidats) balayé sur les 7 en une seule fois.
 
 import { describe, expect, it } from 'vitest'
 import { LAYER_DESCRIPTORS } from '../index.js'
@@ -19,6 +19,7 @@ import { cravingLayer } from './craving.js'
 import { seasonLayer } from './season.js'
 import { varietyLayer } from './variety.js'
 import { habitLayer } from './habit.js'
+import { speedLayer } from './speed.js'
 
 // `as SelectionLayer` : même motif que `EXCLUSION_LAYERS` (exclusion-pass.ts) — sous `strict`,
 // `SelectionLayer<X>` n'est pas structurellement assignable à `SelectionLayer<unknown>` dans un
@@ -31,6 +32,7 @@ const IMPLEMENTED_LAYERS: readonly SelectionLayer[] = [
   seasonLayer as SelectionLayer,
   varietyLayer as SelectionLayer,
   habitLayer as SelectionLayer,
+  speedLayer as SelectionLayer,
 ]
 
 function descriptorFor(id: ScoringLayerId) {
@@ -39,7 +41,7 @@ function descriptorFor(id: ScoringLayerId) {
   return descriptor
 }
 
-describe('scoring/ — les 6 couches livrées restent alignées avec LAYER_DESCRIPTORS (§6.3 ENGINE)', () => {
+describe('scoring/ — les 7 couches livrées restent alignées avec LAYER_DESCRIPTORS (§6.3 ENGINE)', () => {
   it.each(IMPLEMENTED_LAYERS)('$id : kind, critical et defaultWeight identiques au registre', (layer) => {
     const descriptor = descriptorFor(layer.id as ScoringLayerId)
     expect(layer.kind).toBe('scoring')
@@ -49,12 +51,12 @@ describe('scoring/ — les 6 couches livrées restent alignées avec LAYER_DESCR
     expect(layer.defaultWeight).toBe(descriptor.defaultWeight)
   })
 
-  it('LAYER_DESCRIPTORS reste à 16 entrées (6 exclusion + 10 score) — ce lot n’en ajoute aucune', () => {
-    expect(LAYER_DESCRIPTORS).toHaveLength(16)
+  it('LAYER_DESCRIPTORS est à 17 entrées (6 exclusion + 11 score) — `speed` a rejoint le registre', () => {
+    expect(LAYER_DESCRIPTORS).toHaveLength(17)
   })
 })
 
-describe('scoring/ — invariant §6.1 balayé sur les 6 couches : jamais de réduction de l’ensemble', () => {
+describe('scoring/ — invariant §6.1 balayé sur les 7 couches : jamais de réduction de l’ensemble', () => {
   it.each(IMPLEMENTED_LAYERS)('$id : autant de scores que de candidats reçus, y compris un candidat inconnu du catalogue', (layer) => {
     const connue = makeRecipe('connue')
     const catalog = makeCatalog([connue])

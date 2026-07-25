@@ -6,17 +6,43 @@
 // §2/§3 ENGINE : SEL --> GUARD). `layers` reste paramétrable (comme `runExclusionPass`) pour isoler
 // un sous-ensemble de couches en test.
 //
-// Résolution des poids (§6.3 ENGINE), dans cet ordre :
-//  1. poids effectif d'une couche = `req.weights?.[id] ?? layer.defaultWeight` ;
+// Résolution des poids (§6.3, §6.3 bis, §6.5 ENGINE), dans cet ordre :
+//  1. poids effectif d'une couche = le premier défini parmi, du PLUS FORT au plus faible :
+//       (a) `req.weights?.[id]`               — échappatoire explicite de test/débogage, gagne
+//                                                 toujours ;
+//       (b) la bascule dynamique de `craving`  — `CRAVING_DYNAMIC_WEIGHT`, UNIQUEMENT pour la
+//                                                 couche `craving`, UNIQUEMENT si une envie est
+//                                                 RÉELLEMENT exprimée (`isCravingReallyExpressed`
+//                                                 ci-dessous, §6.5 « Poids dynamiques ») ;
+//       (c) la surcharge de l'archétype actif  — `archetypeWeightOverride`, ./archetypes.js,
+//                                                 §6.3 bis ;
+//       (d) `layer.defaultWeight`              — poids de référence, si rien de ce qui précède ne
+//                                                 s'applique.
+//     Précédence résumée : `defaultWeight` < archétype < bascule `craving` < `weights` explicite.
 //  2. une couche de poids EFFECTIF ≤ 0 est IGNORÉE — ni `configure()` ni `apply()` ne sont
 //     appelés. C'est le cas par défaut de `habit` (`defaultWeight: 0`, §7.5 : démarrage à froid
-//     propre, le poids croît avec l'historique) ; ne pas l'exécuter est aussi une économie, pas
-//     seulement une sémantique — évite de dériver un `HabitLayerConfig` pour rien ;
+//     propre, le poids croît avec l'historique) ET de `speed` (`defaultWeight: 0`, relevée
+//     uniquement par l'archétype « Rapide », §6.3 bis) ; ne pas exécuter une couche inactive est
+//     aussi une économie, pas seulement une sémantique — évite de dériver une config pour rien ;
 //  3. les poids retenus (couches à poids > 0) sont NORMALISÉS à Σ = 1 avant application ;
 //  4. si AUCUNE couche ne subsiste (tous les poids à 0, ou `layers` vide) : chaque candidat reçoit
 //     `NEUTRAL_SCORE`. Aucun signal exploitable ne doit jamais se lire comme « mauvais » — même
 //     convention que chaque couche applique déjà individuellement quand ELLE n'a rien à comparer
 //     (scoring/index.ts, `NEUTRAL_SCORE`) ; ici c'est le pipeline entier qui n'a rien à comparer.
+//
+// ⚠️ `occasion` a aussi un poids dynamique documenté (§6.5 ENGINE : n°2 pendant une occasion
+// active, dans la fenêtre de dates) mais la couche `occasion` N'EST PAS IMPLÉMENTÉE (P2, absente
+// de `SCORING_LAYERS`) — aucune bascule pour elle ici, ce n'est pas un oubli, juste hors périmètre
+// de ce lot.
+//
+// ⚠️ POINT STRUCTUREL (§6.5 précision 2, « Aujourd'hui = piloté par l'envie · Semaine = pilotée par
+// `nutri` ») : la bascule de `craving` ne peut jouer QUE parce que `req.context.envie` porte
+// l'information — aucun drapeau de contexte « Aujourd'hui vs Semaine » n'existe ni n'est
+// nécessaire, la garantie vient de la FORME de la requête, pas d'un indicateur explicite. Même
+// parti que `MealContext.requiredFoodIds` (domain/request.ts, voir son en-tête) : `planWeek`
+// (non câblé, P1c) construira ses requêtes SANS `envie` renseignée pour un jour futur — la bascule
+// est donc structurellement inatteignable pour `planWeek`, sans qu'aucun code ici n'ait besoin de
+// le savoir. N'ajoutez pas de drapeau de contexte pour « garantir » ça, ce serait redondant.
 //
 // ⚠️ DÉCISION DE FORMAT DU BREAKDOWN (assumée, documentée ici car sa conséquence est irréversible
 // pour qui consomme `ScoreBreakdown`) : chaque entrée stocke la CONTRIBUTION PONDÉRÉE de la couche
@@ -32,6 +58,7 @@
 
 import type {
   Catalog,
+  CravingAxes,
   PipelineTrace,
   RecipeId,
   ScoreBreakdown,
@@ -47,10 +74,12 @@ import { cravingLayer } from './scoring/craving.js'
 import { seasonLayer } from './scoring/season.js'
 import { varietyLayer } from './scoring/variety.js'
 import { habitLayer } from './scoring/habit.js'
+import { speedLayer } from './scoring/speed.js'
+import { archetypeWeightOverride } from './archetypes.js'
 import { assertScoringLayersNeverExclude } from '../guards/index.js'
 
 /**
- * Registre des couches de score IMPLÉMENTÉES (6 des 10 du registre complet, `LAYER_DESCRIPTORS`) —
+ * Registre des couches de score IMPLÉMENTÉES (7 des 11 du registre complet, `LAYER_DESCRIPTORS`) —
  * `pantry`, `occasion`, `topic`, `cost` restent P2 (voir selection/index.ts). Cast `as
  * SelectionLayer` nécessaire pour les stocker ensemble : même motif qu'`EXCLUSION_LAYERS`
  * (exclusion-pass.ts), voir son commentaire pour le pourquoi (contravariance de `Config` sous
@@ -63,7 +92,29 @@ export const SCORING_LAYERS: readonly SelectionLayer[] = [
   varietyLayer as SelectionLayer,
   seasonLayer as SelectionLayer,
   habitLayer as SelectionLayer,
+  speedLayer as SelectionLayer,
 ]
+
+/**
+ * Poids brut de `craving` quand la bascule dynamique s'applique (§6.5 ENGINE, « Poids
+ * dynamiques »). Avec les couches implémentées à leurs poids de référence, 0.50 brut donne
+ * ≈ 0.40 APRÈS normalisation — la valeur citée en §6.5 — mais l'exacte valeur normalisée dépend
+ * des couches réellement actives (archétype, `req.weights`…). Ce qui est GARANTI et testé, c'est
+ * que `craving` devient le poids le plus élevé, pas qu'il vaut exactement 0.40.
+ */
+export const CRAVING_DYNAMIC_WEIGHT = 0.5
+
+/**
+ * §6.5 ENGINE, « Poids dynamiques » : une envie est RÉELLEMENT exprimée quand `envie` n'est pas
+ * `null` ET qu'au moins un de ses trois axes ne l'est pas — un objet d'envie vide (les 3 axes à
+ * `null`) ne déclenche PAS la bascule. Cohérent avec `scoreCraving` (scoring/craving.ts), qui rend
+ * déjà `NEUTRAL_SCORE` dans ce même cas (rien à comparer) : un poids élevé sur un signal neutre
+ * n'aurait aucun effet utile, la bascule ne se déclenche donc que quand elle a un signal à amplifier.
+ */
+function isCravingReallyExpressed(envie: CravingAxes | null): boolean {
+  if (envie === null) return false
+  return envie.sucreSale !== null || envie.legerConsistant !== null || envie.chaudFroid !== null
+}
 
 export interface ScoringPassResult {
   /** Score final [0, 1] par candidat. */
@@ -73,8 +124,8 @@ export interface ScoringPassResult {
   /**
    * Poids NORMALISÉS effectivement appliqués — une entrée PAR COUCHE ACTIVE uniquement (même
    * convention de sparsité que `ScoreBreakdown`, domain/result.ts : « sous-ensemble des couches
-   * effectivement appliquées »), pas un `ScoreWeights` complet sur les 10 id du registre. Cette
-   * passe ne connaît que les couches qu'on lui a passées (`layers`, 6 par défaut) — compléter à
+   * effectivement appliquées »), pas un `ScoreWeights` complet sur les 11 id du registre. Cette
+   * passe ne connaît que les couches qu'on lui a passées (`layers`, 7 par défaut) — compléter à
    * zéro les 4 couches non implémentées (`pantry`/`occasion`/`topic`/`cost`) pour assembler
    * `EngineDiagnostics.weights` (§8.2 ENGINE) est la responsabilité de l'appelant, pas la sienne.
    */
@@ -83,7 +134,7 @@ export interface ScoringPassResult {
 
 /**
  * Exécute la passe de score (§6.4 ENGINE) sur `candidates` (le résultat de `runExclusionPass`,
- * typiquement). `layers` par défaut = `SCORING_LAYERS` (les 6 couches implémentées) ; paramétrable
+ * typiquement). `layers` par défaut = `SCORING_LAYERS` (les 7 couches implémentées) ; paramétrable
  * pour isoler un sous-ensemble de couches en test.
  */
 export function runScoringPass(
@@ -92,13 +143,18 @@ export function runScoringPass(
   candidates: CandidateSet,
   layers: readonly SelectionLayer[] = SCORING_LAYERS
 ): ScoringPassResult {
-  // 1. Résoudre le poids effectif de chaque couche (§6.3, règle 1), écarter les poids ≤ 0 (règle 2).
+  // 1. Résoudre le poids effectif de chaque couche (§6.3/§6.3 bis/§6.5, règle 1 — voir la chaîne de
+  //    précédence documentée en en-tête de fichier), écarter les poids ≤ 0 (règle 2).
   const activeLayers: Array<{ readonly layer: SelectionLayer; readonly weight: number }> = []
   for (const layer of layers) {
     if (layer.kind !== 'scoring') {
       throw new TypeError(`runScoringPass : la couche '${layer.id}' n'est pas de nature 'scoring'`)
     }
-    const effectiveWeight = req.weights?.[layer.id as ScoringLayerId] ?? layer.defaultWeight
+    const id = layer.id as ScoringLayerId
+    const cravingDynamicWeight =
+      id === 'craving' && isCravingReallyExpressed(req.context.envie) ? CRAVING_DYNAMIC_WEIGHT : undefined
+    const effectiveWeight =
+      req.weights?.[id] ?? cravingDynamicWeight ?? archetypeWeightOverride(req.archetype, id) ?? layer.defaultWeight
     if (effectiveWeight > 0) activeLayers.push({ layer, weight: effectiveWeight })
   }
 

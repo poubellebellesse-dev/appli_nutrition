@@ -7,14 +7,14 @@
 // complet — SEL a le droit de dépendre de NUT (§2 ENGINE), mais ces fonctions restent testables
 // sans catalogue ni index dérivé.
 //
-// 6 de ces 7 fonctions (`nutri`, `preference`, `craving`, `season`, `variety`, `habit`) sont
-// désormais AUSSI enveloppées dans le contrat `SelectionLayer` (`nutriLayer`, `preferenceLayer`,
-// `cravingLayer`, `seasonLayer`, `varietyLayer`, `habitLayer`), dans le MÊME fichier que la
-// fonction pure qu'elles enveloppent — `configure` y fait le pont vers `Catalog`/
+// Les 7 fonctions (`nutri`, `preference`, `craving`, `season`, `variety`, `habit`, `speed`) sont
+// désormais TOUTES enveloppées dans le contrat `SelectionLayer` (`nutriLayer`, `preferenceLayer`,
+// `cravingLayer`, `seasonLayer`, `varietyLayer`, `habitLayer`, `speedLayer`), dans le MÊME fichier
+// que la fonction pure qu'elles enveloppent — `configure` y fait le pont vers `Catalog`/
 // `SuggestionRequest` (pour `nutri` : via `resolveReferenceIntakes`, engine/nutrition/), `apply`
-// reste sans accès au catalogue. `speed` (signal non rattaché au registre, voir §6.5 note ¶
-// ENGINE) reste une fonction pure SEULE, sans couche — hors lot. La passe pondérée qui combine
-// les couches de score (`runScoringPass`) n'est pas traitée ici (lot suivant).
+// reste sans accès au catalogue. `speed` a rejoint les autres (session du 2026-07-25) : ce n'est
+// plus un signal hors registre (voir speed.ts pour la décision). La passe pondérée qui combine
+// les couches de score (`runScoringPass`) n'est pas traitée ici (module scoring-pass.ts).
 //
 // NEUTRAL_SCORE = 0.5 est la valeur « ni bonus ni malus » : le signal neutre qu'une fonction
 // retourne quand elle n'a rien d'exploitable à comparer (aucune cible, aucune préférence connue,
@@ -31,7 +31,7 @@
 // moment où le graphe circulaire se referme, et aucun des 7 fichiers n'y accède au top-level
 // (uniquement à l'intérieur de leurs fonctions, appelées plus tard).
 //
-// Dépendances autorisées : domain/, et — pour les 5 fichiers qui exposent aussi une couche —
+// Dépendances autorisées : domain/, et — pour les 7 fichiers qui exposent aussi une couche —
 // `../index.js` (le contrat `SelectionLayer` local à selection/) — §2/§3 ENGINE. Import circulaire
 // avec `../index.js` assumé de la même façon qu'entre les couches d'exclusion et ce fichier
 // (voir exclusions.ts) : uniquement des `import type`, erasés à la compilation, donc sans cycle
@@ -54,6 +54,7 @@ export { scoreSeason, seasonLayer } from './season.js'
 export type { SeasonLayerConfig } from './season.js'
 export { scoreVariety, varietyLayer } from './variety.js'
 export type { ScoreVarietyArgs, VarietyOverride, VarietyTau, VarietyLayerConfig } from './variety.js'
-export { scoreSpeed } from './speed.js'
+export { scoreSpeed, speedLayer } from './speed.js'
+export type { SpeedLayerConfig } from './speed.js'
 export { scoreHabit, habitLayer } from './habit.js'
 export type { ScoreHabitArgs, HabitLayerConfig } from './habit.js'

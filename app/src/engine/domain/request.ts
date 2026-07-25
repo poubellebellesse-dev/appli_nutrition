@@ -3,6 +3,7 @@
 // Requête de suggestion (docs/ENGINE.md §8.1).
 
 import type { AllergenId, FoodId, RecipeId, TopicId } from './ids.js'
+import type { ArchetypeId } from './archetype-ids.js'
 import type { DietCode, MealSlot } from './catalog.js'
 import type { Minutes } from './units.js'
 import type { UserProfile } from './profile.js'
@@ -80,6 +81,14 @@ export interface SuggestionRequest {
   /** [] par défaut — tant qu'aucune thématique n'est active, `topic` reste à poids nul. */
   readonly activeTopics: readonly TopicId[]
   readonly weights?: Partial<ScoreWeights>
+  /**
+   * Archétype de pondération nommé (§6.3 bis ENGINE) — surcharge certaines couches de score, voir
+   * `ARCHETYPE_WEIGHT_OVERRIDES` (engine/selection/archetypes.ts). Absent → `'equilibre'` (poids
+   * de référence, aucune surcharge). Ordre de précédence résolu par `runScoringPass`
+   * (scoring-pass.ts) : `defaultWeight` < archétype < bascule dynamique de `craving` < `weights`
+   * explicite ci-dessus — un poids passé dans `weights` gagne toujours.
+   */
+  readonly archetype?: ArchetypeId
   /** défaut 5. */
   readonly limit?: number
   /** reproductibilité — PRNG à graine explicite, jamais `Math.random()` (§1 ENGINE). */

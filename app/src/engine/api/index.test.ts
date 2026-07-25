@@ -106,10 +106,10 @@ describe('engine/api — createEngine (§8 ENGINE)', () => {
     expect(engine.catalogVersion).toBe('catalog-test-1.2.3')
   })
 
-  it('layers expose les 16 descripteurs du registre (LAYER_DESCRIPTORS)', () => {
+  it('layers expose les 17 descripteurs du registre (LAYER_DESCRIPTORS)', () => {
     const engine = createEngine(makeCatalog())
     expect(engine.layers).toBe(LAYER_DESCRIPTORS)
-    expect(engine.layers).toHaveLength(16)
+    expect(engine.layers).toHaveLength(17)
   })
 
   it("layer('nutri') retourne la couche implémentée correspondante", () => {

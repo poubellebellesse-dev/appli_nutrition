@@ -7,12 +7,15 @@
 //   3. Câblage du garde-fou `assertScoringLayersNeverExclude` (§6.1 ENGINE) sur une couche factice
 //      qui omet un candidat.
 //
-// Le câblage des 6 vraies couches (SCORING_LAYERS) est balayé plus légèrement ici — la couverture
+// Le câblage des 7 vraies couches (SCORING_LAYERS) est balayé plus légèrement ici — la couverture
 // détaillée par couche vit dans scoring/scoring-layers.test.ts et les tests dédiés par fichier.
+//
+// Un 4e volet couvre la RÉSOLUTION DES POIDS ajoutée cette session : archétypes (§6.3 bis),
+// bascule dynamique de `craving` (§6.5) et leur précédence — voir les describe() en bas de fichier.
 
 import { describe, expect, it } from 'vitest'
 import { EngineSafetyError } from '../domain/index.js'
-import type { RecipeId, ScoringLayerId } from '../domain/index.js'
+import type { ArchetypeId, RecipeId, ScoringLayerId } from '../domain/index.js'
 import type { CandidateSet, ScoringLayerResult, SelectionLayer } from './index.js'
 import { NEUTRAL_SCORE } from './scoring/index.js'
 import { SCORING_LAYERS, rankScoredCandidates, runScoringPass } from './scoring-pass.js'
@@ -235,10 +238,10 @@ describe('selection/scoring-pass — garde-fou §6.1 (assertScoringLayersNeverEx
   })
 })
 
-describe('selection/scoring-pass — câblage des 6 vraies couches (SCORING_LAYERS)', () => {
-  it('SCORING_LAYERS contient exactement les 6 couches de score implémentées', () => {
+describe('selection/scoring-pass — câblage des 7 vraies couches (SCORING_LAYERS)', () => {
+  it('SCORING_LAYERS contient exactement les 7 couches de score implémentées', () => {
     expect(SCORING_LAYERS.map((layer) => layer.id).sort()).toEqual(
-      ['craving', 'habit', 'nutri', 'preference', 'season', 'variety'].sort()
+      ['craving', 'habit', 'nutri', 'preference', 'season', 'speed', 'variety'].sort()
     )
   })
 
@@ -254,6 +257,169 @@ describe('selection/scoring-pass — câblage des 6 vraies couches (SCORING_LAYE
       const score = result.scores.get(recipeId)!
       expect(score).toBeGreaterThanOrEqual(0)
       expect(score).toBeLessThanOrEqual(1)
+    }
+  })
+})
+
+// ------------------------------------------------------------------------------------------
+// Archétypes (§6.3 bis ENGINE) — résolus par `runScoringPass` sur les 7 VRAIES couches
+// (SCORING_LAYERS), pas des couches synthétiques : c'est justement l'interaction entre la
+// surcharge d'archétype et les `defaultWeight` réels du registre qu'on veut prouver.
+// ------------------------------------------------------------------------------------------
+
+describe('selection/scoring-pass — archétypes (§6.3 bis ENGINE)', () => {
+  // Poids de référence (defaultWeight, LAYER_DESCRIPTORS) des couches réellement dans
+  // SCORING_LAYERS — `pantry`/`occasion`/`topic`/`cost` n'y figurent jamais (non implémentées),
+  // listées ici uniquement pour satisfaire `Record<ScoringLayerId, number>`.
+  const REFERENCE_WEIGHTS: Record<ScoringLayerId, number> = {
+    nutri: 0.25,
+    preference: 0.25,
+    craving: 0.2,
+    variety: 0.15,
+    season: 0.1,
+    pantry: 0,
+    habit: 0,
+    occasion: 0,
+    speed: 0,
+    topic: 0,
+    cost: 0,
+  }
+
+  /** Poids normalisés attendus (Σ = 1 sur les couches à poids > 0 seulement) pour `overrides`. */
+  function expectedNormalizedWeights(
+    overrides: Partial<Record<ScoringLayerId, number>>
+  ): ReadonlyMap<ScoringLayerId, number> {
+    const raw = { ...REFERENCE_WEIGHTS, ...overrides }
+    const active = (Object.entries(raw) as Array<[ScoringLayerId, number]>).filter(([, w]) => w > 0)
+    const total = active.reduce((sum, [, w]) => sum + w, 0)
+    return new Map(active.map(([id, w]) => [id, w / total]))
+  }
+
+  const ARCHETYPE_CASES: ReadonlyArray<readonly [ArchetypeId, Partial<Record<ScoringLayerId, number>>]> = [
+    ['equilibre', {}],
+    ['envie', { craving: 0.4 }],
+    ['decouverte', { variety: 0.35 }],
+    ['de_saison', { season: 0.3 }],
+    ['mes_gouts', { preference: 0.4 }],
+    ['rapide', { speed: 0.3 }],
+  ]
+
+  it.each(ARCHETYPE_CASES)(
+    '%s : relève sa couche, les autres gardent leur poids de référence — poids normalisés exacts',
+    (archetype, overrides) => {
+      const catalog = makeCatalog([makeRecipe('a')])
+      const req = { ...makeRequest(), archetype }
+
+      const result = runScoringPass(catalog, req, new Set(['a' as RecipeId]))
+      const expected = expectedNormalizedWeights(overrides)
+
+      expect(Object.keys(result.weights).sort()).toEqual([...expected.keys()].sort())
+      for (const [id, weight] of expected) {
+        expect(result.weights[id]).toBeCloseTo(weight, 9)
+      }
+    }
+  )
+
+  it('absence d’archétype (champ omis) produit exactement les mêmes poids que l’archétype "equilibre" explicite', () => {
+    const catalog = makeCatalog([makeRecipe('a')])
+    const sansArchetype = runScoringPass(catalog, makeRequest(), new Set(['a' as RecipeId]))
+    const equilibreExplicite = runScoringPass(
+      catalog,
+      { ...makeRequest(), archetype: 'equilibre' as const },
+      new Set(['a' as RecipeId])
+    )
+
+    expect(sansArchetype.weights).toEqual(equilibreExplicite.weights)
+  })
+
+  it('l’archétype "rapide" rend `speed` réellement exécutée — poids nul (couche absente) sans lui', () => {
+    const catalog = makeCatalog([makeRecipe('a')])
+    const sansArchetype = runScoringPass(catalog, makeRequest(), new Set(['a' as RecipeId]))
+    const rapide = runScoringPass(catalog, { ...makeRequest(), archetype: 'rapide' as const }, new Set(['a' as RecipeId]))
+
+    expect(sansArchetype.weights.speed).toBeUndefined() // poids ≤ 0 → couche non exécutée, absente
+    expect(rapide.weights.speed).toBeGreaterThan(0)
+  })
+})
+
+// ------------------------------------------------------------------------------------------
+// Poids dynamique de `craving` (§6.5 ENGINE, « Poids dynamiques ») — n'a d'effet qu'en contexte
+// « Aujourd'hui » : `req.context.envie` porte l'information, aucun drapeau de contexte séparé.
+// ------------------------------------------------------------------------------------------
+
+describe('selection/scoring-pass — bascule dynamique de `craving` (§6.5 ENGINE)', () => {
+  it('envie réellement exprimée (≥ 1 axe non null) → craving devient le poids le plus élevé', () => {
+    const catalog = makeCatalog([makeRecipe('a')])
+    const req = makeRequest({ envie: { sucreSale: 1, legerConsistant: null, chaudFroid: null } })
+
+    const result = runScoringPass(catalog, req, new Set(['a' as RecipeId]))
+    const cravingWeight = result.weights.craving!
+
+    for (const [id, weight] of Object.entries(result.weights)) {
+      if (id === 'craving') continue
+      expect(cravingWeight).toBeGreaterThan(weight!)
+    }
+  })
+
+  it('sans envie (`envie: null`) → craving reste à son poids de référence, identique à `equilibre`', () => {
+    const catalog = makeCatalog([makeRecipe('a')])
+    const sansEnvie = runScoringPass(catalog, makeRequest({ envie: null }), new Set(['a' as RecipeId]))
+    const equilibre = runScoringPass(
+      catalog,
+      { ...makeRequest(), archetype: 'equilibre' as const },
+      new Set(['a' as RecipeId])
+    )
+
+    expect(sansEnvie.weights.craving).toBeCloseTo(equilibre.weights.craving!, 9)
+  })
+
+  it('objet d’envie dont les 3 axes sont `null` → NE déclenche PAS la bascule (envie « vide »)', () => {
+    const catalog = makeCatalog([makeRecipe('a')])
+    const envieVide = runScoringPass(
+      catalog,
+      makeRequest({ envie: { sucreSale: null, legerConsistant: null, chaudFroid: null } }),
+      new Set(['a' as RecipeId])
+    )
+    const sansEnvie = runScoringPass(catalog, makeRequest({ envie: null }), new Set(['a' as RecipeId]))
+
+    expect(envieVide.weights.craving).toBeCloseTo(sansEnvie.weights.craving!, 9)
+  })
+})
+
+// ------------------------------------------------------------------------------------------
+// Précédence des poids : `defaultWeight` < archétype < bascule dynamique de `craving` <
+// `req.weights` explicite (documentée en en-tête de scoring-pass.ts).
+// ------------------------------------------------------------------------------------------
+
+describe('selection/scoring-pass — précédence des poids', () => {
+  it('req.weights.craving explicite gagne sur la bascule dynamique, même avec une envie exprimée', () => {
+    const catalog = makeCatalog([makeRecipe('a')])
+    const req = {
+      ...makeRequest({ envie: { sucreSale: 1, legerConsistant: null, chaudFroid: null } }),
+      weights: { craving: 0.05 },
+    }
+
+    const result = runScoringPass(catalog, req, new Set(['a' as RecipeId]))
+
+    // 0.05 explicite doit primer sur CRAVING_DYNAMIC_WEIGHT (0.50 brut) : craving redevient un
+    // poids FAIBLE malgré l'envie exprimée, plus bas que nutri (0.25 brut, inchangé).
+    expect(result.weights.craving!).toBeLessThan(result.weights.nutri!)
+  })
+
+  it('la bascule dynamique de craving gagne sur l’archétype actif (qui relève une autre couche)', () => {
+    const catalog = makeCatalog([makeRecipe('a')])
+    const req = {
+      ...makeRequest({ envie: { sucreSale: 1, legerConsistant: null, chaudFroid: null } }),
+      archetype: 'decouverte' as const, // relève `variety` (0.35 brut) — pas `craving`
+    }
+
+    const result = runScoringPass(catalog, req, new Set(['a' as RecipeId]))
+    const cravingWeight = result.weights.craving!
+
+    // craving (0.50 brut, bascule) doit rester devant variety (0.35 brut, archétype).
+    for (const [id, weight] of Object.entries(result.weights)) {
+      if (id === 'craving') continue
+      expect(cravingWeight).toBeGreaterThan(weight!)
     }
   })
 })

@@ -63,8 +63,8 @@ export interface Engine {
  */
 const ENGINE_VERSION = '0.1.0'
 
-/** Les 12 couches IMPLÉMENTÉES du registre (6 exclusion + 6 score) — voir `LAYER_DESCRIPTORS` pour
- * les 16 déclarées (4 de plus, encore P2 : `pantry`, `occasion`, `topic`, `cost`). */
+/** Les 13 couches IMPLÉMENTÉES du registre (6 exclusion + 7 score) — voir `LAYER_DESCRIPTORS` pour
+ * les 17 déclarées (4 de plus, encore P2 : `pantry`, `occasion`, `topic`, `cost`). */
 const IMPLEMENTED_LAYERS: readonly SelectionLayer[] = [...EXCLUSION_LAYERS, ...SCORING_LAYERS]
 
 /**

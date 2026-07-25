@@ -21,6 +21,12 @@
 // dur d'`exclusions` — « je veux ça » plutôt que « je ne veux pas ça », lit
 // `MealContext.requiredFoodIds`, pas `HardConstraints` — voir domain/request.ts et
 // selection/requis.ts).
+//
+// Registre étendu à 17 entrées (6 exclusion + 11 score) par l'ajout de la couche `speed` (session
+// du 2026-07-25, tranchée) : la note ¶ de §6.5 ENGINE laissait son rattachement ouvert (« pas une
+// 17ᵉ couche du registre ») — c'est désormais résolu, `speed` EST une couche du registre à part
+// entière, poids par défaut nul, relevée par l'archétype « Rapide » (§6.3 bis, voir
+// selection/archetypes.ts). Voir selection/scoring/speed.ts.
 
 export type ExclusionLayerId = 'allergenes' | 'regime' | 'exclusions' | 'requis' | 'temps' | 'equipement'
 
@@ -33,6 +39,7 @@ export type ScoringLayerId =
   | 'pantry'
   | 'habit'
   | 'occasion'
+  | 'speed'
   | 'topic'
   | 'cost'
 
