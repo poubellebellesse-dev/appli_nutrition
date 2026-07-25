@@ -9,6 +9,7 @@ import type {
   AllergenId,
   Catalog,
   CatalogIndexes,
+  Explanation,
   Food,
   FoodId,
   HardConstraints,
@@ -18,7 +19,7 @@ import type {
   ScoringLayerId,
 } from '../domain/index.js'
 import { EngineSafetyError, g, min } from '../domain/index.js'
-import { assertNoDeclaredAllergen, assertScoringLayersNeverExclude } from './index.js'
+import { assertNoDeclaredAllergen, assertNoTherapeuticClaim, assertScoringLayersNeverExclude } from './index.js'
 
 const EMPTY_INDEXES: CatalogIndexes = {
   recipesByAllergen: new Map(),
@@ -208,5 +209,47 @@ describe('guards/assertScoringLayersNeverExclude — invariant §6.1 (aucune cou
   it("ne lève rien quand aucune couche n'a tourné (tous les poids à 0, scoringLayerCounts vide)", () => {
     const trace = traceWith(5, new Map())
     expect(() => assertScoringLayersNeverExclude(trace)).not.toThrow()
+  })
+})
+
+// --- assertNoTherapeuticClaim (§6.2 ARCHITECTURE) ------------------------------------------------
+//
+// Cas construits à la main, comme les deux garde-fous ci-dessus — indépendants d'explain.ts (voir
+// selection/explain.test.ts pour la non-régression sur les VRAIS gabarits produits par le moteur).
+// Le lexique et sa normalisation sont dupliqués depuis catalog/build.mjs (voir guards/banned-terms.ts
+// pour le pourquoi) ; tests/banned-terms-consistency.test.mjs, à la racine, garantit que les deux
+// copies ne divergent jamais.
+
+function explanationWithLabel(label: string): Explanation {
+  return { criterion: 'nutri', contribution: 0.3, label }
+}
+
+describe('guards/assertNoTherapeuticClaim — lexique banni (§6.2 ARCHITECTURE)', () => {
+  it('lève EngineSafetyError sur un terme banni de la famille thérapeutique', () => {
+    expect(() => assertNoTherapeuticClaim([explanationWithLabel('Ce plat soigne les maux de ventre')])).toThrow(
+      EngineSafetyError
+    )
+  })
+
+  it('lève EngineSafetyError sur un terme banni de la famille jugement', () => {
+    expect(() => assertNoTherapeuticClaim([explanationWithLabel('Un aliment sain à privilégier')])).toThrow(
+      EngineSafetyError
+    )
+  })
+
+  it('détecte un terme banni indépendamment des accents et de la casse', () => {
+    expect(() => assertNoTherapeuticClaim([explanationWithLabel('Ce plat GUERIT tout')])).toThrow(EngineSafetyError)
+  })
+
+  it('ne lève rien quand aucune explication ne contient de terme banni', () => {
+    expect(() => assertNoTherapeuticClaim([explanationWithLabel('apports équilibrés pour ce repas')])).not.toThrow()
+  })
+
+  it('ne lève rien sur une liste vide', () => {
+    expect(() => assertNoTherapeuticClaim([])).not.toThrow()
+  })
+
+  it('le message nomme le critère fautif', () => {
+    expect(() => assertNoTherapeuticClaim([explanationWithLabel('à éviter en excès')])).toThrow(/nutri/)
   })
 })

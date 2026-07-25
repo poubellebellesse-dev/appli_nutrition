@@ -95,7 +95,10 @@ const ALLERGENS = [
 ]
 
 // Lexique banni (docs/ARCHITECTURE.md §6.2) — deux familles, un seul test.
-const BANNED_TERMS = [
+// Exporté : app/src/engine/guards/banned-terms.ts en garde une COPIE (engine/ ne peut pas importer
+// ce fichier, §3 ENGINE) ; tests/banned-terms-consistency.test.mjs importe les deux listes depuis
+// leurs sources respectives et échoue si elles divergent — voir l'en-tête de banned-terms.ts.
+export const BANNED_TERMS = [
   // Famille thérapeutique (§6.1)
   'soigne', 'soigner', 'guérit', 'guérir', 'traite', 'traiter',
   'prévient la maladie', 'remède', 'thérapie',
@@ -515,7 +518,21 @@ async function main() {
   console.log(`→ ${OUT_PATH}`)
 }
 
-main().catch((err) => {
-  console.error(err instanceof BuildError ? err.message : err)
-  process.exitCode = 1
-})
+// N'exécute `main()` que si ce fichier est lancé comme SCRIPT (`node catalog/build.mjs`, ou via
+// spawnSync dans catalog/build.test.ts) — jamais quand il est simplement IMPORTÉ pour sa constante
+// `BANNED_TERMS` (tests/banned-terms-consistency.test.mjs). Sans cette garde, importer la liste
+// déclencherait un build complet (lecture des sources, écriture de catalog.db) comme effet de bord
+// non désiré d'une simple lecture de constante.
+function isMainModule() {
+  if (!process.argv[1]) return false
+  const invoked = path.resolve(process.argv[1])
+  const thisFile = fileURLToPath(import.meta.url)
+  return process.platform === 'win32' ? invoked.toLowerCase() === thisFile.toLowerCase() : invoked === thisFile
+}
+
+if (isMainModule()) {
+  main().catch((err) => {
+    console.error(err instanceof BuildError ? err.message : err)
+    process.exitCode = 1
+  })
+}

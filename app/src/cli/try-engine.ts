@@ -35,6 +35,7 @@ import {
   EXCLUSION_LAYERS,
   buildSimilarityProfiles,
   diversify,
+  explainSuggestion,
   rankScoredCandidates,
   runExclusionPass,
   runScoringPass,
@@ -585,6 +586,25 @@ function printWeights(weights: Partial<ScoreWeights>): void {
   console.log('')
 }
 
+/**
+ * Explication (§6.7 ENGINE, docs/ENGINE.md — voir aussi engine/selection/explain.ts) — affichée
+ * sous chaque recette du classement. `breakdowns` doit porter l'ENSEMBLE des candidats scorés
+ * (`scoringResult.breakdowns` en entier, jamais seulement les recettes affichées) : c'est la seule
+ * façon de savoir quelles couches discriminent réellement (voir l'en-tête d'explain.ts). Quand la
+ * liste est vide, on le dit EXPLICITEMENT plutôt que de laisser un vide silencieux — information
+ * utile pour juger le moteur (demandé explicitement pour ce banc).
+ */
+function printExplanations(recipeId: RecipeId, breakdowns: ReadonlyMap<RecipeId, ScoreBreakdown>): void {
+  const explanations = explainSuggestion(recipeId, breakdowns)
+  if (explanations.length === 0) {
+    console.log(
+      '      Explication : (aucune — aucune couche de score ne discrimine sur cet ensemble de candidats, §6.7 ENGINE)'
+    )
+    return
+  }
+  console.log(`      Explication : ${explanations.map((e) => `« ${e.label} »`).join(' · ')}`)
+}
+
 function printRanking(
   ranked: readonly RankedCandidate[],
   breakdowns: ReadonlyMap<RecipeId, ScoreBreakdown>,
@@ -604,6 +624,7 @@ function printRanking(
     for (const [id, contribution] of contributions) {
       console.log(`      ${scoringLayerLabel(id).padEnd(14)} ${(contribution * 100).toFixed(1)}`)
     }
+    printExplanations(entry.recipeId, breakdowns)
   })
   console.log('')
   console.log(`${ranked.length} candidat(s) classé(s) au total, ${top.length} affiché(s) (--limit ${limit}).`)
@@ -637,6 +658,7 @@ function printDiversifiedRanking(
     for (const [id, contribution] of contributions) {
       console.log(`      ${scoringLayerLabel(id).padEnd(14)} ${(contribution * 100).toFixed(1)}`)
     }
+    printExplanations(entry.recipeId, breakdowns)
   })
   console.log('')
   console.log(`${totalRanked} candidat(s) classé(s) au total, ${diversified.length} retenu(s) après diversification.`)

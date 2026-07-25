@@ -5,10 +5,11 @@
 // rien. Une `EngineSafetyError` n'est jamais rattrapée silencieusement par l'UI (§4.4 ENGINE) :
 // le pipeline refuse de retourner un résultat non sûr plutôt que de dégrader.
 //
-// `assertNoDeclaredAllergen` (P1a, §5.2 ARCHITECTURE — « ceinture de sécurité ») et
-// `assertScoringLayersNeverExclude` (P1b-3, §6.1/§6.3 ENGINE) sont implémentés ici. Les trois
-// autres (`assertCalorieFloor`, `assertCriticalLayersRan`, `assertNoTherapeuticClaim`) restent des
-// signatures seules (implémentation P2/P3), avec couverture visée à 100 % (§11 ENGINE).
+// `assertNoDeclaredAllergen` (P1a, §5.2 ARCHITECTURE — « ceinture de sécurité »),
+// `assertScoringLayersNeverExclude` (P1b-3, §6.1/§6.3 ENGINE) et `assertNoTherapeuticClaim` (§6.7
+// ENGINE — premier consommateur réel : selection/explain.ts) sont implémentés ici. Les deux
+// autres (`assertCalorieFloor`, `assertCriticalLayersRan`) restent des signatures seules
+// (implémentation P2/P3), avec couverture visée à 100 % (§11 ENGINE).
 //
 // Dépendances autorisées : domain/ UNIQUEMENT (§2 ENGINE : GUARD --> DOM). Ni selection/ ni
 // planning/ ne sont importés ici, alors même que ce sont elles qui appellent guards/ — c'est
@@ -24,6 +25,7 @@ import type {
   WeekPlan,
 } from '../domain/index.js'
 import { EngineSafetyError } from '../domain/index.js'
+import { findBannedTerms } from './banned-terms.js'
 
 // --- assertNoDeclaredAllergen (§5.2 ENGINE / ARCHITECTURE) — implémenté P1a --------------------
 //
@@ -106,5 +108,25 @@ export const assertScoringLayersNeverExclude: AssertScoringLayersNeverExclude = 
   }
 }
 
-/** Aucune explication ne contient le lexique banni (§6.2 ARCHITECTURE). */
+// --- assertNoTherapeuticClaim (§6.2 ARCHITECTURE, §6.7 ENGINE) — implémenté ici -----------------
+//
+// Premier consommateur réel : `selection/explain.ts` (§6.7 ENGINE), qui produit les `Explanation`
+// affichées à l'utilisateur. Vérifie que `label` (seul champ affiché en texte libre — `criterion`
+// est un id fermé, `authority`/`evidenceSheetId` sont hors périmètre de ce lot, réservés à la
+// couche `topic` non implémentée) ne contient aucun terme du lexique banni.
+//
+// Lexique dupliqué depuis `catalog/build.mjs` — voir guards/banned-terms.ts pour le détail du
+// problème de source unique et sa garantie (tests/banned-terms-consistency.test.mjs).
 export type AssertNoTherapeuticClaim = (explanations: readonly Explanation[]) => void
+
+export const assertNoTherapeuticClaim: AssertNoTherapeuticClaim = (explanations) => {
+  for (const explanation of explanations) {
+    const hits = findBannedTerms(explanation.label)
+    if (hits.length > 0) {
+      throw new EngineSafetyError(
+        `assertNoTherapeuticClaim : le label de l'explication du critère '${explanation.criterion}' contient ` +
+          `le(s) terme(s) banni(s) (${hits.join(', ')}) — §6.2 ARCHITECTURE : "${explanation.label}"`
+      )
+    }
+  }
+}

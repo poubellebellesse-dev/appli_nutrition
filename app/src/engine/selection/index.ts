@@ -198,3 +198,11 @@ export { SIMILARITY_WEIGHT_MAIN_INGREDIENT, SIMILARITY_WEIGHT_SENSORY, SIMILARIT
 export type { RecipeSimilarityProfile } from './similarity.js'
 export { DEFAULT_MMR_LAMBDA, diversify } from './diversify.js'
 export type { DiversifiedCandidate } from './diversify.js'
+
+// ------------------------------------------------------------------------------------------
+// Explication (§6.7 ENGINE) — convertit le breakdown d'une recette en phrases prêtes à afficher,
+// restreintes aux couches qui discriminent réellement sur l'ensemble des candidats scorés (voir
+// explain.ts pour la décision de fond). Réexportées ici pour la même surface unique.
+// ------------------------------------------------------------------------------------------
+
+export { CONTRIBUTION_EPSILON, MAX_EXPLANATIONS, discriminatingScoringLayers, explainSuggestion } from './explain.js'
