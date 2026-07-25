@@ -12,10 +12,10 @@
 // regime.ts, exclusions.ts, requis.ts, temps.ts, equipement.ts, exclusion-pass.ts, réexportés plus
 // bas pour offrir une surface unique `engine/selection`.
 //
-// P1b-1/P1b-2 (implémenté ici) : 6 des 10 couches de SCORE (nutri, preference, craving, season,
-// variety, habit), voir scoring/{nutri,preference,craving,season,variety,habit}.ts, réexportées
-// plus bas. La passe de score qui les enchaîne (§6.4 ENGINE, pendant scoring de
-// `runExclusionPass`) n'est pas encore câblée (lot suivant).
+// P1b-1/P1b-2/P1b-3 (implémenté ici) : 6 des 10 couches de SCORE (nutri, preference, craving,
+// season, variety, habit), voir scoring/{nutri,preference,craving,season,variety,habit}.ts, et la
+// passe de score qui les enchaîne (§6.4 ENGINE), `runScoringPass` — voir scoring-pass.ts,
+// réexportées plus bas.
 //
 // Dépendances autorisées : domain/ (§2 ENGINE : SEL --> DOM). LayerId/LayerKind sont déclarés
 // dans domain/ (pas ici) pour que guards/, qui ne connaît QUE domain/, puisse typer
@@ -139,10 +139,8 @@ export type { ExclusionPassResult } from './exclusion-pass.js'
 // ------------------------------------------------------------------------------------------
 // Couches de score — implémentation partielle P1b-1/P1b-2 (6 des 10 couches du registre : `nutri`,
 // `preference`, `craving`, `season`, `variety`, `habit`). `pantry`, `occasion`, `topic`, `cost`
-// restent NON implémentées (P2) — voir LAYER_DESCRIPTORS ci-dessus, inchangé par ce lot. La passe
-// pondérée qui les combine (`runScoringPass`, pendant scoring de `runExclusionPass`) n'est pas
-// câblée ici (lot suivant). Réexportées ici pour la même surface unique `engine/selection` que les
-// couches d'exclusion.
+// restent NON implémentées (P2) — voir LAYER_DESCRIPTORS ci-dessus, inchangé par ce lot. Réexportées
+// ici pour la même surface unique `engine/selection` que les couches d'exclusion.
 // ------------------------------------------------------------------------------------------
 
 export { nutriLayer } from './scoring/nutri.js'
@@ -157,3 +155,5 @@ export { varietyLayer } from './scoring/variety.js'
 export type { VarietyLayerConfig } from './scoring/variety.js'
 export { habitLayer } from './scoring/habit.js'
 export type { HabitLayerConfig } from './scoring/habit.js'
+export { SCORING_LAYERS, rankScoredCandidates, runScoringPass } from './scoring-pass.js'
+export type { RankedCandidate, ScoringPassResult } from './scoring-pass.js'

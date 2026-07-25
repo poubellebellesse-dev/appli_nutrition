@@ -87,4 +87,22 @@ export interface PipelineTrace {
   readonly criticalLayerIds: readonly LayerId[]
   /** Candidats retirés par couche d'exclusion — une couche de score ne doit jamais y apparaître. */
   readonly excludedCandidateCounts: ReadonlyMap<ExclusionLayerId, number>
+  /**
+   * Nombre de candidats soumis à la passe de score (§6.4 ENGINE, après exclusion) — le dénominateur
+   * attendu pour CHAQUE couche de score exécutée. Ajouté avec `scoringLayerCounts` ci-dessous :
+   * sans les deux, `PipelineTrace` ne peut structurellement PAS exprimer la violation que
+   * `assertScoringLayersNeverExclude` doit attraper (§6.1/§6.3 ENGINE, « aucune couche de score ne
+   * peut réduire l'ensemble des candidats ») — `excludedCandidateCounts` est typé par
+   * `ExclusionLayerId` uniquement, une couche de score n'y a structurellement pas sa place.
+   */
+  readonly scoringCandidateCount: number
+  /**
+   * Nombre de scores RENDUS, PAR COUCHE DE SCORE exécutée (`ScoringLayerResult.scores.size`, un
+   * compte réel, pas une valeur recopiée). Le garde-fou compare chaque entrée à
+   * `scoringCandidateCount` : un écart, dans un sens ou l'autre, signale qu'une couche de score a
+   * réduit (ou halluciné) l'ensemble des candidats. Une couche non exécutée (poids ≤ 0, ignorée
+   * par `runScoringPass`, §6.3 ENGINE) n'apparaît PAS dans cette map — absence attendue, pas une
+   * violation.
+   */
+  readonly scoringLayerCounts: ReadonlyMap<ScoringLayerId, number>
 }

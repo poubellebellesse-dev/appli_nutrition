@@ -5,9 +5,10 @@
 // rien. Une `EngineSafetyError` n'est jamais rattrapée silencieusement par l'UI (§4.4 ENGINE) :
 // le pipeline refuse de retourner un résultat non sûr plutôt que de dégrader.
 //
-// `assertNoDeclaredAllergen` est implémenté ici (P1a, §5.2 ARCHITECTURE — « ceinture de
-// sécurité »). Les quatre autres restent des signatures seules (implémentation P2/P3), avec
-// couverture visée à 100 % (§11 ENGINE).
+// `assertNoDeclaredAllergen` (P1a, §5.2 ARCHITECTURE — « ceinture de sécurité ») et
+// `assertScoringLayersNeverExclude` (P1b-3, §6.1/§6.3 ENGINE) sont implémentés ici. Les trois
+// autres (`assertCalorieFloor`, `assertCriticalLayersRan`, `assertNoTherapeuticClaim`) restent des
+// signatures seules (implémentation P2/P3), avec couverture visée à 100 % (§11 ENGINE).
 //
 // Dépendances autorisées : domain/ UNIQUEMENT (§2 ENGINE : GUARD --> DOM). Ni selection/ ni
 // planning/ ne sont importés ici, alors même que ce sont elles qui appellent guards/ — c'est
@@ -79,8 +80,31 @@ export type AssertCalorieFloor = (plan: WeekPlan, profile: UserProfile) => void
 /** Les couches `critical: true` ont bien été exécutées (§6.3 ENGINE). */
 export type AssertCriticalLayersRan = (trace: PipelineTrace) => void
 
-/** Aucune couche `kind: 'scoring'` n'a réduit l'ensemble des candidats (§6.1, §6.3 ENGINE). */
+// --- assertScoringLayersNeverExclude (§6.1, §6.3 ENGINE) — implémenté P1b-3 --------------------
+//
+// Vérifie qu'AUCUNE couche `kind: 'scoring'` n'a réduit l'ensemble des candidats : le nombre de
+// scores rendus par chaque couche exécutée (`trace.scoringLayerCounts`) doit être EXACTEMENT le
+// nombre de candidats soumis à la passe de score (`trace.scoringCandidateCount`) — ni moins (une
+// couche qui a omis un candidat), ni plus (une couche qui en a halluciné un).
+//
+// Comme `assertNoDeclaredAllergen` : ce garde-fou ne fait pas confiance au calcul qu'il vérifie. Il
+// ne relit pas un verdict que `runScoringPass` lui aurait annoncé (un booléen « tout va bien ») —
+// il recalcule lui-même la comparaison à partir des deux comptes bruts de la trace
+// (`ScoringLayerResult.scores.size` réel par couche vs. `candidates.size` réel de la passe),
+// jamais à partir d'une conclusion déjà tirée par l'appelant.
 export type AssertScoringLayersNeverExclude = (trace: PipelineTrace) => void
+
+export const assertScoringLayersNeverExclude: AssertScoringLayersNeverExclude = (trace) => {
+  for (const [layerId, renderedCount] of trace.scoringLayerCounts) {
+    if (renderedCount !== trace.scoringCandidateCount) {
+      throw new EngineSafetyError(
+        `assertScoringLayersNeverExclude : la couche de score '${layerId}' a rendu ${renderedCount} ` +
+          `score(s) pour ${trace.scoringCandidateCount} candidat(s) soumis à la passe de score — ` +
+          `une couche de score ne doit jamais réduire (ni élargir) l'ensemble des candidats (§6.1/§6.3 ENGINE)`
+      )
+    }
+  }
+}
 
 /** Aucune explication ne contient le lexique banni (§6.2 ARCHITECTURE). */
 export type AssertNoTherapeuticClaim = (explanations: readonly Explanation[]) => void

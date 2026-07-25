@@ -5,9 +5,20 @@
 // fixture minimal suffit à prouver que le garde-fou lève sur une violation.
 
 import { describe, expect, it } from 'vitest'
-import type { AllergenId, Catalog, CatalogIndexes, Food, FoodId, HardConstraints, Recipe, RecipeId } from '../domain/index.js'
+import type {
+  AllergenId,
+  Catalog,
+  CatalogIndexes,
+  Food,
+  FoodId,
+  HardConstraints,
+  PipelineTrace,
+  Recipe,
+  RecipeId,
+  ScoringLayerId,
+} from '../domain/index.js'
 import { EngineSafetyError, g, min } from '../domain/index.js'
-import { assertNoDeclaredAllergen } from './index.js'
+import { assertNoDeclaredAllergen, assertScoringLayersNeverExclude } from './index.js'
 
 const EMPTY_INDEXES: CatalogIndexes = {
   recipesByAllergen: new Map(),
@@ -150,5 +161,52 @@ describe('guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
     expect(() =>
       assertNoDeclaredAllergen(new Set(['inconnu' as RecipeId]), catalog, constraints(['oeufs']))
     ).not.toThrow()
+  })
+})
+
+// --- assertScoringLayersNeverExclude (§6.1/§6.3 ENGINE) ------------------------------------------
+//
+// Cas construits à la main, comme le garde-fou allergènes ci-dessus : `PipelineTrace` fournit deux
+// comptes bruts (`scoringCandidateCount`, `scoringLayerCounts`) — le garde-fou ne fait que les
+// comparer, il ne recalcule rien depuis un catalogue. Prouve que la vérification est réelle
+// (elle lève sur un écart construit à la main), pas seulement déclarée par le type.
+
+function traceWith(
+  scoringCandidateCount: number,
+  scoringLayerCounts: ReadonlyMap<ScoringLayerId, number>
+): PipelineTrace {
+  return {
+    layersRun: [],
+    criticalLayerIds: [],
+    excludedCandidateCounts: new Map(),
+    scoringCandidateCount,
+    scoringLayerCounts,
+  }
+}
+
+describe('guards/assertScoringLayersNeverExclude — invariant §6.1 (aucune couche de score ne réduit les candidats)', () => {
+  it('ne lève rien quand chaque couche exécutée a rendu exactement un score par candidat', () => {
+    const trace = traceWith(3, new Map<ScoringLayerId, number>([['nutri', 3], ['preference', 3]]))
+    expect(() => assertScoringLayersNeverExclude(trace)).not.toThrow()
+  })
+
+  it("lève EngineSafetyError quand une couche FACTICE a omis un candidat (moins de scores que de candidats)", () => {
+    const trace = traceWith(3, new Map<ScoringLayerId, number>([['nutri', 3], ['preference', 2]]))
+    expect(() => assertScoringLayersNeverExclude(trace)).toThrow(EngineSafetyError)
+  })
+
+  it('le message nomme la couche fautive', () => {
+    const trace = traceWith(3, new Map<ScoringLayerId, number>([['preference', 2]]))
+    expect(() => assertScoringLayersNeverExclude(trace)).toThrow(/preference/)
+  })
+
+  it('lève EngineSafetyError quand une couche a rendu PLUS de scores que de candidats (halluciné)', () => {
+    const trace = traceWith(2, new Map<ScoringLayerId, number>([['craving', 3]]))
+    expect(() => assertScoringLayersNeverExclude(trace)).toThrow(EngineSafetyError)
+  })
+
+  it("ne lève rien quand aucune couche n'a tourné (tous les poids à 0, scoringLayerCounts vide)", () => {
+    const trace = traceWith(5, new Map())
+    expect(() => assertScoringLayersNeverExclude(trace)).not.toThrow()
   })
 })
