@@ -19,7 +19,12 @@ import type {
   ScoringLayerId,
 } from '../domain/index.js'
 import { EngineSafetyError, g, min } from '../domain/index.js'
-import { assertNoDeclaredAllergen, assertNoTherapeuticClaim, assertScoringLayersNeverExclude } from './index.js'
+import {
+  assertCriticalLayersRan,
+  assertNoDeclaredAllergen,
+  assertNoTherapeuticClaim,
+  assertScoringLayersNeverExclude,
+} from './index.js'
 
 const EMPTY_INDEXES: CatalogIndexes = {
   recipesByAllergen: new Map(),
@@ -209,6 +214,45 @@ describe('guards/assertScoringLayersNeverExclude — invariant §6.1 (aucune cou
   it("ne lève rien quand aucune couche n'a tourné (tous les poids à 0, scoringLayerCounts vide)", () => {
     const trace = traceWith(5, new Map())
     expect(() => assertScoringLayersNeverExclude(trace)).not.toThrow()
+  })
+})
+
+// --- assertCriticalLayersRan (§6.3 ENGINE) -------------------------------------------------------
+//
+// Cas construits à la main, comme `assertScoringLayersNeverExclude` ci-dessus : `PipelineTrace`
+// porte les deux comptes bruts que le garde-fou compare lui-même (`criticalLayerIds` — le
+// sous-ensemble ATTENDU, `layersRun` — ce qui a RÉELLEMENT tourné), sans jamais faire confiance à
+// une conclusion déjà tirée par l'appelant.
+
+function traceWithLayersRun(layersRun: readonly string[], criticalLayerIds: readonly string[]): PipelineTrace {
+  return {
+    layersRun: layersRun as PipelineTrace['layersRun'],
+    criticalLayerIds: criticalLayerIds as PipelineTrace['criticalLayerIds'],
+    excludedCandidateCounts: new Map(),
+    scoringCandidateCount: 0,
+    scoringLayerCounts: new Map(),
+  }
+}
+
+describe('guards/assertCriticalLayersRan — invariant §6.3 (les couches critical ont bien tourné)', () => {
+  it('ne lève rien quand toutes les couches critiques attendues figurent dans layersRun', () => {
+    const trace = traceWithLayersRun(['allergenes', 'regime', 'temps'], ['allergenes', 'regime'])
+    expect(() => assertCriticalLayersRan(trace)).not.toThrow()
+  })
+
+  it('lève EngineSafetyError quand une trace AMPUTÉE omet une couche critique', () => {
+    const trace = traceWithLayersRun(['regime', 'temps'], ['allergenes', 'regime'])
+    expect(() => assertCriticalLayersRan(trace)).toThrow(EngineSafetyError)
+  })
+
+  it('le message nomme la couche critique manquante', () => {
+    const trace = traceWithLayersRun(['temps'], ['allergenes', 'regime'])
+    expect(() => assertCriticalLayersRan(trace)).toThrow(/allergenes/)
+  })
+
+  it("ne lève rien quand aucune couche n'est déclarée critique (criticalLayerIds vide)", () => {
+    const trace = traceWithLayersRun([], [])
+    expect(() => assertCriticalLayersRan(trace)).not.toThrow()
   })
 })
 

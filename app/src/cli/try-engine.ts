@@ -2,23 +2,27 @@
 //
 // Rôle : juger le moteur SANS navigateur ni UI — le point de non-retour de §12 ENGINE (« si le
 // moteur ne produit pas des repas crédibles en ligne de commande, aucune interface ne le
-// sauvera »). Construit une `SuggestionRequest` à la main, enchaîne `runExclusionPass` puis
-// `runScoringPass`, et affiche un rapport LISIBLE PAR UN HUMAIN (jamais un dump JSON) :
+// sauvera »). Construit une `SuggestionRequest` à la main, appelle `engine.suggestMeals(request)`
+// (§8 ENGINE, câblé P1c) et affiche un rapport LISIBLE PAR UN HUMAIN (jamais un dump JSON) :
 // contexte effectif → entonnoir d'exclusion (§6.8) → poids appliqués → classement expliqué.
 //
-// `suggestMeals` N'EST PAS implémenté (P1c, voir engine/api/index.ts) et ce banc ne le
-// réimplémente pas en douce : il appelle les deux passes directement, comme le fait
-// `runPipeline` en pseudo-code (§6.4 ENGINE), et n'assemble aucun `SuggestionResult`.
+// ⚠️ CHANGEMENT DE STRUCTURE (P1c) : ce banc appelait autrefois `runExclusionPass`/
+// `runScoringPass`/`diversify`/`explainSuggestion` À LA MAIN, et redérivait son propre catalogue
+// enrichi via `attachDerivedIndexes` (§6.5 précision 8) parce que `createEngine` gardait le sien
+// en fermeture sans l'exposer. Les deux dettes sont soldées ici : `suggestMeals` est la SEULE
+// porte d'entrée du pipeline — entonnoir, poids, classement et explications viennent tous de son
+// `SuggestionResult` — et ce fichier n'appelle plus jamais `attachDerivedIndexes` (le catalogue
+// « brut » suffit pour les lookups d'affichage : noms de recettes/aliments/allergènes ne sont pas
+// affectés par l'enrichissement, seul `catalog.indexes` l'est).
 //
-// ⚠️ PROBLÈME SIGNALÉ (pas contourné dans l'API) : `createEngine(catalog)` enrichit le catalogue
-// reçu via `attachDerivedIndexes` (index dérivés `recipeNutrients`/`recipeMainIngredient`,
-// indispensables à `nutri` et `variety`) mais l'`Engine` retourné n'expose PAS ce catalogue
-// enrichi — seuls `version`/`catalogVersion`/`layers`/`layer()` sortent de la fermeture
-// (engine/api/index.ts). Ce banc appelle donc `attachDerivedIndexes` UNE SECONDE FOIS ici, pour
-// obtenir un `Catalog` utilisable par `runExclusionPass`/`runScoringPass` — travail dupliqué (pur
-// et bon marché sur ce catalogue de test, mais un gaspillage réel sur un catalogue de 1000+
-// recettes). Voir le rapport de lot pour la recommandation (exposer le catalogue enrichi, ou une
-// méthode `Engine` dédiée) plutôt qu'une modification unilatérale de l'API ici.
+// Une information affichée par l'ancienne version n'a PAS survécu à ce changement : la similarité
+// maximale de chaque recette retenue avec les précédentes (`DiversifiedCandidate.
+// maxSimilarityToRetained`, engine/selection/diversify.ts). `ScoredSuggestion` (domain/result.ts,
+// §8.2 ENGINE) n'a que les 6 champs listés par la doc — recipeId/score/breakdown/explanations/
+// portions/nutrition — aucun champ de diagnostic MMR. Plutôt que de rappeler `diversify` ici en
+// doublon pour le retrouver (exactement la dette qu'on solde), cette ligne d'affichage a été
+// retirée ; voir le rapport de lot pour la décision et la piste (l'ajouter à `ScoredSuggestion`
+// serait un changement de contrat public, hors périmètre de ce fichier).
 //
 // Exécution : `npm run engine:try -- [options]` (tsx, comme `catalog:list` — voir package.json).
 // Nécessite `catalog.db` généré (`npm run build`).
@@ -27,21 +31,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadCatalog } from '../data/catalog-loader.js'
 import { createEngine } from '../engine/api/index.js'
-import { attachDerivedIndexes } from '../engine/nutrition/index.js'
-import {
-  ARCHETYPE_WEIGHT_OVERRIDES,
-  DEFAULT_ARCHETYPE,
-  DEFAULT_MMR_LAMBDA,
-  EXCLUSION_LAYERS,
-  buildSimilarityProfiles,
-  diversify,
-  explainSuggestion,
-  rankScoredCandidates,
-  runExclusionPass,
-  runScoringPass,
-  similarity,
-} from '../engine/selection/index.js'
-import type { DiversifiedCandidate, RankedCandidate } from '../engine/selection/index.js'
+import { ARCHETYPE_WEIGHT_OVERRIDES, DEFAULT_ARCHETYPE, DEFAULT_MMR_LAMBDA, EXCLUSION_LAYERS } from '../engine/selection/index.js'
 import type {
   AllergenId,
   ArchetypeId,
@@ -52,15 +42,14 @@ import type {
   FoodId,
   MealHistory,
   MealSlot,
-  RecipeId,
-  RejectionEntry,
-  ScoreBreakdown,
+  RejectionSummary,
+  ScoredSuggestion,
   ScoreWeights,
   ScoringLayerId,
   SuggestionRequest,
   UserProfile,
 } from '../engine/domain/index.js'
-import { min } from '../engine/domain/index.js'
+import { NoViableRecipeError, min } from '../engine/domain/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DEFAULT_DB_PATH = path.join(__dirname, '..', '..', 'public', 'catalog', 'catalog.db')
@@ -466,6 +455,8 @@ function buildRequest(opts: CliOptions): SuggestionRequest {
     archetype: opts.archetype,
     limit: opts.limit,
     seed: opts.seed,
+    mmrLambda: opts.lambda,
+    skipDiversification: opts.noMmr,
   }
 }
 
@@ -546,28 +537,18 @@ function printHeader(opts: CliOptions, catalog: Catalog, engineVersion: string, 
   console.log('')
 }
 
-interface ExclusionOutcome {
-  readonly candidates: ReadonlySet<RecipeId>
-  readonly rejections: readonly RejectionEntry[]
-}
-
-function printFunnel(initialCount: number, outcome: ExclusionOutcome): void {
+function printFunnel(rejected: RejectionSummary): void {
   console.log("--- Entonnoir d'exclusion (§6.8 ENGINE) ---")
-  console.log(`${initialCount} recette(s) au créneau`)
-
-  const countsByLayer = new Map<ExclusionLayerId, number>()
-  for (const rejection of outcome.rejections) {
-    countsByLayer.set(rejection.layerId, (countsByLayer.get(rejection.layerId) ?? 0) + 1)
-  }
+  console.log(`${rejected.totalInitial} recette(s) au créneau`)
 
   for (const layer of EXCLUSION_LAYERS) {
     const layerId = layer.id as ExclusionLayerId
-    const count = countsByLayer.get(layerId) ?? 0
+    const count = rejected.byLayer.get(layerId) ?? 0
     if (count === 0) continue // seules les couches ayant réellement écarté quelque chose s'affichent
     console.log(`  → ${EXCLUSION_LAYER_LABELS[layerId].padEnd(12)} − ${count}`)
   }
 
-  console.log(`= ${outcome.candidates.size} candidat(s)`)
+  console.log(`= ${rejected.totalInitial - rejected.totalRejected} candidat(s)`)
   console.log('')
 }
 
@@ -587,106 +568,72 @@ function printWeights(weights: Partial<ScoreWeights>): void {
 }
 
 /**
- * Explication (§6.7 ENGINE, docs/ENGINE.md — voir aussi engine/selection/explain.ts) — affichée
- * sous chaque recette du classement. `breakdowns` doit porter l'ENSEMBLE des candidats scorés
- * (`scoringResult.breakdowns` en entier, jamais seulement les recettes affichées) : c'est la seule
- * façon de savoir quelles couches discriminent réellement (voir l'en-tête d'explain.ts). Quand la
- * liste est vide, on le dit EXPLICITEMENT plutôt que de laisser un vide silencieux — information
- * utile pour juger le moteur (demandé explicitement pour ce banc).
+ * Classement (§6.4, §6.7 ENGINE) — une seule fonction pour les deux modes d'affichage
+ * (`--no-mmr` ou MMR active) : `result.suggestions` vient DÉJÀ du bon classement, `suggestMeals`
+ * ayant lui-même appliqué `diversify` ou non selon `request.skipDiversification` (§6.6 ENGINE).
+ * Ce banc n'a donc plus qu'à FORMATER — `breakdown` et `explanations` sont repris tels quels
+ * depuis chaque `ScoredSuggestion`, jamais recalculés ici (voir en-tête de fichier).
  */
-function printExplanations(recipeId: RecipeId, breakdowns: ReadonlyMap<RecipeId, ScoreBreakdown>): void {
-  const explanations = explainSuggestion(recipeId, breakdowns)
-  if (explanations.length === 0) {
-    console.log(
-      '      Explication : (aucune — aucune couche de score ne discrimine sur cet ensemble de candidats, §6.7 ENGINE)'
+function printSuggestions(
+  suggestions: readonly ScoredSuggestion[],
+  catalog: Catalog,
+  opts: CliOptions,
+  candidatsApresFiltrage: number
+): void {
+  console.log(
+    opts.noMmr
+      ? `--- Classement (top ${opts.limit}) ---`
+      : `--- Classement diversifié (MMR, λ=${opts.lambda}, §6.6 ENGINE) ---`
+  )
+
+  suggestions.forEach((suggestion, index) => {
+    const recipe = catalog.recipes.get(suggestion.recipeId)
+    const nom = recipe?.nom ?? suggestion.recipeId
+    console.log(`#${index + 1}  ${nom} — ${suggestion.score.toFixed(1)}/100`)
+
+    const contributions = (Object.entries(suggestion.breakdown) as Array<[ScoringLayerId, number]>).sort(
+      (a, b) => b[1] - a[1]
     )
-    return
-  }
-  console.log(`      Explication : ${explanations.map((e) => `« ${e.label} »`).join(' · ')}`)
-}
-
-function printRanking(
-  ranked: readonly RankedCandidate[],
-  breakdowns: ReadonlyMap<RecipeId, ScoreBreakdown>,
-  catalog: Catalog,
-  limit: number
-): void {
-  console.log(`--- Classement (top ${limit}) ---`)
-  const top = ranked.slice(0, limit)
-
-  top.forEach((entry, index) => {
-    const recipe = catalog.recipes.get(entry.recipeId)
-    const nom = recipe?.nom ?? entry.recipeId
-    console.log(`#${index + 1}  ${nom} — ${(entry.score * 100).toFixed(1)}/100`)
-
-    const breakdown = breakdowns.get(entry.recipeId) ?? {}
-    const contributions = (Object.entries(breakdown) as Array<[ScoringLayerId, number]>).sort((a, b) => b[1] - a[1])
     for (const [id, contribution] of contributions) {
       console.log(`      ${scoringLayerLabel(id).padEnd(14)} ${(contribution * 100).toFixed(1)}`)
     }
-    printExplanations(entry.recipeId, breakdowns)
-  })
-  console.log('')
-  console.log(`${ranked.length} candidat(s) classé(s) au total, ${top.length} affiché(s) (--limit ${limit}).`)
-}
 
-/**
- * Classement APRÈS diversification MMR (§6.6 ENGINE) — même gabarit que `printRanking`, avec en
- * plus la similarité MAXIMALE de chaque recette retenue avec les précédentes : c'est cette ligne
- * qui rend l'effet de la diversification LISIBLE et calibrable (voir en-tête de fichier §6.6).
- */
-function printDiversifiedRanking(
-  diversified: readonly DiversifiedCandidate[],
-  breakdowns: ReadonlyMap<RecipeId, ScoreBreakdown>,
-  catalog: Catalog,
-  lambda: number,
-  totalRanked: number
-): void {
-  console.log(`--- Classement diversifié (MMR, λ=${lambda}, §6.6 ENGINE) ---`)
-
-  diversified.forEach((entry, index) => {
-    const recipe = catalog.recipes.get(entry.recipeId)
-    const nom = recipe?.nom ?? entry.recipeId
-    const simLabel =
-      index === 0
-        ? '1er retenu — aucune pénalité (ensemble retenu vide)'
-        : `similarité max. avec les retenues précédentes : ${(entry.maxSimilarityToRetained * 100).toFixed(1)}%`
-    console.log(`#${index + 1}  ${nom} — ${(entry.score * 100).toFixed(1)}/100  [${simLabel}]`)
-
-    const breakdown = breakdowns.get(entry.recipeId) ?? {}
-    const contributions = (Object.entries(breakdown) as Array<[ScoringLayerId, number]>).sort((a, b) => b[1] - a[1])
-    for (const [id, contribution] of contributions) {
-      console.log(`      ${scoringLayerLabel(id).padEnd(14)} ${(contribution * 100).toFixed(1)}`)
+    if (suggestion.explanations.length === 0) {
+      console.log(
+        '      Explication : (aucune — aucune couche de score ne discrimine sur cet ensemble de candidats, §6.7 ENGINE)'
+      )
+    } else {
+      console.log(`      Explication : ${suggestion.explanations.map((e) => `« ${e.label} »`).join(' · ')}`)
     }
-    printExplanations(entry.recipeId, breakdowns)
   })
   console.log('')
-  console.log(`${totalRanked} candidat(s) classé(s) au total, ${diversified.length} retenu(s) après diversification.`)
+  console.log(
+    `${candidatsApresFiltrage} candidat(s) classé(s) au total, ${suggestions.length} ` +
+      `${opts.noMmr ? 'affiché(s)' : 'retenu(s) après diversification'} (--limit ${opts.limit}).`
+  )
 }
 
 /** 0 candidat après exclusion (§8.3 ENGINE, `NoViableRecipeError` côté API) : le cas que l'UI
  * transformera en écran « assouplir un critère », motif dominant issu de `RejectionSummary`. */
-function printNoCandidates(outcome: ExclusionOutcome): void {
+function printNoCandidates(rejected: RejectionSummary): void {
   console.log('--- Résultat ---')
   console.log('0 candidat après exclusion : aucune suggestion possible avec ces contraintes.')
 
-  if (outcome.rejections.length === 0) {
+  if (rejected.entries.length === 0) {
     console.log('(le créneau demandé ne contient déjà aucune recette dans le catalogue)')
     return
   }
 
-  const countsByLayer = new Map<ExclusionLayerId, number>()
   const exampleByLayer = new Map<ExclusionLayerId, string>()
-  for (const rejection of outcome.rejections) {
-    countsByLayer.set(rejection.layerId, (countsByLayer.get(rejection.layerId) ?? 0) + 1)
-    if (!exampleByLayer.has(rejection.layerId)) exampleByLayer.set(rejection.layerId, rejection.reason)
+  for (const entry of rejected.entries) {
+    if (!exampleByLayer.has(entry.layerId)) exampleByLayer.set(entry.layerId, entry.reason)
   }
 
   let dominant: ExclusionLayerId | null = null
   let dominantCount = 0
   for (const layer of EXCLUSION_LAYERS) {
     const layerId = layer.id as ExclusionLayerId
-    const count = countsByLayer.get(layerId) ?? 0
+    const count = rejected.byLayer.get(layerId) ?? 0
     if (count > dominantCount) {
       dominant = layerId
       dominantCount = count
@@ -707,45 +654,36 @@ function printNoCandidates(outcome: ExclusionOutcome): void {
 // ------------------------------------------------------------------------------------------
 
 function run(argv: readonly string[]): void {
-  const rawCatalog = loadCatalog(DEFAULT_DB_PATH)
-
-  // `createEngine` initialise le moteur "comme en production" (version, enrichissement interne
-  // du catalogue) — mais n'expose pas ce catalogue enrichi (voir en-tête de fichier). On
-  // ré-enrichit donc nous-mêmes pour obtenir un `Catalog` utilisable par les deux passes.
-  const engine = createEngine(rawCatalog)
-  const catalog = attachDerivedIndexes(rawCatalog)
+  const catalog = loadCatalog(DEFAULT_DB_PATH)
+  const engine = createEngine(catalog)
 
   const opts = parseOptions(argv, catalog)
   const request = buildRequest(opts)
 
   printHeader(opts, catalog, engine.version, engine.catalogVersion)
 
-  const initialCount = catalog.indexes.recipesBySlot.get(opts.slot)?.size ?? 0
-  const exclusionResult = runExclusionPass(catalog, request)
-  printFunnel(initialCount, exclusionResult)
-
-  const scoringResult = runScoringPass(catalog, request, exclusionResult.candidates)
-  printWeights(scoringResult.weights)
-
-  if (exclusionResult.candidates.size === 0) {
-    printNoCandidates(exclusionResult)
-    return
+  let result: ReturnType<typeof engine.suggestMeals>
+  try {
+    result = engine.suggestMeals(request)
+  } catch (err) {
+    if (err instanceof NoViableRecipeError) {
+      printNoCandidates(err.rejected)
+      return
+    }
+    throw err
   }
 
-  const ranked = rankScoredCandidates(scoringResult.scores)
+  printFunnel(result.rejected)
 
-  if (opts.noMmr) {
-    printRanking(ranked, scoringResult.breakdowns, catalog, opts.limit)
-    return
-  }
+  // Seules les couches à poids > 0 s'affichent (même convention que l'ancien
+  // `scoringResult.weights`, partiel) — `EngineDiagnostics.weights` est désormais un
+  // `ScoreWeights` COMPLET (§8.2 ENGINE), zéros compris pour les couches non implémentées.
+  const activeWeights = Object.fromEntries(
+    (Object.entries(result.diagnostics.weights) as Array<[ScoringLayerId, number]>).filter(([, weight]) => weight > 0)
+  ) as Partial<ScoreWeights>
+  printWeights(activeWeights)
 
-  // Diversification MMR (§6.6 ENGINE) : `buildSimilarityProfiles` fait le pont Catalog → profils
-  // de similarité UNE fois pour tout le catalogue (voir similarity.ts) ; `similarityOf` est
-  // l'accesseur attendu par `diversify`, qui reste lui-même sans accès au `Catalog`.
-  const similarityProfiles = buildSimilarityProfiles(catalog)
-  const similarityOf = (a: RecipeId, b: RecipeId): number => similarity(similarityProfiles.get(a)!, similarityProfiles.get(b)!)
-  const diversified = diversify(ranked, opts.limit, opts.lambda, similarityOf)
-  printDiversifiedRanking(diversified, scoringResult.breakdowns, catalog, opts.lambda, ranked.length)
+  printSuggestions(result.suggestions, catalog, opts, result.diagnostics.candidatsApresFiltrage)
 }
 
 function main(): void {

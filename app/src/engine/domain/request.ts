@@ -93,4 +93,17 @@ export interface SuggestionRequest {
   readonly limit?: number
   /** reproductibilité — PRNG à graine explicite, jamais `Math.random()` (§1 ENGINE). */
   readonly seed: number
+  /**
+   * §6.6 ENGINE — poids de la pénalité de redondance en diversification MMR (`diversify`,
+   * `engine/selection/diversify.ts`). Absent → `DEFAULT_MMR_LAMBDA` (0.4). Sans effet si
+   * `skipDiversification` est vrai. Ajouté pour que `suggestMeals` (§8 ENGINE) puisse piloter le
+   * banc CLI (`--lambda`) sans que l'appelant ait à rappeler `diversify` lui-même.
+   */
+  readonly mmrLambda?: number
+  /**
+   * §6.6 ENGINE — désactive la diversification MMR : `suggestMeals` retourne alors le classement
+   * brut par score, tronqué à `limit`, plutôt que le résultat de `diversify`. Défaut `false`
+   * (diversification active). Ajouté pour le même besoin que `mmrLambda` (banc CLI `--no-mmr`).
+   */
+  readonly skipDiversification?: boolean
 }

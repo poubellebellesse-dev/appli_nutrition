@@ -6,10 +6,11 @@
 // le pipeline refuse de retourner un résultat non sûr plutôt que de dégrader.
 //
 // `assertNoDeclaredAllergen` (P1a, §5.2 ARCHITECTURE — « ceinture de sécurité »),
-// `assertScoringLayersNeverExclude` (P1b-3, §6.1/§6.3 ENGINE) et `assertNoTherapeuticClaim` (§6.7
-// ENGINE — premier consommateur réel : selection/explain.ts) sont implémentés ici. Les deux
-// autres (`assertCalorieFloor`, `assertCriticalLayersRan`) restent des signatures seules
-// (implémentation P2/P3), avec couverture visée à 100 % (§11 ENGINE).
+// `assertScoringLayersNeverExclude` (P1b-3, §6.1/§6.3 ENGINE), `assertNoTherapeuticClaim` (§6.7
+// ENGINE — premier consommateur réel : selection/explain.ts) et `assertCriticalLayersRan` (P1c,
+// §6.3 ENGINE — premier consommateur réel : engine/api/index.ts `suggestMeals`) sont implémentés
+// ici. `assertCalorieFloor` reste une signature seule (implémentation P2/P3, `planWeek` non câblé),
+// avec couverture visée à 100 % (§11 ENGINE).
 //
 // Dépendances autorisées : domain/ UNIQUEMENT (§2 ENGINE : GUARD --> DOM). Ni selection/ ni
 // planning/ ne sont importés ici, alors même que ce sont elles qui appellent guards/ — c'est
@@ -79,8 +80,26 @@ export const assertNoDeclaredAllergen: AssertNoDeclaredAllergen = (candidates, c
 /** Aucun jour < 1200 kcal (F) / 1500 kcal (H) sans avertissement explicite (§6.5 ARCHITECTURE). */
 export type AssertCalorieFloor = (plan: WeekPlan, profile: UserProfile) => void
 
-/** Les couches `critical: true` ont bien été exécutées (§6.3 ENGINE). */
+// --- assertCriticalLayersRan (§6.3 ENGINE) — implémenté P1c -----------------------------------
+//
+// Vérifie qu'AUCUNE couche `critical: true` n'a été absente de l'exécution réelle du pipeline
+// (`trace.layersRun`) — l'invariant §6.3 « `critical: true` est indésactivable » resterait une
+// intention si rien ne le vérifiait sur la trace RÉELLE plutôt que sur la déclaration du registre.
+// Comme les autres garde-fous : ne fait pas confiance à une conclusion déjà tirée par l'appelant,
+// compare lui-même `criticalLayerIds` (le sous-ensemble attendu, figé) à `layersRun` (ce qui a
+// RÉELLEMENT tourné, construit par `suggestMeals`).
 export type AssertCriticalLayersRan = (trace: PipelineTrace) => void
+
+export const assertCriticalLayersRan: AssertCriticalLayersRan = (trace) => {
+  for (const criticalId of trace.criticalLayerIds) {
+    if (!trace.layersRun.includes(criticalId)) {
+      throw new EngineSafetyError(
+        `assertCriticalLayersRan : la couche critique '${criticalId}' n'a pas été exécutée — ` +
+          `§6.3 ENGINE : « critical: true est indésactivable, par aucun réglage »`
+      )
+    }
+  }
+}
 
 // --- assertScoringLayersNeverExclude (§6.1, §6.3 ENGINE) — implémenté P1b-3 --------------------
 //
