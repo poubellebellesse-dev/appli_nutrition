@@ -2,9 +2,10 @@
 // précision 1).
 
 import { describe, expect, it } from 'vitest'
-import { scoreNutri } from './nutri.js'
+import { scoreNutri, nutriLayer } from './nutri.js'
 import { NEUTRAL_SCORE } from './index.js'
-import type { NutrientSense } from '../../domain/index.js'
+import type { Catalog, Nutrient, NutrientId, NutrientSense, NutrientVector, RecipeId } from '../../domain/index.js'
+import { asScoringResult, makeCatalog, makeRecipe, makeRequest } from '../test-fixtures.js'
 
 describe('scoring/nutri — scoreNutri', () => {
   it('recette pile sur la cible → score 1', () => {
@@ -126,5 +127,86 @@ describe('scoring/nutri — scoreNutri', () => {
       expect(auDessus).toBeCloseTo(enDessous, 10)
       expect(auDessus).toBeCloseTo(0.8, 10)
     })
+  })
+})
+
+/**
+ * `selection/test-fixtures.ts` fige `catalog.nutrients: []` et `indexes.recipeNutrients` vide
+ * (non pertinents pour les couches d'exclusion/les autres couches de score) : cette couche est la
+ * première à en avoir l'usage, d'où ce petit helper local qui les injecte par-dessus le `Catalog`
+ * de base, même motif que le `makeNutrient` local de nutrition/reference-intakes.test.ts.
+ */
+function withNutrients(
+  catalog: Catalog,
+  nutrients: readonly Nutrient[],
+  recipeNutrients: ReadonlyMap<RecipeId, NutrientVector>
+): Catalog {
+  return { ...catalog, nutrients, indexes: { ...catalog.indexes, recipeNutrients } }
+}
+
+function makeNutrient(id: string, categorie: Nutrient['categorie'] = 'macronutriment'): Nutrient {
+  return { id: id as NutrientId, code: id, nom: id, unite: 'kcal', vnrAdulte: 2000, categorie, sens: 'cible' }
+}
+
+describe('scoring/nutri — nutriLayer (contrat SelectionLayer, §6.2 ENGINE)', () => {
+  it('id/kind/critical/defaultWeight conformes au registre (§6.3 ENGINE)', () => {
+    expect(nutriLayer.id).toBe('nutri')
+    expect(nutriLayer.kind).toBe('scoring')
+    expect(nutriLayer.critical).toBe(false)
+    expect(nutriLayer.defaultWeight).toBe(0.25)
+  })
+
+  it('invariant §6.1 : un score par candidat reçu, aucune réduction', () => {
+    const recetteA = makeRecipe('a')
+    const recetteB = makeRecipe('b')
+    const catalog = makeCatalog([recetteA, recetteB])
+    const req = makeRequest()
+
+    const config = nutriLayer.configure(req, catalog)
+    const result = asScoringResult(nutriLayer.apply(new Set([recetteA.id, recetteB.id]), config))
+
+    expect(result.scores.size).toBe(2)
+  })
+
+  it("recette absente de l'index (recipeNutrients vide, attachDerivedIndexes pas encore lancé) → NEUTRAL_SCORE, jamais 0", () => {
+    const recette = makeRecipe('r')
+    const catalog = makeCatalog([recette]) // indexes.recipeNutrients vide par défaut
+    const req = makeRequest()
+
+    const config = nutriLayer.configure(req, catalog)
+    const result = asScoringResult(nutriLayer.apply(new Set([recette.id]), config))
+
+    expect(result.scores.get(recette.id)).toBe(NEUTRAL_SCORE)
+  })
+
+  it('candidat absent du catalogue (id orphelin) → NEUTRAL_SCORE, pas de plantage', () => {
+    const catalog = makeCatalog([])
+    const req = makeRequest()
+    const config = nutriLayer.configure(req, catalog)
+
+    const result = asScoringResult(nutriLayer.apply(new Set(['inconnu' as RecipeId]), config))
+
+    expect(result.scores.get('inconnu' as RecipeId)).toBe(NEUTRAL_SCORE)
+  })
+
+  it('cas discriminant : une recette proche de la cible du créneau bat une recette très éloignée', () => {
+    // mode VNR à plat (profil par défaut sans taille/poids) : cible journalière énergie = 2000.
+    // créneau 'dejeuner' → part 0,35 → cible du créneau = 700.
+    const energie = makeNutrient('energie')
+    const proche = makeRecipe('proche')
+    const loin = makeRecipe('loin')
+    const recipeNutrients = new Map<RecipeId, NutrientVector>([
+      [proche.id, new Float64Array([700])], // pile sur la cible du créneau
+      [loin.id, new Float64Array([2000])], // très au-dessus (écart clampé à 1)
+    ])
+    const catalog = withNutrients(makeCatalog([proche, loin]), [energie], recipeNutrients)
+    const req = makeRequest({ creneau: 'dejeuner' })
+
+    const config = nutriLayer.configure(req, catalog)
+    const result = asScoringResult(nutriLayer.apply(new Set([proche.id, loin.id]), config))
+
+    expect(result.scores.get(proche.id)).toBe(1)
+    expect(result.scores.get(loin.id)).toBe(0)
+    expect(result.scores.get(proche.id)!).toBeGreaterThan(result.scores.get(loin.id)!)
   })
 })

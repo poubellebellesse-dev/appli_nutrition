@@ -170,11 +170,14 @@ export function makeRequest(
 ): SuggestionRequest {
   return {
     profile: {
-      trancheAge: 'adulte',
+      // Valeurs plausibles depuis le vocabulaire fermé (engine/domain/profile.ts, P1b-2) —
+      // sans effet sur les couches d'exclusion/de score testées ici hormis `nutri`, qui reste en
+      // mode VNR à plat par défaut (`tailleCm`/`poidsKg` à `null`).
+      trancheAge: '30_49',
       sexe: 'NP',
       tailleCm: null,
       poidsKg: null,
-      niveauActivite: 'modere',
+      niveauActivite: 'sedentaire',
       facteurPortion: 1,
     },
     constraints: {

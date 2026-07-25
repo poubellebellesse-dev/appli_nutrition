@@ -7,14 +7,14 @@
 // complet — SEL a le droit de dépendre de NUT (§2 ENGINE), mais ces fonctions restent testables
 // sans catalogue ni index dérivé.
 //
-// 5 de ces 7 fonctions (`preference`, `craving`, `season`, `variety`, `habit`) sont désormais
-// AUSSI enveloppées dans le contrat `SelectionLayer` (`preferenceLayer`, `cravingLayer`,
-// `seasonLayer`, `varietyLayer`, `habitLayer`), dans le MÊME fichier que la fonction pure
-// qu'elles enveloppent — `configure` y fait le pont vers `Catalog`/`SuggestionRequest`, `apply`
-// reste sans accès au catalogue. `nutri` (cible manquante, `resolveReferenceIntakes` non
-// implémentée) et `speed` (signal non rattaché au registre, voir §6.5 note ¶ ENGINE) restent des
-// fonctions pures SEULES, sans couche — hors lot. La passe pondérée qui combine les couches de
-// score (`runScoringPass`) n'est pas traitée ici (lot suivant).
+// 6 de ces 7 fonctions (`nutri`, `preference`, `craving`, `season`, `variety`, `habit`) sont
+// désormais AUSSI enveloppées dans le contrat `SelectionLayer` (`nutriLayer`, `preferenceLayer`,
+// `cravingLayer`, `seasonLayer`, `varietyLayer`, `habitLayer`), dans le MÊME fichier que la
+// fonction pure qu'elles enveloppent — `configure` y fait le pont vers `Catalog`/
+// `SuggestionRequest` (pour `nutri` : via `resolveReferenceIntakes`, engine/nutrition/), `apply`
+// reste sans accès au catalogue. `speed` (signal non rattaché au registre, voir §6.5 note ¶
+// ENGINE) reste une fonction pure SEULE, sans couche — hors lot. La passe pondérée qui combine
+// les couches de score (`runScoringPass`) n'est pas traitée ici (lot suivant).
 //
 // NEUTRAL_SCORE = 0.5 est la valeur « ni bonus ni malus » : le signal neutre qu'une fonction
 // retourne quand elle n'a rien d'exploitable à comparer (aucune cible, aucune préférence connue,
@@ -44,7 +44,8 @@ export function clamp01(x: number): number {
   return Math.min(1, Math.max(0, x))
 }
 
-export { scoreNutri } from './nutri.js'
+export { scoreNutri, nutriLayer } from './nutri.js'
+export type { NutriLayerConfig } from './nutri.js'
 export { scorePreference, preferenceLayer } from './preference.js'
 export type { PreferenceLayerConfig } from './preference.js'
 export { scoreCraving, cravingLayer } from './craving.js'

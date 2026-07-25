@@ -25,10 +25,13 @@
 // Vecteurs de longueurs différentes (ne devrait pas arriver si tous proviennent du même
 // `Catalog.nutrients`, mais défensif) : itère sur la longueur commune.
 //
-// Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
+// Dépendances autorisées : domain/, ./index.js, ../../nutrition/index.js — §2/§3 ENGINE (SEL a le
+// droit de dépendre de NUT, voir en-tête de scoring/index.ts).
 
-import type { NutrientSense, NutrientVector } from '../../domain/index.js'
+import type { MealSlot, NutrientSense, NutrientVector, RecipeId } from '../../domain/index.js'
+import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { NEUTRAL_SCORE, clamp01 } from './index.js'
+import { resolveReferenceIntakes } from '../../nutrition/index.js'
 
 function deviationFor(sens: NutrientSense, recipeValue: number, targetValue: number): number {
   const raw =
@@ -64,4 +67,66 @@ export function scoreNutri(
   if (count === 0) return NEUTRAL_SCORE
 
   return clamp01(1 - sumDeviation / count)
+}
+
+// ------------------------------------------------------------------------------------------
+// Couche `nutri` (§6.2 ENGINE) — enveloppe `scoreNutri` dans le contrat `SelectionLayer`.
+//
+// `configure` résout la référence JOURNALIÈRE via `resolveReferenceIntakes(req.profile, catalog)`
+// (engine/nutrition/), puis en dérive la cible du CRÉNEAU via une table fixe — part du créneau
+// dans la journée, somme = 1 sur les quatre créneaux canoniques (`MealSlot`) : un petit-déjeuner
+// et un dîner ne pèsent pas pareil, et cette table évite d'ajouter un champ à `SuggestionRequest`
+// (précision 1, §6.5 ENGINE : « la part du créneau courant dans la référence journalière »).
+//
+// Le vecteur de la recette vient de `catalog.indexes.recipeNutrients` (déjà PAR PORTION, §6.5
+// précision 8) ; les `sens` viennent de `catalog.nutrients`, dans le MÊME ORDRE (§9.1 ENGINE fixe
+// l'index par la position dans `catalog.nutrients`, aligné avec `NutrientVector`).
+//
+// Recette absente de l'index — index vide tant qu'`attachDerivedIndexes` n'a pas tourné, ou id
+// orphelin du catalogue — → `NEUTRAL_SCORE`, jamais 0 (§6.1 ENGINE, même règle que les autres
+// couches de score).
+// ------------------------------------------------------------------------------------------
+
+/** Part du créneau dans la référence journalière (§6.5 précision 1 ENGINE) — table fixe. */
+const MEAL_SLOT_SHARE: Readonly<Record<MealSlot, number>> = {
+  petit_dejeuner: 0.25,
+  dejeuner: 0.35,
+  diner: 0.3,
+  gouter: 0.1,
+}
+
+export interface NutriLayerConfig {
+  readonly recipeNutrients: ReadonlyMap<RecipeId, NutrientVector>
+  readonly senses: readonly NutrientSense[]
+  readonly target: NutrientVector
+}
+
+export const nutriLayer: SelectionLayer<NutriLayerConfig> = {
+  id: 'nutri',
+  kind: 'scoring',
+  critical: false,
+  defaultWeight: 0.25,
+
+  configure: (req, catalog) => {
+    const dailyReference = resolveReferenceIntakes(req.profile, catalog)
+    const share = MEAL_SLOT_SHARE[req.context.creneau]
+
+    const target = new Float64Array(dailyReference.length)
+    for (let i = 0; i < dailyReference.length; i++) target[i] = dailyReference[i]! * share
+
+    return {
+      recipeNutrients: catalog.indexes.recipeNutrients,
+      senses: catalog.nutrients.map((n) => n.sens),
+      target,
+    }
+  },
+
+  apply: (candidates: CandidateSet, config: NutriLayerConfig): ScoringLayerResult => {
+    const scores = new Map<RecipeId, number>()
+    for (const recipeId of candidates) {
+      const recipeVector = config.recipeNutrients.get(recipeId)
+      scores.set(recipeId, recipeVector ? scoreNutri(recipeVector, config.target, config.senses) : NEUTRAL_SCORE)
+    }
+    return { scores }
+  },
 }

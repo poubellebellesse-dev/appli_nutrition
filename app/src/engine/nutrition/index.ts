@@ -38,9 +38,18 @@ export interface NutritionReport {
 
 // --- Signatures (§5.1 ENGINE) — implémentation P1 ---------------------------------------------
 
-export type ComputeEnergyNeeds = (profile: UserProfile) => Kcal
+/**
+ * `Kcal | null` — jamais un gabarit corporel deviné : `null` quand `tailleCm`/`poidsKg` sont
+ * inconnus (voir energy-needs.ts pour le détail des règles, P1b-2).
+ */
+export type ComputeEnergyNeeds = (profile: UserProfile) => Kcal | null
 
 export type ResolveReferenceIntakes = (profile: UserProfile, catalog: Catalog) => NutrientVector
+
+// --- Besoin énergétique & apports de référence — implémentation P1b-2 (§5.1 ENGINE) -----------
+
+export { computeEnergyNeeds } from './energy-needs.js'
+export { resolveReferenceIntakes } from './reference-intakes.js'
 
 export type AggregateRecipe = (recipe: Recipe, catalog: Catalog) => NutrientVector
 
