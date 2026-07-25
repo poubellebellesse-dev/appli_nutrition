@@ -2,9 +2,10 @@
 // (docs/ENGINE.md §7.5, §6.5 précision 5).
 
 import { describe, expect, it } from 'vitest'
-import { scoreHabit } from './habit.js'
+import { scoreHabit, habitLayer } from './habit.js'
 import { scoreVariety } from './variety.js'
 import { NEUTRAL_SCORE } from './index.js'
+import { asScoringResult, makeCatalog, makeRecipe, makeRequest } from '../test-fixtures.js'
 import type { MealHistory, MealHistoryEntry, RecipeId, FoodId } from '../../domain/index.js'
 
 const RECIPE = 'tartiflette' as RecipeId
@@ -160,5 +161,98 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
       })
       expect(varietyChoisi).toBe(varietyReste) // variety lit tout, quelle que soit l'origine
     })
+  })
+})
+
+describe('scoring/habit — habitLayer (contrat SelectionLayer, §6.2 ENGINE)', () => {
+  it('id/kind/critical/defaultWeight conformes au registre (§6.3 ENGINE) — poids nul (démarrage à froid, §7.5)', () => {
+    expect(habitLayer.id).toBe('habit')
+    expect(habitLayer.kind).toBe('scoring')
+    expect(habitLayer.critical).toBe(false)
+    expect(habitLayer.defaultWeight).toBe(0)
+  })
+
+  it('invariant §6.1 : un score par candidat reçu, aucune réduction — y compris sans historique', () => {
+    const soupe = makeRecipe('soupe')
+    const gratin = makeRecipe('gratin')
+    const catalog = makeCatalog([soupe, gratin])
+    const req = makeRequest({ date: '2026-07-24' })
+
+    const config = habitLayer.configure(req, catalog)
+    const result = asScoringResult(habitLayer.apply(new Set([soupe.id, gratin.id]), config))
+
+    expect(result.scores.size).toBe(2)
+  })
+
+  it('historique vide → NEUTRAL_SCORE pour tout candidat (démarrage à froid propre)', () => {
+    const recette = makeRecipe('r')
+    const catalog = makeCatalog([recette])
+    const req = makeRequest({ date: '2026-07-24' })
+
+    const config = habitLayer.configure(req, catalog)
+    const result = asScoringResult(habitLayer.apply(new Set([recette.id]), config))
+
+    expect(result.scores.get(recette.id)).toBe(NEUTRAL_SCORE)
+  })
+
+  it('candidat absent du catalogue (id orphelin) → NEUTRAL_SCORE quand l’historique est vide, pas de plantage', () => {
+    const catalog = makeCatalog([])
+    const req = makeRequest({ date: '2026-07-24' })
+    const config = habitLayer.configure(req, catalog)
+
+    const result = asScoringResult(habitLayer.apply(new Set(['inconnu' as RecipeId]), config))
+
+    expect(result.scores.get('inconnu' as RecipeId)).toBe(NEUTRAL_SCORE)
+  })
+
+  it('tous les scores restent dans [0, 1]', () => {
+    const recette = makeRecipe('r')
+    const catalog = makeCatalog([recette])
+    const req = makeRequest({
+      date: '2026-07-24',
+      history: { windowDays: 21, entries: [{ recipeId: recette.id, date: '2026-07-01', creneau: 'diner', origine: 'choisi' }] },
+    })
+
+    const config = habitLayer.configure(req, catalog)
+    const result = asScoringResult(habitLayer.apply(new Set([recette.id]), config))
+
+    for (const score of result.scores.values()) {
+      expect(score).toBeGreaterThanOrEqual(0)
+      expect(score).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('cas discriminant : une recette souvent choisie bat une recette jamais choisie', () => {
+    const habituee = makeRecipe('habituee')
+    const jamaisChoisie = makeRecipe('jamais-choisie')
+    const catalog = makeCatalog([habituee, jamaisChoisie])
+    const entries: MealHistoryEntry[] = [
+      { recipeId: habituee.id, date: '2026-07-01', creneau: 'diner', origine: 'choisi' },
+      { recipeId: habituee.id, date: '2026-07-05', creneau: 'diner', origine: 'choisi' },
+      { recipeId: habituee.id, date: '2026-07-10', creneau: 'diner', origine: 'choisi' },
+      { recipeId: 'autre' as RecipeId, date: '2026-07-15', creneau: 'diner', origine: 'choisi' },
+    ]
+    const req = makeRequest({ date: '2026-07-24', history: { windowDays: 21, entries } })
+
+    const config = habitLayer.configure(req, catalog)
+    const result = asScoringResult(habitLayer.apply(new Set([habituee.id, jamaisChoisie.id]), config))
+
+    expect(result.scores.get(habituee.id)!).toBeGreaterThan(result.scores.get(jamaisChoisie.id)!)
+    expect(result.scores.get(habituee.id)).toBeCloseTo(0.75, 10)
+    expect(result.scores.get(jamaisChoisie.id)).toBe(0)
+  })
+
+  it('un `reste` n’est pas compté — même comportement que scoreHabit (asymétrie §6.5 ter ENGINE)', () => {
+    const recette = makeRecipe('r')
+    const catalog = makeCatalog([recette])
+    const req = makeRequest({
+      date: '2026-07-24',
+      history: { windowDays: 21, entries: [{ recipeId: recette.id, date: '2026-07-01', creneau: 'diner', origine: 'reste' }] },
+    })
+
+    const config = habitLayer.configure(req, catalog)
+    const result = asScoringResult(habitLayer.apply(new Set([recette.id]), config))
+
+    expect(result.scores.get(recette.id)).toBe(NEUTRAL_SCORE) // aucune entrée `choisi` ne subsiste
   })
 })

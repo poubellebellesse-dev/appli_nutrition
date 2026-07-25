@@ -37,7 +37,9 @@
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
 import type { FoodId, MealHistory, RecipeId } from '../../domain/index.js'
+import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { clamp01 } from './index.js'
+import { scoreHabit } from './habit.js'
 
 /** Cran de vitesse d'oubli de `variety` (§6.5 ter ENGINE) — trois positions, pas un curseur libre. */
 export type VarietyTau = 3 | 7 | 14
@@ -97,4 +99,70 @@ export function scoreVariety(args: ScoreVarietyArgs): number {
 
   const score = (1 - familiarity) * nouveaute + familiarity * (1 - nouveaute)
   return clamp01(score)
+}
+
+// ------------------------------------------------------------------------------------------
+// Couche `variety` (§6.2 ENGINE) — enveloppe `scoreVariety` dans le contrat `SelectionLayer`.
+//
+// `configure` pré-calcule ce qui dépend du `Catalog` : `mainIngredientByRecipe` est directement
+// `catalog.indexes.recipeMainIngredient` (§9.1 ENGINE) — le même index sert à la fois à résoudre
+// l'ingrédient principal du CANDIDAT scoré et celui des entrées d'HISTORIQUE (voir en-tête de
+// fichier). `history`/`today` viennent de `req.history`/`req.context.date`.
+//
+// ⚠️ Import de `scoreHabit` depuis `./habit.js` : NE PAS lire comme un couplage entre couches. Ce
+// n'est PAS `habitLayer` qui est appelé ici — c'est la fonction PURE `scoreHabit` du même module
+// `scoring/`, exactement comme le documente l'en-tête de ce fichier (§6.5 précision 5 : « habit
+// module variety »). Une couche ne connaît toujours ni les autres couches ni le pipeline (§6.2
+// ENGINE) : `varietyLayer` ne référence jamais `habitLayer`, seulement une fonction de calcul.
+//
+// `familiarity` est donc calculée PAR CANDIDAT dans `apply`, avant l'appel à `scoreVariety` —
+// c'est un calcul dérivé de `candidates`/`config`, pas quelque chose de pré-calculable une fois
+// pour toutes au `configure` (il dépend du `recipeId` scoré). `override` reste non renseigné :
+// `varietyMode` n'existe pas encore dans `SuggestionRequest` (P1c, §8.1 ENGINE).
+// ------------------------------------------------------------------------------------------
+
+export interface VarietyLayerConfig {
+  readonly history: MealHistory
+  /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE), reprise de `req.context.date`. */
+  readonly today: string
+  readonly mainIngredientByRecipe: ReadonlyMap<RecipeId, FoodId>
+}
+
+export const varietyLayer: SelectionLayer<VarietyLayerConfig> = {
+  id: 'variety',
+  kind: 'scoring',
+  critical: false,
+  defaultWeight: 0.15,
+
+  configure: (req, catalog) => ({
+    history: req.history,
+    today: req.context.date,
+    mainIngredientByRecipe: catalog.indexes.recipeMainIngredient,
+  }),
+
+  apply: (candidates: CandidateSet, config: VarietyLayerConfig): ScoringLayerResult => {
+    const scores = new Map<RecipeId, number>()
+    for (const recipeId of candidates) {
+      const mainIngredientId = config.mainIngredientByRecipe.get(recipeId) ?? null
+      const familiarity = scoreHabit({
+        recipeId,
+        mainIngredientId,
+        history: config.history,
+        today: config.today,
+        mainIngredientByRecipe: config.mainIngredientByRecipe,
+      })
+      scores.set(
+        recipeId,
+        scoreVariety({
+          recipeId,
+          mainIngredientId,
+          history: config.history,
+          today: config.today,
+          familiarity,
+          mainIngredientByRecipe: config.mainIngredientByRecipe,
+        })
+      )
+    }
+    return { scores }
+  },
 }

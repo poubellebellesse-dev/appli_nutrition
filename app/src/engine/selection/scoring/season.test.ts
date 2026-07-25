@@ -2,10 +2,10 @@
 // précision 3).
 
 import { describe, expect, it } from 'vitest'
-import { scoreSeason } from './season.js'
+import { scoreSeason, seasonLayer } from './season.js'
 import { NEUTRAL_SCORE } from './index.js'
-import { makeIngredient, makeRecipe } from '../test-fixtures.js'
-import type { Food, FoodId, Month } from '../../domain/index.js'
+import { asScoringResult, makeCatalog, makeIngredient, makeRecipe, makeRequest } from '../test-fixtures.js'
+import type { Food, FoodId, Month, RecipeId } from '../../domain/index.js'
 
 /**
  * `selection/test-fixtures.ts` fige `saisonMois`/`touteAnnee` (non pertinents pour les couches
@@ -150,5 +150,90 @@ describe('scoring/season — scoreSeason', () => {
     const score = scoreSeason(recipe, foods, 8)
     expect(score).toBeGreaterThanOrEqual(0)
     expect(score).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('scoring/season — seasonLayer (contrat SelectionLayer, §6.2 ENGINE)', () => {
+  it('id/kind/critical/defaultWeight conformes au registre (§6.3 ENGINE)', () => {
+    expect(seasonLayer.id).toBe('season')
+    expect(seasonLayer.kind).toBe('scoring')
+    expect(seasonLayer.critical).toBe(false)
+    expect(seasonLayer.defaultWeight).toBe(0.1)
+  })
+
+  it('invariant §6.1 : un score par candidat reçu, aucune réduction — y compris sans donnée de saison', () => {
+    const pates = makeFood('pates', { touteAnnee: true })
+    const recetteA = makeRecipe('a', { ingredients: [makeIngredient('pates', { quantiteG: 200 })] })
+    const recetteB = makeRecipe('b', { ingredients: [makeIngredient('pates', { quantiteG: 100 })] })
+    const catalog = makeCatalog([recetteA, recetteB], [pates])
+    const req = makeRequest({ date: '2026-07-25' })
+
+    const config = seasonLayer.configure(req, catalog)
+    const result = asScoringResult(seasonLayer.apply(new Set([recetteA.id, recetteB.id]), config))
+
+    expect(result.scores.size).toBe(2)
+  })
+
+  it('plat 100% épicerie (aucun ingrédient à saison renseignée) → NEUTRAL_SCORE', () => {
+    const huile = makeFood('huile', { touteAnnee: true })
+    const recette = makeRecipe('r', { ingredients: [makeIngredient('huile', { quantiteG: 20 })] })
+    const catalog = makeCatalog([recette], [huile])
+    const req = makeRequest({ date: '2026-07-25' })
+
+    const config = seasonLayer.configure(req, catalog)
+    const result = asScoringResult(seasonLayer.apply(new Set([recette.id]), config))
+
+    expect(result.scores.get(recette.id)).toBe(NEUTRAL_SCORE)
+  })
+
+  it('candidat absent du catalogue (id orphelin) → NEUTRAL_SCORE, pas de plantage', () => {
+    const catalog = makeCatalog([])
+    const req = makeRequest({ date: '2026-07-25' })
+    const config = seasonLayer.configure(req, catalog)
+
+    const result = asScoringResult(seasonLayer.apply(new Set(['inconnu' as RecipeId]), config))
+
+    expect(result.scores.get('inconnu' as RecipeId)).toBe(NEUTRAL_SCORE)
+  })
+
+  it('parse le mois (juillet) depuis `context.date`, jamais `Date.now()` (§3 ENGINE)', () => {
+    const tomate = makeFood('tomate', { touteAnnee: false, saisonMois: [7, 8, 9] })
+    const recette = makeRecipe('r', { ingredients: [makeIngredient('tomate', { quantiteG: 150 })] })
+    const catalog = makeCatalog([recette], [tomate])
+    const req = makeRequest({ date: '2026-07-25' }) // juillet → dans saisonMois
+
+    const config = seasonLayer.configure(req, catalog)
+    const result = asScoringResult(seasonLayer.apply(new Set([recette.id]), config))
+
+    expect(result.scores.get(recette.id)).toBe(1)
+  })
+
+  it('tous les scores restent dans [0, 1]', () => {
+    const legume = makeFood('legume', { touteAnnee: false, saisonMois: [1, 2, 3] })
+    const recette = makeRecipe('r', { ingredients: [makeIngredient('legume', { quantiteG: 100 })] })
+    const catalog = makeCatalog([recette], [legume])
+    const req = makeRequest({ date: '2026-08-01' })
+
+    const config = seasonLayer.configure(req, catalog)
+    const result = asScoringResult(seasonLayer.apply(new Set([recette.id]), config))
+
+    for (const score of result.scores.values()) {
+      expect(score).toBeGreaterThanOrEqual(0)
+      expect(score).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('cas discriminant : une recette de saison bat une recette hors saison et non disponible', () => {
+    const tomate = makeFood('tomate', { touteAnnee: false, saisonMois: [7, 8, 9] })
+    const asperge = makeFood('asperge', { touteAnnee: false, saisonMois: [4, 5] })
+    const deSaison = makeRecipe('de-saison', { ingredients: [makeIngredient('tomate', { quantiteG: 200 })] })
+    const horsSaison = makeRecipe('hors-saison', { ingredients: [makeIngredient('asperge', { quantiteG: 200 })] })
+    const catalog = makeCatalog([deSaison, horsSaison], [tomate, asperge])
+    const req = makeRequest({ date: '2026-07-25' })
+
+    const config = seasonLayer.configure(req, catalog)
+    const result = asScoringResult(seasonLayer.apply(new Set([deSaison.id, horsSaison.id]), config))
+
+    expect(result.scores.get(deSaison.id)!).toBeGreaterThan(result.scores.get(horsSaison.id)!)
   })
 })

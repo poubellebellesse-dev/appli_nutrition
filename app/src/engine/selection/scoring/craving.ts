@@ -22,7 +22,8 @@
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
-import type { CravingAxes, SensoryAxes } from '../../domain/index.js'
+import type { CravingAxes, RecipeId, SensoryAxes } from '../../domain/index.js'
+import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { NEUTRAL_SCORE, clamp01 } from './index.js'
 
 type NumericCravingAxis = 'sucreSale' | 'legerConsistant' | 'chaudFroid'
@@ -52,4 +53,47 @@ export function scoreCraving(axes: SensoryAxes, envie: CravingAxes | null, textu
 
   const textureComponent = axes.texture === textureVoulue ? 1 : 0
   return clamp01((euclideanComponent + textureComponent) / 2)
+}
+
+// ------------------------------------------------------------------------------------------
+// Couche `craving` (§6.2 ENGINE) — enveloppe `scoreCraving` dans le contrat `SelectionLayer`.
+//
+// `configure` pré-calcule les axes sensoriels de chaque recette (`recipe.axes`) en Map dérivée
+// du `Catalog`, et lit `envie` depuis `req.context.envie` (peut être `null` — aucune envie
+// exprimée, voir `scoreCraving` : la distance n'a alors rien à mesurer → `NEUTRAL_SCORE`).
+//
+// ⚠️ `textureVoulue` (3e paramètre de `scoreCraving`) n'a PAS de source dans `MealContext`
+// aujourd'hui : le champ n'existe pas encore côté domaine (voir domain/request.ts). Cette couche
+// appelle donc `scoreCraving` SANS 3e argument — équivalent à « aucune texture demandée » — signalé
+// tel quel plutôt qu'improvisé (voir rapport de lot). Le câblage viendra avec le champ, pas avant.
+//
+// Candidat absent de `catalog.recipes` (id orphelin) → `NEUTRAL_SCORE`, même règle que les autres
+// couches de score (§6.1 ENGINE).
+// ------------------------------------------------------------------------------------------
+
+export interface CravingLayerConfig {
+  readonly axesByRecipe: ReadonlyMap<RecipeId, SensoryAxes>
+  readonly envie: CravingAxes | null
+}
+
+export const cravingLayer: SelectionLayer<CravingLayerConfig> = {
+  id: 'craving',
+  kind: 'scoring',
+  critical: false,
+  defaultWeight: 0.2,
+
+  configure: (req, catalog) => {
+    const axesByRecipe = new Map<RecipeId, SensoryAxes>()
+    for (const recipe of catalog.recipes.values()) axesByRecipe.set(recipe.id, recipe.axes)
+    return { axesByRecipe, envie: req.context.envie }
+  },
+
+  apply: (candidates: CandidateSet, config: CravingLayerConfig): ScoringLayerResult => {
+    const scores = new Map<RecipeId, number>()
+    for (const recipeId of candidates) {
+      const axes = config.axesByRecipe.get(recipeId)
+      scores.set(recipeId, axes ? scoreCraving(axes, config.envie) : NEUTRAL_SCORE)
+    }
+    return { scores }
+  },
 }

@@ -32,6 +32,7 @@
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
 import type { FoodId, MealHistory, RecipeId } from '../../domain/index.js'
+import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { NEUTRAL_SCORE, clamp01 } from './index.js'
 
 export interface ScoreHabitArgs {
@@ -63,4 +64,63 @@ export function scoreHabit(args: ScoreHabitArgs): number {
   }
 
   return clamp01(matchCount / validEntries.length)
+}
+
+// ------------------------------------------------------------------------------------------
+// Couche `habit` (§6.2 ENGINE) — enveloppe `scoreHabit` dans le contrat `SelectionLayer`.
+//
+// `configure` pré-calcule ce qui dépend du `Catalog` : `mainIngredientByRecipe` est directement
+// `catalog.indexes.recipeMainIngredient` (§9.1 ENGINE), utilisé ici pour la même chose que dans
+// `variety.ts` — résoudre l'ingrédient principal des entrées d'HISTORIQUE (voir en-tête de
+// variety.ts, même motif). `history`/`today` viennent de `req.history`/`req.context.date`.
+//
+// ⚠️ Rappel de l'asymétrie déjà codée dans `scoreHabit` (voir en-tête de fichier plus haut) :
+// `habit` ne compte QUE les entrées d'origine `choisi` — un reste mangé (`origine: 'reste'`)
+// n'est pas une préférence exprimée, il est ignoré au numérateur ET au dénominateur. C'est
+// l'INVERSE de `variety`, qui lit toutes les entrées quelle que soit leur origine. Cette
+// asymétrie est portée par `scoreHabit` lui-même ; cette couche ne fait qu'en hériter, elle ne la
+// réimplémente pas.
+//
+// Candidat non résolu par `mainIngredientByRecipe` (aucun ingrédient principal connu, id
+// orphelin) → `mainIngredientId: null`, transmis tel quel à `scoreHabit`, qui reste alors basé
+// uniquement sur la correspondance de `recipeId` — jamais de plantage, jamais un score hors
+// [0, 1] (§6.1 ENGINE).
+// ------------------------------------------------------------------------------------------
+
+export interface HabitLayerConfig {
+  readonly history: MealHistory
+  /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE), reprise de `req.context.date`. */
+  readonly today: string
+  readonly mainIngredientByRecipe: ReadonlyMap<RecipeId, FoodId>
+}
+
+export const habitLayer: SelectionLayer<HabitLayerConfig> = {
+  id: 'habit',
+  kind: 'scoring',
+  critical: false,
+  defaultWeight: 0,
+
+  configure: (req, catalog) => ({
+    history: req.history,
+    today: req.context.date,
+    mainIngredientByRecipe: catalog.indexes.recipeMainIngredient,
+  }),
+
+  apply: (candidates: CandidateSet, config: HabitLayerConfig): ScoringLayerResult => {
+    const scores = new Map<RecipeId, number>()
+    for (const recipeId of candidates) {
+      const mainIngredientId = config.mainIngredientByRecipe.get(recipeId) ?? null
+      scores.set(
+        recipeId,
+        scoreHabit({
+          recipeId,
+          mainIngredientId,
+          history: config.history,
+          today: config.today,
+          mainIngredientByRecipe: config.mainIngredientByRecipe,
+        })
+      )
+    }
+    return { scores }
+  },
 }

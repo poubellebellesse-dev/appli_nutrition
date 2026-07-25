@@ -1,13 +1,20 @@
 // engine/selection/scoring/ — L3 Sélection, couches de SCORE : socle de fonctions pures
-// (docs/ENGINE.md §6.5) — lot 3 de la tranche P1b-1.
+// (docs/ENGINE.md §6.5) — lot 3 de la tranche P1b-1, complété par l'enveloppe `SelectionLayer`
+// (lot suivant de P1b-1, voir §6.8 ENGINE).
 //
-// Portée volontairement limitée : les 7 fonctions ci-dessous sont des fonctions PURES qui
-// calculent un score 0-1, PAS des objets `SelectionLayer` (voir ../index.ts pour le contrat).
-// L'enveloppe dans ce contrat, les poids par défaut (`LAYER_DESCRIPTORS`), les archétypes
-// (« Rapide », « Équilibre »…) et la passe pondérée qui les combine sont P1b-2 — non traités ici.
-// Chaque fonction reçoit ses données en paramètres (vecteur nutritionnel, id d'ingrédient
-// principal, etc.) plutôt qu'un `Catalog` complet : SEL a le droit de dépendre de NUT (§2 ENGINE),
-// mais ces fonctions restent testables sans catalogue ni index dérivé.
+// Chaque fichier expose une fonction PURE qui calcule un score 0-1 à partir de ses données en
+// paramètres (vecteur nutritionnel, id d'ingrédient principal, etc.) plutôt qu'un `Catalog`
+// complet — SEL a le droit de dépendre de NUT (§2 ENGINE), mais ces fonctions restent testables
+// sans catalogue ni index dérivé.
+//
+// 5 de ces 7 fonctions (`preference`, `craving`, `season`, `variety`, `habit`) sont désormais
+// AUSSI enveloppées dans le contrat `SelectionLayer` (`preferenceLayer`, `cravingLayer`,
+// `seasonLayer`, `varietyLayer`, `habitLayer`), dans le MÊME fichier que la fonction pure
+// qu'elles enveloppent — `configure` y fait le pont vers `Catalog`/`SuggestionRequest`, `apply`
+// reste sans accès au catalogue. `nutri` (cible manquante, `resolveReferenceIntakes` non
+// implémentée) et `speed` (signal non rattaché au registre, voir §6.5 note ¶ ENGINE) restent des
+// fonctions pures SEULES, sans couche — hors lot. La passe pondérée qui combine les couches de
+// score (`runScoringPass`) n'est pas traitée ici (lot suivant).
 //
 // NEUTRAL_SCORE = 0.5 est la valeur « ni bonus ni malus » : le signal neutre qu'une fonction
 // retourne quand elle n'a rien d'exploitable à comparer (aucune cible, aucune préférence connue,
@@ -24,7 +31,11 @@
 // moment où le graphe circulaire se referme, et aucun des 7 fichiers n'y accède au top-level
 // (uniquement à l'intérieur de leurs fonctions, appelées plus tard).
 //
-// Dépendances autorisées : domain/ uniquement — §2/§3 ENGINE.
+// Dépendances autorisées : domain/, et — pour les 5 fichiers qui exposent aussi une couche —
+// `../index.js` (le contrat `SelectionLayer` local à selection/) — §2/§3 ENGINE. Import circulaire
+// avec `../index.js` assumé de la même façon qu'entre les couches d'exclusion et ce fichier
+// (voir exclusions.ts) : uniquement des `import type`, erasés à la compilation, donc sans cycle
+// réel à l'exécution.
 
 export const NEUTRAL_SCORE = 0.5
 
@@ -34,11 +45,14 @@ export function clamp01(x: number): number {
 }
 
 export { scoreNutri } from './nutri.js'
-export { scorePreference } from './preference.js'
-export { scoreCraving } from './craving.js'
-export { scoreSeason } from './season.js'
-export { scoreVariety } from './variety.js'
-export type { ScoreVarietyArgs, VarietyOverride, VarietyTau } from './variety.js'
+export { scorePreference, preferenceLayer } from './preference.js'
+export type { PreferenceLayerConfig } from './preference.js'
+export { scoreCraving, cravingLayer } from './craving.js'
+export type { CravingLayerConfig } from './craving.js'
+export { scoreSeason, seasonLayer } from './season.js'
+export type { SeasonLayerConfig } from './season.js'
+export { scoreVariety, varietyLayer } from './variety.js'
+export type { ScoreVarietyArgs, VarietyOverride, VarietyTau, VarietyLayerConfig } from './variety.js'
 export { scoreSpeed } from './speed.js'
-export { scoreHabit } from './habit.js'
-export type { ScoreHabitArgs } from './habit.js'
+export { scoreHabit, habitLayer } from './habit.js'
+export type { ScoreHabitArgs, HabitLayerConfig } from './habit.js'

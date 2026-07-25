@@ -23,7 +23,8 @@
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
-import type { FoodId, Recipe } from '../../domain/index.js'
+import type { FoodId, Recipe, RecipeId } from '../../domain/index.js'
+import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { NEUTRAL_SCORE, clamp01 } from './index.js'
 
 export function scorePreference(recipe: Recipe, preferences: ReadonlyMap<FoodId, number>): number {
@@ -40,4 +41,42 @@ export function scorePreference(recipe: Recipe, preferences: ReadonlyMap<FoodId,
 
   const avgPref = weightedSum / totalWeight // dans −2…+2 en théorie ; clampé plus bas malgré tout
   return clamp01((avgPref + 2) / 4)
+}
+
+// ------------------------------------------------------------------------------------------
+// Couche `preference` (§6.2 ENGINE) — enveloppe `scorePreference` dans le contrat
+// `SelectionLayer`, sans changer son calcul.
+//
+// `configure` pré-calcule tout ce qui dépend du `Catalog` : ici, rien à dériver au-delà de la
+// Map de recettes déjà construite par `data/` (`catalog.recipes`) — la reprendre telle quelle
+// évite de la recopier pour rien. `req.preferences` (voir domain/request.ts, échelle −2…+2,
+// lignes `user_preference` de `cible_type='food'`) est propagé tel quel ; `apply` n'a ensuite
+// plus aucun accès à `Catalog`.
+//
+// Candidat absent de `catalog.recipes` (id orphelin, ne devrait pas arriver en usage normal
+// mais la couche ne doit jamais planter dessus) → `NEUTRAL_SCORE`, comme tout candidat dont on
+// ne sait rien — jamais 0, jamais une absence de la Map retournée (§6.1 ENGINE).
+// ------------------------------------------------------------------------------------------
+
+export interface PreferenceLayerConfig {
+  readonly recipes: ReadonlyMap<RecipeId, Recipe>
+  readonly preferences: ReadonlyMap<FoodId, number>
+}
+
+export const preferenceLayer: SelectionLayer<PreferenceLayerConfig> = {
+  id: 'preference',
+  kind: 'scoring',
+  critical: false,
+  defaultWeight: 0.25,
+
+  configure: (req, catalog) => ({ recipes: catalog.recipes, preferences: req.preferences }),
+
+  apply: (candidates: CandidateSet, config: PreferenceLayerConfig): ScoringLayerResult => {
+    const scores = new Map<RecipeId, number>()
+    for (const recipeId of candidates) {
+      const recipe = config.recipes.get(recipeId)
+      scores.set(recipeId, recipe ? scorePreference(recipe, config.preferences) : NEUTRAL_SCORE)
+    }
+    return { scores }
+  },
 }

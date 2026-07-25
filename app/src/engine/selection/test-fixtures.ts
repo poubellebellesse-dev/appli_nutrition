@@ -24,7 +24,7 @@ import type {
   SuggestionRequest,
 } from '../domain/index.js'
 import { g, min } from '../domain/index.js'
-import type { ExclusionLayerResult, LayerResult } from './index.js'
+import type { ExclusionLayerResult, LayerResult, ScoringLayerResult } from './index.js'
 
 /**
  * `SelectionLayer<Config>.apply` retourne `LayerResult` (union) même pour une couche typée
@@ -34,6 +34,12 @@ import type { ExclusionLayerResult, LayerResult } from './index.js'
  */
 export function asExclusionResult(result: LayerResult): ExclusionLayerResult {
   if (!('rejected' in result)) throw new Error('asExclusionResult: résultat de couche de score, pas exclusion')
+  return result
+}
+
+/** Même narrowing qu'`asExclusionResult`, côté couche de score (`kind: 'scoring'`). */
+export function asScoringResult(result: LayerResult): ScoringLayerResult {
+  if (!('scores' in result)) throw new Error('asScoringResult: résultat de couche d’exclusion, pas de score')
   return result
 }
 
@@ -70,6 +76,7 @@ export function makeRecipe(
     readonly tempsPrepMin?: number
     readonly tempsCuissonMin?: number
     readonly typesRepas?: Recipe['typesRepas']
+    readonly axes?: Recipe['axes']
   } = {}
 ): Recipe {
   return {
@@ -85,7 +92,7 @@ export function makeRecipe(
     saisonMois: [],
     envergure: 'quotidien',
     conservationJours: 1,
-    axes: { sucreSale: 0, legerConsistant: 0, chaudFroid: 0, texture: 'test' },
+    axes: overrides.axes ?? { sucreSale: 0, legerConsistant: 0, chaudFroid: 0, texture: 'test' },
     ingredients: overrides.ingredients ?? [],
     etapes: [],
     facettes: overrides.facettes ?? [],
@@ -124,7 +131,12 @@ function buildIndexes(recipes: ReadonlyMap<RecipeId, Recipe>, foods: ReadonlyMap
   return { recipesByAllergen, recipesByDiet, recipesBySlot, recipeNutrients: new Map(), recipeMainIngredient: new Map() }
 }
 
-export function makeCatalog(recipes: readonly Recipe[], foods: readonly Food[] = []): Catalog {
+export function makeCatalog(
+  recipes: readonly Recipe[],
+  foods: readonly Food[] = [],
+  /** Override de `indexes.recipeMainIngredient` (§9.1 ENGINE) — vide par défaut, comme avant. */
+  mainIngredientByRecipe: ReadonlyMap<RecipeId, FoodId> = new Map()
+): Catalog {
   const recipeMap = new Map(recipes.map((recipe) => [recipe.id, recipe]))
   const foodMap = new Map(foods.map((food) => [food.id, food]))
 
@@ -137,11 +149,11 @@ export function makeCatalog(recipes: readonly Recipe[], foods: readonly Food[] =
     lexicon: new Map(),
     topics: new Map(),
     substitutions: new Map(),
-    indexes: buildIndexes(recipeMap, foodMap),
+    indexes: { ...buildIndexes(recipeMap, foodMap), recipeMainIngredient: mainIngredientByRecipe },
   }
 }
 
-/** `SuggestionRequest` minimal — seuls les champs lus par les couches d'exclusion varient en test. */
+/** `SuggestionRequest` minimal — seuls les champs lus par les couches d'exclusion/de score en test varient. */
 export function makeRequest(
   overrides: {
     readonly allergies?: readonly string[]
@@ -150,6 +162,10 @@ export function makeRequest(
     readonly requiredFoodIds?: readonly string[]
     readonly creneau?: SuggestionRequest['context']['creneau']
     readonly tempsDisponibleMin?: number | null
+    readonly preferences?: ReadonlyMap<FoodId, number>
+    readonly date?: string
+    readonly envie?: SuggestionRequest['context']['envie']
+    readonly history?: SuggestionRequest['history']
   } = {}
 ): SuggestionRequest {
   return {
@@ -168,13 +184,14 @@ export function makeRequest(
     },
     context: {
       creneau: overrides.creneau ?? 'diner',
-      date: '2026-07-23',
+      date: overrides.date ?? '2026-07-23',
       tempsDisponibleMin: overrides.tempsDisponibleMin == null ? null : min(overrides.tempsDisponibleMin),
-      envie: null,
+      envie: overrides.envie ?? null,
       pantryFoodIds: [],
       requiredFoodIds: (overrides.requiredFoodIds ?? []) as readonly FoodId[],
     },
-    history: { windowDays: 21, entries: [] },
+    history: overrides.history ?? { windowDays: 21, entries: [] },
+    preferences: overrides.preferences ?? new Map(),
     activeTopics: [],
     seed: 1,
   }

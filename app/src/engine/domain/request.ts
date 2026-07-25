@@ -68,6 +68,15 @@ export interface SuggestionRequest {
   readonly constraints: HardConstraints
   readonly context: MealContext
   readonly history: MealHistory
+  /**
+   * Préférences utilisateur par aliment (couche `preference`, §6.5 ENGINE précision 4) — table
+   * `user_preference` où `cible_type = 'food'` (docs/ARCHITECTURE.md §4.3). Échelle **−2 (déteste)
+   * … +2 (adore)**, 0 = neutre. Champ OBLIGATOIRE : Map VIDE = aucune préférence connue, auquel
+   * cas `preferenceLayer` rend `NEUTRAL_SCORE` pour tout candidat (voir
+   * engine/selection/scoring/preference.ts) plutôt que de traiter l'absence comme un cas
+   * particulier côté couche.
+   */
+  readonly preferences: ReadonlyMap<FoodId, number>
   /** [] par défaut — tant qu'aucune thématique n'est active, `topic` reste à poids nul. */
   readonly activeTopics: readonly TopicId[]
   readonly weights?: Partial<ScoreWeights>

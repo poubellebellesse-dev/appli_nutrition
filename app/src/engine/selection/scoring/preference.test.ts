@@ -2,10 +2,10 @@
 // §6.5 précision 4).
 
 import { describe, expect, it } from 'vitest'
-import { scorePreference } from './preference.js'
+import { scorePreference, preferenceLayer } from './preference.js'
 import { NEUTRAL_SCORE } from './index.js'
-import { makeIngredient, makeRecipe } from '../test-fixtures.js'
-import type { FoodId } from '../../domain/index.js'
+import { asScoringResult, makeCatalog, makeIngredient, makeRecipe, makeRequest } from '../test-fixtures.js'
+import type { FoodId, RecipeId } from '../../domain/index.js'
 
 describe('scoring/preference — scorePreference', () => {
   it('recette sans ingrédient → score neutre', () => {
@@ -74,5 +74,78 @@ describe('scoring/preference — scorePreference', () => {
     const score = scorePreference(recipe, preferences)
     expect(score).toBeGreaterThanOrEqual(0)
     expect(score).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('scoring/preference — preferenceLayer (contrat SelectionLayer, §6.2 ENGINE)', () => {
+  it('id/kind/critical/defaultWeight conformes au registre (§6.3 ENGINE)', () => {
+    expect(preferenceLayer.id).toBe('preference')
+    expect(preferenceLayer.kind).toBe('scoring')
+    expect(preferenceLayer.critical).toBe(false)
+    expect(preferenceLayer.defaultWeight).toBe(0.25)
+  })
+
+  it('invariant §6.1 : un score par candidat reçu, aucune réduction — y compris sans préférence', () => {
+    const soupe = makeRecipe('soupe', { ingredients: [makeIngredient('carotte')] })
+    const gratin = makeRecipe('gratin', { ingredients: [makeIngredient('brocoli')] })
+    const catalog = makeCatalog([soupe, gratin])
+    const req = makeRequest()
+
+    const config = preferenceLayer.configure(req, catalog)
+    const result = asScoringResult(preferenceLayer.apply(new Set([soupe.id, gratin.id]), config))
+
+    expect(result.scores.size).toBe(2)
+  })
+
+  it('aucune préférence connue (Map vide) → NEUTRAL_SCORE pour tout candidat', () => {
+    const soupe = makeRecipe('soupe', { ingredients: [makeIngredient('carotte', { quantiteG: 200 })] })
+    const catalog = makeCatalog([soupe])
+    const req = makeRequest({ preferences: new Map() })
+
+    const config = preferenceLayer.configure(req, catalog)
+    const result = asScoringResult(preferenceLayer.apply(new Set([soupe.id]), config))
+
+    expect(result.scores.get(soupe.id)).toBe(NEUTRAL_SCORE)
+  })
+
+  it('candidat absent du catalogue (id orphelin) → NEUTRAL_SCORE, pas de plantage', () => {
+    const catalog = makeCatalog([])
+    const req = makeRequest()
+    const config = preferenceLayer.configure(req, catalog)
+
+    const result = asScoringResult(preferenceLayer.apply(new Set(['inconnu' as RecipeId]), config))
+
+    expect(result.scores.get('inconnu' as RecipeId)).toBe(NEUTRAL_SCORE)
+  })
+
+  it('tous les scores restent dans [0, 1]', () => {
+    const recette = makeRecipe('extreme', { ingredients: [makeIngredient('x', { quantiteG: 100 })] })
+    const catalog = makeCatalog([recette])
+    const preferences = new Map<FoodId, number>([['x' as FoodId, -2]])
+    const req = makeRequest({ preferences })
+
+    const config = preferenceLayer.configure(req, catalog)
+    const result = asScoringResult(preferenceLayer.apply(new Set([recette.id]), config))
+
+    for (const score of result.scores.values()) {
+      expect(score).toBeGreaterThanOrEqual(0)
+      expect(score).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('cas discriminant : une recette dont l’ingrédient principal est adoré bat celle dont il est détesté', () => {
+    const adoree = makeRecipe('adoree', { ingredients: [makeIngredient('ail', { quantiteG: 300 })] })
+    const detestee = makeRecipe('detestee', { ingredients: [makeIngredient('brocoli', { quantiteG: 300 })] })
+    const catalog = makeCatalog([adoree, detestee])
+    const preferences = new Map<FoodId, number>([
+      ['ail' as FoodId, 2],
+      ['brocoli' as FoodId, -2],
+    ])
+    const req = makeRequest({ preferences })
+
+    const config = preferenceLayer.configure(req, catalog)
+    const result = asScoringResult(preferenceLayer.apply(new Set([adoree.id, detestee.id]), config))
+
+    expect(result.scores.get(adoree.id)!).toBeGreaterThan(result.scores.get(detestee.id)!)
   })
 })

@@ -32,7 +32,8 @@
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
-import type { Food, FoodId, Month, Recipe } from '../../domain/index.js'
+import type { Food, FoodId, Month, Recipe, RecipeId } from '../../domain/index.js'
+import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { NEUTRAL_SCORE, clamp01 } from './index.js'
 
 export function scoreSeason(recipe: Recipe, foods: ReadonlyMap<FoodId, Food>, mois: Month): number {
@@ -58,4 +59,53 @@ export function scoreSeason(recipe: Recipe, foods: ReadonlyMap<FoodId, Food>, mo
   if (totalWeight === 0) return NEUTRAL_SCORE
 
   return clamp01(weightedCreditSum / totalWeight)
+}
+
+// ------------------------------------------------------------------------------------------
+// Couche `season` (§6.2 ENGINE) — enveloppe `scoreSeason` dans le contrat `SelectionLayer`.
+//
+// `configure` pré-calcule `recipes`/`foods` (repris tels quels du `Catalog`, déjà des Map prêtes
+// à l'emploi) et parse le mois depuis `req.context.date` (ISO `yyyy-mm-dd`) — JAMAIS
+// `Date.now()` (§3 ENGINE, horloge injectée). `parseMonthFromIsoDate` type et valide le résultat
+// comme `Month` (1-12) plutôt que de faire confiance silencieusement au format de la chaîne.
+//
+// Candidat absent de `catalog.recipes` (id orphelin) → `NEUTRAL_SCORE`, même règle que les autres
+// couches de score (§6.1 ENGINE).
+// ------------------------------------------------------------------------------------------
+
+/** Parse le mois (1-12) depuis une date ISO `yyyy-mm-dd` — jamais `Date.now()` (§3 ENGINE). */
+function parseMonthFromIsoDate(iso: string): Month {
+  const month = Number(iso.slice(5, 7))
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    throw new RangeError(`season: date de contexte invalide, mois hors plage 1-12 : '${iso}'`)
+  }
+  return month as Month
+}
+
+export interface SeasonLayerConfig {
+  readonly recipes: ReadonlyMap<RecipeId, Recipe>
+  readonly foods: ReadonlyMap<FoodId, Food>
+  readonly mois: Month
+}
+
+export const seasonLayer: SelectionLayer<SeasonLayerConfig> = {
+  id: 'season',
+  kind: 'scoring',
+  critical: false,
+  defaultWeight: 0.1,
+
+  configure: (req, catalog) => ({
+    recipes: catalog.recipes,
+    foods: catalog.foods,
+    mois: parseMonthFromIsoDate(req.context.date),
+  }),
+
+  apply: (candidates: CandidateSet, config: SeasonLayerConfig): ScoringLayerResult => {
+    const scores = new Map<RecipeId, number>()
+    for (const recipeId of candidates) {
+      const recipe = config.recipes.get(recipeId)
+      scores.set(recipeId, recipe ? scoreSeason(recipe, config.foods, config.mois) : NEUTRAL_SCORE)
+    }
+    return { scores }
+  },
 }

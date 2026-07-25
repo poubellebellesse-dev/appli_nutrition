@@ -4,12 +4,18 @@
 // partageant un contrat commun (SelectionLayer). Deux natures ne doivent jamais être confondues
 // (§6.1 ENGINE) : EXCLUSION retire des candidats (intersection), SCORE ne retire rien et
 // repondère (somme pondérée). LAYER_DESCRIPTORS (ci-dessous) ne porte que des métadonnées pour
-// les 16 couches du registre complet — les 10 couches de score restent NON implémentées (P2).
+// les 16 couches du registre complet — 5 des 10 couches de score restent NON implémentées
+// (`nutri`, `pantry`, `occasion`, `topic`, `cost` — P2).
 //
 // P1a (implémenté ici) : les 6 couches d'EXCLUSION (allergenes, regime, exclusions, requis,
 // temps, equipement) et la passe d'exclusion qui les enchaîne (§6.4 ENGINE) — voir allergenes.ts,
 // regime.ts, exclusions.ts, requis.ts, temps.ts, equipement.ts, exclusion-pass.ts, réexportés plus
 // bas pour offrir une surface unique `engine/selection`.
+//
+// P1b-1 (implémenté ici) : 5 des 10 couches de SCORE (preference, craving, season, variety,
+// habit), voir scoring/{preference,craving,season,variety,habit}.ts, réexportées plus bas. La
+// passe de score qui les enchaîne (§6.4 ENGINE, pendant scoring de `runExclusionPass`) n'est pas
+// encore câblée (lot suivant).
 //
 // Dépendances autorisées : domain/ (§2 ENGINE : SEL --> DOM). LayerId/LayerKind sont déclarés
 // dans domain/ (pas ici) pour que guards/, qui ne connaît QUE domain/, puisse typer
@@ -112,7 +118,7 @@ export const LAYER_DESCRIPTORS: readonly LayerDescriptor[] = [
 
 // ------------------------------------------------------------------------------------------
 // Couches d'exclusion & passe d'exclusion — implémentation P1a (§6.4 ENGINE).
-// Réexportées ici pour une surface unique `engine/selection` (les couches de score restent P2).
+// Réexportées ici pour une surface unique `engine/selection` (couches de score : voir plus bas).
 // ------------------------------------------------------------------------------------------
 
 export { allergenLayer } from './allergenes.js'
@@ -129,3 +135,23 @@ export { equipmentLayer } from './equipement.js'
 export type { EquipmentLayerConfig } from './equipement.js'
 export { EXCLUSION_LAYERS, runExclusionPass } from './exclusion-pass.js'
 export type { ExclusionPassResult } from './exclusion-pass.js'
+
+// ------------------------------------------------------------------------------------------
+// Couches de score — implémentation partielle P1b-1 (5 des 10 couches du registre : `preference`,
+// `craving`, `season`, `variety`, `habit`). `nutri` (cible manquante, `resolveReferenceIntakes`
+// non implémentée), `pantry`, `occasion`, `topic`, `cost` restent NON implémentées (P2) — voir
+// LAYER_DESCRIPTORS ci-dessus, inchangé par ce lot. La passe pondérée qui les combine
+// (`runScoringPass`, pendant scoring de `runExclusionPass`) n'est pas câblée ici (lot suivant).
+// Réexportées ici pour la même surface unique `engine/selection` que les couches d'exclusion.
+// ------------------------------------------------------------------------------------------
+
+export { preferenceLayer } from './scoring/preference.js'
+export type { PreferenceLayerConfig } from './scoring/preference.js'
+export { cravingLayer } from './scoring/craving.js'
+export type { CravingLayerConfig } from './scoring/craving.js'
+export { seasonLayer } from './scoring/season.js'
+export type { SeasonLayerConfig } from './scoring/season.js'
+export { varietyLayer } from './scoring/variety.js'
+export type { VarietyLayerConfig } from './scoring/variety.js'
+export { habitLayer } from './scoring/habit.js'
+export type { HabitLayerConfig } from './scoring/habit.js'
