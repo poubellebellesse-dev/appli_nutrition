@@ -10,20 +10,21 @@
 ## 1. En une phrase
 
 Application de nutrition et de planification de repas, **100 % locale, sans IA, sans compte**,
-utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0, P1a, P1b-1 et
-désormais P1b-2 du moteur terminés** — passe de score pondérée (`runScoringPass`), 6 archétypes
-codés et noms validés, poids dynamique de `craving`, `speed` en 17ᵉ couche du registre,
-`createEngine` réel, banc CLI `engine:try`, second garde-fou (`assertScoringLayersNeverExclude`)
-(303 tests verts, 29 fichiers, typecheck propre) ; **P1c = prochaine étape**. Tout est committé
-(6 commits depuis la dernière mise à jour de ce document).
+utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0, P1a, P1b-1,
+P1b-2 et désormais les lots 1-3 de P1c terminés** — diversification MMR (§6.6 ENGINE), explication
+avec règle de non-citation (§6.7 ENGINE), `suggestMeals` bout-en-bout (§8 ENGINE), 3ᵉ et 4ᵉ
+garde-fous codés (`assertNoTherapeuticClaim`, `assertCriticalLayersRan` — 4 garde-fous codés sur 5)
+(366 tests verts, 33 fichiers, typecheck propre) ; **reste en P1c** : flags `onlyFavorites` /
+`varietyMode` et `suggestAlternatives`. Committé (3 commits depuis la dernière mise à jour de ce
+document).
 
 ---
 
 ## 2. Où en est-on
 
 ```
-Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── ▓▓ P1c ▓▓
-  ✅          ✅            ✅           ✅              ✅                                                              ⬅ ICI (à coder)
+Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-3 ✅) ▓▓
+  ✅          ✅            ✅           ✅              ✅                                                                          ⬅ ICI (flags favoris/variété + suggestAlternatives restants)
 ```
 
 | Livrable | Fichier | État |
@@ -38,7 +39,8 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Code — P1b-1 (socle scoring) | `app/src/engine/nutrition/`, `app/src/engine/selection/scoring/` | ✅ Terminé et committé, 140 tests verts |
 | Code — rang 0 + `variety` TAU + `requis` | `app/src/engine/domain/{planning,request}.ts`, `app/src/engine/selection/scoring/variety.ts`, `app/src/engine/selection/requis.ts` | ✅ Terminé et committé, 158 tests verts (23 fichiers), typecheck propre |
 | Code — P1b-2 (passe de score + archétypes) | `app/src/engine/selection/scoring-pass.ts`, `archetypes.ts`, `app/src/engine/domain/archetype-ids.ts`, `app/src/engine/guards/index.ts`, `app/src/engine/api/index.ts`, `app/src/cli/try-engine.ts`, `app/src/engine/nutrition/energy-needs.ts`, `reference-intakes.ts` | ✅ Terminé et committé, 303 tests verts (29 fichiers), typecheck propre |
-| Code — P1c (diversification, explication, `suggestMeals`) | `app/src/engine/selection/` (diversification + explication), `app/src/engine/api/index.ts` | ⬜ **Prochaine étape** |
+| Code — P1c lots 1-3 (diversification, explication, `suggestMeals` bout-en-bout) | `app/src/engine/selection/{similarity,diversify,explain}.ts`, `app/src/engine/guards/{banned-terms,index}.ts`, `app/src/engine/api/index.ts` | ✅ Terminé et committé (3 commits), 366 tests verts (33 fichiers), typecheck propre |
+| Code — P1c reste (flags `onlyFavorites`/`varietyMode`, `suggestAlternatives`) | `app/src/engine/domain/request.ts`, `app/src/engine/api/index.ts` | ⬜ **Prochaine étape** |
 
 ---
 
@@ -73,9 +75,10 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
     Voir `docs/ENGINE.md` §6.5.
 - **Fonction pure synchrone**, catalogue en RAM. Pas de `Date.now`/`Math.random` (PRNG à graine,
   tie-break stable par id de recette).
-- **Sécurité = post-conditions** : le moteur lève plutôt que de retourner un résultat non sûr. Deux
-  garde-fous CODÉS (`assertNoDeclaredAllergen`, `assertScoringLayersNeverExclude`) sur cinq —
-  détail : `docs/ENGINE.md` §5.2.
+- **Sécurité = post-conditions** : le moteur lève plutôt que de retourner un résultat non sûr.
+  **Quatre garde-fous CODÉS** sur cinq (`assertNoDeclaredAllergen`,
+  `assertScoringLayersNeverExclude`, `assertNoTherapeuticClaim`, `assertCriticalLayersRan`) — ne
+  reste que `assertCalorieFloor`, en attente de `planWeek` — détail : `docs/ENGINE.md` §5.2.
 - **Anticipation sans IA** = 4 statistiques locales (couche `habit`), réversibles.
 - **Poids dynamiques** : `craving` passe **n°1 — CODÉ** dès qu'une envie est RÉELLEMENT exprimée,
   **uniquement dans le contexte « Aujourd'hui »** (suggestion ponctuelle) ; il reste à son socle
@@ -243,11 +246,38 @@ retenu :
 - [x] Banc CLI `engine:try` (`app/src/cli/try-engine.ts`)
 - [x] 303 tests verts (29 fichiers), typecheck propre
 
+### P1c lots 1-3 — Diversification, explication, `suggestMeals` bout-en-bout ✅ terminés et committés (3 commits)
+
+- [x] Diversification MMR (§6.6 ENGINE) — `engine/selection/similarity.ts` (similarité pondérée :
+  ingrédient principal 0,5 · profil sensoriel 0,3 · famille de cuisine 0,2 ; texture catégorielle,
+  comme `craving` ; piège absence ≠ égalité codé et documenté) + `diversify.ts` (boucle gloutonne
+  `argmax(score − λ·simMax)`, MAX et non moyenne, `DEFAULT_MMR_LAMBDA = 0.4` — à calibrer)
+- [x] Explication (§6.7 ENGINE) — `engine/selection/explain.ts` : règle de non-citation des couches
+  dont la contribution ne discrimine aucun candidat (ÉTEND la spec « top 3 par contribution »)
+- [x] 3ᵉ garde-fou CODÉ `assertNoTherapeuticClaim` — lexique banni dupliqué dans
+  `engine/guards/banned-terms.ts`, synchronisation garantie par
+  `tests/banned-terms-consistency.test.mjs` ; `BANNED_TERMS` exporté de `catalog/build.mjs`
+  derrière une garde `isMainModule()`
+- [x] `suggestMeals` bout-en-bout (§8 ENGINE) — `engine/api/index.ts`, `runSuggestMeals` :
+  exclusion → `assertNoDeclaredAllergen` → score → classement → diversification → explication →
+  `assertNoTherapeuticClaim`
+- [x] 4ᵉ garde-fou CODÉ `assertCriticalLayersRan`
+- [x] `NoViableRecipeError` porte désormais la `RejectionSummary` complète (§8.3 ENGINE)
+- [x] `EngineDiagnostics.weights` complet (`ScoreWeights` entier, zéros pour les couches non
+  implémentées)
+- [x] `createEngine(catalog, opts?)` accepte une horloge injectée optionnelle
+  (`CreateEngineOptions.now?: () => number`) pour `dureeMs`
+- [x] `SuggestionRequest` gagne `mmrLambda?` et `skipDiversification?`
+- [x] Banc CLI `engine:try` passe désormais par `suggestMeals` — la « limite d'API » documentée
+  §8 ENGINE est levée
+- [x] 366 tests verts (33 fichiers), typecheck propre
+
 | Sous-étape | Contenu |
 |---|---|
 | ✅ **P1b-1** | Prérequis données (`food.saison_mois` + flag « toute l'année/staple », §ARCHI 4.2) + index calculés à l'**init du moteur** (`recipeNutrients`, `recipeMainIngredient`, dans `engine/nutrition/`) + les 7 fonctions de score (`nutri` · `preference` · `craving` · `season` · `variety` + `speed` + `habit` minimal) + tests unitaires |
 | ✅ **P1b-2** | Passe de score pondérée (`runScoringPass`) + les 6 archétypes CODÉS (§ENGINE 6.3 bis) + poids dynamique CODÉ de `craving` (`occasion` reste non câblée, couche absente) + tie-break déterministe par id + banc CLI `engine:try` |
-| **P1c** ⬅ prochaine étape | Diversification (MMR) + explication (top 3) + `suggestMeals` bout-en-bout + flags `onlyFavorites`/`varietyMode` + `suggestAlternatives` |
+| ✅ **P1c lots 1-3** | Diversification MMR (§ENGINE 6.6) + explication avec règle de non-citation (§ENGINE 6.7) + `suggestMeals` bout-en-bout (§ENGINE 8) + 3ᵉ et 4ᵉ garde-fous CODÉS |
+| **P1c reste** ⬅ prochaine étape | Flags `onlyFavorites`/`varietyMode` + `suggestAlternatives` |
 
 > ⚠️ Rappel du plan (§12 ENGINE) : **ne pas écrire d'UI avant la phase P3.** Le moteur doit produire
 > des repas crédibles en ligne de commande d'abord. Une UI branchée trop tôt rend douloureux le fait

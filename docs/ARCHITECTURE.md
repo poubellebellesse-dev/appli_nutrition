@@ -337,6 +337,16 @@ Quand une thématique est active, l'explication cite le critère **et son autori
 Cette explication n'est pas cosmétique : c'est ce qui rend le système auditable par l'utilisateur
 et défendable juridiquement.
 
+> ⚠️ **CODÉ (P1c, `engine/selection/explain.ts`) — règle de non-citation, qui ÉTEND cette
+> esquisse.** `explainSuggestion` reçoit l'ensemble des candidats scorés du créneau, pas une
+> recette isolée : c'est ce qui permet de savoir quelles couches **discriminent réellement** entre
+> eux. Une couche dont la contribution est identique sur tous les candidats — cas d'un profil neuf,
+> où `preference`, `craving` et `variety` rendent alors le même score neutre à tout le monde — n'est
+> **jamais citée**, quelle que soit sa contribution : citer « proche de vos goûts » à quelqu'un dont
+> l'appli ne sait rien serait faux et contraire au principe 6. Moins de trois couches
+> discriminantes → moins de trois phrases, jamais de remplissage ; aucune → liste vide. Détail
+> complet : `docs/ENGINE.md` §6.7.
+
 ### 5.6 Planning 7 jours
 
 Algorithme **glouton, jour par jour**, avec l'état nutritionnel cumulé de la semaine réinjecté à
@@ -437,6 +447,20 @@ Vocabulaire **banni** de toute chaîne de caractères de l'application, en deux 
 
 → vérifié par un test automatisé bloquant sur les fichiers de contenu (§9). Un seul test couvre les
 deux familles.
+
+> **Deux copies synchronisées, garde-fou moteur CODÉ (P1c).** Le lexique vit en source canonique
+> dans `catalog/build.mjs` (`BANNED_TERMS`, bloquant sur le contenu édité au build) et en copie
+> dupliquée dans `engine/guards/banned-terms.ts` — `engine/` ne peut structurellement pas importer
+> `catalog/build.mjs` (§3 : `engine/` n'importe jamais depuis react/sqlite/`features/`, et
+> `catalog/build.mjs` est un script Node hors de ce périmètre ; la barrière est vérifiée par
+> `tests/engine-boundaries.test.ts`). La non-divergence des deux listes est garantie par
+> `tests/banned-terms-consistency.test.mjs`, qui échoue si elles diffèrent — c'est ce test, pas la
+> duplication elle-même, qui constitue la vraie garantie. `BANNED_TERMS` est exporté de
+> `catalog/build.mjs`, protégé par une garde `isMainModule()` pour que l'import ne déclenche pas
+> l'effet de bord `main()` du script de build. Côté moteur, `assertNoTherapeuticClaim`
+> (`engine/guards/index.ts`, §5.2 ENGINE) est désormais **CODÉ** : il vérifie qu'aucune
+> `Explanation.label` produite par `selection/explain.ts` (§5.5, §6.7 ENGINE) ne contient un terme
+> de ce lexique.
 
 ### 6.3 Thématiques — liste blanche
 

@@ -293,10 +293,13 @@ assertNoTherapeuticClaim(explanations: readonly Explanation[]): void
 | Garde-fou | Vérifie | Référence | État |
 |---|---|---|---|
 | `assertNoDeclaredAllergen` | Aucune suggestion ne contient un allergène déclaré | §5.2 ARCHI | **CODÉ** (P1a) — signature adaptée, voir note |
-| `assertCalorieFloor` | Aucun jour < 1 200 kcal (F) / 1 500 (H) | §6.5 ARCHI | signature seule (P2/P3) |
-| `assertCriticalLayersRan` | Les couches `critical` ont bien été exécutées | §6.3 | signature seule (P2/P3) |
+| `assertCalorieFloor` | Aucun jour < 1 200 kcal (F) / 1 500 (H) | §6.5 ARCHI | signature seule (P2/P3, attend `planWeek`) |
+| `assertCriticalLayersRan` | Les couches `critical` ont bien été exécutées | §6.3 | **CODÉ** (P1c) |
 | `assertScoringLayersNeverExclude` | **Aucune** couche de score n'a réduit l'ensemble | §6.1 ARCHI · §6.3 | **CODÉ** (P1b-2) |
-| `assertNoTherapeuticClaim` | Aucune explication ne contient le lexique banni | §6.2 ARCHI | signature seule (P2/P3) |
+| `assertNoTherapeuticClaim` | Aucune explication ne contient le lexique banni | §6.2 ARCHI | **CODÉ** (P1c) |
+
+**4 garde-fous codés sur 5** — seul `assertCalorieFloor` reste une signature seule, en attente de
+`planWeek` (planning/, non câblé).
 
 > **Écart assumé pour `assertNoDeclaredAllergen` (P1a)** : implémenté aujourd'hui sur
 > `(candidates: ReadonlySet<RecipeId>, catalog: Catalog, constraints: HardConstraints): void`
@@ -314,6 +317,23 @@ assertNoTherapeuticClaim(explanations: readonly Explanation[]): void
 > exécutée, poids ≤ 0, n'y apparaît pas). Le garde-fou compare chaque entrée de la seconde au
 > premier : un écart, dans un sens ou l'autre, signale qu'une couche de score a réduit (ou
 > « halluciné ») l'ensemble des candidats.
+
+> **`assertCriticalLayersRan` (CODÉ, `engine/guards/index.ts`) — implémenté P1c.** Compare
+> `trace.criticalLayerIds` (le sous-ensemble `critical: true` attendu, figé, du registre) à
+> `trace.layersRun` (ce qui a RÉELLEMENT tourné) : toute couche critique absente de la trace
+> déclenche l'erreur — l'invariant §6.3 « `critical: true` est indésactivable » cesse d'être une
+> intention pour devenir une propriété vérifiée sur l'exécution réelle. Premier consommateur réel :
+> `engine/api/index.ts`, `runSuggestMeals` (§8), vérifié juste après la passe de score.
+>
+> **`assertNoTherapeuticClaim` (CODÉ, `engine/guards/index.ts`) — implémenté P1c.** Vérifie que
+> `label` de chaque `Explanation` (seul champ affiché en texte libre — `criterion` est un id fermé,
+> `authority`/`evidenceSheetId` sont hors périmètre tant que `topic` n'est pas implémenté) ne
+> contient aucun terme du lexique banni (§6.2 ARCHITECTURE). Premier consommateur réel :
+> `selection/explain.ts` (§6.7), appelé par `suggestMeals` sur l'ensemble des explications
+> produites, juste avant de retourner. Le lexique est **dupliqué** depuis `catalog/build.mjs` dans
+> `engine/guards/banned-terms.ts` — `engine/` ne peut pas importer `catalog/build.mjs` (§3 ENGINE) —
+> et la non-divergence des deux copies est garantie par `tests/banned-terms-consistency.test.mjs`
+> (détail complet : `docs/ARCHITECTURE.md` §6.2).
 
 ```mermaid
 flowchart LR
@@ -707,22 +727,54 @@ Tranchées ; une partie est désormais implémentée (détail par point ci-desso
   métadonnée éditoriale (jamais dans le score, jamais nutritionnelle, masquable). Mode *recette*
   (plat unique) vs *repas* (entrée+plat+dessert avec accords).
 
-### 6.6 Diversification
+### 6.6 Diversification — CODÉ (P1c, `engine/selection/{similarity,diversify}.ts`)
 
 Prendre les 5 meilleurs scores retourne souvent 5 variations du même plat. Correction par
-**pertinence marginale maximale** simplifiée :
+**pertinence marginale maximale (MMR)**, boucle gloutonne :
 
 ```
 retenues = []
 tant que |retenues| < limite :
-    meilleure = argmax( score(r) − λ · similarité(r, retenues) )
+    meilleure = argmax( score(r) − λ · simMax(r, retenues) )
     retenues += meilleure
 ```
 
-`similarité` combine ingrédient principal, famille de cuisine et profil sensoriel.
-`λ ≈ 0.4` par défaut, à calibrer sur le catalogue réel.
+`simMax(r, retenues)` est le **MAXIMUM** de similarité entre `r` et les recettes déjà retenues —
+**jamais une moyenne** : une moyenne diluerait un doublon flagrant dès que suffisamment d'autres
+retenues « diluent » la proximité, alors que c'est justement ce doublon-là que la diversification
+doit repousser. Sur un ensemble retenu vide (premier tour), `simMax = 0` par convention : le
+meilleur score gagne naturellement, sans cas particulier codé — et `λ = 0` fait dégénérer la boucle
+en un simple classement par score, non-régression vérifiée par test.
 
-### 6.7 Explication
+`similarity(a, b) ∈ [0, 1]` (`engine/selection/similarity.ts`) combine trois signaux pondérés en
+constantes nommées (Σ = 1) :
+
+| Signal | Constante | Poids | Nature |
+|---|---|---|---|
+| Ingrédient principal identique | `SIMILARITY_WEIGHT_MAIN_INGREDIENT` | 0.5 | catégoriel (match / pas-match) |
+| Profil sensoriel proche | `SIMILARITY_WEIGHT_SENSORY` | 0.3 | distance euclidienne (3 axes numériques) + `texture` |
+| Famille de cuisine identique | `SIMILARITY_WEIGHT_CUISINE` | 0.2 | catégoriel (match / pas-match) |
+
+La **texture** reste, comme dans `craving` (§6.5 précision 2), un axe **catégoriel** — match ou
+pas-match — jamais une distance numérique : elle est recombinée avec la distance euclidienne des
+trois axes numériques, pas fondue dedans.
+
+> ⚠️ **Piège documenté — absence ≠ égalité.** Deux recettes dont l'ingrédient principal est
+> **inconnu** des deux côtés ne sont **pas** réputées similaires sur ce signal : la composante vaut
+> 0, pas 1. Un ingrédient principal inconnu ne veut rien dire de comparable ; le traiter comme un
+> match gonflerait artificiellement la similarité de recettes dont on ne sait justement rien. Même
+> règle pour la facette `cuisine` : deux recettes sans cuisine renseignée ne sont pas « de la même
+> famille ».
+
+`DEFAULT_MMR_LAMBDA = 0.4` (`engine/selection/diversify.ts`) — valeur de référence issue d'une
+intuition de conception, **pas d'une mesure sur le catalogue réel**, **à calibrer**. Cette
+calibration reste hors de portée sur le catalogue de test actuel (10 recettes,
+`catalog/recipes/`) : un jeu de recettes composées à la main pour couvrir des cas de test n'a pas
+la distribution d'un catalogue de production (~150-200 recettes, §2 ARCHITECTURE) — trop petit et
+non représentatif pour tirer une valeur de λ statistiquement défendable. `λ` reste donc au défaut
+de conception tant qu'un catalogue plus proche de la taille de production n'est pas disponible.
+
+### 6.7 Explication — CODÉ (P1c, `engine/selection/explain.ts`)
 
 ```ts
 interface Explanation {
@@ -734,7 +786,41 @@ interface Explanation {
 }
 ```
 
-Les trois plus fortes contributions sont converties en phrases via un gabarit par critère :
+`explainSuggestion(recipeId, breakdowns)` reçoit l'**ENSEMBLE** des breakdowns de la passe de score
+(`ScoringPassResult.breakdowns`, pas seulement le candidat affiché) — c'est la seule façon de savoir
+ce qui discrimine réellement entre les candidats ; une fonction qui ne verrait qu'une recette
+isolée ne pourrait structurellement pas faire la différence entre « ce plat est vraiment un bon
+match » et « cette couche dit la même chose à tout le monde en ce moment ».
+
+> ⚠️ **Règle centrale, qui ÉTEND la spécification « top 3 par contribution » ci-dessous** : une
+> couche dont la contribution est **identique sur l'ensemble des candidats scorés** n'est **jamais
+> citée**, quelle que soit sa contribution — même si elle est numériquement la plus forte. Sur un
+> profil neuf (aucune préférence enregistrée, aucune envie exprimée, historique vide), les couches
+> `preference`, `craving` et `variety` rendent le même score neutre (`NEUTRAL_SCORE`) à tout le
+> monde : elles ne discriminent rien, et les citer reviendrait à annoncer « proche de vos goûts » à
+> quelqu'un dont l'application ne sait rien — faux, et contraire au principe 6 (§1 ARCHITECTURE,
+> « informer, jamais juger »). La comparaison se fait à `CONTRIBUTION_EPSILON` (1e-9) près, pour
+> ignorer le bruit d'arrondi flottant sans jamais masquer un écart réel.
+>
+> Conséquence : moins de trois couches discriminantes → moins de trois phrases, **jamais de
+> remplissage** ; aucune couche discriminante → liste **vide**, plutôt qu'une explication
+> mensongère.
+
+Gabarits de phrase, un par couche de score **implémentée** (ton neutre et descriptif, §6.2
+ARCHITECTURE — l'application décrit, elle ne juge ni ne félicite) :
+
+| Couche | Phrase |
+|---|---|
+| `nutri` | « apports équilibrés pour ce repas » |
+| `preference` | « proche de vos goûts » |
+| `craving` | « correspond à l'envie exprimée » |
+| `season` | « ingrédients de saison » |
+| `variety` | « change de vos derniers repas » |
+| `habit` | « dans vos habitudes » |
+| `speed` | « rapide à préparer » |
+
+Les 3 plus fortes contributions **parmi les couches discriminantes** sont converties en phrases via
+ces gabarits :
 
 > « Proposé car : riche en fer · plat rapide comme demandé · légumes de saison »
 
@@ -742,8 +828,12 @@ Quand une thématique est active, l'explication **cite obligatoirement l'autorit
 
 > « Correspond au critère *limiter les sucres rapides* — recommandations ANSES, diabète de type 2 »
 
-`authority` et `evidenceSheetId` sont **non-nullables dès que `criterion === 'topic'`** —
-contrainte vérifiée par `assertNoTherapeuticClaim`.
+`authority` et `evidenceSheetId` restent **réservés à la couche `topic`** (non implémentée, poids
+nul par défaut — §6.5) : `explain.ts` ne les renseigne jamais pour une autre couche, ce serait
+fabriquer une source qui n'existe pas. `authority` et `evidenceSheetId` sont **non-nullables dès que
+`criterion === 'topic'`** — règle de conception **non vérifiée à ce jour** : `assertNoTherapeuticClaim`
+(§5.2) n'inspecte que `label`, comme le dit sa note ci-dessus. La vérification est à écrire **en même
+temps que la couche `topic`**, seule couche capable de produire ce cas.
 
 ### 6.8 Utiliser une couche seule
 
@@ -913,7 +1003,11 @@ volée. La couche reste une fonction pure comme les treize autres.
 Surface volontairement étroite. Tout le reste est interne au module.
 
 ```ts
-export function createEngine(catalog: Catalog): Engine
+export function createEngine(catalog: Catalog, opts?: CreateEngineOptions): Engine
+
+export interface CreateEngineOptions {
+  readonly now?: () => number   // horloge injectée, pour EngineDiagnostics.dureeMs — jamais Date.now()
+}
 
 export interface Engine {
   readonly version: string
@@ -949,17 +1043,25 @@ export interface Engine {
 > `ENGINE_VERSION`, voir note ci-dessous), `catalogVersion`, `layers` (`LAYER_DESCRIPTORS`) et
 > `layer(id)` — ce dernier distingue deux échecs : un id **déclaré** au registre mais pas encore
 > implémenté (P2 : `pantry`/`occasion`/`topic`/`cost`) vs un id **inconnu** (absent de
-> `LAYER_DESCRIPTORS`). Les 8 méthodes d'orchestration (`suggestMeals`, `planWeek`, `rerollSlot`,
-> `planLeftovers`, `buildShoppingList`, `analyzeWeek`, `scaleRecipe`, `suggestSubstitutions`)
-> lèvent chacune explicitement « non implémenté (P1c) » — leur câblage est le lot suivant.
+> `LAYER_DESCRIPTORS`). Accepte désormais un second paramètre optionnel, `CreateEngineOptions.now`
+> (CODÉ, P1c) — une **horloge injectée**, pour `EngineDiagnostics.dureeMs` uniquement ; absente,
+> `dureeMs` vaut 0. Jamais `Date.now()` en interne (§3 ENGINE), y compris pour cette mesure.
 >
-> **Limite d'API constatée — point ouvert, pas tranché.** `createEngine` garde le catalogue
-> enrichi dans sa fermeture mais ne l'expose PAS : `Engine` ne rend que
-> `version`/`catalogVersion`/`layers`/`layer()`. Un appelant qui veut lancer les passes lui-même
-> (`runExclusionPass`/`runScoringPass`, §6.4) ou utiliser une couche seule (§6.8) avec un catalogue
-> enrichi doit donc rappeler `attachDerivedIndexes` lui-même — c'est ce que fait le banc CLI
-> `engine:try` (§11.3), avec le coût dupliqué documenté dans son en-tête de fichier (négligeable
-> sur le catalogue de test, réel sur un catalogue de 1000+ recettes).
+> **`suggestMeals` est désormais RÉEL (CODÉ, P1c)** — assemblage bout-en-bout : exclusion →
+> `assertNoDeclaredAllergen` → 0 candidat → `NoViableRecipeError` → score → classement +
+> diversification (§6.6) → explication (§6.7) → `assertCriticalLayersRan` puis
+> `assertNoTherapeuticClaim` (§5.2), voir `runSuggestMeals` (`engine/api/index.ts`). **Il ne reste
+> que 7 méthodes non implémentées sur les 8 de l'interface `Engine`** : `planWeek`, `rerollSlot`,
+> `planLeftovers`, `buildShoppingList`, `analyzeWeek`, `scaleRecipe`, `suggestSubstitutions` lèvent
+> chacune explicitement « non implémenté (P1c) » — leur câblage (`planning/`) reste un lot ultérieur.
+>
+> **Limite d'API levée (P1c).** Le point précédemment ouvert ci-dessous ne s'applique plus à
+> l'usage réel constaté : `createEngine` garde toujours le catalogue enrichi dans sa fermeture sans
+> l'exposer directement (`Engine` ne rend que `version`/`catalogVersion`/`layers`/`layer()` en plus
+> de `suggestMeals`), mais plus aucun appelant n'a besoin de le recontourner — le banc CLI
+> `engine:try` (§11.3) passe désormais entièrement par `engine.suggestMeals(request)` et ne rappelle
+> plus `attachDerivedIndexes`, ni `runExclusionPass`/`runScoringPass` à la main. Le coût dupliqué
+> précédemment documenté (ancienne version de ce paragraphe) a disparu avec lui.
 >
 > `ENGINE_VERSION` (constante `'0.1.0'`, `engine/api/index.ts`) est codée en dur, faute de
 > mécanisme d'injection depuis `package.json` — peut diverger silencieusement du numéro de version
@@ -981,6 +1083,8 @@ export interface SuggestionRequest {
   readonly varietyMode?: 'auto' | 'surprise' | 'classiques' // P1c, PROPOSÉ — override explicite de `variety` (précision 5, §6.5)
   readonly limit?: number                   // défaut 5
   readonly seed: number                     // reproductibilité
+  readonly mmrLambda?: number                // §6.6 — CODÉ ; poids de la pénalité MMR ; défaut DEFAULT_MMR_LAMBDA (0.4)
+  readonly skipDiversification?: boolean     // §6.6 — CODÉ ; désactive MMR, classement brut tronqué à `limit` ; défaut false
 }
 ```
 
@@ -1003,6 +1107,12 @@ export interface SuggestionRequest {
 > `constraints` (`HardConstraints`), alors que son miroir `excludedFoodIds` y est : `WeekPlanRequest`
 > n'a pas de `MealContext`, donc ce placement rend le filtre dur structurellement hors d'atteinte de
 > `planWeek` plutôt que de compter sur la discipline de l'appelant (§6.5 ter).
+
+> `mmrLambda` et `skipDiversification` (CODÉS, P1c) pilotent la diversification MMR (§6.6) depuis la
+> requête ; `mmrLambda` est sans effet si `skipDiversification` est vrai (MMR alors totalement
+> court-circuitée, classement brut tronqué à `limit`). Ajoutés pour que le banc CLI (`--lambda`,
+> `--no-mmr`, §11.3) pilote la diversification sans avoir à rappeler `diversify` lui-même en dehors
+> de `suggestMeals`.
 
 ### 8.2 Réponse
 
@@ -1045,6 +1155,13 @@ export interface EngineDiagnostics {
 > depuis le breakdown seul (contribution / poids le retrouve, mais ce n'est pas ce que la structure
 > stocke) — un besoin futur de score brut (debug, tests) doit le lire ailleurs.
 
+> **`EngineDiagnostics.weights` est désormais un `ScoreWeights` COMPLET (CODÉ, P1c).**
+> `runScoringPass` ne rend que les couches de score ACTIVES (poids > 0, sparsité assumée et
+> documentée dans `scoring-pass.ts`) ; `runSuggestMeals` (`engine/api/index.ts`) complète ce
+> résultat partiel à zéro pour les 4 couches de score déclarées mais non implémentées
+> (`pantry`/`occasion`/`topic`/`cost`) avant de le placer dans `diagnostics.weights` — la complétion
+> est explicitement la responsabilité de l'appelant, pas de la passe de score elle-même.
+
 ### 8.3 Contrat d'erreur
 
 | Erreur | Signification | Traitement UI |
@@ -1052,6 +1169,13 @@ export interface EngineDiagnostics {
 | `NoViableRecipeError` | Contraintes trop restrictives, 0 candidat | Écran « assouplir un critère », avec le motif dominant issu de `RejectionSummary` |
 | `EngineSafetyError` | Post-condition violée — bug | Écran d'erreur. **Jamais de dégradation silencieuse.** |
 | `CatalogIntegrityError` | Catalogue corrompu ou version incompatible | Rechargement du catalogue livré |
+
+> **`NoViableRecipeError` porte désormais le `RejectionSummary` COMPLET (CODÉ, P1c,
+> `engine/domain/errors.ts`)** — une propriété `rejected: RejectionSummary`, pas seulement un
+> message texte. §8.3 disait déjà que le motif dominant vient de `RejectionSummary` ; l'attacher à
+> l'erreur elle-même évite à l'appelant (banc CLI, future UI) de rejouer `runExclusionPass` pour
+> retrouver l'entonnoir complet derrière le message — `describeNoViableRecipe` (`engine/api/index.ts`)
+> l'utilise pour construire un message qui cite le motif dominant en toutes lettres.
 
 ---
 
@@ -1261,15 +1385,28 @@ npm run engine:try -- --slot diner --temps 30 --envie "leger,chaud" --seed 42
 
 Affiche, dans l'ordre, l'en-tête de contexte effectif (avec une commande « à rejouer » où tous les
 défauts implicites sont rendus explicites), l'**entonnoir d'exclusion** (§6.8), les **poids
-appliqués** (après archétype, bascule d'envie, normalisation), puis le **classement** avec la
-contribution de chaque couche par candidat — ou le **motif de rejet dominant** si 0 candidat après
-exclusion — **sans navigateur ni UI**. Options : `--slot --date --temps --envie --archetype
---allergies --regime --exclus --requis --pref --limit --seed`.
+appliqués** (après archétype, bascule d'envie, normalisation), puis le **classement diversifié**
+(MMR, §6.6) avec la contribution de chaque couche et l'**explication** (§6.7) par candidat — ou le
+**motif de rejet dominant** si 0 candidat après exclusion — **sans navigateur ni UI**. Options :
+`--slot --date --temps --envie --archetype --allergies --regime --exclus --requis --pref --limit
+--seed --lambda --no-mmr`.
 
-`suggestMeals` n'étant pas encore câblé (§8, P1c), le banc appelle directement `runExclusionPass`
-puis `runScoringPass` — il n'assemble aucun `SuggestionResult`. Date par défaut **fixe en dur**
-(`2026-06-15`), jamais l'horloge système, pour rester reproductible d'un run à l'autre (§1) —
-notamment vis-à-vis de la couche `season`, sensible au mois.
+> `--lambda` (§6.6, CODÉ) fixe `mmrLambda` sur la requête ; `--no-mmr` (drapeau booléen, CODÉ)
+> positionne `skipDiversification` et affiche alors le classement brut par score, pour comparaison
+> directe avec le classement diversifié.
+
+**Le banc passe désormais entièrement par `engine.suggestMeals(request)` (CODÉ, P1c)** — c'est le
+changement de structure du lot : il n'appelle plus `runExclusionPass`/`runScoringPass`/`diversify`/
+`explainSuggestion` à la main, et ne re-dérive plus son propre catalogue enrichi via
+`attachDerivedIndexes` (§8). Entonnoir, poids, classement et explications viennent tous du
+`SuggestionResult` retourné par `suggestMeals` ; la « limite d'API » précédemment documentée en §8
+est levée par ce même changement. Une information affichée par l'ancienne version n'a pas survécu à
+ce changement : la similarité maximale de chaque recette retenue avec les précédentes
+(`DiversifiedCandidate.maxSimilarityToRetained`, `engine/selection/diversify.ts`) — `ScoredSuggestion`
+(§8.2) n'a pas de champ de diagnostic MMR, et élargir ce contrat public pour ce seul besoin de
+diagnostic n'a pas été retenu ; à rétablir le jour où `λ` sera calibré (§6.6). Date par défaut
+**fixe en dur** (`2026-06-15`), jamais l'horloge système, pour rester reproductible d'un run à
+l'autre (§1) — notamment vis-à-vis de la couche `season`, sensible au mois.
 
 Cet outil permet de valider et calibrer tout le produit avant d'écrire le premier composant React.
 Construit en phase 1, il servira jusqu'à la fin du projet.
@@ -1310,7 +1447,7 @@ gantt
 |---|---|---|
 | **P0** Fondations | Repo, Vite, TS strict, Vitest, `build.mjs`, import CIQUAL | `catalog.db` généré depuis 10 recettes de test ; le build échoue sur une recette invalide |
 | **P1** Domaine & nutrition | L1 + L2 + guards | Besoins énergétiques conformes à Mifflin-St Jeor sur 20 cas de référence ; 4 garde-fous couverts à 100 % |
-| **P2** Sélection | Registre de **17** couches + banc CLI | Banc CLI **outillé** (`engine:try`, CODÉ — §11.3) : affiche le classement par couches actives et les motifs de rejet. Diversification (§6.6) et explication top 3 (§6.7) restent en cours — critère de sortie complet (« 5 suggestions expliquées et diversifiées ») pas encore atteint ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
+| **P2** Sélection | Registre de **17** couches + banc CLI | Banc CLI **outillé** (`engine:try`, CODÉ — §11.3), qui passe désormais par `suggestMeals` (§8). Diversification (§6.6) et explication (§6.7) sont **CODÉES et câblées bout-en-bout** (P1c) : le pipeline produit mécaniquement des suggestions diversifiées et expliquées, démontré par le banc CLI et par les tests (366 tests verts, 33 fichiers). Le critère littéral (« 5 suggestions expliquées et diversifiées ») est donc rempli sur le plan mécanique — **ce que le catalogue de test ne permet toujours pas**, c'est de calibrer `DEFAULT_MMR_LAMBDA` (§6.6) : 10 recettes composées à la main n'ont pas la distribution d'un catalogue de production (~150-200 recettes, §2 ARCHITECTURE), donc cette calibration reste non atteinte ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
 | **P3** Planning & API | L4 + L5 + restes + courses | Un planning 7 jours cohérent et une liste de courses agrégée, produits **entièrement en CLI** |
 | **P4** Coquille PWA | React, routage, SQLite/OPFS, consentement, sauvegarde | Installation sur iPhone et PC ; données conservées après 8 jours sans ouverture |
 | **P5** Parcours principal | Onboarding, suggestions, planning, courses, tips | Un utilisateur non accompagné planifie sa semaine et obtient sa liste |
