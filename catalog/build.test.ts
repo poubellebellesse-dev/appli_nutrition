@@ -1,11 +1,16 @@
 // Preuve du critère de sortie P0 (docs/ETAT.md §6) :
-//   "catalog.db généré depuis 10 recettes ; le build échoue sur une recette invalide."
+//   "catalog.db généré depuis les recettes sources ; le build échoue sur une recette invalide."
 //
 // (i)  Le build réel (catalog/sources, catalog/lexicon, catalog/recipes) produit
-//      catalog.db et il contient bien 10 recettes.
+//      catalog.db et il contient AUTANT de recettes qu'il y a de fichiers source.
 // (ii) Sur une fixture temporaire invalide (food inconnu OU mot banni), le build
 //      échoue (exit != 0). Les fixtures vivent dans un répertoire temporaire
-//      isolé : elles ne touchent jamais aux 10 vraies recettes.
+//      isolé : elles ne touchent jamais aux vraies recettes.
+//
+// ⚠️ Le compte attendu est DÉRIVÉ de `catalog/recipes/` (`countRecipeSources`), jamais écrit en
+// dur : le catalogue passe de 10 à ~100 recettes (chantier contenu), et une constante figée ferait
+// échouer ces tests à chaque recette ajoutée sans rien prouver de plus. Ce qui est vérifié reste le
+// vrai invariant — le build ne perd ni n'invente de recette.
 
 import { describe, expect, it } from 'vitest'
 import { spawnSync } from 'node:child_process'
@@ -24,6 +29,13 @@ function runBuild(args: readonly string[]) {
     cwd: REPO_ROOT,
     encoding: 'utf8',
   })
+}
+
+/** Source de vérité du nombre de recettes : les fichiers de `catalog/recipes/`. Voir l'en-tête. */
+export function countRecipeSources(): number {
+  return readdirSync(path.join(REPO_ROOT, 'catalog', 'recipes')).filter(
+    (f) => f.endsWith('.yaml') || f.endsWith('.yml')
+  ).length
 }
 
 /** Aliment minimal, valide, suffisant pour une recette de fixture. */
@@ -53,8 +65,8 @@ function writeFoodsFixture(dir: string, foodYamlBody: string): void {
   writeFileSync(path.join(dir, 'sources', 'foods.yaml'), `foods:\n${foodYamlBody}`, 'utf8')
 }
 
-describe('catalog/build.mjs — build réel (10 recettes valides)', () => {
-  it('génère catalog.db et le peuple avec les 10 recettes du catalogue', () => {
+describe('catalog/build.mjs — build réel (recettes sources valides)', () => {
+  it('génère catalog.db et le peuple avec TOUTES les recettes sources, sans en perdre ni en inventer', () => {
     const result = runBuild([])
 
     expect(result.status).toBe(0)
@@ -63,7 +75,8 @@ describe('catalog/build.mjs — build réel (10 recettes valides)', () => {
     const db = new DatabaseSync(dbPath, { readOnly: true })
     try {
       const { count } = db.prepare('SELECT COUNT(*) as count FROM recipe').get() as { count: number }
-      expect(count).toBe(10)
+      expect(count).toBe(countRecipeSources())
+      expect(count).toBeGreaterThanOrEqual(10) // critère P0 : au moins les 10 recettes d'amorçage
     } finally {
       db.close()
     }
@@ -146,10 +159,12 @@ facettes: []
       expect(result.status).not.toBe(0)
       expect(result.stderr).toContain('aliment inconnu')
 
-      // Garde-fou : les 10 vraies recettes restent intactes (fixture isolée).
+      // Garde-fou : les vraies recettes restent intactes (la fixture vit dans un tmpdir isolé).
+      // Ce qui compte ici est qu'AUCUNE n'ait été touchée, pas leur nombre exact — d'où la
+      // comparaison au compte source plutôt qu'à une constante (voir l'en-tête de fichier).
       const realRecipesDir = path.join(REPO_ROOT, 'catalog', 'recipes')
       const realRecipeFiles = readdirSync(realRecipesDir).filter((f) => f.endsWith('.yaml'))
-      expect(realRecipeFiles).toHaveLength(10)
+      expect(realRecipeFiles).toHaveLength(countRecipeSources())
     } finally {
       rmSync(fixtureDir, { recursive: true, force: true })
     }

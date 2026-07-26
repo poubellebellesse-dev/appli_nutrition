@@ -1,0 +1,74 @@
+id: poulet_roti_carottes
+nom: "Blanc de poulet rôti, carottes fondantes"
+description: >
+  Des blancs de poulet rôtis au four sur un lit de carottes et d'oignons.
+temps_prep_min: 10
+temps_cuisson_min: 30
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.4
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: poulet_blanc
+    quantite_g: 500
+    unite_affichage: "4 blancs"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 500
+    unite_affichage: "5 carottes"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 190 °C. Couper les carottes en bâtonnets et émincer l'oignon."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Étaler les légumes dans un plat, arroser de la moitié de l'huile, saler et enfourner."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Poser les blancs de poulet sur les légumes, badigeonner du reste d'huile, saler et poivrer."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Remettre au four jusqu'à ce que le poulet soit cuit à cœur et les carottes fondantes."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

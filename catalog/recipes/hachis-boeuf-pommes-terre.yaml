@@ -1,0 +1,78 @@
+id: hachis_boeuf_pommes_terre
+nom: "Hachis de bœuf aux pommes de terre"
+description: >
+  Du bœuf haché mijoté aux oignons, recouvert d'une purée de pommes de terre et gratiné.
+temps_prep_min: 20
+temps_cuisson_min: 40
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.9
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: boeuf_hache_5
+    quantite_g: 500
+    unite_affichage: "500 g"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 800
+    unite_affichage: "8 pommes de terre"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 150
+    unite_affichage: "15 cl"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 30
+    unite_affichage: "30 g"
+    optionnel: false
+  - food_id: fromage_emmental_rape
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les pommes de terre, les couper en morceaux et les cuire dans l'eau salée jusqu'à ce qu'elles s'écrasent facilement."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Émincer l'oignon et le faire revenir, puis ajouter le bœuf haché et le cuire en l'écrasant à la cuillère."
+    lexicon_ids: [emincer]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Écraser les pommes de terre avec le lait chaud et le beurre, saler."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Étaler la viande dans un plat, recouvrir de purée, parsemer d'emmental et gratiner au four à 200 °C."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

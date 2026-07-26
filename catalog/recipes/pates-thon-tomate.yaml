@@ -1,0 +1,78 @@
+id: pates_thon_tomate
+nom: "Pâtes au thon et à la tomate"
+description: >
+  Des spaghettis dans une sauce tomate courte, avec du thon émietté et de l'ail.
+temps_prep_min: 5
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: pates_spaghetti
+    quantite_g: 320
+    unite_affichage: "320 g"
+    optionnel: false
+  - food_id: thon_conserve
+    quantite_g: 200
+    unite_affichage: "2 boîtes égouttées"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 400
+    unite_affichage: "4 tomates"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Porter une grande casserole d'eau salée à ébullition et y cuire les spaghettis."
+    lexicon_ids: []
+    timer_s: 540
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Émincer l'ail et le faire blondir dans l'huile d'olive."
+    lexicon_ids: [emincer]
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les tomates coupées en dés et laisser réduire jusqu'à obtenir une sauce courte."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Émietter le thon dans la sauce, mélanger avec les pâtes égouttées et parsemer de persil."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

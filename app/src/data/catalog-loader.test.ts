@@ -11,6 +11,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { DatabaseSync } from 'node:sqlite'
 import type { AllergenId, Catalog, FoodId, NutrientId, RecipeId } from '../engine/domain/index.js'
 import { loadCatalog } from './catalog-loader.js'
 
@@ -42,9 +43,21 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     rmSync(fixtureDir, { recursive: true, force: true })
   })
 
-  it('charge 76 aliments et 10 recettes', () => {
-    expect(catalog.foods.size).toBe(76)
-    expect(catalog.recipes.size).toBe(10)
+  // Comptes NON figés côté recettes : le catalogue grandit (chantier contenu, 10 → ~100). Ce que
+  // ce test prouve est que le loader ne PERD rien entre catalog.db et le `Catalog` en mémoire, pas
+  // qu'il y a exactement N recettes — d'où la comparaison au compte lu en base.
+  it('charge les aliments et TOUTES les recettes de catalog.db, sans perte', () => {
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    try {
+      const foods = db.prepare('SELECT COUNT(*) as count FROM food').get() as { count: number }
+      const recipes = db.prepare('SELECT COUNT(*) as count FROM recipe').get() as { count: number }
+      expect(catalog.foods.size).toBe(foods.count)
+      expect(catalog.recipes.size).toBe(recipes.count)
+    } finally {
+      db.close()
+    }
+    expect(catalog.foods.size).toBeGreaterThanOrEqual(76)
+    expect(catalog.recipes.size).toBeGreaterThanOrEqual(10)
   })
 
   it('rattache les nutriments et l’allergène au bon aliment (œuf)', () => {

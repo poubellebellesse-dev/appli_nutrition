@@ -1,0 +1,74 @@
+id: sardines_grillees_tomates
+nom: "Sardines grillées, tomates au four"
+description: >
+  Des sardines grillées servies avec des tomates rôties à l'ail et à l'huile d'olive.
+temps_prep_min: 10
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.7
+  leger_consistant: 0.0
+  chaud_froid: 0.6
+  texture: croquant
+
+ingredients:
+  - food_id: sardine
+    quantite_g: 350
+    unite_affichage: "6 sardines"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 400
+    unite_affichage: "4 tomates"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Couper les tomates en deux et les poser sur une plaque, face coupée vers le haut."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'ail, en parsemer les tomates, arroser d'huile d'olive, saler et enfourner."
+    lexicon_ids: [emincer]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Pendant ce temps, écailler et vider les sardines, puis les griller sur une poêle très chaude, deux minutes par face."
+    lexicon_ids: []
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Servir les sardines avec les tomates rôties et le persil ciselé."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

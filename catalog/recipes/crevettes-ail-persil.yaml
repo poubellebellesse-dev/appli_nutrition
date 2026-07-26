@@ -1,0 +1,74 @@
+id: crevettes_ail_persil
+nom: "Crevettes sautées à l'ail et au persil"
+description: >
+  Des crevettes saisies à feu vif dans l'huile d'olive avec beaucoup d'ail et de persil.
+temps_prep_min: 10
+temps_cuisson_min: 6
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.7
+  leger_consistant: -0.3
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: crevette
+    quantite_g: 400
+    unite_affichage: "400 g décortiquées"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 15
+    unite_affichage: "3 gousses"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 20
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'ail finement et ciseler le persil."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Chauffer l'huile d'olive à feu vif dans une grande poêle et y jeter les crevettes en une seule couche."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Retourner les crevettes, ajouter l'ail, saler, et poursuivre juste le temps que l'ail embaume sans colorer."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Hors du feu, ajouter le persil et un trait de jus de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

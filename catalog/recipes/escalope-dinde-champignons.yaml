@@ -1,0 +1,78 @@
+id: escalope_dinde_champignons
+nom: "Escalopes de dinde aux champignons"
+description: >
+  Des escalopes de dinde poêlées, nappées d'une sauce aux champignons de Paris et à la crème.
+temps_prep_min: 10
+temps_cuisson_min: 20
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.8
+  texture: creme
+
+ingredients:
+  - food_id: escalope_dinde
+    quantite_g: 500
+    unite_affichage: "4 escalopes"
+    optionnel: false
+  - food_id: champignon_paris
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 100
+    unite_affichage: "10 cl"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 20
+    unite_affichage: "20 g"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et les champignons."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Saisir les escalopes dans le beurre chaud, deux minutes par face, puis les réserver."
+    lexicon_ids: []
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire revenir l'oignon puis les champignons dans la même poêle jusqu'à évaporation de leur eau."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter la crème, saler, remettre les escalopes et laisser mijoter à couvert. Parsemer de persil."
+    lexicon_ids: []
+    timer_s: 360
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

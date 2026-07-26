@@ -1,0 +1,74 @@
+id: moules_vin_blanc
+nom: "Moules marinière"
+description: >
+  Des moules ouvertes à couvert dans un fond de vin blanc, avec oignon et persil.
+temps_prep_min: 15
+temps_cuisson_min: 10
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.7
+  leger_consistant: -0.2
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: moule
+    quantite_g: 2000
+    unite_affichage: "2 kg"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 20
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 30
+    unite_affichage: "30 g"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Gratter et rincer les moules à grande eau, écarter celles qui restent ouvertes au toucher."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'oignon et le faire suer dans le beurre au fond d'un grand faitout."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Verser le vin blanc, porter à frémissement, ajouter les moules et couvrir."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Secouer le faitout à mi-cuisson. Dès que toutes les moules sont ouvertes, poivrer et parsemer de persil."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

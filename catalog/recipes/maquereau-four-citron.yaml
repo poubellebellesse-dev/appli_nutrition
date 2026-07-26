@@ -1,0 +1,74 @@
+id: maquereau_four_citron
+nom: "Maquereaux au four, citron et persil"
+description: >
+  Des maquereaux entiers cuits au four avec des rondelles de citron et beaucoup de persil.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.2
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: maquereau
+    quantite_g: 400
+    unite_affichage: "2 maquereaux"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 20
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Rincer les maquereaux et les inciser légèrement sur chaque flanc."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'ail et le citron en rondelles, glisser quelques rondelles et le persil dans le ventre des poissons."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Poser les maquereaux sur une plaque, arroser d'huile d'olive, saler et enfourner."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Servir avec le jus de cuisson et le reste de persil ciselé."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

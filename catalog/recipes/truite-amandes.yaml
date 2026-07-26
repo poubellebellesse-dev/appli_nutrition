@@ -1,0 +1,74 @@
+id: truite_amandes
+nom: "Truite aux amandes"
+description: >
+  Un filet de truite poêlé au beurre, parsemé d'amandes effilées dorées et relevé de citron.
+temps_prep_min: 5
+temps_cuisson_min: 12
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.1
+  chaud_froid: 0.7
+  texture: croquant
+
+ingredients:
+  - food_id: truite
+    quantite_g: 280
+    unite_affichage: "2 filets"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire dorer les amandes effilées à sec dans une poêle, puis les réserver."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Faire mousser le beurre dans la même poêle et y déposer les filets de truite côté peau."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Retourner les filets, saler, et terminer la cuisson."
+    lexicon_ids: []
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Déglacer avec le jus de citron, parsemer d'amandes et de persil, servir aussitôt."
+    lexicon_ids: [deglacer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

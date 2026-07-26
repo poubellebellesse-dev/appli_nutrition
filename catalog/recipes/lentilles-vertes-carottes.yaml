@@ -1,0 +1,84 @@
+id: lentilles_vertes_carottes
+nom: "Lentilles vertes aux carottes"
+description: >
+  Des lentilles vertes mijotées avec carottes, oignon et poireau, servies tièdes ou chaudes.
+temps_prep_min: 10
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.5
+  chaud_froid: 0.5
+  texture: fondant
+
+ingredients:
+  - food_id: lentilles_vertes
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 300
+    unite_affichage: "3 carottes"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: poireau
+    quantite_g: 150
+    unite_affichage: "1 poireau"
+    optionnel: true
+  - food_id: huile_colza
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et le poireau, couper les carottes en rondelles."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir les légumes dans l'huile de colza jusqu'à ce que l'oignon devienne translucide."
+    lexicon_ids: []
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les lentilles rincées et couvrir d'eau à hauteur de trois centimètres au-dessus."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser mijoter à découvert jusqu'à ce que les lentilles soient tendres, saler en fin de cuisson et parsemer de persil."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  # Deux facettes `regime`, pas une : la couche `regime` fait une égalité STRICTE de chaîne et ne
+  # déduit AUCUNE hiérarchie (voir l'en-tête de engine/selection/regime.ts). Sans `vegetarien`
+  # déclaré explicitement, ce plat — pourtant sans aucun produit animal — serait invisible pour un
+  # utilisateur végétarien.
+  - facette: regime
+    valeur: vegetarien
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

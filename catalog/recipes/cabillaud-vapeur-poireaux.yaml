@@ -1,0 +1,74 @@
+id: cabillaud_vapeur_poireaux
+nom: "Cabillaud vapeur, fondue de poireaux"
+description: >
+  Un dos de cabillaud cuit à la vapeur, posé sur une fondue de poireaux à la crème.
+temps_prep_min: 15
+temps_cuisson_min: 20
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.1
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: cabillaud
+    quantite_g: 300
+    unite_affichage: "2 dos"
+    optionnel: false
+  - food_id: poireau
+    quantite_g: 300
+    unite_affichage: "2 poireaux"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 60
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 15
+    unite_affichage: "une noix"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les poireaux en fines rondelles et les rincer à grande eau."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire fondre le beurre dans une sauteuse, ajouter les poireaux et les laisser compoter à couvert sur feu doux."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Poser les dos de cabillaud dans le panier vapeur, saler, et cuire jusqu'à ce que la chair se détache en lamelles."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter la crème aux poireaux, poivrer, et servir le cabillaud posé dessus."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

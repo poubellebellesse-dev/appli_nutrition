@@ -29,7 +29,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..')
 const BUILD_SCRIPT = path.join(REPO_ROOT, 'catalog', 'build.mjs')
 
-describe('selection/exclusion-pass + guards — catalogue réel (10 recettes)', () => {
+describe('selection/exclusion-pass + guards — catalogue réel', () => {
   let catalog: Catalog
   const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-exclusion-pass-'))
   const dbPath = path.join(fixtureDir, 'catalog.db')
@@ -47,15 +47,23 @@ describe('selection/exclusion-pass + guards — catalogue réel (10 recettes)', 
     rmSync(fixtureDir, { recursive: true, force: true })
   })
 
-  it('charge bien 10 recettes réelles (précondition des tests ci-dessous)', () => {
-    expect(catalog.recipes.size).toBe(10)
+  /** Recettes du créneau, comptées sur le catalogue RÉEL — jamais une constante figée : le
+   * catalogue grandit (chantier contenu, 10 → ~100), et un nombre en dur ferait échouer ces tests
+   * à chaque recette ajoutée sans rien prouver de plus. */
+  function dinerCount(): number {
+    return catalog.indexes.recipesBySlot.get('diner')?.size ?? 0
+  }
+
+  it('charge les recettes réelles (précondition des tests ci-dessous)', () => {
+    expect(catalog.recipes.size).toBeGreaterThanOrEqual(10)
+    expect(dinerCount()).toBeGreaterThan(0)
   })
 
-  it('sans contrainte, la passe d’exclusion renvoie les 9 recettes du créneau "diner"', () => {
+  it('sans contrainte, la passe d’exclusion renvoie TOUTES les recettes du créneau "diner"', () => {
     const req = makeRequest({ creneau: 'diner' })
     const { candidates, rejections } = runExclusionPass(catalog, req)
 
-    expect(candidates.size).toBe(9)
+    expect(candidates.size).toBe(dinerCount())
     expect(rejections).toEqual([])
     expect(candidates.has('salade_pois_chiches' as RecipeId)).toBe(false) // dejeuner uniquement
   })
@@ -66,7 +74,16 @@ describe('selection/exclusion-pass + guards — catalogue réel (10 recettes)', 
 
     expect(candidates.has('boeuf_hache_sauce_tomate' as RecipeId)).toBe(false)
     expect(candidates.has('saumon_poele_courgettes' as RecipeId)).toBe(false)
-    expect(candidates.size).toBe(7)
+    // Dérivé du catalogue : la couche fait une égalité STRICTE sur les facettes `regime` d'une
+    // recette (aucune hiérarchie déduite — voir l'en-tête de selection/regime.ts), donc un plat
+    // végétalien n'est compté ici QUE s'il déclare AUSSI `vegetarien`. C'est une propriété des
+    // DONNÉES, pas du moteur : la recompter à la main la figerait à la composition du jour.
+    const vegetariennesAuDiner = [...(catalog.indexes.recipesBySlot.get('diner') ?? [])].filter((id) =>
+      catalog.recipes
+        .get(id)
+        ?.facettes.some((f) => f.facette === 'regime' && f.valeur === 'vegetarien')
+    )
+    expect(candidates.size).toBe(vegetariennesAuDiner.length)
     for (const entry of rejections) expect(entry.layerId).toBe('regime')
   })
 
@@ -76,7 +93,8 @@ describe('selection/exclusion-pass + guards — catalogue réel (10 recettes)', 
 
     expect(candidates).toEqual(new Set(['omelette_fines_herbes']))
     expect(rejections.every((entry) => entry.layerId === 'temps')).toBe(true)
-    expect(rejections).toHaveLength(8)
+    // Tout le créneau sauf l'omelette : dérivé, pas figé (voir `dinerCount`).
+    expect(rejections).toHaveLength(dinerCount() - 1)
   })
 
   it('le garde-fou lève EngineSafetyError sur un cas violant construit à la main (catalogue réel)', () => {
