@@ -16,3 +16,9 @@ dist/
 
 # Catalogue généré (reproductible via `npm run build`)
 app/public/catalog/*.db
+
+# Table CIQUAL (ANSES) — source de l'import nutritionnel, 69 Mo dont 67 pour compo_*.xml.
+# NON versionnée : trop lourde pour git, et redistribuable mais inutile au dépôt puisque
+# `catalog/sources/foods.yaml` porte déjà le résultat de l'import. Pour la récupérer et rejouer
+# `npm run catalog:ciqual`, voir l'en-tête de catalog/import-ciqual.mjs.
+documents Ciqual/

@@ -1,16 +1,27 @@
 # ============================================================================
-# PROVISOIRE — sous-ensemble d'aliments pour amorcer la chaîne de build (P0).
+# Aliments du catalogue — valeurs nutritionnelles CIQUAL 2025 (ANSES).
 #
-# Il n'existe pas encore de table CIQUAL (ANSES) téléchargée dans ce dépôt.
-# Les valeurs nutritionnelles ci-dessous sont des ordres de grandeur usuels
-# (pour 100 g de partie comestible), PAS des valeurs vérifiées contre la
-# table CIQUAL officielle. Les `code_ciqual` sont des identifiants
-# provisoires (préfixe PROV-), pas de vrais codes CIQUAL.
+# ⚠️ `code_ciqual` et les blocs `nutriments` sont GÉNÉRÉS. Ne pas les éditer à
+# la main : `node catalog/import-ciqual.mjs --write` les réécrit depuis l'export
+# XML de l'ANSES et écrasera toute retouche. L'appariement aliment → code CIQUAL
+# vit dans catalog/sources/ciqual-mapping.yaml, écrit et relu à la main (les
+# écarts assumés y sont documentés aliment par aliment).
 #
-# Le vrai import ira dans catalog/sources/ciqual/ (fichier ANSES en clair,
-# licence ouverte — voir docs/ARCHITECTURE.md §8.1) et remplacera ce
-# fichier ; le reste de la chaîne (build.mjs, schéma food/food_nutrient/
-# food_allergen) n'aura pas à changer.
+# Tout le reste — id, nom, groupe, saison_mois, toute_annee, allergenes, et les
+# commentaires éditoriaux de saisonnalité ci-dessous — est écrit et maintenu à
+# la main : CIQUAL ne porte ni saisonnalité locale ni allergènes.
+#
+# Les 9 nutriments retenus (décision 25, docs/ETAT.md §4), pour 100 g de partie
+# comestible : énergie · protéines · lipides · glucides · fibres · fer ·
+# calcium · sodium · vitamine C. Un nutriment NON DÉTERMINÉ par CIQUAL est
+# ABSENT de la liste, jamais mis à 0 — un zéro inventé serait indistinguable
+# d'un vrai zéro pour la couche `nutri`. Trois aliments sont dans ce cas pour la
+# vitamine C (poulet, comté, truite).
+#
+# Source : Table de composition nutritionnelle des aliments CIQUAL 2025, ANSES,
+# novembre 2025. https://ciqual.anses.fr/ — https://doi.org/10.57745/RDMHWY
+# La table source (69 Mo) n'est PAS versionnée : voir l'en-tête de
+# catalog/import-ciqual.mjs pour la récupérer.
 #
 # Allergènes : parmi les 14 allergènes réglementaires UE (règlement
 # 1169/2011 annexe II). Codes utilisés ici : gluten, crustaces, oeufs,
@@ -38,117 +49,117 @@
 
 foods:
   - id: oeuf
-    code_ciqual: "PROV-00001"
+    code_ciqual: "22000"
     nom: "Œuf de poule, entier, cru"
     groupe: "œufs"
     toute_annee: true
     nutriments:
-      energie_kcal: 143
-      proteines_g: 12.6
-      lipides_g: 9.9
-      glucides_g: 0.7
+      energie_kcal: 140
+      proteines_g: 12.8
+      lipides_g: 9.83
+      glucides_g: 0.06
       fibres_g: 0
-      fer_mg: 1.8
-      calcium_mg: 50
-      sodium_mg: 140
+      fer_mg: 1.75
+      calcium_mg: 76.8
+      sodium_mg: 124
       vitamine_c_mg: 0
     allergenes:
       - code: oeufs
         certitude: contient
 
   - id: farine_ble
-    code_ciqual: "PROV-00002"
+    code_ciqual: "9436"
     nom: "Farine de blé tendre T55"
     groupe: "céréales et dérivés"
     toute_annee: true
     nutriments:
-      energie_kcal: 349
-      proteines_g: 10.3
-      lipides_g: 1.0
-      glucides_g: 76.3
-      fibres_g: 2.7
-      fer_mg: 1.2
-      calcium_mg: 15
-      sodium_mg: 2
-      vitamine_c_mg: 0
+      energie_kcal: 350
+      proteines_g: 9.03
+      lipides_g: 1
+      glucides_g: 73.7
+      fibres_g: 3.2
+      fer_mg: 1
+      calcium_mg: 23
+      sodium_mg: 5
+      vitamine_c_mg: 0.5
     allergenes:
       - code: gluten
         certitude: contient
 
   - id: lait_demi_ecreme
-    code_ciqual: "PROV-00003"
+    code_ciqual: "19041"
     nom: "Lait demi-écrémé"
     groupe: "lait et produits laitiers"
     toute_annee: true
     nutriments:
-      energie_kcal: 46
-      proteines_g: 3.3
-      lipides_g: 1.6
-      glucides_g: 4.8
+      energie_kcal: 47.7
+      proteines_g: 3.48
+      lipides_g: 1.56
+      glucides_g: 5
       fibres_g: 0
-      fer_mg: 0.02
-      calcium_mg: 120
-      sodium_mg: 44
-      vitamine_c_mg: 1
+      fer_mg: 0.084
+      calcium_mg: 121
+      sodium_mg: 35
+      vitamine_c_mg: 2
     allergenes:
       - code: lait
         certitude: contient
 
   - id: beurre_doux
-    code_ciqual: "PROV-00004"
+    code_ciqual: "16400"
     nom: "Beurre doux"
     groupe: "matières grasses"
     toute_annee: true
     nutriments:
-      energie_kcal: 717
-      proteines_g: 0.9
-      lipides_g: 81
-      glucides_g: 0.7
+      energie_kcal: 753
+      proteines_g: 0.64
+      lipides_g: 83
+      glucides_g: 0.71
       fibres_g: 0
-      fer_mg: 0.02
-      calcium_mg: 24
-      sodium_mg: 11
+      fer_mg: 0.5
+      calcium_mg: 19.8
+      sodium_mg: 14
       vitamine_c_mg: 0
     allergenes:
       - code: lait
         certitude: contient
 
   - id: huile_olive
-    code_ciqual: "PROV-00005"
+    code_ciqual: "17270"
     nom: "Huile d'olive vierge extra"
     groupe: "matières grasses"
     toute_annee: true
     nutriments:
-      energie_kcal: 900
-      proteines_g: 0
-      lipides_g: 100
+      energie_kcal: 899
+      proteines_g: 0.25
+      lipides_g: 99.9
       glucides_g: 0
       fibres_g: 0
-      fer_mg: 0.6
-      calcium_mg: 1
-      sodium_mg: 2
+      fer_mg: 0.05
+      calcium_mg: 0.2
+      sodium_mg: 5
       vitamine_c_mg: 0
     allergenes: []
 
   - id: sucre_blanc
-    code_ciqual: "PROV-00006"
+    code_ciqual: "31016"
     nom: "Sucre blanc cristal"
     groupe: "produits sucrés"
     toute_annee: true
     nutriments:
-      energie_kcal: 400
+      energie_kcal: 399
       proteines_g: 0
       lipides_g: 0
-      glucides_g: 100
+      glucides_g: 99.7
       fibres_g: 0
-      fer_mg: 0
-      calcium_mg: 1
-      sodium_mg: 1
+      fer_mg: 0.077
+      calcium_mg: 3.69
+      sodium_mg: 2.17
       vitamine_c_mg: 0
     allergenes: []
 
   - id: sel_fin
-    code_ciqual: "PROV-00007"
+    code_ciqual: "11017"
     nom: "Sel fin"
     groupe: "condiments"
     toute_annee: true
@@ -158,67 +169,67 @@ foods:
       lipides_g: 0
       glucides_g: 0
       fibres_g: 0
-      fer_mg: 0.3
-      calcium_mg: 24
-      sodium_mg: 38758
+      fer_mg: 0.33
+      calcium_mg: 13.3
+      sodium_mg: 39100
       vitamine_c_mg: 0
     allergenes: []
 
   - id: poivre_noir
-    code_ciqual: "PROV-00008"
+    code_ciqual: "11015"
     nom: "Poivre noir moulu"
     groupe: "condiments"
     toute_annee: true
     nutriments:
-      energie_kcal: 251
-      proteines_g: 10.4
-      lipides_g: 3.3
-      glucides_g: 64
+      energie_kcal: 331
+      proteines_g: 13.3
+      lipides_g: 7.5
+      glucides_g: 39.9
       fibres_g: 25.3
-      fer_mg: 9.7
-      calcium_mg: 443
-      sodium_mg: 20
-      vitamine_c_mg: 0
+      fer_mg: 17
+      calcium_mg: 480
+      sodium_mg: 14.2
+      vitamine_c_mg: 0.5
     allergenes: []
 
   - id: riz_blanc
-    code_ciqual: "PROV-00009"
+    code_ciqual: "9100"
     nom: "Riz blanc, cru"
     groupe: "céréales et dérivés"
     toute_annee: true
     nutriments:
-      energie_kcal: 365
-      proteines_g: 7.1
-      lipides_g: 0.7
-      glucides_g: 79
-      fibres_g: 1.3
-      fer_mg: 0.8
-      calcium_mg: 28
-      sodium_mg: 5
+      energie_kcal: 350
+      proteines_g: 7.02
+      lipides_g: 0.79
+      glucides_g: 77.5
+      fibres_g: 1.53
+      fer_mg: 1.94
+      calcium_mg: 13.3
+      sodium_mg: 2.33
       vitamine_c_mg: 0
     allergenes: []
 
   - id: pates_spaghetti
-    code_ciqual: "PROV-00010"
+    code_ciqual: "9810"
     nom: "Pâtes spaghetti, crues"
     groupe: "céréales et dérivés"
     toute_annee: true
     nutriments:
-      energie_kcal: 371
-      proteines_g: 13
-      lipides_g: 1.5
-      glucides_g: 74.7
-      fibres_g: 3.2
+      energie_kcal: 364
+      proteines_g: 12
+      lipides_g: 1.6
+      glucides_g: 72.7
+      fibres_g: 2.91
       fer_mg: 1.3
       calcium_mg: 21
-      sodium_mg: 6
+      sodium_mg: 6.2
       vitamine_c_mg: 0
     allergenes:
       - code: gluten
         certitude: contient
 
   - id: pomme_de_terre
-    code_ciqual: "PROV-00011"
+    code_ciqual: "4008"
     nom: "Pomme de terre, crue"
     groupe: "légumes"
     # Légume de garde (longue conservation) : traité comme toute l'année dans les
@@ -227,38 +238,38 @@ foods:
     toute_annee: true
     saison_mois: [9, 10, 11, 12, 1, 2, 3, 4]
     nutriments:
-      energie_kcal: 77
-      proteines_g: 2.0
-      lipides_g: 0.1
-      glucides_g: 17
+      energie_kcal: 80
+      proteines_g: 2.02
+      lipides_g: 0.09
+      glucides_g: 16.2
       fibres_g: 2.2
-      fer_mg: 0.8
-      calcium_mg: 12
-      sodium_mg: 6
-      vitamine_c_mg: 20
+      fer_mg: 0.78
+      calcium_mg: 14.3
+      sodium_mg: 0.44
+      vitamine_c_mg: 19.7
     allergenes: []
 
   - id: oignon
-    code_ciqual: "PROV-00012"
+    code_ciqual: "20034"
     nom: "Oignon, cru"
     groupe: "légumes"
     # Légume de garde — même choix éditorial que pomme_de_terre ci-dessus.
     toute_annee: true
     saison_mois: [8, 9, 10, 11, 12, 1, 2, 3, 4]
     nutriments:
-      energie_kcal: 40
+      energie_kcal: 39
       proteines_g: 1.1
-      lipides_g: 0.1
-      glucides_g: 9.3
+      lipides_g: 0.62
+      glucides_g: 6.25
       fibres_g: 1.7
-      fer_mg: 0.2
-      calcium_mg: 23
-      sodium_mg: 4
-      vitamine_c_mg: 7.4
+      fer_mg: 0.00019
+      calcium_mg: 25
+      sodium_mg: 39
+      vitamine_c_mg: 3.9
     allergenes: []
 
   - id: ail
-    code_ciqual: "PROV-00013"
+    code_ciqual: "11000"
     nom: "Ail, cru"
     groupe: "légumes"
     # Ail sec (non ail frais/nouveau) — se conserve jusqu'au printemps suivant,
@@ -266,89 +277,89 @@ foods:
     toute_annee: true
     saison_mois: [7, 8, 9, 10, 11, 12, 1, 2, 3]
     nutriments:
-      energie_kcal: 149
-      proteines_g: 6.4
+      energie_kcal: 109
+      proteines_g: 5.31
       lipides_g: 0.5
-      glucides_g: 33
-      fibres_g: 2.1
-      fer_mg: 1.7
-      calcium_mg: 181
-      sodium_mg: 17
-      vitamine_c_mg: 31
+      glucides_g: 18.6
+      fibres_g: 5.8
+      fer_mg: 0.63
+      calcium_mg: 11
+      sodium_mg: 9
+      vitamine_c_mg: 0.5
     allergenes: []
 
   - id: carotte
-    code_ciqual: "PROV-00014"
+    code_ciqual: "20009"
     nom: "Carotte, crue"
     groupe: "légumes"
     # Légume de garde — même choix éditorial que pomme_de_terre/oignon/ail.
     toute_annee: true
     saison_mois: [9, 10, 11, 12, 1, 2, 3, 4]
     nutriments:
-      energie_kcal: 41
-      proteines_g: 0.9
-      lipides_g: 0.2
-      glucides_g: 9.6
-      fibres_g: 2.8
-      fer_mg: 0.3
-      calcium_mg: 33
-      sodium_mg: 69
-      vitamine_c_mg: 5.9
+      energie_kcal: 30.2
+      proteines_g: 0.78
+      lipides_g: 0.5
+      glucides_g: 5.16
+      fibres_g: 2.9
+      fer_mg: 0.25
+      calcium_mg: 36.2
+      sodium_mg: 49
+      vitamine_c_mg: 3.73
     allergenes: []
 
   - id: tomate
-    code_ciqual: "PROV-00015"
+    code_ciqual: "20385"
     nom: "Tomate, crue"
     groupe: "légumes"
     saison_mois: [6, 7, 8, 9]
     nutriments:
-      energie_kcal: 18
-      proteines_g: 0.9
-      lipides_g: 0.2
-      glucides_g: 3.9
-      fibres_g: 1.2
-      fer_mg: 0.3
-      calcium_mg: 10
+      energie_kcal: 19.2
+      proteines_g: 0.6
+      lipides_g: 0.5
+      glucides_g: 3.69
+      fibres_g: 1.02
+      fer_mg: 0.19
+      calcium_mg: 6.78
       sodium_mg: 5
-      vitamine_c_mg: 14
+      vitamine_c_mg: 20.1
     allergenes: []
 
   - id: courgette
-    code_ciqual: "PROV-00016"
+    code_ciqual: "20020"
     nom: "Courgette, crue"
     groupe: "légumes"
     saison_mois: [6, 7, 8, 9]
     nutriments:
-      energie_kcal: 17
-      proteines_g: 1.2
-      lipides_g: 0.3
-      glucides_g: 3.1
-      fibres_g: 1.0
-      fer_mg: 0.4
+      energie_kcal: 16.7
+      proteines_g: 1.21
+      lipides_g: 0.32
+      glucides_g: 1.75
+      fibres_g: 1
+      fer_mg: 0.37
       calcium_mg: 16
       sodium_mg: 8
-      vitamine_c_mg: 17
+      vitamine_c_mg: 17.9
     allergenes: []
 
   - id: poivron_rouge
-    code_ciqual: "PROV-00017"
+    code_ciqual: "20087"
     nom: "Poivron rouge, cru"
     groupe: "légumes"
     saison_mois: [7, 8, 9, 10]
     nutriments:
-      energie_kcal: 31
-      proteines_g: 1.0
-      lipides_g: 0.3
-      glucides_g: 6
-      fibres_g: 2.1
-      fer_mg: 0.4
-      calcium_mg: 7
-      sodium_mg: 4
-      vitamine_c_mg: 128
+      energie_kcal: 33.6
+      proteines_g: 1.06
+      lipides_g: 0.5
+      glucides_g: 5.98
+      fibres_g: 3.2
+      fer_mg: 0.21
+      calcium_mg: 4.8
+      sodium_mg: 5
+      vitamine_c_mg: 121
     allergenes: []
 
   - id: champignon_paris
-    code_ciqual: "PROV-00018"
+    code_ciqual: "20056"
     nom: "Champignon de Paris, cru"
     groupe: "légumes"
     # Champignon de couche cultivé en cave, hors sol et hors saison climatique —
@@ -356,164 +367,163 @@ foods:
     toute_annee: true
     saison_mois: [9, 10, 11, 12, 1, 2, 3]
     nutriments:
-      energie_kcal: 22
-      proteines_g: 3.1
-      lipides_g: 0.3
-      glucides_g: 3.3
-      fibres_g: 1.0
-      fer_mg: 0.5
+      energie_kcal: 21
+      proteines_g: 2.11
+      lipides_g: 0.36
+      glucides_g: 1.83
+      fibres_g: 1
+      fer_mg: 0.31
       calcium_mg: 3
-      sodium_mg: 5
-      vitamine_c_mg: 2.1
+      sodium_mg: 39
+      vitamine_c_mg: 3.18
     allergenes: []
 
   - id: poulet_blanc
-    code_ciqual: "PROV-00019"
+    code_ciqual: "36007"
     nom: "Blanc de poulet, cru"
     groupe: "viandes"
     toute_annee: true
     nutriments:
-      energie_kcal: 120
-      proteines_g: 22.5
-      lipides_g: 2.6
+      energie_kcal: 122
+      proteines_g: 20.8
+      lipides_g: 4.3
       glucides_g: 0
       fibres_g: 0
-      fer_mg: 0.4
-      calcium_mg: 5
-      sodium_mg: 63
-      vitamine_c_mg: 0
+      fer_mg: 0.65
+      calcium_mg: 9.73
+      sodium_mg: 78.3
     allergenes: []
 
   - id: boeuf_hache_5
-    code_ciqual: "PROV-00020"
+    code_ciqual: "6250"
     nom: "Bœuf haché 5% MG, cru"
     groupe: "viandes"
     toute_annee: true
     nutriments:
-      energie_kcal: 137
-      proteines_g: 21.4
-      lipides_g: 5
-      glucides_g: 0
+      energie_kcal: 130
+      proteines_g: 21.9
+      lipides_g: 4.59
+      glucides_g: 0.3
       fibres_g: 0
-      fer_mg: 2.1
-      calcium_mg: 8
-      sodium_mg: 65
+      fer_mg: 2.65
+      calcium_mg: 9
+      sodium_mg: 37.8
       vitamine_c_mg: 0
     allergenes: []
 
   - id: saumon
-    code_ciqual: "PROV-00021"
+    code_ciqual: "26036"
     nom: "Saumon, cru"
     groupe: "poissons"
     # Poisson d'élevage (aquaculture) — pas de saisonnalité de pêche à respecter.
     toute_annee: true
     nutriments:
-      energie_kcal: 208
-      proteines_g: 20.4
-      lipides_g: 13.4
+      energie_kcal: 193
+      proteines_g: 20.5
+      lipides_g: 12.4
       glucides_g: 0
-      fibres_g: 0
-      fer_mg: 0.3
-      calcium_mg: 9
-      sodium_mg: 59
-      vitamine_c_mg: 0
+      fibres_g: 0.25
+      fer_mg: 0.48
+      calcium_mg: 5.84
+      sodium_mg: 45.4
+      vitamine_c_mg: 1.8
     allergenes:
       - code: poissons
         certitude: contient
 
   - id: lentilles_corail
-    code_ciqual: "PROV-00022"
+    code_ciqual: "20359"
     nom: "Lentilles corail, crues"
     groupe: "légumineuses"
     toute_annee: true
     nutriments:
-      energie_kcal: 340
-      proteines_g: 25
-      lipides_g: 1.1
-      glucides_g: 60
-      fibres_g: 8
-      fer_mg: 7.5
-      calcium_mg: 35
-      sodium_mg: 6
-      vitamine_c_mg: 1.5
+      energie_kcal: 327
+      proteines_g: 25.1
+      lipides_g: 1.8
+      glucides_g: 44.5
+      fibres_g: 16.3
+      fer_mg: 6.31
+      calcium_mg: 63.7
+      sodium_mg: 5
+      vitamine_c_mg: 1.61
     allergenes: []
 
   - id: pois_chiches
-    code_ciqual: "PROV-00023"
+    code_ciqual: "20532"
     nom: "Pois chiches cuits, conserve égouttée"
     groupe: "légumineuses"
     toute_annee: true
     nutriments:
-      energie_kcal: 139
-      proteines_g: 8.9
-      lipides_g: 2.6
-      glucides_g: 22.5
-      fibres_g: 7.6
-      fer_mg: 1.5
-      calcium_mg: 49
-      sodium_mg: 240
-      vitamine_c_mg: 1.3
+      energie_kcal: 122
+      proteines_g: 6.74
+      lipides_g: 2.68
+      glucides_g: 15
+      fibres_g: 5.45
+      fer_mg: 1.15
+      calcium_mg: 41.2
+      sodium_mg: 216
+      vitamine_c_mg: 0.1
     allergenes: []
 
   - id: yaourt_nature
-    code_ciqual: "PROV-00024"
+    code_ciqual: "19593"
     nom: "Yaourt nature au lait entier"
     groupe: "lait et produits laitiers"
     toute_annee: true
     nutriments:
-      energie_kcal: 61
-      proteines_g: 3.5
-      lipides_g: 3.3
-      glucides_g: 4.7
+      energie_kcal: 50.1
+      proteines_g: 3.83
+      lipides_g: 1.68
+      glucides_g: 4.26
       fibres_g: 0
-      fer_mg: 0.1
-      calcium_mg: 121
-      sodium_mg: 46
-      vitamine_c_mg: 0.5
+      fer_mg: 0.25
+      calcium_mg: 137
+      sodium_mg: 40
+      vitamine_c_mg: 2
     allergenes:
       - code: lait
         certitude: contient
 
   - id: fromage_emmental_rape
-    code_ciqual: "PROV-00025"
+    code_ciqual: "12118"
     nom: "Emmental râpé"
     groupe: "lait et produits laitiers"
     toute_annee: true
     nutriments:
-      energie_kcal: 380
-      proteines_g: 28
-      lipides_g: 29
-      glucides_g: 0.5
-      fibres_g: 0
-      fer_mg: 0.3
-      calcium_mg: 970
-      sodium_mg: 380
-      vitamine_c_mg: 0
+      energie_kcal: 368
+      proteines_g: 27.6
+      lipides_g: 28.2
+      glucides_g: 0.58
+      fibres_g: 0.042
+      fer_mg: 0.25
+      calcium_mg: 977
+      sodium_mg: 272
+      vitamine_c_mg: 0.5
     allergenes:
       - code: lait
         certitude: contient
 
   - id: creme_fraiche
-    code_ciqual: "PROV-00026"
+    code_ciqual: "19410"
     nom: "Crème fraîche épaisse 30% MG"
     groupe: "lait et produits laitiers"
     toute_annee: true
     nutriments:
-      energie_kcal: 292
-      proteines_g: 2.2
-      lipides_g: 30
-      glucides_g: 3.4
-      fibres_g: 0
-      fer_mg: 0.1
-      calcium_mg: 80
-      sodium_mg: 30
+      energie_kcal: 285
+      proteines_g: 2.32
+      lipides_g: 29.9
+      glucides_g: 1.38
+      fibres_g: 3
+      fer_mg: 0.25
+      calcium_mg: 78.2
+      sodium_mg: 26
       vitamine_c_mg: 0.5
     allergenes:
       - code: lait
         certitude: contient
 
   - id: persil
-    code_ciqual: "PROV-00027"
+    code_ciqual: "11014"
     nom: "Persil frais"
     groupe: "légumes"
     # Herbe fraîche cultivée toute l'année (plein champ + sous abri selon saison) —
@@ -521,19 +531,19 @@ foods:
     toute_annee: true
     saison_mois: [5, 6, 7, 8, 9, 10]
     nutriments:
-      energie_kcal: 36
-      proteines_g: 3.0
-      lipides_g: 0.8
-      glucides_g: 3.0
-      fibres_g: 3.3
+      energie_kcal: 42.5
+      proteines_g: 2.97
+      lipides_g: 0.63
+      glucides_g: 4.1
+      fibres_g: 4.3
       fer_mg: 6.2
       calcium_mg: 138
-      sodium_mg: 34
+      sodium_mg: 51.5
       vitamine_c_mg: 133
     allergenes: []
 
   - id: citron
-    code_ciqual: "PROV-00028"
+    code_ciqual: "13009"
     nom: "Citron, pulpe crue"
     groupe: "fruits"
     # Production française très limitée (bassin de Menton, AOC/AOP « Citron de
@@ -542,171 +552,171 @@ foods:
     # périmètre de cette annotation, voir convention en tête de fichier).
     saison_mois: [11, 12, 1, 2, 3, 4]
     nutriments:
-      energie_kcal: 29
-      proteines_g: 1.1
-      lipides_g: 0.3
-      glucides_g: 3.2
-      fibres_g: 2.8
-      fer_mg: 0.6
-      calcium_mg: 26
-      sodium_mg: 2
-      vitamine_c_mg: 53
+      energie_kcal: 24.3
+      proteines_g: 0.25
+      lipides_g: 0.5
+      glucides_g: 1.56
+      fibres_g: 0.5
+      fer_mg: 0.15
+      calcium_mg: 11
+      sodium_mg: 5
+      vitamine_c_mg: 45
     allergenes: []
 
   - id: amande_effilee
-    code_ciqual: "PROV-00029"
+    code_ciqual: "15041"
     nom: "Amande effilée"
     groupe: "fruits à coque et oléagineux"
     # Fruit à coque séché/transformé — épicerie sèche, pas de saisonnalité fraîche.
     toute_annee: true
     nutriments:
-      energie_kcal: 579
-      proteines_g: 21.2
-      lipides_g: 49.9
-      glucides_g: 4.4
-      fibres_g: 12.5
-      fer_mg: 3.7
-      calcium_mg: 269
-      sodium_mg: 1
+      energie_kcal: 631
+      proteines_g: 21.4
+      lipides_g: 52.5
+      glucides_g: 8.76
+      fibres_g: 9.9
+      fer_mg: 3.28
+      calcium_mg: 236
+      sodium_mg: 19
       vitamine_c_mg: 0
     allergenes:
       - code: fruits_a_coque
         certitude: contient
 
   - id: levure_boulangere
-    code_ciqual: "PROV-00030"
+    code_ciqual: "11010"
     nom: "Levure de boulanger fraîche"
     groupe: "céréales et dérivés"
     # Produite industriellement en continu — disponibilité toute l'année.
     toute_annee: true
     nutriments:
-      energie_kcal: 105
-      proteines_g: 8
-      lipides_g: 2
-      glucides_g: 3
-      fibres_g: 0
-      fer_mg: 5
-      calcium_mg: 12
-      sodium_mg: 51
-      vitamine_c_mg: 0
+      energie_kcal: 115
+      proteines_g: 8.4
+      lipides_g: 1.9
+      glucides_g: 11.9
+      fibres_g: 8.1
+      fer_mg: 3.25
+      calcium_mg: 19
+      sodium_mg: 30
+      vitamine_c_mg: 0.1
     allergenes: []
 
   - id: poireau
-    code_ciqual: "PROV-00031"
+    code_ciqual: "20039"
     nom: "Poireau, cru"
     groupe: "légumes"
     # Légume de garde — même choix éditorial que pomme_de_terre/oignon/ail/carotte.
     toute_annee: true
     saison_mois: [10, 11, 12, 1, 2, 3, 4]
     nutriments:
-      energie_kcal: 29
+      energie_kcal: 30.4
       proteines_g: 1.5
       lipides_g: 0.3
-      glucides_g: 3.9
-      fibres_g: 2.3
-      fer_mg: 1.1
+      glucides_g: 4.55
+      fibres_g: 1.8
+      fer_mg: 2.1
       calcium_mg: 59
       sodium_mg: 20
       vitamine_c_mg: 12
     allergenes: []
 
   - id: epinard
-    code_ciqual: "PROV-00032"
+    code_ciqual: "20059"
     nom: "Épinard, cru"
     groupe: "légumes"
     saison_mois: [3, 4, 5, 9, 10, 11]
     nutriments:
-      energie_kcal: 23
-      proteines_g: 2.9
-      lipides_g: 0.4
-      glucides_g: 1.4
-      fibres_g: 2.2
-      fer_mg: 2.7
+      energie_kcal: 33.3
+      proteines_g: 2.68
+      lipides_g: 0.39
+      glucides_g: 3.06
+      fibres_g: 2.6
+      fer_mg: 2.71
       calcium_mg: 99
-      sodium_mg: 79
-      vitamine_c_mg: 28
+      sodium_mg: 79.5
+      vitamine_c_mg: 28.1
     allergenes: []
 
   - id: brocoli
-    code_ciqual: "PROV-00033"
+    code_ciqual: "20057"
     nom: "Brocoli, cru"
     groupe: "légumes"
     saison_mois: [10, 11, 12, 1, 2, 3, 4]
     nutriments:
-      energie_kcal: 34
-      proteines_g: 2.8
-      lipides_g: 0.4
-      glucides_g: 4
+      energie_kcal: 31.9
+      proteines_g: 2.9
+      lipides_g: 0.36
+      glucides_g: 2.15
       fibres_g: 2.6
-      fer_mg: 0.7
-      calcium_mg: 47
-      sodium_mg: 33
-      vitamine_c_mg: 89
+      fer_mg: 0.81
+      calcium_mg: 47.5
+      sodium_mg: 30
+      vitamine_c_mg: 91.2
     allergenes: []
 
   - id: chou_fleur
-    code_ciqual: "PROV-00034"
+    code_ciqual: "20016"
     nom: "Chou-fleur, cru"
     groupe: "légumes"
     saison_mois: [9, 10, 11, 12, 1, 2, 3]
     nutriments:
-      energie_kcal: 25
-      proteines_g: 1.9
-      lipides_g: 0.3
-      glucides_g: 3
-      fibres_g: 2
-      fer_mg: 0.4
-      calcium_mg: 22
-      sodium_mg: 30
-      vitamine_c_mg: 48
+      energie_kcal: 24.9
+      proteines_g: 1.81
+      lipides_g: 0.7
+      glucides_g: 2.13
+      fibres_g: 2.2
+      fer_mg: 0.27
+      calcium_mg: 23
+      sodium_mg: 6
+      vitamine_c_mg: 48.2
     allergenes: []
 
   - id: haricot_vert
-    code_ciqual: "PROV-00035"
+    code_ciqual: "20061"
     nom: "Haricot vert, cru"
     groupe: "légumes"
     saison_mois: [6, 7, 8, 9]
     nutriments:
-      energie_kcal: 31
-      proteines_g: 1.8
-      lipides_g: 0.2
-      glucides_g: 4.3
-      fibres_g: 3.1
-      fer_mg: 1.0
+      energie_kcal: 31.9
+      proteines_g: 1.83
+      lipides_g: 0.22
+      glucides_g: 4.14
+      fibres_g: 2.7
+      fer_mg: 1.03
       calcium_mg: 37
       sodium_mg: 6
-      vitamine_c_mg: 16
+      vitamine_c_mg: 12.2
     allergenes: []
 
   - id: aubergine
-    code_ciqual: "PROV-00036"
+    code_ciqual: "20053"
     nom: "Aubergine, crue"
     groupe: "légumes"
     saison_mois: [6, 7, 8, 9]
     nutriments:
-      energie_kcal: 25
-      proteines_g: 1.0
-      lipides_g: 0.2
-      glucides_g: 3.5
-      fibres_g: 2.5
-      fer_mg: 0.3
+      energie_kcal: 22.9
+      proteines_g: 0.98
+      lipides_g: 0.18
+      glucides_g: 2.7
+      fibres_g: 3
+      fer_mg: 0.23
       calcium_mg: 9
       sodium_mg: 2
       vitamine_c_mg: 2.2
     allergenes: []
 
   - id: betterave
-    code_ciqual: "PROV-00037"
+    code_ciqual: "20091"
     nom: "Betterave rouge, crue"
     groupe: "légumes"
     # Légume de garde — même choix éditorial que pomme_de_terre/oignon/ail/carotte.
     toute_annee: true
     saison_mois: [9, 10, 11, 12, 1, 2, 3]
     nutriments:
-      energie_kcal: 43
-      proteines_g: 1.6
-      lipides_g: 0.2
-      glucides_g: 7.6
+      energie_kcal: 40.2
+      proteines_g: 1.61
+      lipides_g: 0.17
+      glucides_g: 6.34
       fibres_g: 2.8
       fer_mg: 0.8
       calcium_mg: 16
@@ -715,17 +725,17 @@ foods:
     allergenes: []
 
   - id: navet
-    code_ciqual: "PROV-00038"
+    code_ciqual: "20064"
     nom: "Navet, cru"
     groupe: "légumes"
     # Légume de garde — même choix éditorial que pomme_de_terre/oignon/ail/carotte.
     toute_annee: true
     saison_mois: [9, 10, 11, 12, 1, 2, 3]
     nutriments:
-      energie_kcal: 28
+      energie_kcal: 25.6
       proteines_g: 0.9
       lipides_g: 0.1
-      glucides_g: 4.7
+      glucides_g: 4.39
       fibres_g: 1.8
       fer_mg: 0.3
       calcium_mg: 30
@@ -734,7 +744,7 @@ foods:
     allergenes: []
 
   - id: courge_butternut
-    code_ciqual: "PROV-00039"
+    code_ciqual: "20138"
     nom: "Courge butternut, crue"
     groupe: "légumes"
     # Courge de garde (conservation hivernale) — même choix éditorial que
@@ -742,10 +752,10 @@ foods:
     toute_annee: true
     saison_mois: [10, 11, 12, 1, 2]
     nutriments:
-      energie_kcal: 45
-      proteines_g: 1.0
+      energie_kcal: 30.5
+      proteines_g: 1
       lipides_g: 0.1
-      glucides_g: 10
+      glucides_g: 5.4
       fibres_g: 2
       fer_mg: 0.7
       calcium_mg: 48
@@ -754,58 +764,58 @@ foods:
     allergenes: []
 
   - id: petit_pois
-    code_ciqual: "PROV-00040"
+    code_ciqual: "20072"
     nom: "Petit pois, cru"
     groupe: "légumes"
     saison_mois: [5, 6, 7]
     nutriments:
-      energie_kcal: 81
-      proteines_g: 5.4
+      energie_kcal: 81.2
+      proteines_g: 5.42
       lipides_g: 0.4
-      glucides_g: 14
+      glucides_g: 11.4
       fibres_g: 5.1
-      fer_mg: 1.5
+      fer_mg: 1.47
       calcium_mg: 25
       sodium_mg: 5
       vitamine_c_mg: 40
     allergenes: []
 
   - id: laitue
-    code_ciqual: "PROV-00041"
+    code_ciqual: "20031"
     nom: "Laitue, crue"
     groupe: "légumes"
     saison_mois: [5, 6, 7, 8, 9]
     nutriments:
-      energie_kcal: 15
-      proteines_g: 1.4
+      energie_kcal: 14.7
+      proteines_g: 1.35
       lipides_g: 0.2
-      glucides_g: 1.3
-      fibres_g: 1.3
-      fer_mg: 0.9
-      calcium_mg: 36
-      sodium_mg: 28
-      vitamine_c_mg: 9.2
+      glucides_g: 1.22
+      fibres_g: 1.1
+      fer_mg: 1.1
+      calcium_mg: 64.6
+      sodium_mg: 8.47
+      vitamine_c_mg: 5.53
     allergenes: []
 
   - id: radis
-    code_ciqual: "PROV-00042"
+    code_ciqual: "20045"
     nom: "Radis, cru"
     groupe: "légumes"
     saison_mois: [4, 5, 6, 7, 8, 9]
     nutriments:
-      energie_kcal: 16
-      proteines_g: 0.7
-      lipides_g: 0.1
-      glucides_g: 3.4
-      fibres_g: 1.6
-      fer_mg: 0.3
-      calcium_mg: 25
-      sodium_mg: 39
-      vitamine_c_mg: 15
+      energie_kcal: 11
+      proteines_g: 0.94
+      lipides_g: 0.5
+      glucides_g: 1.53
+      fibres_g: 1.4
+      fer_mg: 0.4
+      calcium_mg: 15
+      sodium_mg: 16
+      vitamine_c_mg: 12.2
     allergenes: []
 
   - id: pomme
-    code_ciqual: "PROV-00043"
+    code_ciqual: "13039"
     nom: "Pomme, crue"
     groupe: "fruits"
     # Fruit de garde (conservation longue en chambre froide) — même choix
@@ -815,19 +825,19 @@ foods:
     toute_annee: true
     saison_mois: [9, 10, 11, 12, 1, 2, 3]
     nutriments:
-      energie_kcal: 52
-      proteines_g: 0.3
-      lipides_g: 0.2
-      glucides_g: 11.4
-      fibres_g: 2.4
-      fer_mg: 0.1
-      calcium_mg: 6
-      sodium_mg: 1
+      energie_kcal: 54
+      proteines_g: 0.25
+      lipides_g: 0.25
+      glucides_g: 11.6
+      fibres_g: 1.4
+      fer_mg: 0.099
+      calcium_mg: 5.34
+      sodium_mg: 1.5
       vitamine_c_mg: 4.6
     allergenes: []
 
   - id: poire
-    code_ciqual: "PROV-00044"
+    code_ciqual: "13037"
     nom: "Poire, crue"
     groupe: "fruits"
     # Se conserve plusieurs mois mais moins universellement que la pomme :
@@ -835,195 +845,195 @@ foods:
     # Décision prise seule, pas de consigne explicite dans le brief.
     saison_mois: [8, 9, 10, 11, 12, 1]
     nutriments:
-      energie_kcal: 57
-      proteines_g: 0.4
-      lipides_g: 0.1
-      glucides_g: 12.4
-      fibres_g: 3.1
-      fer_mg: 0.2
-      calcium_mg: 9
-      sodium_mg: 1
+      energie_kcal: 56.6
+      proteines_g: 0.36
+      lipides_g: 0.27
+      glucides_g: 12.3
+      fibres_g: 2.9
+      fer_mg: 0.072
+      calcium_mg: 6.46
+      sodium_mg: 1.8
       vitamine_c_mg: 4.3
     allergenes: []
 
   - id: fraise
-    code_ciqual: "PROV-00045"
+    code_ciqual: "13014"
     nom: "Fraise, crue"
     groupe: "fruits"
     saison_mois: [4, 5, 6, 7]
     nutriments:
-      energie_kcal: 32
-      proteines_g: 0.7
-      lipides_g: 0.3
-      glucides_g: 6
-      fibres_g: 2
-      fer_mg: 0.4
-      calcium_mg: 16
-      sodium_mg: 1
-      vitamine_c_mg: 59
+      energie_kcal: 35.1
+      proteines_g: 0.63
+      lipides_g: 0.5
+      glucides_g: 6.03
+      fibres_g: 3.8
+      fer_mg: 0.19
+      calcium_mg: 18
+      sodium_mg: 5
+      vitamine_c_mg: 54
     allergenes: []
 
   - id: abricot
-    code_ciqual: "PROV-00046"
+    code_ciqual: "13000"
     nom: "Abricot, cru"
     groupe: "fruits"
     saison_mois: [6, 7, 8]
     nutriments:
-      energie_kcal: 48
-      proteines_g: 1.4
-      lipides_g: 0.4
-      glucides_g: 9.3
-      fibres_g: 2
-      fer_mg: 0.4
-      calcium_mg: 13
-      sodium_mg: 1
-      vitamine_c_mg: 10
+      energie_kcal: 44.1
+      proteines_g: 0.81
+      lipides_g: 0.5
+      glucides_g: 9.01
+      fibres_g: 1.7
+      fer_mg: 0.19
+      calcium_mg: 15
+      sodium_mg: 5
+      vitamine_c_mg: 2.55
     allergenes: []
 
   - id: peche
-    code_ciqual: "PROV-00047"
+    code_ciqual: "13043"
     nom: "Pêche, crue"
     groupe: "fruits"
     saison_mois: [6, 7, 8, 9]
     nutriments:
-      energie_kcal: 39
-      proteines_g: 0.9
-      lipides_g: 0.3
-      glucides_g: 8.4
-      fibres_g: 1.6
-      fer_mg: 0.4
-      calcium_mg: 6
-      sodium_mg: 1
+      energie_kcal: 37.9
+      proteines_g: 0.91
+      lipides_g: 0.25
+      glucides_g: 7.55
+      fibres_g: 1.5
+      fer_mg: 0.15
+      calcium_mg: 7.32
+      sodium_mg: 1.11
       vitamine_c_mg: 6.6
     allergenes: []
 
   - id: raisin
-    code_ciqual: "PROV-00048"
+    code_ciqual: "13395"
     nom: "Raisin, cru"
     groupe: "fruits"
     saison_mois: [8, 9, 10]
     nutriments:
-      energie_kcal: 69
-      proteines_g: 0.6
-      lipides_g: 0.2
-      glucides_g: 16.1
-      fibres_g: 0.9
-      fer_mg: 0.3
-      calcium_mg: 12
-      sodium_mg: 2
-      vitamine_c_mg: 3.2
+      energie_kcal: 71
+      proteines_g: 0.7
+      lipides_g: 0.25
+      glucides_g: 16.3
+      fibres_g: 1.11
+      fer_mg: 0.23
+      calcium_mg: 11.2
+      sodium_mg: 3.77
+      vitamine_c_mg: 3.03
     allergenes: []
 
   - id: orange
-    code_ciqual: "PROV-00049"
+    code_ciqual: "13034"
     nom: "Orange, crue"
     groupe: "fruits"
     # Pas de production métropolitaine (climat) : disponible toute l'année par
     # import uniquement — jamais « de saison » locale, donc pas de saison_mois.
     toute_annee: true
     nutriments:
-      energie_kcal: 47
-      proteines_g: 0.9
-      lipides_g: 0.1
-      glucides_g: 9.2
-      fibres_g: 2.4
-      fer_mg: 0.1
-      calcium_mg: 40
-      sodium_mg: 3
-      vitamine_c_mg: 53
+      energie_kcal: 42
+      proteines_g: 0.75
+      lipides_g: 0.5
+      glucides_g: 8.03
+      fibres_g: 2.7
+      fer_mg: 0.57
+      calcium_mg: 66
+      sodium_mg: 5
+      vitamine_c_mg: 47.5
     allergenes: []
 
   - id: banane
-    code_ciqual: "PROV-00050"
+    code_ciqual: "13005"
     nom: "Banane, crue"
     groupe: "fruits"
     # Pas de production métropolitaine (climat) : disponible toute l'année par
     # import uniquement — jamais « de saison » locale, donc pas de saison_mois.
     toute_annee: true
     nutriments:
-      energie_kcal: 89
-      proteines_g: 1.1
-      lipides_g: 0.3
-      glucides_g: 22.8
-      fibres_g: 2.6
-      fer_mg: 0.3
-      calcium_mg: 5
-      sodium_mg: 1
-      vitamine_c_mg: 8.7
+      energie_kcal: 87.6
+      proteines_g: 1.06
+      lipides_g: 0.5
+      glucides_g: 19.7
+      fibres_g: 2.7
+      fer_mg: 0.2
+      calcium_mg: 5.1
+      sodium_mg: 5
+      vitamine_c_mg: 7.16
     allergenes: []
 
   - id: melon
-    code_ciqual: "PROV-00051"
+    code_ciqual: "13026"
     nom: "Melon, cru"
     groupe: "fruits"
     saison_mois: [6, 7, 8, 9]
     nutriments:
-      energie_kcal: 34
-      proteines_g: 0.8
-      lipides_g: 0.2
-      glucides_g: 7.6
-      fibres_g: 0.9
-      fer_mg: 0.2
+      energie_kcal: 59.8
+      proteines_g: 1.13
+      lipides_g: 0.5
+      glucides_g: 14.8
+      fibres_g: 1.3
+      fer_mg: 0.21
       calcium_mg: 11
-      sodium_mg: 16
-      vitamine_c_mg: 18
+      sodium_mg: 24
+      vitamine_c_mg: 8.14
     allergenes: []
 
   - id: prune
-    code_ciqual: "PROV-00052"
+    code_ciqual: "13100"
     nom: "Prune, crue"
     groupe: "fruits"
     saison_mois: [7, 8, 9]
     nutriments:
-      energie_kcal: 46
+      energie_kcal: 51.6
       proteines_g: 0.7
-      lipides_g: 0.3
-      glucides_g: 10
+      lipides_g: 0.28
+      glucides_g: 9.92
       fibres_g: 1.4
-      fer_mg: 0.2
+      fer_mg: 0.17
       calcium_mg: 6
-      sodium_mg: 2
-      vitamine_c_mg: 6.3
+      sodium_mg: 0
+      vitamine_c_mg: 9.5
     allergenes: []
 
   - id: lentilles_vertes
-    code_ciqual: "PROV-00053"
+    code_ciqual: "20359"
     nom: "Lentilles vertes, crues"
     groupe: "légumineuses"
     toute_annee: true
     nutriments:
-      energie_kcal: 336
-      proteines_g: 24
-      lipides_g: 1.1
-      glucides_g: 55
-      fibres_g: 11
-      fer_mg: 6.5
-      calcium_mg: 45
-      sodium_mg: 8
-      vitamine_c_mg: 1.5
+      energie_kcal: 327
+      proteines_g: 25.1
+      lipides_g: 1.8
+      glucides_g: 44.5
+      fibres_g: 16.3
+      fer_mg: 6.31
+      calcium_mg: 63.7
+      sodium_mg: 5
+      vitamine_c_mg: 1.61
     allergenes: []
 
   - id: thon_conserve
-    code_ciqual: "PROV-00054"
+    code_ciqual: "26039"
     nom: "Thon, conserve au naturel, égoutté"
     groupe: "poissons"
     toute_annee: true
     nutriments:
-      energie_kcal: 116
-      proteines_g: 26
-      lipides_g: 1
+      energie_kcal: 143
+      proteines_g: 26.8
+      lipides_g: 3.94
       glucides_g: 0
       fibres_g: 0
-      fer_mg: 1.4
-      calcium_mg: 12
-      sodium_mg: 350
+      fer_mg: 0.76
+      calcium_mg: 6.26
+      sodium_mg: 251
       vitamine_c_mg: 0
     allergenes:
       - code: poissons
         certitude: contient
 
   - id: tofu_nature
-    code_ciqual: "PROV-00055"
+    code_ciqual: "20904"
     nom: "Tofu nature"
     groupe: "légumineuses"
     # Pas de groupe "soja/dérivés" dans le référentiel existant — rattaché à
@@ -1031,76 +1041,76 @@ foods:
     # Décision prise seule, à valider si un groupe dédié est préféré.
     toute_annee: true
     nutriments:
-      energie_kcal: 76
-      proteines_g: 8
-      lipides_g: 4.8
-      glucides_g: 1.9
-      fibres_g: 0.3
-      fer_mg: 1.6
-      calcium_mg: 130
-      sodium_mg: 7
-      vitamine_c_mg: 0
+      energie_kcal: 147
+      proteines_g: 13.4
+      lipides_g: 8.5
+      glucides_g: 2.87
+      fibres_g: 0.5
+      fer_mg: 2.4
+      calcium_mg: 100
+      sodium_mg: 10
+      vitamine_c_mg: 0.5
     allergenes:
       - code: soja
         certitude: contient
 
   - id: escalope_dinde
-    code_ciqual: "PROV-00056"
+    code_ciqual: "36304"
     nom: "Escalope de dinde, crue"
     groupe: "viandes"
     toute_annee: true
     nutriments:
-      energie_kcal: 104
-      proteines_g: 22
-      lipides_g: 1.6
+      energie_kcal: 108
+      proteines_g: 23.7
+      lipides_g: 1.48
       glucides_g: 0
       fibres_g: 0
-      fer_mg: 0.7
-      calcium_mg: 4
-      sodium_mg: 55
+      fer_mg: 0.73
+      calcium_mg: 11
+      sodium_mg: 113
       vitamine_c_mg: 0
     allergenes: []
 
   - id: semoule_ble
-    code_ciqual: "PROV-00057"
+    code_ciqual: "9610"
     nom: "Semoule de blé (couscous), crue"
     groupe: "céréales et dérivés"
     toute_annee: true
     nutriments:
-      energie_kcal: 360
-      proteines_g: 12.7
-      lipides_g: 0.6
-      glucides_g: 72.8
+      energie_kcal: 350
+      proteines_g: 11.8
+      lipides_g: 1.28
+      glucides_g: 69.8
       fibres_g: 3.7
-      fer_mg: 1.2
-      calcium_mg: 20
-      sodium_mg: 5
+      fer_mg: 1.23
+      calcium_mg: 17
+      sodium_mg: 1
       vitamine_c_mg: 0
     allergenes:
       - code: gluten
         certitude: contient
 
   - id: pain_complet
-    code_ciqual: "PROV-00058"
+    code_ciqual: "7110"
     nom: "Pain complet"
     groupe: "céréales et dérivés"
     toute_annee: true
     nutriments:
-      energie_kcal: 246
-      proteines_g: 9
-      lipides_g: 2.5
-      glucides_g: 45
-      fibres_g: 7
-      fer_mg: 2.5
-      calcium_mg: 30
-      sodium_mg: 480
-      vitamine_c_mg: 0
+      energie_kcal: 234
+      proteines_g: 8.66
+      lipides_g: 1.7
+      glucides_g: 41.2
+      fibres_g: 7.3
+      fer_mg: 2
+      calcium_mg: 83.2
+      sodium_mg: 470
+      vitamine_c_mg: 2
     allergenes:
       - code: gluten
         certitude: contient
 
   - id: huile_colza
-    code_ciqual: "PROV-00059"
+    code_ciqual: "17130"
     nom: "Huile de colza"
     groupe: "matières grasses"
     toute_annee: true
@@ -1110,341 +1120,339 @@ foods:
       lipides_g: 100
       glucides_g: 0
       fibres_g: 0
-      fer_mg: 0
-      calcium_mg: 0
-      sodium_mg: 0
+      fer_mg: 0.023
+      calcium_mg: 2.57
+      sodium_mg: 1.11
       vitamine_c_mg: 0
     allergenes: []
 
   - id: miel
-    code_ciqual: "PROV-00060"
+    code_ciqual: "31008"
     nom: "Miel"
     groupe: "produits sucrés"
     toute_annee: true
     nutriments:
-      energie_kcal: 304
-      proteines_g: 0.3
+      energie_kcal: 331
+      proteines_g: 0.65
       lipides_g: 0
-      glucides_g: 76
-      fibres_g: 0.2
-      fer_mg: 0.4
-      calcium_mg: 5
-      sodium_mg: 4
+      glucides_g: 82.1
+      fibres_g: 0
+      fer_mg: 0.18
+      calcium_mg: 7.93
+      sodium_mg: 4.11
       vitamine_c_mg: 0.5
     allergenes: []
 
   - id: comte_rape
-    code_ciqual: "PROV-00061"
+    code_ciqual: "12110"
     nom: "Comté, râpé"
     groupe: "lait et produits laitiers"
     toute_annee: true
     nutriments:
-      energie_kcal: 412
-      proteines_g: 27
-      lipides_g: 32
+      energie_kcal: 413
+      proteines_g: 27.8
+      lipides_g: 33.8
       glucides_g: 0
       fibres_g: 0
-      fer_mg: 0.3
-      calcium_mg: 1000
-      sodium_mg: 600
-      vitamine_c_mg: 0
+      fer_mg: 0.49
+      calcium_mg: 907
+      sodium_mg: 403
     allergenes:
       - code: lait
         certitude: contient
 
   - id: camembert
-    code_ciqual: "PROV-00062"
+    code_ciqual: "12001"
     nom: "Camembert"
     groupe: "lait et produits laitiers"
     toute_annee: true
     nutriments:
-      energie_kcal: 300
-      proteines_g: 19.8
-      lipides_g: 23
-      glucides_g: 0.5
+      energie_kcal: 280
+      proteines_g: 19.5
+      lipides_g: 22.5
+      glucides_g: 0
       fibres_g: 0
-      fer_mg: 0.3
-      calcium_mg: 400
-      sodium_mg: 650
+      fer_mg: 0.22
+      calcium_mg: 439
+      sodium_mg: 579
       vitamine_c_mg: 0
     allergenes:
       - code: lait
         certitude: contient
 
   - id: chevre_frais
-    code_ciqual: "PROV-00063"
+    code_ciqual: "12805"
     nom: "Chèvre, fromage frais"
     groupe: "lait et produits laitiers"
     toute_annee: true
     nutriments:
-      energie_kcal: 200
-      proteines_g: 13
-      lipides_g: 15
-      glucides_g: 3
-      fibres_g: 0
-      fer_mg: 0.3
-      calcium_mg: 140
-      sodium_mg: 300
-      vitamine_c_mg: 0
+      energie_kcal: 194
+      proteines_g: 12
+      lipides_g: 15.2
+      glucides_g: 2.5
+      fibres_g: 0.000017
+      fer_mg: 0.26
+      calcium_mg: 170
+      sodium_mg: 377
+      vitamine_c_mg: 1
     allergenes:
       - code: lait
         certitude: contient
 
   - id: mozzarella
-    code_ciqual: "PROV-00064"
+    code_ciqual: "19590"
     nom: "Mozzarella"
     groupe: "lait et produits laitiers"
     toute_annee: true
     nutriments:
-      energie_kcal: 280
-      proteines_g: 18
-      lipides_g: 22
-      glucides_g: 2.2
+      energie_kcal: 227
+      proteines_g: 16.5
+      lipides_g: 17.7
+      glucides_g: 0.7
       fibres_g: 0
-      fer_mg: 0.2
-      calcium_mg: 400
-      sodium_mg: 370
+      fer_mg: 0.44
+      calcium_mg: 598
+      sodium_mg: 240
       vitamine_c_mg: 0
     allergenes:
       - code: lait
         certitude: contient
 
   - id: roquefort
-    code_ciqual: "PROV-00065"
+    code_ciqual: "12500"
     nom: "Roquefort"
     groupe: "lait et produits laitiers"
     toute_annee: true
     nutriments:
-      energie_kcal: 370
-      proteines_g: 19
-      lipides_g: 31
-      glucides_g: 2
+      energie_kcal: 384
+      proteines_g: 19.5
+      lipides_g: 33.9
+      glucides_g: 0
       fibres_g: 0
-      fer_mg: 0.6
+      fer_mg: 0.1
       calcium_mg: 660
-      sodium_mg: 1800
+      sodium_mg: 1290
       vitamine_c_mg: 0
     allergenes:
       - code: lait
         certitude: contient
 
   - id: cabillaud
-    code_ciqual: "PROV-00066"
+    code_ciqual: "26043"
     nom: "Cabillaud, cru"
     groupe: "poissons"
     saison_mois: [10, 11, 12, 1, 2, 3]
     toute_annee: false
     nutriments:
-      energie_kcal: 82
-      proteines_g: 18
-      lipides_g: 0.7
+      energie_kcal: 77.4
+      proteines_g: 18.1
+      lipides_g: 0.57
       glucides_g: 0
-      fibres_g: 0
-      fer_mg: 0.4
-      calcium_mg: 16
-      sodium_mg: 68
-      vitamine_c_mg: 0
+      fibres_g: 0.2
+      fer_mg: 0.49
+      calcium_mg: 4.43
+      sodium_mg: 65.2
+      vitamine_c_mg: 1
     allergenes:
       - code: poissons
         certitude: contient
 
   - id: sardine
-    code_ciqual: "PROV-00067"
+    code_ciqual: "26065"
     nom: "Sardine, crue"
     groupe: "poissons"
     saison_mois: [6, 7, 8, 9, 10]
     toute_annee: false
     nutriments:
-      energie_kcal: 150
-      proteines_g: 20
-      lipides_g: 8
+      energie_kcal: 160
+      proteines_g: 19.5
+      lipides_g: 9.17
       glucides_g: 0
       fibres_g: 0
-      fer_mg: 1.2
-      calcium_mg: 60
-      sodium_mg: 100
-      vitamine_c_mg: 0
+      fer_mg: 1.67
+      calcium_mg: 57.5
+      sodium_mg: 101
+      vitamine_c_mg: 2.5
     allergenes:
       - code: poissons
         certitude: contient
 
   - id: maquereau
-    code_ciqual: "PROV-00068"
+    code_ciqual: "26051"
     nom: "Maquereau, cru"
     groupe: "poissons"
     saison_mois: [9, 10, 11, 12, 1, 2]
     toute_annee: false
     nutriments:
-      energie_kcal: 200
-      proteines_g: 19
-      lipides_g: 13.9
-      glucides_g: 0
+      energie_kcal: 198
+      proteines_g: 18.1
+      lipides_g: 13.5
+      glucides_g: 0.93
       fibres_g: 0
-      fer_mg: 1.1
-      calcium_mg: 12
-      sodium_mg: 90
-      vitamine_c_mg: 0
+      fer_mg: 0.48
+      calcium_mg: 4.92
+      sodium_mg: 64
+      vitamine_c_mg: 0.2
     allergenes:
       - code: poissons
         certitude: contient
 
   - id: truite
-    code_ciqual: "PROV-00069"
+    code_ciqual: "27008"
     nom: "Truite, crue"
     groupe: "poissons"
     # Poisson d'élevage (aquaculture) — pas de saisonnalité de pêche à respecter,
     # même choix éditorial que saumon.
     toute_annee: true
     nutriments:
-      energie_kcal: 120
-      proteines_g: 20
-      lipides_g: 4
+      energie_kcal: 133
+      proteines_g: 19.3
+      lipides_g: 6.22
       glucides_g: 0
       fibres_g: 0
-      fer_mg: 0.3
-      calcium_mg: 25
-      sodium_mg: 50
-      vitamine_c_mg: 0
+      fer_mg: 0.5
+      calcium_mg: 17.1
+      sodium_mg: 41.8
     allergenes:
       - code: poissons
         certitude: contient
 
   - id: moule
-    code_ciqual: "PROV-00070"
+    code_ciqual: "10014"
     nom: "Moule, crue"
     groupe: "fruits de mer"
     saison_mois: [7, 8, 9, 10, 11, 12]
     toute_annee: false
     nutriments:
-      energie_kcal: 86
-      proteines_g: 12
-      lipides_g: 2.2
-      glucides_g: 3.4
+      energie_kcal: 71.8
+      proteines_g: 11.2
+      lipides_g: 1.82
+      glucides_g: 2.69
       fibres_g: 0
-      fer_mg: 4
-      calcium_mg: 26
-      sodium_mg: 290
-      vitamine_c_mg: 0
+      fer_mg: 6.78
+      calcium_mg: 51.5
+      sodium_mg: 339
+      vitamine_c_mg: 6.4
     allergenes:
       - code: mollusques
         certitude: contient
 
   - id: huitre
-    code_ciqual: "PROV-00071"
+    code_ciqual: "10011"
     nom: "Huître, crue"
     groupe: "fruits de mer"
     saison_mois: [9, 10, 11, 12, 1, 2, 3, 4]
     toute_annee: false
     nutriments:
-      energie_kcal: 70
-      proteines_g: 9
-      lipides_g: 2.5
-      glucides_g: 4
+      energie_kcal: 67.2
+      proteines_g: 8.64
+      lipides_g: 1.91
+      glucides_g: 3.86
       fibres_g: 0
-      fer_mg: 6
-      calcium_mg: 40
-      sodium_mg: 180
-      vitamine_c_mg: 0
+      fer_mg: 2.18
+      calcium_mg: 92.7
+      sodium_mg: 578
+      vitamine_c_mg: 5.13
     allergenes:
       - code: mollusques
         certitude: contient
 
   - id: coquille_saint_jacques
-    code_ciqual: "PROV-00072"
+    code_ciqual: "10003"
     nom: "Coquille Saint-Jacques, crue"
     groupe: "fruits de mer"
     saison_mois: [10, 11, 12, 1, 2, 3]
     toute_annee: false
     nutriments:
-      energie_kcal: 88
+      energie_kcal: 83
       proteines_g: 17
-      lipides_g: 0.8
-      glucides_g: 3
+      lipides_g: 1.31
+      glucides_g: 0.78
       fibres_g: 0
-      fer_mg: 0.3
-      calcium_mg: 24
-      sodium_mg: 240
+      fer_mg: 1.16
+      calcium_mg: 220
+      sodium_mg: 191
       vitamine_c_mg: 0
     allergenes:
       - code: mollusques
         certitude: contient
 
   - id: crevette
-    code_ciqual: "PROV-00073"
+    code_ciqual: "10021"
     nom: "Crevette, crue"
     groupe: "fruits de mer"
     # Majoritairement importée/élevage (aquaculture) — pas de saisonnalité de pêche
     # locale à respecter, même choix éditorial que saumon/truite.
     toute_annee: true
     nutriments:
-      energie_kcal: 85
-      proteines_g: 18
-      lipides_g: 1
-      glucides_g: 0.5
+      energie_kcal: 99
+      proteines_g: 19.7
+      lipides_g: 0.84
+      glucides_g: 3.21
       fibres_g: 0
-      fer_mg: 1.5
-      calcium_mg: 55
-      sodium_mg: 150
+      fer_mg: 3.21
+      calcium_mg: 84.8
+      sodium_mg: 182
       vitamine_c_mg: 0
     allergenes:
       - code: crustaces
         certitude: contient
 
   - id: vin_blanc_cuisine
-    code_ciqual: "PROV-00074"
+    code_ciqual: "5215"
     nom: "Vin blanc sec (de cuisine)"
     groupe: "boissons alcoolisées"
     # Ingrédient de cuisine (déglaçage, sauces) — pas une boisson consommée telle quelle.
     toute_annee: true
     nutriments:
-      energie_kcal: 82
-      proteines_g: 0.1
+      energie_kcal: 55.3
+      proteines_g: 0.25
       lipides_g: 0
-      glucides_g: 2.6
+      glucides_g: 0.17
       fibres_g: 0
-      fer_mg: 0.4
-      calcium_mg: 8
-      sodium_mg: 5
-      vitamine_c_mg: 0
+      fer_mg: 0.34
+      calcium_mg: 7.1
+      sodium_mg: 2.5
+      vitamine_c_mg: 0.5
     allergenes:
       - code: sulfites
         certitude: contient
 
   - id: vin_rouge_cuisine
-    code_ciqual: "PROV-00075"
+    code_ciqual: "5214"
     nom: "Vin rouge (de cuisine)"
     groupe: "boissons alcoolisées"
     # Ingrédient de cuisine (déglaçage, sauces) — pas une boisson consommée telle quelle.
     toute_annee: true
     nutriments:
-      energie_kcal: 85
-      proteines_g: 0.1
-      lipides_g: 0
-      glucides_g: 2.5
-      fibres_g: 0
-      fer_mg: 0.5
-      calcium_mg: 8
-      sodium_mg: 4
-      vitamine_c_mg: 0
+      energie_kcal: 75.7
+      proteines_g: 0.16
+      lipides_g: 0.5
+      glucides_g: 0
+      fibres_g: 1
+      fer_mg: 0.36
+      calcium_mg: 6.31
+      sodium_mg: 2
+      vitamine_c_mg: 2
     allergenes:
       - code: sulfites
         certitude: contient
 
   - id: cognac
-    code_ciqual: "PROV-00076"
+    code_ciqual: "1001"
     nom: "Cognac"
     groupe: "boissons alcoolisées"
     # Ingrédient de cuisine (flambage, déglaçage, sauces) — pas une boisson consommée
     # telle quelle. Pas de sulfites déclarés obligatoirement pour une eau-de-vie distillée.
     toute_annee: true
     nutriments:
-      energie_kcal: 250
+      energie_kcal: 233
       proteines_g: 0
       lipides_g: 0
-      glucides_g: 0.4
+      glucides_g: 0.63
       fibres_g: 0
-      fer_mg: 0
-      calcium_mg: 0
-      sodium_mg: 1
+      fer_mg: 0.04
+      calcium_mg: 1
+      sodium_mg: 1.39
       vitamine_c_mg: 0
     allergenes: []

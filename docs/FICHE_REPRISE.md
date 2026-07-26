@@ -34,7 +34,8 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
 **État vérifié : `npm test` → 380 verts (34 fichiers) · `npm run typecheck` propre ·
-`npm run build` → 76 aliments, 10 recettes.**
+`npm run build` → 76 aliments, 22 recettes — valeurs nutritionnelles **CIQUAL 2025 réelles**,
+plus aucun `PROV-`.**
 
 > ⚠️ Vérifier `git status -sb` en début de session : des commits peuvent ne pas être poussés.
 > Modèle en vigueur — **Claude committe, l'utilisateur pousse** (le shell agent ne peut pas
@@ -42,16 +43,16 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 
 ## ▶ Reprendre ici
 
-**1. Le contenu — remplir le catalogue.** C'est la prochaine étape, décidée en session 4. Deux
-chantiers, dans cet ordre :
-- **Import CIQUAL** (parser ANSES → `food` / `food_nutrient`, technique, délégable). La décision
-  bloquante est **tranchée : ~9 nutriments** — énergie, protéines, glucides, sucres, lipides,
-  saturés, fibres, sel. `food_nutrient` étant une table à lignes, passer à ~40 plus tard ne
-  demandera pas de migration douloureuse. Allergènes à compléter dans la foulée.
-- **Les recettes**, de 10 à ~100. Ce n'est pas du code : ingrédients quantifiés, étapes, allergènes,
-  facettes, axes sensoriels, temps, équipement, envergure, créneaux. Et la contrainte figée
-  (**contenu original obligatoire, pas de scrap**) veut dire qu'elles s'écrivent, elles ne se
-  collectent pas. C'est le gros morceau du projet.
+**1. Le contenu — continuer à remplir le catalogue.** L'import CIQUAL est **FAIT** (76 aliments aux
+valeurs ANSES 2025 réelles, `npm run catalog:ciqual`). Reste **les recettes, de 22 à ~100**. Ce n'est
+pas du code : ingrédients quantifiés, étapes, allergènes, facettes, axes sensoriels, temps,
+équipement, envergure, créneaux. Et la contrainte figée (**contenu original obligatoire, pas de
+scrap**) veut dire qu'elles s'écrivent, elles ne se collectent pas. C'est le gros morceau du projet.
+
+> Écrire une recette qui a besoin d'un aliment absent des 76 : ajouter l'entrée dans `foods.yaml`
+> (id, nom, groupe, saisonnalité, allergènes — à la main), sa ligne dans `ciqual-mapping.yaml`
+> (`node catalog/import-ciqual.mjs --search "<terme>"` pour trouver le code), puis
+> `npm run catalog:ciqual -- --write`. Les valeurs nutritionnelles ne s'écrivent JAMAIS à la main.
 
 **2. Puis `suggestAlternatives`, avec la spec révisée (décision 26, ETAT §4).** Reporté
 délibérément : sur 10 recettes, le mécanisme « plat frère » n'a **aucun candidat** — 1 seule recette

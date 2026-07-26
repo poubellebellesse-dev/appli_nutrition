@@ -1,0 +1,131 @@
+# ============================================================================
+# Appariement aliment du catalogue → code Ciqual (ANSES, table 2025).
+#
+# ÉCRIT ET RELU À LA MAIN. Ne jamais générer ce fichier automatiquement : Ciqual
+# nomme ses 3 484 entrées de façon très fine et un rapprochement par similarité
+# de nom choisit silencieusement la mauvaise ligne. Exemple vécu : une recherche
+# « saumon » remonte d'abord « Rillettes de saumon », « Huile de saumon » et
+# « Saumon fumé » avant « Saumon, élevage, cru ». Une valeur nutritionnelle
+# fausse ne se voit pas — elle se propage dans tout le moteur.
+#
+# Construire une ligne : node catalog/import-ciqual.mjs --search "<terme>"
+# Vérifier l'ensemble : node catalog/import-ciqual.mjs --check
+#
+# CONVENTIONS DE CHOIX
+#  - Aliment CRU quand notre catalogue décrit un ingrédient cru : les recettes
+#    donnent des quantités d'ingrédients avant cuisson.
+#  - « aliment moyen » quand Ciqual n'a que des variétés et que notre entrée est
+#    générique (tomate, raisin) — c'est exactement ce pour quoi l'ANSES publie
+#    ces agrégats.
+#  - Jamais un produit transformé, préemballé ou cuisiné pour un ingrédient de
+#    base.
+#
+# ÉCARTS ASSUMÉS, à relire si la nutrition d'une recette semble fausse :
+#  - `lentilles_corail` et `lentilles_vertes` pointent tous deux sur 20359
+#    (« Lentille, sèche », aliment moyen) : Ciqual ne distingue pas les variétés
+#    de lentille sèche. Les deux aliments auront donc des valeurs identiques.
+#  - `poulet_blanc` → 36007 « Poulet blanc, viande ET PEAU crues » : Ciqual n'a
+#    pas de blanc sans peau cru. Les lipides sont donc légèrement surestimés.
+#  - `cognac` → 1001 « Eau de vie de fruits » : le cognac est absent de Ciqual.
+#  - `comte_rape` → 12110 « Comté » : pas de variante râpée (sans effet, le
+#    râpage ne change pas la composition pour 100 g).
+#  - `amande_effilee` → 15041 « Amande, émondée » : l'effilage n'est pas une
+#    variante Ciqual, l'amande émondée est la plus proche.
+# ============================================================================
+
+mapping:
+  # Œufs, farines, matières grasses, condiments
+  oeuf: 22000                    # Oeuf cru
+  farine_ble: 9436               # Farine de blé tendre ou froment T55 (pour pains)
+  beurre_doux: 16400             # Beurre à 80% MG minimum, doux
+  huile_olive: 17270             # Huile d'olive vierge extra
+  huile_colza: 17130             # Huile de colza
+  sucre_blanc: 31016             # Sucre blanc
+  miel: 31008                    # Miel
+  sel_fin: 11017                 # Sel blanc alimentaire, non iodé, non fluoré
+  poivre_noir: 11015             # Poivre noir, poudre
+  levure_boulangere: 11010       # Levure de boulanger fraîche
+  persil: 11014                  # Persil, frais
+
+  # Céréales et dérivés
+  riz_blanc: 9100                # Riz blanc, cru
+  pates_spaghetti: 9810          # Pâtes sèches, standard, crues
+  semoule_ble: 9610              # Semoule de blé dur, crue
+  pain_complet: 7110             # Pain complet ou intégral (à la farine T150)
+
+  # Légumes
+  pomme_de_terre: 4008           # Pomme de terre, sans peau, crue
+  oignon: 20034                  # Oignon, cru
+  ail: 11000                     # Ail, cru
+  carotte: 20009                 # Carotte, crue
+  tomate: 20385                  # Tomate sans précision, crue (aliment moyen)
+  courgette: 20020               # Courgette, chair et peau, crue
+  poivron_rouge: 20087           # Poivron rouge, cru
+  champignon_paris: 20056        # Champignon de Paris ou champignon de couche, cru
+  poireau: 20039                 # Poireau, cru
+  epinard: 20059                 # Épinard, cru
+  brocoli: 20057                 # Brocoli, cru
+  chou_fleur: 20016              # Chou-fleur, cru
+  haricot_vert: 20061            # Haricot vert, cru
+  aubergine: 20053               # Aubergine, crue
+  betterave: 20091               # Betterave rouge, crue
+  navet: 20064                   # Navet, pelé, cru
+  courge_butternut: 20138        # Courge butternut (doubeurre), chair sans peau, crue
+  petit_pois: 20072              # Petits pois, crus
+  laitue: 20031                  # Laitue, crue
+  radis: 20045                   # Radis rouge, cru
+
+  # Fruits
+  pomme: 13039                   # Pomme, chair et peau, crue
+  poire: 13037                   # Poire, chair et peau, crue
+  fraise: 13014                  # Fraise, crue
+  abricot: 13000                 # Abricot, dénoyauté, cru
+  peche: 13043                   # Pêche, chair et peau, sans noyau, crue
+  raisin: 13395                  # Raisin cru (aliment moyen)
+  orange: 13034                  # Orange, chair sans peau, sans pépins, crue
+  banane: 13005                  # Banane, chair sans peau, crue
+  melon: 13026                   # Melon cantaloup, chair sans peau, sans pépins, cru
+  prune: 13100                   # Prune, sans noyau, crue
+  citron: 13009                  # Citron, chair sans peau, sans pépins, cru
+  amande_effilee: 15041          # Amande, émondée, sans sel ajouté — voir écarts
+
+  # Légumineuses et substituts
+  lentilles_corail: 20359        # Lentille, sèche (aliment moyen) — voir écarts
+  lentilles_vertes: 20359        # Lentille, sèche (aliment moyen) — voir écarts
+  pois_chiches: 20532            # Pois chiche, appertisé, égoutté
+  tofu_nature: 20904             # Tofu nature, préemballé
+
+  # Viandes
+  poulet_blanc: 36007            # Poulet blanc, viande et peau crues — voir écarts
+  escalope_dinde: 36304          # Dinde, escalope crue
+  boeuf_hache_5: 6250            # Boeuf, steak haché 5% MG cru
+
+  # Poissons
+  saumon: 26036                  # Saumon, élevage, cru
+  cabillaud: 26043               # Cabillaud, cru
+  sardine: 26065                 # Sardine, crue
+  maquereau: 26051               # Maquereau, cru
+  truite: 27008                  # Truite ou truite fario, élevage, crue
+  thon_conserve: 26039           # Thon, au naturel, appertisé, égoutté
+
+  # Fruits de mer
+  moule: 10014                   # Moule commune, crue
+  huitre: 10011                  # Huître, sans précision, crue
+  coquille_saint_jacques: 10003  # Coquille Saint-Jacques, noix et corail, crue
+  crevette: 10021                # Crevette, crue
+
+  # Lait et produits laitiers
+  lait_demi_ecreme: 19041        # Lait demi-écrémé, UHT
+  yaourt_nature: 19593           # Yaourt ou lait fermenté, nature
+  creme_fraiche: 19410           # Crème 30% MG, épaisse, rayon frais
+  fromage_emmental_rape: 12118   # Emmental ou emmenthal, râpé
+  comte_rape: 12110              # Comté — voir écarts
+  camembert: 12001               # Camembert, sans précision sur le type de lait
+  chevre_frais: 12805            # Fromage de chèvre frais, type palet, crottin ou bûchette
+  mozzarella: 19590              # Mozzarella au lait de vache
+  roquefort: 12500               # Roquefort (fromage de brebis)
+
+  # Boissons alcoolisées employées comme ingrédient (§1.7 CONCEPTION_B_VIN_REPAS)
+  vin_blanc_cuisine: 5215        # Vin blanc sec
+  vin_rouge_cuisine: 5214        # Vin rouge
+  cognac: 1001                   # Eau de vie de fruits — voir écarts

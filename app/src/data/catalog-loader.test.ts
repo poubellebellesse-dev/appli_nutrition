@@ -60,13 +60,17 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     expect(catalog.recipes.size).toBeGreaterThanOrEqual(10)
   })
 
+  // Valeurs attendues = CIQUAL 2025, aliment 22000 « Oeuf cru » (voir ciqual-mapping.yaml). Elles
+  // sont volontairement écrites en dur ICI, à la différence des comptes de recettes : ce test prouve
+  // que le loader rattache chaque nutriment au BON aliment, et une valeur exacte est le seul moyen
+  // de le montrer. Elles ne changeront qu'avec une nouvelle édition de la table ANSES.
   it('rattache les nutriments et l’allergène au bon aliment (œuf)', () => {
     const oeuf = catalog.foods.get('oeuf' as FoodId)
     expect(oeuf).toBeDefined()
     expect(oeuf?.nom).toBe('Œuf de poule, entier, cru')
     expect(oeuf?.nutrimentsPour100g.size).toBe(9)
-    expect(oeuf?.nutrimentsPour100g.get('energie' as NutrientId)).toBe(143)
-    expect(oeuf?.nutrimentsPour100g.get('proteines' as NutrientId)).toBeCloseTo(12.6)
+    expect(oeuf?.nutrimentsPour100g.get('energie' as NutrientId)).toBe(140)
+    expect(oeuf?.nutrimentsPour100g.get('proteines' as NutrientId)).toBeCloseTo(12.8)
     expect(oeuf?.allergenes).toEqual([{ allergenId: 'oeufs', certitude: 'contient' }])
   })
 

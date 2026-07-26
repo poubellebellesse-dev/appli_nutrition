@@ -8,6 +8,7 @@
     "build": "node --experimental-sqlite catalog/build.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "catalog:ciqual": "node catalog/import-ciqual.mjs",
     "catalog:list": "tsx app/src/cli/list-recipes.ts",
     "engine:try": "tsx app/src/cli/try-engine.ts"
   },
