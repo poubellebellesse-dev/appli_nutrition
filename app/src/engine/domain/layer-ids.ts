@@ -27,8 +27,22 @@
 // 17ᵉ couche du registre ») — c'est désormais résolu, `speed` EST une couche du registre à part
 // entière, poids par défaut nul, relevée par l'archétype « Rapide » (§6.3 bis, voir
 // selection/archetypes.ts). Voir selection/scoring/speed.ts.
+//
+// Registre étendu à 18 entrées (7 exclusion + 11 score) par l'ajout de la couche `favoris`
+// (`SuggestionRequest.onlyFavorites`, §8.1 ENGINE). Le flag aurait pu être un pré-filtre du set
+// initial dans `runExclusionPass` ; en faire une COUCHE suit le précédent d'`exclusions`/`requis`
+// (données de requête, filtre dur, désactivable) et fait tomber gratuitement le motif de rejet
+// dans `RejectionSummary` — sans quoi l'entonnoir du banc d'essai afficherait une chute de
+// candidats sans cause lisible. Voir selection/favoris.ts.
 
-export type ExclusionLayerId = 'allergenes' | 'regime' | 'exclusions' | 'requis' | 'temps' | 'equipement'
+export type ExclusionLayerId =
+  | 'allergenes'
+  | 'regime'
+  | 'exclusions'
+  | 'requis'
+  | 'temps'
+  | 'equipement'
+  | 'favoris'
 
 export type ScoringLayerId =
   | 'nutri'

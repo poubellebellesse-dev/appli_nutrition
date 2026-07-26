@@ -22,7 +22,11 @@
 // `familiarity` elle-même — voir scoreHabit, destiné à l'alimenter (P1b-2 pour le câblage).
 //
 // Override (« Surprends-moi » / « Mes classiques ») : prime sur la modulation — 'surprise' force
-// familiarity=0, 'classics' force familiarity=1, quelle que soit la valeur passée.
+// familiarity=0, 'classiques' force familiarity=1, quelle que soit la valeur passée. Vient de
+// `SuggestionRequest.varietyMode` (§8.1 ENGINE) depuis P1c ; le vocabulaire de `VarietyOverride`
+// était 'classics' (anglais) jusque-là — aligné sur le français comme le reste des unions fermées
+// du domaine (`MealOrigin`, `NutrientSense`, `ArchetypeId`) pour éviter une table de traduction
+// entre `VarietyMode` et cette union.
 //
 // Dates : écarts calculés en jours calendaires depuis les chaînes ISO `yyyy-mm-dd`, jamais
 // `Date.now()` (§3 ENGINE — l'horloge vient de `today`). Une entrée d'historique postérieure à
@@ -36,7 +40,7 @@
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
-import type { FoodId, MealHistory, RecipeId } from '../../domain/index.js'
+import type { FoodId, MealHistory, RecipeId, VarietyMode } from '../../domain/index.js'
 import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { clamp01 } from './index.js'
 import { scoreHabit } from './habit.js'
@@ -57,7 +61,7 @@ function ageInDays(entryDate: string, today: string): number {
   return Math.round((parseIsoDateUtc(today) - parseIsoDateUtc(entryDate)) / MS_PER_DAY)
 }
 
-export type VarietyOverride = 'surprise' | 'classics' | null
+export type VarietyOverride = 'surprise' | 'classiques' | null
 
 export interface ScoreVarietyArgs {
   readonly recipeId: RecipeId
@@ -95,7 +99,7 @@ export function scoreVariety(args: ScoreVarietyArgs): number {
   const nouveaute = 1 - recence
 
   const familiarity =
-    args.override === 'surprise' ? 0 : args.override === 'classics' ? 1 : args.familiarity
+    args.override === 'surprise' ? 0 : args.override === 'classiques' ? 1 : args.familiarity
 
   const score = (1 - familiarity) * nouveaute + familiarity * (1 - nouveaute)
   return clamp01(score)
@@ -117,8 +121,15 @@ export function scoreVariety(args: ScoreVarietyArgs): number {
 //
 // `familiarity` est donc calculée PAR CANDIDAT dans `apply`, avant l'appel à `scoreVariety` —
 // c'est un calcul dérivé de `candidates`/`config`, pas quelque chose de pré-calculable une fois
-// pour toutes au `configure` (il dépend du `recipeId` scoré). `override` reste non renseigné :
-// `varietyMode` n'existe pas encore dans `SuggestionRequest` (P1c, §8.1 ENGINE).
+// pour toutes au `configure` (il dépend du `recipeId` scoré). `override`, lui, EST pré-calculable :
+// il vaut la même chose pour tous les candidats, il est donc résolu une fois au `configure` depuis
+// `req.varietyMode` (P1c, §8.1 ENGINE).
+//
+// ⚠️ La modulation par `habit` continue d'être calculée même sous override, alors que le résultat
+// sera écrasé. C'est délibéré : sauter `scoreHabit` ferait diverger le chemin « avec override » du
+// chemin normal, et `scoreVariety` est la SEULE à connaître la règle de priorité (voir sa
+// signature — elle reçoit `familiarity` ET `override`, et tranche elle-même). Le coût est un
+// exponentielle par candidat sur un catalogue en RAM.
 // ------------------------------------------------------------------------------------------
 
 export interface VarietyLayerConfig {
@@ -126,6 +137,17 @@ export interface VarietyLayerConfig {
   /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE), reprise de `req.context.date`. */
   readonly today: string
   readonly mainIngredientByRecipe: ReadonlyMap<RecipeId, FoodId>
+  /**
+   * Résolu depuis `req.varietyMode` (§8.1 ENGINE) : `'auto'` et l'absence donnent tous deux
+   * `null` — la position `auto` de `VarietyMode` n'existe pas dans `VarietyOverride`, l'absence
+   * d'override EST le mode automatique.
+   */
+  readonly override: VarietyOverride
+}
+
+/** `VarietyMode` (domain/, L1) → `VarietyOverride` (scoring, L3) — voir `VarietyLayerConfig`. */
+function resolveOverride(mode: VarietyMode | undefined): VarietyOverride {
+  return mode === undefined || mode === 'auto' ? null : mode
 }
 
 export const varietyLayer: SelectionLayer<VarietyLayerConfig> = {
@@ -138,6 +160,7 @@ export const varietyLayer: SelectionLayer<VarietyLayerConfig> = {
     history: req.history,
     today: req.context.date,
     mainIngredientByRecipe: catalog.indexes.recipeMainIngredient,
+    override: resolveOverride(req.varietyMode),
   }),
 
   apply: (candidates: CandidateSet, config: VarietyLayerConfig): ScoringLayerResult => {
@@ -160,6 +183,7 @@ export const varietyLayer: SelectionLayer<VarietyLayerConfig> = {
           today: config.today,
           familiarity,
           mainIngredientByRecipe: config.mainIngredientByRecipe,
+          override: config.override,
         })
       )
     }

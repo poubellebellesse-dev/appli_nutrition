@@ -3,7 +3,8 @@
 > **À lire en premier.** Où on en est, quoi faire ensuite, ce qu'il ne faut pas défaire.
 > Index de toute la documentation : [README.md](./README.md). État complet : [ETAT.md](./ETAT.md).
 > Spécification (fait foi) : [ENGINE.md](./ENGINE.md), [ARCHITECTURE.md](./ARCHITECTURE.md).
-> Dernière mise à jour : **2026-07-26** (fin de session 3 — récit : `RECAP_SESSION_3.md`).
+> Dernière mise à jour : **2026-07-26** (session 4 — P1c lot 4 : flags favoris/variété.
+> Récit de la session précédente : `RECAP_SESSION_3.md`).
 
 ---
 
@@ -18,12 +19,13 @@ SQLite construit au build. On code le moteur en ligne de commande **avant toute 
 diversifiées, expliquées, avec l'entonnoir des rejets et des diagnostics rejouables.
 
 ```
-P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ▓▓ (lots 1-3 faits, 2 morceaux restants) ── planning ⬜ ── UI ⬜
+P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4) ── CONTENU ▓▓ ── planning ⬜ ── UI ⬜
 ```
 
 | Acquis | Détail |
 |---|---|
-| **Registre à 17 couches** | 6 exclusion (`allergenes` 🔒 · `regime` 🔒 · `exclusions` · `requis` · `temps` · `equipement`) + 11 score, dont 7 implémentées |
+| **Registre à 18 couches** | 7 exclusion (`allergenes` 🔒 · `regime` 🔒 · `exclusions` · `requis` · `temps` · `equipement` · `favoris`) + 11 score, dont 7 implémentées |
+| **Flags de requête** | `onlyFavorites` (+ `favoriteRecipeIds`, obligatoire) · `varietyMode` (`auto`/`surprise`/`classiques`) · `mmrLambda` · `skipDiversification` |
 | **Passe de score** | Poids normalisés Σ=1, archétypes, bascule d'envie, tie-break stable par id de recette |
 | **6 archétypes** | `equilibre` · `envie` · `decouverte` · `de_saison` · `mes_gouts` · `rapide` |
 | **Diversification** | MMR, λ = 0,4 **non calibré** (voir dette) |
@@ -31,7 +33,7 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ▓▓ (lots 
 | **Garde-fous** | 4 sur 5 codés — reste `assertCalorieFloor`, qui attend le planning |
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
-**État vérifié : `npm test` → 366 verts (33 fichiers) · `npm run typecheck` propre ·
+**État vérifié : `npm test` → 380 verts (34 fichiers) · `npm run typecheck` propre ·
 `npm run build` → 76 aliments, 10 recettes.**
 
 > ⚠️ Vérifier `git status -sb` en début de session : des commits peuvent ne pas être poussés.
@@ -40,23 +42,32 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ▓▓ (lots 
 
 ## ▶ Reprendre ici
 
-**1. Finir P1c** — deux morceaux, les plus petits de la tranche :
-- flags `onlyFavorites` (restreindre aux favoris **avant** le scoring) et `varietyMode`
-  (« Surprends-moi » / « Mes classiques », override explicite de `variety`) ;
-- `suggestAlternatives(recipeId, dislikedFoodId)` — trois mécanismes dans l'ordre : retirer
-  l'ingrédient `optionnel`, piocher dans la table `substitution`, proposer un plat frère via le
-  regroupement de la diversification.
+**1. Le contenu — remplir le catalogue.** C'est la prochaine étape, décidée en session 4. Deux
+chantiers, dans cet ordre :
+- **Import CIQUAL** (parser ANSES → `food` / `food_nutrient`, technique, délégable). La décision
+  bloquante est **tranchée : ~9 nutriments** — énergie, protéines, glucides, sucres, lipides,
+  saturés, fibres, sel. `food_nutrient` étant une table à lignes, passer à ~40 plus tard ne
+  demandera pas de migration douloureuse. Allergènes à compléter dans la foulée.
+- **Les recettes**, de 10 à ~100. Ce n'est pas du code : ingrédients quantifiés, étapes, allergènes,
+  facettes, axes sensoriels, temps, équipement, envergure, créneaux. Et la contrainte figée
+  (**contenu original obligatoire, pas de scrap**) veut dire qu'elles s'écrivent, elles ne se
+  collectent pas. C'est le gros morceau du projet.
 
-**2. Puis le contenu, pas le planning.** Recommandation de fin de session 3 : s'arrêter là côté
-moteur. Tout ce qui suivrait — calibrer λ, ajuster les poids, juger si les suggestions sont
-crédibles — se réglerait aujourd'hui sur des données inventées. Le planning (semaine, restes,
-courses) est de l'orchestration par-dessus le moteur : il ne changera pas selon que le catalogue
-contient 10 ou 200 recettes, il peut attendre sans rien coûter.
+**2. Puis `suggestAlternatives`, avec la spec révisée (décision 26, ETAT §4).** Reporté
+délibérément : sur 10 recettes, le mécanisme « plat frère » n'a **aucun candidat** — 1 seule recette
+de poisson (saumon poêlé), 1 seule de viande (bœuf haché). Le coder maintenant reviendrait à écrire
+à l'aveugle, comme calibrer λ. Rappel de la spec révisée : **variante** = ingrédient principal
+invariant (retrait d'un `optionnel`, substitution d'un ingrédient secondaire) · **alternative** =
+autre recette, ingrédient principal libre dans le même `Food.groupe`, toujours dans les filtres de
+l'utilisateur. La table `substitution` se conçoit **avec** les recettes, pas avant (décision 27).
 
-Le chantier contenu, concrètement : **import CIQUAL** (parser ANSES → `food`/`food_nutrient`,
-délégable à un agent) puis **les recettes** (choix produit, pas technique). Une décision à prendre
-avant de commencer : **9 nutriments ou ~40 ?** Ça change la taille de l'import, le poids du `.db`
-et la finesse de `nutri`.
+**3. Le planning attend, toujours.** Il ne changera pas selon que le catalogue contient 10 ou 200
+recettes : c'est de l'orchestration par-dessus le moteur, il peut attendre sans rien coûter.
+
+**Deux dettes de mesure, identiques dans leur forme** : λ (§6.6) et `varietyMode` ne sont pas
+jugeables sur le catalogue actuel — λ parce que 10 recettes n'ont pas la distribution d'un vrai
+catalogue, `varietyMode` parce que l'historique du banc est vide (les 10 recettes ont donc la même
+récence, l'override les décale toutes pareil sans changer l'ordre). Le contenu débloque les deux.
 
 ## Trois acquis à ne pas défaire
 

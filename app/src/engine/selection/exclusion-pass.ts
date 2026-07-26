@@ -21,11 +21,15 @@ import { personalExclusionLayer } from './exclusions.js'
 import { requiredFoodLayer } from './requis.js'
 import { timeLayer } from './temps.js'
 import { equipmentLayer } from './equipement.js'
+import { favoriteLayer } from './favoris.js'
 
 /**
  * Registre des couches d'exclusion, dans l'ordre de priorité de motif (§6.3 ENGINE) : allergènes
  * puis régime (toutes deux 🔒 `critical`), puis exclusions (rejet personnel), puis requis (miroir
- * dur — « je veux ça »), puis temps, puis équipement.
+ * dur — « je veux ça »), puis temps, puis équipement, puis favoris.
+ *
+ * `favoris` est DERNIÈRE volontairement : « hors favoris » est le motif le moins informatif du
+ * registre, il ne doit masquer aucun autre (voir l'en-tête de favoris.ts).
  *
  * Chaque couche est déclarée ci-dessus avec son `Config` propre (`SelectionLayer<XConfig>`), ce
  * qui garde `configure`/`apply` entièrement typés pour qui l'utilise seule (§6.8 ENGINE). Le
@@ -43,6 +47,7 @@ export const EXCLUSION_LAYERS: readonly SelectionLayer[] = [
   requiredFoodLayer as SelectionLayer,
   timeLayer as SelectionLayer,
   equipmentLayer as SelectionLayer,
+  favoriteLayer as SelectionLayer,
 ]
 
 export interface ExclusionPassResult {

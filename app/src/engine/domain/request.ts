@@ -64,6 +64,17 @@ export interface MealHistory {
   readonly entries: readonly MealHistoryEntry[]
 }
 
+/**
+ * Override explicite de la couche `variety` (§8.1 ENGINE) — « Surprends-moi » / « Mes classiques ».
+ * `auto` (défaut) laisse `variety` moduler par `habit` comme d'habitude ; les deux autres positions
+ * forcent la modulation à ses bornes (voir `VarietyOverride`, selection/scoring/variety.ts).
+ *
+ * Déclaré ICI et pas dans selection/ : `SuggestionRequest` est en domain/ (L1) et ne peut pas
+ * importer de selection/ (L3) — §2 ENGINE, SEL --> DOM. `varietyLayer.configure` fait la
+ * conversion vers `VarietyOverride`, qui ne connaît pas la position `auto` (absence = `null`).
+ */
+export type VarietyMode = 'auto' | 'surprise' | 'classiques'
+
 export interface SuggestionRequest {
   readonly profile: UserProfile
   readonly constraints: HardConstraints
@@ -78,6 +89,31 @@ export interface SuggestionRequest {
    * particulier côté couche.
    */
   readonly preferences: ReadonlyMap<FoodId, number>
+  /**
+   * Recettes marquées en favori (table `user_favorite`, §4.3 ARCHITECTURE). Champ OBLIGATOIRE,
+   * Set VIDE = aucun favori — même raison que `preferences` ci-dessus : `onlyFavorites` serait
+   * sinon un flag SANS SOURCE DE DONNÉES, exactement le défaut corrigé en P1b-2 sur la couche
+   * `preference`. Rendre le champ obligatoire fait porter l'oubli au compilateur plutôt qu'à un
+   * `NoViableRecipeError` incompréhensible à l'exécution.
+   *
+   * Les favoris n'influencent le moteur QUE via `onlyFavorites` (décision figée : « marque-page
+   * rapide, n'influence pas le moteur par défaut », §10.1 ENGINE) — aucune couche de score ne les
+   * lit.
+   */
+  readonly favoriteRecipeIds: ReadonlySet<RecipeId>
+  /**
+   * §8.1 ENGINE — restreint les candidats aux seuls `favoriteRecipeIds`, **avant** la passe de
+   * score : c'est une couche d'EXCLUSION (`favoris`, selection/favoris.ts), pas un filtre du
+   * classement final. Défaut `false` (couche inerte, tout est conservé). Un Set vide combiné à
+   * `true` ne conserve rien et lève `NoViableRecipeError` — comportement voulu, cohérent avec
+   * `requis` : un filtre dur qui vide le panier le dit, il ne se désactive pas tout seul.
+   */
+  readonly onlyFavorites?: boolean
+  /**
+   * §8.1 ENGINE — override explicite de la couche `variety`. Absent → `'auto'`, aucun override
+   * (`variety` reste modulée par `habit`). Voir `VarietyMode` ci-dessus.
+   */
+  readonly varietyMode?: VarietyMode
   /** [] par défaut — tant qu'aucune thématique n'est active, `topic` reste à poids nul. */
   readonly activeTopics: readonly TopicId[]
   readonly weights?: Partial<ScoreWeights>

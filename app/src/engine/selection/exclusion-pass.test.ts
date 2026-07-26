@@ -112,7 +112,7 @@ describe('selection/exclusion-pass — mécanique du pipeline (§6.4 ENGINE, cou
 })
 
 describe('selection/exclusion-pass — câblage des 6 vraies couches (EXCLUSION_LAYERS)', () => {
-  it('EXCLUSION_LAYERS contient les 6 couches, dans l’ordre de priorité de motif (§6.3 ENGINE)', () => {
+  it('EXCLUSION_LAYERS contient les 7 couches, dans l’ordre de priorité de motif (§6.3 ENGINE)', () => {
     expect(EXCLUSION_LAYERS.map((layer) => layer.id)).toEqual([
       'allergenes',
       'regime',
@@ -120,6 +120,7 @@ describe('selection/exclusion-pass — câblage des 6 vraies couches (EXCLUSION_
       'requis',
       'temps',
       'equipement',
+      'favoris',
     ])
   })
 

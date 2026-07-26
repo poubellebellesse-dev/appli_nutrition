@@ -60,7 +60,7 @@ une piste a été écartée vaut souvent l'énoncé de celle qui a été retenue
 
 **Le code fait foi.** Quand un document et le code divergent, c'est le document qu'on corrige — et
 on le dit dans le message de commit. Plusieurs notes de `ENGINE.md` conservent la trace de ces
-corrections (le compte de couches est passé de 12 à 17 en quatre étapes, chacune consignée).
+corrections (le compte de couches est passé de 12 à 18 en cinq étapes, chacune consignée).
 
 **Une décision se range à un seul endroit.** Tranchée → `ETAT.md` §3. Encore ouverte → `ETAT.md`
 §4. Propre à un chantier → le document de chantier. La fiche de reprise ne fait que *pointer* vers

@@ -101,10 +101,10 @@ describe('engine/api — createEngine (§8 ENGINE)', () => {
     expect(engine.catalogVersion).toBe('catalog-test-1.2.3')
   })
 
-  it('layers expose les 17 descripteurs du registre (LAYER_DESCRIPTORS)', () => {
+  it('layers expose les 18 descripteurs du registre (LAYER_DESCRIPTORS)', () => {
     const engine = createEngine(makeCatalog())
     expect(engine.layers).toBe(LAYER_DESCRIPTORS)
-    expect(engine.layers).toHaveLength(17)
+    expect(engine.layers).toHaveLength(18)
   })
 
   it("layer('nutri') retourne la couche implémentée correspondante", () => {
@@ -267,6 +267,8 @@ function ferRequest(
     readonly excludedFoodIds?: readonly FoodId[]
     readonly tempsDisponibleMin?: number | null
     readonly skipDiversification?: boolean
+    readonly favoriteRecipeIds?: readonly RecipeId[]
+    readonly onlyFavorites?: boolean
   } = {}
 ): SuggestionRequest {
   return {
@@ -282,6 +284,7 @@ function ferRequest(
     },
     history: { windowDays: 21, entries: [] },
     preferences: new Map(),
+    favoriteRecipeIds: new Set(overrides.favoriteRecipeIds ?? []),
     activeTopics: [],
     seed: 1,
     // `exactOptionalPropertyTypes` (tsconfig) distingue « absente » d'« explicitement `undefined` »
@@ -291,6 +294,7 @@ function ferRequest(
     ...(overrides.weights !== undefined ? { weights: overrides.weights } : {}),
     ...(overrides.limit !== undefined ? { limit: overrides.limit } : {}),
     ...(overrides.skipDiversification !== undefined ? { skipDiversification: overrides.skipDiversification } : {}),
+    ...(overrides.onlyFavorites !== undefined ? { onlyFavorites: overrides.onlyFavorites } : {}),
   }
 }
 
@@ -314,6 +318,30 @@ describe('engine/api — suggestMeals bout-en-bout (§6.4, §8 ENGINE)', () => {
     }
     expect(result.suggestions.find((s) => s.recipeId === riche.id)?.nutrition.perPortion[0]).toBeCloseTo(12, 9)
     expect(result.suggestions.find((s) => s.recipeId === pauvre.id)?.nutrition.perPortion[0]).toBeCloseTo(0, 9)
+  })
+
+  it('onlyFavorites restreint bout-en-bout — les non-favoris n’atteignent jamais le scoring (§8.1 ENGINE)', () => {
+    const { catalog, riche, moyen, pauvre } = makeFerFixture()
+    const engine = createEngine(catalog)
+
+    // `riche` domine le classement sans filtre (test précédent). En ne gardant que `pauvre` en
+    // favori, il devient la SEULE suggestion — ce qui prouve que le filtre agit AVANT le score et
+    // non sur le classement final, où `riche` serait resté en tête.
+    const result = engine.suggestMeals(
+      ferRequest({ weights: ISOLATE_NUTRI_WEIGHTS, favoriteRecipeIds: [pauvre.id], onlyFavorites: true })
+    )
+
+    expect(result.suggestions.map((s) => s.recipeId)).toEqual([pauvre.id])
+    expect(result.rejected.byLayer.get('favoris')).toBe(2)
+    expect(result.rejected.entries.map((e) => e.recipeId).sort()).toEqual([riche.id, moyen.id].sort())
+    expect(result.rejected.entries.every((e) => e.layerId === 'favoris')).toBe(true)
+  })
+
+  it('onlyFavorites sans aucun favori → NoViableRecipeError, le filtre dur ne se désactive pas tout seul', () => {
+    const { catalog } = makeFerFixture()
+    const engine = createEngine(catalog)
+
+    expect(() => engine.suggestMeals(ferRequest({ onlyFavorites: true }))).toThrow(NoViableRecipeError)
   })
 
   it('limit est respecté', () => {

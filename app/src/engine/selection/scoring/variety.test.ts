@@ -137,14 +137,14 @@ describe('scoring/variety — scoreVariety', () => {
     expect(score).toBeCloseTo(0, 10) // se comporte comme familiarity=0 : pas de bonus
   })
 
-  it('override "classics" force familiarity=1, prime sur la modulation demandée', () => {
+  it('override "classiques" force familiarity=1, prime sur la modulation demandée', () => {
     const score = scoreVariety({
       recipeId: RECIPE,
       mainIngredientId: null,
       history: history([entry(RECIPE, '2026-07-24')]), // vu aujourd'hui
       today: '2026-07-24',
       familiarity: 0, // demanderait normalement de la pure nouveauté
-      override: 'classics',
+      override: 'classiques',
     })
     expect(score).toBeCloseTo(1, 10) // se comporte comme familiarity=1 : bonus de familiarité
   })
@@ -228,7 +228,7 @@ describe('scoring/variety — scoreVariety', () => {
       }
     })
 
-    it('override "classics" prime sur la modulation quel que soit le cran', () => {
+    it('override "classiques" prime sur la modulation quel que soit le cran', () => {
       for (const tauDays of [3, 7, 14] as const) {
         const score = scoreVariety({
           recipeId: RECIPE,
@@ -236,7 +236,7 @@ describe('scoring/variety — scoreVariety', () => {
           history: history([entry(RECIPE, '2026-07-24')]), // vu aujourd'hui
           today: '2026-07-24',
           familiarity: 0, // demanderait normalement de la pure nouveauté
-          override: 'classics',
+          override: 'classiques',
           tauDays,
         })
         expect(score).toBeCloseTo(1, 10) // se comporte comme familiarity=1, quel que soit tauDays
@@ -346,5 +346,63 @@ describe('scoring/variety — varietyLayer (contrat SelectionLayer, §6.2 ENGINE
     // familiarité(vueAujourdhui) = 4/4 = 1 (toutes les entrées la concernent) → bonus de
     // familiarité plein : score = 1 - nouveauté = 1 - 0 = 1, au sommet.
     expect(result.scores.get(vueAujourdhui.id)).toBeCloseTo(1, 10)
+  })
+})
+
+describe('scoring/variety — varietyMode (§8.1 ENGINE, câblage P1c)', () => {
+  /** Historique où `vueAujourdhui` est à la fois TRÈS récente et TRÈS familière : sans override,
+   * `habit` la remonte au sommet (voir le test précédent). C'est le cas qui distingue vraiment les
+   * trois positions — un historique vide les rendrait toutes identiques. */
+  const entries: readonly MealHistoryEntry[] = [
+    { recipeId: 'vue-aujourdhui' as RecipeId, date: '2026-07-24', creneau: 'diner', origine: 'choisi' },
+    { recipeId: 'vue-aujourdhui' as RecipeId, date: '2026-07-23', creneau: 'diner', origine: 'choisi' },
+    { recipeId: 'vue-aujourdhui' as RecipeId, date: '2026-07-22', creneau: 'diner', origine: 'choisi' },
+    { recipeId: 'vue-aujourdhui' as RecipeId, date: '2026-07-21', creneau: 'diner', origine: 'choisi' },
+  ]
+
+  function scoreVueAujourdhui(varietyMode?: 'auto' | 'surprise' | 'classiques'): number {
+    const vueAujourdhui = makeRecipe('vue-aujourdhui')
+    const catalog = makeCatalog([vueAujourdhui])
+    const req = makeRequest({
+      date: '2026-07-24',
+      history: { windowDays: 21, entries },
+      ...(varietyMode === undefined ? {} : { varietyMode }),
+    })
+
+    const config = varietyLayer.configure(req, catalog)
+    const result = asScoringResult(varietyLayer.apply(new Set([vueAujourdhui.id]), config))
+    return result.scores.get(vueAujourdhui.id)!
+  }
+
+  it('absent → aucun override, la modulation par `habit` s’applique (score 1, bonus de familiarité)', () => {
+    expect(scoreVueAujourdhui()).toBeCloseTo(1, 10)
+  })
+
+  it("'auto' est EXACTEMENT équivalent à l'absence — la position auto n'existe pas dans VarietyOverride", () => {
+    expect(scoreVueAujourdhui('auto')).toBeCloseTo(scoreVueAujourdhui(), 10)
+  })
+
+  it("'surprise' force familiarity=0 et prime sur `habit` : la recette vue aujourd’hui tombe à 0", () => {
+    // Sans override elle vaut 1 (bonus de familiarité) — l'override inverse complètement le verdict.
+    expect(scoreVueAujourdhui('surprise')).toBeCloseTo(0, 10)
+  })
+
+  it("'classiques' force familiarity=1 : une recette JAMAIS vue tombe à 0, sans historique pour l’expliquer", () => {
+    const jamaisVue = makeRecipe('jamais-vue')
+    const catalog = makeCatalog([jamaisVue])
+    const req = makeRequest({ date: '2026-07-24', history: { windowDays: 21, entries }, varietyMode: 'classiques' })
+
+    const config = varietyLayer.configure(req, catalog)
+    const result = asScoringResult(varietyLayer.apply(new Set([jamaisVue.id]), config))
+
+    // recence=0 → nouveaute=1 ; familiarity forcée à 1 → score = 1 - nouveaute = 0.
+    expect(result.scores.get(jamaisVue.id)).toBeCloseTo(0, 10)
+  })
+
+  it('l’override est résolu une fois au `configure`, pas par candidat', () => {
+    const catalog = makeCatalog([makeRecipe('a')])
+    expect(varietyLayer.configure(makeRequest({ varietyMode: 'surprise' }), catalog).override).toBe('surprise')
+    expect(varietyLayer.configure(makeRequest({ varietyMode: 'auto' }), catalog).override).toBeNull()
+    expect(varietyLayer.configure(makeRequest(), catalog).override).toBeNull()
   })
 })

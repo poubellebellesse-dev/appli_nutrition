@@ -96,6 +96,10 @@ export interface LayerDescriptor {
 // registre » et laissait son rattachement ouvert — c'est désormais résolu, `speed` EST une couche
 // du registre à part entière (voir scoring/speed.ts).
 //
+// Registre étendu à 18 entrées (7 exclusion + 11 score) par l'ajout de `favoris`
+// (`SuggestionRequest.onlyFavorites`, §8.1 ENGINE — voir favoris.ts). Couche inerte tant que le
+// flag n'est pas explicitement levé : les favoris restent un marque-page, pas un signal de score.
+//
 // L'ordre suit §6.3 : pour l'exclusion, l'ordre encode la priorité de MOTIF affiché en cas de
 // rejets multiples (§6.3 "Sur l'ordre des couches") ; pour le score, l'ordre est indifférent
 // (seuls les poids comptent, §6.3).
@@ -109,6 +113,7 @@ export const LAYER_DESCRIPTORS: readonly LayerDescriptor[] = [
   { id: 'requis', kind: 'exclusion', critical: false, defaultWeight: 0 }, // miroir dur, contexte Aujourd'hui seulement (§6.5 ter)
   { id: 'temps', kind: 'exclusion', critical: false, defaultWeight: 0 },
   { id: 'equipement', kind: 'exclusion', critical: false, defaultWeight: 0 }, // seulement l'équipement `requis` (§6.5 ENGINE)
+  { id: 'favoris', kind: 'exclusion', critical: false, defaultWeight: 0 }, // inerte hors `onlyFavorites` (§8.1 ENGINE) — motif le moins informatif, donc en dernier
 
   // --- score — l'ordre n'a aucun effet sur le résultat, seuls les poids comptent ---------
   { id: 'nutri', kind: 'scoring', critical: false, defaultWeight: 0.25 },
@@ -152,6 +157,8 @@ export { timeLayer } from './temps.js'
 export type { TimeLayerConfig } from './temps.js'
 export { equipmentLayer } from './equipement.js'
 export type { EquipmentLayerConfig } from './equipement.js'
+export { favoriteLayer } from './favoris.js'
+export type { FavoriteLayerConfig } from './favoris.js'
 export { EXCLUSION_LAYERS, runExclusionPass } from './exclusion-pass.js'
 export type { ExclusionPassResult } from './exclusion-pass.js'
 

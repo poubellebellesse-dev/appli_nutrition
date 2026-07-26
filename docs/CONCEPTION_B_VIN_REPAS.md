@@ -213,7 +213,7 @@ flowchart TB
     C -->|1 appel par service| SEL
 
     subgraph L3["L3 selection/ — INCHANGÉ"]
-        SEL["16 couches : 6 exclusion + 10 score"]
+        SEL["18 couches : 7 exclusion + 11 score"]
     end
 
     SEL -->|candidats classés| C

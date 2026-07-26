@@ -1,9 +1,10 @@
 # État du projet — récapitulatif et reprise
 
 > État complet du projet. Pour un démarrage rapide, lire d'abord `docs/FICHE_REPRISE.md`.
-> Dernière mise à jour : **2026-07-25** (session 3 — dette de commits vidée, puis rang 0
-> (origine `choisi`/`reste` + `service`), `variety` à TAU réglable, 6ᵉ couche `requis` ; conception
-> B validée (vin + modes repas). Sessions précédentes : `docs/RECAP_SESSION_2.md`).
+> Dernière mise à jour : **2026-07-26** (session 4 — P1c lot 4 : flags `onlyFavorites` /
+> `varietyMode` codés, 7ᵉ couche d'exclusion `favoris`, registre à 18 couches ;
+> `suggestAlternatives` REPORTÉ après le chantier contenu, voir §6). Sessions précédentes :
+> `docs/RECAP_SESSION_2.md`, `docs/RECAP_SESSION_3.md`.
 
 ---
 
@@ -11,20 +12,21 @@
 
 Application de nutrition et de planification de repas, **100 % locale, sans IA, sans compte**,
 utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0, P1a, P1b-1,
-P1b-2 et désormais les lots 1-3 de P1c terminés** — diversification MMR (§6.6 ENGINE), explication
-avec règle de non-citation (§6.7 ENGINE), `suggestMeals` bout-en-bout (§8 ENGINE), 3ᵉ et 4ᵉ
-garde-fous codés (`assertNoTherapeuticClaim`, `assertCriticalLayersRan` — 4 garde-fous codés sur 5)
-(366 tests verts, 33 fichiers, typecheck propre) ; **reste en P1c** : flags `onlyFavorites` /
-`varietyMode` et `suggestAlternatives`. Committé (3 commits depuis la dernière mise à jour de ce
-document).
+P1b-2 et les lots 1-4 de P1c terminés** — diversification MMR (§6.6 ENGINE), explication avec règle
+de non-citation (§6.7 ENGINE), `suggestMeals` bout-en-bout (§8 ENGINE), 3ᵉ et 4ᵉ garde-fous codés
+(`assertNoTherapeuticClaim`, `assertCriticalLayersRan` — 4 garde-fous codés sur 5), puis les flags
+`onlyFavorites` / `varietyMode` avec la 7ᵉ couche d'exclusion `favoris` (380 tests verts,
+34 fichiers, typecheck propre). **`suggestAlternatives` est REPORTÉ après le chantier contenu** :
+sur 10 recettes le mécanisme « plat frère » n'a aucun candidat (1 seule recette de poisson, 1 seule
+de viande) — voir §6. **Prochaine étape : remplir le catalogue** (aliments, allergènes, recettes).
 
 ---
 
 ## 2. Où en est-on
 
 ```
-Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-3 ✅) ▓▓
-  ✅          ✅            ✅           ✅              ✅                                                                          ⬅ ICI (flags favoris/variété + suggestAlternatives restants)
+Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ─▶ CONTENU ▓▓
+  ✅          ✅            ✅           ✅              ✅                                                                                     ⬅ ICI (catalogue réel)
 ```
 
 | Livrable | Fichier | État |
@@ -40,7 +42,9 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Code — rang 0 + `variety` TAU + `requis` | `app/src/engine/domain/{planning,request}.ts`, `app/src/engine/selection/scoring/variety.ts`, `app/src/engine/selection/requis.ts` | ✅ Terminé et committé, 158 tests verts (23 fichiers), typecheck propre |
 | Code — P1b-2 (passe de score + archétypes) | `app/src/engine/selection/scoring-pass.ts`, `archetypes.ts`, `app/src/engine/domain/archetype-ids.ts`, `app/src/engine/guards/index.ts`, `app/src/engine/api/index.ts`, `app/src/cli/try-engine.ts`, `app/src/engine/nutrition/energy-needs.ts`, `reference-intakes.ts` | ✅ Terminé et committé, 303 tests verts (29 fichiers), typecheck propre |
 | Code — P1c lots 1-3 (diversification, explication, `suggestMeals` bout-en-bout) | `app/src/engine/selection/{similarity,diversify,explain}.ts`, `app/src/engine/guards/{banned-terms,index}.ts`, `app/src/engine/api/index.ts` | ✅ Terminé et committé (3 commits), 366 tests verts (33 fichiers), typecheck propre |
-| Code — P1c reste (flags `onlyFavorites`/`varietyMode`, `suggestAlternatives`) | `app/src/engine/domain/request.ts`, `app/src/engine/api/index.ts` | ⬜ **Prochaine étape** |
+| Code — P1c lot 4 (flags `onlyFavorites`/`varietyMode`) | `app/src/engine/domain/{request,layer-ids}.ts`, `app/src/engine/selection/{favoris,exclusion-pass,index}.ts`, `app/src/engine/selection/scoring/variety.ts`, `app/src/cli/try-engine.ts` | ✅ Terminé et committé, 380 tests verts (34 fichiers), typecheck propre |
+| Contenu — catalogue réel (import CIQUAL ~9 nutriments, allergènes, ~100 recettes) | `catalog/sources/`, `catalog/recipes/`, `catalog/build.mjs` | ⬜ **Prochaine étape** |
+| Code — `suggestAlternatives` (spec révisée : variante vs alternative) | `app/src/engine/selection/alternatives.ts` (à créer), `app/src/engine/api/index.ts` | ⬜ Reporté APRÈS le contenu — inobservable sur 10 recettes |
 
 ---
 
@@ -62,12 +66,14 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 - Mode avancé (macros) = **descriptif seul**, opt-in, jamais de compteur de reste.
 
 ### Moteur
-- **Registre de 17 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (le code
+- **Registre de 18 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (le code
   fait foi, voir `app/src/engine/domain/layer-ids.ts`). Une 5ᵉ couche d'exclusion `exclusions`
   (rejet perso, `excludedFoodIds`) a été ajoutée en session 2, une 6ᵉ couche `requis` (miroir
   dur, `MealContext.requiredFoodIds`) en session 3, puis `speed` a rejoint le registre comme 11ᵉ
-  couche de SCORE — corrige aussi les anciennes mentions « 12 » puis « 14 » puis « 15 » puis « 16 ».
-  - Exclusion (6) : `allergenes` 🔒 · `regime` 🔒 · `exclusions` · `requis` · `temps` · `equipement`
+  couche de SCORE, puis une 7ᵉ couche d'exclusion `favoris` (`onlyFavorites`) en session 4 —
+  corrige aussi les anciennes mentions « 12 » puis « 14 » puis « 15 » puis « 16 » puis « 17 ».
+  - Exclusion (7) : `allergenes` 🔒 · `regime` 🔒 · `exclusions` · `requis` · `temps` ·
+    `equipement` · `favoris` (inerte hors `onlyFavorites`, motif le moins informatif → en dernier)
   - Score (11) : `nutri` · `preference` · `craving` · `variety` · `season` · `pantry` · `habit` ·
     `occasion` · `speed` · `topic` (v2, réserve) · `cost` (v3, réserve)
   - `speed` **EST désormais une couche du registre à part entière** (tranché et CODÉ) — poids par
@@ -169,6 +175,9 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 22 | Sens de l'écart nutritionnel (`nutrient.sens`) | **Tranché et CODÉ** (P1b-2) — union fermée `cible`/`plancher`/`plafond` (§4.2 ARCHITECTURE, §6.5 ENGINE précision 1) ; corrige l'écart symétrique de `scoreNutri` qui pénalisait un dépassement (fer, fibres) comme un manque |
 | 23 | Vocabulaire de `trancheAge`/`niveauActivite` (`UserProfile`) | **Tranché et CODÉ** (P1b-2) — unions fermées `AgeBracket` (`18_29`·`30_49`·`50_64`·`65_plus`, âges représentatifs 24/40/57/72) et `ActivityLevel` (`sedentaire` 1,2 · `peu_actif` 1,375 · `actif` 1,55 · `tres_actif` 1,725) ; pas de palier athlète, aucune tranche mineure — la VNR du catalogue est ADULTE |
 | 24 | Part du créneau dans la référence journalière (couche `nutri`) | **Tranché et CODÉ** (P1b-2) — table fixe `MEAL_SLOT_SHARE` : `petit_dejeuner` 0,25 · `dejeuner` 0,35 · `diner` 0,30 · `gouter` 0,10 (Σ=1) ; décision nouvelle, absente de la conception initiale (`docs/ENGINE.md` §6.5 précision 1) |
+| ~~25~~ | Granularité nutritionnelle de l'import CIQUAL : 9 nutriments ou ~40 ? | **Tranché (2026-07-26) — ~9** : énergie, protéines, glucides, sucres, lipides, saturés, fibres, sel. Couvre ce que `nutri` exploite et ce qu'affiche un étiquetage standard ; `.db` léger (contrainte PWA, cache à deux étages) ; `food_nutrient` étant une table à lignes, passer à ~40 plus tard ne demande pas de migration douloureuse |
+| ~~26~~ | `suggestAlternatives` : l'ingrédient principal peut-il changer ? | **Tranché (2026-07-26)** — DEUX notions distinctes que §8 confondait. **Variante** = ingrédient principal INVARIANT (retrait d'un `optionnel`, substitution d'un ingrédient **secondaire**). **Alternative** = autre recette, ingrédient principal PEUT changer dans le même `Food.groupe` (autre poisson, autre viande, autre légume), **toujours dans les filtres de l'utilisateur**. Deux conséquences non triviales : (a) le mécanisme « plat frère » ne peut PAS être `argmax(similarity)`, qui pondère l'ingrédient principal à 0,5 et favorise donc de le GARDER — il faut « même groupe, ingrédient différent », puis classer sur les axes restants ; (b) la signature `(recipeId, dislikedFoodId)` de §8 est **insuffisante**, respecter les filtres impose de passer un `SuggestionRequest`. Codable seulement après le chantier contenu |
+| 27 | Table `substitution` : quand la créer ? | **Avec le contenu, pas avant** — quels couples ont du sens dépend des recettes qui existent. Le type `Substitution` et `Catalog.substitutions` existent déjà ; le loader retourne une Map vide (`catalog-loader.ts`, une ligne à changer) et un test verrouille ce vide. Le moteur n'aura rien à changer quand la table arrivera |
 
 ---
 
@@ -272,12 +281,38 @@ retenu :
   §8 ENGINE est levée
 - [x] 366 tests verts (33 fichiers), typecheck propre
 
+### P1c lot 4 — Flags `onlyFavorites` / `varietyMode` ✅ terminé et committé
+
+- [x] 7ᵉ couche d'EXCLUSION `favoris` (`engine/selection/favoris.ts`) — registre à **18** entrées
+  (7 exclusion + 11 score). Le flag §8.1 aurait pu rester un pré-filtre du set initial ; en faire
+  une couche fait tomber le motif « hors favoris » dans `RejectionSummary`, donc dans l'entonnoir
+  du banc. Placée **en dernier** : c'est le motif le moins informatif, il ne doit en masquer aucun
+- [x] `SuggestionRequest.favoriteRecipeIds` (`ReadonlySet<RecipeId>`, **OBLIGATOIRE**) — ajout à la
+  conception : §8.1 ne spécifiait qu'un booléen, sans jamais dire d'où venait la liste. Même défaut
+  que `preferences` avant P1b-2 (un flag sans source de données). Set vide + `onlyFavorites: true`
+  → `NoViableRecipeError`, comportement voulu (miroir de `requis`)
+- [x] `SuggestionRequest.varietyMode` (`'auto' | 'surprise' | 'classiques'`) câblé jusqu'à
+  `scoreVariety`, qui portait déjà le paramètre `override` inutilisé depuis P1b-1
+- [x] `VarietyOverride` : `'classics'` → `'classiques'` — aligné sur les autres unions fermées du
+  domaine (`MealOrigin`, `NutrientSense`, `ArchetypeId`), toutes en français ; évite une table de
+  traduction entre `VarietyMode` et `VarietyOverride`
+- [x] Banc CLI : `--favoris`, `--only-favoris`, `--variete`, tous trois rejoués par la commande
+  « Rejouer » et visibles dans l'en-tête
+- [x] 380 tests verts (34 fichiers), typecheck propre
+
+> ⚠️ **Mesuré sur le catalogue de test : `--variete` déplace les SCORES sans changer l'ORDRE.**
+> L'historique du banc est vide, donc les 10 recettes ont la même récence et la même familiarité —
+> l'override les décale toutes du même montant (`auto` 57,6 · `surprise` 65,5 · `classiques` 49,7
+> en tête de classement). L'effet sur le classement demande un historique réel, exactement comme la
+> calibration de λ. `onlyFavorites`, lui, agit bien (entonnoir : 9 candidats → 2).
+
 | Sous-étape | Contenu |
 |---|---|
 | ✅ **P1b-1** | Prérequis données (`food.saison_mois` + flag « toute l'année/staple », §ARCHI 4.2) + index calculés à l'**init du moteur** (`recipeNutrients`, `recipeMainIngredient`, dans `engine/nutrition/`) + les 7 fonctions de score (`nutri` · `preference` · `craving` · `season` · `variety` + `speed` + `habit` minimal) + tests unitaires |
 | ✅ **P1b-2** | Passe de score pondérée (`runScoringPass`) + les 6 archétypes CODÉS (§ENGINE 6.3 bis) + poids dynamique CODÉ de `craving` (`occasion` reste non câblée, couche absente) + tie-break déterministe par id + banc CLI `engine:try` |
 | ✅ **P1c lots 1-3** | Diversification MMR (§ENGINE 6.6) + explication avec règle de non-citation (§ENGINE 6.7) + `suggestMeals` bout-en-bout (§ENGINE 8) + 3ᵉ et 4ᵉ garde-fous CODÉS |
-| **P1c reste** ⬅ prochaine étape | Flags `onlyFavorites`/`varietyMode` + `suggestAlternatives` |
+| ✅ **P1c lot 4** | Flags `onlyFavorites` (7ᵉ couche d'exclusion `favoris`) + `varietyMode` (override de `variety`) + `--favoris`/`--only-favoris`/`--variete` au banc CLI |
+| **Contenu** ⬅ prochaine étape | Import CIQUAL (~9 nutriments, tranché) puis ~100 recettes — `suggestAlternatives` attend ce catalogue |
 
 > ⚠️ Rappel du plan (§12 ENGINE) : **ne pas écrire d'UI avant la phase P3.** Le moteur doit produire
 > des repas crédibles en ligne de commande d'abord. Une UI branchée trop tôt rend douloureux le fait
@@ -293,7 +328,7 @@ appli_nutrition/
 │  ├─ ETAT.md            ← CE FICHIER — reprise de session
 │  ├─ ARCHITECTURE.md    ← périmètre · données · cadre légal
 │  ├─ FICHE_REPRISE.md   ← ⭐ à lire en premier — état condensé + prochaines étapes
-│  ├─ ENGINE.md          ← moteur · 17 couches · API · plan de lancement
+│  ├─ ENGINE.md          ← moteur · 18 couches · API · plan de lancement
 │  ├─ DESIGN.md          ← 8 écrans · navigation · badge de preuve
 │  ├─ RECAP_SESSION.md   ← récit session 1 (conception P1b)
 │  ├─ RECAP_SESSION_2.md ← récit session 2 (P1b-1 codé, saison, contenu, 5ᵉ couche, conception variety/radar)

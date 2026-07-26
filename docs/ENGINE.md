@@ -429,6 +429,7 @@ export const LAYERS: readonly SelectionLayer[] = [
   requiredFoodLayer,      // miroir dur — MealContext.requiredFoodIds, contexte Aujourd'hui seulement
   timeLayer,
   equipmentLayer,    // seulement l'équipement `requis`
+  favoriteLayer,     // inerte hors `onlyFavorites` — motif le moins informatif, donc en DERNIER
 
   // — score —
   nutriLayer,        // 0.25
@@ -445,7 +446,7 @@ export const LAYERS: readonly SelectionLayer[] = [
 ]
 ```
 
-**17 couches au registre (6 exclusion + 11 score), dont `topic` (v2) et `cost` (v3) en réserve à
+**18 couches au registre (7 exclusion + 11 score), dont `topic` (v2) et `cost` (v3) en réserve à
 poids nul — mais six couches de score réellement actives au premier lancement** : `topic`,
 `cost`, `habit` et `speed` démarrent à 0, `occasion` est nul hors période. La complexité perçue
 n'augmente pas avec le nombre de couches.
@@ -466,6 +467,12 @@ n'augmente pas avec le nombre de couches.
 > révisée : la précédente affirmation « `speed` n'est pas une 17ᵉ couche du registre » est fausse
 > depuis cette décision. Le code (`app/src/engine/domain/layer-ids.ts`,
 > `app/src/engine/selection/index.ts`) fait foi.
+> Mise à jour (session du 2026-07-26, P1c lot 4) : une 7ᵉ couche d'exclusion `favoris` (lit
+> `SuggestionRequest.onlyFavorites` + `favoriteRecipeIds`) a été ajoutée — le registre est
+> désormais à **18** (7 exclusion + 11 score). Le flag §8.1 aurait pu rester un pré-filtre du set
+> initial : en faire une couche fait tomber son motif de rejet dans `RejectionSummary`, donc dans
+> l'entonnoir du banc d'essai. Couche INERTE tant qu'`onlyFavorites` n'est pas explicitement levé
+> — les favoris restent un marque-page, conformément à §10.1. Le code fait foi.
 
 Les poids sont normalisés (`Σ = 1`) avant application. L'utilisateur les module via un petit jeu
 d'**archétypes nommés** — voir §6.3 bis ci-dessous, qui généralise l'idée initiale de « quatre
@@ -578,7 +585,9 @@ Ajouter une fonctionnalité, c'est **ajouter une entrée au registre** — le pi
 ‡ `habit` croît avec le volume d'historique — démarrage à froid propre
 § `occasion` vaut 0 hors de la fenêtre d'une occasion activée
 ¶ **Tranché et CODÉ (session du 2026-07-25) : `speed` EST une couche du registre à part entière**
-(la 17ᵉ, 6 exclusion + 11 score — `LAYER_DESCRIPTORS`, `app/src/engine/selection/index.ts` ;
+(la 11ᵉ et dernière couche de SCORE implémentée — `LAYER_DESCRIPTORS`,
+`app/src/engine/selection/index.ts` ; l'ordinal absolu n'est plus cité, il a changé à chaque
+ajout de couche d'exclusion — le registre est à 18 entrées depuis `favoris`, P1c lot 4 ;
 implémentation `app/src/engine/selection/scoring/speed.ts`), distincte du filtre dur `temps` (§6.3,
 exclusion) ; poids nul par défaut, **activée par l'archétype « Rapide »** (§6.3 bis, poids brut
 0.30). La précédente affirmation « `speed` n'est pas une 17ᵉ couche du registre » est **fausse** et
@@ -1079,8 +1088,9 @@ export interface SuggestionRequest {
   readonly activeTopics: readonly TopicId[] // [] par défaut
   readonly weights?: Partial<ScoreWeights>
   readonly archetype?: ArchetypeId          // §6.3 bis — CODÉ ; défaut = 'equilibre' ; sélecteur UI = P3
-  readonly onlyFavorites?: boolean          // P1c, PROPOSÉ — restreint les candidats à user_favorite avant scoring
-  readonly varietyMode?: 'auto' | 'surprise' | 'classiques' // P1c, PROPOSÉ — override explicite de `variety` (précision 5, §6.5)
+  readonly favoriteRecipeIds: ReadonlySet<RecipeId> // CODÉ, OBLIGATOIRE — source de données d'`onlyFavorites`, voir note
+  readonly onlyFavorites?: boolean          // P1c — CODÉ ; couche d'exclusion `favoris`, restreint les candidats avant scoring
+  readonly varietyMode?: 'auto' | 'surprise' | 'classiques' // P1c — CODÉ ; override explicite de `variety` (précision 5, §6.5)
   readonly limit?: number                   // défaut 5
   readonly seed: number                     // reproductibilité
   readonly mmrLambda?: number                // §6.6 — CODÉ ; poids de la pénalité MMR ; défaut DEFAULT_MMR_LAMBDA (0.4)
@@ -1095,13 +1105,30 @@ export interface SuggestionRequest {
 > « aucune préférence connue » : la couche rend alors `NEUTRAL_SCORE` pour tout candidat, plutôt
 > que de traiter l'absence comme un cas particulier côté couche.
 >
-> `onlyFavorites` et `varietyMode` restent des champs **proposés**, pas encore dans le code.
-> `onlyFavorites` restreint l'ensemble de candidats à `user_favorite` **avant** le passage des
-> couches de score — cohérent avec « favori = marque-page, n'influence pas le moteur par défaut »
-> (§10.1 : c'est un opt-in explicite, pas un poids ajouté en continu). `archetype`, lui, est
-> désormais **CODÉ** (`domain/request.ts`) — voir §6.3 bis pour la table des surcharges et
-> `selection/archetypes.ts` pour la résolution ; seul le SÉLECTEUR UI (onboarding/Paramètres) reste
-> P3.
+> **`onlyFavorites` et `varietyMode` sont CODÉS (P1c lot 4).** `onlyFavorites` restreint l'ensemble
+> de candidats à `user_favorite` **avant** le passage des couches de score — cohérent avec
+> « favori = marque-page, n'influence pas le moteur par défaut » (§10.1 : c'est un opt-in
+> explicite, pas un poids ajouté en continu). Implémenté comme la 7ᵉ couche d'EXCLUSION `favoris`
+> (`selection/favoris.ts`), placée **en dernier** dans `EXCLUSION_LAYERS` : « hors favoris » est le
+> motif de rejet le moins informatif du registre, il ne doit en masquer aucun autre.
+>
+> **`favoriteRecipeIds` est un ajout à la conception initiale**, du même ordre que `preferences`
+> ci-dessus : §8.1 ne spécifiait qu'un booléen `onlyFavorites`, sans jamais dire d'où venait la
+> liste des favoris. Un flag sans source de données ne filtre rien. Le champ est donc
+> **OBLIGATOIRE** (Set vide = aucun favori) pour que l'oubli soit une erreur de compilation plutôt
+> qu'un `NoViableRecipeError` incompréhensible à l'exécution. Conséquence assumée :
+> `onlyFavorites: true` avec un Set vide ne conserve **rien** et lève — un filtre dur qui vide le
+> panier le dit, il ne se désactive pas tout seul (même règle que `requis`, §6.5 ter).
+>
+> `varietyMode` est converti en `VarietyOverride` par `varietyLayer.configure` : la position
+> `'auto'` et l'absence du champ donnent toutes deux `null` (aucun override). `VarietyOverride`
+> disait `'classics'` (anglais) jusqu'à ce lot — aligné sur `'classiques'` pour éviter une table de
+> traduction, et par cohérence avec les autres unions fermées du domaine (`MealOrigin`,
+> `NutrientSense`, `ArchetypeId`), toutes en français.
+>
+> `archetype`, lui, est **CODÉ** (`domain/request.ts`) — voir §6.3 bis pour la table des surcharges
+> et `selection/archetypes.ts` pour la résolution ; seul le SÉLECTEUR UI (onboarding/Paramètres)
+> reste P3.
 
 > `MealContext.requiredFoodIds` (couche `requis`, **CODÉ**) vit dans `context`, pas dans
 > `constraints` (`HardConstraints`), alors que son miroir `excludedFoodIds` y est : `WeekPlanRequest`
@@ -1265,8 +1292,8 @@ fichier de contenu.
 | **Équipement disponible** | couche `equipment` | v1 |
 | **Lexique de cuisine illustré** | catalogue, `lexicon_entry` | v1 |
 | **Macros en option** | affichage, `false` par défaut (§6.5 ARCHI) | v1 |
-| **Favoris** | `user_favorite` — marque-page, hors moteur ; flag `onlyFavorites` PROPOSÉ (P1c, §8.1) | v1 |
-| **Mode variété** | `varietyMode` PROPOSÉ (P1c, §8.1) — override explicite de la couche `variety` | v1 |
+| **Favoris** | `user_favorite` — marque-page, hors moteur ; flag `onlyFavorites` **CODÉ** (P1c, §8.1) → couche d'exclusion `favoris` | v1 |
+| **Mode variété** | `varietyMode` **CODÉ** (P1c, §8.1) — override explicite de la couche `variety` | v1 |
 | **Substitution d'ingrédient** | `suggestSubstitutions` + table `substitution` (secondaire, recalcul allergènes) | v1 |
 | **Alternatives d'une recette** | `suggestAlternatives` PROPOSÉ (§8, socle en P1b, feature P1c/P2) | v1 |
 | **Import / partage de recette** | fichier `.nutri-recipe`, P2P sans serveur (§8.7 ARCHI) | v1 |
@@ -1388,12 +1415,23 @@ défauts implicites sont rendus explicites), l'**entonnoir d'exclusion** (§6.8)
 appliqués** (après archétype, bascule d'envie, normalisation), puis le **classement diversifié**
 (MMR, §6.6) avec la contribution de chaque couche et l'**explication** (§6.7) par candidat — ou le
 **motif de rejet dominant** si 0 candidat après exclusion — **sans navigateur ni UI**. Options :
-`--slot --date --temps --envie --archetype --allergies --regime --exclus --requis --pref --limit
---seed --lambda --no-mmr`.
+`--slot --date --temps --envie --archetype --allergies --regime --exclus --requis --pref --favoris
+--only-favoris --variete --limit --seed --lambda --no-mmr`.
 
 > `--lambda` (§6.6, CODÉ) fixe `mmrLambda` sur la requête ; `--no-mmr` (drapeau booléen, CODÉ)
 > positionne `skipDiversification` et affiche alors le classement brut par score, pour comparaison
 > directe avec le classement diversifié.
+>
+> `--favoris id1,id2` (§8.1, CODÉ) peuple `favoriteRecipeIds` ; `--only-favoris` (drapeau booléen)
+> lève `onlyFavorites`. Les deux sont indépendants : `--favoris` seul ne filtre rien (les favoris
+> sont un marque-page), `--only-favoris` seul ne conserve rien et lève `NoViableRecipeError`.
+> `--variete auto|surprise|classiques` (§8.1, CODÉ) fixe `varietyMode`.
+>
+> ⚠️ **Sur le catalogue de test, `--variete` déplace les SCORES sans changer l'ORDRE** : l'historique
+> du banc est vide (§7.5, démarrage à froid), donc les 10 recettes ont exactement la même récence et
+> la même familiarité — l'override les décale toutes du même montant. Mesuré : `auto` 57,6 ·
+> `surprise` 65,5 · `classiques` 49,7 pour la même tête de classement. L'effet sur le CLASSEMENT ne
+> sera observable qu'avec un historique réel, au même titre que la calibration de λ (§6.6).
 
 **Le banc passe désormais entièrement par `engine.suggestMeals(request)` (CODÉ, P1c)** — c'est le
 changement de structure du lot : il n'appelle plus `runExclusionPass`/`runScoringPass`/`diversify`/
@@ -1447,7 +1485,7 @@ gantt
 |---|---|---|
 | **P0** Fondations | Repo, Vite, TS strict, Vitest, `build.mjs`, import CIQUAL | `catalog.db` généré depuis 10 recettes de test ; le build échoue sur une recette invalide |
 | **P1** Domaine & nutrition | L1 + L2 + guards | Besoins énergétiques conformes à Mifflin-St Jeor sur 20 cas de référence ; 4 garde-fous couverts à 100 % |
-| **P2** Sélection | Registre de **17** couches + banc CLI | Banc CLI **outillé** (`engine:try`, CODÉ — §11.3), qui passe désormais par `suggestMeals` (§8). Diversification (§6.6) et explication (§6.7) sont **CODÉES et câblées bout-en-bout** (P1c) : le pipeline produit mécaniquement des suggestions diversifiées et expliquées, démontré par le banc CLI et par les tests (366 tests verts, 33 fichiers). Le critère littéral (« 5 suggestions expliquées et diversifiées ») est donc rempli sur le plan mécanique — **ce que le catalogue de test ne permet toujours pas**, c'est de calibrer `DEFAULT_MMR_LAMBDA` (§6.6) : 10 recettes composées à la main n'ont pas la distribution d'un catalogue de production (~150-200 recettes, §2 ARCHITECTURE), donc cette calibration reste non atteinte ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
+| **P2** Sélection | Registre de **18** couches + banc CLI | Banc CLI **outillé** (`engine:try`, CODÉ — §11.3), qui passe désormais par `suggestMeals` (§8). Diversification (§6.6) et explication (§6.7) sont **CODÉES et câblées bout-en-bout** (P1c) : le pipeline produit mécaniquement des suggestions diversifiées et expliquées, démontré par le banc CLI et par les tests (380 tests verts, 34 fichiers). Le critère littéral (« 5 suggestions expliquées et diversifiées ») est donc rempli sur le plan mécanique — **ce que le catalogue de test ne permet toujours pas**, c'est de calibrer `DEFAULT_MMR_LAMBDA` (§6.6) : 10 recettes composées à la main n'ont pas la distribution d'un catalogue de production (~150-200 recettes, §2 ARCHITECTURE), donc cette calibration reste non atteinte ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
 | **P3** Planning & API | L4 + L5 + restes + courses | Un planning 7 jours cohérent et une liste de courses agrégée, produits **entièrement en CLI** |
 | **P4** Coquille PWA | React, routage, SQLite/OPFS, consentement, sauvegarde | Installation sur iPhone et PC ; données conservées après 8 jours sans ouverture |
 | **P5** Parcours principal | Onboarding, suggestions, planning, courses, tips | Un utilisateur non accompagné planifie sa semaine et obtient sa liste |
@@ -1486,7 +1524,7 @@ le plus cher dans le plus incertain.
 
 | # | Décision | Retenu |
 |---|---|---|
-| 1 | Pipeline en dur ou registre de couches ? | **Registre de 17 couches** à contrat commun (§6.2) |
+| 1 | Pipeline en dur ou registre de couches ? | **Registre de 18 couches** à contrat commun (§6.2) |
 | 2 | « Vider le frigo » : filtre ou score ? | **Score**, avec un mode où son poids devient dominant |
 | 3 | Suivi des préférences | **Signaux uniquement**, jamais un journal alimentaire (§6.5 ARCHI) |
 | 4 | Média du lexique | **WebP animée**, boucle muette ~3 s, ~80 Ko (§8.5 ARCHI) |

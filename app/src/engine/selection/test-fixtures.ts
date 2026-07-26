@@ -22,6 +22,7 @@ import type {
   RecipeId,
   RecipeIngredient,
   SuggestionRequest,
+  VarietyMode,
 } from '../domain/index.js'
 import { g, min } from '../domain/index.js'
 import type { ExclusionLayerResult, LayerResult, ScoringLayerResult } from './index.js'
@@ -163,6 +164,9 @@ export function makeRequest(
     readonly creneau?: SuggestionRequest['context']['creneau']
     readonly tempsDisponibleMin?: number | null
     readonly preferences?: ReadonlyMap<FoodId, number>
+    readonly favoriteRecipeIds?: readonly string[]
+    readonly onlyFavorites?: boolean
+    readonly varietyMode?: VarietyMode
     readonly date?: string
     readonly envie?: SuggestionRequest['context']['envie']
     readonly history?: SuggestionRequest['history']
@@ -195,6 +199,11 @@ export function makeRequest(
     },
     history: overrides.history ?? { windowDays: 21, entries: [] },
     preferences: overrides.preferences ?? new Map(),
+    favoriteRecipeIds: new Set((overrides.favoriteRecipeIds ?? []) as readonly RecipeId[]),
+    // `exactOptionalPropertyTypes` (tsconfig) distingue « clé absente » d'« explicitement
+    // `undefined` » : n'inclure ces deux clés QUE quand l'appelant fournit vraiment une valeur.
+    ...(overrides.onlyFavorites === undefined ? {} : { onlyFavorites: overrides.onlyFavorites }),
+    ...(overrides.varietyMode === undefined ? {} : { varietyMode: overrides.varietyMode }),
     activeTopics: [],
     seed: 1,
   }

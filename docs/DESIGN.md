@@ -95,8 +95,8 @@ Un geste invisible n'existe pas pour une partie des utilisateurs. Cette règle p
 - Carte « Le saviez-vous ? »
 - **Carte occasion** « idée pour… » à l'ouverture, throttlée (~1×/3-4 j), occasions **activées**
   seulement, écartable — jamais un repas imposé (§8.6 ARCHITECTURE)
-- **Toggles « Mes favoris » / variété** *(proposé, P3 — pas maquetté, session 2026-07-24)* :
-  pilotent les flags moteur `onlyFavorites` / `varietyMode` (P1c, §8.1 ENGINE). « Mes favoris »
+- **Toggles « Mes favoris » / variété** *(UI P3 — pas maquetté ; les flags moteur sont CODÉS depuis
+  P1c lot 4, 2026-07-26)* : pilotent `onlyFavorites` / `varietyMode` (§8.1 ENGINE). « Mes favoris »
   restreint les candidats aux favoris **puis** score dedans — cohérent avec « favori = marque-page,
   n'influence pas le moteur par défaut » (§4.3 ARCHITECTURE) : c'est un opt-in explicite, jamais un
   poids ajouté en continu.

@@ -42,12 +42,14 @@ import type {
   FoodId,
   MealHistory,
   MealSlot,
+  RecipeId,
   RejectionSummary,
   ScoredSuggestion,
   ScoreWeights,
   ScoringLayerId,
   SuggestionRequest,
   UserProfile,
+  VarietyMode,
 } from '../engine/domain/index.js'
 import { NoViableRecipeError, min } from '../engine/domain/index.js'
 
@@ -98,6 +100,7 @@ const EXCLUSION_LAYER_LABELS: Readonly<Record<ExclusionLayerId, string>> = {
   requis: 'requis',
   temps: 'temps',
   equipement: 'équipement',
+  favoris: 'favoris',
 }
 
 /** Libellés humains des couches de score effectivement implémentées (voir SCORING_LAYERS). */
@@ -132,14 +135,19 @@ const KNOWN_VALUE_FLAGS = [
   'exclus',
   'requis',
   'pref',
+  'favoris',
+  'variete',
   'limit',
   'seed',
   'lambda',
 ] as const
 
 /** Drapeaux sans valeur (présence = vrai) — `--no-mmr` compare le classement brut au classement
- * diversifié (§6.6 ENGINE) sans avoir à répéter une valeur, comme `--flag` en ligne de commande usuelle. */
-const KNOWN_BOOLEAN_FLAGS = ['no-mmr'] as const
+ * diversifié (§6.6 ENGINE) sans avoir à répéter une valeur, comme `--flag` en ligne de commande
+ * usuelle. `--only-favoris` lève `SuggestionRequest.onlyFavorites` (§8.1 ENGINE) ; il se combine
+ * avec `--favoris`, qui fournit la liste — sans elle, le filtre ne conserve rien et le moteur lève
+ * `NoViableRecipeError`, ce qui est le comportement attendu, pas un bug du banc. */
+const KNOWN_BOOLEAN_FLAGS = ['no-mmr', 'only-favoris'] as const
 
 const KNOWN_FLAGS = [...KNOWN_VALUE_FLAGS, ...KNOWN_BOOLEAN_FLAGS]
 
@@ -309,6 +317,28 @@ function parseFoodIdList(raw: string | undefined, catalog: Catalog, flagName: st
   return ids as FoodId[]
 }
 
+/** Miroir de `parseFoodIdList` pour les `RecipeId` — `--favoris` (§8.1 ENGINE). */
+function parseRecipeIdList(raw: string | undefined, catalog: Catalog, flagName: string): readonly RecipeId[] {
+  if (raw === undefined) return []
+  const ids = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+  for (const id of ids) {
+    if (!catalog.recipes.has(id as RecipeId)) {
+      throw new CliUsageError(`--${flagName} : recipeId inconnu '${id}' (absent du catalogue)`)
+    }
+  }
+  return ids as RecipeId[]
+}
+
+/** `--variete` → `VarietyMode` (§8.1 ENGINE), union fermée à trois positions. */
+function parseVarietyMode(raw: string | undefined): VarietyMode {
+  if (raw === undefined) return 'auto'
+  if (raw === 'auto' || raw === 'surprise' || raw === 'classiques') return raw
+  throw new CliUsageError(`--variete invalide '${raw}' — attendu : auto | surprise | classiques`)
+}
+
 function parsePreferences(raw: string | undefined, catalog: Catalog): ReadonlyMap<FoodId, number> {
   const preferences = new Map<FoodId, number>()
   if (raw === undefined) return preferences
@@ -378,6 +408,12 @@ interface CliOptions {
   readonly exclus: readonly FoodId[]
   readonly requis: readonly FoodId[]
   readonly preferences: ReadonlyMap<FoodId, number>
+  /** `--favoris` : les `RecipeId` marqués en favori. Sans effet tant qu'`onlyFavorites` est faux. */
+  readonly favoris: readonly RecipeId[]
+  /** `--only-favoris` : lève `SuggestionRequest.onlyFavorites` (couche d'exclusion `favoris`). */
+  readonly onlyFavoris: boolean
+  /** `--variete` : override explicite de la couche `variety` (§8.1 ENGINE). */
+  readonly varietyMode: VarietyMode
   readonly limit: number
   readonly seed: number
   /** §6.6 ENGINE — poids de la pénalité de redondance dans la diversification MMR. Sans effet si `noMmr`. */
@@ -402,6 +438,9 @@ function parseOptions(argv: readonly string[], catalog: Catalog): CliOptions {
     exclus: parseFoodIdList(raw.values.get('exclus'), catalog, 'exclus'),
     requis: parseFoodIdList(raw.values.get('requis'), catalog, 'requis'),
     preferences: parsePreferences(raw.values.get('pref'), catalog),
+    favoris: parseRecipeIdList(raw.values.get('favoris'), catalog, 'favoris'),
+    onlyFavoris: raw.flags.has('only-favoris'),
+    varietyMode: parseVarietyMode(raw.values.get('variete')),
     limit: parseLimit(raw.values.get('limit')),
     seed: parseSeed(raw.values.get('seed')),
     lambda: parseLambda(raw.values.get('lambda')),
@@ -451,6 +490,9 @@ function buildRequest(opts: CliOptions): SuggestionRequest {
     },
     history: EMPTY_HISTORY,
     preferences: opts.preferences,
+    favoriteRecipeIds: new Set(opts.favoris),
+    onlyFavorites: opts.onlyFavoris,
+    varietyMode: opts.varietyMode,
     activeTopics: [],
     archetype: opts.archetype,
     limit: opts.limit,
@@ -490,6 +532,9 @@ function buildReplayCommand(opts: CliOptions): string {
     const prefStr = [...opts.preferences.entries()].map(([id, v]) => `${id}:${v >= 0 ? '+' : ''}${v}`).join(',')
     parts.push(`--pref ${prefStr}`)
   }
+  if (opts.favoris.length > 0) parts.push(`--favoris ${opts.favoris.join(',')}`)
+  if (opts.onlyFavoris) parts.push('--only-favoris')
+  if (opts.varietyMode !== 'auto') parts.push(`--variete ${opts.varietyMode}`)
   if (opts.noMmr) parts.push('--no-mmr')
   else if (opts.lambda !== DEFAULT_MMR_LAMBDA) parts.push(`--lambda ${opts.lambda}`)
   parts.push(`--limit ${opts.limit}`, `--seed ${opts.seed}`)
@@ -524,6 +569,12 @@ function printHeader(opts: CliOptions, catalog: Catalog, engineVersion: string, 
         : [...opts.preferences.entries()].map(([id, v]) => `${catalog.foods.get(id)?.nom ?? id}:${v}`).join(', ')
     }`
   )
+  console.log(
+    `Favoris      : ${opts.favoris.length === 0 ? '(aucun)' : opts.favoris.map((id) => catalog.recipes.get(id)?.nom ?? id).join(', ')}${
+      opts.onlyFavoris ? ' — RESTREINT aux favoris (--only-favoris)' : ''
+    }`
+  )
+  console.log(`Variété      : ${opts.varietyMode}${opts.varietyMode === 'auto' ? ' (modulée par habit)' : ' — override explicite'}`)
   console.log(`Limit / seed : ${opts.limit} / ${opts.seed}`)
   console.log(
     `Diversif.    : ${
