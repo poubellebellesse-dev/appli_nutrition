@@ -33,7 +33,7 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Garde-fous** | 4 sur 5 codés — reste `assertCalorieFloor`, qui attend le planning |
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
-**État vérifié : `npm test` → 401 verts (35 fichiers) · `npm run typecheck` propre ·
+**État vérifié : `npm test` → 404 verts (35 fichiers) · `npm run typecheck` propre ·
 `npm run build` → **193 aliments, 212 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
 plus aucun `PROV-`. Cible v1 revue (décision 4) : ~200 aliments **atteint**,
 200-300 recettes **ATTEINTE**.**
@@ -100,11 +100,18 @@ recettes ont donc la même récence et l'override les décale identiquement.
   63,0 % → 52,6 %, et les 6 paires les plus proches sont toutes légitimes (deux soupes de carottes,
   deux plats de maquereau, deux taboulés…) là où l'ancien modèle plaçait « œufs au plat aux
   tomates × soupe de poisson » à 99 %.
-- 🟠 **`variety` et `habit` utilisent TOUJOURS `recipeMainIngredient`** — le même index resté
-  volontairement en place. Conséquence : manger un plat rend « récent » tout plat partageant son
-  ingrédient le plus lourd, même sans rapport. La correction n'est PAS la même que pour la
-  similarité (« ai-je mangé ça récemment » n'est pas « ces plats se ressemblent-ils »), donc elle
-  demande sa propre mesure avant d'être écrite. Ne pas copier la signature ici sans mesurer.
+- ✅ ~~`variety` et `habit` utilisent `recipeMainIngredient`~~ — **CORRIGÉ** (décision 31). Règle de
+  récence = chevauchement de signature ≥ 0,45, seuil MESURÉ séparément de celui de la similarité :
+  la question « ai-je mangé ça récemment » n'est pas « ces plats se ressemblent-ils ». Déclenchements
+  à tort 6/6 → 0/6, paires touchées 326 → 86.
+- 🟠 **Limite de DONNÉES sur la récence** : « poulet rôti aux carottes » et « poulet au citron et
+  olives » ne se rendent PAS répétitifs, parce que `poulet_blanc` et `poulet_cuisse` sont deux
+  aliments distincts et que rien n'exprime qu'ils viennent du même animal. Aucun réglage de seuil
+  ne le rattrapera : il faudrait une **sous-famille** sur `Food` (poulet, bœuf, agneau… sous
+  « viandes »). Vaut aussi pour les morceaux de porc et d'agneau.
+- 🟠 **`recipeMainIngredient` n'est plus lu par AUCUNE couche** — il reste calculé à l'init et
+  n'est employé que par les bancs de comparaison, qui documentent pourquoi on l'a abandonné. À
+  supprimer si l'on décide un jour de figer ces bancs.
 - **λ (diversification) n'est pas calibré**, mais la base l'est enfin. Distribution mesurée sur
   212 recettes / 22 366 paires, après correction de l'ingrédient (§6.6 bis) ET de la pondération
   (§6.6 ter, 0,8/0,15/0,05) : max 94,2 % · p99 38,2 % · médiane 9,5 % · **30 paires au-dessus de

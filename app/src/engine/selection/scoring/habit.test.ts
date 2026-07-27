@@ -24,7 +24,7 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
   it('historique vide → score neutre (démarrage à froid propre)', () => {
     const score = scoreHabit({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([]),
       today: '2026-07-24',
     })
@@ -34,7 +34,7 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
   it('répétition croissante de la recette → familiarité croissante', () => {
     const scoreUnePasseOnDix = scoreHabit({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([
         entry(RECIPE, '2026-07-01'),
         entry(AUTRE_RECIPE, '2026-07-05'),
@@ -45,7 +45,7 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
     })
     const scoreTroisPassesOnQuatre = scoreHabit({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([
         entry(RECIPE, '2026-07-01'),
         entry(RECIPE, '2026-07-05'),
@@ -60,29 +60,29 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
   it('valeur vérifiée à la main : fréquence = occurrences / total d’entrées valides', () => {
     const score = scoreHabit({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-01'), entry(AUTRE_RECIPE, '2026-07-05')]),
       today: '2026-07-24',
     })
     expect(score).toBeCloseTo(0.5, 10)
   })
 
-  it('compte aussi les occurrences de l’ingrédient principal, via mainIngredientByRecipe', () => {
-    const mainIngredientByRecipe = new Map<RecipeId, FoodId>([[AUTRE_RECIPE, INGREDIENT_PRINCIPAL]])
+  it('compte aussi les occurrences de COMPOSITION PROCHE, via signatureByRecipe', () => {
+    const signatureByRecipe = new Map([[AUTRE_RECIPE, new Map([[INGREDIENT_PRINCIPAL, 1]])]])
     const score = scoreHabit({
       recipeId: RECIPE,
-      mainIngredientId: INGREDIENT_PRINCIPAL,
+      signature: new Map([[INGREDIENT_PRINCIPAL, 1]]),
       history: history([entry(AUTRE_RECIPE, '2026-07-01'), entry(AUTRE_RECIPE, '2026-07-05')]),
       today: '2026-07-24',
-      mainIngredientByRecipe,
+      signatureByRecipe,
     })
-    expect(score).toBe(1) // les 2 entrées partagent l'ingrédient principal demandé
+    expect(score).toBe(1) // les 2 entrées ont la même composition que le candidat
   })
 
   it('entrée d’historique postérieure à today → ignorée (ni au numérateur ni au dénominateur)', () => {
     const score = scoreHabit({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-01'), entry(AUTRE_RECIPE, '2026-08-01')]),
       today: '2026-07-24',
     })
@@ -92,7 +92,7 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
   it('reste dans [0, 1]', () => {
     const score = scoreHabit({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-01')]),
       today: '2026-07-24',
     })
@@ -104,7 +104,7 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
     it('attention au dénominateur : un `reste` est exclu du calcul, pas seulement du numérateur', () => {
       const score = scoreHabit({
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: history([
           entry(RECIPE, '2026-07-01', 'choisi'),
           entry(RECIPE, '2026-07-05', 'reste'), // ne doit compter ni au numérateur ni au dénominateur
@@ -120,7 +120,7 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
     it('uniquement des restes → aucune entrée `choisi` ne subsiste → score neutre (même démarrage à froid que l’historique vide)', () => {
       const score = scoreHabit({
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: history([entry(RECIPE, '2026-07-01', 'reste'), entry(AUTRE_RECIPE, '2026-07-05', 'reste')]),
         today: '2026-07-24',
       })
@@ -133,13 +133,13 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
 
       const habitChoisi = scoreHabit({
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: historyChoisi,
         today: '2026-07-24',
       })
       const habitReste = scoreHabit({
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: historyReste,
         today: '2026-07-24',
       })
@@ -147,14 +147,14 @@ describe('scoring/habit — scoreHabit (version minimale : fréquence normalisé
 
       const varietyChoisi = scoreVariety({
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: historyChoisi,
         today: '2026-07-24',
         familiarity: 0.5,
       })
       const varietyReste = scoreVariety({
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: historyReste,
         today: '2026-07-24',
         familiarity: 0.5,

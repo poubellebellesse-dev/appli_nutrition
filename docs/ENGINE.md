@@ -867,11 +867,36 @@ Effet mesuré sur les 22 366 paires du catalogue : médiane 22,8 % → **9,5 %**
 paires au-dessus de 60 % : 81 → **30**. Dans la bande 55-70 %, où MMR arbitre réellement, toutes les
 paires ont désormais **au moins 56 % d'ingrédients communs** — contre 17-30 % avant.
 
-> ⚠️ **`variety` et `habit` utilisent TOUJOURS `recipeMainIngredient`.** Mesuré : sur 290 paires
-> partageant un même « ingrédient principal », **194 (67 %)** ont une composition très différente —
-> une mousse au chocolat rend « récentes » des galettes de sarrasin, les deux étant majoritairement
-> des œufs. Le défaut y est donc réel, mais la correction n'est PAS la même : « ai-je mangé ça
-> récemment » n'est pas « ces plats se ressemblent-ils ». Elle demande sa propre mesure.
+#### 6.6 quater — Règle de RÉCENCE de `variety` / `habit` (2026-07-27), MESURÉE et CODÉE
+
+Ces deux couches demandent « ai-je mangé ça récemment ? », et répondaient « oui » quand l'entrée
+d'historique partageait l'ingrédient LE PLUS LOURD du candidat — le même index abandonné en §6.6 bis.
+Mesuré : sur 290 paires partageant un « ingrédient principal », **194 (67 %)** ont une composition
+très différente. Une mousse au chocolat rendait « récentes » des galettes de sarrasin.
+
+**La question n'est PAS celle de la similarité** — deux plats peuvent se ressembler sans que manger
+l'un lasse de l'autre. Le seuil a donc été mesuré séparément, sur des paires jugées pour cette
+question-ci (banc `app/src/cli/compare-variety.ts`) :
+
+| Règle | Déclenche à tort | Rate à raison | Paires touchées |
+|---|---|---|---|
+| ingrédient le plus lourd (avant) | **6 / 6** | 1 / 7 | 326 |
+| chevauchement ≥ 0,35 | 3 / 6 | 1 / 7 | 204 |
+| **chevauchement ≥ 0,45 — RETENU** | **0 / 6** | 1 / 7 | **86** |
+| chevauchement ≥ 0,55 | 0 / 6 | 2 / 7 | 43 |
+| ≥ 0,45 OU même `Food.groupe` | 4 / 6 | 1 / 7 | 735 |
+
+Le repli par groupe alimentaire a été **testé et écarté** : `viandes` mélange bœuf, poulet, porc et
+agneau, donc tout plat carné rendait tout autre plat carné répétitif.
+
+> ⚠️ **LIMITE DE DONNÉES, non résolue.** La règle rate « poulet rôti aux carottes » × « poulet au
+> citron et aux olives » : 7 % de chevauchement, parce que les deux emploient `poulet_blanc` et
+> `poulet_cuisse`, **deux aliments distincts du catalogue**. Aucun réglage de seuil ne rattrapera
+> ça — il faudrait une **sous-famille** sur `Food` (poulet, bœuf, agneau… sous « viandes »). Vaut
+> aussi pour les morceaux de porc et d'agneau. À décider séparément.
+
+> `recipeMainIngredient` n'est désormais lu par **aucune couche**. Il reste calculé à l'init et
+> employé seulement par les bancs de comparaison, qui documentent pourquoi il a été abandonné.
 
 `similarity(a, b) ∈ [0, 1]` (`engine/selection/similarity.ts`) combine trois signaux pondérés en
 constantes nommées (Σ = 1) :

@@ -2,7 +2,7 @@
 // précision 5, §13 fenêtre d'historique).
 
 import { describe, expect, it } from 'vitest'
-import { scoreVariety, varietyLayer } from './variety.js'
+import { VARIETY_RECENCY_OVERLAP_THRESHOLD, scoreVariety, varietyLayer } from './variety.js'
 import { asScoringResult, makeCatalog, makeRecipe, makeRequest } from '../test-fixtures.js'
 import type { MealHistory, MealHistoryEntry, RecipeId, FoodId } from '../../domain/index.js'
 
@@ -22,7 +22,7 @@ describe('scoring/variety — scoreVariety', () => {
   it('jamais vu, familiarité neutre (0.5) → score neutre (0.5)', () => {
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([]),
       today: '2026-07-24',
       familiarity: 0.5,
@@ -33,7 +33,7 @@ describe('scoring/variety — scoreVariety', () => {
   it('jamais vu, familiarité 0 (pure nouveauté) → score maximal', () => {
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([]),
       today: '2026-07-24',
       familiarity: 0,
@@ -44,7 +44,7 @@ describe('scoring/variety — scoreVariety', () => {
   it('vu aujourd’hui même, familiarité 0 → score minimal (aucune nouveauté)', () => {
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-24')]),
       today: '2026-07-24',
       familiarity: 0,
@@ -55,14 +55,14 @@ describe('scoring/variety — scoreVariety', () => {
   it('familiarity = 1 INVERSE le signal : un plat récent marque mieux qu’un plat jamais vu', () => {
     const scoreRecent = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-24')]), // vu aujourd'hui
       today: '2026-07-24',
       familiarity: 1,
     })
     const scoreJamaisVu = scoreVariety({
       recipeId: AUTRE_RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-24')]), // n'a rien à voir avec AUTRE_RECIPE
       today: '2026-07-24',
       familiarity: 1,
@@ -75,7 +75,7 @@ describe('scoring/variety — scoreVariety', () => {
   it('décroissance exponentielle : ancienneté de 7 jours (TAU) → recence = e^-1', () => {
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-17')]), // 7 jours avant le 24
       today: '2026-07-24',
       familiarity: 0, // score = nouveauté = 1 - recence
@@ -83,41 +83,96 @@ describe('scoring/variety — scoreVariety', () => {
     expect(score).toBeCloseTo(1 - Math.exp(-1), 10)
   })
 
-  it('récence portée sur l’ingrédient principal via mainIngredientByRecipe, pas seulement la recette', () => {
-    const mainIngredientByRecipe = new Map<RecipeId, FoodId>([[AUTRE_RECIPE, INGREDIENT_PRINCIPAL]])
-    // AUTRE_RECIPE (jamais demandée ici) partage son ingrédient principal avec RECIPE.
+  it('récence portée sur la COMPOSITION via signatureByRecipe, pas seulement la recette', () => {
+    const signatureByRecipe = new Map([[AUTRE_RECIPE, new Map([[INGREDIENT_PRINCIPAL, 1]])]])
+    // AUTRE_RECIPE (jamais demandée ici) a la même composition que RECIPE.
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: INGREDIENT_PRINCIPAL,
+      signature: new Map([[INGREDIENT_PRINCIPAL, 1]]),
       history: history([entry(AUTRE_RECIPE, '2026-07-24')]),
       today: '2026-07-24',
       familiarity: 0,
-      mainIngredientByRecipe,
+      signatureByRecipe,
     })
     // même ingrédient principal vu aujourd'hui → recence=1 → nouveauté=0 → score=0 (pas jamais-vu=1)
     expect(score).toBeCloseTo(0, 10)
   })
 
-  it('prend la PLUS RÉCENTE des deux occurrences (recette / ingrédient principal)', () => {
-    const mainIngredientByRecipe = new Map<RecipeId, FoodId>([[AUTRE_RECIPE, INGREDIENT_PRINCIPAL]])
+  it('prend la PLUS RÉCENTE des deux occurrences (recette / composition proche)', () => {
+    const signatureByRecipe = new Map([[AUTRE_RECIPE, new Map([[INGREDIENT_PRINCIPAL, 1]])]])
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: INGREDIENT_PRINCIPAL,
+      signature: new Map([[INGREDIENT_PRINCIPAL, 1]]),
       history: history([
         entry(RECIPE, '2026-06-01'), // ancien
-        entry(AUTRE_RECIPE, '2026-07-24'), // même ingrédient principal, très récent
+        entry(AUTRE_RECIPE, '2026-07-24'), // même composition, très récent
       ]),
       today: '2026-07-24',
       familiarity: 0,
-      mainIngredientByRecipe,
+      signatureByRecipe,
     })
     expect(score).toBeCloseTo(0, 10) // domine par l'occurrence la plus récente (aujourd'hui)
+  })
+
+  // -------------------------------------------------------------------------------------
+  // RÉGRESSION — décision 31. La règle comparait l'ingrédient LE PLUS LOURD, ce qui rendait
+  // « récentes » des recettes sans rapport : 194 paires sur 290 du catalogue réel (67 %).
+  // -------------------------------------------------------------------------------------
+  it('deux plats qui ne partagent qu’un ingrédient MARGINAL ne se rendent pas « récents »', () => {
+    // Reproduit « mousse au chocolat » × « galettes de sarrasin » : l'œuf pèse le plus dans les
+    // deux, mais chacune est par ailleurs un plat entièrement différent. Chevauchement ≈ 23 %,
+    // sous le seuil mesuré de 45 %.
+    const mousse = 'mousse' as RecipeId
+    const galettes = 'galettes' as RecipeId
+    const signatureByRecipe = new Map([
+      [galettes, new Map([['oeuf' as FoodId, 0.25], ['sarrasin' as FoodId, 0.5], ['jambon' as FoodId, 0.25]])],
+    ])
+
+    const score = scoreVariety({
+      recipeId: mousse,
+      signature: new Map([['oeuf' as FoodId, 0.6], ['chocolat' as FoodId, 0.4]]),
+      history: history([entry(galettes, '2026-07-24')]), // mangées aujourd'hui
+      today: '2026-07-24',
+      familiarity: 0,
+      signatureByRecipe,
+    })
+
+    // Aucun rapprochement : la mousse reste « jamais vue », score de pure nouveauté.
+    expect(score).toBe(1)
+  })
+
+  it('deux plats de composition VRAIMENT proche se rendent bien « récents »', () => {
+    // Contre-épreuve : un seuil qui ne déclenche jamais ne vaut pas mieux qu'un seuil qui
+    // déclenche toujours.
+    const a = 'boeuf_a' as RecipeId
+    const b = 'boeuf_b' as RecipeId
+    const signatureByRecipe = new Map([
+      [b, new Map([['boeuf' as FoodId, 0.5], ['tomate' as FoodId, 0.5]])],
+    ])
+
+    const score = scoreVariety({
+      recipeId: a,
+      signature: new Map([['boeuf' as FoodId, 0.55], ['tomate' as FoodId, 0.45]]),
+      history: history([entry(b, '2026-07-24')]),
+      today: '2026-07-24',
+      familiarity: 0,
+      signatureByRecipe,
+    })
+
+    expect(score).toBeCloseTo(0, 10) // vu aujourd'hui via la composition → aucune nouveauté
+  })
+
+  it('le seuil de récence est plus EXIGEANT que celui d’un simple ingrédient partagé', () => {
+    // Verrouille la valeur mesurée sans la figer au centième : ce qui compte est qu'elle exige
+    // une part substantielle de composition commune, pas un simple contact.
+    expect(VARIETY_RECENCY_OVERLAP_THRESHOLD).toBeGreaterThan(0.35)
+    expect(VARIETY_RECENCY_OVERLAP_THRESHOLD).toBeLessThan(0.55)
   })
 
   it('entrée d’historique postérieure à today → ignorée', () => {
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-08-01')]), // après today
       today: '2026-07-24',
       familiarity: 0,
@@ -128,7 +183,7 @@ describe('scoring/variety — scoreVariety', () => {
   it('override "surprise" force familiarity=0, prime sur la modulation demandée', () => {
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-24')]), // vu aujourd'hui
       today: '2026-07-24',
       familiarity: 1, // demanderait normalement un bonus de familiarité
@@ -140,7 +195,7 @@ describe('scoring/variety — scoreVariety', () => {
   it('override "classiques" force familiarity=1, prime sur la modulation demandée', () => {
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-24')]), // vu aujourd'hui
       today: '2026-07-24',
       familiarity: 0, // demanderait normalement de la pure nouveauté
@@ -152,7 +207,7 @@ describe('scoring/variety — scoreVariety', () => {
   it('reste dans [0, 1]', () => {
     const score = scoreVariety({
       recipeId: RECIPE,
-      mainIngredientId: null,
+      signature: new Map(),
       history: history([entry(RECIPE, '2026-07-23')]),
       today: '2026-07-24',
       familiarity: 0.5,
@@ -167,7 +222,7 @@ describe('scoring/variety — scoreVariety', () => {
     it('TAU=3 → nouveauté ≈ 0.90 pour un plat vu il y a 7 jours', () => {
       const score = scoreVariety({
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: history([entry(RECIPE, '2026-07-17')]),
         today: '2026-07-24',
         familiarity: 0,
@@ -179,7 +234,7 @@ describe('scoring/variety — scoreVariety', () => {
     it('TAU=7 → nouveauté ≈ 0.63 pour un plat vu il y a 7 jours', () => {
       const score = scoreVariety({
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: history([entry(RECIPE, '2026-07-17')]),
         today: '2026-07-24',
         familiarity: 0,
@@ -191,7 +246,7 @@ describe('scoring/variety — scoreVariety', () => {
     it('TAU=14 → nouveauté ≈ 0.39 pour un plat vu il y a 7 jours', () => {
       const score = scoreVariety({
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: history([entry(RECIPE, '2026-07-17')]),
         today: '2026-07-24',
         familiarity: 0,
@@ -203,7 +258,7 @@ describe('scoring/variety — scoreVariety', () => {
     it('non-régression : sans tauDays, résultat identique à tauDays: 7', () => {
       const args = {
         recipeId: RECIPE,
-        mainIngredientId: null,
+        signature: new Map(),
         history: history([entry(RECIPE, '2026-07-17')]),
         today: '2026-07-24',
         familiarity: 0,
@@ -217,7 +272,7 @@ describe('scoring/variety — scoreVariety', () => {
       for (const tauDays of [3, 7, 14] as const) {
         const score = scoreVariety({
           recipeId: RECIPE,
-          mainIngredientId: null,
+          signature: new Map(),
           history: history([entry(RECIPE, '2026-07-24')]), // vu aujourd'hui
           today: '2026-07-24',
           familiarity: 1, // demanderait normalement un bonus de familiarité
@@ -232,7 +287,7 @@ describe('scoring/variety — scoreVariety', () => {
       for (const tauDays of [3, 7, 14] as const) {
         const score = scoreVariety({
           recipeId: RECIPE,
-          mainIngredientId: null,
+          signature: new Map(),
           history: history([entry(RECIPE, '2026-07-24')]), // vu aujourd'hui
           today: '2026-07-24',
           familiarity: 0, // demanderait normalement de la pure nouveauté

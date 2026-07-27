@@ -31,18 +31,21 @@
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
-import type { FoodId, MealHistory, RecipeId } from '../../domain/index.js'
+import type { MealHistory, RecipeId, RecipeSignature } from '../../domain/index.js'
+import { signatureOverlap } from '../../nutrition/signature.js'
+import { VARIETY_RECENCY_OVERLAP_THRESHOLD } from './variety.js'
 import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { NEUTRAL_SCORE, clamp01 } from './index.js'
 
 export interface ScoreHabitArgs {
   readonly recipeId: RecipeId
-  readonly mainIngredientId: FoodId | null
+  /** Signature du candidat (§6.6 ENGINE). Map vide = composition inconnue, aucun rapprochement. */
+  readonly signature: RecipeSignature
   readonly history: MealHistory
   /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE). */
   readonly today: string
-  /** Résout l'ingrédient principal des entrées d'historique — voir variety.ts, même motif. */
-  readonly mainIngredientByRecipe?: ReadonlyMap<RecipeId, FoodId>
+  /** Résout la signature des entrées d'historique — voir variety.ts, même motif et même seuil. */
+  readonly signatureByRecipe?: ReadonlyMap<RecipeId, RecipeSignature>
 }
 
 export function scoreHabit(args: ScoreHabitArgs): number {
@@ -56,11 +59,12 @@ export function scoreHabit(args: ScoreHabitArgs): number {
   let matchCount = 0
   for (const historyEntry of validEntries) {
     const matchesRecipe = historyEntry.recipeId === args.recipeId
-    const matchesMainIngredient =
-      args.mainIngredientId !== null &&
-      args.mainIngredientByRecipe?.get(historyEntry.recipeId) === args.mainIngredientId
+    const pastSignature = args.signatureByRecipe?.get(historyEntry.recipeId)
+    const matchesComposition =
+      pastSignature !== undefined &&
+      signatureOverlap(args.signature, pastSignature) >= VARIETY_RECENCY_OVERLAP_THRESHOLD
 
-    if (matchesRecipe || matchesMainIngredient) matchCount++
+    if (matchesRecipe || matchesComposition) matchCount++
   }
 
   return clamp01(matchCount / validEntries.length)
@@ -69,10 +73,11 @@ export function scoreHabit(args: ScoreHabitArgs): number {
 // ------------------------------------------------------------------------------------------
 // Couche `habit` (§6.2 ENGINE) — enveloppe `scoreHabit` dans le contrat `SelectionLayer`.
 //
-// `configure` pré-calcule ce qui dépend du `Catalog` : `mainIngredientByRecipe` est directement
-// `catalog.indexes.recipeMainIngredient` (§9.1 ENGINE), utilisé ici pour la même chose que dans
-// `variety.ts` — résoudre l'ingrédient principal des entrées d'HISTORIQUE (voir en-tête de
-// variety.ts, même motif). `history`/`today` viennent de `req.history`/`req.context.date`.
+// `configure` pré-calcule ce qui dépend du `Catalog` : `signatureByRecipe` est directement
+// `catalog.indexes.recipeSignature` (§9.1 ENGINE), utilisé ici pour la même chose que dans
+// `variety.ts` — résoudre la composition des entrées d'HISTORIQUE, avec le MÊME seuil mesuré
+// (`VARIETY_RECENCY_OVERLAP_THRESHOLD`, voir l'en-tête de variety.ts pour les cinq règles
+// comparées et la limite connue sur les morceaux d'un même animal). `history`/`today` viennent de `req.history`/`req.context.date`.
 //
 // ⚠️ Rappel de l'asymétrie déjà codée dans `scoreHabit` (voir en-tête de fichier plus haut) :
 // `habit` ne compte QUE les entrées d'origine `choisi` — un reste mangé (`origine: 'reste'`)
@@ -81,8 +86,8 @@ export function scoreHabit(args: ScoreHabitArgs): number {
 // asymétrie est portée par `scoreHabit` lui-même ; cette couche ne fait qu'en hériter, elle ne la
 // réimplémente pas.
 //
-// Candidat non résolu par `mainIngredientByRecipe` (aucun ingrédient principal connu, id
-// orphelin) → `mainIngredientId: null`, transmis tel quel à `scoreHabit`, qui reste alors basé
+// Candidat non résolu par `signatureByRecipe` (aucune composition connue, id orphelin) →
+// signature VIDE, transmise telle quelle à `scoreHabit`, qui reste alors basé
 // uniquement sur la correspondance de `recipeId` — jamais de plantage, jamais un score hors
 // [0, 1] (§6.1 ENGINE).
 // ------------------------------------------------------------------------------------------
@@ -91,7 +96,7 @@ export interface HabitLayerConfig {
   readonly history: MealHistory
   /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE), reprise de `req.context.date`. */
   readonly today: string
-  readonly mainIngredientByRecipe: ReadonlyMap<RecipeId, FoodId>
+  readonly signatureByRecipe: ReadonlyMap<RecipeId, RecipeSignature>
 }
 
 export const habitLayer: SelectionLayer<HabitLayerConfig> = {
@@ -103,21 +108,20 @@ export const habitLayer: SelectionLayer<HabitLayerConfig> = {
   configure: (req, catalog) => ({
     history: req.history,
     today: req.context.date,
-    mainIngredientByRecipe: catalog.indexes.recipeMainIngredient,
+    signatureByRecipe: catalog.indexes.recipeSignature,
   }),
 
   apply: (candidates: CandidateSet, config: HabitLayerConfig): ScoringLayerResult => {
     const scores = new Map<RecipeId, number>()
     for (const recipeId of candidates) {
-      const mainIngredientId = config.mainIngredientByRecipe.get(recipeId) ?? null
       scores.set(
         recipeId,
         scoreHabit({
           recipeId,
-          mainIngredientId,
+          signature: config.signatureByRecipe.get(recipeId) ?? new Map(),
           history: config.history,
           today: config.today,
-          mainIngredientByRecipe: config.mainIngredientByRecipe,
+          signatureByRecipe: config.signatureByRecipe,
         })
       )
     }
