@@ -1,0 +1,91 @@
+id: poulet_basquaise
+nom: "Poulet basquaise"
+description: >
+  Des cuisses de poulet mijotées avec poivrons, tomates, oignon et une pointe de paprika.
+temps_prep_min: 20
+temps_cuisson_min: 45
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.7
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: poulet_cuisse
+    quantite_g: 900
+    unite_affichage: "4 cuisses"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 200
+    unite_affichage: "1 poivron rouge"
+    optionnel: false
+  - food_id: poivron_vert
+    quantite_g: 200
+    unite_affichage: "1 poivron vert"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 500
+    unite_affichage: "5 tomates"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 200
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 15
+    unite_affichage: "3 gousses"
+    optionnel: false
+  - food_id: paprika
+    quantite_g: 5
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les oignons, les poivrons et l'ail. Couper les tomates en dés."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Colorer les cuisses de poulet dans l'huile, côté peau d'abord, puis les réserver."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire revenir oignons et poivrons dans la même cocotte jusqu'à ce qu'ils fondent."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter l'ail, le paprika et les tomates, saler, puis remettre les cuisses sur le lit de légumes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Couvrir et laisser mijoter à feu doux jusqu'à ce que la chair se détache de l'os."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

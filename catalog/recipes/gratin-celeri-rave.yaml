@@ -1,0 +1,83 @@
+id: gratin_celeri_rave
+nom: "Gratin de céleri-rave"
+description: >
+  Des tranches fines de céleri-rave cuites dans le lait et la crème, gratinées au gruyère.
+temps_prep_min: 20
+temps_cuisson_min: 50
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: celeri_rave
+    quantite_g: 900
+    unite_affichage: "1 céleri-rave"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 300
+    unite_affichage: "30 cl"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 150
+    unite_affichage: "15 cl"
+    optionnel: false
+  - food_id: gruyere
+    quantite_g: 100
+    unite_affichage: "100 g râpé"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 8
+    unite_affichage: "1 gousse"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 15
+    unite_affichage: "une noix"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Peler le céleri-rave et le couper en tranches fines et régulières."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Frotter un plat avec la gousse d'ail coupée, puis le beurrer."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire chauffer le lait et la crème avec le sel, y pocher les tranches quelques minutes pour les attendrir."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ranger les tranches dans le plat en les faisant se chevaucher, verser le liquide de cuisson, couvrir de gruyère."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner à 180 °C jusqu'à ce que la pointe d'un couteau traverse sans résistance et que le dessus soit doré."
+    lexicon_ids: []
+    timer_s: 2400
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

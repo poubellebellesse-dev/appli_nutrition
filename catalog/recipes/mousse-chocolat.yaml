@@ -1,0 +1,71 @@
+id: mousse_chocolat
+nom: "Mousse au chocolat"
+description: >
+  Du chocolat noir fondu incorporé à des blancs montés en neige, sans crème ni beurre.
+temps_prep_min: 20
+temps_cuisson_min: 5
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: 0.9
+  leger_consistant: 0.1
+  chaud_froid: -0.6
+  texture: creme
+
+ingredients:
+  - food_id: chocolat_noir
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 300
+    unite_affichage: "6 œufs"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Séparer les blancs des jaunes. Casser le chocolat en morceaux et le faire fondre au bain-marie."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Hors du feu, incorporer les jaunes un à un au chocolat encore tiède, en mélangeant vivement."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Monter les blancs en neige avec la pincée de sel, en ajoutant le sucre quand ils commencent à tenir."
+    lexicon_ids: [monter_blancs]
+    timer_s: 300
+    timer_type: null
+  - ordre: 4
+    texte: "Détendre le chocolat avec un tiers des blancs, puis incorporer le reste en soulevant la masse à la spatule."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Répartir en verrines et laisser prendre au frais au moins trois heures."
+    lexicon_ids: []
+    timer_s: 10800
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

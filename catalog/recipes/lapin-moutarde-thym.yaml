@@ -1,0 +1,91 @@
+id: lapin_moutarde_thym
+nom: "Lapin à la moutarde et au thym"
+description: >
+  Des morceaux de lapin badigeonnés de moutarde, mijotés au vin blanc avec du thym.
+temps_prep_min: 15
+temps_cuisson_min: 55
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: lapin
+    quantite_g: 1200
+    unite_affichage: "1 lapin en morceaux"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 60
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 250
+    unite_affichage: "25 cl"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 4
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 100
+    unite_affichage: "10 cl"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Badigeonner chaque morceau de lapin de moutarde et laisser reposer le temps de préparer le reste."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: repos
+  - ordre: 2
+    texte: "Émincer l'oignon. Colorer les morceaux de lapin dans l'huile chaude, en plusieurs fois pour ne pas les entasser."
+    lexicon_ids: [emincer]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter l'oignon, laisser blondir, puis déglacer au vin blanc en grattant les sucs."
+    lexicon_ids: [deglacer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter le thym, le laurier et le sel, couvrir et laisser mijoter à feu doux."
+    lexicon_ids: []
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Retirer le laurier, incorporer la crème hors du feu et servir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

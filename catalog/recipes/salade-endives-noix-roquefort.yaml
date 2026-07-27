@@ -1,0 +1,78 @@
+id: salade_endives_noix_roquefort
+nom: "Salade d'endives, noix et roquefort"
+description: >
+  Des endives croquantes en vinaigrette à l'huile de noix, avec roquefort émietté et cerneaux.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.2
+  chaud_froid: -0.7
+  texture: croquant
+
+ingredients:
+  - food_id: endive
+    quantite_g: 500
+    unite_affichage: "5 endives"
+    optionnel: false
+  - food_id: roquefort
+    quantite_g: 100
+    unite_affichage: "100 g"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 60
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: huile_noix
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 10
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: pomme
+    quantite_g: 150
+    unite_affichage: "1 pomme"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Retirer le cône amer à la base des endives, puis les couper en tronçons de deux centimètres."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Délayer la moutarde avec le vinaigre, puis monter la vinaigrette en versant l'huile de noix en filet."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Couper la pomme en fins bâtonnets et concasser grossièrement les cerneaux de noix."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mélanger les endives à la vinaigrette juste avant de servir, puis parsemer de roquefort émietté, de noix et de pomme."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

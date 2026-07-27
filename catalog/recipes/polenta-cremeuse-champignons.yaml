@@ -1,0 +1,87 @@
+id: polenta_cremeuse_champignons
+nom: "Polenta crémeuse aux champignons"
+description: >
+  Une polenta montée au parmesan et au beurre, garnie de champignons poêlés à l'ail.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: polenta
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: champignon_paris
+    quantite_g: 500
+    unite_affichage: "500 g"
+    optionnel: false
+  - food_id: parmesan
+    quantite_g: 80
+    unite_affichage: "80 g râpé"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Porter un litre d'eau salée à ébullition et verser la polenta en pluie sans cesser de remuer."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Baisser le feu et remuer régulièrement jusqu'à ce que la polenta se détache des parois."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Pendant ce temps, émincer les champignons et l'ail, puis les faire sauter à feu vif dans l'huile."
+    lexicon_ids: [emincer]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Hors du feu, incorporer le beurre et le parmesan à la polenta en fouettant pour la rendre crémeuse."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Dresser la polenta dans les assiettes, garnir de champignons et de persil ciselé."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

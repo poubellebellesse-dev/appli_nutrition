@@ -45,7 +45,8 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Code — P1c lot 4 (flags `onlyFavorites`/`varietyMode`) | `app/src/engine/domain/{request,layer-ids}.ts`, `app/src/engine/selection/{favoris,exclusion-pass,index}.ts`, `app/src/engine/selection/scoring/variety.ts`, `app/src/cli/try-engine.ts` | ✅ Terminé et committé, 380 tests verts (34 fichiers), typecheck propre |
 | Contenu — 12 recettes (poissons, viandes, fruits de mer) | `catalog/recipes/` | ✅ Terminé et committé, 10 → 22 recettes |
 | Contenu — import CIQUAL 2025 (9 nutriments, 76 aliments) | `catalog/import-ciqual.mjs`, `catalog/sources/ciqual-mapping.yaml`, `catalog/sources/foods.yaml` | ✅ Terminé — valeurs `PROV-` remplacées par les valeurs ANSES |
-| Contenu — montée à ~100 recettes | `catalog/recipes/` | ⬜ **Prochaine étape** |
+| Contenu — 193 aliments (cible ~200) | `catalog/sources/foods.yaml`, `ciqual-mapping.yaml` | ✅ Atteint |
+| Contenu — montée à 200-300 recettes (décision 4 revue) | `catalog/recipes/` | ▓▓ **En cours — 46 écrites** |
 | Code — `suggestAlternatives` (spec révisée : variante vs alternative) | `app/src/engine/selection/alternatives.ts` (à créer), `app/src/engine/api/index.ts` | ⬜ Reporté APRÈS le contenu — inobservable sur 10 recettes |
 
 ---

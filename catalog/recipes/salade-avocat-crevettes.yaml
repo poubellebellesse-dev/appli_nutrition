@@ -1,0 +1,78 @@
+id: salade_avocat_crevettes
+nom: "Salade d'avocat et crevettes"
+description: >
+  De l'avocat en tranches avec des crevettes, mâche et une vinaigrette au citron et à l'aneth.
+temps_prep_min: 15
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.3
+  chaud_froid: -0.7
+  texture: fondant
+
+ingredients:
+  - food_id: avocat
+    quantite_g: 300
+    unite_affichage: "2 avocats"
+    optionnel: false
+  - food_id: crevette
+    quantite_g: 250
+    unite_affichage: "250 g décortiquées"
+    optionnel: false
+  - food_id: mache
+    quantite_g: 80
+    unite_affichage: "2 poignées"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: aneth_frais
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Saisir les crevettes une minute par face dans une poêle très chaude, puis les laisser refroidir."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Fouetter le jus de citron avec l'huile d'olive et le sel, ajouter l'aneth ciselé."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Couper les avocats en deux, retirer le noyau et détailler la chair en tranches."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Dresser la mâche, les tranches d'avocat et les crevettes, puis arroser de vinaigrette au moment de servir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

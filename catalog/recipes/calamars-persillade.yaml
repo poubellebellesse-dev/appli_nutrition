@@ -1,0 +1,83 @@
+id: calamars_persillade
+nom: "Calamars en persillade"
+description: >
+  Des anneaux de calamar saisis très vite à feu vif, avec ail, persil et citron.
+temps_prep_min: 15
+temps_cuisson_min: 8
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: -0.1
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: calamar
+    quantite_g: 800
+    unite_affichage: "800 g nettoyés"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 20
+    unite_affichage: "4 gousses"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 30
+    unite_affichage: "1 bouquet"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 100
+    unite_affichage: "1/2 poivron"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Couper les calamars en anneaux réguliers et les éponger, l'eau empêcherait la coloration."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'ail très finement et ciseler le persil."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Chauffer l'huile à feu très vif et jeter les anneaux en une seule couche, sans remuer au début."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter l'ail, saler, faire sauter encore une minute — au-delà la chair devient caoutchouteuse."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Hors du feu, ajouter le persil et un trait de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

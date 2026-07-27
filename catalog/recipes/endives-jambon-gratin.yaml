@@ -1,0 +1,83 @@
+id: endives_jambon_gratin
+nom: "Endives au jambon gratinées"
+description: >
+  Des endives braisées roulées dans du jambon, nappées de béchamel et gratinées au gruyère.
+temps_prep_min: 20
+temps_cuisson_min: 45
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.7
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: endive
+    quantite_g: 800
+    unite_affichage: "8 endives"
+    optionnel: false
+  - food_id: jambon_blanc
+    quantite_g: 320
+    unite_affichage: "8 tranches"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 500
+    unite_affichage: "50 cl"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: gruyere
+    quantite_g: 100
+    unite_affichage: "100 g râpé"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Retirer le cône amer à la base de chaque endive, puis les braiser à couvert dans un peu de beurre et d'eau."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Préparer la béchamel : faire fondre le beurre, ajouter la farine, cuire une minute puis verser le lait en fouettant."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Égoutter les endives en les pressant, puis rouler chacune dans une tranche de jambon."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ranger les rouleaux dans un plat, napper de béchamel salée, parsemer de gruyère."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Gratiner au four à 200 °C jusqu'à ce que le dessus soit doré."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

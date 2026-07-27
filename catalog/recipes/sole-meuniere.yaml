@@ -1,0 +1,74 @@
+id: sole_meuniere
+nom: "Sole meunière"
+description: >
+  Une sole farinée, poêlée au beurre mousseux et arrosée de jus de citron et de persil.
+temps_prep_min: 10
+temps_cuisson_min: 10
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.0
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: sole
+    quantite_g: 500
+    unite_affichage: "2 soles"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Saler les soles puis les passer dans la farine des deux côtés, en tapotant pour retirer l'excédent."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire mousser la moitié du beurre dans une grande poêle sans le laisser noircir."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Poser les soles et les cuire sans les bouger, puis les retourner à la spatule large."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter le reste du beurre, le jus de citron et le persil ciselé, arroser les poissons de ce jus et servir aussitôt."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial
