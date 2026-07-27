@@ -1,0 +1,87 @@
+id: chou_rouge_pommes
+nom: "Chou rouge braisé aux pommes"
+description: >
+  Du chou rouge fondu longuement avec des pommes, du vinaigre et une pointe de cannelle.
+temps_prep_min: 15
+temps_cuisson_min: 60
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: 0.1
+  leger_consistant: 0.0
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: chou_rouge
+    quantite_g: 900
+    unite_affichage: "1 petit chou rouge"
+    optionnel: false
+  - food_id: pomme
+    quantite_g: 300
+    unite_affichage: "2 pommes"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: true
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+  - food_id: huile_colza
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer le chou rouge en lanières fines et l'oignon en lamelles."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir l'oignon dans l'huile, ajouter le chou et le laisser tomber quelques minutes."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Verser le vinaigre — il fixe la couleur violette, sans lui le chou vire au bleu-gris à la cuisson."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ajouter les pommes en quartiers, la cannelle, le laurier, saler et mouiller d'un demi-verre d'eau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Couvrir et laisser braiser à feu très doux jusqu'à ce que le chou soit fondant, en remuant de temps en temps."
+    lexicon_ids: []
+    timer_s: 3000
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

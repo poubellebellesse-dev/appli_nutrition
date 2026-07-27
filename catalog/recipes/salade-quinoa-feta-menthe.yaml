@@ -1,0 +1,91 @@
+id: salade_quinoa_feta_menthe
+nom: "Salade de quinoa, feta et menthe"
+description: >
+  Du quinoa froid avec concombre, tomates cerises, feta émiettée, menthe et citron.
+temps_prep_min: 20
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.0
+  chaud_froid: -0.7
+  texture: croquant
+
+ingredients:
+  - food_id: quinoa
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: concombre
+    quantite_g: 250
+    unite_affichage: "1/2 concombre"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 250
+    unite_affichage: "3 tomates"
+    optionnel: false
+  - food_id: feta
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le quinoa à l'eau froide, ce qui retire son amertume de surface, puis le cuire dans deux fois son volume d'eau salée."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 2
+    texte: "L'égoutter et l'étaler sur un plat pour qu'il refroidisse vite sans continuer à cuire."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: repos
+  - ordre: 3
+    texte: "Couper le concombre et les tomates en petits dés, émincer l'échalote, ciseler la menthe."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mélanger le quinoa froid aux légumes, arroser d'huile d'olive et de jus de citron, saler."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Émietter la feta par-dessus au dernier moment pour qu'elle garde ses morceaux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

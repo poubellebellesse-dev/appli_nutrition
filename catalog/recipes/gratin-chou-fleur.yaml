@@ -1,0 +1,83 @@
+id: gratin_chou_fleur
+nom: "Gratin de chou-fleur"
+description: >
+  Des bouquets de chou-fleur nappés de béchamel et gratinés au comté.
+temps_prep_min: 15
+temps_cuisson_min: 40
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.5
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: chou_fleur
+    quantite_g: 900
+    unite_affichage: "1 chou-fleur"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 500
+    unite_affichage: "50 cl"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: comte_rape
+    quantite_g: 120
+    unite_affichage: "120 g râpé"
+    optionnel: false
+  - food_id: chapelure
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Détailler le chou-fleur en bouquets et les blanchir à l'eau salée jusqu'à ce qu'ils soient tendres mais fermes."
+    lexicon_ids: [blanchir]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Les égoutter longuement — l'eau restante délaierait la béchamel dans le plat."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: repos
+  - ordre: 3
+    texte: "Faire fondre le beurre, ajouter la farine, cuire une minute puis verser le lait en fouettant jusqu'à épaississement."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Saler la béchamel, y incorporer la moitié du comté, puis en napper les bouquets rangés dans un plat."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Couvrir du reste de comté et de chapelure, puis gratiner à 200 °C jusqu'à ce que le dessus soit doré."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

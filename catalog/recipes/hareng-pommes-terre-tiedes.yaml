@@ -1,0 +1,87 @@
+id: hareng_pommes_terre_tiedes
+nom: "Hareng et pommes de terre tièdes"
+description: >
+  Des filets de hareng marinés à l'huile et aux aromates, servis sur des pommes de terre tièdes.
+temps_prep_min: 20
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.7
+  leger_consistant: 0.3
+  chaud_froid: -0.2
+  texture: fondant
+
+ingredients:
+  - food_id: hareng
+    quantite_g: 400
+    unite_affichage: "4 filets"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 700
+    unite_affichage: "7 pommes de terre"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 100
+    unite_affichage: "1 carotte"
+    optionnel: true
+  - food_id: huile_colza
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "quelques grains"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et la carotte en rondelles très fines."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ranger les filets de hareng dans un plat creux avec les rondelles, le laurier et le poivre, couvrir d'huile."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Laisser mariner au frais — une nuit vaut mieux qu'une heure, la chair s'attendrit et prend les aromates."
+    lexicon_ids: []
+    timer_s: 43200
+    timer_type: repos
+  - ordre: 4
+    texte: "Cuire les pommes de terre en robe des champs dans l'eau salée, puis les peler encore chaudes."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Couper les pommes de terre en rondelles épaisses, les arroser d'un peu d'huile de la marinade et poser les filets dessus."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

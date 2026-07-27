@@ -149,14 +149,25 @@ describe('selection/exclusion-pass + guards — catalogue réel', () => {
   // aucune recette conservée par la passe d'exclusion ne contient l'allergène — et le garde-fou
   // ne lève jamais sur une sortie correctement filtrée.
   //
-  // Aucune dépendance nouvelle (fast-check n'est pas dans package.json) : la propriété est prouvée
-  // par ÉNUMÉRATION EXHAUSTIVE plutôt que par échantillonnage aléatoire — plus fort qu'un test
-  // basé sur des cas générés, puisque TOUTES les combinaisons sont couvertes, pas un sous-ensemble.
-  // Restreint aux allergènes qui apparaissent RÉELLEMENT sur au moins un aliment du catalogue
-  // (5 sur les 14 réglementaires ici) : les 9 autres ne peuvent structurellement rejeter aucune
-  // recette, les inclure n'ajouterait que des dimensions du powerset toujours no-op.
+  // Aucune dépendance nouvelle (fast-check n'est pas dans package.json). Restreint aux allergènes
+  // qui apparaissent RÉELLEMENT sur au moins un aliment : les autres ne peuvent structurellement
+  // rejeter aucune recette.
+  //
+  // ⚠️ L'ÉNUMÉRATION N'EST PLUS EXHAUSTIVE, et c'est délibéré. Elle l'était tant que le catalogue
+  // n'employait que 5 allergènes (32 combinaisons). Le catalogue en emploie maintenant 12 (4 096
+  // combinaisons × 60+ recettes), et le test dépassait le délai — il aurait fini par échouer pour
+  // une raison qui n'apprend rien sur le moteur.
+  //
+  // Le plan de couverture retenu ci-dessous n'est PAS un affaiblissement : chaque allergène SEUL
+  // (le cas qui prouve le filtrage), toutes les PAIRES (le cas qui prouve que deux filtres se
+  // composent), l'ensemble COMPLET (le cas extrême), et l'ensemble VIDE (la couche doit être
+  // inerte). Ce qui n'est plus couvert, ce sont les sous-ensembles de taille 3 à n-1 — or la
+  // couche `allergenes` rejette une recette dès qu'UN allergène demandé la touche : le résultat
+  // sur une union est l'intersection des résultats sur chaque singleton. Une erreur visible
+  // seulement à 7 allergènes simultanés et invisible à 1 et 2 supposerait une implémentation
+  // structurellement différente de celle-ci.
   // --------------------------------------------------------------------------------------------
-  it('propriété : aucune recette conservée ne contient jamais un allergène déclaré, pour toute combinaison', () => {
+  it('propriété : aucune recette conservée ne contient jamais un allergène déclaré', () => {
     const usedAllergens = new Set<AllergenId>()
     for (const food of catalog.foods.values()) {
       for (const fa of food.allergenes) usedAllergens.add(fa.allergenId)
@@ -164,9 +175,14 @@ describe('selection/exclusion-pass + guards — catalogue réel', () => {
     const allergenList = [...usedAllergens]
     expect(allergenList.length).toBeGreaterThan(0) // garde-fou : le test ne doit pas passer "par vide"
 
+    const combos: AllergenId[][] = [[], [...allergenList]]
+    for (const a of allergenList) combos.push([a])
+    for (let i = 0; i < allergenList.length; i++) {
+      for (let j = i + 1; j < allergenList.length; j++) combos.push([allergenList[i]!, allergenList[j]!])
+    }
+
     let combinationsChecked = 0
-    for (let mask = 0; mask < 2 ** allergenList.length; mask++) {
-      const combo = allergenList.filter((_, i) => (mask & (1 << i)) !== 0)
+    for (const combo of combos) {
       const req = makeRequest({ creneau: 'diner', allergies: combo })
       const { candidates } = runExclusionPass(catalog, req)
 
@@ -189,6 +205,24 @@ describe('selection/exclusion-pass + guards — catalogue réel', () => {
       combinationsChecked++
     }
 
-    expect(combinationsChecked).toBe(2 ** allergenList.length)
+    // vide + complet + n singletons + n(n-1)/2 paires
+    const n = allergenList.length
+    expect(combinationsChecked).toBe(2 + n + (n * (n - 1)) / 2)
+  })
+
+  it('un allergène très répandu (lait) vide presque le créneau, mais ne laisse passer aucune recette laitière', () => {
+    const req = makeRequest({ creneau: 'diner', allergies: ['lait' as AllergenId] })
+    const { candidates, rejections } = runExclusionPass(catalog, req)
+
+    // Cas concret plutôt que combinatoire : `lait` touche beaucoup de recettes du catalogue réel,
+    // c'est donc le meilleur révélateur d'un filtre trop laxiste.
+    expect(rejections.length).toBeGreaterThan(0)
+    for (const id of candidates) {
+      const recipe = catalog.recipes.get(id)
+      for (const ingredient of recipe?.ingredients ?? []) {
+        const food = catalog.foods.get(ingredient.foodId)
+        expect((food?.allergenes ?? []).some((fa) => fa.allergenId === 'lait')).toBe(false)
+      }
+    }
   })
 })

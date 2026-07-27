@@ -1,0 +1,81 @@
+id: magret_canard_miel
+nom: "Magret de canard au miel et au vinaigre balsamique"
+description: >
+  Un magret cuit côté peau puis laqué d'un caramel de miel et de vinaigre balsamique.
+temps_prep_min: 10
+temps_cuisson_min: 20
+difficulte: 3
+portions_base: 2
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: fete
+conservation_jours: 2
+axes:
+  sucre_sale: 0.2
+  leger_consistant: 0.8
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: canard_magret
+    quantite_g: 400
+    unite_affichage: "1 magret"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_balsamique
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Quadriller la peau du magret au couteau sans entamer la chair, puis saler les deux faces."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Poser le magret côté peau dans une poêle FROIDE, puis allumer à feu moyen — la graisse fond ainsi progressivement."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Vider la graisse rendue au fur et à mesure, retourner le magret et le cuire côté chair."
+    lexicon_ids: []
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Réserver la viande au chaud. Faire suer l'échalote émincée, déglacer au vinaigre, ajouter le miel et laisser sirupeux."
+    lexicon_ids: [emincer, deglacer]
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Laisser reposer le magret cinq minutes avant de le trancher en biais, puis napper de sauce."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: occasion
+    valeur: repas_de_fete
+  - facette: style
+    valeur: convivial
