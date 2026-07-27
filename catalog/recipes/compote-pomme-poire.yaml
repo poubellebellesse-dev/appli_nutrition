@@ -1,0 +1,66 @@
+id: compote_pomme_poire
+nom: "Compote pomme-poire à la cannelle"
+description: >
+  Des pommes et des poires fondues à couvert, écrasées à la fourchette, sans sucre ajouté.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: 0.8
+  leger_consistant: -0.4
+  chaud_froid: 0.0
+  texture: fondant
+
+ingredients:
+  - food_id: pomme
+    quantite_g: 600
+    unite_affichage: "4 pommes"
+    optionnel: false
+  - food_id: poire
+    quantite_g: 400
+    unite_affichage: "3 poires"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: true
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Peler les fruits, retirer les cœurs et couper la chair en morceaux réguliers."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mettre les morceaux dans une casserole avec le jus de citron et deux cuillères à soupe d'eau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Couvrir et laisser compoter à feu doux, en remuant de temps en temps."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Écraser à la fourchette pour garder des morceaux, ajouter la cannelle et laisser tiédir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

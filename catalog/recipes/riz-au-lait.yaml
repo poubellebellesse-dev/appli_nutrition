@@ -1,0 +1,75 @@
+id: riz_au_lait
+nom: "Riz au lait à la cannelle"
+description: >
+  Du riz cuit longuement dans du lait entier sucré, parfumé à la cannelle.
+temps_prep_min: 5
+temps_cuisson_min: 40
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.9
+  leger_consistant: 0.5
+  chaud_froid: 0.2
+  texture: creme
+
+ingredients:
+  - food_id: riz_blanc
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: lait_entier
+    quantite_g: 900
+    unite_affichage: "90 cl"
+    optionnel: false
+  - food_id: sucre_blanc
+    quantite_g: 80
+    unite_affichage: "80 g"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 15
+    unite_affichage: "une noix"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le riz à l'eau froide pour retirer l'excès d'amidon de surface."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Porter le lait à frémissement avec la cannelle, sans le faire bouillir."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Verser le riz et laisser cuire à feu très doux en remuant souvent pour qu'il n'attache pas."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter le sucre en fin de cuisson seulement, puis le beurre hors du feu."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Répartir en ramequins ; le riz épaissit encore en refroidissant."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,78 @@
+id: salade_fruits_menthe
+nom: "Salade de fruits frais à la menthe"
+description: >
+  Un mélange de fruits frais coupés, relevé de jus de citron vert et de menthe ciselée.
+temps_prep_min: 20
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.9
+  leger_consistant: -0.8
+  chaud_froid: -0.9
+  texture: croquant
+
+ingredients:
+  - food_id: ananas
+    quantite_g: 300
+    unite_affichage: "1/2 ananas"
+    optionnel: false
+  - food_id: mangue
+    quantite_g: 250
+    unite_affichage: "1 mangue"
+    optionnel: false
+  - food_id: kiwi
+    quantite_g: 150
+    unite_affichage: "2 kiwis"
+    optionnel: false
+  - food_id: banane
+    quantite_g: 150
+    unite_affichage: "1 banane"
+    optionnel: true
+  - food_id: citron
+    quantite_g: 40
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 10
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Couper l'ananas, la mangue et les kiwis en dés réguliers d'environ un centimètre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ajouter la banane en rondelles en dernier, arrosée aussitôt de jus de citron pour qu'elle ne noircisse pas."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Mélanger avec le miel délayé dans le reste du jus de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser reposer au frais, puis ciseler la menthe au dernier moment — elle noircit vite une fois coupée."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

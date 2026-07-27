@@ -1,0 +1,79 @@
+id: galettes_sarrasin_jambon
+nom: "Galettes de sarrasin, jambon et gruyère"
+description: >
+  Des galettes de blé noir garnies d'un œuf, de jambon et de gruyère, repliées en carré.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: sarrasin
+    quantite_g: 250
+    unite_affichage: "250 g de farine"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 250
+    unite_affichage: "5 œufs"
+    optionnel: false
+  - food_id: jambon_blanc
+    quantite_g: 160
+    unite_affichage: "4 tranches"
+    optionnel: false
+  - food_id: gruyere
+    quantite_g: 120
+    unite_affichage: "120 g râpé"
+    optionnel: false
+  - food_id: beurre_demi_sel
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Mélanger la farine de sarrasin, le sel et un œuf avec 60 cl d'eau, jusqu'à obtenir une pâte lisse."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Laisser reposer la pâte au frais — c'est ce repos qui rend la galette souple plutôt que cassante."
+    lexicon_ids: []
+    timer_s: 7200
+    timer_type: repos
+  - ordre: 3
+    texte: "Beurrer une poêle bien chaude, verser une louche de pâte et l'étaler d'un mouvement circulaire."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Retourner la galette, casser un œuf au centre, répartir jambon et gruyère autour."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Replier les quatre bords vers le centre pour former un carré, et servir dès que le blanc est pris."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: bretonne
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

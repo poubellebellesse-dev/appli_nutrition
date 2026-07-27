@@ -1,0 +1,99 @@
+id: ratatouille
+nom: "Ratatouille"
+description: >
+  Aubergine, courgette, poivrons et tomates cuits séparément puis réunis, au thym et au laurier.
+temps_prep_min: 25
+temps_cuisson_min: 50
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.1
+  chaud_froid: 0.4
+  texture: fondant
+
+ingredients:
+  - food_id: aubergine
+    quantite_g: 400
+    unite_affichage: "2 aubergines"
+    optionnel: false
+  - food_id: courgette
+    quantite_g: 400
+    unite_affichage: "2 courgettes"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 200
+    unite_affichage: "1 poivron rouge"
+    optionnel: false
+  - food_id: poivron_vert
+    quantite_g: 200
+    unite_affichage: "1 poivron vert"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 600
+    unite_affichage: "6 tomates"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 200
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 15
+    unite_affichage: "3 gousses"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Couper tous les légumes en cubes de deux centimètres, en gardant chaque légume à part."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir l'aubergine seule dans l'huile chaude jusqu'à ce qu'elle dore, puis la réserver."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Répéter séparément pour la courgette puis les poivrons — c'est ce qui évite la bouillie uniforme."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Faire fondre les oignons et l'ail émincés, ajouter les tomates, le thym et le laurier, saler."
+    lexicon_ids: [emincer]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Réunir tous les légumes, couvrir à demi et laisser mijoter à feu doux. Retirer le laurier avant de servir."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

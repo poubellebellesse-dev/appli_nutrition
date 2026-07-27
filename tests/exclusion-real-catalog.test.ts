@@ -112,14 +112,24 @@ describe('selection/exclusion-pass + guards — catalogue réel', () => {
     expect(candidates.has('boeuf_hache_sauce_tomate' as RecipeId)).toBe(false) // omnivore
   })
 
-  it('temps disponible = 15 min ne garde que l’omelette (10 min) sur le créneau "diner"', () => {
+  it('temps disponible = 15 min : garde EXACTEMENT les recettes tenant en 15 min, pas une de plus', () => {
     const req = makeRequest({ creneau: 'diner', tempsDisponibleMin: 15 })
     const { candidates, rejections } = runExclusionPass(catalog, req)
 
-    expect(candidates).toEqual(new Set(['omelette_fines_herbes']))
+    // Propriété, pas liste figée : le catalogue grandit (46 → 58 → …) et une recette rapide
+    // ajoutée demain rendrait fausse toute énumération écrite à la main, sans rien révéler du
+    // moteur. Ce qui doit rester vrai est la coupure elle-même, dans les deux sens.
+    const totalMinutes = (id: RecipeId): number => {
+      const recipe = catalog.recipes.get(id)
+      return (recipe?.tempsPrepMin ?? 0) + (recipe?.tempsCuissonMin ?? 0)
+    }
+
+    expect(candidates.size).toBeGreaterThan(0) // sinon le test ne prouve rien
+    for (const id of candidates) expect(totalMinutes(id)).toBeLessThanOrEqual(15)
+    for (const entry of rejections) expect(totalMinutes(entry.recipeId)).toBeGreaterThan(15)
+    expect(candidates.has('omelette_fines_herbes' as RecipeId)).toBe(true) // 10 min, témoin
     expect(rejections.every((entry) => entry.layerId === 'temps')).toBe(true)
-    // Tout le créneau sauf l'omelette : dérivé, pas figé (voir `dinerCount`).
-    expect(rejections).toHaveLength(dinerCount() - 1)
+    expect(candidates.size + rejections.length).toBe(dinerCount())
   })
 
   it('le garde-fou lève EngineSafetyError sur un cas violant construit à la main (catalogue réel)', () => {

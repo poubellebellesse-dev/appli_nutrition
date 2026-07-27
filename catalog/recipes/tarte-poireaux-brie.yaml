@@ -1,0 +1,83 @@
+id: tarte_poireaux_brie
+nom: "Tarte fine aux poireaux et au brie"
+description: >
+  Une pâte feuilletée garnie de fondue de poireaux à la crème, couverte de lamelles de brie.
+temps_prep_min: 20
+temps_cuisson_min: 35
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.6
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: pate_feuilletee
+    quantite_g: 250
+    unite_affichage: "1 rouleau"
+    optionnel: false
+  - food_id: poireau
+    quantite_g: 700
+    unite_affichage: "4 poireaux"
+    optionnel: false
+  - food_id: brie
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 120
+    unite_affichage: "12 cl"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 50
+    unite_affichage: "1 œuf"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les poireaux en rondelles fines et les rincer à grande eau."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les faire fondre dans le beurre à couvert et à feu doux, jusqu'à ce qu'ils soient translucides."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Hors du feu, incorporer la crème et l'œuf battu, saler."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Étaler la pâte sur sa plaque, la piquer à la fourchette, puis répartir la fondue de poireaux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Couvrir de lamelles de brie et enfourner à 200 °C jusqu'à ce que la pâte soit dorée dessous."
+    lexicon_ids: []
+    timer_s: 2100
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

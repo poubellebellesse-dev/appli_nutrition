@@ -1,0 +1,99 @@
+id: veau_marengo
+nom: "Veau Marengo"
+description: >
+  Des morceaux de veau mijotés au vin blanc avec tomates, champignons et petits oignons.
+temps_prep_min: 20
+temps_cuisson_min: 90
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.7
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: veau_escalope
+    quantite_g: 1200
+    unite_affichage: "1,2 kg de sauté de veau"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 600
+    unite_affichage: "6 tomates"
+    optionnel: false
+  - food_id: concentre_tomate
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: champignon_paris
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 250
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 300
+    unite_affichage: "30 cl"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Colorer les morceaux de veau dans l'huile, en plusieurs fois pour qu'ils dorent au lieu de bouillir."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Saupoudrer de farine, remuer et laisser cuire une minute pour qu'elle perde son goût cru."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Déglacer au vin blanc, gratter les sucs, puis ajouter les tomates en dés et le concentré."
+    lexicon_ids: [deglacer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter les oignons émincés, le thym, le laurier et le sel, couvrir et laisser mijoter à feu très doux."
+    lexicon_ids: [emincer]
+    timer_s: 4200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter les champignons émincés pour la dernière demi-heure, puis retirer le laurier."
+    lexicon_ids: [emincer]
+    timer_s: 1800
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

@@ -1,0 +1,74 @@
+id: pain_perdu
+nom: "Pain perdu à la cannelle"
+description: >
+  Des tranches de pain de mie trempées dans un mélange œuf-lait, dorées au beurre et sucrées.
+temps_prep_min: 10
+temps_cuisson_min: 10
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.8
+  leger_consistant: 0.5
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: pain_mie
+    quantite_g: 240
+    unite_affichage: "8 tranches"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 150
+    unite_affichage: "3 œufs"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 300
+    unite_affichage: "30 cl"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Battre les œufs avec le lait, la moitié du sucre et la cannelle dans un plat creux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Tremper chaque tranche des deux côtés sans la laisser se détremper — quelques secondes suffisent."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire mousser le beurre dans une poêle et y dorer les tranches à feu moyen."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Retourner, dorer l'autre face, puis saupoudrer du reste de sucre à la sortie de la poêle."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

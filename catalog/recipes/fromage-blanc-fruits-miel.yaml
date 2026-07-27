@@ -1,0 +1,70 @@
+id: fromage_blanc_fruits_miel
+nom: "Fromage blanc, fruits rouges et miel"
+description: >
+  Du fromage blanc nature garni de framboises et myrtilles, avec du miel et des amandes.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.7
+  leger_consistant: -0.4
+  chaud_froid: -0.8
+  texture: creme
+
+ingredients:
+  - food_id: fromage_blanc
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: framboise
+    quantite_g: 100
+    unite_affichage: "1 barquette"
+    optionnel: false
+  - food_id: myrtille
+    quantite_g: 80
+    unite_affichage: "une poignée"
+    optionnel: true
+  - food_id: miel
+    quantite_g: 25
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Faire dorer les amandes effilées à sec dans une poêle, puis les laisser refroidir."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Rincer les fruits rouges et les égoutter sans les écraser."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Répartir le fromage blanc dans deux bols, garnir de fruits."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Arroser de miel et parsemer d'amandes juste avant de servir, pour qu'elles restent croquantes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

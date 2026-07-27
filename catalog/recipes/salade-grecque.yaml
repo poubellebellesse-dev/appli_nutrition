@@ -1,0 +1,82 @@
+id: salade_grecque
+nom: "Salade grecque"
+description: >
+  Concombre, tomates et oignon rouge en gros morceaux, feta, olives noires et origan.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: -0.3
+  chaud_froid: -0.8
+  texture: croquant
+
+ingredients:
+  - food_id: concombre
+    quantite_g: 400
+    unite_affichage: "1 concombre"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 500
+    unite_affichage: "5 tomates"
+    optionnel: false
+  - food_id: feta
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: olive_noire
+    quantite_g: 80
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 80
+    unite_affichage: "1/2 oignon"
+    optionnel: false
+  - food_id: origan_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Couper le concombre et les tomates en gros morceaux — la salade grecque ne se coupe pas fin."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'oignon en fines lamelles et le laisser dégorger quelques minutes dans l'eau froide pour l'adoucir."
+    lexicon_ids: [emincer]
+    timer_s: 600
+    timer_type: repos
+  - ordre: 3
+    texte: "Réunir les légumes, ajouter les olives et poser la feta en pavés sur le dessus, sans l'émietter."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Arroser d'huile d'olive, saupoudrer d'origan et saler légèrement — la feta apporte déjà du sel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: grecque
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

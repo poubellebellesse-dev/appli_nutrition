@@ -1,0 +1,74 @@
+id: oeufs_brouilles_persil
+nom: "Œufs brouillés au persil"
+description: >
+  Des œufs battus cuits lentement au bain-marie jusqu'à une texture crémeuse, avec du persil.
+temps_prep_min: 5
+temps_cuisson_min: 10
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.2
+  chaud_froid: 0.8
+  texture: creme
+
+ingredients:
+  - food_id: oeuf
+    quantite_g: 250
+    unite_affichage: "5 œufs"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 30
+    unite_affichage: "30 g"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 30
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 2
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Battre les œufs à la fourchette sans chercher à les faire mousser."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire fondre le beurre dans une casserole posée sur une seconde casserole d'eau frémissante."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Verser les œufs et remuer sans arrêt à la spatule, en raclant le fond — la lenteur fait la texture."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Retirer du feu quand les œufs sont encore brillants, ajouter la crème pour stopper la cuisson, saler et parsemer de persil."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien
