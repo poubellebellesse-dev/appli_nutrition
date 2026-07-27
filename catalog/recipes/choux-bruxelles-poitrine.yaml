@@ -1,0 +1,83 @@
+id: choux_bruxelles_poitrine
+nom: "Choux de Bruxelles poêlés à la poitrine fumée"
+description: >
+  Des choux de Bruxelles blanchis puis dorés à la poêle avec des lardons de poitrine.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.3
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: chou_bruxelles
+    quantite_g: 700
+    unite_affichage: "700 g"
+    optionnel: false
+  - food_id: porc_poitrine
+    quantite_g: 150
+    unite_affichage: "150 g en lardons"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 60
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: noisette
+    quantite_g: 40
+    unite_affichage: "une poignée"
+    optionnel: true
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Parer les choux, retirer les feuilles abîmées et les couper en deux dans la hauteur."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les blanchir cinq minutes à l'eau bouillante salée, puis les égoutter — cette étape retire leur amertume."
+    lexicon_ids: [blanchir]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire rendre leur gras aux lardons dans une poêle, sans matière grasse, puis les réserver."
+    lexicon_ids: []
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter le beurre et poser les choux FACE COUPÉE vers le bas, sans les remuer, pour qu'ils caramélisent."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter l'échalote émincée et les lardons, saler, poivrer et parsemer de noisettes concassées."
+    lexicon_ids: [emincer]
+    timer_s: 240
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: belge
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

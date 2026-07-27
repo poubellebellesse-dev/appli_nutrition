@@ -1,0 +1,91 @@
+id: poulet_noix_cajou
+nom: "Poulet sauté aux noix de cajou"
+description: >
+  Des dés de poulet sautés à feu vif avec poivron, sauce soja, gingembre et noix de cajou.
+temps_prep_min: 20
+temps_cuisson_min: 15
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.2
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: croquant
+
+ingredients:
+  - food_id: poulet_blanc
+    quantite_g: 500
+    unite_affichage: "4 blancs"
+    optionnel: false
+  - food_id: noix_cajou
+    quantite_g: 100
+    unite_affichage: "100 g"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 200
+    unite_affichage: "1 poivron"
+    optionnel: false
+  - food_id: riz_blanc
+    quantite_g: 280
+    unite_affichage: "280 g"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 45
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_sesame
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: huile_tournesol
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire le riz. Couper le poulet en dés et le poivron en lanières."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Faire dorer les noix de cajou à sec dans le wok, puis les réserver — elles brûleraient avec le reste."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Saisir le poulet à feu très vif dans l'huile de tournesol, en une seule couche, sans le remuer d'abord."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter le poivron, l'ail émincé et le gingembre, faire sauter en remuant sans arrêt."
+    lexicon_ids: [emincer]
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Verser la sauce soja, laisser réduire une minute, puis ajouter les cajous et l'huile de sésame hors du feu."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: chinoise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,87 @@
+id: gaspacho
+nom: "Gaspacho de tomates et concombre"
+description: >
+  Une soupe froide de tomates, concombre et poivron, liée au pain et à l'huile d'olive.
+temps_prep_min: 20
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: -0.6
+  chaud_froid: -0.9
+  texture: liquide
+
+ingredients:
+  - food_id: tomate
+    quantite_g: 900
+    unite_affichage: "8 tomates mûres"
+    optionnel: false
+  - food_id: concombre
+    quantite_g: 300
+    unite_affichage: "1/2 concombre"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 150
+    unite_affichage: "1 poivron"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 80
+    unite_affichage: "2 tranches rassises"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 8
+    unite_affichage: "1 gousse"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire tremper le pain dans un peu d'eau — c'est lui qui donnera au gaspacho sa texture veloutée."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 2
+    texte: "Couper grossièrement les tomates, le concombre pelé et le poivron épépiné."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Mixer les légumes avec l'ail, le pain pressé, le vinaigre et le sel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Verser l'huile d'olive en filet pendant que le mixeur tourne, jusqu'à ce que le mélange pâlisse et épaississe."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Passer au tamis si l'on veut une texture lisse, puis réfrigérer au moins deux heures — un gaspacho tiède ne vaut rien."
+    lexicon_ids: []
+    timer_s: 7200
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: espagnole
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,83 @@
+id: salade_endives_clementines
+nom: "Salade d'endives aux clémentines et pistaches"
+description: >
+  Des endives croquantes avec des quartiers de clémentine et des pistaches concassées.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.3
+  leger_consistant: -0.6
+  chaud_froid: -0.8
+  texture: croquant
+
+ingredients:
+  - food_id: endive
+    quantite_g: 500
+    unite_affichage: "5 endives"
+    optionnel: false
+  - food_id: clementine
+    quantite_g: 300
+    unite_affichage: "4 clémentines"
+    optionnel: false
+  - food_id: pistache
+    quantite_g: 50
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: huile_noix
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_balsamique
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 10
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Retirer le cône amer à la base des endives, puis les couper en tronçons."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Peler les clémentines à vif, en retirant la peau blanche, et détacher les quartiers."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Concasser grossièrement les pistaches au couteau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Fouetter le vinaigre balsamique, le miel et le sel, puis monter à l'huile de noix."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Assaisonner les endives au dernier moment — elles rendent de l'eau — puis ajouter clémentines et pistaches."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

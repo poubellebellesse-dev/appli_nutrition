@@ -1,0 +1,83 @@
+id: salade_pasteque_feta_menthe
+nom: "Salade de pastèque, feta et menthe"
+description: >
+  Des cubes de pastèque avec de la feta émiettée, de la menthe et un filet d'huile d'olive.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.3
+  leger_consistant: -0.7
+  chaud_froid: -0.9
+  texture: croquant
+
+ingredients:
+  - food_id: pasteque
+    quantite_g: 800
+    unite_affichage: "1/4 de pastèque"
+    optionnel: false
+  - food_id: feta
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 40
+    unite_affichage: "1/2 citron"
+    optionnel: true
+  - food_id: olive_noire
+    quantite_g: 60
+    unite_affichage: "une poignée"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Couper la pastèque en cubes de trois centimètres, en retirant les pépins."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les laisser s'égoutter quelques minutes dans une passoire — la pastèque rend beaucoup d'eau."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 3
+    texte: "Émietter la feta grossièrement, en gros morceaux plutôt qu'en miettes fines."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Réunir pastèque, feta et olives, sans mélanger trop fort pour ne pas écraser les cubes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Arroser d'huile et de citron, déchirer la menthe par-dessus, poivrer et servir aussitôt. Ne pas saler : la feta suffit."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: grecque
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

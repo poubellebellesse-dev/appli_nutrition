@@ -1,0 +1,83 @@
+id: tarte_oignons_anchois
+nom: "Tarte aux oignons confits et anchois"
+description: >
+  Une pâte garnie d'oignons longuement confits, de filets d'anchois et d'olives noires.
+temps_prep_min: 20
+temps_cuisson_min: 60
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.4
+  chaud_froid: 0.5
+  texture: fondant
+
+ingredients:
+  - food_id: oignon
+    quantite_g: 1000
+    unite_affichage: "8 oignons"
+    optionnel: false
+  - food_id: pate_feuilletee
+    quantite_g: 250
+    unite_affichage: "1 rouleau"
+    optionnel: false
+  - food_id: anchois_huile
+    quantite_g: 80
+    unite_affichage: "12 filets"
+    optionnel: false
+  - food_id: olive_noire
+    quantite_g: 80
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les oignons finement — c'est la seule étape longue, tout le reste est rapide."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les faire confire à couvert dans l'huile avec le thym et le laurier, à feu très doux, sans les colorer."
+    lexicon_ids: []
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Découvrir en fin de cuisson pour évaporer le jus rendu — une garniture humide détremperait la pâte. Ne pas saler : les anchois s'en chargent."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Étaler la pâte, la piquer, puis répartir les oignons refroidis."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Disposer les filets d'anchois en croisillons, poser une olive dans chaque losange, et enfourner à 200 °C."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: provencale
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

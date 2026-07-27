@@ -1,0 +1,79 @@
+id: tarte_rhubarbe
+nom: "Tarte à la rhubarbe"
+description: >
+  Des tronçons de rhubarbe dégorgés au sucre, sur une pâte feuilletée, liés d'un appareil à l'œuf.
+temps_prep_min: 25
+temps_cuisson_min: 40
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: 0.7
+  leger_consistant: 0.3
+  chaud_froid: 0.2
+  texture: fondant
+
+ingredients:
+  - food_id: rhubarbe
+    quantite_g: 700
+    unite_affichage: "700 g de tiges"
+    optionnel: false
+  - food_id: pate_feuilletee
+    quantite_g: 250
+    unite_affichage: "1 rouleau"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 120
+    unite_affichage: "120 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 100
+    unite_affichage: "2 œufs"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 120
+    unite_affichage: "12 cl"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Effiler la rhubarbe si les tiges sont grosses, puis les couper en tronçons de deux centimètres."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les saupoudrer de la moitié du sucre et les laisser dégorger — c'est ce qui évite une tarte détrempée."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: repos
+  - ordre: 3
+    texte: "Égoutter la rhubarbe en jetant le jus rendu, puis la ranger serrée sur la pâte piquée."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Enfourner à 200 °C une vingtaine de minutes, le temps que la pâte prenne."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Verser l'appareil œufs-crème-sucre restant, parsemer d'amandes et remettre au four jusqu'à ce qu'il soit pris."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

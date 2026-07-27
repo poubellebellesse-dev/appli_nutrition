@@ -1,0 +1,79 @@
+id: feves_fraiches_menthe
+nom: "Fèves fraîches à la menthe"
+description: >
+  Des fèves écossées et pelées, juste étuvées au beurre avec de l'échalote et de la menthe.
+temps_prep_min: 30
+temps_cuisson_min: 10
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: -0.2
+  chaud_froid: 0.5
+  texture: fondant
+
+ingredients:
+  - food_id: feve
+    quantite_g: 1200
+    unite_affichage: "1,2 kg en cosses"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 60
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 30
+    unite_affichage: "30 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Écosser les fèves. Sur 1,2 kg de cosses il reste environ 400 g de grains — le rendement est faible, c'est normal."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Blanchir les grains une minute, puis les rafraîchir à l'eau glacée."
+    lexicon_ids: [blanchir]
+    timer_s: 60
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Retirer la seconde peau de chaque grain en la pinçant — fastidieux, mais c'est elle qui est amère et coriace."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Faire suer l'échalote émincée au beurre sans coloration."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter les fèves, étuver deux minutes à couvert, saler, puis ajouter la menthe ciselée et un trait de citron hors du feu."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: provencale
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

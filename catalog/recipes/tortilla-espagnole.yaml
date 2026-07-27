@@ -1,0 +1,75 @@
+id: tortilla_espagnole
+nom: "Tortilla espagnole aux pommes de terre"
+description: >
+  Une omelette épaisse de pommes de terre et d'oignons confits à l'huile d'olive.
+temps_prep_min: 15
+temps_cuisson_min: 35
+difficulte: 3
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.7
+  chaud_froid: 0.3
+  texture: fondant
+
+ingredients:
+  - food_id: pomme_de_terre
+    quantite_g: 700
+    unite_affichage: "6 pommes de terre"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 350
+    unite_affichage: "7 œufs"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 250
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 100
+    unite_affichage: "10 cl"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 7
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Peler les pommes de terre et les couper en tranches fines, émincer les oignons."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les faire CONFIRE doucement dans l'huile, à couvert et sans coloration — la tortilla n'est pas une poêlée de pommes de terre sautées."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Les égoutter en gardant un peu d'huile, saler, puis les mêler aux œufs battus et laisser reposer."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 4
+    texte: "Verser dans une poêle chaude et huilée, cuire à feu doux jusqu'à ce que les bords prennent."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Retourner à l'aide d'une assiette plus large que la poêle, puis cuire l'autre face — le centre doit rester moelleux."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: espagnole
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,89 @@
+id: salade_crabe_avocat
+nom: "Salade de crabe et avocat"
+description: >
+  De la chair de crabe mêlée d'avocat, citron vert et coriandre, servie très fraîche.
+temps_prep_min: 20
+temps_cuisson_min: 20
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: fete
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.3
+  chaud_froid: -0.9
+  texture: fondant
+
+ingredients:
+  - food_id: crabe
+    quantite_g: 800
+    unite_affichage: "1 tourteau"
+    optionnel: false
+  - food_id: avocat
+    quantite_g: 300
+    unite_affichage: "2 avocats"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 80
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: mache
+    quantite_g: 60
+    unite_affichage: "2 poignées"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire le crabe à l'eau bouillante salée, puis le laisser refroidir complètement avant de le décortiquer."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Récupérer la chair en vérifiant à la main qu'il ne reste aucun éclat de carapace."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Couper les avocats en dés et les citronner aussitôt pour qu'ils ne noircissent pas."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mêler délicatement crabe, avocat, échalote émincée, huile, reste de citron et sel."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Dresser sur la mâche, parsemer de coriandre et servir sans attendre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: occasion
+    valeur: repas_de_fete
+  - facette: style
+    valeur: convivial

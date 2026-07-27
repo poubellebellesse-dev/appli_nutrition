@@ -1,0 +1,79 @@
+id: creme_mascarpone_cacao
+nom: "Crème de mascarpone au cacao"
+description: >
+  Une crème fouettée de mascarpone et d'œufs, saupoudrée de cacao amer, servie bien froide.
+temps_prep_min: 20
+temps_cuisson_min: 0
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: 0.8
+  leger_consistant: 0.2
+  chaud_froid: -0.8
+  texture: creme
+
+ingredients:
+  - food_id: mascarpone
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 200
+    unite_affichage: "4 œufs"
+    optionnel: false
+  - food_id: sucre_blanc
+    quantite_g: 90
+    unite_affichage: "90 g"
+    optionnel: false
+  - food_id: cacao_poudre
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: noisette
+    quantite_g: 40
+    unite_affichage: "une poignée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Séparer les blancs des jaunes et sortir le mascarpone à l'avance pour qu'il ne soit pas trop ferme."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+  - ordre: 2
+    texte: "Fouetter les jaunes avec le sucre jusqu'à ce que le mélange blanchisse et double de volume."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: null
+  - ordre: 3
+    texte: "Incorporer le mascarpone en trois fois, sans travailler la crème plus que nécessaire — elle tournerait granuleuse."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Monter les blancs en neige ferme avec la pincée de sel, puis les incorporer à la spatule en soulevant la masse."
+    lexicon_ids: [monter_blancs]
+    timer_s: 300
+    timer_type: null
+  - ordre: 5
+    texte: "Répartir en verrines, réfrigérer au moins quatre heures, puis saupoudrer de cacao et de noisettes juste avant de servir."
+    lexicon_ids: []
+    timer_s: 14400
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial
