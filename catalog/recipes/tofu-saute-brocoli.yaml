@@ -68,11 +68,8 @@ etapes:
 facettes:
   - facette: cuisine
     valeur: asiatique
-  # Deux facettes `regime` — voir lentilles-vertes-carottes.yaml : égalité stricte, pas de
-  # hiérarchie déduite, un plat végétalien doit déclarer `vegetarien` pour être proposé à un
-  # utilisateur végétarien.
-  - facette: regime
-    valeur: vegetarien
+  # Une seule facette — voir lentilles-vertes-carottes.yaml : la chaîne d'inclusion des régimes
+  # rend l'énumération inutile.
   - facette: regime
     valeur: vegetalien
   - facette: style

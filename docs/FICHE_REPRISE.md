@@ -33,9 +33,13 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Garde-fous** | 4 sur 5 codés — reste `assertCalorieFloor`, qui attend le planning |
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
-**État vérifié : `npm test` → 380 verts (34 fichiers) · `npm run typecheck` propre ·
-`npm run build` → 76 aliments, 22 recettes — valeurs nutritionnelles **CIQUAL 2025 réelles**,
+**État vérifié : `npm test` → 387 verts (34 fichiers) · `npm run typecheck` propre ·
+`npm run build` → **123 aliments, 34 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
 plus aucun `PROV-`.**
+
+> Règle de contenu à ne pas défaire : une recette déclare **un seul** régime, le plus restrictif
+> qu'elle respecte (`vegetalien` pour un plat sans produit animal). La couche `regime` connaît la
+> chaîne `vegetalien ⊂ vegetarien ⊂ pescetarien ⊂ omnivore` et se charge du reste — §6.3 ter ENGINE.
 
 > ⚠️ Vérifier `git status -sb` en début de session : des commits peuvent ne pas être poussés.
 > Modèle en vigueur — **Claude committe, l'utilisateur pousse** (le shell agent ne peut pas

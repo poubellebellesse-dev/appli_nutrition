@@ -1,0 +1,87 @@
+id: soupe_pois_casses
+nom: "Soupe de pois cassés au laurier"
+description: >
+  Une soupe épaisse de pois cassés mijotés avec carotte, poireau et feuille de laurier.
+temps_prep_min: 10
+temps_cuisson_min: 60
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: pois_casse
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 200
+    unite_affichage: "2 carottes"
+    optionnel: false
+  - food_id: poireau
+    quantite_g: 150
+    unite_affichage: "1 poireau"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "2 feuilles"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 10
+    unite_affichage: "1 cube"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer les pois cassés à grande eau jusqu'à ce que l'eau reste claire."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'oignon et le poireau, couper les carottes en rondelles, faire revenir le tout dans l'huile."
+    lexicon_ids: [emincer]
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les pois cassés, le laurier et le cube de bouillon, couvrir d'un litre et demi d'eau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser mijoter à couvert et à petits bouillons jusqu'à ce que les pois se défassent."
+    lexicon_ids: []
+    timer_s: 3300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Retirer le laurier, mixer si l'on veut une texture lisse, saler et servir bien chaud."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

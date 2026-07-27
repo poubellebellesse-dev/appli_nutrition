@@ -1,0 +1,94 @@
+id: chili_haricots_rouges
+nom: "Chili de bœuf aux haricots rouges"
+description: >
+  Du bœuf haché mijoté longuement avec haricots rouges, tomate, cumin et paprika.
+temps_prep_min: 15
+temps_cuisson_min: 45
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 4
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.9
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: boeuf_hache_5
+    quantite_g: 500
+    unite_affichage: "500 g"
+    optionnel: false
+  - food_id: haricot_rouge
+    quantite_g: 400
+    unite_affichage: "1 grande conserve égouttée"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 400
+    unite_affichage: "4 tomates"
+    optionnel: false
+  - food_id: concentre_tomate
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 150
+    unite_affichage: "1 poivron"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 4
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: paprika
+    quantite_g: 4
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon, l'ail et le poivron."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir les légumes dans l'huile, puis ajouter le cumin et le paprika et laisser chauffer une minute pour libérer les arômes."
+    lexicon_ids: []
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter le bœuf haché, l'écraser à la cuillère et le laisser colorer, puis incorporer les tomates en dés et le concentré."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Verser les haricots rouges égouttés, saler, couvrir à moitié et laisser mijoter à feu doux en remuant de temps en temps."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: tex_mex
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

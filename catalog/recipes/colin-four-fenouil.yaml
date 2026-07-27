@@ -1,0 +1,78 @@
+id: colin_four_fenouil
+nom: "Dos de colin au four, fenouil et citron"
+description: >
+  Du colin cuit au four sur des lamelles de fenouil, avec citron, huile d'olive et thym.
+temps_prep_min: 15
+temps_cuisson_min: 30
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.2
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: lieu_colin
+    quantite_g: 600
+    unite_affichage: "4 dos"
+    optionnel: false
+  - food_id: fenouil
+    quantite_g: 500
+    unite_affichage: "2 bulbes"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Émincer les bulbes de fenouil en lamelles fines."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Étaler le fenouil dans un plat, arroser de la moitié de l'huile, saler et enfourner seul."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Poser les dos de colin sur le fenouil, couvrir de rondelles de citron, parsemer de thym et arroser du reste d'huile."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Remettre au four jusqu'à ce que la chair du poisson se détache en lamelles, puis poivrer."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

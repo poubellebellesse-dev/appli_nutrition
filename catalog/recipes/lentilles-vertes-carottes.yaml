@@ -72,12 +72,9 @@ etapes:
 facettes:
   - facette: cuisine
     valeur: francaise
-  # Deux facettes `regime`, pas une : la couche `regime` fait une égalité STRICTE de chaîne et ne
-  # déduit AUCUNE hiérarchie (voir l'en-tête de engine/selection/regime.ts). Sans `vegetarien`
-  # déclaré explicitement, ce plat — pourtant sans aucun produit animal — serait invisible pour un
-  # utilisateur végétarien.
-  - facette: regime
-    valeur: vegetarien
+  # Une seule facette suffit : la couche `regime` connaît la chaîne
+  # vegetalien ⊂ vegetarien ⊂ pescetarien ⊂ omnivore (engine/selection/regime.ts), donc ce plat
+  # est proposé aux quatre régimes sans avoir à les énumérer.
   - facette: regime
     valeur: vegetalien
   - facette: style

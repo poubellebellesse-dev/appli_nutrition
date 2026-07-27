@@ -1,0 +1,82 @@
+id: salade_flageolets_thon
+nom: "Salade de flageolets au thon"
+description: >
+  Des flageolets froids en vinaigrette à la moutarde, avec thon émietté, échalote et persil.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.2
+  chaud_froid: -0.7
+  texture: fondant
+
+ingredients:
+  - food_id: flageolet
+    quantite_g: 500
+    unite_affichage: "1 grande conserve égouttée"
+    optionnel: false
+  - food_id: thon_conserve
+    quantite_g: 200
+    unite_affichage: "2 boîtes égouttées"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 60
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 45
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 20
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer les flageolets à grande eau, puis les laisser s'égoutter dans une passoire."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: repos
+  - ordre: 2
+    texte: "Délayer la moutarde avec le vinaigre et une pincée de sel, puis monter la vinaigrette en versant l'huile en filet."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Émincer les échalotes très finement et ciseler le persil."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mélanger les flageolets à la vinaigrette, ajouter le thon émietté, l'échalote et le persil, puis laisser reposer au frais."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

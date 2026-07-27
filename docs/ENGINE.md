@@ -373,7 +373,7 @@ flowchart TB
     IN["SuggestionRequest"] --> EX
 
     subgraph EXC["COUCHES D'EXCLUSION — réduisent l'ensemble"]
-        EX["allergènes 🔒 → régime 🔒 → exclusions → requis → temps → équipement"]
+        EX["allergènes 🔒 → régime 🔒 → exclusions → requis → temps → équipement → favoris"]
     end
 
     EX -->|candidats| SC
@@ -473,6 +473,47 @@ n'augmente pas avec le nombre de couches.
 > initial : en faire une couche fait tomber son motif de rejet dans `RejectionSummary`, donc dans
 > l'entonnoir du banc d'essai. Couche INERTE tant qu'`onlyFavorites` n'est pas explicitement levé
 > — les favoris restent un marque-page, conformément à §10.1. Le code fait foi.
+
+#### 6.3 ter — Chaîne d'inclusion des régimes (couche `regime` 🔒) — **CODÉ (2026-07-26)**
+
+```
+vegetalien  ⊂  vegetarien  ⊂  pescetarien  ⊂  omnivore
+```
+
+Une recette est compatible avec le régime demandé si elle porte **ce régime, ou un régime plus
+restrictif** dans la chaîne ci-dessus (`DIET_CHAIN`, `app/src/engine/selection/regime.ts`).
+
+**Ce que ça remplace.** P1a imposait une **égalité stricte de chaîne**, sans hiérarchie. Le défaut
+n'était pas théorique — mesuré sur le catalogue réel de 34 recettes, AVANT correction :
+
+| Régime déclaré | Recettes visibles avant | Après |
+|---|---|---|
+| `vegetalien` | 5 | 5 |
+| `vegetarien` | 11 | **16** |
+| `pescetarien` | 11 | **27** |
+| `omnivore` | **7** | **34** |
+
+Le cas le plus grave n'était pas le pescétarien mais l'**omnivore** — le réglage le plus courant :
+il ne voyait que les 7 recettes littéralement étiquetées `omnivore`, c'est-à-dire uniquement les
+plats de viande. Ni poisson, ni pâtes, ni soupe.
+
+**Deux propriétés qui font que c'est sûr dans une couche 🔒 critique :**
+
+1. **La chaîne n'élargit JAMAIS vers la droite.** Demander `vegetarien` ne fait jamais entrer une
+   recette `omnivore` : un plat de viande reste structurellement inatteignable pour qui a déclaré
+   végétarien. Un test dédié verrouille les six directions interdites.
+2. **Un régime hors chaîne retombe sur l'égalité stricte.** `sans_gluten`, `halal`, `casher`,
+   `sans_lactose` ne s'emboîtent dans rien — ils ne sont pas dans `DIET_CHAIN` et ne bénéficient
+   d'aucune inclusion, ni dans un sens ni dans l'autre. `DietCode` étant un `string` ouvert
+   (aucune contrainte CHECK en base), la chaîne est du **vocabulaire connu**, pas une union fermée.
+
+**L'alternative écartée** était d'étiqueter chaque recette avec tous les régimes qu'elle respecte
+(le taboulé porterait 4 facettes). Rejetée pour son mode de défaillance : une étiquette oubliée sur
+une recette parmi cent la fait disparaître pour une partie des utilisateurs, **sans erreur, sans
+trace, sans que personne ne le remarque**. La chaîne s'écrit une fois et ne s'oublie pas.
+
+> Conséquence pour le contenu : une recette déclare **le régime le plus restrictif qu'elle
+> respecte**, un seul. Un plat végétalien déclare `vegetalien`, pas la liste des quatre.
 
 Les poids sont normalisés (`Σ = 1`) avant application. L'utilisateur les module via un petit jeu
 d'**archétypes nommés** — voir §6.3 bis ci-dessous, qui généralise l'idée initiale de « quatre
@@ -1278,7 +1319,7 @@ fichier de contenu.
 | Fonctionnalité | Où | Version |
 |---|---|---|
 | Suggestion multi-repas | `selection/` | v1 |
-| Allergies & régime | couches `allergenes` 🔒 · `regime` 🔒 | v1 |
+| Allergies & régime | couches `allergenes` 🔒 · `regime` 🔒 (avec chaîne d'inclusion `vegetalien ⊂ vegetarien ⊂ pescetarien ⊂ omnivore`, §6.3 ter) | v1 |
 | Préférences culinaires | couche `preference` | v1 |
 | Envies du moment | couche `craving` + axes sensoriels | v1 |
 | Planning 7 jours | `planning/planWeek` | v1 |

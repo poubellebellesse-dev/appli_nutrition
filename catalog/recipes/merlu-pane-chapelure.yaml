@@ -1,0 +1,83 @@
+id: merlu_pane_chapelure
+nom: "Merlu pané maison, quartiers de citron"
+description: >
+  Des filets de merlu panés à l'œuf et à la chapelure, poêlés jusqu'à ce qu'ils dorent.
+temps_prep_min: 15
+temps_cuisson_min: 10
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.4
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: merlu
+    quantite_g: 600
+    unite_affichage: "4 filets"
+    optionnel: false
+  - food_id: chapelure
+    quantite_g: 100
+    unite_affichage: "100 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 100
+    unite_affichage: "2 œufs"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préparer trois assiettes creuses : farine salée, œufs battus, chapelure."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Passer chaque filet dans la farine, puis dans l'œuf, puis dans la chapelure en appuyant pour qu'elle adhère."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Chauffer l'huile à feu moyen et poser les filets sans les superposer."
+    lexicon_ids: []
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Retourner délicatement à la spatule et terminer la cuisson, puis égoutter sur du papier absorbant."
+    lexicon_ids: []
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Servir avec des quartiers de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

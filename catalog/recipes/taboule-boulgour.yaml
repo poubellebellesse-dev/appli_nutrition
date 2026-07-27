@@ -1,0 +1,82 @@
+id: taboule_boulgour
+nom: "Taboulé de boulgour, tomate et concombre"
+description: >
+  Du boulgour gonflé à froid, mélangé à beaucoup de persil, tomate, concombre et jus de citron.
+temps_prep_min: 20
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: -0.4
+  chaud_froid: -0.8
+  texture: croquant
+
+ingredients:
+  - food_id: boulgour
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 300
+    unite_affichage: "3 tomates"
+    optionnel: false
+  - food_id: concombre
+    quantite_g: 200
+    unite_affichage: "1/2 concombre"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 50
+    unite_affichage: "1 gros bouquet"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Couvrir le boulgour du jus de citron et d'un verre d'eau froide, laisser gonfler à couvert."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: repos
+  - ordre: 2
+    texte: "Couper les tomates et le concombre en petits dés, ciseler finement le persil, émincer l'échalote."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Égrainer le boulgour à la fourchette, y mélanger les légumes et le persil."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Verser l'huile d'olive, saler, mélanger et laisser reposer au frais avant de servir."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: libanaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

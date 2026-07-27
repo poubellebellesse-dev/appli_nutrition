@@ -1,0 +1,78 @@
+id: pates_pesto_basilic
+nom: "Pâtes au pesto de basilic"
+description: >
+  Un pesto pilé au basilic frais, parmesan, noix et ail, mélangé à des spaghettis chauds.
+temps_prep_min: 15
+temps_cuisson_min: 10
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.6
+  texture: creme
+
+ingredients:
+  - food_id: pates_spaghetti
+    quantite_g: 320
+    unite_affichage: "320 g"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 50
+    unite_affichage: "2 gros bouquets"
+    optionnel: false
+  - food_id: parmesan
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 40
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 8
+    unite_affichage: "1 gousse"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Porter une grande casserole d'eau salée à ébullition et y cuire les spaghettis."
+    lexicon_ids: []
+    timer_s: 540
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Effeuiller le basilic. Piler l'ail avec une pincée de sel, puis ajouter les feuilles petit à petit."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Incorporer les cerneaux de noix concassés et le parmesan râpé, puis verser l'huile d'olive en filet sans cesser de piler."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Égoutter les pâtes en gardant une louche d'eau de cuisson, mélanger au pesto hors du feu et détendre avec l'eau réservée."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

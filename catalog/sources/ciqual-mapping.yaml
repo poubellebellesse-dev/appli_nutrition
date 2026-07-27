@@ -129,3 +129,72 @@ mapping:
   vin_blanc_cuisine: 5215        # Vin blanc sec
   vin_rouge_cuisine: 5214        # Vin rouge
   cognac: 1001                   # Eau de vie de fruits — voir écarts
+
+  # --------------------------------------------------------------------------
+  # Lot 2 — herbes, épices, condiments et bases (2026-07-26).
+  # --------------------------------------------------------------------------
+
+  # Condiments, herbes, épices
+  vinaigre_vin_rouge: 11220      # Vinaigre de vin rouge
+  moutarde_dijon: 11013          # Moutarde
+  thym_seche: 11038              # Thym, séché
+  laurier: 11053                 # Laurier, feuille
+  basilic_frais: 11033           # Basilic, frais
+  origan_seche: 11035            # Origan, séché
+  romarin_seche: 11036           # Romarin, séché
+  cumin_graine: 11042            # Cumin, graine
+  paprika: 11049                 # Paprika, poudre
+  curry_poudre: 11005            # Curry, poudre
+  gingembre_poudre: 11006        # Gingembre, poudre
+  cannelle: 11025                # Cannelle, poudre
+  sauce_soja: 11104              # Sauce soja, préemballée
+  bouillon_legumes: 11041        # Bouillon de légumes, déshydraté
+  concentre_tomate: 20068        # Tomate, concentré, appertisé
+  olive_noire: 13032             # Olive noire, en saumure, égouttée
+
+  # Matières grasses
+  huile_tournesol: 17440         # Huile de tournesol
+  beurre_demi_sel: 16402         # Beurre à 80% MG, demi-sel
+
+  # Légumes
+  echalote: 20097                # Échalote, crue
+  concombre: 20019               # Concombre, chair et peau, cru
+  celeri_branche: 20023          # Céleri branche, cru
+  fenouil: 20028                 # Fenouil, cru
+  patate_douce: 4101             # Patate douce, crue
+  potiron: 20044                 # Potiron, cru
+  chou_vert: 20069               # Chou vert, cru
+  mais_doux: 20066               # Maïs doux, appertisé, égoutté
+
+  # Céréales et dérivés
+  riz_complet: 9102              # Riz complet, cru
+  quinoa: 9340                   # Quinoa, cru
+  boulgour: 9690                 # Boulgour de blé, cru
+  flocons_avoine: 32140          # Flocons d'avoine
+  chapelure: 7500                # Chapelure
+  pain_mie: 7200                 # Pain de mie blanc, préemballé
+
+  # Viandes
+  agneau_gigot: 21502            # Agneau, gigot cru
+
+  # Poissons
+  lieu_colin: 26006              # Lieu ou colin d'Alaska, cru
+  merlu: 26044                   # Merlu, cru
+  hareng: 26011                  # Hareng, cru
+  anchois_huile: 26000           # Anchois, filets, marinés à l'huile, semi-conserve, égouttés
+
+  # Lait et produits laitiers
+  lait_entier: 19023             # Lait entier, UHT
+  fromage_blanc: 19501           # Fromage blanc, nature ou aux fruits (aliment moyen)
+  parmesan: 12120                # Parmesan
+
+  # Légumineuses
+  haricot_rouge: 20524           # Haricot rouge, appertisé, égoutté
+  flageolet: 20508               # Haricot flageolet, appertisé, égoutté
+  pois_casse: 20515              # Pois cassé, sec
+
+  # Fruits à coque et graines
+  noix: 15005                    # Noix, cerneau, séchée
+  noisette: 15004                # Noisette, sans sel ajouté
+  sesame_graine: 15010           # Sésame, graine
+  graine_tournesol: 15011        # Tournesol, graine

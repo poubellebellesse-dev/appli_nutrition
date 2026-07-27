@@ -1,0 +1,74 @@
+id: porridge_avoine_banane
+nom: "Porridge d'avoine à la banane et à la cannelle"
+description: >
+  Des flocons d'avoine cuits dans le lait, garnis de banane en rondelles, de cannelle et de miel.
+temps_prep_min: 5
+temps_cuisson_min: 8
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.7
+  leger_consistant: 0.4
+  chaud_froid: 0.8
+  texture: creme
+
+ingredients:
+  - food_id: flocons_avoine
+    quantite_g: 80
+    unite_affichage: "8 cuillères à soupe"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 400
+    unite_affichage: "40 cl"
+    optionnel: false
+  - food_id: banane
+    quantite_g: 200
+    unite_affichage: "2 bananes"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 20
+    unite_affichage: "2 cuillères à café"
+    optionnel: true
+  - food_id: noisette
+    quantite_g: 20
+    unite_affichage: "une petite poignée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Verser les flocons d'avoine et le lait dans une casserole, porter à frémissement."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Baisser le feu et remuer régulièrement jusqu'à ce que le mélange épaississe."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Couper les bananes en rondelles et concasser grossièrement les noisettes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Répartir le porridge dans les bols, garnir de banane, saupoudrer de cannelle et arroser de miel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: britannique
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,85 @@
+id: gigot_agneau_thym
+nom: "Gigot d'agneau au thym et pommes de terre"
+description: >
+  Un gigot rôti au four avec ail et thym, sur un lit de pommes de terre qui cuisent dans le jus.
+temps_prep_min: 15
+temps_cuisson_min: 75
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: fete
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.9
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: agneau_gigot
+    quantite_g: 1500
+    unite_affichage: "1 gigot d'environ 1,5 kg"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 1200
+    unite_affichage: "12 pommes de terre"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 30
+    unite_affichage: "6 gousses"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 5
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: romarin_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 10
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Sortir le gigot du réfrigérateur une heure avant de le cuire, pour qu'il revienne à température ambiante."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: repos
+  - ordre: 2
+    texte: "Préchauffer le four à 210 °C. Piquer le gigot d'éclats d'ail, le frotter d'huile, de thym et de sel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Couper les pommes de terre en gros quartiers, les disposer autour du gigot dans le plat et enfourner."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Baisser à 180 °C et poursuivre la cuisson en arrosant du jus toutes les vingt minutes."
+    lexicon_ids: []
+    timer_s: 3300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Laisser reposer le gigot dix minutes sous une feuille d'aluminium avant de le trancher."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: occasion
+    valeur: repas_de_fete
+  - facette: style
+    valeur: convivial

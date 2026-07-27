@@ -179,6 +179,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 24 | Part du créneau dans la référence journalière (couche `nutri`) | **Tranché et CODÉ** (P1b-2) — table fixe `MEAL_SLOT_SHARE` : `petit_dejeuner` 0,25 · `dejeuner` 0,35 · `diner` 0,30 · `gouter` 0,10 (Σ=1) ; décision nouvelle, absente de la conception initiale (`docs/ENGINE.md` §6.5 précision 1) |
 | ~~25~~ | Granularité nutritionnelle de l'import CIQUAL : 9 nutriments ou ~40 ? | **Tranché et FAIT (2026-07-26) — ~9**, et ce sont ceux que `build.mjs` portait déjà : énergie · protéines · lipides · glucides · fibres · **fer · calcium · vitamine C** · sodium. ⚠️ Ce n'est PAS la liste d'étiquetage (ni sucres ni acides gras saturés) : `fer` est porteur, c'est l'exemple de `sens: plancher` en §6.5 ENGINE et dans les fixtures de test. Aucun changement de schéma n'a été nécessaire. `food_nutrient` étant une table à lignes, passer à ~40 plus tard ne demandera pas de migration douloureuse |
 | ~~26~~ | `suggestAlternatives` : l'ingrédient principal peut-il changer ? | **Tranché (2026-07-26)** — DEUX notions distinctes que §8 confondait. **Variante** = ingrédient principal INVARIANT (retrait d'un `optionnel`, substitution d'un ingrédient **secondaire**). **Alternative** = autre recette, ingrédient principal PEUT changer dans le même `Food.groupe` (autre poisson, autre viande, autre légume), **toujours dans les filtres de l'utilisateur**. Deux conséquences non triviales : (a) le mécanisme « plat frère » ne peut PAS être `argmax(similarity)`, qui pondère l'ingrédient principal à 0,5 et favorise donc de le GARDER — il faut « même groupe, ingrédient différent », puis classer sur les axes restants ; (b) la signature `(recipeId, dislikedFoodId)` de §8 est **insuffisante**, respecter les filtres impose de passer un `SuggestionRequest`. Codable seulement après le chantier contenu |
+| ~~28~~ | Régimes emboîtés : étiquettes multiples sur chaque recette, ou hiérarchie dans le moteur ? | **Tranché et CODÉ (2026-07-26) — hiérarchie** (`DIET_CHAIN`, §6.3 ter ENGINE) : `vegetalien ⊂ vegetarien ⊂ pescetarien ⊂ omnivore`. L'égalité stricte de P1a rendait un utilisateur **omnivore** aveugle à 27 des 34 recettes (il ne voyait que les 7 plats étiquetés `omnivore`), et un pescétarien à 16. Les étiquettes multiples ont été écartées pour leur mode de défaillance SILENCIEUX — une étiquette oubliée fait disparaître une recette sans erreur ni trace. Deux garde-fous : la chaîne n'élargit jamais vers le plus permissif, et tout régime hors chaîne (`sans_gluten`, `halal`…) retombe sur l'égalité stricte |
 | 27 | Table `substitution` : quand la créer ? | **Avec le contenu, pas avant** — quels couples ont du sens dépend des recettes qui existent. Le type `Substitution` et `Catalog.substitutions` existent déjà ; le loader retourne une Map vide (`catalog-loader.ts`, une ligne à changer) et un test verrouille ce vide. Le moteur n'aura rien à changer quand la table arrivera |
 
 ---
@@ -306,10 +307,23 @@ retenu :
   l'en-tête de l'importeur. `npm run catalog:ciqual -- --check | --write`
 - [x] 380 tests verts (34 fichiers), typecheck propre, build 76 aliments / 22 recettes
 
-> Non traité, signalé : un utilisateur **pescétarien ne voit aucun plat végétarien** (8 recettes
-> pré-existantes). La couche `regime` fait une égalité stricte de chaîne sans hiérarchie (§P1a,
-> volontaire). Corriger demande soit des facettes en cascade sur chaque recette, soit une hiérarchie
-> dans une couche 🔒 critique — décision produit non prise.
+### Contenu lot 2 — 47 aliments, 12 recettes, chaîne des régimes ✅ terminé
+
+- [x] **47 aliments ajoutés** (76 → 123), dont **16 herbes, épices et condiments** : le catalogue
+  n'en avait que DEUX, sel et poivre. Écrire des dizaines de recettes de plus sur cette seule base
+  les aurait rendues indiscernables — l'assaisonnement est ce qui distingue un plat. Valeurs
+  CIQUAL, aucune inventée
+- [x] **12 recettes** (22 → 34) exploitant les nouveaux ingrédients : pesto, chili au cumin,
+  porridge à la cannelle, gigot au thym, velouté de potiron, taboulé, colin au fenouil, poulet au
+  curry, salade de flageolets, merlu pané, tofu laqué, soupe de pois cassés. Premières recettes de
+  **petit-déjeuner** et de **fête** du catalogue
+- [x] **Chaîne d'inclusion des régimes** (décision 28, §6.3 ter ENGINE) — `DIET_CHAIN` dans
+  `selection/regime.ts`. Mesuré avant/après sur le catalogue réel : `omnivore` 7 → 34 recettes
+  visibles, `pescetarien` 11 → 27, `vegetarien` 11 → 16
+- [x] Les deux tests d'intégration du régime vérifient désormais des **propriétés** (rien de trop
+  permissif ne passe · les plats végétaliens passent bien) plutôt qu'un nombre : recompter la règle
+  de la couche dans le test rejouerait simplement le bug s'il y en avait un
+- [x] 387 tests verts (34 fichiers), typecheck propre, build 123 aliments / 34 recettes
 
 ### P1c lot 4 — Flags `onlyFavorites` / `varietyMode` ✅ terminé et committé
 

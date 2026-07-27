@@ -1,0 +1,87 @@
+id: tofu_sauce_soja_sesame
+nom: "Tofu laqué à la sauce soja et au sésame"
+description: >
+  Des dés de tofu dorés puis glacés à la sauce soja, au miel et au gingembre, avec du riz.
+temps_prep_min: 10
+temps_cuisson_min: 20
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.2
+  leger_consistant: 0.3
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: tofu_nature
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: riz_blanc
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: false
+  - food_id: sesame_graine
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 8
+    unite_affichage: "1 gousse"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Cuire le riz dans deux fois son volume d'eau salée."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Éponger le tofu entre deux feuilles de papier absorbant, puis le couper en dés de deux centimètres."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire dorer les dés dans l'huile très chaude sur toutes leurs faces, sans les remuer trop souvent."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Mélanger sauce soja, miel, gingembre et ail émincé, verser sur le tofu et laisser réduire jusqu'à ce que la sauce nappe."
+    lexicon_ids: [emincer]
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Parsemer de graines de sésame et servir sur le riz."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: asiatique
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

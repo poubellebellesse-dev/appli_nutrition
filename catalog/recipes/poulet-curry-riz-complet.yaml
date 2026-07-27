@@ -1,0 +1,87 @@
+id: poulet_curry_riz_complet
+nom: "Poulet au curry, riz complet"
+description: >
+  Des dés de poulet mijotés au curry et à la crème, servis avec du riz complet.
+temps_prep_min: 15
+temps_cuisson_min: 35
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.7
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: poulet_blanc
+    quantite_g: 500
+    unite_affichage: "4 blancs"
+    optionnel: false
+  - food_id: riz_complet
+    quantite_g: 280
+    unite_affichage: "280 g"
+    optionnel: false
+  - food_id: curry_poudre
+    quantite_g: 8
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: true
+  - food_id: creme_fraiche
+    quantite_g: 120
+    unite_affichage: "12 cl"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le riz complet et le cuire dans deux fois son volume d'eau salée."
+    lexicon_ids: []
+    timer_s: 2100
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Émincer l'oignon et couper le poulet en dés d'environ trois centimètres."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire revenir l'oignon dans l'huile, ajouter le curry et le gingembre et remuer une minute pour libérer les arômes."
+    lexicon_ids: []
+    timer_s: 360
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter le poulet, le faire dorer sur toutes ses faces, verser la crème et un demi-verre d'eau, saler."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Laisser mijoter à couvert et à feu doux jusqu'à ce que la sauce nappe la cuillère. Servir sur le riz."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: indienne
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

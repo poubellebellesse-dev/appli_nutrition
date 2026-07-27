@@ -68,23 +68,48 @@ describe('selection/exclusion-pass + guards — catalogue réel', () => {
     expect(candidates.has('salade_pois_chiches' as RecipeId)).toBe(false) // dejeuner uniquement
   })
 
-  it('régime "vegetarien" écarte le bœuf (omnivore) et le saumon (pescetarien) — motif "regime"', () => {
+  /** Régimes déclarés par une recette du catalogue réel. */
+  function dietsOf(recipeId: RecipeId): readonly string[] {
+    return (catalog.recipes.get(recipeId)?.facettes ?? [])
+      .filter((f) => f.facette === 'regime')
+      .map((f) => f.valeur)
+  }
+
+  // Ces deux tests vérifient des PROPRIÉTÉS, pas un nombre. Recompter à la main la règle
+  // d'inclusion de la couche ne prouverait rien — le test rejouerait simplement le bug s'il y en
+  // avait un. Ce qui compte est : rien de trop permissif ne passe, rien de légitime n'est écarté.
+  it('régime "vegetarien" : aucun plat de viande ni de poisson ne passe (sûreté de la chaîne)', () => {
     const req = makeRequest({ creneau: 'diner', diet: 'vegetarien' })
     const { candidates, rejections } = runExclusionPass(catalog, req)
 
     expect(candidates.has('boeuf_hache_sauce_tomate' as RecipeId)).toBe(false)
     expect(candidates.has('saumon_poele_courgettes' as RecipeId)).toBe(false)
-    // Dérivé du catalogue : la couche fait une égalité STRICTE sur les facettes `regime` d'une
-    // recette (aucune hiérarchie déduite — voir l'en-tête de selection/regime.ts), donc un plat
-    // végétalien n'est compté ici QUE s'il déclare AUSSI `vegetarien`. C'est une propriété des
-    // DONNÉES, pas du moteur : la recompter à la main la figerait à la composition du jour.
-    const vegetariennesAuDiner = [...(catalog.indexes.recipesBySlot.get('diner') ?? [])].filter((id) =>
-      catalog.recipes
-        .get(id)
-        ?.facettes.some((f) => f.facette === 'regime' && f.valeur === 'vegetarien')
-    )
-    expect(candidates.size).toBe(vegetariennesAuDiner.length)
+    for (const id of candidates) {
+      expect(dietsOf(id).some((d) => d === 'omnivore' || d === 'pescetarien')).toBe(false)
+    }
     for (const entry of rejections) expect(entry.layerId).toBe('regime')
+  })
+
+  it('régime "vegetarien" : les plats VÉGÉTALIENS passent — l’inclusion vegetalien ⊂ vegetarien', () => {
+    const req = makeRequest({ creneau: 'diner', diet: 'vegetarien' })
+    const { candidates } = runExclusionPass(catalog, req)
+
+    const vegetaliennesAuDiner = [...(catalog.indexes.recipesBySlot.get('diner') ?? [])].filter((id) =>
+      dietsOf(id).includes('vegetalien')
+    )
+    expect(vegetaliennesAuDiner.length).toBeGreaterThan(0) // sinon le test ne prouve rien
+    for (const id of vegetaliennesAuDiner) expect(candidates.has(id)).toBe(true)
+  })
+
+  it('régime "pescetarien" : les plats végétariens ET végétaliens passent, la viande non', () => {
+    const req = makeRequest({ creneau: 'diner', diet: 'pescetarien' })
+    const { candidates } = runExclusionPass(catalog, req)
+
+    // Le défaut qui a motivé la chaîne : un pescétarien ne voyait QUE du poisson.
+    expect(candidates.has('pates_ail_huile' as RecipeId)).toBe(true) // vegetarien
+    expect(candidates.has('soupe_pois_casses' as RecipeId)).toBe(true) // vegetalien
+    expect(candidates.has('saumon_poele_courgettes' as RecipeId)).toBe(true) // pescetarien
+    expect(candidates.has('boeuf_hache_sauce_tomate' as RecipeId)).toBe(false) // omnivore
   })
 
   it('temps disponible = 15 min ne garde que l’omelette (10 min) sur le créneau "diner"', () => {
