@@ -2,7 +2,7 @@
 // (docs/ENGINE.md §6.6).
 
 import { describe, expect, it } from 'vitest'
-import type { FoodId, SensoryAxes } from '../domain/index.js'
+import type { FoodId, RecipeSignature, SensoryAxes } from '../domain/index.js'
 import type { RecipeSimilarityProfile } from './similarity.js'
 import {
   SIMILARITY_WEIGHT_CUISINE,
@@ -13,9 +13,15 @@ import {
 
 const AXES: SensoryAxes = { sucreSale: 0.5, legerConsistant: -0.2, chaudFroid: 1, texture: 'croquant' }
 
+/** Signature à un seul ingrédient — la forme la plus simple pour isoler un signal en test. */
+function sig(...foodIds: readonly string[]): RecipeSignature {
+  const part = foodIds.length === 0 ? 0 : 1 / foodIds.length
+  return new Map(foodIds.map((id) => [id as FoodId, part]))
+}
+
 function makeProfile(overrides: Partial<RecipeSimilarityProfile> = {}): RecipeSimilarityProfile {
   return {
-    mainIngredientId: 'poulet' as FoodId,
+    signature: sig('poulet'),
     cuisines: ['francaise'],
     axes: AXES,
     ...overrides,
@@ -30,12 +36,12 @@ describe('selection/similarity — similarity (§6.6 ENGINE)', () => {
 
   it('résultat toujours dans [0, 1], y compris sur des profils maximalement opposés', () => {
     const a = makeProfile({
-      mainIngredientId: 'poulet' as FoodId,
+      signature: sig('poulet'),
       cuisines: ['francaise'],
       axes: { sucreSale: -1, legerConsistant: -1, chaudFroid: -1, texture: 'croquant' },
     })
     const b = makeProfile({
-      mainIngredientId: 'tofu' as FoodId,
+      signature: sig('tofu'),
       cuisines: ['japonaise'],
       axes: { sucreSale: 1, legerConsistant: 1, chaudFroid: 1, texture: 'fondant' },
     })
@@ -45,40 +51,40 @@ describe('selection/similarity — similarity (§6.6 ENGINE)', () => {
     expect(score).toBeLessThanOrEqual(1)
   })
 
-  it('même ingrédient principal → plus similaire que des ingrédients principaux différents (toutes choses égales par ailleurs)', () => {
-    const reference = makeProfile({ mainIngredientId: 'poulet' as FoodId })
-    const memeIngredient = makeProfile({ mainIngredientId: 'poulet' as FoodId })
-    const ingredientDifferent = makeProfile({ mainIngredientId: 'tofu' as FoodId })
+  it('même composition → plus similaire qu’une composition différente (toutes choses égales par ailleurs)', () => {
+    const reference = makeProfile({ signature: sig('poulet') })
+    const memeComposition = makeProfile({ signature: sig('poulet') })
+    const compositionDifferente = makeProfile({ signature: sig('tofu') })
 
-    expect(similarity(reference, memeIngredient)).toBeGreaterThan(similarity(reference, ingredientDifferent))
+    expect(similarity(reference, memeComposition)).toBeGreaterThan(similarity(reference, compositionDifferente))
   })
 
-  it("deux recettes SANS ingrédient principal connu ne sont pas réputées similaires pour autant (absence ≠ égalité)", () => {
-    // Piège documenté : `null === null` ne doit JAMAIS compter comme un match sur ce signal.
-    const sansIngredientA = makeProfile({ mainIngredientId: null, cuisines: [], axes: { ...AXES, texture: 'a' } })
-    const sansIngredientB = makeProfile({
-      mainIngredientId: null,
+  it("deux recettes SANS signature connue ne sont pas réputées similaires pour autant (absence ≠ égalité)", () => {
+    // Piège documenté : deux signatures VIDES ne doivent JAMAIS compter comme un match.
+    const sansSignatureA = makeProfile({ signature: sig(), cuisines: [], axes: { ...AXES, texture: 'a' } })
+    const sansSignatureB = makeProfile({
+      signature: sig(),
       cuisines: ['japonaise'],
       axes: { sucreSale: -1, legerConsistant: -1, chaudFroid: -1, texture: 'z' },
     })
-    // Mêmes profils, mais ingrédient principal CONNU et identique cette fois — seule variable changée.
-    const avecIngredientA = makeProfile({ mainIngredientId: 'poulet' as FoodId, cuisines: [], axes: { ...AXES, texture: 'a' } })
-    const avecIngredientB = makeProfile({
-      mainIngredientId: 'poulet' as FoodId,
+    // Mêmes profils, mais signature CONNUE et identique cette fois — seule variable changée.
+    const avecSignatureA = makeProfile({ signature: sig('poulet'), cuisines: [], axes: { ...AXES, texture: 'a' } })
+    const avecSignatureB = makeProfile({
+      signature: sig('poulet'),
       cuisines: ['japonaise'],
       axes: { sucreSale: -1, legerConsistant: -1, chaudFroid: -1, texture: 'z' },
     })
 
-    expect(similarity(sansIngredientA, sansIngredientB)).toBeLessThan(similarity(avecIngredientA, avecIngredientB))
+    expect(similarity(sansSignatureA, sansSignatureB)).toBeLessThan(similarity(avecSignatureA, avecSignatureB))
   })
 
   it('même absence trap sur la cuisine : deux recettes sans famille de cuisine connue ne sont pas réputées similaires pour autant', () => {
-    const sansCuisineA = makeProfile({ cuisines: [], mainIngredientId: null })
-    const sansCuisineB = makeProfile({ cuisines: [], mainIngredientId: null, axes: { ...AXES, texture: 'autre' } })
-    const memeCuisineA = makeProfile({ cuisines: ['francaise'], mainIngredientId: null })
+    const sansCuisineA = makeProfile({ cuisines: [], signature: sig() })
+    const sansCuisineB = makeProfile({ cuisines: [], signature: sig(), axes: { ...AXES, texture: 'autre' } })
+    const memeCuisineA = makeProfile({ cuisines: ['francaise'], signature: sig() })
     const memeCuisineB = makeProfile({
       cuisines: ['francaise'],
-      mainIngredientId: null,
+      signature: sig(),
       axes: { ...AXES, texture: 'autre' },
     })
 

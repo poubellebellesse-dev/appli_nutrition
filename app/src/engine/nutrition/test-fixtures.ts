@@ -19,12 +19,23 @@ import type {
   NutrientId,
   Recipe,
   RecipeIngredient,
-} from '../domain/index.js'
-import { g, min } from '../domain/index.js'
+} from "../domain/index.js";
+import { g, min } from "../domain/index.js";
 
 /** `sens` par défaut à `'cible'` : neutre pour ces tests d'agrégation, qui ne testent pas `scoreNutri`. */
-export function makeNutrient(id: string, sens: Nutrient['sens'] = 'cible'): Nutrient {
-  return { id: id as NutrientId, code: id, nom: id, unite: 'g', vnrAdulte: null, categorie: null, sens }
+export function makeNutrient(
+  id: string,
+  sens: Nutrient["sens"] = "cible",
+): Nutrient {
+  return {
+    id: id as NutrientId,
+    code: id,
+    nom: id,
+    unite: "g",
+    vnrAdulte: null,
+    categorie: null,
+    sens,
+  };
 }
 
 /**
@@ -33,59 +44,65 @@ export function makeNutrient(id: string, sens: Nutrient['sens'] = 'cible'): Nutr
  * défaut (`touteAnnee: true`, aucune fenêtre de saison), sans intérêt pour l'agrégation
  * nutritionnelle testée ici.
  */
-export function makeFood(id: string, nutrimentsPour100g: Readonly<Record<string, number>> = {}): Food {
+export function makeFood(
+  id: string,
+  nutrimentsPour100g: Readonly<Record<string, number>> = {},
+): Food {
   const nutrientMap = new Map<NutrientId, number>(
-    Object.entries(nutrimentsPour100g).map(([nutrientId, value]) => [nutrientId as NutrientId, value])
-  )
+    Object.entries(nutrimentsPour100g).map(([nutrientId, value]) => [
+      nutrientId as NutrientId,
+      value,
+    ]),
+  );
   return {
     id: id as FoodId,
     codeCiqual: `TEST-${id}`,
     nom: id,
-    groupe: 'test',
+    groupe: "test",
     nutrimentsPour100g: nutrientMap,
     allergenes: [],
     saisonMois: [],
     touteAnnee: true,
-  }
+  };
 }
 
 export function makeIngredient(
   foodId: string,
-  opts: { readonly optionnel?: boolean; readonly quantiteG?: number } = {}
+  opts: { readonly optionnel?: boolean; readonly quantiteG?: number } = {},
 ): RecipeIngredient {
   return {
     foodId: foodId as FoodId,
     quantiteG: g(opts.quantiteG ?? 100),
-    uniteAffichage: 'g',
+    uniteAffichage: "g",
     optionnel: opts.optionnel ?? false,
-  }
+  };
 }
 
 export function makeRecipe(
   id: string,
   overrides: {
-    readonly ingredients?: readonly RecipeIngredient[]
-    readonly portionsBase?: number
-  } = {}
+    readonly ingredients?: readonly RecipeIngredient[];
+    readonly portionsBase?: number;
+  } = {},
 ): Recipe {
   return {
-    id: id as Recipe['id'],
+    id: id as Recipe["id"],
     nom: id,
-    description: '',
+    description: "",
     tempsPrepMin: min(10),
     tempsCuissonMin: min(10),
     difficulte: 1,
     portionsBase: overrides.portionsBase ?? 2,
     imagePath: null,
-    typesRepas: ['diner'],
+    typesRepas: ["diner"],
     saisonMois: [],
-    envergure: 'quotidien',
+    envergure: "quotidien",
     conservationJours: 1,
-    axes: { sucreSale: 0, legerConsistant: 0, chaudFroid: 0, texture: 'test' },
+    axes: { sucreSale: 0, legerConsistant: 0, chaudFroid: 0, texture: "test" },
     ingredients: overrides.ingredients ?? [],
     etapes: [],
     facettes: [],
-  }
+  };
 }
 
 function makeEmptyIndexes(): CatalogIndexes {
@@ -95,16 +112,17 @@ function makeEmptyIndexes(): CatalogIndexes {
     recipesBySlot: new Map(),
     recipeNutrients: new Map(),
     recipeMainIngredient: new Map(),
-  }
+    recipeSignature: new Map(),
+  };
 }
 
 export function makeCatalog(
   recipes: readonly Recipe[],
   foods: readonly Food[] = [],
-  nutrients: readonly Nutrient[] = []
+  nutrients: readonly Nutrient[] = [],
 ): Catalog {
   return {
-    version: 'test',
+    version: "test",
     foods: new Map(foods.map((food) => [food.id, food])),
     recipes: new Map(recipes.map((recipe) => [recipe.id, recipe])),
     nutrients,
@@ -113,5 +131,5 @@ export function makeCatalog(
     topics: new Map(),
     substitutions: new Map(),
     indexes: makeEmptyIndexes(),
-  }
+  };
 }

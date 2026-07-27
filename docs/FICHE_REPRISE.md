@@ -95,21 +95,22 @@ sans changer l'ordre. Ce second point ne se règle PAS par le contenu : il deman
 
 ## Dette connue
 
-- 🔴 **`recipeMainIngredient` désigne le plus LOURD, pas le plus caractéristique** — défaut de
-  conception révélé par la mesure au palier de 100 recettes (`npm run engine:similarity`). Exemples
-  réels : « lentilles aux carottes » et « poulet rôti aux carottes » ont tous deux **carotte** pour
-  ingrédient principal (égalité 300/300 et 500/500 g, départage arbitraire) → **98,4 % de
-  similarité** ; la mousse au chocolat a **œuf** pour principal (300 g d'œufs contre 200 g de
-  chocolat) et ressemble donc à 91 % aux œufs brouillés ; le hachis de bœuf a **pomme de terre**.
-  **Deux couches sont touchées, pas une** : `similarity` (pondère le principal à 0,5, donc MMR
-  écarte des plats sans rapport) et `variety` (la lassitude se propage entre plats qui partagent un
-  faux principal). Piste : privilégier l'aliment porteur de protéines (`Food.groupe` ∈ viandes,
-  poissons, fruits de mer, légumineuses, œufs) avant de retomber sur le plus lourd. **À trancher
-  avant de calibrer λ** — calibrer sur une similarité fausse n'a aucun sens.
-- **λ (diversification) n'est pas calibré.** Distribution mesurée sur 100 recettes / 4 950 paires :
-  max 98,4 % · p99 63,0 % · médiane 25,9 % · moyenne 24,3 % · 54 paires au-dessus de 60 %.
-  L'ancienne mesure (max 48,7 % sur 45 paires) est caduque. Ne pas calibrer avant d'avoir corrigé
-  l'ingrédient principal ci-dessus.
+- ✅ ~~`recipeMainIngredient` fausse la similarité~~ — **CORRIGÉ.** `similarity` compare désormais
+  des `recipeSignature` (3 ingrédients les plus lourds, parts normalisées, chevauchement pondéré),
+  modèle choisi par mesure sur six candidats à 100 puis 200 recettes — voir
+  `engine/nutrition/signature.ts`. Effet mesuré : similarité maximale **98,4 % → 82,9 %**, p99
+  63,0 % → 52,6 %, et les 6 paires les plus proches sont toutes légitimes (deux soupes de carottes,
+  deux plats de maquereau, deux taboulés…) là où l'ancien modèle plaçait « œufs au plat aux
+  tomates × soupe de poisson » à 99 %.
+- 🟠 **`variety` et `habit` utilisent TOUJOURS `recipeMainIngredient`** — le même index resté
+  volontairement en place. Conséquence : manger un plat rend « récent » tout plat partageant son
+  ingrédient le plus lourd, même sans rapport. La correction n'est PAS la même que pour la
+  similarité (« ai-je mangé ça récemment » n'est pas « ces plats se ressemblent-ils »), donc elle
+  demande sa propre mesure avant d'être écrite. Ne pas copier la signature ici sans mesurer.
+- **λ (diversification) n'est pas calibré.** Distribution mesurée sur 200 recettes / 19 900 paires
+  APRÈS correction : max 82,9 % · p99 52,6 % · médiane 23,3 % · moyenne 22,6 % · 72 paires au-dessus
+  de 60 %. C'est désormais une base saine pour calibrer — les mesures antérieures (48,7 % sur 45
+  paires, puis 98,4 % sur 4 950) sont caduques.
 - **Le banc n'affiche plus la similarité** de chaque recette retenue (perdue en passant par
   `suggestMeals` — `ScoredSuggestion` ne porte pas cette information). À rétablir avant de calibrer λ.
 - **L'explication distingue peu** : les cinq suggestions affichent souvent les mêmes trois phrases,

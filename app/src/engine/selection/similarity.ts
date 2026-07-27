@@ -2,31 +2,32 @@
 // (docs/ENGINE.md §6.6).
 //
 // `similarity(a, b) ∈ [0, 1]` combine trois signaux, exactement ceux nommés par §6.6 :
-//  - ingrédient principal identique (`catalog.indexes.recipeMainIngredient`, §9.1 ENGINE, déjà
-//    peuplé à l'init — voir nutrition/main-ingredient.ts, PAS recalculé ici) ;
+//  - COMPOSITION proche : chevauchement pondéré des `recipeSignature` (§9.1 ENGINE, peuplées à
+//    l'init — voir nutrition/signature.ts, PAS recalculées ici). Ce signal comparait autrefois un
+//    SEUL ingrédient, le plus lourd, par égalité stricte ; corrigé après mesure, voir l'en-tête de
+//    signature.ts pour les six modèles comparés et les chiffres ;
 //  - famille de cuisine identique (facette `cuisine` de `recipe.facettes`, vocabulaire ouvert) ;
 //  - profil sensoriel proche (`sucreSale`/`legerConsistant`/`chaudFroid`, distance euclidienne
 //    normalisée + `texture` CATÉGORIELLE recombinée — même traitement que `scoreCraving`,
 //    §6.5 précision 2, voir scoring/craving.ts).
 //
 // ⚠️ PIÈGE DOCUMENTÉ (demandé explicitement par le lot) : ABSENCE ≠ ÉGALITÉ. Deux recettes qui
-// n'ont NI l'une ni l'autre d'ingrédient principal connu (`mainIngredientId: null` des deux côtés)
-// ne sont PAS réputées similaires sur ce signal — la composante vaut 0, pas 1. Un ingrédient
-// principal inconnu ne veut rien dire de comparable ; le traiter comme un match reviendrait à
-// gonfler artificiellement la similarité de recettes dont on ne sait justement rien. Même
+// n'ont NI l'une ni l'autre de signature connue (Map vide des deux côtés) ne sont PAS réputées
+// similaires sur ce signal — la composante vaut 0, pas 1. Une composition inconnue ne veut rien
+// dire de comparable ; la traiter comme un match reviendrait à gonfler artificiellement la
+// similarité de recettes dont on ne sait justement rien. Même
 // raisonnement appliqué à la cuisine (une recette sans facette `cuisine` n'est pas "de la même
 // famille" qu'une autre recette sans facette `cuisine`, par cohérence).
 //
 // Conséquence de ce piège sur l'identité : `similarity(a, a) = 1` tient pour toute recette dont
-// AU MOINS l'ingrédient principal et la cuisine sont connus (le cas normal — une recette a par
-// construction au moins un ingrédient non-optionnel dans le catalogue réel, voir
-// nutrition/main-ingredient.ts). Cette fonction compare des SIGNAUX, pas des identités de recette
+// AU MOINS la signature et la cuisine sont connues (le cas normal — une recette a par construction
+// au moins un ingrédient non-optionnel dans le catalogue réel, voir nutrition/signature.ts). Cette fonction compare des SIGNAUX, pas des identités de recette
 // (aucun `RecipeId` en entrée) : une recette dépourvue des DEUX signaux ne peut, par construction,
 // atteindre 1 avec elle-même — assumé, pas un bug (voir rapport de lot).
 //
-// Pondération (constantes nommées ci-dessous, Σ = 1) : l'ingrédient principal pèse le plus
-// (0.5) — c'est le signal qui produit littéralement les « 5 variations du même plat » que §6.6
-// veut éviter (même protéine/base réemployée). Le profil sensoriel (0.3) capture une redondance
+// Pondération (constantes nommées ci-dessous, Σ = 1) : la composition pèse le plus (0.5) — c'est
+// le signal qui produit littéralement les « 5 variations du même plat » que §6.6 veut éviter (mêmes
+// ingrédients réemployés). Le profil sensoriel (0.3) capture une redondance
 // plus subtile (deux plats différents mais « également légers et froids ») : réel mais plus faible
 // que la répétition d'ingrédient. La cuisine (0.2) est le signal le plus grossier : deux recettes
 // de la même famille culinaire peuvent être très différentes (curry vs. dal, tous deux « indien »)
@@ -40,7 +41,8 @@
 // Dépendances autorisées : domain/, ./scoring/index.js (`clamp01`, même import que
 // scoring-pass.ts) — §2/§3 ENGINE.
 
-import type { Catalog, FoodId, RecipeId, SensoryAxes } from '../domain/index.js'
+import type { Catalog, RecipeId, RecipeSignature, SensoryAxes } from '../domain/index.js'
+import { signatureOverlap } from '../nutrition/signature.js'
 import { clamp01 } from './scoring/index.js'
 
 /** Les trois axes sensoriels NUMÉRIQUES — `texture` reste hors de cette liste, traitée à part. */
@@ -52,7 +54,7 @@ const NUMERIC_AXES = ['sucreSale', 'legerConsistant', 'chaudFroid'] as const
  * qu'un sous-ensemble). */
 const SENSORY_MAX_DISTANCE = 2 * Math.sqrt(NUMERIC_AXES.length)
 
-/** Ingrédient principal : 0.5 — le signal qui pèse le plus (voir en-tête de fichier). */
+/** Composition (chevauchement des signatures) : 0.5 — le signal qui pèse le plus (voir en-tête). */
 export const SIMILARITY_WEIGHT_MAIN_INGREDIENT = 0.5
 /** Profil sensoriel : 0.3 — redondance plus subtile que l'ingrédient, mais réelle. */
 export const SIMILARITY_WEIGHT_SENSORY = 0.3
@@ -64,16 +66,20 @@ export const SIMILARITY_WEIGHT_CUISINE = 0.2
  * `Catalog` réel, ou construit à la main en test.
  */
 export interface RecipeSimilarityProfile {
-  /** `catalog.indexes.recipeMainIngredient.get(recipeId) ?? null` — `null` = inconnu, voir le piège documenté en en-tête. */
-  readonly mainIngredientId: FoodId | null
+  /**
+   * `catalog.indexes.recipeSignature.get(recipeId)` — les 3 ingrédients non optionnels les plus
+   * lourds avec leur part normalisée. Map VIDE = signature inconnue (recette sans ingrédient non
+   * optionnel), traitée comme une absence et jamais comme une égalité.
+   *
+   * ⚠️ Remplace `mainIngredientId` depuis la correction de §6.6. L'ancien champ comparait UN SEUL
+   * ingrédient, le plus lourd, par égalité stricte — ce qui rendait « œufs au plat aux tomates » et
+   * « soupe de poisson au fenouil » similaires à 99 %. Le remplacement a été choisi par mesure sur
+   * six modèles candidats, voir engine/nutrition/signature.ts pour les chiffres.
+   */
+  readonly signature: RecipeSignature
   /** Valeurs de la facette `cuisine` (`recipe.facettes`) — vide = aucune cuisine renseignée. */
   readonly cuisines: readonly string[]
   readonly axes: SensoryAxes
-}
-
-function mainIngredientSimilarity(a: FoodId | null, b: FoodId | null): number {
-  if (a === null || b === null) return 0 // absence ≠ égalité — voir en-tête de fichier
-  return a === b ? 1 : 0
 }
 
 function cuisineSimilarity(a: readonly string[], b: readonly string[]): number {
@@ -100,12 +106,12 @@ function sensorySimilarity(a: SensoryAxes, b: SensoryAxes): number {
 /** Similarité entre deux recettes ∈ [0, 1] (§6.6 ENGINE) — voir en-tête de fichier pour la
  * pondération et le piège absence ≠ égalité. */
 export function similarity(a: RecipeSimilarityProfile, b: RecipeSimilarityProfile): number {
-  const mainIngredientComponent = mainIngredientSimilarity(a.mainIngredientId, b.mainIngredientId)
+  const ingredientComponent = signatureOverlap(a.signature, b.signature)
   const cuisineComponent = cuisineSimilarity(a.cuisines, b.cuisines)
   const sensoryComponent = sensorySimilarity(a.axes, b.axes)
 
   return clamp01(
-    SIMILARITY_WEIGHT_MAIN_INGREDIENT * mainIngredientComponent +
+    SIMILARITY_WEIGHT_MAIN_INGREDIENT * ingredientComponent +
       SIMILARITY_WEIGHT_CUISINE * cuisineComponent +
       SIMILARITY_WEIGHT_SENSORY * sensoryComponent
   )
@@ -122,7 +128,7 @@ export function buildSimilarityProfiles(catalog: Catalog): ReadonlyMap<RecipeId,
   for (const recipe of catalog.recipes.values()) {
     const cuisines = recipe.facettes.filter((facette) => facette.facette === 'cuisine').map((facette) => facette.valeur)
     profiles.set(recipe.id, {
-      mainIngredientId: catalog.indexes.recipeMainIngredient.get(recipe.id) ?? null,
+      signature: catalog.indexes.recipeSignature.get(recipe.id) ?? new Map(),
       cuisines,
       axes: recipe.axes,
     })

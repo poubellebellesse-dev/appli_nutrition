@@ -208,14 +208,32 @@ export interface Substitution {
 
 // --- Le catalogue en mémoire (§9.1 ENGINE) ------------------------------------------------------
 
+/**
+ * Signature de composition d'une recette : `foodId` → part de la masse (somme = 1), sur les
+ * quelques ingrédients non optionnels les plus lourds. Déclarée ICI et pas dans nutrition/ parce
+ * que `CatalogIndexes` en dépend et que domain/ (L1) ne peut rien importer de nutrition/ (L2) —
+ * §2 ENGINE. Le calcul, lui, vit dans engine/nutrition/signature.ts.
+ */
+export type RecipeSignature = ReadonlyMap<FoodId, number>
+
 export interface CatalogIndexes {
   readonly recipesByAllergen: ReadonlyMap<AllergenId, ReadonlySet<RecipeId>>
   readonly recipesByDiet: ReadonlyMap<DietCode, ReadonlySet<RecipeId>>
   readonly recipesBySlot: ReadonlyMap<MealSlot, ReadonlySet<RecipeId>>
   /** Calculé à l'init du moteur (`createEngine`), pas au build — `aggregateRecipe` est une fonction pure de engine/nutrition/ (§6.5 ENGINE précision 8). */
   readonly recipeNutrients: ReadonlyMap<RecipeId, NutrientVector>
-  /** Pour la diversification (§6.6 ENGINE). */
+  /**
+   * L'ingrédient non optionnel LE PLUS LOURD. ⚠️ Ce n'est PAS l'ingrédient qui définit le plat —
+   * mesuré faux sur le catalogue réel (« mousse au chocolat » → œuf, « hachis de bœuf » → pomme de
+   * terre). Conservé pour `variety`/`habit`, qui n'ont pas encore de remplaçant mesuré ; la
+   * diversification, elle, utilise `recipeSignature` depuis la correction de §6.6.
+   */
   readonly recipeMainIngredient: ReadonlyMap<RecipeId, FoodId>
+  /**
+   * Les 3 ingrédients non optionnels les plus lourds avec leur part normalisée — base de la
+   * similarité (§6.6 ENGINE). Modèle CHOISI PAR MESURE, voir engine/nutrition/signature.ts.
+   */
+  readonly recipeSignature: ReadonlyMap<RecipeId, RecipeSignature>
 }
 
 export interface Catalog {

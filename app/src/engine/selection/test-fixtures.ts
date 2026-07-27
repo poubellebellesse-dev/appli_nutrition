@@ -129,7 +129,14 @@ function buildIndexes(recipes: ReadonlyMap<RecipeId, Recipe>, foods: ReadonlyMap
     }
   }
 
-  return { recipesByAllergen, recipesByDiet, recipesBySlot, recipeNutrients: new Map(), recipeMainIngredient: new Map() }
+  return {
+    recipesByAllergen,
+    recipesByDiet,
+    recipesBySlot,
+    recipeNutrients: new Map(),
+    recipeMainIngredient: new Map(),
+    recipeSignature: new Map(),
+  }
 }
 
 export function makeCatalog(

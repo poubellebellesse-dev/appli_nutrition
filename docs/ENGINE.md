@@ -796,6 +796,46 @@ doit repousser. Sur un ensemble retenu vide (premier tour), `simMax = 0` par con
 meilleur score gagne naturellement, sans cas particulier codé — et `λ = 0` fait dégénérer la boucle
 en un simple classement par score, non-régression vérifiée par test.
 
+#### 6.6 bis — Correction du signal « ingrédient » (2026-07-27), CODÉE
+
+Le premier signal comparait UN SEUL ingrédient — le non-optionnel le plus lourd
+(`recipeMainIngredient`) — par égalité stricte. **Mesuré faux sur le catalogue réel** : le plus
+lourd n'est presque jamais celui qui définit le plat. « Mousse au chocolat » = 300 g d'œufs contre
+200 g de chocolat, donc « plat d'œufs ». « Hachis de bœuf » = 800 g de pommes de terre contre 500 g
+de bœuf. « Lentilles aux carottes » et « poulet rôti aux carottes » = deux ÉGALITÉS de poids
+tranchées arbitrairement en faveur de la carotte. Ce signal pesant 0,5, la similarité jugeait
+« œufs au plat aux tomates » et « soupe de poisson au fenouil » identiques à **99 %**.
+
+Remplacé par le chevauchement pondéré de deux **signatures** — les 3 ingrédients non optionnels les
+plus lourds avec leur part normalisée (`recipeSignature`, `engine/nutrition/signature.ts`).
+
+**Le modèle a été choisi par mesure, pas par raisonnement.** Six candidats comparés sur deux jeux de
+paires (des plats sans rapport à séparer, des plats réellement proches à garder proches), au palier
+de 100 puis de 200 recettes — banc `app/src/cli/compare-similarite.ts` :
+
+| Modèle | Écart patho/témoins à 100 rec. | à 200 rec. |
+|---|---|---|
+| le plus lourd (ancien) | **1 pt** | **1 pt** |
+| **3 plus lourds — RETENU** | **18 pts** | **18 pts** |
+| 3 plus lourds + seuil 5 % de masse | 18 pts | 18 pts |
+| pondération par rareté (3 variantes) | 17 pts | 17 pts |
+
+Doubler le catalogue n'a rien changé : la conclusion n'est pas un artefact de petit échantillon. La
+pondération par rareté n'apporte rien de mesurable et ferait dépendre la similarité de la
+composition du catalogue entier. Le seuil de masse ne change rien non plus et porte un risque
+propre (il écarterait l'ail de « pâtes à l'ail et à l'huile »). Le modèle retenu est le plus simple
+à égalité de résultat.
+
+Effet sur le catalogue réel : similarité maximale **98,4 % → 82,9 %**, p99 63,0 % → 52,6 %. Et les
+six paires les plus proches sont désormais toutes légitimes — deux soupes de carottes, deux plats de
+maquereau, deux plats de bœuf-tomate, deux plats de moules, deux plats d'œufs, deux taboulés.
+
+> ⚠️ **`variety` et `habit` utilisent TOUJOURS `recipeMainIngredient`.** Mesuré : sur 290 paires
+> partageant un même « ingrédient principal », **194 (67 %)** ont une composition très différente —
+> une mousse au chocolat rend « récentes » des galettes de sarrasin, les deux étant majoritairement
+> des œufs. Le défaut y est donc réel, mais la correction n'est PAS la même : « ai-je mangé ça
+> récemment » n'est pas « ces plats se ressemblent-ils ». Elle demande sa propre mesure.
+
 `similarity(a, b) ∈ [0, 1]` (`engine/selection/similarity.ts`) combine trois signaux pondérés en
 constantes nommées (Σ = 1) :
 
@@ -1268,7 +1308,8 @@ export interface CatalogIndexes {
   readonly recipesByDiet: ReadonlyMap<DietCode, ReadonlySet<RecipeId>>
   readonly recipesBySlot: ReadonlyMap<MealSlot, ReadonlySet<RecipeId>>
   readonly recipeNutrients: ReadonlyMap<RecipeId, NutrientVector>   // pré-agrégé
-  readonly recipeMainIngredient: ReadonlyMap<RecipeId, FoodId>      // pour la diversification
+  readonly recipeMainIngredient: ReadonlyMap<RecipeId, FoodId>      // ⚠️ le plus LOURD — voir §6.6 bis
+  readonly recipeSignature: ReadonlyMap<RecipeId, RecipeSignature>  // pour la diversification
 }
 ```
 

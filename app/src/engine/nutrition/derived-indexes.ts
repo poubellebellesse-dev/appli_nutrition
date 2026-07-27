@@ -7,11 +7,13 @@
 // champs et index INCHANGÉS (même référence, pas de recopie) — immutabilité, aucune mutation du
 // catalogue reçu en entrée.
 //
-// Dépendances autorisées : domain/, ./recipe-nutrients.js, ./main-ingredient.js — §2/§3 ENGINE.
+// Dépendances autorisées : domain/, ./recipe-nutrients.js, ./main-ingredient.js, ./signature.js
+// — §2/§3 ENGINE.
 
 import type { Catalog } from '../domain/index.js'
 import { computeRecipeNutrients } from './recipe-nutrients.js'
 import { computeRecipeMainIngredient } from './main-ingredient.js'
+import { computeRecipeSignature } from './signature.js'
 
 export function attachDerivedIndexes(catalog: Catalog): Catalog {
   return {
@@ -20,6 +22,7 @@ export function attachDerivedIndexes(catalog: Catalog): Catalog {
       ...catalog.indexes,
       recipeNutrients: computeRecipeNutrients(catalog),
       recipeMainIngredient: computeRecipeMainIngredient(catalog),
+      recipeSignature: computeRecipeSignature(catalog),
     },
   }
 }
