@@ -1,0 +1,83 @@
+id: caldo_verde
+nom: "Caldo verde"
+description: >
+  Une soupe portugaise de pommes de terre écrasées, chou vert en lanières fines et poitrine fumée.
+temps_prep_min: 20
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.5
+  chaud_froid: 0.9
+  texture: liquide
+
+ingredients:
+  - food_id: pomme_de_terre
+    quantite_g: 800
+    unite_affichage: "6 pommes de terre"
+    optionnel: false
+  - food_id: chou_vert
+    quantite_g: 400
+    unite_affichage: "1/2 chou vert"
+    optionnel: false
+  - food_id: porc_poitrine
+    quantite_g: 200
+    unite_affichage: "200 g fumée"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer le chou vert en lanières AUSSI FINES QUE POSSIBLE — c'est ce qui fait la texture du caldo verde."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir l'oignon et l'ail dans l'huile, ajouter les pommes de terre en morceaux."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Couvrir de 1,5 L d'eau, saler et cuire jusqu'à ce que les pommes de terre se défassent."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Écraser au presse-purée dans le bouillon — sans mixer, la soupe doit rester un peu rustique."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Faire dorer la poitrine à part, jeter le chou dans le bouillon frémissant cinq minutes, puis servir avec les lardons."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: portugaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,83 @@
+id: mousse_fromage_blanc_fruits_rouges
+nom: "Mousse de fromage blanc aux fruits rouges"
+description: >
+  Du fromage blanc allégé de blancs montés en neige, servi sur un coulis de framboises.
+temps_prep_min: 20
+temps_cuisson_min: 0
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.7
+  leger_consistant: -0.5
+  chaud_froid: -0.8
+  texture: creme
+
+ingredients:
+  - food_id: fromage_blanc
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: framboise
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 100
+    unite_affichage: "2 blancs"
+    optionnel: false
+  - food_id: sucre_blanc
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 25
+    unite_affichage: "quelques gouttes"
+    optionnel: true
+  - food_id: myrtille
+    quantite_g: 100
+    unite_affichage: "une poignée"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Écraser les deux tiers des framboises avec la moitié du sucre et le citron, puis passer au tamis pour retirer les grains."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Battre le fromage blanc avec le reste du sucre jusqu'à ce qu'il soit parfaitement lisse."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Monter les blancs en neige ferme avec la pincée de sel."
+    lexicon_ids: [monter_blancs]
+    timer_s: 300
+    timer_type: null
+  - ordre: 4
+    texte: "Détendre le fromage blanc avec un tiers des blancs, puis incorporer le reste en soulevant à la spatule."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Répartir sur le coulis dans les verrines, réfrigérer, puis garnir des fruits entiers au service."
+    lexicon_ids: []
+    timer_s: 7200
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

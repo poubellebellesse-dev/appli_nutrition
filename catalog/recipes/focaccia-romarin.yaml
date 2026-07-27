@@ -1,0 +1,79 @@
+id: focaccia_romarin
+nom: "Focaccia au romarin et à l'huile d'olive"
+description: >
+  Une pâte levée moelleuse, creusée du bout des doigts, généreusement huilée et salée au romarin.
+temps_prep_min: 20
+temps_cuisson_min: 25
+difficulte: 2
+portions_base: 8
+image_path: null
+types_repas: [dejeuner, gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.6
+  chaud_froid: 0.5
+  texture: fondant
+
+ingredients:
+  - food_id: farine_ble
+    quantite_g: 500
+    unite_affichage: "500 g"
+    optionnel: false
+  - food_id: levure_boulangere
+    quantite_g: 20
+    unite_affichage: "20 g fraîche"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 90
+    unite_affichage: "9 cuillères à soupe"
+    optionnel: false
+  - food_id: romarin_seche
+    quantite_g: 5
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 12
+    unite_affichage: "12 g"
+    optionnel: false
+  - food_id: olive_verte
+    quantite_g: 80
+    unite_affichage: "une poignée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Délayer la levure dans 35 cl d'eau tiède. La pâte à focaccia est TRÈS hydratée, elle doit coller."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 2
+    texte: "Mélanger farine, sel, eau levurée et trois cuillères d'huile, sans chercher à obtenir une boule lisse."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Laisser lever à couvert jusqu'au doublement, puis verser sur une plaque bien huilée."
+    lexicon_ids: []
+    timer_s: 5400
+    timer_type: repos
+  - ordre: 4
+    texte: "Étaler du bout des doigts en creusant des trous profonds, y verser le reste d'huile, saler et parsemer de romarin."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Laisser regonfler une demi-heure puis enfourner à 220 °C jusqu'à ce que la surface dore."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: convivial

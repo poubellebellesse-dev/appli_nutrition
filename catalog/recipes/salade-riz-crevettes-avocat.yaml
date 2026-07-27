@@ -1,0 +1,87 @@
+id: salade_riz_crevettes_avocat
+nom: "Salade de riz aux crevettes et à l'avocat"
+description: >
+  Du riz froid avec des crevettes, de l'avocat, du concombre et une sauce citron-aneth.
+temps_prep_min: 20
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.2
+  chaud_froid: -0.8
+  texture: fondant
+
+ingredients:
+  - food_id: riz_blanc
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: crevette
+    quantite_g: 300
+    unite_affichage: "300 g décortiquées"
+    optionnel: false
+  - food_id: avocat
+    quantite_g: 250
+    unite_affichage: "2 avocats"
+    optionnel: false
+  - food_id: concombre
+    quantite_g: 200
+    unite_affichage: "1/2 concombre"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 80
+    unite_affichage: "1 gros citron"
+    optionnel: false
+  - food_id: aneth_frais
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire le riz à l'eau salée, l'égoutter et l'étaler pour qu'il refroidisse vite sans coller."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Saisir les crevettes une minute par face à la poêle, puis les laisser refroidir."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Couper le concombre en dés et l'avocat en morceaux, en citronnant l'avocat aussitôt."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Fouetter le reste du jus de citron avec l'huile, le sel et l'aneth ciselé."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Mélanger le riz froid, les crevettes et les légumes à la sauce, en ajoutant l'avocat en dernier pour ne pas l'écraser."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,87 @@
+id: pizza_maison
+nom: "Pizza maison tomate-mozzarella"
+description: >
+  Une pâte levée maison, sauce tomate courte, mozzarella et basilic, cuite à four très chaud.
+temps_prep_min: 30
+temps_cuisson_min: 15
+difficulte: 3
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.8
+  chaud_froid: 0.9
+  texture: croquant
+
+ingredients:
+  - food_id: farine_ble
+    quantite_g: 500
+    unite_affichage: "500 g"
+    optionnel: false
+  - food_id: levure_boulangere
+    quantite_g: 15
+    unite_affichage: "15 g fraîche"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 500
+    unite_affichage: "5 tomates"
+    optionnel: false
+  - food_id: mozzarella
+    quantite_g: 250
+    unite_affichage: "2 boules"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 20
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: origan_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 10
+    unite_affichage: "10 g"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Délayer la levure dans 30 cl d'eau tiède, puis pétrir avec la farine, le sel et deux cuillères d'huile."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: null
+  - ordre: 2
+    texte: "Laisser lever à couvert jusqu'à ce que la pâte double de volume."
+    lexicon_ids: []
+    timer_s: 5400
+    timer_type: repos
+  - ordre: 3
+    texte: "Faire réduire les tomates en dés avec un peu d'huile et de sel, jusqu'à une sauce COURTE — humide, elle détremperait la pâte."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Préchauffer le four au maximum avec la plaque à l'intérieur : c'est la chaleur du support qui fait la croûte."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Étaler la pâte à la main, garnir de sauce et de mozzarella égouttée, enfourner, puis ajouter le basilic à la sortie."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

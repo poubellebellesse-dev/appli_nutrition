@@ -1,0 +1,95 @@
+id: boulettes_agneau_menthe
+nom: "Boulettes d'agneau à la menthe et au yaourt"
+description: >
+  Des boulettes d'agneau au cumin et à la menthe, grillées, servies avec un yaourt au citron.
+temps_prep_min: 25
+temps_cuisson_min: 15
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.6
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: agneau_epaule
+    quantite_g: 600
+    unite_affichage: "600 g haché"
+    optionnel: false
+  - food_id: yaourt_nature
+    quantite_g: 250
+    unite_affichage: "2 yaourts"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 25
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 5
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 120
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: chapelure
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 50
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Râper l'oignon plutôt que l'émincer : son jus attendrit la viande et la boulette se tient mieux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mêler l'agneau, l'oignon râpé, la chapelure, le cumin, la moitié de la menthe ciselée et le sel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Laisser reposer au frais avant de former les boulettes — la chapelure absorbe l'humidité et la masse se travaille mieux."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+  - ordre: 4
+    texte: "Former des boulettes de la taille d'une noix et les griller dans l'huile en les retournant."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Battre le yaourt avec l'ail écrasé, le jus de citron et le reste de menthe, servir à part."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: turque
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

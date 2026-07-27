@@ -1,0 +1,87 @@
+id: veloute_chou_fleur_curry
+nom: "Velouté de chou-fleur au curry"
+description: >
+  Du chou-fleur fondu au lait et au bouillon, mixé avec du curry et garni d'amandes.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: -0.2
+  chaud_froid: 0.9
+  texture: liquide
+
+ingredients:
+  - food_id: chou_fleur
+    quantite_g: 900
+    unite_affichage: "1 chou-fleur"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 400
+    unite_affichage: "40 cl"
+    optionnel: false
+  - food_id: curry_poudre
+    quantite_g: 6
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 120
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 10
+    unite_affichage: "1 cube"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: true
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Détailler le chou-fleur en bouquets et émincer l'oignon."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire suer l'oignon au beurre, ajouter le curry et remuer une minute pour le réveiller."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter le chou-fleur, le lait et 30 cl d'eau avec le bouillon émietté."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser frémir SANS BOUILLIR — le lait déborderait — jusqu'à ce que les bouquets s'écrasent."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Mixer très finement, saler, et parsemer d'amandes grillées à sec au service."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: indienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

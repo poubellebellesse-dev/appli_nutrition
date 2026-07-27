@@ -1,0 +1,83 @@
+id: oeufs_mimosa
+nom: "Œufs mimosa"
+description: >
+  Des œufs durs dont le jaune est écrasé, assaisonné et remis en dôme dans le blanc.
+temps_prep_min: 20
+temps_cuisson_min: 10
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.2
+  chaud_froid: -0.7
+  texture: creme
+
+ingredients:
+  - food_id: oeuf
+    quantite_g: 400
+    unite_affichage: "8 œufs"
+    optionnel: false
+  - food_id: fromage_blanc
+    quantite_g: 120
+    unite_affichage: "120 g"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 25
+    unite_affichage: "quelques gouttes"
+    optionnel: true
+  - food_id: laitue
+    quantite_g: 100
+    unite_affichage: "quelques feuilles"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire les œufs dix minutes à l'eau frémissante, puis les refroidir aussitôt à l'eau glacée."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Le choc thermique décolle la coquille et évite le cerne verdâtre autour du jaune."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: repos
+  - ordre: 3
+    texte: "Écaler, couper en deux dans la longueur et récupérer les jaunes sans abîmer les blancs."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Écraser les jaunes à la fourchette avec le fromage blanc, la moutarde, le sel et le citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Garnir les blancs de cette crème, réserver un jaune pour l'émietter par-dessus, et parsemer de persil."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

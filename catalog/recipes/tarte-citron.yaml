@@ -1,0 +1,79 @@
+id: tarte_citron
+nom: "Tarte au citron"
+description: >
+  Une crème au citron montée au beurre sur fond de pâte cuite à blanc, acidulée et lisse.
+temps_prep_min: 30
+temps_cuisson_min: 30
+difficulte: 3
+portions_base: 8
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: 0.7
+  leger_consistant: 0.2
+  chaud_froid: -0.7
+  texture: creme
+
+ingredients:
+  - food_id: pate_feuilletee
+    quantite_g: 250
+    unite_affichage: "1 rouleau"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 300
+    unite_affichage: "5 citrons"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 200
+    unite_affichage: "4 œufs"
+    optionnel: false
+  - food_id: sucre_blanc
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 120
+    unite_affichage: "120 g froid"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 30
+    unite_affichage: "30 g"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Étaler la pâte dans un moule, la piquer, la couvrir de papier et de poids, puis la cuire À BLANC à 180 °C."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Sans cette cuisson à blanc, la crème détremperait le fond : la tarte au citron ne cuit pas garnie."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Fouetter les œufs, le sucre et le jus des citrons dans une casserole, hors du feu d'abord."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Chauffer à feu doux SANS CESSER DE FOUETTER, jusqu'à ce que la crème nappe la cuillère — elle coagulerait autrement."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Hors du feu, incorporer le beurre froid en dés morceau par morceau, verser sur le fond cuit et réfrigérer."
+    lexicon_ids: []
+    timer_s: 10800
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

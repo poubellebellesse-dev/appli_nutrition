@@ -1,0 +1,83 @@
+id: poireaux_gratines_bechamel
+nom: "Poireaux gratinés à la béchamel"
+description: >
+  Des blancs de poireaux braisés, nappés de béchamel et gratinés au comté.
+temps_prep_min: 15
+temps_cuisson_min: 45
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.4
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: poireau
+    quantite_g: 1000
+    unite_affichage: "6 poireaux"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 500
+    unite_affichage: "50 cl"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: comte_rape
+    quantite_g: 120
+    unite_affichage: "120 g râpé"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Ne garder que les blancs et le vert tendre, les fendre en deux et les rincer à grande eau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les cuire à l'eau salée jusqu'à ce qu'une pointe traverse sans résistance, puis les PRESSER pour chasser l'eau."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Sans ce pressage, l'eau rendue au four délaierait la béchamel jusqu'à la rendre liquide."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 4
+    texte: "Faire fondre le beurre, ajouter la farine, cuire une minute puis verser le lait en fouettant. Saler et poivrer."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ranger les poireaux dans un plat, napper de béchamel, couvrir de comté et gratiner à 200 °C."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

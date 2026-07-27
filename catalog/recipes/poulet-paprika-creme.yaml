@@ -1,0 +1,87 @@
+id: poulet_paprika_creme
+nom: "Poulet au paprika et à la crème"
+description: >
+  Des cuisses de poulet mijotées aux oignons et au paprika, liées à la crème en fin de cuisson.
+temps_prep_min: 15
+temps_cuisson_min: 45
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.8
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: poulet_cuisse
+    quantite_g: 900
+    unite_affichage: "4 cuisses"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 400
+    unite_affichage: "3 oignons"
+    optionnel: false
+  - food_id: paprika
+    quantite_g: 12
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 200
+    unite_affichage: "1 poivron"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 200
+    unite_affichage: "2 tomates"
+    optionnel: true
+  - food_id: huile_tournesol
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Colorer les cuisses dans l'huile, côté peau d'abord, puis les réserver."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Faire fondre longuement les oignons émincés dans la même cocotte, jusqu'à ce qu'ils blondissent."
+    lexicon_ids: [emincer]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Retirer du feu AVANT d'ajouter le paprika : sur feu vif il brûle en quelques secondes et devient amer."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Remettre les cuisses, ajouter le poivron et les tomates, mouiller d'un verre d'eau, saler et couvrir."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Incorporer la crème hors du feu, en la détendant d'abord avec un peu de sauce chaude pour qu'elle ne tranche pas."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: hongroise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

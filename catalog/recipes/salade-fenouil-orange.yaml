@@ -1,0 +1,83 @@
+id: salade_fenouil_orange
+nom: "Salade de fenouil et orange aux olives"
+description: >
+  Du fenouil cru en lamelles très fines, des quartiers d'orange, olives noires et huile d'olive.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.3
+  leger_consistant: -0.7
+  chaud_froid: -0.8
+  texture: croquant
+
+ingredients:
+  - food_id: fenouil
+    quantite_g: 500
+    unite_affichage: "2 bulbes"
+    optionnel: false
+  - food_id: orange
+    quantite_g: 400
+    unite_affichage: "3 oranges"
+    optionnel: false
+  - food_id: olive_noire
+    quantite_g: 70
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Retirer les tiges et la base dure des bulbes, garder quelques plumets verts pour la finition."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer le fenouil en lamelles TRÈS fines : cru et épais, il reste coriace et anisé à l'excès."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Le plonger dix minutes dans l'eau glacée pour qu'il croque, puis l'égoutter."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 4
+    texte: "Peler les oranges à vif et prélever les quartiers au-dessus d'un bol, en gardant le jus."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Mélanger fenouil, orange, olives et échalote émincée avec l'huile, le jus récupéré et le sel."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

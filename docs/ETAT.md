@@ -46,7 +46,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Contenu — 12 recettes (poissons, viandes, fruits de mer) | `catalog/recipes/` | ✅ Terminé et committé, 10 → 22 recettes |
 | Contenu — import CIQUAL 2025 (9 nutriments, 76 aliments) | `catalog/import-ciqual.mjs`, `catalog/sources/ciqual-mapping.yaml`, `catalog/sources/foods.yaml` | ✅ Terminé — valeurs `PROV-` remplacées par les valeurs ANSES |
 | Contenu — 193 aliments (cible ~200) | `catalog/sources/foods.yaml`, `ciqual-mapping.yaml` | ✅ Atteint |
-| Contenu — montée à 200-300 recettes (décision 4 revue) | `catalog/recipes/` | ▓▓ **▓▓ ****200 écrites** — palier atteint, modèles départagés**, cible 200**, palier intermédiaire visé : 100 |
+| Contenu — montée à 200-300 recettes (décision 4 revue) | `catalog/recipes/` | ▓▓ **▓▓ ****212 écrites** — cible v1 (200-300) atteinte, modèles départagés**, cible 200**, palier intermédiaire visé : 100 |
 | Code — `suggestAlternatives` (spec révisée : variante vs alternative) | `app/src/engine/selection/alternatives.ts` (à créer), `app/src/engine/api/index.ts` | ⬜ Reporté APRÈS le contenu — inobservable sur 10 recettes |
 
 ---
