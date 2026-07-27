@@ -1,0 +1,83 @@
+id: poelee_champignons_persillade
+nom: "Poêlée de champignons en persillade"
+description: >
+  Des champignons sautés à feu vif jusqu'à ce qu'ils dorent, finis à l'ail et au persil.
+temps_prep_min: 10
+temps_cuisson_min: 15
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.2
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: champignon_paris
+    quantite_g: 800
+    unite_affichage: "800 g"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 15
+    unite_affichage: "3 gousses"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 25
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 50
+    unite_affichage: "2 échalotes"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Nettoyer les champignons à la brosse ou au linge humide plutôt qu'à l'eau, qu'ils absorbent aussitôt."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les émincer en lamelles épaisses — trop fines, elles disparaissent à la cuisson."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Les jeter dans une poêle très chaude avec l'huile, SANS SEL et sans les entasser."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Attendre que l'eau rendue s'évapore complètement avant qu'ils commencent à dorer — saler trop tôt les ferait bouillir."
+    lexicon_ids: []
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter le beurre et l'échalote, saler, puis l'ail émincé et le persil hors du feu."
+    lexicon_ids: [emincer]
+    timer_s: 180
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

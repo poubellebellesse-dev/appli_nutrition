@@ -1,0 +1,83 @@
+id: poulet_teriyaki
+nom: "Poulet teriyaki"
+description: >
+  Des cuisses de poulet laquées dans une sauce soja-miel-gingembre réduite jusqu'à napper.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.3
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: poulet_cuisse
+    quantite_g: 800
+    unite_affichage: "4 cuisses désossées"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 80
+    unite_affichage: "8 cuillères à soupe"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: riz_blanc
+    quantite_g: 280
+    unite_affichage: "280 g"
+    optionnel: false
+  - food_id: sesame_graine
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire le riz. Mélanger sauce soja, miel, gingembre et deux cuillères d'eau."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Saisir les cuisses côté peau dans l'huile chaude, sans les bouger, jusqu'à ce qu'elles dorent."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Les retourner, vider l'excès de gras, puis verser la sauce."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Laisser réduire à feu moyen en arrosant sans arrêt : la sauce doit épaissir et laquer la viande."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Trancher en lanières, napper du reste de sauce et parsemer de graines de sésame grillées."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: japonaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

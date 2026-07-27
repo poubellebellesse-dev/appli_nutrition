@@ -1,0 +1,79 @@
+id: rosti_pommes_terre
+nom: "Rösti de pommes de terre"
+description: >
+  Une galette de pommes de terre râpées, dorée à la poêle jusqu'à être croustillante.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.7
+  chaud_froid: 0.9
+  texture: croquant
+
+ingredients:
+  - food_id: pomme_de_terre
+    quantite_g: 900
+    unite_affichage: "6 grosses pommes de terre"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Râper les pommes de terre crues à gros trous, ainsi que l'oignon."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les presser fort dans un torchon pour en chasser l'eau — c'est l'étape qui décide du croustillant."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Saler, poivrer, puis étaler la préparation dans une poêle avec le beurre et l'huile chauds."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Tasser à la spatule et cuire à feu moyen SANS REMUER, jusqu'à ce que le dessous forme une croûte."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Retourner d'un coup à l'aide d'une assiette, puis cuire l'autre face de la même façon."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: suisse
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

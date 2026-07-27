@@ -1,0 +1,103 @@
+id: chili_sin_carne
+nom: "Chili sin carne aux haricots rouges et maïs"
+description: >
+  Une version sans viande du chili : haricots rouges, maïs, poivrons, cumin et paprika.
+temps_prep_min: 15
+temps_cuisson_min: 40
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.7
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: haricot_rouge
+    quantite_g: 600
+    unite_affichage: "2 conserves égouttées"
+    optionnel: false
+  - food_id: mais_doux
+    quantite_g: 250
+    unite_affichage: "1 conserve égouttée"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 500
+    unite_affichage: "5 tomates"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 200
+    unite_affichage: "1 poivron"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: concentre_tomate
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 5
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: paprika
+    quantite_g: 5
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon, l'ail et le poivron."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les faire revenir dans l'huile, puis ajouter cumin et paprika et laisser chauffer une minute."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les tomates en dés et le concentré, saler, laisser réduire."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Verser les haricots rouges rincés, couvrir à demi et laisser mijoter à feu doux."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter le maïs pour les cinq dernières minutes et parsemer de coriandre au service."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: mexicaine
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

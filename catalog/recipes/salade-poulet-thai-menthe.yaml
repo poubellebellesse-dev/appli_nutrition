@@ -1,0 +1,95 @@
+id: salade_poulet_thai_menthe
+nom: "Salade thaïe de poulet à la menthe"
+description: >
+  Du poulet effiloché avec concombre, carotte, menthe et coriandre, sauce citron-soja.
+temps_prep_min: 20
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.2
+  leger_consistant: -0.2
+  chaud_froid: -0.7
+  texture: croquant
+
+ingredients:
+  - food_id: poulet_blanc
+    quantite_g: 450
+    unite_affichage: "3 blancs"
+    optionnel: false
+  - food_id: concombre
+    quantite_g: 300
+    unite_affichage: "1/2 concombre"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 200
+    unite_affichage: "2 carottes"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 20
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 20
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 80
+    unite_affichage: "1 gros citron"
+    optionnel: false
+  - food_id: cacahuete
+    quantite_g: 60
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: huile_sesame
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: sucre_roux
+    quantite_g: 10
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Pocher les blancs de poulet dans l'eau frémissante salée, puis les laisser tiédir dans leur bouillon."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Les effilocher à la main dans le sens des fibres plutôt que de les couper au couteau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Détailler le concombre en fins bâtonnets et râper les carottes en longs filaments."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Fouetter le jus de citron, la sauce soja, le sucre et l'huile de sésame."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Mélanger le tout, ajouter les herbes en grande quantité et parsemer de cacahuètes concassées."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: thai
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

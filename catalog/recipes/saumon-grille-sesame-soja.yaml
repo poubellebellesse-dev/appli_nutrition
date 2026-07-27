@@ -1,0 +1,87 @@
+id: saumon_grille_sesame_soja
+nom: "Saumon grillé au sésame et sauce soja"
+description: >
+  Des pavés de saumon marinés au soja et gingembre, croûtés de graines de sésame.
+temps_prep_min: 15
+temps_cuisson_min: 12
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.1
+  leger_consistant: 0.3
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: saumon
+    quantite_g: 600
+    unite_affichage: "4 pavés"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: sesame_graine
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: riz_complet
+    quantite_g: 280
+    unite_affichage: "280 g"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 40
+    unite_affichage: "1/2 citron"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Mélanger sauce soja, gingembre et miel, y faire mariner les pavés au frais."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+  - ordre: 2
+    texte: "Cuire le riz complet pendant la marinade."
+    lexicon_ids: []
+    timer_s: 2100
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Égoutter les pavés et les presser côté chair dans les graines de sésame."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Les saisir côté sésame dans l'huile chaude sans y toucher, pour que les graines dorent sans se détacher."
+    lexicon_ids: []
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Retourner, baisser le feu et terminer la cuisson — le cœur doit rester rosé. Servir avec le riz et un trait de citron."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: japonaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

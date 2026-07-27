@@ -1,0 +1,87 @@
+id: hachis_canard_patate_douce
+nom: "Hachis de canard à la patate douce"
+description: >
+  Du canard effiloché aux oignons, sous une purée de patate douce gratinée.
+temps_prep_min: 25
+temps_cuisson_min: 60
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: 0.1
+  leger_consistant: 0.9
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: canard_magret
+    quantite_g: 600
+    unite_affichage: "600 g"
+    optionnel: false
+  - food_id: patate_douce
+    quantite_g: 900
+    unite_affichage: "3 patates douces"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 200
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 120
+    unite_affichage: "12 cl"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: comte_rape
+    quantite_g: 80
+    unite_affichage: "80 g râpé"
+    optionnel: true
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 7
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire les patates douces pelées et coupées à l'eau salée jusqu'à ce qu'elles s'écrasent."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Faire colorer le canard côté peau dans une poêle froide qui monte en température, pour fondre le gras."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Retirer la viande, la hacher grossièrement, puis faire fondre les oignons émincés dans le gras rendu."
+    lexicon_ids: [emincer]
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Mêler viande, oignons et thym, saler, puis étaler au fond d'un plat."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Écraser les patates douces avec le lait chaud et le beurre, en couvrir la viande, parsemer de comté et gratiner à 200 °C."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

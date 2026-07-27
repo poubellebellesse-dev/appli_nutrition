@@ -1,0 +1,87 @@
+id: tartine_avocat_oeuf
+nom: "Tartine d'avocat et œuf poché"
+description: >
+  Du pain complet grillé, de l'avocat écrasé au citron et un œuf poché coulant.
+temps_prep_min: 10
+temps_cuisson_min: 8
+difficulte: 3
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.2
+  chaud_froid: 0.4
+  texture: creme
+
+ingredients:
+  - food_id: pain_complet
+    quantite_g: 120
+    unite_affichage: "4 tranches"
+    optionnel: false
+  - food_id: avocat
+    quantite_g: 200
+    unite_affichage: "1 gros avocat"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 100
+    unite_affichage: "2 œufs très frais"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Porter une casserole d'eau à frémissement — jamais à gros bouillons — et y verser le vinaigre."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Casser chaque œuf dans un ramequin, créer un tourbillon dans l'eau et l'y faire glisser."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Compter trois minutes : le blanc doit être pris, le jaune encore liquide. Égoutter sur du papier absorbant."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Griller le pain. Écraser l'avocat à la fourchette avec le jus de citron et le sel."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Tartiner généreusement, poser l'œuf poché dessus, poivrer et arroser d'un filet d'huile."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

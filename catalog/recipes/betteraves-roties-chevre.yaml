@@ -1,0 +1,87 @@
+id: betteraves_roties_chevre
+nom: "Betteraves rôties au chèvre et au thym"
+description: >
+  Des betteraves crues rôties en robe au four, servies tièdes avec du chèvre frais.
+temps_prep_min: 10
+temps_cuisson_min: 60
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.2
+  leger_consistant: -0.2
+  chaud_froid: 0.3
+  texture: fondant
+
+ingredients:
+  - food_id: betterave
+    quantite_g: 800
+    unite_affichage: "4 betteraves crues"
+    optionnel: false
+  - food_id: chevre_frais
+    quantite_g: 180
+    unite_affichage: "180 g"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 50
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: huile_noix
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_balsamique
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: roquette
+    quantite_g: 60
+    unite_affichage: "2 poignées"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 190 °C. Brosser les betteraves sans les peler et couper les fanes à deux centimètres."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les envelopper individuellement dans du papier cuisson avec un peu de sel et de thym."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Enfourner jusqu'à ce qu'une lame traverse sans résistance — rôtir concentre le sucre, contrairement à la cuisson à l'eau."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Les peler encore chaudes, la peau s'enlève alors du bout des doigts, puis les couper en quartiers."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Dresser tiède avec le chèvre émietté, les noix concassées, l'huile de noix et le balsamique."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

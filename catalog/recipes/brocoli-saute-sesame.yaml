@@ -1,0 +1,83 @@
+id: brocoli_saute_sesame
+nom: "Brocoli sauté au sésame et à l'ail"
+description: >
+  Des bouquets de brocoli blanchis puis sautés à feu vif avec ail, sauce soja et sésame.
+temps_prep_min: 10
+temps_cuisson_min: 12
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.3
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: brocoli
+    quantite_g: 800
+    unite_affichage: "2 brocolis"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 15
+    unite_affichage: "3 gousses"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sesame_graine
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_sesame
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Détailler le brocoli en petits bouquets et peler les tiges, qui se mangent aussi."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les blanchir trois minutes à l'eau bouillante salée, puis les rafraîchir à l'eau glacée pour fixer le vert."
+    lexicon_ids: [blanchir]
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire griller les graines de sésame à sec, puis les réserver."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Faire sauter le brocoli bien égoutté à feu très vif dans l'huile de tournesol, avec l'ail émincé et le gingembre."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Verser la sauce soja sur les bords de la poêle, mélanger, puis ajouter l'huile de sésame et les graines hors du feu."
+    lexicon_ids: []
+    timer_s: 60
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: chinoise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien
