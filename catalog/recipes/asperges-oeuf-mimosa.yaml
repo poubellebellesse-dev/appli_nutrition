@@ -1,0 +1,87 @@
+id: asperges_oeuf_mimosa
+nom: "Asperges vertes, œuf mimosa et vinaigrette"
+description: >
+  Des asperges vertes juste cuites, couvertes d'œuf dur émietté et d'une vinaigrette moutardée.
+temps_prep_min: 15
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.5
+  chaud_froid: -0.4
+  texture: croquant
+
+ingredients:
+  - food_id: asperge_verte
+    quantite_g: 800
+    unite_affichage: "2 bottes"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 150
+    unite_affichage: "3 œufs"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 12
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 45
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Casser la base ligneuse de chaque asperge à la main — elle se rompt naturellement là où la tige devient tendre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Cuire les asperges à l'eau bouillante salée jusqu'à ce qu'elles ploient légèrement, puis les rafraîchir à l'eau glacée pour fixer le vert."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Cuire les œufs durs, les écaler et les écraser à la fourchette."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Délayer la moutarde avec le vinaigre et le sel, puis monter la vinaigrette à l'huile. Ajouter l'échalote émincée."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Dresser les asperges, napper de vinaigrette et couvrir d'œuf émietté et de persil."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

@@ -1,0 +1,95 @@
+id: chakchouka
+nom: "Chakchouka"
+description: >
+  Des œufs pochés dans une compotée de poivrons et tomates au cumin et au paprika.
+temps_prep_min: 15
+temps_cuisson_min: 30
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.3
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: oeuf
+    quantite_g: 300
+    unite_affichage: "6 œufs"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 300
+    unite_affichage: "2 poivrons rouges"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 600
+    unite_affichage: "6 tomates"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: paprika
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon, l'ail et les poivrons en lanières."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire fondre l'oignon et les poivrons dans l'huile jusqu'à ce qu'ils s'affaissent."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter l'ail, le cumin et le paprika, remuer une minute, puis verser les tomates en dés et saler."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Creuser six puits dans la compotée et y casser un œuf dans chacun."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Couvrir et laisser pocher jusqu'à ce que les blancs soient pris et les jaunes encore coulants. Parsemer de coriandre."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: maghrebine
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

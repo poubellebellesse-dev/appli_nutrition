@@ -1,0 +1,99 @@
+id: navarin_agneau
+nom: "Navarin d'agneau aux légumes primeurs"
+description: >
+  De l'épaule d'agneau mijotée avec navets, carottes, petits pois et pommes de terre.
+temps_prep_min: 25
+temps_cuisson_min: 80
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.8
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: agneau_epaule
+    quantite_g: 1200
+    unite_affichage: "1,2 kg en morceaux"
+    optionnel: false
+  - food_id: navet
+    quantite_g: 400
+    unite_affichage: "4 navets"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 400
+    unite_affichage: "4 carottes"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 500
+    unite_affichage: "5 pommes de terre"
+    optionnel: false
+  - food_id: petit_pois
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: true
+  - food_id: concentre_tomate
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Colorer les morceaux d'agneau dans l'huile très chaude, en plusieurs fois pour qu'ils dorent vraiment."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Saupoudrer de farine, remuer, puis ajouter le concentré de tomate et l'oignon émincé."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Mouiller à hauteur d'eau chaude, ajouter le thym et le sel, couvrir et laisser mijoter."
+    lexicon_ids: []
+    timer_s: 2700
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter navets, carottes et pommes de terre en gros morceaux, poursuivre la cuisson à couvert."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Jeter les petits pois dans les cinq dernières minutes seulement, pour qu'ils gardent leur couleur."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

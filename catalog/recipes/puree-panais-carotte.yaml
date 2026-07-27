@@ -1,0 +1,83 @@
+id: puree_panais_carotte
+nom: "Purée de panais et carottes"
+description: >
+  Panais et carottes cuits au lait puis écrasés, avec une noix de beurre demi-sel.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.1
+  leger_consistant: 0.3
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: panais
+    quantite_g: 500
+    unite_affichage: "4 panais"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 400
+    unite_affichage: "4 carottes"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 200
+    unite_affichage: "2 pommes de terre"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: beurre_demi_sel
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Peler les panais, les carottes et les pommes de terre, puis les couper en morceaux de taille égale."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les cuire dans l'eau salée jusqu'à ce qu'ils s'écrasent facilement sous la fourchette."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire chauffer le lait sans le faire bouillir pendant que les légumes finissent de cuire."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Égoutter, écraser au presse-purée en incorporant le lait chaud petit à petit — le mixeur rendrait la purée élastique."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Ajouter le beurre demi-sel hors du feu, rectifier le sel et poivrer."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

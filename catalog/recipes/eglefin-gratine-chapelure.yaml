@@ -1,0 +1,83 @@
+id: eglefin_gratine_chapelure
+nom: "Églefin gratiné à la chapelure d'ail et persil"
+description: >
+  Des filets d'églefin couverts d'une croûte de chapelure, ail et persil, dorée au four.
+temps_prep_min: 15
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.2
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: eglefin
+    quantite_g: 600
+    unite_affichage: "4 filets"
+    optionnel: false
+  - food_id: chapelure
+    quantite_g: 80
+    unite_affichage: "80 g"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 25
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Émincer l'ail très finement et ciseler le persil."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mélanger la chapelure, l'ail, le persil, le sel et l'huile jusqu'à obtenir un sable humide."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Poser les filets dans un plat huilé, les arroser d'un peu de jus de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Tasser la chapelure sur chaque filet en couche régulière."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner jusqu'à ce que la croûte soit dorée et la chair opaque — au-delà le poisson se dessèche."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

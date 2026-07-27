@@ -34,7 +34,7 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
 **État vérifié : `npm test` → 388 verts (34 fichiers) · `npm run typecheck` propre ·
-`npm run build` → **193 aliments, 73 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
+`npm run build` → **193 aliments, 85 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
 plus aucun `PROV-`. Cible v1 revue (décision 4) : ~200 aliments **atteint**, 200-300 recettes **en
 cours**.**
 
@@ -49,7 +49,7 @@ cours**.**
 ## ▶ Reprendre ici
 
 **1. Le contenu — continuer à remplir le catalogue.** L'import CIQUAL est **FAIT** (193 aliments aux
-valeurs ANSES 2025 réelles, `npm run catalog:ciqual`). Reste **les recettes : 73 écrites, palier
+valeurs ANSES 2025 réelles, `npm run catalog:ciqual`). Reste **les recettes : 85 écrites, palier
 visé 100, cible v1 200-300**. Ce n'est
 pas du code : ingrédients quantifiés, étapes, allergènes, facettes, axes sensoriels, temps,
 équipement, envergure, créneaux. Et la contrainte figée (**contenu original obligatoire, pas de

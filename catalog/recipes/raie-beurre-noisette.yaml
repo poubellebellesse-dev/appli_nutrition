@@ -1,0 +1,83 @@
+id: raie_beurre_noisette
+nom: "Aile de raie au beurre noisette"
+description: >
+  Une aile de raie pochée au court-bouillon, nappée d'un beurre noisette au citron et persil.
+temps_prep_min: 10
+temps_cuisson_min: 20
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.1
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: raie
+    quantite_g: 600
+    unite_affichage: "2 ailes"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 70
+    unite_affichage: "70 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préparer un court-bouillon : eau salée, vinaigre et laurier, porté à frémissement."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Y glisser les ailes de raie et les pocher sans bouillir, jusqu'à ce que la chair se détache du cartilage."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Égoutter les ailes et retirer la peau des deux côtés, qui s'enlève facilement à chaud."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Faire chauffer le beurre jusqu'à ce qu'il mousse puis prenne une couleur noisette — quelques secondes de plus et il brûle."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Hors du feu, ajouter le jus de citron et le persil, puis napper la raie de ce beurre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

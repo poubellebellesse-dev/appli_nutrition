@@ -1,0 +1,87 @@
+id: salade_mache_betterave_noix
+nom: "Salade de mâche, betterave et noix"
+description: >
+  De la mâche avec des dés de betterave, des cerneaux de noix et une vinaigrette à l'huile de noix.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.0
+  leger_consistant: -0.6
+  chaud_froid: -0.8
+  texture: croquant
+
+ingredients:
+  - food_id: mache
+    quantite_g: 150
+    unite_affichage: "4 poignées"
+    optionnel: false
+  - food_id: betterave
+    quantite_g: 300
+    unite_affichage: "2 betteraves cuites"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 60
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: comte_rape
+    quantite_g: 60
+    unite_affichage: "60 g en copeaux"
+    optionnel: true
+  - food_id: huile_noix
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_balsamique
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 8
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Laver la mâche en la plongeant dans un grand volume d'eau, le sable tombe au fond. L'essorer sans la brutaliser."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Couper les betteraves en dés d'un centimètre et concasser grossièrement les cerneaux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Délayer la moutarde avec le vinaigre balsamique et le sel, puis monter à l'huile de noix."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Assaisonner la betterave à part, sinon elle teint toute la salade en rose."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Dresser la mâche, poser la betterave dessus, parsemer de noix et de copeaux de comté."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

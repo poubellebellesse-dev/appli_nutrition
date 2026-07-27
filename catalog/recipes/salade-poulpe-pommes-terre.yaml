@@ -1,0 +1,91 @@
+id: salade_poulpe_pommes_terre
+nom: "Salade tiède de poulpe et pommes de terre"
+description: >
+  Du poulpe longuement mijoté, coupé en rondelles, avec pommes de terre, olives et citron.
+temps_prep_min: 20
+temps_cuisson_min: 70
+difficulte: 3
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.2
+  chaud_froid: -0.1
+  texture: fondant
+
+ingredients:
+  - food_id: poulpe
+    quantite_g: 1000
+    unite_affichage: "1 kg"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 600
+    unite_affichage: "6 pommes de terre"
+    optionnel: false
+  - food_id: olive_noire
+    quantite_g: 80
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 20
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: true
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Plonger le poulpe trois fois quelques secondes dans l'eau bouillante avant de l'y laisser — ce geste détend les tentacules."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Laisser cuire à petits frémissements avec le laurier, jusqu'à ce qu'une pointe de couteau entre sans résistance."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Cuire les pommes de terre en robe des champs dans l'eau salée, puis les peler encore chaudes."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Couper le poulpe égoutté en rondelles et les pommes de terre en gros dés."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Mélanger tiède avec l'huile, le jus de citron, l'ail émincé, les olives et le persil, puis saler."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

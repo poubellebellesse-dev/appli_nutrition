@@ -1,0 +1,83 @@
+id: clafoutis_framboises
+nom: "Clafoutis aux framboises"
+description: >
+  Un appareil léger à base d'œufs, lait et farine, versé sur des framboises et cuit au four.
+temps_prep_min: 15
+temps_cuisson_min: 40
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: 0.8
+  leger_consistant: 0.3
+  chaud_froid: 0.3
+  texture: fondant
+
+ingredients:
+  - food_id: framboise
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 200
+    unite_affichage: "4 œufs"
+    optionnel: false
+  - food_id: lait_entier
+    quantite_g: 400
+    unite_affichage: "40 cl"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 100
+    unite_affichage: "100 g"
+    optionnel: false
+  - food_id: sucre_blanc
+    quantite_g: 90
+    unite_affichage: "90 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 20
+    unite_affichage: "pour le moule"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 180 °C et beurrer généreusement un moule à bords hauts."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Fouetter les œufs avec le sucre et le sel, puis incorporer la farine sans grumeaux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Détendre avec le lait versé en filet jusqu'à obtenir une pâte fluide, proche d'une pâte à crêpes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Répartir les framboises dans le moule et verser l'appareil dessus — elles remonteront un peu à la cuisson."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner jusqu'à ce que la lame d'un couteau ressorte propre et que le dessus soit doré. Servir tiède."
+    lexicon_ids: []
+    timer_s: 2400
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

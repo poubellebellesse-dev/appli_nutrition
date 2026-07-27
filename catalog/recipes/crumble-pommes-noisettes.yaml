@@ -1,0 +1,83 @@
+id: crumble_pommes_noisettes
+nom: "Crumble aux pommes et noisettes"
+description: >
+  Des pommes fondantes sous une pâte sableuse de farine, beurre, sucre roux et noisettes.
+temps_prep_min: 20
+temps_cuisson_min: 40
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: 0.9
+  leger_consistant: 0.6
+  chaud_froid: 0.6
+  texture: croquant
+
+ingredients:
+  - food_id: pomme
+    quantite_g: 900
+    unite_affichage: "6 pommes"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 120
+    unite_affichage: "120 g froid"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 100
+    unite_affichage: "100 g"
+    optionnel: false
+  - food_id: noisette
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 180 °C. Peler les pommes, les couper en cubes et les citronner."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Concasser les noisettes, puis les mélanger à la farine et au sucre roux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter le beurre FROID en dés et travailler du bout des doigts jusqu'à obtenir un sable grossier — le beurre mou donnerait une pâte, pas un crumble."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Répartir les pommes dans un plat, saupoudrer de cannelle, puis couvrir de pâte sableuse sans tasser."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner jusqu'à ce que le dessus soit doré et que le jus des pommes bouillonne sur les bords."
+    lexicon_ids: []
+    timer_s: 2400
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: britannique
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial
