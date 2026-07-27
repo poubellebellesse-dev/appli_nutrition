@@ -33,10 +33,10 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Garde-fous** | 4 sur 5 codés — reste `assertCalorieFloor`, qui attend le planning |
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
-**État vérifié : `npm test` → 388 verts (34 fichiers) · `npm run typecheck` propre ·
+**État vérifié : `npm test` → 399 verts (35 fichiers) · `npm run typecheck` propre ·
 `npm run build` → **193 aliments, 212 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
-plus aucun `PROV-`. Cible v1 revue (décision 4) : ~200 aliments **atteint**, 200-300 recettes **en
-cours**.**
+plus aucun `PROV-`. Cible v1 revue (décision 4) : ~200 aliments **atteint**,
+200-300 recettes **ATTEINTE**.**
 
 > Règle de contenu à ne pas défaire : une recette déclare **un seul** régime, le plus restrictif
 > qu'elle respecte (`vegetalien` pour un plat sans produit animal). La couche `regime` connaît la
@@ -48,21 +48,20 @@ cours**.**
 
 ## ▶ Reprendre ici
 
-**1. Le contenu — continuer à remplir le catalogue.** L'import CIQUAL est **FAIT** (193 aliments aux
-valeurs ANSES 2025 réelles, `npm run catalog:ciqual`). Reste **les recettes : 85 écrites, palier
-visé 100, cible v1 200-300**. Ce n'est
-pas du code : ingrédients quantifiés, étapes, allergènes, facettes, axes sensoriels, temps,
-équipement, envergure, créneaux. Et la contrainte figée (**contenu original obligatoire, pas de
-scrap**) veut dire qu'elles s'écrivent, elles ne se collectent pas. C'est le gros morceau du projet.
+**1. Le contenu est FAIT pour la v1.** 193 aliments aux valeurs ANSES réelles, 212 recettes, aucun
+aliment inemployé. La cible de la décision 4 (200-300 recettes) est atteinte. Continuer reste
+possible et utile, mais ce n'est plus un préalable à quoi que ce soit.
 
 > Écrire une recette qui a besoin d'un aliment absent des 193 : ajouter l'entrée dans `foods.yaml`
 > (id, nom, groupe, saisonnalité, allergènes — à la main), sa ligne dans `ciqual-mapping.yaml`
 > (`node catalog/import-ciqual.mjs --search "<terme>"` pour trouver le code), puis
 > `npm run catalog:ciqual -- --write`. Les valeurs nutritionnelles ne s'écrivent JAMAIS à la main.
 
-**2. Puis `suggestAlternatives`, avec la spec révisée (décision 26, ETAT §4).** Le blocage est LEVÉ : le mécanisme
-« plat frère » a désormais des candidats (16 aliments poissons et 13 viandes, ~15 recettes de
-poisson et ~12 de viande). C'est le prochain chantier moteur, après le palier de 100 recettes. Rappel de la spec révisée : **variante** = ingrédient principal
+**2. ⬅ PROCHAINE ÉTAPE — `suggestAlternatives`, spec révisée (décision 26, ETAT §4).** Le blocage
+est levé depuis longtemps : le mécanisme « plat frère » a de quoi travailler (16 aliments poissons,
+13 viandes, une vingtaine de recettes de chaque). Et il repose sur la notion d'ingrédient
+caractéristique, désormais CORRECTE (`recipeSignature`, §6.6 bis) — la construire avant la
+correction aurait été du travail à refaire. Rappel de la spec révisée : **variante** = ingrédient principal
 invariant (retrait d'un `optionnel`, substitution d'un ingrédient secondaire) · **alternative** =
 autre recette, ingrédient principal libre dans le même `Food.groupe`, toujours dans les filtres de
 l'utilisateur. La table `substitution` se conçoit **avec** les recettes, pas avant (décision 27).
@@ -70,11 +69,10 @@ l'utilisateur. La table `substitution` se conçoit **avec** les recettes, pas av
 **3. Le planning attend, toujours.** Il ne changera pas selon que le catalogue contient 10 ou 200
 recettes : c'est de l'orchestration par-dessus le moteur, il peut attendre sans rien coûter.
 
-**Deux dettes de mesure, identiques dans leur forme** : λ (§6.6) et `varietyMode` ne sont pas
-jugeables sur le catalogue actuel — λ parce qu'il demande la distribution d'un vrai
-catalogue — elle arrive, à re-mesurer au palier de 100 ; `varietyMode` parce que l'historique du
-banc est vide, donc toutes les recettes ont la même récence et l'override les décale identiquement
-sans changer l'ordre. Ce second point ne se règle PAS par le contenu : il demande un historique.
+**λ est désormais calibrable** : le catalogue et le modèle de similarité sont sains (distribution
+mesurée sous « Dette connue »). **`varietyMode` ne l'est toujours pas**, et le contenu n'y changera
+rien : son problème est un historique de repas VIDE au banc, pas un catalogue pauvre — toutes les
+recettes ont donc la même récence et l'override les décale identiquement.
 
 ## Trois acquis à ne pas défaire
 
