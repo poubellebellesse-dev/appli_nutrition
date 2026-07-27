@@ -33,7 +33,7 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Garde-fous** | 4 sur 5 codés — reste `assertCalorieFloor`, qui attend le planning |
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
-**État vérifié : `npm test` → 387 verts (34 fichiers) · `npm run typecheck` propre ·
+**État vérifié : `npm test` → 388 verts (34 fichiers) · `npm run typecheck` propre ·
 `npm run build` → **193 aliments, 73 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
 plus aucun `PROV-`. Cible v1 revue (décision 4) : ~200 aliments **atteint**, 200-300 recettes **en
 cours**.**
@@ -48,21 +48,21 @@ cours**.**
 
 ## ▶ Reprendre ici
 
-**1. Le contenu — continuer à remplir le catalogue.** L'import CIQUAL est **FAIT** (76 aliments aux
-valeurs ANSES 2025 réelles, `npm run catalog:ciqual`). Reste **les recettes, de 22 à ~100**. Ce n'est
+**1. Le contenu — continuer à remplir le catalogue.** L'import CIQUAL est **FAIT** (193 aliments aux
+valeurs ANSES 2025 réelles, `npm run catalog:ciqual`). Reste **les recettes : 73 écrites, palier
+visé 100, cible v1 200-300**. Ce n'est
 pas du code : ingrédients quantifiés, étapes, allergènes, facettes, axes sensoriels, temps,
 équipement, envergure, créneaux. Et la contrainte figée (**contenu original obligatoire, pas de
 scrap**) veut dire qu'elles s'écrivent, elles ne se collectent pas. C'est le gros morceau du projet.
 
-> Écrire une recette qui a besoin d'un aliment absent des 76 : ajouter l'entrée dans `foods.yaml`
+> Écrire une recette qui a besoin d'un aliment absent des 193 : ajouter l'entrée dans `foods.yaml`
 > (id, nom, groupe, saisonnalité, allergènes — à la main), sa ligne dans `ciqual-mapping.yaml`
 > (`node catalog/import-ciqual.mjs --search "<terme>"` pour trouver le code), puis
 > `npm run catalog:ciqual -- --write`. Les valeurs nutritionnelles ne s'écrivent JAMAIS à la main.
 
-**2. Puis `suggestAlternatives`, avec la spec révisée (décision 26, ETAT §4).** Reporté
-délibérément : sur 10 recettes, le mécanisme « plat frère » n'a **aucun candidat** — 1 seule recette
-de poisson (saumon poêlé), 1 seule de viande (bœuf haché). Le coder maintenant reviendrait à écrire
-à l'aveugle, comme calibrer λ. Rappel de la spec révisée : **variante** = ingrédient principal
+**2. Puis `suggestAlternatives`, avec la spec révisée (décision 26, ETAT §4).** Le blocage est LEVÉ : le mécanisme
+« plat frère » a désormais des candidats (16 aliments poissons et 13 viandes, ~15 recettes de
+poisson et ~12 de viande). C'est le prochain chantier moteur, après le palier de 100 recettes. Rappel de la spec révisée : **variante** = ingrédient principal
 invariant (retrait d'un `optionnel`, substitution d'un ingrédient secondaire) · **alternative** =
 autre recette, ingrédient principal libre dans le même `Food.groupe`, toujours dans les filtres de
 l'utilisateur. La table `substitution` se conçoit **avec** les recettes, pas avant (décision 27).
@@ -71,9 +71,10 @@ l'utilisateur. La table `substitution` se conçoit **avec** les recettes, pas av
 recettes : c'est de l'orchestration par-dessus le moteur, il peut attendre sans rien coûter.
 
 **Deux dettes de mesure, identiques dans leur forme** : λ (§6.6) et `varietyMode` ne sont pas
-jugeables sur le catalogue actuel — λ parce que 10 recettes n'ont pas la distribution d'un vrai
-catalogue, `varietyMode` parce que l'historique du banc est vide (les 10 recettes ont donc la même
-récence, l'override les décale toutes pareil sans changer l'ordre). Le contenu débloque les deux.
+jugeables sur le catalogue actuel — λ parce qu'il demande la distribution d'un vrai
+catalogue — elle arrive, à re-mesurer au palier de 100 ; `varietyMode` parce que l'historique du
+banc est vide, donc toutes les recettes ont la même récence et l'override les décale identiquement
+sans changer l'ordre. Ce second point ne se règle PAS par le contenu : il demande un historique.
 
 ## Trois acquis à ne pas défaire
 
@@ -96,9 +97,8 @@ récence, l'override les décale toutes pareil sans changer l'ordre). Le contenu
 
 - **λ (diversification) n'est pas calibré** — mesuré sur les 45 paires du catalogue réel : similarité
   maximale **48,7 %** (`boeuf_hache_sauce_tomate` × `saumon_poele_courgettes`), et MMR déplace
-  `bœuf haché sauce tomate` du rang 5 au rang 8. L'effet existe donc, mais 10 recettes composées à
-  la main n'ont pas la distribution d'un catalogue de production : calibrer λ demande d'attendre le
-  vrai catalogue.
+  `bœuf haché sauce tomate` du rang 5 au rang 8. **Mesure faite quand le catalogue comptait 10
+  recettes — à refaire au palier de 100**, la distribution des similarités a forcément changé.
 - **Le banc n'affiche plus la similarité** de chaque recette retenue (perdue en passant par
   `suggestMeals` — `ScoredSuggestion` ne porte pas cette information). À rétablir avant de calibrer λ.
 - **L'explication distingue peu** : les cinq suggestions affichent souvent les mêmes trois phrases,
