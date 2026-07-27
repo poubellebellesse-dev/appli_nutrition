@@ -1,0 +1,83 @@
+id: pommes_terre_boulangere
+nom: "Pommes de terre boulangère"
+description: >
+  Des pommes de terre en tranches cuites au four avec des oignons fondus et du bouillon.
+temps_prep_min: 20
+temps_cuisson_min: 60
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.7
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: pomme_de_terre
+    quantite_g: 1200
+    unite_affichage: "1,2 kg"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 400
+    unite_affichage: "3 oignons"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 10
+    unite_affichage: "1 cube pour 50 cl"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 7
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les oignons et les faire fondre longuement au beurre jusqu'à ce qu'ils blondissent."
+    lexicon_ids: [emincer]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Peler les pommes de terre et les couper en tranches de trois millimètres."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Alterner dans un plat beurré une couche de pommes de terre, une d'oignons, en salant chaque étage."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Verser le bouillon chaud à hauteur des pommes de terre — ici pas de lait ni de crème, c'est ce qui distingue la boulangère du dauphinois."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Ajouter thym et laurier, parsemer du reste de beurre et enfourner à 190 °C jusqu'à absorption du bouillon."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

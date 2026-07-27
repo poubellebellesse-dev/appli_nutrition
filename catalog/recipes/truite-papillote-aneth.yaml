@@ -1,0 +1,83 @@
+id: truite_papillote_aneth
+nom: "Truite en papillote à l'aneth"
+description: >
+  Des truites entières cuites en papillote avec citron, aneth et rondelles de poireau.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.1
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: truite
+    quantite_g: 500
+    unite_affichage: "2 truites vidées"
+    optionnel: false
+  - food_id: poireau
+    quantite_g: 200
+    unite_affichage: "1 poireau"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 80
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: aneth_frais
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 30
+    unite_affichage: "30 g"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 190 °C et découper deux grandes feuilles de papier cuisson."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer le poireau en fines rondelles et le rincer à grande eau."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Répartir le poireau au centre de chaque feuille, saler, poser la truite dessus."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Glisser des rondelles de citron et de l'aneth dans le ventre, ajouter une noix de beurre et un trait de vin blanc."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Fermer hermétiquement et enfourner : la chair doit se détacher de l'arête sans résistance."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

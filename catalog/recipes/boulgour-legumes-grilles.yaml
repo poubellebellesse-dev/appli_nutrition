@@ -1,0 +1,91 @@
+id: boulgour_legumes_grilles
+nom: "Boulgour aux légumes grillés"
+description: >
+  Du boulgour tiède mêlé d'aubergine, courgette et poivron rôtis, relevé de cumin et de menthe.
+temps_prep_min: 20
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.4
+  chaud_froid: 0.2
+  texture: fondant
+
+ingredients:
+  - food_id: boulgour
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: aubergine
+    quantite_g: 350
+    unite_affichage: "1 aubergine"
+    optionnel: false
+  - food_id: courgette
+    quantite_g: 300
+    unite_affichage: "1 courgette"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 200
+    unite_affichage: "1 poivron"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 210 °C. Couper les légumes en cubes de deux centimètres."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les mélanger à la moitié de l'huile, au cumin et au sel, puis les étaler en une seule couche."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Enfourner en remuant une fois à mi-cuisson, jusqu'à ce que les bords caramélisent."
+    lexicon_ids: []
+    timer_s: 2100
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Cuire le boulgour dans son volume et demi d'eau salée, à couvert et hors du feu."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: repos
+  - ordre: 5
+    texte: "L'égrainer à la fourchette, y mêler les légumes chauds, le reste d'huile, le jus de citron et la menthe ciselée."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: libanaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

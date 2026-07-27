@@ -1,0 +1,87 @@
+id: tarte_courgettes_chevre
+nom: "Tarte aux courgettes et au chèvre"
+description: >
+  Une pâte feuilletée garnie de rondelles de courgette et de chèvre frais, au thym.
+temps_prep_min: 20
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.4
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: pate_feuilletee
+    quantite_g: 250
+    unite_affichage: "1 rouleau"
+    optionnel: false
+  - food_id: courgette
+    quantite_g: 600
+    unite_affichage: "3 courgettes"
+    optionnel: false
+  - food_id: chevre_frais
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 100
+    unite_affichage: "2 œufs"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 100
+    unite_affichage: "10 cl"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les courgettes en rondelles fines, les saler et les laisser dégorger dans une passoire."
+    lexicon_ids: [emincer]
+    timer_s: 1200
+    timer_type: repos
+  - ordre: 2
+    texte: "Les éponger puis les faire sauter rapidement à l'huile pour évaporer le reste d'eau."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Battre les œufs avec la crème, le thym et une pincée de sel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Étaler la pâte, la piquer, répartir les courgettes puis le chèvre en morceaux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Verser l'appareil et enfourner à 190 °C jusqu'à ce qu'il soit pris et la pâte dorée."
+    lexicon_ids: []
+    timer_s: 2100
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,91 @@
+id: salade_pates_pesto_froide
+nom: "Salade de pâtes au pesto et tomates cerises"
+description: >
+  Des pâtes refroidies mêlées de pesto, tomates, mozzarella et pignons, servies froides.
+temps_prep_min: 20
+temps_cuisson_min: 10
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.4
+  chaud_froid: -0.7
+  texture: fondant
+
+ingredients:
+  - food_id: pates_spaghetti
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 40
+    unite_affichage: "1 gros bouquet"
+    optionnel: false
+  - food_id: pignon_pin
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: parmesan
+    quantite_g: 60
+    unite_affichage: "60 g râpé"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 300
+    unite_affichage: "3 tomates"
+    optionnel: false
+  - food_id: mozzarella
+    quantite_g: 150
+    unite_affichage: "1 boule"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 6
+    unite_affichage: "1 gousse"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire les pâtes, les rincer à l'eau froide pour stopper la cuisson et les empêcher de coller."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Faire dorer les pignons à sec, puis les laisser refroidir."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Piler l'ail avec le basilic, ajouter la moitié des pignons et le parmesan, puis l'huile en filet."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Couper les tomates en quartiers et la mozzarella en dés."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Mélanger le tout aux pâtes froides, saler, parsemer du reste de pignons et laisser reposer au frais."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

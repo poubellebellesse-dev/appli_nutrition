@@ -1,0 +1,79 @@
+id: smoothie_banane_myrtille
+nom: "Smoothie banane-myrtille"
+description: >
+  Banane, myrtilles et yaourt mixés avec un peu de lait et de miel.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.9
+  leger_consistant: -0.3
+  chaud_froid: -0.9
+  texture: liquide
+
+ingredients:
+  - food_id: banane
+    quantite_g: 300
+    unite_affichage: "2 bananes"
+    optionnel: false
+  - food_id: myrtille
+    quantite_g: 150
+    unite_affichage: "1 barquette"
+    optionnel: false
+  - food_id: yaourt_nature
+    quantite_g: 250
+    unite_affichage: "2 yaourts"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 150
+    unite_affichage: "15 cl"
+    optionnel: true
+  - food_id: miel
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: flocons_avoine
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les bananes et les couper en tronçons — bien mûres, elles suffisent souvent à sucrer le smoothie."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Rincer les myrtilles et les égoutter."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Mettre tous les ingrédients dans le bol du mixeur, fruits d'abord et liquides ensuite."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mixer jusqu'à obtenir une texture lisse, en ajoutant du lait si c'est trop épais."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Servir aussitôt : la couleur et la texture se dégradent au bout de quelques minutes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

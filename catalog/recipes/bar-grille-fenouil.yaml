@@ -1,0 +1,83 @@
+id: bar_grille_fenouil
+nom: "Bar grillé au fenouil"
+description: >
+  Un bar entier grillé, farci de fenouil et de citron, arrosé d'huile d'olive.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: -0.1
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: bar
+    quantite_g: 600
+    unite_affichage: "1 bar vidé"
+    optionnel: false
+  - food_id: fenouil
+    quantite_g: 300
+    unite_affichage: "1 bulbe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 80
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Inciser le bar de trois entailles obliques sur chaque flanc, pour que la chaleur pénètre régulièrement."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer le fenouil finement et en garnir le ventre avec des rondelles de citron et l'ail."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Saler l'extérieur et huiler généreusement, ce qui empêche la peau d'attacher."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Griller à feu moyen sans déplacer le poisson tant que la peau n'est pas saisie."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Retourner à l'aide de deux spatules et terminer la cuisson, puis poivrer et servir entier."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

@@ -1,0 +1,83 @@
+id: gratin_pates_jambon
+nom: "Gratin de pâtes au jambon"
+description: >
+  Des pâtes liées d'une béchamel au gruyère, mêlées de dés de jambon et gratinées.
+temps_prep_min: 15
+temps_cuisson_min: 40
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.9
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: pates_spaghetti
+    quantite_g: 350
+    unite_affichage: "350 g"
+    optionnel: false
+  - food_id: jambon_blanc
+    quantite_g: 250
+    unite_affichage: "5 tranches"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 600
+    unite_affichage: "60 cl"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: gruyere
+    quantite_g: 150
+    unite_affichage: "150 g râpé"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 7
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire les pâtes deux minutes de moins que le temps indiqué — elles finiront au four."
+    lexicon_ids: []
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Faire fondre le beurre, ajouter la farine, cuire une minute puis verser le lait en fouettant."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Saler la béchamel et y fondre la moitié du gruyère hors du feu."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mélanger les pâtes égouttées, le jambon en dés et la sauce, puis verser dans un plat beurré."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Couvrir du reste de gruyère et enfourner à 200 °C jusqu'à ce que le dessus soit doré et boursouflé."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

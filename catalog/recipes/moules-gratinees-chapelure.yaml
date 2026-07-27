@@ -1,0 +1,83 @@
+id: moules_gratinees_chapelure
+nom: "Moules gratinées à la chapelure d'ail"
+description: >
+  Des moules ouvertes puis gratinées sur leur demi-coquille avec une chapelure au persil.
+temps_prep_min: 25
+temps_cuisson_min: 15
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.1
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: moule
+    quantite_g: 1500
+    unite_affichage: "1,5 kg"
+    optionnel: false
+  - food_id: chapelure
+    quantite_g: 100
+    unite_affichage: "100 g"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 30
+    unite_affichage: "1 bouquet"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 20
+    unite_affichage: "4 gousses"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 70
+    unite_affichage: "70 g mou"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 100
+    unite_affichage: "10 cl"
+    optionnel: true
+  - food_id: citron
+    quantite_g: 40
+    unite_affichage: "1/2 citron"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Gratter et rincer les moules, écarter celles qui restent ouvertes au toucher."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les ouvrir à feu vif dans une cocotte couverte avec le vin blanc, puis les retirer dès qu'elles s'ouvrent."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Jeter la coquille vide de chaque moule et ranger les demi-coquilles garnies sur une plaque."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mêler le beurre mou, la chapelure, l'ail émincé très fin et le persil ciselé."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Déposer un peu de ce beurre sur chaque moule et passer sous le gril jusqu'à ce que la chapelure dore."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

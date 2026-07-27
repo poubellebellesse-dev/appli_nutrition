@@ -1,0 +1,87 @@
+id: salade_chou_rouge_carotte
+nom: "Salade de chou rouge et carotte râpée"
+description: >
+  Du chou rouge et des carottes râpés, en vinaigrette au vinaigre de cidre et graines de tournesol.
+temps_prep_min: 20
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.1
+  leger_consistant: -0.5
+  chaud_froid: -0.8
+  texture: croquant
+
+ingredients:
+  - food_id: chou_rouge
+    quantite_g: 400
+    unite_affichage: "1/2 chou rouge"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 300
+    unite_affichage: "3 carottes"
+    optionnel: false
+  - food_id: pomme
+    quantite_g: 150
+    unite_affichage: "1 pomme"
+    optionnel: true
+  - food_id: graine_tournesol
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_colza
+    quantite_g: 45
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 10
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer le chou rouge le plus finement possible, retirer la côte centrale trop dure."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Le saler et le masser à la main quelques minutes — ce geste l'attendrit et lui évite d'être coriace."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: repos
+  - ordre: 3
+    texte: "Râper les carottes et la pomme, et les mêler au chou."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Délayer la moutarde avec le vinaigre, monter à l'huile, puis verser sur les légumes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Laisser reposer au frais au moins une heure, puis parsemer de graines de tournesol grillées à sec."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien
