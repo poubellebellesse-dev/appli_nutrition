@@ -1,0 +1,91 @@
+id: sardines_pommes_terre_four
+nom: "Sardines et pommes de terre au four"
+description: >
+  Des sardines rangées sur un lit de pommes de terre en tranches, cuites au four à l'origan.
+temps_prep_min: 20
+temps_cuisson_min: 45
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: sardine
+    quantite_g: 700
+    unite_affichage: "12 sardines vidées"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 800
+    unite_affichage: "6 pommes de terre"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 300
+    unite_affichage: "3 tomates"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: origan_seche
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 7
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Émincer les pommes de terre en tranches fines et l'oignon en lamelles."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les étaler dans un plat huilé avec l'ail émincé, saler, et enfourner SEULES d'abord."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Cette précuisson est indispensable : les sardines seraient sèches avant que les pommes de terre soient tendres."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ranger les sardines en éventail sur les pommes de terre, glisser les tomates en rondelles entre elles."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Arroser d'huile, saupoudrer d'origan et remettre au four jusqu'à ce que la peau des sardines grille."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

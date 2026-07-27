@@ -1,0 +1,83 @@
+id: tartine_fromage_blanc_radis
+nom: "Tartine de fromage blanc aux radis"
+description: >
+  Du pain complet tartiné de fromage blanc battu, garni de radis en rondelles et de ciboulette.
+temps_prep_min: 10
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.4
+  chaud_froid: -0.5
+  texture: croquant
+
+ingredients:
+  - food_id: pain_complet
+    quantite_g: 120
+    unite_affichage: "4 tranches"
+    optionnel: false
+  - food_id: fromage_blanc
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: radis
+    quantite_g: 200
+    unite_affichage: "1 botte"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: citron
+    quantite_g: 20
+    unite_affichage: "quelques gouttes"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 2
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Battre le fromage blanc à la fourchette avec le sel, le poivre et quelques gouttes de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Le laisser s'égoutter quelques minutes s'il est très liquide, pour qu'il tienne sur le pain."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 3
+    texte: "Émincer les radis en rondelles très fines."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Griller légèrement le pain, puis le tartiner généreusement."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ranger les rondelles de radis en écailles, ciseler le persil dessus et donner un tour de poivre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

@@ -261,5 +261,20 @@ for (const m of MODELS) {
   )
 }
 
+// Les paires les plus proches selon chaque modèle : c'est là que se cachent les artefacts
+// restants. Une valeur haute n'est un défaut que si la paire n'a rien à voir.
+console.log('\nPAIRES LES PLUS PROCHES DE TOUT LE CATALOGUE, par modèle')
+for (const m of MODELS) {
+  const pairs: { a: string; b: string; s: number }[] = []
+  for (let i = 0; i < recipes.length; i++) {
+    for (let j = i + 1; j < recipes.length; j++) {
+      pairs.push({ a: recipes[i]!.id, b: recipes[j]!.id, s: m.sim(recipes[i]!, recipes[j]!) })
+    }
+  }
+  pairs.sort((x, y) => y.s - x.s)
+  console.log(`  ${m.name}`)
+  for (const p of pairs.slice(0, 3)) console.log(`     ${(p.s * 100).toFixed(0)}%  ${p.a} × ${p.b}`)
+}
+
 console.log('\nNotes :')
 for (const m of MODELS) console.log(`  ${m.name.padEnd(24)} ${m.note}`)

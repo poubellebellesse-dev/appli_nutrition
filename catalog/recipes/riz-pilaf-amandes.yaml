@@ -1,0 +1,87 @@
+id: riz_pilaf_amandes
+nom: "Riz pilaf aux amandes et raisins secs"
+description: >
+  Du riz nacré au beurre puis cuit au bouillon, garni d'amandes dorées et de raisins.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.2
+  leger_consistant: 0.5
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: riz_blanc
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: raisin
+    quantite_g: 80
+    unite_affichage: "une poignée"
+    optionnel: true
+  - food_id: oignon
+    quantite_g: 120
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 10
+    unite_affichage: "1 cube pour 60 cl"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire dorer les amandes effilées à sec, puis les réserver."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Faire suer l'oignon émincé dans le beurre sans coloration."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter le riz SEC et le remuer jusqu'à ce que les grains deviennent translucides — c'est le nacrage, il empêche le riz de coller."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Verser une fois et demie son volume de bouillon chaud, saler, couvrir et NE PLUS OUVRIR."
+    lexicon_ids: []
+    timer_s: 1080
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Hors du feu, laisser reposer à couvert, puis égrainer à la fourchette et ajouter amandes, raisins et cannelle."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: turque
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

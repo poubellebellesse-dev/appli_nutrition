@@ -1,0 +1,83 @@
+id: salade_agrumes_hiver
+nom: "Salade d'agrumes d'hiver"
+description: >
+  Oranges, clémentines et kiwis en quartiers, arrosés de miel et parsemés de pistaches.
+temps_prep_min: 20
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.8
+  leger_consistant: -0.8
+  chaud_froid: -0.8
+  texture: fondant
+
+ingredients:
+  - food_id: orange
+    quantite_g: 500
+    unite_affichage: "4 oranges"
+    optionnel: false
+  - food_id: clementine
+    quantite_g: 300
+    unite_affichage: "4 clémentines"
+    optionnel: false
+  - food_id: kiwi
+    quantite_g: 200
+    unite_affichage: "2 kiwis"
+    optionnel: false
+  - food_id: pistache
+    quantite_g: 40
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 25
+    unite_affichage: "2 cuillères à café"
+    optionnel: true
+  - food_id: menthe_fraiche
+    quantite_g: 10
+    unite_affichage: "quelques feuilles"
+    optionnel: true
+  - food_id: cannelle
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Peler les oranges À VIF au couteau, en retirant toute la peau blanche."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Prélever les quartiers entre les membranes, au-dessus d'un saladier pour récupérer le jus."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Éplucher les clémentines et séparer les quartiers, peler et couper les kiwis en rondelles."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Délayer le miel dans le jus récupéré et en arroser les fruits."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Laisser reposer au frais, puis parsemer de pistaches concassées, de menthe et d'une pincée de cannelle."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

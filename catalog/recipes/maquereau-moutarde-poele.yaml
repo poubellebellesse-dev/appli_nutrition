@@ -1,0 +1,87 @@
+id: maquereau_moutarde_poele
+nom: "Filets de maquereau poêlés à la moutarde"
+description: >
+  Des filets de maquereau saisis côté peau, nappés d'une crème à la moutarde et à l'échalote.
+temps_prep_min: 10
+temps_cuisson_min: 12
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.3
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: maquereau
+    quantite_g: 600
+    unite_affichage: "8 filets"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 35
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 100
+    unite_affichage: "10 cl"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 60
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 80
+    unite_affichage: "8 cl"
+    optionnel: true
+  - food_id: huile_colza
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Inciser légèrement la peau des filets pour qu'ils ne se rétractent pas à la cuisson."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les saisir côté peau dans l'huile chaude, sans les bouger, jusqu'à ce qu'elle croustille."
+    lexicon_ids: []
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Les retourner trente secondes seulement, puis les réserver — le maquereau cuit très vite."
+    lexicon_ids: []
+    timer_s: 60
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Faire suer l'échalote émincée dans la même poêle, déglacer au vin blanc et laisser réduire."
+    lexicon_ids: [emincer, deglacer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Incorporer la moutarde et la crème hors du feu, saler, napper les filets et parsemer de persil."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

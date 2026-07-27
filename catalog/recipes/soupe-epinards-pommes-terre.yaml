@@ -1,0 +1,87 @@
+id: soupe_epinards_pommes_terre
+nom: "Velouté d'épinards et pommes de terre"
+description: >
+  Des épinards mixés avec des pommes de terre pour la texture, relevés de muscade et de crème.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.1
+  chaud_froid: 0.9
+  texture: liquide
+
+ingredients:
+  - food_id: epinard
+    quantite_g: 700
+    unite_affichage: "700 g frais"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 400
+    unite_affichage: "4 pommes de terre"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 120
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 10
+    unite_affichage: "1 cube"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 80
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: true
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire suer l'oignon émincé au beurre, ajouter les pommes de terre en cubes."
+    lexicon_ids: [emincer]
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Couvrir d'eau, émietter le bouillon et cuire jusqu'à ce que les pommes de terre s'écrasent."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les épinards lavés par grosses poignées : ils fondent en moins d'une minute."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Mixer AUSSITÔT, hors du feu — prolonger la cuisson des épinards ferait virer le vert au kaki."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Saler, incorporer la crème et réveiller de quelques gouttes de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

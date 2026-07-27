@@ -1,0 +1,71 @@
+id: oeufs_coque_mouillettes
+nom: "Œufs à la coque et mouillettes"
+description: >
+  Des œufs cuits trois minutes, jaune coulant, avec des mouillettes de pain beurré.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.1
+  chaud_froid: 0.8
+  texture: creme
+
+ingredients:
+  - food_id: oeuf
+    quantite_g: 200
+    unite_affichage: "4 œufs très frais"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 120
+    unite_affichage: "4 tranches"
+    optionnel: false
+  - food_id: beurre_demi_sel
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 2
+    unite_affichage: "au goût"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Sortir les œufs du réfrigérateur à l'avance : plongés froids dans l'eau bouillante, ils fendent."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+  - ordre: 2
+    texte: "Porter une casserole d'eau à ébullition franche, puis y descendre les œufs à la cuillère."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Compter exactement trois minutes à partir de la reprise de l'ébullition — c'est la seule difficulté."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Pendant ce temps, griller le pain et le tartiner de beurre, puis le couper en longues bandes."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Décalotter les œufs et servir aussitôt : ils continuent de cuire dans leur coquille."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,79 @@
+id: smoothie_mangue_ananas
+nom: "Smoothie mangue-ananas"
+description: >
+  Mangue et ananas mixés avec du yaourt, du citron vert et une pointe de gingembre.
+temps_prep_min: 10
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.9
+  leger_consistant: -0.4
+  chaud_froid: -0.9
+  texture: liquide
+
+ingredients:
+  - food_id: mangue
+    quantite_g: 300
+    unite_affichage: "1 grosse mangue"
+    optionnel: false
+  - food_id: ananas
+    quantite_g: 250
+    unite_affichage: "1/4 d'ananas"
+    optionnel: false
+  - food_id: yaourt_nature
+    quantite_g: 200
+    unite_affichage: "2 yaourts"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: miel
+    quantite_g: 15
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Peler la mangue et détacher la chair du noyau plat en suivant ses deux faces."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Retirer l'écorce de l'ananas et son cœur fibreux, qui reste dur au mixage."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Mettre les fruits en morceaux dans le mixeur avec le yaourt."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mixer jusqu'à obtenir une texture lisse, en ajoutant un peu d'eau si c'est trop épais."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Réveiller d'un trait de citron et d'une pincée de gingembre, goûter avant de sucrer — l'ananas suffit souvent."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien
