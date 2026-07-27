@@ -7,7 +7,10 @@
 // tests/engine-boundaries.test.ts). N'exporte que des fonctions, ce n'est pas un fichier `.test.ts`
 // : aucun test n'y tourne directement.
 //
-// Dépendances autorisées : domain/ uniquement — §2/§3 ENGINE.
+// Dépendances autorisées : domain/ et nutrition/ — §2/§3 ENGINE, les mêmes que le code de
+// selection/ qu'elles servent. `nutrition/signature.js` est importé pour construire les index de
+// signature avec les VRAIES fonctions du moteur plutôt qu'une copie approximative (voir
+// `buildIndexes`).
 
 import type {
   AllergenId,
@@ -26,6 +29,7 @@ import type {
 } from '../domain/index.js'
 import { g, min } from '../domain/index.js'
 import type { ExclusionLayerResult, LayerResult, ScoringLayerResult } from './index.js'
+import { computeRecipeFamilySignature, computeRecipeSignature } from '../nutrition/signature.js'
 
 /**
  * `SelectionLayer<Config>.apply` retourne `LayerResult` (union) même pour une couche typée
@@ -44,12 +48,17 @@ export function asScoringResult(result: LayerResult): ScoringLayerResult {
   return result
 }
 
-export function makeFood(id: string, allergenes: readonly FoodAllergen[] = []): Food {
+export function makeFood(
+  id: string,
+  allergenes: readonly FoodAllergen[] = [],
+  opts: { readonly sousFamille?: string } = {}
+): Food {
   return {
     id: id as FoodId,
     codeCiqual: `TEST-${id}`,
     nom: id,
     groupe: 'test',
+    sousFamille: opts.sousFamille ?? null,
     nutrimentsPour100g: new Map(),
     allergenes,
     saisonMois: [],
@@ -106,7 +115,11 @@ export function makeRecipe(
  * couches ne connaissant que `Catalog`, un fixture qui n'indexe pas correctement les créneaux
  * ferait passer `runExclusionPass` à côté de son point de départ réel, §6.4 ENGINE).
  */
-function buildIndexes(recipes: ReadonlyMap<RecipeId, Recipe>, foods: ReadonlyMap<FoodId, Food>): CatalogIndexes {
+function buildIndexes(
+  recipes: ReadonlyMap<RecipeId, Recipe>,
+  foods: ReadonlyMap<FoodId, Food>,
+  catalogForSignatures: Catalog,
+): CatalogIndexes {
   const recipesBySlot = new Map<Recipe['typesRepas'][number], Set<RecipeId>>()
   const recipesByDiet = new Map<DietCode, Set<RecipeId>>()
   const recipesByAllergen = new Map<AllergenId, Set<RecipeId>>()
@@ -135,20 +148,21 @@ function buildIndexes(recipes: ReadonlyMap<RecipeId, Recipe>, foods: ReadonlyMap
     recipesBySlot,
     recipeNutrients: new Map(),
     recipeMainIngredient: new Map(),
-    recipeSignature: new Map(),
+    // Calculés par les VRAIES fonctions du moteur, pas re-simulés ici : les couches `variety` et
+    // `habit` lisent `recipeFamilySignature` (§6.6 quater), et un index vide les rendrait aveugles
+    // à la composition — les tests passeraient sans jamais exercer le rapprochement.
+    recipeSignature: computeRecipeSignature(catalogForSignatures),
+    recipeFamilySignature: computeRecipeFamilySignature(catalogForSignatures),
   }
 }
 
-export function makeCatalog(
-  recipes: readonly Recipe[],
-  foods: readonly Food[] = [],
-  /** Override de `indexes.recipeMainIngredient` (§9.1 ENGINE) — vide par défaut, comme avant. */
-  mainIngredientByRecipe: ReadonlyMap<RecipeId, FoodId> = new Map()
-): Catalog {
+export function makeCatalog(recipes: readonly Recipe[], foods: readonly Food[] = []): Catalog {
   const recipeMap = new Map(recipes.map((recipe) => [recipe.id, recipe]))
   const foodMap = new Map(foods.map((food) => [food.id, food]))
 
-  return {
+  // `computeRecipeSignature` prend un `Catalog` : on construit d'abord une coquille aux index vides,
+  // uniquement pour la lui passer. Aucune récursion — ces fonctions ne lisent que `recipes`/`foods`.
+  const base: Catalog = {
     version: 'test',
     foods: foodMap,
     recipes: recipeMap,
@@ -157,8 +171,20 @@ export function makeCatalog(
     lexicon: new Map(),
     topics: new Map(),
     substitutions: new Map(),
-    indexes: { ...buildIndexes(recipeMap, foodMap), recipeMainIngredient: mainIngredientByRecipe },
+    indexes: EMPTY_INDEXES,
   }
+
+  return { ...base, indexes: buildIndexes(recipeMap, foodMap, base) }
+}
+
+const EMPTY_INDEXES: CatalogIndexes = {
+  recipesByAllergen: new Map(),
+  recipesByDiet: new Map(),
+  recipesBySlot: new Map(),
+  recipeNutrients: new Map(),
+  recipeMainIngredient: new Map(),
+  recipeSignature: new Map(),
+  recipeFamilySignature: new Map(),
 }
 
 /** `SuggestionRequest` minimal — seuls les champs lus par les couches d'exclusion/de score en test varient. */

@@ -75,6 +75,7 @@ interface FoodRow {
   readonly code_ciqual: string
   readonly nom: string
   readonly groupe: string
+  readonly sous_famille: string | null
   readonly saison_mois: string
   readonly toute_annee: number
 }
@@ -212,6 +213,7 @@ function loadFoods(db: DatabaseSync): Map<FoodId, Food> {
       codeCiqual: row.code_ciqual,
       nom: row.nom,
       groupe: row.groupe,
+      sousFamille: row.sous_famille,
       nutrimentsPour100g,
       allergenes,
       saisonMois: parseJsonArray<Month>(row.saison_mois),
@@ -325,6 +327,7 @@ function buildIndexes(recipes: ReadonlyMap<RecipeId, Recipe>, foods: ReadonlyMap
     recipeNutrients: new Map(),
     recipeMainIngredient: new Map(),
     recipeSignature: new Map(),
+    recipeFamilySignature: new Map(),
   }
 }
 

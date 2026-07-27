@@ -7,8 +7,10 @@
 //
 // Écarts assumés par rapport aux documents, documentés au fil du fichier :
 //  - `food` a `saison_mois` et `toute_annee` dans le schéma réel depuis P1b-1 (§4.2 ARCHITECTURE,
-//    §6.5 ENGINE précision 3), mais toujours pas `sous_groupe` (hors périmètre P1b-1) : cette
-//    colonne n'existe pas dans build.mjs. Food suit le réel.
+//    §6.5 ENGINE précision 3), et `sous_famille` depuis §6.6 quater. Toujours pas de `sous_groupe`
+//    au sens taxonomique du §4.2 : `sous_famille` ne le remplace PAS — elle ne renseigne que les
+//    aliments dont le catalogue contient plusieurs entrées du même produit de base, et sert un
+//    besoin précis (la récence). Food suit le réel.
 //  - Plusieurs champs texte (axe_texture, recipe_facet.valeur, régime) n'ont AUCUNE contrainte
 //    CHECK en base : vocabulaire ouvert, typé `string` plutôt qu'en union littérale fermée.
 //  - `topics`/`substitutions` sur Catalog n'ont pas encore de table dans catalog.db (v1.5/v2,
@@ -75,6 +77,17 @@ export interface Food {
   readonly codeCiqual: string
   readonly nom: string
   readonly groupe: string
+  /**
+   * Sous-famille facultative — regroupe les aliments qui sont le MÊME produit de base
+   * (`poulet_blanc` et `poulet_cuisse` → `poulet`). `null` quand l'aliment est seul de son espèce,
+   * ce qui est le cas de la très grande majorité.
+   *
+   * ⚠️ N'est PAS une taxonomie : elle n'existe que là où le catalogue contient plusieurs entrées
+   * du même produit, et sert un besoin précis — la récence de `variety`/`habit` (§6.6 quater
+   * ENGINE). `groupe` ne peut pas jouer ce rôle : « viandes » mélange bœuf, poulet, porc et agneau,
+   * ce qui a été mesuré et écarté.
+   */
+  readonly sousFamille: string | null
   /** `food_nutrient`, une ligne par nutriment — regroupé en Map propre, pas en lignes SQL. */
   readonly nutrimentsPour100g: ReadonlyMap<NutrientId, number>
   readonly allergenes: readonly FoodAllergen[]
@@ -216,6 +229,17 @@ export interface Substitution {
  */
 export type RecipeSignature = ReadonlyMap<FoodId, number>
 
+/**
+ * La même signature, mais chaque aliment replié sur sa `Food.sousFamille` quand elle existe
+ * (§6.6 quater ENGINE). Les clés ne sont donc PAS des `FoodId` : ce sont des ids d'aliment OU des
+ * noms de famille, d'où `string`. Type NOMMÉ ET DISTINCT de `RecipeSignature` exprès : comparer
+ * une signature brute à une signature repliée n'a aucun sens (les clés ne désignent pas la même
+ * chose). ⚠️ TypeScript ne peut PAS l'imposer — les deux Map restent structurellement compatibles,
+ * `signatureOverlap` accepte donc les deux. Le nom porte l'intention, pas le compilateur : à
+ * l'appel, les deux côtés doivent venir du même index.
+ */
+export type RecipeFamilySignature = ReadonlyMap<string, number>
+
 export interface CatalogIndexes {
   readonly recipesByAllergen: ReadonlyMap<AllergenId, ReadonlySet<RecipeId>>
   readonly recipesByDiet: ReadonlyMap<DietCode, ReadonlySet<RecipeId>>
@@ -225,8 +249,9 @@ export interface CatalogIndexes {
   /**
    * L'ingrédient non optionnel LE PLUS LOURD. ⚠️ Ce n'est PAS l'ingrédient qui définit le plat —
    * mesuré faux sur le catalogue réel (« mousse au chocolat » → œuf, « hachis de bœuf » → pomme de
-   * terre). Conservé pour `variety`/`habit`, qui n'ont pas encore de remplaçant mesuré ; la
-   * diversification, elle, utilise `recipeSignature` depuis la correction de §6.6.
+   * terre). ⚠️ PLUS AUCUNE COUCHE NE LE LIT depuis §6.6 quater : la similarité est passée à
+   * `recipeSignature`, `variety`/`habit` à `recipeFamilySignature`. Conservé le temps de vérifier
+   * qu'aucun usage n'apparaît côté UI ; à supprimer sinon — c'est de la dette, pas un index actif.
    */
   readonly recipeMainIngredient: ReadonlyMap<RecipeId, FoodId>
   /**
@@ -234,6 +259,13 @@ export interface CatalogIndexes {
    * similarité (§6.6 ENGINE). Modèle CHOISI PAR MESURE, voir engine/nutrition/signature.ts.
    */
   readonly recipeSignature: ReadonlyMap<RecipeId, RecipeSignature>
+  /**
+   * La même signature, mais les aliments d'une même `Food.sousFamille` fusionnés (§6.6 quater).
+   * Base de la RÉCENCE de `variety`/`habit` — « ai-je mangé du poulet hier » se moque du morceau,
+   * alors que la diversification doit encore distinguer un blanc rôti d'un tajine de cuisses.
+   * Clés : id d'aliment OU nom de famille, d'où `string` et non `FoodId`.
+   */
+  readonly recipeFamilySignature: ReadonlyMap<RecipeId, RecipeFamilySignature>
 }
 
 export interface Catalog {

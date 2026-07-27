@@ -44,6 +44,18 @@ const groupeOf = (id: RecipeId) => {
   const d = dominantOf(id)
   return d === undefined ? undefined : catalog.foods.get(d)?.groupe
 }
+/** Sous-famille de l'aliment dominant (`poulet_blanc` et `poulet_cuisse` → `poulet`). */
+const sousFamilleOf = (id: RecipeId) => {
+  const d = dominantOf(id)
+  return d === undefined ? undefined : (catalog.foods.get(d)?.sousFamille ?? undefined)
+}
+/** Variante : chevauchement OU même SOUS-FAMILLE dominante — bien plus étroit que le groupe. */
+const ruleOverlapOrFamily = (tau: number) => (a: RecipeId, b: RecipeId) => {
+  if (signatureOverlap(sigOf(a), sigOf(b)) >= tau) return true
+  const fa = sousFamilleOf(a)
+  return fa !== undefined && fa === sousFamilleOf(b)
+}
+
 /** Groupes où « j'en ai déjà mangé » a un sens fort — le reste est trop hétérogène. */
 const GROUPES_STRUCTURANTS = new Set(['viandes', 'poissons', 'fruits de mer', 'légumineuses', 'œufs'])
 /** Variante : chevauchement OU même GROUPE alimentaire dominant, si ce groupe est structurant. */
@@ -53,6 +65,32 @@ const ruleOverlapOrGroup = (tau: number) => (a: RecipeId, b: RecipeId) => {
   return ga !== undefined && ga === groupeOf(b) && GROUPES_STRUCTURANTS.has(ga)
 }
 
+/**
+ * Signature NORMALISÉE PAR FAMILLE : chaque aliment est remplacé par sa sous-famille quand elle
+ * existe, et les parts des aliments d'une même famille s'additionnent. `poulet_blanc` et
+ * `poulet_cuisse` deviennent tous deux `poulet`, donc deux plats de poulet se chevauchent enfin.
+ * Plus robuste que « même sous-famille DOMINANTE » : ne dépend pas d'un départage de poids.
+ */
+const famSig = (id: RecipeId) => {
+  const out = new Map<string, number>()
+  for (const [foodId, part] of sigOf(id)) {
+    const key = catalog.foods.get(foodId)?.sousFamille ?? foodId
+    out.set(key, (out.get(key) ?? 0) + part)
+  }
+  return out
+}
+const famOverlap = (a: RecipeId, b: RecipeId) => {
+  const [x, y] = [famSig(a), famSig(b)]
+  if (x.size === 0 || y.size === 0) return 0
+  let inter = 0, union = 0
+  for (const k of new Set([...x.keys(), ...y.keys()])) {
+    inter += Math.min(x.get(k) ?? 0, y.get(k) ?? 0)
+    union += Math.max(x.get(k) ?? 0, y.get(k) ?? 0)
+  }
+  return union === 0 ? 0 : inter / union
+}
+const ruleFam = (tau: number) => (a: RecipeId, b: RecipeId) => famOverlap(a, b) >= tau
+
 const RULES: { name: string; fires: (a: RecipeId, b: RecipeId) => boolean }[] = [
   { name: 'actuelle (même plus lourd)', fires: ruleCurrent },
   { name: 'chevauchement ≥ 0,25', fires: ruleOverlap(0.25) },
@@ -60,6 +98,13 @@ const RULES: { name: string; fires: (a: RecipeId, b: RecipeId) => boolean }[] = 
   { name: 'chevauchement ≥ 0,45', fires: ruleOverlap(0.45) },
   { name: 'chevauchement ≥ 0,55', fires: ruleOverlap(0.55) },
   { name: '≥ 0,45 OU même groupe', fires: ruleOverlapOrGroup(0.45) },
+  { name: '≥ 0,45 OU sous-famille', fires: ruleOverlapOrFamily(0.45) },
+  { name: '≥ 0,55 OU sous-famille', fires: ruleOverlapOrFamily(0.55) },
+  { name: 'famille-normalisé ≥ 0,36', fires: ruleFam(0.36) },
+  { name: 'famille-normalisé ≥ 0,38', fires: ruleFam(0.38) },
+  { name: 'famille-normalisé ≥ 0,40', fires: ruleFam(0.4) },
+  { name: 'famille-normalisé ≥ 0,42', fires: ruleFam(0.42) },
+  { name: 'famille-normalisé ≥ 0,45', fires: ruleFam(0.45) },
 ]
 
 const DOIT: [string, string][] = [

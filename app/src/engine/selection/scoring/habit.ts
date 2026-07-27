@@ -31,7 +31,7 @@
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
-import type { MealHistory, RecipeId, RecipeSignature } from '../../domain/index.js'
+import type { MealHistory, RecipeFamilySignature, RecipeId } from '../../domain/index.js'
 import { signatureOverlap } from '../../nutrition/signature.js'
 import { VARIETY_RECENCY_OVERLAP_THRESHOLD } from './variety.js'
 import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
@@ -39,13 +39,13 @@ import { NEUTRAL_SCORE, clamp01 } from './index.js'
 
 export interface ScoreHabitArgs {
   readonly recipeId: RecipeId
-  /** Signature du candidat (§6.6 ENGINE). Map vide = composition inconnue, aucun rapprochement. */
-  readonly signature: RecipeSignature
+  /** Signature normalisée par sous-famille — même espace que `variety`, voir son en-tête (§6.6 quater). */
+  readonly signature: RecipeFamilySignature
   readonly history: MealHistory
   /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE). */
   readonly today: string
   /** Résout la signature des entrées d'historique — voir variety.ts, même motif et même seuil. */
-  readonly signatureByRecipe?: ReadonlyMap<RecipeId, RecipeSignature>
+  readonly signatureByRecipe?: ReadonlyMap<RecipeId, RecipeFamilySignature>
 }
 
 export function scoreHabit(args: ScoreHabitArgs): number {
@@ -74,10 +74,12 @@ export function scoreHabit(args: ScoreHabitArgs): number {
 // Couche `habit` (§6.2 ENGINE) — enveloppe `scoreHabit` dans le contrat `SelectionLayer`.
 //
 // `configure` pré-calcule ce qui dépend du `Catalog` : `signatureByRecipe` est directement
-// `catalog.indexes.recipeSignature` (§9.1 ENGINE), utilisé ici pour la même chose que dans
-// `variety.ts` — résoudre la composition des entrées d'HISTORIQUE, avec le MÊME seuil mesuré
-// (`VARIETY_RECENCY_OVERLAP_THRESHOLD`, voir l'en-tête de variety.ts pour les cinq règles
-// comparées et la limite connue sur les morceaux d'un même animal). `history`/`today` viennent de `req.history`/`req.context.date`.
+// `catalog.indexes.recipeFamilySignature` (§9.1 ENGINE), utilisé ici pour la même chose que dans
+// `variety.ts` — résoudre la composition des entrées d'HISTORIQUE, dans le MÊME espace normalisé
+// par sous-famille et avec le MÊME seuil mesuré (`VARIETY_RECENCY_OVERLAP_THRESHOLD` ; voir
+// l'en-tête de variety.ts pour les sept règles comparées et la limite résiduelle sur les plats où
+// le même animal pèse des parts très inégales). `history`/`today` viennent de
+// `req.history`/`req.context.date`.
 //
 // ⚠️ Rappel de l'asymétrie déjà codée dans `scoreHabit` (voir en-tête de fichier plus haut) :
 // `habit` ne compte QUE les entrées d'origine `choisi` — un reste mangé (`origine: 'reste'`)
@@ -96,7 +98,7 @@ export interface HabitLayerConfig {
   readonly history: MealHistory
   /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE), reprise de `req.context.date`. */
   readonly today: string
-  readonly signatureByRecipe: ReadonlyMap<RecipeId, RecipeSignature>
+  readonly signatureByRecipe: ReadonlyMap<RecipeId, RecipeFamilySignature>
 }
 
 export const habitLayer: SelectionLayer<HabitLayerConfig> = {
@@ -108,7 +110,7 @@ export const habitLayer: SelectionLayer<HabitLayerConfig> = {
   configure: (req, catalog) => ({
     history: req.history,
     today: req.context.date,
-    signatureByRecipe: catalog.indexes.recipeSignature,
+    signatureByRecipe: catalog.indexes.recipeFamilySignature,
   }),
 
   apply: (candidates: CandidateSet, config: HabitLayerConfig): ScoringLayerResult => {

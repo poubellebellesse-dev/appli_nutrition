@@ -90,6 +90,7 @@ foods:
     code_ciqual: "19041"
     nom: "Lait demi-écrémé"
     groupe: "lait et produits laitiers"
+    sous_famille: "lait"
     toute_annee: true
     nutriments:
       energie_kcal: 47.7
@@ -109,6 +110,7 @@ foods:
     code_ciqual: "16400"
     nom: "Beurre doux"
     groupe: "matières grasses"
+    sous_famille: "beurre"
     toute_annee: true
     nutriments:
       energie_kcal: 753
@@ -196,6 +198,7 @@ foods:
     code_ciqual: "9100"
     nom: "Riz blanc, cru"
     groupe: "céréales et dérivés"
+    sous_famille: "riz"
     toute_annee: true
     nutriments:
       energie_kcal: 350
@@ -345,6 +348,7 @@ foods:
     code_ciqual: "20087"
     nom: "Poivron rouge, cru"
     groupe: "légumes"
+    sous_famille: "poivron"
     saison_mois: [7, 8, 9, 10]
     nutriments:
       energie_kcal: 33.6
@@ -382,6 +386,7 @@ foods:
     code_ciqual: "36007"
     nom: "Blanc de poulet, cru"
     groupe: "viandes"
+    sous_famille: "poulet"
     toute_annee: true
     nutriments:
       energie_kcal: 122
@@ -435,6 +440,7 @@ foods:
     code_ciqual: "20359"
     nom: "Lentilles corail, crues"
     groupe: "légumineuses"
+    sous_famille: "lentilles"
     toute_annee: true
     nutriments:
       energie_kcal: 327
@@ -1000,6 +1006,7 @@ foods:
     code_ciqual: "20359"
     nom: "Lentilles vertes, crues"
     groupe: "légumineuses"
+    sous_famille: "lentilles"
     toute_annee: true
     nutriments:
       energie_kcal: 327
@@ -1475,6 +1482,7 @@ foods:
     code_ciqual: "11220"
     nom: "Vinaigre de vin rouge"
     groupe: "condiments"
+    sous_famille: "vinaigre"
     toute_annee: true
     nutriments:
       energie_kcal: 20.6
@@ -1747,6 +1755,7 @@ foods:
     code_ciqual: "13032"
     nom: "Olive noire en saumure, égouttée"
     groupe: "fruits"
+    sous_famille: "olive"
     toute_annee: true
     nutriments:
       energie_kcal: 173
@@ -1783,6 +1792,7 @@ foods:
     code_ciqual: "16402"
     nom: "Beurre demi-sel"
     groupe: "matières grasses"
+    sous_famille: "beurre"
     toute_annee: true
     nutriments:
       energie_kcal: 725
@@ -1917,6 +1927,7 @@ foods:
     code_ciqual: "20069"
     nom: "Chou vert, cru"
     groupe: "légumes"
+    sous_famille: "chou"
     saison_mois: [10, 11, 12, 1, 2, 3]
     toute_annee: false
     nutriments:
@@ -1955,6 +1966,7 @@ foods:
     code_ciqual: "9102"
     nom: "Riz complet, cru"
     groupe: "céréales et dérivés"
+    sous_famille: "riz"
     toute_annee: true
     nutriments:
       energie_kcal: 350
@@ -2070,6 +2082,7 @@ foods:
     code_ciqual: "21502"
     nom: "Agneau, gigot cru"
     groupe: "viandes"
+    sous_famille: "agneau"
     toute_annee: true
     nutriments:
       energie_kcal: 128
@@ -2168,6 +2181,7 @@ foods:
     code_ciqual: "19023"
     nom: "Lait entier, UHT"
     groupe: "lait et produits laitiers"
+    sous_famille: "lait"
     toute_annee: true
     nutriments:
       energie_kcal: 64.6
@@ -2370,6 +2384,7 @@ foods:
     code_ciqual: "28204"
     nom: "Porc, filet mignon cru"
     groupe: "viandes"
+    sous_famille: "porc"
     toute_annee: true
     nutriments:
       energie_kcal: 123
@@ -2387,6 +2402,7 @@ foods:
     code_ciqual: "28300"
     nom: "Porc, rôti cru"
     groupe: "viandes"
+    sous_famille: "porc"
     toute_annee: true
     nutriments:
       energie_kcal: 153
@@ -2404,6 +2420,7 @@ foods:
     code_ciqual: "28002"
     nom: "Porc, poitrine crue"
     groupe: "viandes"
+    sous_famille: "porc"
     toute_annee: true
     nutriments:
       energie_kcal: 253
@@ -2488,6 +2505,7 @@ foods:
     code_ciqual: "36024"
     nom: "Poulet, cuisse, viande crue"
     groupe: "viandes"
+    sous_famille: "poulet"
     toute_annee: true
     nutriments:
       energie_kcal: 114
@@ -2505,6 +2523,7 @@ foods:
     code_ciqual: "21504"
     nom: "Agneau, épaule crue"
     groupe: "viandes"
+    sous_famille: "agneau"
     toute_annee: true
     nutriments:
       energie_kcal: 170
@@ -2820,6 +2839,7 @@ foods:
     code_ciqual: "20014"
     nom: "Chou rouge, cru"
     groupe: "légumes"
+    sous_famille: "chou"
     saison_mois: [9, 10, 11, 12, 1, 2]
     toute_annee: false
     nutriments:
@@ -2930,6 +2950,7 @@ foods:
     code_ciqual: "20085"
     nom: "Poivron vert, cru"
     groupe: "légumes"
+    sous_famille: "poivron"
     saison_mois: [6, 7, 8, 9, 10]
     toute_annee: true
     nutriments:
@@ -3145,6 +3166,7 @@ foods:
     code_ciqual: "13033"
     nom: "Olive verte en saumure, égouttée"
     groupe: "fruits"
+    sous_famille: "olive"
     toute_annee: true
     nutriments:
       energie_kcal: 164
@@ -3495,6 +3517,7 @@ foods:
     code_ciqual: "11091"
     nom: "Vinaigre balsamique"
     groupe: "condiments"
+    sous_famille: "vinaigre"
     toute_annee: true
     nutriments:
       energie_kcal: 91.7
@@ -3550,6 +3573,7 @@ foods:
     code_ciqual: "11026"
     nom: "Coriandre, graine"
     groupe: "condiments"
+    sous_famille: "coriandre"
     toute_annee: true
     nutriments:
       energie_kcal: 345
@@ -3567,6 +3591,7 @@ foods:
     code_ciqual: "11094"
     nom: "Coriandre fraîche"
     groupe: "condiments"
+    sous_famille: "coriandre"
     toute_annee: true
     nutriments:
       energie_kcal: 22.3

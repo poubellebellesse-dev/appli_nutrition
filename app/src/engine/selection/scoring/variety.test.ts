@@ -3,8 +3,8 @@
 
 import { describe, expect, it } from 'vitest'
 import { VARIETY_RECENCY_OVERLAP_THRESHOLD, scoreVariety, varietyLayer } from './variety.js'
-import { asScoringResult, makeCatalog, makeRecipe, makeRequest } from '../test-fixtures.js'
-import type { MealHistory, MealHistoryEntry, RecipeId, FoodId } from '../../domain/index.js'
+import { asScoringResult, makeCatalog, makeFood, makeIngredient, makeRecipe, makeRequest } from '../test-fixtures.js'
+import type { Food, MealHistory, MealHistoryEntry, Recipe, RecipeId, FoodId } from '../../domain/index.js'
 
 const RECIPE = 'tartiflette' as RecipeId
 const AUTRE_RECIPE = 'salade' as RecipeId
@@ -459,5 +459,81 @@ describe('scoring/variety — varietyMode (§8.1 ENGINE, câblage P1c)', () => {
     expect(varietyLayer.configure(makeRequest({ varietyMode: 'surprise' }), catalog).override).toBe('surprise')
     expect(varietyLayer.configure(makeRequest({ varietyMode: 'auto' }), catalog).override).toBeNull()
     expect(varietyLayer.configure(makeRequest(), catalog).override).toBeNull()
+  })
+})
+
+describe('scoring/variety — récence par SOUS-FAMILLE (§6.6 quater, décision 31)', () => {
+  // Deux morceaux du même animal = deux aliments distincts du catalogue. C'est le cas réel qui a
+  // motivé `Food.sousFamille` : sans repli, rien n'exprime que c'est le même produit de base.
+  const POULET_BLANC = makeFood('poulet_blanc', [], { sousFamille: 'poulet' })
+  const POULET_CUISSE = makeFood('poulet_cuisse', [], { sousFamille: 'poulet' })
+  const AGNEAU = makeFood('agneau_gigot', [], { sousFamille: 'agneau' })
+  const CAROTTE = makeFood('carotte')
+
+  function platDe(id: string, foodId: string) {
+    return makeRecipe(id, {
+      ingredients: [makeIngredient(foodId, { quantiteG: 400 }), makeIngredient('carotte', { quantiteG: 100 })],
+    })
+  }
+
+  /**
+   * Score de `candidat` sachant que `mange` a été mangé la veille. Plus bas = jugé plus répétitif.
+   *
+   * ⚠️ `varietyMode: 'surprise'` n'est PAS décoratif : il force `familiarity` à 0, donc
+   * `score = nouveaute`, ce qui isole la RÉCENCE — la seule chose testée ici. Sans lui, `habit`
+   * reconnaîtrait la même composition, `familiarity` monterait à 1 et `scoreVariety` basculerait en
+   * bonus de familiarité : le score REMONTERAIT au lieu de descendre, pour la même raison. Les deux
+   * comportements sont corrects mais opposés, et mesurer les deux à la fois ne prouve rien.
+   */
+  function scoreApres(candidat: Recipe, mange: Recipe, foods: readonly Food[]): number {
+    const catalog = makeCatalog([candidat, mange], foods)
+    const req = makeRequest({
+      date: '2026-07-24',
+      history: { windowDays: 21, entries: [entry(mange.id, '2026-07-23')] },
+      varietyMode: 'surprise',
+    })
+    const config = varietyLayer.configure(req, catalog)
+    return asScoringResult(varietyLayer.apply(new Set([candidat.id]), config)).scores.get(candidat.id)!
+  }
+
+  it('la couche lit `recipeFamilySignature`, pas `recipeSignature` — c’est CE câblage qui est testé', () => {
+    const catalog = makeCatalog([platDe('a', 'poulet_blanc')], [POULET_BLANC, CAROTTE])
+    const config = varietyLayer.configure(makeRequest(), catalog)
+
+    expect(config.signatureByRecipe).toBe(catalog.indexes.recipeFamilySignature)
+    expect(config.signatureByRecipe).not.toBe(catalog.indexes.recipeSignature)
+  })
+
+  it('CAS CORRIGÉ : du poulet mangé hier rend répétitif un plat au poulet d’un AUTRE morceau', () => {
+    const teriyaki = platDe('poulet_teriyaki', 'poulet_cuisse')
+    const curry = platDe('poulet_curry', 'poulet_blanc')
+
+    const score = scoreApres(teriyaki, curry, [POULET_BLANC, POULET_CUISSE, CAROTTE])
+
+    // Les deux signatures brutes n'ont que la carotte en commun (20 %) — sous le seuil. Repliées sur
+    // `poulet`, elles sont identiques : la récence se déclenche et écrase le score de nouveauté.
+    // Valeur attendue : 1 − exp(−1/7), la décroissance d'un plat vu il y a exactement un jour.
+    expect(score).toBeCloseTo(1 - Math.exp(-1 / 7), 10)
+    expect(score).toBeLessThan(0.2)
+  })
+
+  it('CONTRE-ÉPREUVE : un plat d’agneau n’est PAS rendu répétitif par du poulet', () => {
+    // Le garde-fou de la mesure : replier sur `Food.groupe` (« viandes ») rendait tout plat carné
+    // équivalent à tout autre. La sous-famille doit rester d'un cran plus fine.
+    const agneau = platDe('gigot', 'agneau_gigot')
+    const curry = platDe('poulet_curry', 'poulet_blanc')
+
+    const score = scoreApres(agneau, curry, [POULET_BLANC, AGNEAU, CAROTTE])
+
+    // Aucun rapprochement : la recette n'a jamais été vue → recence=0 → nouveaute=1.
+    expect(score).toBe(1)
+  })
+
+  it('sans sous-famille déclarée, deux aliments distincts restent distincts — le repli n’invente rien', () => {
+    const sansFamille = [makeFood('poulet_blanc'), makeFood('poulet_cuisse'), CAROTTE]
+    const teriyaki = platDe('poulet_teriyaki', 'poulet_cuisse')
+    const curry = platDe('poulet_curry', 'poulet_blanc')
+
+    expect(scoreApres(teriyaki, curry, sansFamille)).toBe(1)
   })
 })

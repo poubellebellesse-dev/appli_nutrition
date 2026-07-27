@@ -33,6 +33,7 @@ const EMPTY_INDEXES: CatalogIndexes = {
   recipeNutrients: new Map(),
   recipeMainIngredient: new Map(),
   recipeSignature: new Map(),
+  recipeFamilySignature: new Map(),
 };
 
 function food(id: string, allergenId: string | null): Food {
@@ -41,6 +42,7 @@ function food(id: string, allergenId: string | null): Food {
     codeCiqual: `TEST-${id}`,
     nom: id,
     groupe: "test",
+    sousFamille: null,
     nutrimentsPour100g: new Map(),
     allergenes: allergenId
       ? [{ allergenId: allergenId as AllergenId, certitude: "contient" }]

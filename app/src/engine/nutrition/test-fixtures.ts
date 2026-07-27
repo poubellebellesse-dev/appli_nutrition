@@ -47,6 +47,7 @@ export function makeNutrient(
 export function makeFood(
   id: string,
   nutrimentsPour100g: Readonly<Record<string, number>> = {},
+  opts: { readonly sousFamille?: string } = {},
 ): Food {
   const nutrientMap = new Map<NutrientId, number>(
     Object.entries(nutrimentsPour100g).map(([nutrientId, value]) => [
@@ -59,6 +60,7 @@ export function makeFood(
     codeCiqual: `TEST-${id}`,
     nom: id,
     groupe: "test",
+    sousFamille: opts.sousFamille ?? null,
     nutrimentsPour100g: nutrientMap,
     allergenes: [],
     saisonMois: [],
@@ -113,6 +115,7 @@ function makeEmptyIndexes(): CatalogIndexes {
     recipeNutrients: new Map(),
     recipeMainIngredient: new Map(),
     recipeSignature: new Map(),
+    recipeFamilySignature: new Map(),
   };
 }
 

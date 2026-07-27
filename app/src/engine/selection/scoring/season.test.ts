@@ -17,6 +17,7 @@ function makeFood(id: string, opts: { readonly touteAnnee: boolean; readonly sai
     codeCiqual: `TEST-${id}`,
     nom: id,
     groupe: 'test',
+    sousFamille: null,
     nutrimentsPour100g: new Map(),
     allergenes: [],
     saisonMois: opts.saisonMois ?? [],

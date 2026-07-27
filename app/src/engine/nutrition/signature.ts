@@ -32,7 +32,7 @@
 //
 // Dépendances autorisées : domain/ uniquement — §2/§3 ENGINE.
 
-import type { Catalog, FoodId, RecipeId, RecipeSignature } from '../domain/index.js'
+import type { Catalog, FoodId, RecipeFamilySignature, RecipeId, RecipeSignature } from '../domain/index.js'
 
 /**
  * Nombre d'ingrédients retenus dans la signature. TROIS est la valeur mesurée, pas un réglage à
@@ -86,6 +86,40 @@ export function computeRecipeSignature(catalog: Catalog): ReadonlyMap<RecipeId, 
 }
 
 /**
+ * Signature NORMALISÉE PAR SOUS-FAMILLE : chaque aliment est remplacé par sa `sousFamille` quand
+ * elle existe, et les parts d'une même famille s'additionnent. `poulet_blanc` et `poulet_cuisse`
+ * deviennent tous deux `poulet`.
+ *
+ * POURQUOI UN SECOND INDEX plutôt qu'une normalisation dans `computeRecipeSignature` : les deux
+ * questions ne se posent pas au même endroit. La DIVERSIFICATION (§6.6 ter) compare des plats et
+ * doit pouvoir distinguer un blanc de poulet rôti d'un tajine de cuisses. La RÉCENCE (§6.6 quater)
+ * demande « ai-je mangé du poulet hier », où le morceau n'a aucune importance. Normaliser dans
+ * l'index commun changerait la similarité, qui a été mesurée sans — il faudrait tout refaire.
+ *
+ * MESURÉ (banc app/src/cli/compare-variety.ts) : au même seuil de 0,45, la normalisation par
+ * famille rattrape 16 paires que la signature brute manquait, toutes légitimes — gigot × navarin
+ * d'agneau (14 → 65 %), lentilles vertes × lentilles corail (38 → 90 %), et huit paires de poulet
+ * dont « poulet au curry » × « poulet teriyaki » (0 → 64 %). Elle n'introduit aucun faux
+ * rapprochement sur le jeu jugé.
+ *
+ * Les clés ne sont plus des `FoodId` mais des chaînes (id d'aliment OU nom de famille) : le type
+ * de retour est volontairement `ReadonlyMap<string, number>`, pas une `RecipeSignature`, pour que
+ * les deux ne puissent pas être confondues à l'appel.
+ */
+export function computeRecipeFamilySignature(catalog: Catalog): ReadonlyMap<RecipeId, RecipeFamilySignature> {
+  const result = new Map<RecipeId, RecipeFamilySignature>()
+  for (const [recipeId, signature] of computeRecipeSignature(catalog)) {
+    const byFamily = new Map<string, number>()
+    for (const [foodId, part] of signature) {
+      const key = catalog.foods.get(foodId)?.sousFamille ?? foodId
+      byFamily.set(key, (byFamily.get(key) ?? 0) + part)
+    }
+    result.set(recipeId, byFamily)
+  }
+  return result
+}
+
+/**
  * Chevauchement pondéré de deux signatures ∈ [0, 1] — indice de Jaccard pondéré : somme des minima
  * sur somme des maxima.
  *
@@ -97,7 +131,7 @@ export function computeRecipeSignature(catalog: Catalog): ReadonlyMap<RecipeId, 
  * Une signature VIDE (recette sans ingrédient non optionnel) rend 0, jamais 1 : l'absence n'est pas
  * une égalité — même piège que celui documenté dans similarity.ts.
  */
-export function signatureOverlap(a: RecipeSignature, b: RecipeSignature): number {
+export function signatureOverlap(a: ReadonlyMap<string, number>, b: ReadonlyMap<string, number>): number {
   if (a.size === 0 || b.size === 0) return 0
 
   let intersection = 0

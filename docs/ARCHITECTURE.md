@@ -121,13 +121,18 @@ nutrient(id, code, nom, unite, vnr_adulte, categorie, sens)
     --   (énergie, macros) ; 'plancher' ne punit que le manque (fibres, fer, calcium, vitamine C) ;
     --   'plafond' ne punit que le dépassement (sodium). Corrige un écart auparavant SYMÉTRIQUE qui
     --   pénalisait un plat riche en fer pour sa richesse (docs/ENGINE.md §6.5 précision 1).
-food(id, code_ciqual, nom, groupe, saison_mois[], toute_annee)
+food(id, code_ciqual, nom, groupe, sous_famille?, saison_mois[], toute_annee)
     -- saison_mois[] + toute_annee : RÉELS depuis P1b-1 (build.mjs + loader). Deux dimensions
     --   INDÉPENDANTES et cumulables : saison_mois = pleine saison (production locale) ;
     --   toute_annee = disponibilité (rayon/conservation). Un légume de garde porte les deux.
     --   La couche `season` les combine en crédits pondérés par quantité (docs/ENGINE.md §6.5
     --   précision 3). Un aliment sans saison_mois est exclu du calcul de saison.
-    --   `sous_groupe` de l'esquisse initiale n'existe PAS au schéma réel.
+    -- sous_famille : RÉEL depuis 2026-07-27 (docs/ENGINE.md §6.6 quater), NULLABLE et renseigné
+    --   seulement là où le catalogue contient plusieurs entrées du MÊME produit de base
+    --   (poulet_blanc + poulet_cuisse → 'poulet') : 25 aliments sur 193, 12 familles. Sert la
+    --   RÉCENCE de `variety`/`habit`, pas la similarité. Ce n'est PAS le `sous_groupe`
+    --   taxonomique de l'esquisse initiale, qui n'existe toujours pas au schéma réel : celui-ci
+    --   classerait TOUS les aliments, `sous_famille` n'en regroupe qu'une poignée.
 food_nutrient(food_id, nutrient_id, valeur_pour_100g)
 allergen(id, code, nom)                          -- 14 allergènes réglementaires UE
 food_allergen(food_id, allergen_id, certitude)   -- 'contient' | 'traces'

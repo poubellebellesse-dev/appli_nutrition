@@ -16,21 +16,36 @@
 // question — « manger A hier rend-il B répétitif aujourd'hui ? », qui n'est PAS « A et B se
 // ressemblent-ils » :
 //
-//   règle                        déclenche à tort   rate à raison   paires touchées
-//   ingrédient le plus lourd          6 / 6             1 / 7            326
-//   chevauchement ≥ 0,35              3 / 6             1 / 7            204
-//   chevauchement ≥ 0,45  ← RETENU    0 / 6             1 / 7             86
-//   chevauchement ≥ 0,55              0 / 6             2 / 7             43
-//   ≥ 0,45 OU même groupe alim.       4 / 6             1 / 7            735
+//   règle                            déclenche à tort   rate à raison   paires touchées
+//   ingrédient le plus lourd              6 / 6             1 / 7            326
+//   chevauchement ≥ 0,35                  3 / 6             1 / 7            204
+//   chevauchement ≥ 0,45                  0 / 6             1 / 7             86
+//   chevauchement ≥ 0,55                  0 / 6             2 / 7             43
+//   ≥ 0,45 OU même groupe alim.           4 / 6             1 / 7            735
+//   sous-famille ≥ 0,45   ← RETENU        0 / 6             1 / 7            102
+//   sous-famille ≥ 0,38                   3 / 6             0 / 7            191
 //
 // Le repli par `Food.groupe` a été TESTÉ ET ÉCARTÉ : « viandes » mélange bœuf, poulet, porc et
-// agneau, donc tout plat carné rendait tout autre plat carné répétitif.
+// agneau, donc tout plat carné rendait tout autre plat carné répétitif. La SOUS-FAMILLE
+// (`Food.sousFamille`, §6.6 quater) est le MÊME repli, mais d'un cran plus fin : `poulet_blanc` et
+// `poulet_cuisse` se replient sur `poulet`, jamais sur « viandes ».
 //
-// ⚠️ LIMITE CONNUE ET NON RÉSOLUE : le seuil rate « poulet rôti aux carottes » × « poulet au citron
-// et aux olives » (7 % de chevauchement). Les deux emploient `poulet_blanc` et `poulet_cuisse`,
-// DEUX ALIMENTS DISTINCTS du catalogue. C'est une limite de DONNÉES, pas de règle : rien n'exprime
-// que ces deux aliments sont le même animal. La corriger demande une notion de sous-famille sur
-// `Food`, à décider séparément — aucun réglage de seuil ne la rattrapera.
+// La comparaison se fait donc dans l'ESPACE NORMALISÉ PAR SOUS-FAMILLE
+// (`catalog.indexes.recipeFamilySignature`), pas dans l'espace brut que lit la similarité. Les deux
+// questions diffèrent : la diversification doit encore distinguer un blanc rôti d'un tajine de
+// cuisses, la récence non — voir `computeRecipeFamilySignature` pour la justification complète.
+//
+// À seuil ÉGAL (0,45) la normalisation ne dégrade rien sur le jeu jugé (0/6 et 1/7 dans les deux
+// cas) et rattrape 16 paires que la signature brute manquait, toutes légitimes : gigot × navarin
+// d'agneau (14 → 65 %), lentilles vertes × lentilles corail (38 → 90 %), crêpes × flan aux œufs
+// (12 → 58 %) et HUIT paires de poulet, dont « poulet au curry » × « poulet teriyaki » (0 → 64 %).
+//
+// ⚠️ LIMITE RÉSIDUELLE : « poulet rôti aux carottes » × « poulet au citron et aux olives » reste
+// sous le seuil (39 %), alors que c'est le cas qui a motivé la sous-famille. La cause n'est plus
+// l'absence de repli — il s'applique bien — mais le POIDS : le poulet pèse 43 % de la signature
+// d'un côté contre 71 % de l'autre, et les accompagnements ne se recoupent pas. Descendre à 0,38
+// le rattraperait au prix de 3 faux déclenchements sur 6 (voir tableau). Arbitrage tranché en
+// faveur du seuil sûr : rater un rapprochement coûte moins cher qu'écarter un plat à tort.
 //
 // `recence = exp(-ageJours / TAU)`, TAU réglable à TROIS CRANS — 3, 7 ou 14 jours, défaut 7 jours
 // (§6.5 ter ENGINE, « variety — trois réglages séparés ») — via `ScoreVarietyArgs.tauDays`
@@ -65,7 +80,7 @@
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
-import type { MealHistory, RecipeId, RecipeSignature, VarietyMode } from '../../domain/index.js'
+import type { MealHistory, RecipeFamilySignature, RecipeId, VarietyMode } from '../../domain/index.js'
 import { signatureOverlap } from '../../nutrition/signature.js'
 import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { clamp01 } from './index.js'
@@ -90,22 +105,27 @@ function ageInDays(entryDate: string, today: string): number {
 export type VarietyOverride = 'surprise' | 'classiques' | null
 
 /**
- * Seuil de chevauchement de signature au-delà duquel deux plats comptent comme « le même repas »
- * pour la récence. MESURÉ (voir en-tête), pas réglé au jugé : à 0,35 la règle réintroduit des faux
- * rapprochements, à 0,55 elle commence à manquer des doublons évidents.
+ * Seuil de chevauchement au-delà duquel deux plats comptent comme « le même repas » pour la
+ * récence, appliqué dans l'espace NORMALISÉ PAR SOUS-FAMILLE. MESURÉ (voir en-tête), pas réglé au
+ * jugé : à 0,38 la règle réintroduit des faux rapprochements, à 0,55 elle manque des doublons
+ * évidents. Partagé avec `habit`, qui pose la même question sur le même espace.
  */
 export const VARIETY_RECENCY_OVERLAP_THRESHOLD = 0.45
 
 export interface ScoreVarietyArgs {
   readonly recipeId: RecipeId
-  /** Signature du candidat (§6.6 ENGINE). Map vide = composition inconnue, aucun rapprochement. */
-  readonly signature: RecipeSignature
+  /**
+   * Signature du candidat NORMALISÉE PAR SOUS-FAMILLE (§6.6 quater). Map vide = composition
+   * inconnue, aucun rapprochement. Doit venir du MÊME espace que `signatureByRecipe` : la fonction
+   * compare les deux directement et ne peut pas vérifier qu'ils sont commensurables.
+   */
+  readonly signature: RecipeFamilySignature
   readonly history: MealHistory
   /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE). */
   readonly today: string
   readonly familiarity: number
-  /** Résout la signature des entrées d'historique — voir en-tête de fichier. */
-  readonly signatureByRecipe?: ReadonlyMap<RecipeId, RecipeSignature>
+  /** Résout la signature des entrées d'historique, même espace que `signature` — voir en-tête. */
+  readonly signatureByRecipe?: ReadonlyMap<RecipeId, RecipeFamilySignature>
   readonly override?: VarietyOverride
   /** Cran de vitesse d'oubli — 3/7/14 jours. Absent → `VARIETY_RECENCY_TAU_DAYS_DEFAULT` (7). */
   readonly tauDays?: VarietyTau
@@ -143,10 +163,11 @@ export function scoreVariety(args: ScoreVarietyArgs): number {
 // ------------------------------------------------------------------------------------------
 // Couche `variety` (§6.2 ENGINE) — enveloppe `scoreVariety` dans le contrat `SelectionLayer`.
 //
-// `configure` pré-calcule ce qui dépend du `Catalog` : `mainIngredientByRecipe` est directement
-// `catalog.indexes.recipeMainIngredient` (§9.1 ENGINE) — le même index sert à la fois à résoudre
-// l'ingrédient principal du CANDIDAT scoré et celui des entrées d'HISTORIQUE (voir en-tête de
-// fichier). `history`/`today` viennent de `req.history`/`req.context.date`.
+// `configure` pré-calcule ce qui dépend du `Catalog` : `signatureByRecipe` est directement
+// `catalog.indexes.recipeFamilySignature` (§9.1 ENGINE) — le même index sert à la fois à résoudre
+// la signature du CANDIDAT scoré et celle des entrées d'HISTORIQUE, ce qui garantit que les deux
+// côtés de la comparaison vivent dans le même espace (voir en-tête de fichier). `history`/`today`
+// viennent de `req.history`/`req.context.date`.
 //
 // ⚠️ Import de `scoreHabit` depuis `./habit.js` : NE PAS lire comme un couplage entre couches. Ce
 // n'est PAS `habitLayer` qui est appelé ici — c'est la fonction PURE `scoreHabit` du même module
@@ -171,7 +192,7 @@ export interface VarietyLayerConfig {
   readonly history: MealHistory
   /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE), reprise de `req.context.date`. */
   readonly today: string
-  readonly signatureByRecipe: ReadonlyMap<RecipeId, RecipeSignature>
+  readonly signatureByRecipe: ReadonlyMap<RecipeId, RecipeFamilySignature>
   /**
    * Résolu depuis `req.varietyMode` (§8.1 ENGINE) : `'auto'` et l'absence donnent tous deux
    * `null` — la position `auto` de `VarietyMode` n'existe pas dans `VarietyOverride`, l'absence
@@ -194,7 +215,7 @@ export const varietyLayer: SelectionLayer<VarietyLayerConfig> = {
   configure: (req, catalog) => ({
     history: req.history,
     today: req.context.date,
-    signatureByRecipe: catalog.indexes.recipeSignature,
+    signatureByRecipe: catalog.indexes.recipeFamilySignature,
     override: resolveOverride(req.varietyMode),
   }),
 

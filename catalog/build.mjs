@@ -305,6 +305,13 @@ CREATE TABLE food (
   code_ciqual TEXT NOT NULL,
   nom TEXT NOT NULL,
   groupe TEXT NOT NULL,
+  -- Sous-famille facultative : regroupe plusieurs aliments qui sont le MEME produit de base
+  -- (poulet_blanc + poulet_cuisse -> 'poulet'). NULL quand l'aliment est seul de son espece au
+  -- catalogue, ce qui est le cas de la tres grande majorite. Sert a la recence de variety/habit
+  -- (section 6.6 quater ENGINE) : sans elle, deux plats de poulet employant deux morceaux
+  -- differents ne se rendent pas repetitifs. Ne PAS confondre avec groupe, trop large
+  -- ('viandes' melange boeuf, poulet, porc et agneau).
+  sous_famille TEXT,
   saison_mois TEXT NOT NULL,
   toute_annee INTEGER NOT NULL DEFAULT 0
 );
@@ -398,7 +405,7 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
     for (const a of ALLERGENS) insertAllergen.run(a.id, a.code, a.nom)
 
     const insertFood = db.prepare(
-      'INSERT INTO food (id, code_ciqual, nom, groupe, saison_mois, toute_annee) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee) VALUES (?, ?, ?, ?, ?, ?, ?)'
     )
     const insertFoodNutrient = db.prepare(
       'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g) VALUES (?, ?, ?)'
@@ -413,6 +420,7 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
         food.code_ciqual,
         food.nom,
         food.groupe,
+        food.sous_famille ?? null,
         JSON.stringify(food.saison_mois ?? []),
         food.toute_annee ? 1 : 0
       )

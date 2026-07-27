@@ -37,6 +37,7 @@ function food(id: string, kcalPer100g: number): Food {
     codeCiqual: `TEST-${id}`,
     nom: id,
     groupe: "test",
+    sousFamille: null,
     nutrimentsPour100g: new Map([["kcal" as NutrientId, kcalPer100g]]),
     allergenes: [],
     saisonMois: [],
@@ -79,6 +80,7 @@ const EMPTY_INDEXES: CatalogIndexes = {
   recipeNutrients: new Map(),
   recipeMainIngredient: new Map(),
   recipeSignature: new Map(),
+  recipeFamilySignature: new Map(),
 };
 
 function makeCatalog(): Catalog {
@@ -201,6 +203,7 @@ function ferFood(id: string, ferPer100g: number): Food {
     codeCiqual: `TEST-${id}`,
     nom: id,
     groupe: "test",
+    sousFamille: null,
     nutrimentsPour100g: new Map([[FER_ID, ferPer100g]]),
     allergenes: [],
     saisonMois: [],

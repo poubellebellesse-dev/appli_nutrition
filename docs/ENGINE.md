@@ -882,18 +882,47 @@ question-ci (banc `app/src/cli/compare-variety.ts`) :
 |---|---|---|---|
 | ingrédient le plus lourd (avant) | **6 / 6** | 1 / 7 | 326 |
 | chevauchement ≥ 0,35 | 3 / 6 | 1 / 7 | 204 |
-| **chevauchement ≥ 0,45 — RETENU** | **0 / 6** | 1 / 7 | **86** |
+| chevauchement ≥ 0,45 | **0 / 6** | 1 / 7 | 86 |
 | chevauchement ≥ 0,55 | 0 / 6 | 2 / 7 | 43 |
 | ≥ 0,45 OU même `Food.groupe` | 4 / 6 | 1 / 7 | 735 |
+| **sous-famille ≥ 0,45 — RETENU** | **0 / 6** | 1 / 7 | **102** |
+| sous-famille ≥ 0,38 | 3 / 6 | **0 / 7** | 191 |
 
 Le repli par groupe alimentaire a été **testé et écarté** : `viandes` mélange bœuf, poulet, porc et
 agneau, donc tout plat carné rendait tout autre plat carné répétitif.
 
-> ⚠️ **LIMITE DE DONNÉES, non résolue.** La règle rate « poulet rôti aux carottes » × « poulet au
-> citron et aux olives » : 7 % de chevauchement, parce que les deux emploient `poulet_blanc` et
-> `poulet_cuisse`, **deux aliments distincts du catalogue**. Aucun réglage de seuil ne rattrapera
-> ça — il faudrait une **sous-famille** sur `Food` (poulet, bœuf, agneau… sous « viandes »). Vaut
-> aussi pour les morceaux de porc et d'agneau. À décider séparément.
+##### Le repli par SOUS-FAMILLE (`Food.sousFamille`)
+
+Même mécanisme que le repli par groupe, **d'un cran plus fin** : `poulet_blanc` et `poulet_cuisse`
+se replient sur `poulet`, jamais sur « viandes ». Le champ est **facultatif et non taxonomique** —
+il n'existe que là où le catalogue contient plusieurs entrées du même produit de base (25 aliments
+sur 193 à ce jour, 12 familles). Les autres restent à `null` et gardent leur propre id pour clé.
+
+La comparaison se fait dans **un second index**, `CatalogIndexes.recipeFamilySignature`, et non dans
+`recipeSignature` que lit la similarité (§6.6 ter). Les deux questions ne se posent pas au même
+endroit : la **diversification** doit encore distinguer un blanc de poulet rôti d'un tajine de
+cuisses ; la **récence** — « ai-je mangé du poulet hier » — se moque du morceau. Normaliser dans
+l'index commun changerait la similarité, dont la pondération a été mesurée sans.
+
+À **seuil égal** (0,45), la normalisation ne dégrade rien sur le jeu jugé (0/6 et 1/7 dans les deux
+cas) et rattrape **16 paires** que la signature brute manquait, toutes légitimes :
+
+| Paire | Brut | Sous-famille |
+|---|---|---|
+| Lentilles vertes aux carottes × Soupe de lentilles corail | 38 % | **90 %** |
+| Gigot d'agneau × Navarin d'agneau | 14 % | **65 %** |
+| Poulet au curry × Poulet teriyaki | 0 % | **64 %** |
+| Crêpes × Flan aux œufs | 12 % | **58 %** |
+
+dont **huit paires de poulet** — la classe de défaut qui a motivé le champ.
+
+> ⚠️ **LIMITE RÉSIDUELLE.** « Poulet rôti aux carottes » × « poulet au citron et aux olives » reste
+> sous le seuil (**39 %**), alors que c'est le cas précis qui a motivé la sous-famille. La cause
+> n'est plus l'absence de repli — il s'applique — mais le **poids** : le poulet pèse 43 % de la
+> signature d'un côté contre 71 % de l'autre, et les accompagnements ne se recoupent pas. Descendre
+> à 0,38 le rattraperait au prix de **3 faux déclenchements sur 6** (voir tableau). Arbitrage
+> tranché en faveur du seuil sûr : rater un rapprochement coûte moins cher qu'écarter un plat à
+> tort. À rejouer quand le catalogue aura grossi — le compromis peut se déplacer.
 
 > `recipeMainIngredient` n'est désormais lu par **aucune couche**. Il reste calculé à l'init et
 > employé seulement par les bancs de comparaison, qui documentent pourquoi il a été abandonné.
@@ -903,19 +932,22 @@ constantes nommées (Σ = 1) :
 
 | Signal | Constante | Poids | Nature |
 |---|---|---|---|
-| Ingrédient principal identique | `SIMILARITY_WEIGHT_MAIN_INGREDIENT` | 0.5 | catégoriel (match / pas-match) |
-| Profil sensoriel proche | `SIMILARITY_WEIGHT_SENSORY` | 0.3 | distance euclidienne (3 axes numériques) + `texture` |
-| Famille de cuisine identique | `SIMILARITY_WEIGHT_CUISINE` | 0.2 | catégoriel (match / pas-match) |
+| Composition (chevauchement de signatures) | `SIMILARITY_WEIGHT_INGREDIENTS` | 0.80 | continu ∈ [0, 1] (Jaccard pondéré) |
+| Profil sensoriel proche | `SIMILARITY_WEIGHT_SENSORY` | 0.15 | distance euclidienne (3 axes numériques) + `texture` |
+| Famille de cuisine identique | `SIMILARITY_WEIGHT_CUISINE` | 0.05 | catégoriel (match / pas-match) |
+
+> Ces trois poids **et** la nature continue du premier signal viennent de §6.6 bis et §6.6 ter, qui
+> les ont mesurés. Le tableau ci-dessus est l'état **courant** du code, pas l'état d'origine.
 
 La **texture** reste, comme dans `craving` (§6.5 précision 2), un axe **catégoriel** — match ou
 pas-match — jamais une distance numérique : elle est recombinée avec la distance euclidienne des
 trois axes numériques, pas fondue dedans.
 
-> ⚠️ **Piège documenté — absence ≠ égalité.** Deux recettes dont l'ingrédient principal est
-> **inconnu** des deux côtés ne sont **pas** réputées similaires sur ce signal : la composante vaut
-> 0, pas 1. Un ingrédient principal inconnu ne veut rien dire de comparable ; le traiter comme un
-> match gonflerait artificiellement la similarité de recettes dont on ne sait justement rien. Même
-> règle pour la facette `cuisine` : deux recettes sans cuisine renseignée ne sont pas « de la même
+> ⚠️ **Piège documenté — absence ≠ égalité.** Deux recettes dont la composition est **inconnue** des
+> deux côtés (signature vide) ne sont **pas** réputées similaires sur ce signal : la composante vaut
+> 0, pas 1. Une composition inconnue ne veut rien dire de comparable ; la traiter comme un match
+> gonflerait artificiellement la similarité de recettes dont on ne sait justement rien. Même règle
+> pour la facette `cuisine` : deux recettes sans cuisine renseignée ne sont pas « de la même
 > famille ».
 
 `DEFAULT_MMR_LAMBDA = 0.4` (`engine/selection/diversify.ts`) — valeur de référence issue d'une

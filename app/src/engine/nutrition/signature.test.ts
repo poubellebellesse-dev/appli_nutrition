@@ -2,8 +2,9 @@
 
 import { describe, expect, it } from 'vitest'
 import type { FoodId, RecipeSignature } from '../domain/index.js'
-import { SIGNATURE_SIZE, computeRecipeSignature, signatureOverlap } from './signature.js'
-import { makeCatalog, makeIngredient, makeRecipe } from './test-fixtures.js'
+import { SIGNATURE_SIZE, computeRecipeFamilySignature, computeRecipeSignature, signatureOverlap } from './signature.js'
+import { VARIETY_RECENCY_OVERLAP_THRESHOLD } from '../selection/scoring/variety.js'
+import { makeCatalog, makeFood, makeIngredient, makeRecipe } from './test-fixtures.js'
 
 function sig(entries: Record<string, number>): RecipeSignature {
   return new Map(Object.entries(entries).map(([id, part]) => [id as FoodId, part]))
@@ -158,5 +159,94 @@ describe('nutrition/signature — signatureOverlap', () => {
     const index = computeRecipeSignature(makeCatalog([roti, curry]))
 
     expect(signatureOverlap(index.get(roti.id)!, index.get(curry.id)!)).toBeGreaterThan(0.9)
+  })
+})
+
+describe('nutrition/signature — computeRecipeFamilySignature (§6.6 quater)', () => {
+  // Deux morceaux du même animal, deux aliments distincts du catalogue — la situation exacte que
+  // la sous-famille existe pour traiter.
+  const POULET_BLANC = makeFood('poulet_blanc', {}, { sousFamille: 'poulet' })
+  const POULET_CUISSE = makeFood('poulet_cuisse', {}, { sousFamille: 'poulet' })
+  const CAROTTE = makeFood('carotte')
+
+  it('replie deux aliments d’une même sous-famille sur une seule clé, en cumulant leurs parts', () => {
+    const recette = makeRecipe('mixte', {
+      ingredients: [
+        makeIngredient('poulet_blanc', { quantiteG: 200 }),
+        makeIngredient('poulet_cuisse', { quantiteG: 200 }),
+        makeIngredient('carotte', { quantiteG: 100 }),
+      ],
+    })
+    const catalog = makeCatalog([recette], [POULET_BLANC, POULET_CUISSE, CAROTTE])
+
+    const familySignature = computeRecipeFamilySignature(catalog).get(recette.id)!
+
+    // 3 aliments → 2 clés : les deux morceaux fusionnent, et leurs parts s'ADDITIONNENT (0,4+0,4).
+    expect(familySignature.size).toBe(2)
+    expect(familySignature.get('poulet')).toBeCloseTo(0.8, 10)
+    expect(familySignature.get('carotte')).toBeCloseTo(0.2, 10)
+  })
+
+  it('un aliment sans sous-famille garde son propre id pour clé', () => {
+    const recette = makeRecipe('simple', { ingredients: [makeIngredient('carotte', { quantiteG: 100 })] })
+    const catalog = makeCatalog([recette], [CAROTTE])
+
+    expect([...computeRecipeFamilySignature(catalog).get(recette.id)!.keys()]).toEqual(['carotte'])
+  })
+
+  it('aliment absent du catalogue → repli sur son id, jamais de plantage ni de clé perdue', () => {
+    const recette = makeRecipe('orpheline', { ingredients: [makeIngredient('inconnu', { quantiteG: 100 })] })
+
+    const familySignature = computeRecipeFamilySignature(makeCatalog([recette])).get(recette.id)!
+
+    expect(familySignature.get('inconnu')).toBeCloseTo(1, 10)
+  })
+
+  it('la somme des parts reste 1 après repli — invariant partagé avec la signature brute', () => {
+    const recette = makeRecipe('mixte', {
+      ingredients: [
+        makeIngredient('poulet_blanc', { quantiteG: 200 }),
+        makeIngredient('poulet_cuisse', { quantiteG: 150 }),
+        makeIngredient('carotte', { quantiteG: 90 }),
+      ],
+    })
+    const catalog = makeCatalog([recette], [POULET_BLANC, POULET_CUISSE, CAROTTE])
+
+    const total = [...computeRecipeFamilySignature(catalog).get(recette.id)!.values()].reduce((s, v) => s + v, 0)
+
+    expect(total).toBeCloseTo(1, 10)
+  })
+
+  it('CAS QUI MOTIVE LA FONCTION : deux plats de poulet sur des morceaux différents passent de « sans rapport » à « proches »', () => {
+    const curry = makeRecipe('poulet_curry', {
+      ingredients: [makeIngredient('poulet_blanc', { quantiteG: 400 }), makeIngredient('carotte', { quantiteG: 100 })],
+    })
+    const teriyaki = makeRecipe('poulet_teriyaki', {
+      ingredients: [makeIngredient('poulet_cuisse', { quantiteG: 400 }), makeIngredient('carotte', { quantiteG: 100 })],
+    })
+    const catalog = makeCatalog([curry, teriyaki], [POULET_BLANC, POULET_CUISSE, CAROTTE])
+
+    const brut = computeRecipeSignature(catalog)
+    const famille = computeRecipeFamilySignature(catalog)
+
+    // Signature BRUTE : seule la carotte est commune → sous le seuil de récence.
+    expect(signatureOverlap(brut.get(curry.id)!, brut.get(teriyaki.id)!)).toBeLessThan(
+      VARIETY_RECENCY_OVERLAP_THRESHOLD,
+    )
+    // Signature REPLIÉE : le poulet devient commun → les deux plats comptent comme le même repas.
+    expect(signatureOverlap(famille.get(curry.id)!, famille.get(teriyaki.id)!)).toBe(1)
+  })
+
+  it('ne rapproche PAS deux sous-familles différentes — le repli n’est pas un nivellement', () => {
+    // Garde-fou contre la dérive mesurée sur `Food.groupe` : « viandes » rendait tout plat carné
+    // équivalent à tout autre. La sous-famille doit rester d'un cran plus fine.
+    const agneau = makeFood('agneau_gigot', {}, { sousFamille: 'agneau' })
+    const plat = makeRecipe('poulet', { ingredients: [makeIngredient('poulet_blanc', { quantiteG: 400 })] })
+    const autre = makeRecipe('agneau', { ingredients: [makeIngredient('agneau_gigot', { quantiteG: 400 })] })
+    const catalog = makeCatalog([plat, autre], [POULET_BLANC, agneau])
+
+    const famille = computeRecipeFamilySignature(catalog)
+
+    expect(signatureOverlap(famille.get(plat.id)!, famille.get(autre.id)!)).toBe(0)
   })
 })
