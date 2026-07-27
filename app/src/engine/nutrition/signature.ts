@@ -106,6 +106,27 @@ export function computeRecipeSignature(catalog: Catalog): ReadonlyMap<RecipeId, 
  * de retour est volontairement `ReadonlyMap<string, number>`, pas une `RecipeSignature`, pour que
  * les deux ne puissent pas être confondues à l'appel.
  */
+/**
+ * Les noms de sous-familles RÉELLEMENT déclarées au catalogue (`poulet`, `agneau`, `lait`, `riz`…).
+ *
+ * Indispensable parce que les clés d'une `RecipeFamilySignature` MÉLANGENT deux choses : un nom de
+ * famille quand l'aliment en a une, son propre `foodId` sinon. Rien ne les distingue à la lecture.
+ * Or la règle de récence (§6.6 quinquies) ne veut agir que sur les vraies familles : partager
+ * `poulet` à 40 % des deux côtés dit « deux préparations du même animal », partager `oeuf` — un
+ * `foodId` sans famille — ne dit rien de tel, l'œuf étant présent dans les mousses, les omelettes,
+ * les flans et les panures.
+ *
+ * MESURÉ : sans cette restriction, la règle rapproche « Clafoutis aux framboises » et « Gratin de
+ * pâtes au jambon », et déclenche 3 faux sur 6 cas jugés.
+ */
+export function computeDeclaredFamilies(catalog: Catalog): ReadonlySet<string> {
+  const result = new Set<string>()
+  for (const food of catalog.foods.values()) {
+    if (food.sousFamille !== null) result.add(food.sousFamille)
+  }
+  return result
+}
+
 export function computeRecipeFamilySignature(catalog: Catalog): ReadonlyMap<RecipeId, RecipeFamilySignature> {
   const result = new Map<RecipeId, RecipeFamilySignature>()
   for (const [recipeId, signature] of computeRecipeSignature(catalog)) {

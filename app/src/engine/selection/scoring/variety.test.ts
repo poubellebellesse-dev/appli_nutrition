@@ -2,9 +2,10 @@
 // précision 5, §13 fenêtre d'historique).
 
 import { describe, expect, it } from 'vitest'
-import { VARIETY_RECENCY_OVERLAP_THRESHOLD, scoreVariety, varietyLayer } from './variety.js'
+import { VARIETY_RECENCY_OVERLAP_THRESHOLD, countsAsSameMeal, scoreVariety, varietyLayer } from './variety.js'
+import { signatureOverlap } from '../../nutrition/signature.js'
 import { asScoringResult, makeCatalog, makeFood, makeIngredient, makeRecipe, makeRequest } from '../test-fixtures.js'
-import type { Food, MealHistory, MealHistoryEntry, Recipe, RecipeId, FoodId } from '../../domain/index.js'
+import type { Food, MealHistory, MealHistoryEntry, MealSlot, Recipe, RecipeId, FoodId } from '../../domain/index.js'
 
 const RECIPE = 'tartiflette' as RecipeId
 const AUTRE_RECIPE = 'salade' as RecipeId
@@ -535,5 +536,102 @@ describe('scoring/variety — récence par SOUS-FAMILLE (§6.6 quater, décision
     const curry = platDe('poulet_curry', 'poulet_blanc')
 
     expect(scoreApres(teriyaki, curry, sansFamille)).toBe(1)
+  })
+})
+
+describe('scoring/variety — countsAsSameMeal, 2ᵉ déclencheur par famille (§6.6 quinquies)', () => {
+  const FAMILLES: ReadonlySet<string> = new Set(['poulet'])
+  const sig = (parts: Record<string, number>) => new Map(Object.entries(parts))
+
+  it('CAS QUI MOTIVE LA RÈGLE : même protéine à des parts très inégales, accompagnements disjoints', () => {
+    // « Blanc de poulet rôti, carottes fondantes » × « Poulet au citron et aux olives », valeurs
+    // réelles du catalogue. Chevauchement global 39 % — sous le seuil — mais 43 % et 71 % de poulet.
+    const roti = sig({ carotte: 0.43, poulet: 0.43, oignon: 0.13 })
+    const citron = sig({ poulet: 0.71, oignon: 0.2, citron: 0.09 })
+
+    expect(signatureOverlap(roti, citron)).toBeLessThan(VARIETY_RECENCY_OVERLAP_THRESHOLD)
+    expect(countsAsSameMeal(roti, citron, FAMILLES)).toBe(true)
+  })
+
+  it('la part doit atteindre le seuil DES DEUX CÔTÉS, pas d’un seul', () => {
+    const beaucoup = sig({ poulet: 0.8, riz: 0.2 })
+    const unPeu = sig({ tomate: 0.7, poulet: 0.3 }) // 30 % < 40 %
+
+    expect(countsAsSameMeal(beaucoup, unPeu, FAMILLES)).toBe(false)
+  })
+
+  it('n’agit QUE sur les sous-familles déclarées — un foodId partagé ne suffit pas', () => {
+    // Le garde-fou central : les clés d'une signature repliée mélangent familles et foodId bruts.
+    // Mousse au chocolat × omelette partagent `oeuf` massivement, et ne sont pas le même repas.
+    const mousse = sig({ oeuf: 0.5, chocolat: 0.5 })
+    const omelette = sig({ oeuf: 0.8, beurre: 0.2 })
+
+    expect(countsAsSameMeal(mousse, omelette, FAMILLES)).toBe(false) // `oeuf` non déclaré
+    expect(countsAsSameMeal(mousse, omelette, new Set(['oeuf']))).toBe(true) // déclaré → déclenche
+  })
+
+  it('le 1ᵉʳ déclencheur reste actif sans aucune famille déclarée', () => {
+    const a = sig({ tomate: 0.6, oignon: 0.4 })
+    expect(countsAsSameMeal(a, a, new Set())).toBe(true)
+  })
+})
+
+describe('scoring/variety — filtre de CRÉNEAU sur l’historique (§6.6 quinquies)', () => {
+  const LAIT = makeFood('lait', [], { sousFamille: 'lait' })
+  const POULET_BLANC = makeFood('poulet_blanc', [], { sousFamille: 'poulet' })
+  const POULET_CUISSE = makeFood('poulet_cuisse', [], { sousFamille: 'poulet' })
+
+  const plat = (id: string, foodId: string, typesRepas: Recipe['typesRepas']) =>
+    makeRecipe(id, { typesRepas, ingredients: [makeIngredient(foodId, { quantiteG: 400 })] })
+
+  /** Nouveauté du candidat après avoir mangé `mange` la veille AU CRÉNEAU indiqué. */
+  function nouveauteApres(
+    candidat: Recipe,
+    mange: Recipe,
+    creneauMange: MealSlot,
+    foods: readonly Food[]
+  ): number {
+    const catalog = makeCatalog([candidat, mange], foods)
+    const req = makeRequest({
+      date: '2026-07-24',
+      varietyMode: 'surprise', // familiarity = 0 → le score EST la nouveauté (voir plus haut)
+      history: { windowDays: 21, entries: [{ recipeId: mange.id, date: '2026-07-23', creneau: creneauMange, origine: 'choisi' }] },
+    })
+    const config = varietyLayer.configure(req, catalog)
+    return asScoringResult(varietyLayer.apply(new Set([candidat.id]), config)).scores.get(candidat.id)!
+  }
+
+  it('CAS CORRIGÉ : un plat mangé au goûter ne rend pas répétitif un plat du dîner', () => {
+    // Clafoutis [gouter] × gratin de pâtes [dejeuner, diner] : 40 % et 50 % de lait, donc la règle
+    // de famille se déclencherait — mais les deux ne peuvent jamais être candidats à la même
+    // demande. Sans ce filtre, le goûter d'hier pénalisait le dîner d'aujourd'hui.
+    const clafoutis = plat('clafoutis', 'lait', ['gouter'])
+    const gratin = plat('gratin', 'lait', ['dejeuner', 'diner'])
+
+    expect(nouveauteApres(gratin, clafoutis, 'gouter', [LAIT])).toBe(1) // jamais vu → nouveauté pleine
+  })
+
+  it('CONTRE-ÉPREUVE : déjeuner puis dîner reste répétitif — le filtre n’est pas « même créneau »', () => {
+    // Erreur à ne pas commettre en « corrigeant » le filtre : comparer au créneau DEMANDÉ. Du
+    // poulet à midi puis du poulet le soir, c'est deux fois du poulet dans la journée.
+    const midi = plat('poulet_midi', 'poulet_blanc', ['dejeuner', 'diner'])
+    const soir = plat('poulet_soir', 'poulet_cuisse', ['dejeuner', 'diner'])
+
+    expect(nouveauteApres(soir, midi, 'dejeuner', [POULET_BLANC, POULET_CUISSE])).toBeLessThan(0.2)
+  })
+
+  it('la MÊME recette compte quel que soit le créneau — seul le rapprochement par composition filtre', () => {
+    const gouterOnly = plat('gouter_seul', 'lait', ['gouter'])
+    // Mangée au petit-déjeuner alors qu'elle n'est déclarée qu'au goûter : incohérent, mais c'est
+    // la même recette — elle doit rester « déjà vue ».
+    expect(nouveauteApres(gouterOnly, gouterOnly, 'petit_dejeuner', [LAIT])).toBeLessThan(0.2)
+  })
+
+  it('la couche transmet bien les créneaux du candidat, pas ceux de la demande', () => {
+    const recette = plat('r', 'lait', ['gouter', 'diner'])
+    const catalog = makeCatalog([recette], [LAIT])
+    const config = varietyLayer.configure(makeRequest({ creneau: 'diner' }), catalog)
+
+    expect(config.slotsByRecipe.get(recette.id)).toEqual(['gouter', 'diner'])
   })
 })

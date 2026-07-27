@@ -31,9 +31,8 @@
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
-import type { MealHistory, RecipeFamilySignature, RecipeId } from '../../domain/index.js'
-import { signatureOverlap } from '../../nutrition/signature.js'
-import { VARIETY_RECENCY_OVERLAP_THRESHOLD } from './variety.js'
+import type { MealHistory, MealSlot, RecipeFamilySignature, RecipeId } from '../../domain/index.js'
+import { countsAsSameMeal } from './variety.js'
 import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { NEUTRAL_SCORE, clamp01 } from './index.js'
 
@@ -46,6 +45,10 @@ export interface ScoreHabitArgs {
   readonly today: string
   /** Résout la signature des entrées d'historique — voir variety.ts, même motif et même seuil. */
   readonly signatureByRecipe?: ReadonlyMap<RecipeId, RecipeFamilySignature>
+  /** Sous-familles déclarées — voir `countsAsSameMeal` dans variety.ts. */
+  readonly declaredFamilies?: ReadonlySet<string>
+  /** Créneaux du candidat — même filtre que `variety`, voir `ScoreVarietyArgs.candidateSlots`. */
+  readonly candidateSlots?: readonly MealSlot[] | undefined
 }
 
 export function scoreHabit(args: ScoreHabitArgs): number {
@@ -62,7 +65,8 @@ export function scoreHabit(args: ScoreHabitArgs): number {
     const pastSignature = args.signatureByRecipe?.get(historyEntry.recipeId)
     const matchesComposition =
       pastSignature !== undefined &&
-      signatureOverlap(args.signature, pastSignature) >= VARIETY_RECENCY_OVERLAP_THRESHOLD
+      (args.candidateSlots === undefined || args.candidateSlots.includes(historyEntry.creneau)) &&
+      countsAsSameMeal(args.signature, pastSignature, args.declaredFamilies ?? new Set())
 
     if (matchesRecipe || matchesComposition) matchCount++
   }
@@ -99,6 +103,8 @@ export interface HabitLayerConfig {
   /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE), reprise de `req.context.date`. */
   readonly today: string
   readonly signatureByRecipe: ReadonlyMap<RecipeId, RecipeFamilySignature>
+  readonly declaredFamilies: ReadonlySet<string>
+  readonly slotsByRecipe: ReadonlyMap<RecipeId, readonly MealSlot[]>
 }
 
 export const habitLayer: SelectionLayer<HabitLayerConfig> = {
@@ -111,6 +117,8 @@ export const habitLayer: SelectionLayer<HabitLayerConfig> = {
     history: req.history,
     today: req.context.date,
     signatureByRecipe: catalog.indexes.recipeFamilySignature,
+    declaredFamilies: catalog.indexes.declaredFamilies,
+    slotsByRecipe: new Map([...catalog.recipes].map(([id, recipe]) => [id, recipe.typesRepas])),
   }),
 
   apply: (candidates: CandidateSet, config: HabitLayerConfig): ScoringLayerResult => {
@@ -124,6 +132,8 @@ export const habitLayer: SelectionLayer<HabitLayerConfig> = {
           history: config.history,
           today: config.today,
           signatureByRecipe: config.signatureByRecipe,
+          declaredFamilies: config.declaredFamilies,
+          candidateSlots: config.slotsByRecipe.get(recipeId),
         })
       )
     }

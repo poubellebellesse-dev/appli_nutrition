@@ -40,12 +40,41 @@
 // d'agneau (14 → 65 %), lentilles vertes × lentilles corail (38 → 90 %), crêpes × flan aux œufs
 // (12 → 58 %) et HUIT paires de poulet, dont « poulet au curry » × « poulet teriyaki » (0 → 64 %).
 //
-// ⚠️ LIMITE RÉSIDUELLE : « poulet rôti aux carottes » × « poulet au citron et aux olives » reste
-// sous le seuil (39 %), alors que c'est le cas qui a motivé la sous-famille. La cause n'est plus
-// l'absence de repli — il s'applique bien — mais le POIDS : le poulet pèse 43 % de la signature
-// d'un côté contre 71 % de l'autre, et les accompagnements ne se recoupent pas. Descendre à 0,38
-// le rattraperait au prix de 3 faux déclenchements sur 6 (voir tableau). Arbitrage tranché en
-// faveur du seuil sûr : rater un rapprochement coûte moins cher qu'écarter un plat à tort.
+// ⚠️ CE SEUIL SEUL ratait « poulet rôti aux carottes » × « poulet au citron et aux olives »
+// (39 %), le cas qui avait motivé la sous-famille. La cause n'est pas l'absence de repli — il
+// s'applique — mais le POIDS : le poulet pèse 43 % de la signature d'un côté contre 71 % de
+// l'autre, et les accompagnements ne se recoupent pas. Descendre le seuil à 0,38 le rattrapait au
+// prix de 3 faux déclenchements sur 6. Corrigé autrement en §6.6 quinquies, ci-dessous.
+//
+// ================================ §6.6 quinquies (2026-07-27) ================================
+// DEUX AJOUTS MESURÉS, qui portent la règle à 0 faux ET 0 raté sur les jeux jugés :
+//
+//  1. SECOND DÉCLENCHEUR — une même sous-famille DÉCLARÉE pesant ≥ 40 % des deux côtés suffit,
+//     même quand le chevauchement global reste sous 0,45. Voir `countsAsSameMeal`.
+//  2. FILTRE DE CRÉNEAU — une entrée d'historique dont le `creneau` ne figure pas dans les
+//     `typesRepas` du candidat est ignorée pour le rapprochement par composition.
+//
+//   règle                                        déclenche à tort   rate à raison   paires
+//   fam ≥ 0,45 (avant)                                0 / 6             1 / 7          102
+//   rang 60/25/15 (principal + secondaires)           1 / 6             3 / 7           83
+//   rang + départage par rôle                         0 / 6             2 / 7           93
+//   fam ≥ 0,45 OU toute famille ≥ 40 %                3 / 6             0 / 7          510
+//   + créneau, fam ≥ 0,38                             1 / 6             0 / 7          168
+//   + créneau + famille déclarée ≥ 40 %  ← RETENU     0 / 6             0 / 7          174
+//
+// Le modèle « un ingrédient PRINCIPAL + des SECONDAIRES à poids fixes » a été TESTÉ ET ÉCARTÉ :
+// il détruit de l'information. Poulet à 54 % et poulet à 43 % sont proches ; les ramener à
+// « 1ᵉʳ » et « 2ᵉ » les éloigne d'un coup, d'où 2 à 3 ratés au lieu d'1. Le départage par rôle
+// (le structurant passe devant à part égale) corrige bien le bug d'égalité — « Blanc de poulet
+// rôti, carottes fondantes » a carotte 43 % ET poulet 43 %, départagés alphabétiquement, donc la
+// machine y voyait « un plat de carottes » — mais ne compense pas la perte.
+//
+// Le filtre de créneau ne remplace pas le second déclencheur, il le complète : seul, à 0,38, il
+// laisse encore passer 1 faux. Ensemble ils tombent à 0. Ce que le créneau écarte, ce sont les
+// rapprochements entre moments de la journée — « Clafoutis aux framboises » [gouter] et « Gratin
+// de pâtes au jambon » [dejeuner, diner] partagent 40 % et 50 % de lait mais ne peuvent jamais
+// être candidats à la même demande. Une fois le créneau appliqué, les paires laitières qui
+// subsistent sont légitimes : deux flans au goûter, deux porridges au petit-déjeuner.
 //
 // `recence = exp(-ageJours / TAU)`, TAU réglable à TROIS CRANS — 3, 7 ou 14 jours, défaut 7 jours
 // (§6.5 ter ENGINE, « variety — trois réglages séparés ») — via `ScoreVarietyArgs.tauDays`
@@ -80,7 +109,7 @@
 //
 // Dépendances autorisées : domain/, ./index.js — §2/§3 ENGINE.
 
-import type { MealHistory, RecipeFamilySignature, RecipeId, VarietyMode } from '../../domain/index.js'
+import type { MealHistory, MealSlot, RecipeFamilySignature, RecipeId, VarietyMode } from '../../domain/index.js'
 import { signatureOverlap } from '../../nutrition/signature.js'
 import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { clamp01 } from './index.js'
@@ -93,6 +122,9 @@ export type VarietyTau = 3 | 7 | 14
 const VARIETY_RECENCY_TAU_DAYS_DEFAULT: VarietyTau = 7
 
 const MS_PER_DAY = 86_400_000
+
+/** Repli quand l'appelant ne fournit pas les familles déclarées : le 2ᵉ déclencheur est alors inerte. */
+const EMPTY_FAMILIES: ReadonlySet<string> = new Set()
 
 function parseIsoDateUtc(iso: string): number {
   return Date.parse(`${iso}T00:00:00Z`)
@@ -112,6 +144,52 @@ export type VarietyOverride = 'surprise' | 'classiques' | null
  */
 export const VARIETY_RECENCY_OVERLAP_THRESHOLD = 0.45
 
+/**
+ * Second déclencheur (§6.6 quinquies) : part qu'une MÊME sous-famille déclarée doit peser des DEUX
+ * côtés pour que les plats comptent comme le même repas, même quand le chevauchement global reste
+ * sous `VARIETY_RECENCY_OVERLAP_THRESHOLD`.
+ *
+ * Ce qu'il rattrape : « blanc de poulet rôti, carottes fondantes » (poulet 43 %) × « poulet au
+ * citron et aux olives » (poulet 71 %). Chevauchement global 39 % — les accompagnements n'ont rien
+ * en commun — mais c'est deux fois du poulet, et deux jours de suite ça se voit.
+ *
+ * MESURÉ à 0,30 / 0,40 / 0,50 : 0,40 est le seul à faire 0 faux ET 0 raté. À 0,50 la paire de
+ * poulet ci-dessus repasse à travers.
+ */
+export const VARIETY_RECENCY_FAMILY_PART_THRESHOLD = 0.4
+
+/**
+ * « Manger A rend-il B répétitif ? » — LE prédicat de récence, partagé par `variety` et `habit`
+ * pour qu'ils ne puissent pas diverger (ils répondaient à la même question avec deux copies du
+ * même code). Deux déclencheurs, en OU :
+ *
+ *  1. le chevauchement global des signatures repliées atteint `VARIETY_RECENCY_OVERLAP_THRESHOLD` ;
+ *  2. une MÊME sous-famille DÉCLARÉE pèse `VARIETY_RECENCY_FAMILY_PART_THRESHOLD` des deux côtés.
+ *
+ * Le point 2 est restreint aux familles déclarées et ce n'est pas cosmétique : les clés d'une
+ * `RecipeFamilySignature` mélangent noms de famille et `foodId` bruts. Sans le filtre, partager
+ * `oeuf` à 40 % suffirait à rapprocher une mousse au chocolat d'une omelette — mesuré, 3 faux
+ * déclenchements sur 6 cas jugés.
+ *
+ * ⚠️ Ne PAS appeler ce prédicat sans avoir d'abord écarté les entrées d'historique hors créneau
+ * (voir `partageCreneau` dans `scoreVariety`) : c'est ce filtre-là qui empêche un clafoutis mangé
+ * au goûter de rendre « répétitif » un gratin de pâtes proposé au dîner.
+ */
+export function countsAsSameMeal(
+  signature: RecipeFamilySignature,
+  pastSignature: RecipeFamilySignature,
+  declaredFamilies: ReadonlySet<string>
+): boolean {
+  if (signatureOverlap(signature, pastSignature) >= VARIETY_RECENCY_OVERLAP_THRESHOLD) return true
+
+  for (const [key, part] of signature) {
+    if (!declaredFamilies.has(key)) continue
+    if (part < VARIETY_RECENCY_FAMILY_PART_THRESHOLD) continue
+    if ((pastSignature.get(key) ?? 0) >= VARIETY_RECENCY_FAMILY_PART_THRESHOLD) return true
+  }
+  return false
+}
+
 export interface ScoreVarietyArgs {
   readonly recipeId: RecipeId
   /**
@@ -126,9 +204,29 @@ export interface ScoreVarietyArgs {
   readonly familiarity: number
   /** Résout la signature des entrées d'historique, même espace que `signature` — voir en-tête. */
   readonly signatureByRecipe?: ReadonlyMap<RecipeId, RecipeFamilySignature>
+  /** Sous-familles déclarées (`catalog.indexes.declaredFamilies`) — voir `countsAsSameMeal`. */
+  readonly declaredFamilies?: ReadonlySet<string>
+  /**
+   * Créneaux du CANDIDAT (`Recipe.typesRepas`). Une entrée d'historique dont le `creneau` n'y
+   * figure pas est ignorée : un clafoutis mangé au goûter ne doit pas rendre « répétitif » un
+   * gratin de pâtes proposé au dîner, les deux ne pouvant jamais être candidats à la même demande.
+   *
+   * ⚠️ Ce n'est PAS « même créneau que la demande en cours ». Poulet au déjeuner puis poulet au
+   * dîner DOIT compter comme répétitif : la recette candidate porte `[dejeuner, diner]`, donc
+   * l'entrée de déjeuner passe le filtre. Comparer au créneau demandé casserait ce cas.
+   *
+   * Absent → aucun filtrage (créneaux inconnus). Réservé aux appels unitaires qui ne testent pas
+   * cette dimension ; le câblage réel les fournit toujours.
+   */
+  readonly candidateSlots?: readonly MealSlot[] | undefined
   readonly override?: VarietyOverride
   /** Cran de vitesse d'oubli — 3/7/14 jours. Absent → `VARIETY_RECENCY_TAU_DAYS_DEFAULT` (7). */
   readonly tauDays?: VarietyTau
+}
+
+/** `true` si l'entrée peut concerner le même repas que le candidat — voir `candidateSlots`. */
+function partageCreneau(entrySlot: MealSlot, candidateSlots: readonly MealSlot[] | undefined): boolean {
+  return candidateSlots === undefined || candidateSlots.includes(entrySlot)
 }
 
 export function scoreVariety(args: ScoreVarietyArgs): number {
@@ -141,8 +239,12 @@ export function scoreVariety(args: ScoreVarietyArgs): number {
     const pastSignature = args.signatureByRecipe?.get(historyEntry.recipeId)
     const matchesComposition =
       pastSignature !== undefined &&
-      signatureOverlap(args.signature, pastSignature) >= VARIETY_RECENCY_OVERLAP_THRESHOLD
+      partageCreneau(historyEntry.creneau, args.candidateSlots) &&
+      countsAsSameMeal(args.signature, pastSignature, args.declaredFamilies ?? EMPTY_FAMILIES)
 
+    // `matchesRecipe` n'est VOLONTAIREMENT pas filtré par créneau : avoir mangé exactement cette
+    // recette compte, quel que soit le moment de la journée. Seul le rapprochement par COMPOSITION,
+    // qui est une inférence, exige que les deux plats puissent occuper la même place.
     if (!matchesRecipe && !matchesComposition) continue
 
     const age = ageInDays(historyEntry.date, args.today)
@@ -193,6 +295,10 @@ export interface VarietyLayerConfig {
   /** ISO yyyy-mm-dd — horloge injectée (§3 ENGINE), reprise de `req.context.date`. */
   readonly today: string
   readonly signatureByRecipe: ReadonlyMap<RecipeId, RecipeFamilySignature>
+  /** `catalog.indexes.declaredFamilies` — voir `countsAsSameMeal`. */
+  readonly declaredFamilies: ReadonlySet<string>
+  /** `Recipe.typesRepas` par recette — sert à écarter les entrées d'historique hors créneau. */
+  readonly slotsByRecipe: ReadonlyMap<RecipeId, readonly MealSlot[]>
   /**
    * Résolu depuis `req.varietyMode` (§8.1 ENGINE) : `'auto'` et l'absence donnent tous deux
    * `null` — la position `auto` de `VarietyMode` n'existe pas dans `VarietyOverride`, l'absence
@@ -216,6 +322,8 @@ export const varietyLayer: SelectionLayer<VarietyLayerConfig> = {
     history: req.history,
     today: req.context.date,
     signatureByRecipe: catalog.indexes.recipeFamilySignature,
+    declaredFamilies: catalog.indexes.declaredFamilies,
+    slotsByRecipe: new Map([...catalog.recipes].map(([id, recipe]) => [id, recipe.typesRepas])),
     override: resolveOverride(req.varietyMode),
   }),
 
@@ -223,12 +331,15 @@ export const varietyLayer: SelectionLayer<VarietyLayerConfig> = {
     const scores = new Map<RecipeId, number>()
     for (const recipeId of candidates) {
       const signature = config.signatureByRecipe.get(recipeId) ?? new Map()
+      const candidateSlots = config.slotsByRecipe.get(recipeId)
       const familiarity = scoreHabit({
         recipeId,
         signature,
         history: config.history,
         today: config.today,
         signatureByRecipe: config.signatureByRecipe,
+        declaredFamilies: config.declaredFamilies,
+        candidateSlots,
       })
       scores.set(
         recipeId,
@@ -239,6 +350,8 @@ export const varietyLayer: SelectionLayer<VarietyLayerConfig> = {
           today: config.today,
           familiarity,
           signatureByRecipe: config.signatureByRecipe,
+          declaredFamilies: config.declaredFamilies,
+          candidateSlots,
           override: config.override,
         })
       )

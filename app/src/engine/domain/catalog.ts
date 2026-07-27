@@ -266,6 +266,12 @@ export interface CatalogIndexes {
    * Clés : id d'aliment OU nom de famille, d'où `string` et non `FoodId`.
    */
   readonly recipeFamilySignature: ReadonlyMap<RecipeId, RecipeFamilySignature>
+  /**
+   * Les noms de sous-familles réellement déclarées (§6.6 quinquies). Les clés d'une
+   * `RecipeFamilySignature` mélangent noms de famille et `foodId` bruts sans qu'on puisse les
+   * distinguer ; ce jeu tranche. Catalogue-global, pas par recette — d'où l'absence de `RecipeId`.
+   */
+  readonly declaredFamilies: ReadonlySet<string>
 }
 
 export interface Catalog {

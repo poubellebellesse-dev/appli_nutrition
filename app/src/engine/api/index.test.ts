@@ -81,6 +81,7 @@ const EMPTY_INDEXES: CatalogIndexes = {
   recipeMainIngredient: new Map(),
   recipeSignature: new Map(),
   recipeFamilySignature: new Map(),
+    declaredFamilies: new Set(),
 };
 
 function makeCatalog(): Catalog {

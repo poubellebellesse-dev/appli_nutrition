@@ -916,13 +916,58 @@ cas) et rattrape **16 paires** que la signature brute manquait, toutes légitime
 
 dont **huit paires de poulet** — la classe de défaut qui a motivé le champ.
 
-> ⚠️ **LIMITE RÉSIDUELLE.** « Poulet rôti aux carottes » × « poulet au citron et aux olives » reste
-> sous le seuil (**39 %**), alors que c'est le cas précis qui a motivé la sous-famille. La cause
-> n'est plus l'absence de repli — il s'applique — mais le **poids** : le poulet pèse 43 % de la
-> signature d'un côté contre 71 % de l'autre, et les accompagnements ne se recoupent pas. Descendre
-> à 0,38 le rattraperait au prix de **3 faux déclenchements sur 6** (voir tableau). Arbitrage
-> tranché en faveur du seuil sûr : rater un rapprochement coûte moins cher qu'écarter un plat à
-> tort. À rejouer quand le catalogue aura grossi — le compromis peut se déplacer.
+> ⚠️ **Ce seuil seul ratait** « poulet rôti aux carottes » × « poulet au citron et aux olives »
+> (**39 %**), le cas précis qui avait motivé la sous-famille. La cause n'est pas l'absence de repli
+> — il s'applique — mais le **poids** : le poulet pèse 43 % de la signature d'un côté contre 71 %
+> de l'autre. Corrigé autrement en §6.6 quinquies.
+
+#### 6.6 quinquies — Second déclencheur et filtre de créneau (2026-07-27), MESURÉS et CODÉS
+
+Deux ajouts portent la règle de récence à **0 faux et 0 raté** sur les jeux jugés.
+
+**1. Second déclencheur par famille.** Une même sous-famille **déclarée** pesant ≥ 40 % des **deux**
+côtés suffit, même si le chevauchement global reste sous 0,45 (`countsAsSameMeal`,
+`VARIETY_RECENCY_FAMILY_PART_THRESHOLD`). C'est ce qui rattrape la paire de poulet ci-dessus.
+
+La restriction aux familles **déclarées** n'est pas cosmétique : les clés d'une
+`RecipeFamilySignature` mélangent noms de famille et `foodId` bruts, rien ne les distingue à la
+lecture. Sans le filtre (`CatalogIndexes.declaredFamilies`), partager `oeuf` à 40 % rapprocherait
+une mousse au chocolat d'une omelette — mesuré, 3 faux sur 6.
+
+**2. Filtre de créneau.** Une entrée d'historique dont le `creneau` ne figure pas dans les
+`typesRepas` du candidat est ignorée **pour le rapprochement par composition**. « Clafoutis aux
+framboises » `[gouter]` et « Gratin de pâtes au jambon » `[dejeuner, diner]` partagent 40 % et 50 %
+de lait mais ne peuvent jamais être candidats à la même demande ; sans ce filtre, le goûter d'hier
+pénalisait le dîner d'aujourd'hui.
+
+> ⚠️ **Ce n'est PAS « même créneau que la demande ».** Poulet au déjeuner puis poulet au dîner
+> **doit** rester répétitif : la recette candidate porte `[dejeuner, diner]`, l'entrée de déjeuner
+> passe donc le filtre. Et la correspondance par `recipeId` exact n'est **jamais** filtrée — avoir
+> mangé cette recette-là compte quel que soit le moment.
+
+| Règle | Déclenche à tort | Rate à raison | Paires |
+|---|---|---|---|
+| famille ≥ 0,45 (avant) | 0 / 6 | 1 / 7 | 102 |
+| rang 60/25/15 (principal + secondaires) | 1 / 6 | **3 / 7** | 83 |
+| rang + départage par rôle | 0 / 6 | **2 / 7** | 93 |
+| famille ≥ 0,45 OU toute famille ≥ 40 % | **3 / 6** | 0 / 7 | 510 |
+| + créneau, famille ≥ 0,38 | 1 / 6 | 0 / 7 | 168 |
+| **+ créneau + famille déclarée ≥ 40 % — RETENU** | **0 / 6** | **0 / 7** | **174** |
+
+Le modèle **« un ingrédient principal + des secondaires »** (poids fixes 0,60 / 0,25 / 0,15 par
+rang) a été **testé et écarté** : il détruit de l'information. Poulet à 54 % et poulet à 43 % sont
+proches ; les ramener à « 1ᵉʳ » et « 2ᵉ » les éloigne d'un coup. Le départage par rôle corrige un
+vrai bug — « Blanc de poulet rôti, carottes fondantes » a carotte 43 % **et** poulet 43 %,
+départagés par ordre alphabétique, donc la machine y voyait « un plat de carottes » — mais ne
+compense pas la perte.
+
+Le créneau **ne remplace pas** le second déclencheur : seul, à 0,38, il laisse passer 1 faux. Les
+deux ensemble tombent à 0. Une fois le créneau appliqué, les paires laitières qui subsistent sont
+légitimes (deux flans au goûter, deux porridges au petit-déjeuner), et les absurdes ont disparu.
+
+> `CourseKind` (entrée/plat/dessert) **n'est pas sur `Recipe`** — il reste réservé au mode repas
+> composé de v1.5 (`MealPlanEntry.service`). Le créneau suffit pour ce problème ; annoter les 212
+> recettes n'a pas été jugé nécessaire.
 
 > `recipeMainIngredient` n'est désormais lu par **aucune couche**. Il reste calculé à l'init et
 > employé seulement par les bancs de comparaison, qui documentent pourquoi il a été abandonné.

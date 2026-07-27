@@ -13,7 +13,7 @@
 import type { Catalog } from '../domain/index.js'
 import { computeRecipeNutrients } from './recipe-nutrients.js'
 import { computeRecipeMainIngredient } from './main-ingredient.js'
-import { computeRecipeFamilySignature, computeRecipeSignature } from './signature.js'
+import { computeDeclaredFamilies, computeRecipeFamilySignature, computeRecipeSignature } from './signature.js'
 
 export function attachDerivedIndexes(catalog: Catalog): Catalog {
   return {
@@ -24,6 +24,7 @@ export function attachDerivedIndexes(catalog: Catalog): Catalog {
       recipeMainIngredient: computeRecipeMainIngredient(catalog),
       recipeSignature: computeRecipeSignature(catalog),
       recipeFamilySignature: computeRecipeFamilySignature(catalog),
+      declaredFamilies: computeDeclaredFamilies(catalog),
     },
   }
 }

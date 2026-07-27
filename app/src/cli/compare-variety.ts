@@ -91,6 +91,147 @@ const famOverlap = (a: RecipeId, b: RecipeId) => {
 }
 const ruleFam = (tau: number) => (a: RecipeId, b: RecipeId) => famOverlap(a, b) >= tau
 
+/**
+ * ---------------------------------------------------------------------------------------------
+ * MODÈLES « PRINCIPAL + SECONDAIRES » (proposition utilisateur, 2026-07-27)
+ *
+ * Constat qui les motive, mesuré : « Blanc de poulet rôti, carottes fondantes » a carotte 43 % ET
+ * poulet_blanc 43 % — ÉGALITÉ PARFAITE, départagée par ordre alphabétique. Pour la machine, ce
+ * plat est donc « un plat de carottes ». Aucune règle fondée sur l'aliment DOMINANT ne peut
+ * marcher tant que le départage est arbitraire.
+ *
+ * Deux idées distinctes, mesurées séparément puis combinées :
+ *
+ *  A. RANG PLUTÔT QUE POIDS — un aliment PRINCIPAL et des SECONDAIRES, à poids fixes
+ *     (0,60 / 0,25 / 0,15) au lieu des parts réelles. Rend la comparaison insensible au fait
+ *     qu'un plat soit « chargé » en protéine et l'autre non (43 % vs 71 %).
+ *
+ *  B. DÉPARTAGE PAR RÔLE — à poids égal, l'aliment d'un GROUPE STRUCTURANT (viande, poisson,
+ *     légumineuse, œuf) passe devant l'accompagnement. « Poulet aux carottes », jamais
+ *     « carottes au poulet ».
+ *
+ *  C. FAMILLE COMMUNE PESANTE — pas de dominant du tout : deux plats comptent comme le même repas
+ *     si une MÊME sous-famille pèse au moins τ des deux côtés. Robuste par construction aux
+ *     égalités, puisqu'il n'y a rien à départager.
+ * ---------------------------------------------------------------------------------------------
+ */
+
+/** Poids fixes par rang — le principal vaut plus du double du premier secondaire. */
+const RANG_POIDS = [0.6, 0.25, 0.15]
+
+/** `true` si l'aliment appartient à un groupe qui STRUCTURE un repas (protéine, légumineuse). */
+const estStructurant = (foodId: string) => {
+  const groupe = catalog.foods.get(foodId as never)?.groupe
+  return groupe !== undefined && GROUPES_STRUCTURANTS.has(groupe)
+}
+
+/**
+ * Signature à poids de RANG, repliée par famille. `parRole` active le départage B : à part égale,
+ * le structurant passe devant. Sans lui, le tri retombe sur l'ordre alphabétique des ids.
+ */
+const rangSig = (id: RecipeId, parRole: boolean) => {
+  const entrees = [...sigOf(id).entries()].sort((x, y) => {
+    if (parRole) {
+      const [sx, sy] = [estStructurant(x[0]), estStructurant(y[0])]
+      if (sx !== sy) return sx ? -1 : 1
+    }
+    return y[1] - x[1] || (x[0] < y[0] ? -1 : 1)
+  })
+  const out = new Map<string, number>()
+  entrees.forEach(([foodId], rang) => {
+    const key = catalog.foods.get(foodId)?.sousFamille ?? foodId
+    out.set(key, (out.get(key) ?? 0) + (RANG_POIDS[rang] ?? 0))
+  })
+  return out
+}
+
+const overlapDe = (x: ReadonlyMap<string, number>, y: ReadonlyMap<string, number>) => {
+  if (x.size === 0 || y.size === 0) return 0
+  let inter = 0, union = 0
+  for (const k of new Set([...x.keys(), ...y.keys()])) {
+    inter += Math.min(x.get(k) ?? 0, y.get(k) ?? 0)
+    union += Math.max(x.get(k) ?? 0, y.get(k) ?? 0)
+  }
+  return union === 0 ? 0 : inter / union
+}
+
+const ruleRang = (tau: number, parRole: boolean) => (a: RecipeId, b: RecipeId) =>
+  overlapDe(rangSig(a, parRole), rangSig(b, parRole)) >= tau
+
+/** Modèle C : une même sous-famille pèse ≥ τ des DEUX côtés, sans notion de dominant. */
+const ruleFamillePesante = (tauPart: number) => (a: RecipeId, b: RecipeId) => {
+  const [x, y] = [famSig(a), famSig(b)]
+  for (const [key, part] of x) {
+    if (part >= tauPart && (y.get(key) ?? 0) >= tauPart) return true
+  }
+  return false
+}
+
+/** Noms de sous-familles RÉELLEMENT déclarées au catalogue (`poulet`, `agneau`, `riz`…). */
+const FAMILLES_DECLAREES = new Set(
+  [...catalog.foods.values()].map((f) => f.sousFamille).filter((f): f is string => f !== null)
+)
+
+/**
+ * Variante de C restreinte aux SOUS-FAMILLES DÉCLARÉES. Partager `poulet` à 40 % des deux côtés
+ * dit « deux préparations du même animal ». Partager `oeuf` à 40 % ne dit rien de tel : l'œuf est
+ * un ingrédient de structure présent partout (mousse, omelette, flan, panure). La version non
+ * restreinte confondait les deux, d'où ses 3 faux déclenchements.
+ */
+const ruleFamilleDeclareePesante = (tauPart: number) => (a: RecipeId, b: RecipeId) => {
+  const [x, y] = [famSig(a), famSig(b)]
+  for (const [key, part] of x) {
+    if (!FAMILLES_DECLAREES.has(key)) continue
+    if (part >= tauPart && (y.get(key) ?? 0) >= tauPart) return true
+  }
+  return false
+}
+
+/**
+ * Familles déclarées dont les aliments relèvent d'un GROUPE STRUCTURANT (viande, poisson, fruit de
+ * mer, légumineuse) — celles qui DÉFINISSENT un plat. Exclut `lait`, `riz`, `chou`, `poivron` :
+ * mesuré, `lait ≥ 40 % des deux côtés` rapproche « Clafoutis aux framboises » et « Gratin de pâtes
+ * au jambon ». Le lait est un ingrédient de structure présent partout, pas un produit définissant.
+ */
+const GROUPES_DEFINISSANTS = new Set(['viandes', 'poissons', 'fruits de mer', 'légumineuses'])
+const FAMILLES_STRUCTURANTES = new Set(
+  [...catalog.foods.values()]
+    .filter((f) => f.sousFamille !== null && GROUPES_DEFINISSANTS.has(f.groupe))
+    .map((f) => f.sousFamille as string)
+)
+
+const ruleFamilleStructurantePesante = (tauPart: number) => (a: RecipeId, b: RecipeId) => {
+  const [x, y] = [famSig(a), famSig(b)]
+  for (const [key, part] of x) {
+    if (!FAMILLES_STRUCTURANTES.has(key)) continue
+    if (part >= tauPart && (y.get(key) ?? 0) >= tauPart) return true
+  }
+  return false
+}
+
+/** Combinaison : le chevauchement famille OU la famille commune pesante. */
+const ruleFamOuPesante = (tau: number, tauPart: number) => (a: RecipeId, b: RecipeId) =>
+  famOverlap(a, b) >= tau || ruleFamillePesante(tauPart)(a, b)
+
+/**
+ * MODIFICATEUR DE CRÉNEAU. Deux recettes qui ne partagent aucun `typesRepas` ne peuvent jamais être
+ * candidates à la même demande (l'exclusion `creneau` passe avant le scoring, §6.4) : les rapprocher
+ * n'a aucun effet utile, et peut en avoir un NUISIBLE — un clafoutis mangé au goûter pénalise
+ * aujourd'hui un gratin de pâtes proposé au dîner, parce que `scoreVariety` lit toutes les entrées
+ * d'historique sans regarder leur créneau.
+ *
+ * ⚠️ Ce n'est PAS « même créneau exactement ». Poulet au déjeuner puis poulet au dîner DOIT compter
+ * comme répétitif : les deux recettes portent [dejeuner, diner], elles se croisent donc.
+ */
+const partagentCreneau = (a: RecipeId, b: RecipeId) => {
+  const sa = catalog.recipes.get(a)?.typesRepas ?? []
+  const sb = catalog.recipes.get(b)?.typesRepas ?? []
+  return sa.some((s) => sb.includes(s))
+}
+const avecCreneau =
+  (fires: (a: RecipeId, b: RecipeId) => boolean) => (a: RecipeId, b: RecipeId) =>
+    partagentCreneau(a, b) && fires(a, b)
+
 const RULES: { name: string; fires: (a: RecipeId, b: RecipeId) => boolean }[] = [
   { name: 'actuelle (même plus lourd)', fires: ruleCurrent },
   { name: 'chevauchement ≥ 0,25', fires: ruleOverlap(0.25) },
@@ -105,6 +246,28 @@ const RULES: { name: string; fires: (a: RecipeId, b: RecipeId) => boolean }[] = 
   { name: 'famille-normalisé ≥ 0,40', fires: ruleFam(0.4) },
   { name: 'famille-normalisé ≥ 0,42', fires: ruleFam(0.42) },
   { name: 'famille-normalisé ≥ 0,45', fires: ruleFam(0.45) },
+  { name: 'rang 60/25/15 ≥ 0,45', fires: ruleRang(0.45, false) },
+  { name: 'rang + rôle ≥ 0,45', fires: ruleRang(0.45, true) },
+  { name: 'rang + rôle ≥ 0,55', fires: ruleRang(0.55, true) },
+  { name: 'rang + rôle ≥ 0,60', fires: ruleRang(0.6, true) },
+  { name: 'famille commune ≥ 40 % des 2', fires: ruleFamillePesante(0.4) },
+  { name: 'famille commune ≥ 50 % des 2', fires: ruleFamillePesante(0.5) },
+  { name: 'fam ≥ 0,45 OU commune ≥ 40 %', fires: ruleFamOuPesante(0.45, 0.4) },
+  { name: 'fam ≥ 0,45 OU commune ≥ 50 %', fires: ruleFamOuPesante(0.45, 0.5) },
+  { name: 'famille DÉCLARÉE ≥ 35 % des 2', fires: ruleFamilleDeclareePesante(0.35) },
+  { name: 'famille DÉCLARÉE ≥ 40 % des 2', fires: ruleFamilleDeclareePesante(0.4) },
+  { name: 'fam ≥ 0,45 OU déclarée ≥ 35 %', fires: (a, b) => famOverlap(a, b) >= 0.45 || ruleFamilleDeclareePesante(0.35)(a, b) },
+  { name: 'fam ≥ 0,45 OU déclarée ≥ 40 %', fires: (a, b) => famOverlap(a, b) >= 0.45 || ruleFamilleDeclareePesante(0.4)(a, b) },
+  { name: 'fam ≥ 0,45 OU déclarée ≥ 50 %', fires: (a, b) => famOverlap(a, b) >= 0.45 || ruleFamilleDeclareePesante(0.5)(a, b) },
+  { name: 'fam ≥ 0,45 OU structurante ≥ 30 %', fires: (a, b) => famOverlap(a, b) >= 0.45 || ruleFamilleStructurantePesante(0.3)(a, b) },
+  { name: 'fam ≥ 0,45 OU structurante ≥ 40 %', fires: (a, b) => famOverlap(a, b) >= 0.45 || ruleFamilleStructurantePesante(0.4)(a, b) },
+  { name: 'fam ≥ 0,45 OU structurante ≥ 50 %', fires: (a, b) => famOverlap(a, b) >= 0.45 || ruleFamilleStructurantePesante(0.5)(a, b) },
+  { name: '+créneau : fam ≥ 0,36', fires: avecCreneau(ruleFam(0.36)) },
+  { name: '+créneau : fam ≥ 0,38', fires: avecCreneau(ruleFam(0.38)) },
+  { name: '+créneau : fam ≥ 0,40', fires: avecCreneau(ruleFam(0.4)) },
+  { name: '+créneau : fam ≥ 0,45', fires: avecCreneau(ruleFam(0.45)) },
+  { name: '+créneau : ≥ 0,45 OU protéine ≥ 40 %', fires: avecCreneau((a, b) => famOverlap(a, b) >= 0.45 || ruleFamilleStructurantePesante(0.4)(a, b)) },
+  { name: '+créneau : ≥ 0,45 OU toute fam ≥ 40 %', fires: avecCreneau((a, b) => famOverlap(a, b) >= 0.45 || ruleFamilleDeclareePesante(0.4)(a, b)) },
 ]
 
 const DOIT: [string, string][] = [

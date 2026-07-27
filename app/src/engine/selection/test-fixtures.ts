@@ -29,7 +29,7 @@ import type {
 } from '../domain/index.js'
 import { g, min } from '../domain/index.js'
 import type { ExclusionLayerResult, LayerResult, ScoringLayerResult } from './index.js'
-import { computeRecipeFamilySignature, computeRecipeSignature } from '../nutrition/signature.js'
+import { computeDeclaredFamilies, computeRecipeFamilySignature, computeRecipeSignature } from '../nutrition/signature.js'
 
 /**
  * `SelectionLayer<Config>.apply` retourne `LayerResult` (union) même pour une couche typée
@@ -153,6 +153,7 @@ function buildIndexes(
     // à la composition — les tests passeraient sans jamais exercer le rapprochement.
     recipeSignature: computeRecipeSignature(catalogForSignatures),
     recipeFamilySignature: computeRecipeFamilySignature(catalogForSignatures),
+    declaredFamilies: computeDeclaredFamilies(catalogForSignatures),
   }
 }
 
@@ -185,6 +186,7 @@ const EMPTY_INDEXES: CatalogIndexes = {
   recipeMainIngredient: new Map(),
   recipeSignature: new Map(),
   recipeFamilySignature: new Map(),
+  declaredFamilies: new Set(),
 }
 
 /** `SuggestionRequest` minimal — seuls les champs lus par les couches d'exclusion/de score en test varient. */
