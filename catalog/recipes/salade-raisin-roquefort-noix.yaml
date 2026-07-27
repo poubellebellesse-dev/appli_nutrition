@@ -1,0 +1,83 @@
+id: salade_raisin_roquefort_noix
+nom: "Salade de raisin, roquefort et noix"
+description: >
+  De la mâche avec des grains de raisin, du roquefort émietté et des cerneaux de noix.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.2
+  leger_consistant: -0.3
+  chaud_froid: -0.8
+  texture: croquant
+
+ingredients:
+  - food_id: raisin
+    quantite_g: 400
+    unite_affichage: "1 grosse grappe"
+    optionnel: false
+  - food_id: roquefort
+    quantite_g: 120
+    unite_affichage: "120 g"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 60
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: mache
+    quantite_g: 120
+    unite_affichage: "3 poignées"
+    optionnel: false
+  - food_id: huile_noix
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_balsamique
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Laver la mâche dans un grand volume d'eau et l'essorer sans l'écraser."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Détacher les grains de raisin et les couper en deux s'ils ont des pépins."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Concasser les cerneaux et émietter le roquefort en gros morceaux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Fouetter le vinaigre balsamique et l'huile de noix. NE PAS SALER : le roquefort s'en charge amplement."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Assaisonner la mâche au dernier moment, puis répartir raisin, roquefort et noix par-dessus."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

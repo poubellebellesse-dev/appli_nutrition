@@ -1,0 +1,87 @@
+id: truite_four_moutarde
+nom: "Truite au four à la moutarde et aux poireaux"
+description: >
+  Des filets de truite nappés de moutarde et de crème, sur une fondue de poireaux, au four.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.3
+  chaud_froid: 0.8
+  texture: creme
+
+ingredients:
+  - food_id: truite
+    quantite_g: 600
+    unite_affichage: "4 filets"
+    optionnel: false
+  - food_id: poireau
+    quantite_g: 500
+    unite_affichage: "3 poireaux"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 40
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 120
+    unite_affichage: "12 cl"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 50
+    unite_affichage: "1/2 citron"
+    optionnel: true
+  - food_id: aneth_frais
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les poireaux en rondelles et les rincer à grande eau."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les faire fondre au beurre à couvert, à feu doux, jusqu'à ce qu'ils soient translucides."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Les étaler dans un plat, saler, et poser les filets de truite dessus."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mélanger moutarde et crème, en napper les filets."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner à 190 °C jusqu'à ce que la chair s'effeuille, puis ajouter l'aneth et un trait de citron."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

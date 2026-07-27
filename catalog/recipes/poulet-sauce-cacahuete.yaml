@@ -1,0 +1,91 @@
+id: poulet_sauce_cacahuete
+nom: "Poulet à la sauce cacahuète"
+description: >
+  Des dés de poulet mijotés dans une sauce de cacahuètes broyées, tomate et gingembre.
+temps_prep_min: 20
+temps_cuisson_min: 35
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.1
+  leger_consistant: 0.8
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: poulet_cuisse
+    quantite_g: 800
+    unite_affichage: "4 cuisses désossées"
+    optionnel: false
+  - food_id: cacahuete
+    quantite_g: 150
+    unite_affichage: "150 g non salées"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 400
+    unite_affichage: "4 tomates"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 200
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: riz_blanc
+    quantite_g: 280
+    unite_affichage: "280 g"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire griller les cacahuètes à sec, puis les broyer jusqu'à obtenir une pâte grossière."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Couper le poulet en gros dés et le colorer dans l'huile, puis le réserver."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire revenir les oignons et l'ail émincés, ajouter le gingembre et les tomates en dés."
+    lexicon_ids: [emincer]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Délayer la pâte de cacahuètes avec un verre d'eau chaude et la verser dans la cocotte."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Remettre le poulet, saler, couvrir et laisser mijoter à feu doux en remuant — la sauce attache facilement. Servir sur le riz."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: africaine
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

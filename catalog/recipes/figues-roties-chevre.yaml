@@ -1,0 +1,83 @@
+id: figues_roties_chevre
+nom: "Figues rôties au chèvre et au miel"
+description: >
+  Des figues fendues, garnies de chèvre frais et de miel, passées au four quelques minutes.
+temps_prep_min: 10
+temps_cuisson_min: 12
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: 0.4
+  leger_consistant: -0.3
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: figue
+    quantite_g: 600
+    unite_affichage: "8 figues"
+    optionnel: false
+  - food_id: chevre_frais
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 50
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: roquette
+    quantite_g: 80
+    unite_affichage: "2 poignées"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Fendre chaque figue en croix par le haut, sans la couper en deux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Presser légèrement la base pour ouvrir la fleur et dégager un creux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Garnir chaque creux de chèvre frais et arroser de miel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Enfourner juste le temps que le fromage fonde et que les figues s'attendrissent — trop longtemps, elles s'affaissent."
+    lexicon_ids: []
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Servir tiède sur la roquette, avec les cerneaux de noix, un filet d'huile et un tour de poivre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

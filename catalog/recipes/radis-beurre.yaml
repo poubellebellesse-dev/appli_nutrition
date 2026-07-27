@@ -1,0 +1,71 @@
+id: radis_beurre
+nom: "Radis au beurre et sel"
+description: >
+  Des radis croquants servis avec du beurre demi-sel et du pain, tels quels.
+temps_prep_min: 10
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: -0.6
+  chaud_froid: -0.7
+  texture: croquant
+
+ingredients:
+  - food_id: radis
+    quantite_g: 400
+    unite_affichage: "2 bottes"
+    optionnel: false
+  - food_id: beurre_demi_sel
+    quantite_g: 80
+    unite_affichage: "80 g"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 200
+    unite_affichage: "1/2 pain"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Couper les fanes en laissant deux centimètres de tige, qui servent à tenir le radis."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Laver les radis à grande eau en frottant, la terre se loge sous le collet."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Les plonger dans l'eau glacée un quart d'heure : c'est ce qui les rend fermes et croquants."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: repos
+  - ordre: 4
+    texte: "Sortir le beurre à l'avance pour qu'il soit tartinable — un beurre dur déchire le pain."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+  - ordre: 5
+    texte: "Servir les radis égouttés avec le beurre, le pain et une soucoupe de sel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

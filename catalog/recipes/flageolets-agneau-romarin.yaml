@@ -1,0 +1,91 @@
+id: flageolets_agneau_romarin
+nom: "Flageolets à l'agneau et au romarin"
+description: >
+  De l'épaule d'agneau mijotée avec des flageolets, tomate, ail et romarin.
+temps_prep_min: 20
+temps_cuisson_min: 90
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.9
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: agneau_epaule
+    quantite_g: 1000
+    unite_affichage: "1 kg en morceaux"
+    optionnel: false
+  - food_id: flageolet
+    quantite_g: 700
+    unite_affichage: "2 conserves égouttées"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 400
+    unite_affichage: "4 tomates"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 200
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 20
+    unite_affichage: "4 gousses"
+    optionnel: false
+  - food_id: romarin_seche
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 150
+    unite_affichage: "15 cl"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Colorer les morceaux d'agneau dans l'huile très chaude, en plusieurs fois."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Ajouter les oignons et l'ail émincés, laisser blondir, puis déglacer au vin blanc."
+    lexicon_ids: [emincer, deglacer]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les tomates en dés, le romarin et le sel, mouiller à hauteur et couvrir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser mijoter à feu très doux jusqu'à ce que la viande se détache à la fourchette."
+    lexicon_ids: []
+    timer_s: 4200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Verser les flageolets rincés pour le dernier quart d'heure seulement, en remuant doucement pour ne pas les écraser."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

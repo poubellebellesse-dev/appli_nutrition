@@ -1,0 +1,83 @@
+id: soupe_petits_pois_menthe
+nom: "Velouté de petits pois à la menthe"
+description: >
+  Des petits pois cuits très brièvement puis mixés avec de la menthe, servi chaud ou froid.
+temps_prep_min: 10
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.2
+  leger_consistant: -0.4
+  chaud_froid: 0.5
+  texture: liquide
+
+ingredients:
+  - food_id: petit_pois
+    quantite_g: 700
+    unite_affichage: "700 g"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 10
+    unite_affichage: "1 cube"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 80
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: true
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire suer l'oignon émincé au beurre sans coloration."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Verser 70 cl d'eau et le bouillon, porter à ébullition franche."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Jeter les petits pois et compter cinq minutes MAXIMUM — au-delà ils virent au kaki et perdent leur goût sucré."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Mixer aussitôt avec la menthe, hors du feu, pour fixer la couleur verte."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Saler, incorporer la crème, et servir chaud ou bien froid selon la saison."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

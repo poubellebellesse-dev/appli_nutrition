@@ -1,0 +1,95 @@
+id: dahl_epinards_curcuma
+nom: "Dahl de lentilles corail aux épinards"
+description: >
+  Des lentilles corail fondues au curcuma et au gingembre, avec des épinards ajoutés en fin de cuisson.
+temps_prep_min: 15
+temps_cuisson_min: 30
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: lentilles_corail
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: epinard
+    quantite_g: 400
+    unite_affichage: "400 g frais"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: curcuma
+    quantite_g: 5
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 50
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: huile_colza
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire chauffer les graines de cumin dans l'huile jusqu'à ce qu'elles crépitent — c'est ce qui libère leur parfum."
+    lexicon_ids: []
+    timer_s: 90
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Ajouter l'oignon et l'ail émincés, laisser blondir, puis le curcuma et le gingembre."
+    lexicon_ids: [emincer]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Verser les lentilles rincées et un litre d'eau, laisser mijoter jusqu'à ce qu'elles se défassent."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter les épinards par poignées, ils fondent en quelques instants."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Saler en fin de cuisson et réveiller d'un bon trait de jus de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: indienne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

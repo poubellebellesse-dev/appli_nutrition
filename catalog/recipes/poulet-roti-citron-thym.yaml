@@ -1,0 +1,83 @@
+id: poulet_roti_citron_thym
+nom: "Cuisses de poulet rôties au citron et au thym"
+description: >
+  Des cuisses rôties au four sur des quartiers de citron et de pommes de terre, au thym.
+temps_prep_min: 15
+temps_cuisson_min: 50
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.7
+  chaud_froid: 0.9
+  texture: croquant
+
+ingredients:
+  - food_id: poulet_cuisse
+    quantite_g: 900
+    unite_affichage: "4 cuisses"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 800
+    unite_affichage: "8 pommes de terre"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 150
+    unite_affichage: "2 citrons"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 5
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 30
+    unite_affichage: "6 gousses en chemise"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 45
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 7
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Couper les pommes de terre en gros quartiers, sans les peler."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les mélanger à la moitié de l'huile, au sel et au thym, puis les étaler dans un plat."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Frotter les cuisses de sel et de thym, les poser PEAU VERS LE HAUT sur les pommes de terre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Glisser les quartiers de citron et les gousses d'ail entre les morceaux, arroser du reste d'huile."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner sans couvrir, en arrosant du jus rendu à mi-cuisson — c'est ce qui fait la peau croustillante."
+    lexicon_ids: []
+    timer_s: 3000
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien
