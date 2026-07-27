@@ -1,0 +1,83 @@
+id: salade_tomate_mozzarella
+nom: "Salade de tomates et mozzarella au basilic"
+description: >
+  Des tranches de tomate et de mozzarella alternées, basilic, huile d'olive et sel.
+temps_prep_min: 10
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.4
+  chaud_froid: -0.8
+  texture: fondant
+
+ingredients:
+  - food_id: tomate
+    quantite_g: 600
+    unite_affichage: "4 grosses tomates"
+    optionnel: false
+  - food_id: mozzarella
+    quantite_g: 250
+    unite_affichage: "2 boules"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 20
+    unite_affichage: "1 bouquet"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_balsamique
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Sortir la mozzarella du réfrigérateur à l'avance — froide, elle n'a aucun goût."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+  - ordre: 2
+    texte: "Couper les tomates et la mozzarella en tranches d'un demi-centimètre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Les alterner sur un plat en les faisant se chevaucher."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Saler les tomates seulement, parsemer de basilic déchiré à la main."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Arroser d'huile d'olive et d'un filet de balsamique au dernier moment, puis poivrer."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

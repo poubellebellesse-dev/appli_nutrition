@@ -1,0 +1,83 @@
+id: pates_poitrine_creme
+nom: "Pâtes à la poitrine fumée et à la crème"
+description: >
+  Des spaghettis liés d'une crème aux lardons de poitrine, œuf et parmesan.
+temps_prep_min: 10
+temps_cuisson_min: 20
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.8
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: pates_spaghetti
+    quantite_g: 320
+    unite_affichage: "320 g"
+    optionnel: false
+  - food_id: porc_poitrine
+    quantite_g: 200
+    unite_affichage: "200 g en lardons"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 100
+    unite_affichage: "2 œufs"
+    optionnel: false
+  - food_id: parmesan
+    quantite_g: 80
+    unite_affichage: "80 g râpé"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 80
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 3
+    unite_affichage: "généreusement"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "pour l'eau"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Porter une grande casserole d'eau salée à ébullition et y cuire les spaghettis."
+    lexicon_ids: []
+    timer_s: 540
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Faire rendre leur gras aux lardons à feu moyen, sans matière grasse ajoutée, jusqu'à ce qu'ils dorent."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Battre les œufs avec le parmesan, la crème et beaucoup de poivre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Égoutter les pâtes en gardant une louche d'eau de cuisson, les verser sur les lardons HORS DU FEU."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Ajouter le mélange aux œufs et remuer vivement : la chaleur résiduelle suffit à le lier. Sur le feu, il coagulerait en omelette."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

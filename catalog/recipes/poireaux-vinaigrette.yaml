@@ -1,0 +1,87 @@
+id: poireaux_vinaigrette
+nom: "Poireaux vinaigrette"
+description: >
+  Des blancs de poireaux cuits à l'eau, servis tièdes en vinaigrette à l'échalote et à l'œuf.
+temps_prep_min: 15
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.5
+  chaud_froid: -0.2
+  texture: fondant
+
+ingredients:
+  - food_id: poireau
+    quantite_g: 900
+    unite_affichage: "6 poireaux"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 100
+    unite_affichage: "2 œufs"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_colza
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 50
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Ne garder que les blancs et le vert tendre, les fendre en deux et les rincer à grande eau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les cuire dans l'eau salée jusqu'à ce qu'une pointe de couteau entre sans résistance."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Les égoutter et les PRESSER doucement pour chasser l'eau, sinon la vinaigrette sera diluée."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 4
+    texte: "Cuire les œufs durs, les écaler et les écraser à la fourchette."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Délayer la moutarde avec le vinaigre et le sel, monter à l'huile, ajouter l'échalote émincée, puis en napper les poireaux tièdes et couvrir d'œuf."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

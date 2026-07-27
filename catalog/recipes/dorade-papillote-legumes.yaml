@@ -1,0 +1,87 @@
+id: dorade_papillote_legumes
+nom: "Dorade en papillote aux légumes"
+description: >
+  Des filets de dorade cuits en papillote sur un lit de courgette, tomate et fenouil.
+temps_prep_min: 20
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.3
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: dorade
+    quantite_g: 600
+    unite_affichage: "4 filets"
+    optionnel: false
+  - food_id: courgette
+    quantite_g: 300
+    unite_affichage: "1 courgette"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 300
+    unite_affichage: "3 tomates"
+    optionnel: false
+  - food_id: fenouil
+    quantite_g: 250
+    unite_affichage: "1 bulbe"
+    optionnel: true
+  - food_id: citron
+    quantite_g: 80
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C et découper quatre grandes feuilles de papier cuisson."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer la courgette et le fenouil en lamelles très fines — épaisses, elles ne cuiraient pas dans le temps du poisson."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Répartir les légumes au centre de chaque feuille, saler, poser le filet dessus."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ajouter une rondelle de citron, un filet d'huile et du thym, puis fermer hermétiquement en repliant les bords."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner : la papillote doit gonfler. L'ouvrir à table, la vapeur emporte tout le parfum."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

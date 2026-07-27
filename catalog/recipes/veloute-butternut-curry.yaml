@@ -1,0 +1,87 @@
+id: veloute_butternut_curry
+nom: "Velouté de butternut au curry"
+description: >
+  De la courge butternut fondue au bouillon, mixée avec du curry et une pointe de crème.
+temps_prep_min: 15
+temps_cuisson_min: 30
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.1
+  leger_consistant: -0.2
+  chaud_froid: 0.9
+  texture: liquide
+
+ingredients:
+  - food_id: courge_butternut
+    quantite_g: 900
+    unite_affichage: "1 butternut"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 120
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: curry_poudre
+    quantite_g: 6
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 10
+    unite_affichage: "1 cube"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 80
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: true
+  - food_id: graine_tournesol
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+  - food_id: huile_colza
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Peler la courge, retirer les graines et couper la chair en cubes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire suer l'oignon émincé dans l'huile, ajouter le curry et remuer une minute pour le réveiller."
+    lexicon_ids: [emincer]
+    timer_s: 360
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter la courge, couvrir d'eau à mi-hauteur et émietter le cube de bouillon."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser cuire à couvert jusqu'à ce que les cubes s'écrasent à la fourchette."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Mixer, saler, incorporer la crème et parsemer de graines de tournesol grillées à sec."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien
