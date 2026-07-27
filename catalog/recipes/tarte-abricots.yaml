@@ -1,0 +1,75 @@
+id: tarte_abricots
+nom: "Tarte aux abricots et à la poudre d'amande"
+description: >
+  Des demi-abricots sur un lit d'amandes qui absorbe leur jus, sur pâte feuilletée.
+temps_prep_min: 20
+temps_cuisson_min: 40
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: 0.8
+  leger_consistant: 0.3
+  chaud_froid: 0.3
+  texture: fondant
+
+ingredients:
+  - food_id: abricot
+    quantite_g: 800
+    unite_affichage: "12 abricots"
+    optionnel: false
+  - food_id: pate_feuilletee
+    quantite_g: 250
+    unite_affichage: "1 rouleau"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 80
+    unite_affichage: "80 g"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 80
+    unite_affichage: "80 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 30
+    unite_affichage: "30 g"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Dérouler la pâte sur sa plaque et la piquer à la fourchette."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Broyer grossièrement la moitié des amandes et en tapisser le fond avec un peu de sucre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Cette couche d'amandes absorbe le jus des abricots — sans elle, la pâte serait détrempée."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ranger les demi-abricots serrés, face coupée vers le haut, saupoudrer du reste de sucre et de noisettes de beurre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner, puis parsemer du reste d'amandes effilées à mi-cuisson pour qu'elles dorent sans brûler."
+    lexicon_ids: []
+    timer_s: 2400
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

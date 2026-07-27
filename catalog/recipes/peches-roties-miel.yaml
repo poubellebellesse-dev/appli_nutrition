@@ -1,0 +1,79 @@
+id: peches_roties_miel
+nom: "Pêches rôties au miel et aux pistaches"
+description: >
+  Des demi-pêches rôties au four avec du miel, servies tièdes avec des pistaches concassées.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.9
+  leger_consistant: -0.3
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: peche
+    quantite_g: 800
+    unite_affichage: "6 pêches"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 50
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: pistache
+    quantite_g: 50
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: true
+  - food_id: yaourt_nature
+    quantite_g: 200
+    unite_affichage: "2 yaourts"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Couper les pêches en deux et retirer les noyaux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les ranger face coupée vers le haut dans un plat, sans les superposer."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Déposer une noisette de beurre dans chaque creux et arroser de miel et de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Enfourner jusqu'à ce que la chair s'affaisse et que le jus caramélise sur les bords."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Servir tiède, arrosé du jus du plat, avec les pistaches concassées et une cuillère de yaourt."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,75 @@
+id: salade_melon_jambon
+nom: "Melon au jambon et à la menthe"
+description: >
+  Des tranches de melon servies avec du jambon, un tour de poivre et de la menthe.
+temps_prep_min: 10
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.4
+  leger_consistant: -0.6
+  chaud_froid: -0.9
+  texture: fondant
+
+ingredients:
+  - food_id: melon
+    quantite_g: 900
+    unite_affichage: "1 melon"
+    optionnel: false
+  - food_id: jambon_blanc
+    quantite_g: 200
+    unite_affichage: "8 tranches fines"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 10
+    unite_affichage: "quelques feuilles"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "généreusement"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Choisir un melon lourd pour sa taille et parfumé au pédoncule — un melon fade ne se rattrape pas."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Le couper en deux, retirer les graines, puis le détailler en quartiers et retirer l'écorce."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Dresser les quartiers sur un plat et les draper de tranches de jambon."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Poivrer généreusement : c'est le poivre qui fait tenir l'accord entre le sucré et le salé."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Ajouter la menthe déchirée et un filet d'huile d'olive, servir très frais."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

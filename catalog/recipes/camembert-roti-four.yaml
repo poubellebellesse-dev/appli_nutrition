@@ -1,0 +1,83 @@
+id: camembert_roti_four
+nom: "Camembert rôti au four, ail et thym"
+description: >
+  Un camembert entier passé au four dans sa boîte, piqué d'ail et de thym, à tremper au pain.
+temps_prep_min: 5
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: camembert
+    quantite_g: 250
+    unite_affichage: "1 camembert"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 250
+    unite_affichage: "1/2 pain"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 8
+    unite_affichage: "1 gousse"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 2
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: noix
+    quantite_g: 40
+    unite_affichage: "une poignée"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 180 °C. Retirer l'emballage et remettre le fromage dans sa boîte en bois."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Inciser la croûte en croix sur le dessus, sans aller jusqu'au fond."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Glisser des éclats d'ail dans les entailles, parsemer de thym et arroser d'un trait de vin blanc."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Enfourner jusqu'à ce que le cœur soit coulant — la croûte doit gonfler légèrement."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Servir aussitôt avec du pain coupé en mouillettes et des cerneaux de noix."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

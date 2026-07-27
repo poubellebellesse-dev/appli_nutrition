@@ -1,0 +1,95 @@
+id: soupe_chou_vert_celeri
+nom: "Soupe de chou vert au céleri branche"
+description: >
+  Une soupe paysanne de chou vert, céleri branche, pomme de terre et haricots blancs.
+temps_prep_min: 20
+temps_cuisson_min: 45
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.4
+  chaud_froid: 0.9
+  texture: liquide
+
+ingredients:
+  - food_id: chou_vert
+    quantite_g: 600
+    unite_affichage: "1/2 chou vert"
+    optionnel: false
+  - food_id: celeri_branche
+    quantite_g: 250
+    unite_affichage: "4 branches"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 400
+    unite_affichage: "4 pommes de terre"
+    optionnel: false
+  - food_id: haricot_blanc
+    quantite_g: 400
+    unite_affichage: "1 conserve égouttée"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 200
+    unite_affichage: "2 carottes"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 15
+    unite_affichage: "1,5 cube"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Retirer les grosses côtes du chou et l'émincer en lanières ; couper le céleri en tronçons."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Blanchir le chou cinq minutes puis l'égoutter — cette étape enlève son amertume et son odeur forte."
+    lexicon_ids: [blanchir]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire revenir l'oignon, le céleri et les carottes dans l'huile."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter le chou égoutté, les pommes de terre en cubes, le laurier et le bouillon, couvrir d'eau."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Verser les haricots blancs pour les dix dernières minutes, saler et retirer le laurier."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

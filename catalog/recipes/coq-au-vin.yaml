@@ -1,0 +1,101 @@
+id: coq_au_vin
+nom: "Coq au vin"
+description: >
+  Des cuisses de poulet mijotées au vin rouge avec lardons, champignons et petits oignons.
+temps_prep_min: 25
+temps_cuisson_min: 90
+difficulte: 3
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: fete
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.9
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: poulet_cuisse
+    quantite_g: 1400
+    unite_affichage: "6 cuisses"
+    optionnel: false
+  - food_id: vin_rouge_cuisine
+    quantite_g: 700
+    unite_affichage: "1 bouteille"
+    optionnel: false
+  - food_id: porc_poitrine
+    quantite_g: 200
+    unite_affichage: "200 g en lardons"
+    optionnel: false
+  - food_id: champignon_paris
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 300
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 200
+    unite_affichage: "2 carottes"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire mariner les cuisses dans le vin avec le thym et le laurier, au frais, la veille de préférence."
+    lexicon_ids: []
+    timer_s: 43200
+    timer_type: repos
+  - ordre: 2
+    texte: "Égoutter les morceaux et les sécher — mouillés, ils ne coloreraient pas. Garder la marinade."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire rendre leur gras aux lardons, les réserver, puis colorer le poulet dans la même cocotte."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter oignons et carottes émincés, saupoudrer de farine, remuer, puis verser la marinade filtrée."
+    lexicon_ids: [emincer]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Saler, couvrir et laisser mijoter à feu très doux ; ajouter champignons et lardons pour la dernière demi-heure."
+    lexicon_ids: []
+    timer_s: 4200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: occasion
+    valeur: repas_de_fete
+  - facette: style
+    valeur: convivial

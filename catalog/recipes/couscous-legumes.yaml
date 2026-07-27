@@ -1,0 +1,103 @@
+id: couscous_legumes
+nom: "Couscous de légumes"
+description: >
+  De la semoule gonflée à la vapeur, servie avec un bouillon de légumes aux épices et pois chiches.
+temps_prep_min: 25
+temps_cuisson_min: 45
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: semoule_ble
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: pois_chiches
+    quantite_g: 400
+    unite_affichage: "1 conserve égouttée"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 300
+    unite_affichage: "3 carottes"
+    optionnel: false
+  - food_id: navet
+    quantite_g: 250
+    unite_affichage: "2 navets"
+    optionnel: false
+  - food_id: courgette
+    quantite_g: 300
+    unite_affichage: "2 courgettes"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 200
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: concentre_tomate
+    quantite_g: 40
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: coriandre_graine
+    quantite_g: 5
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 5
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: curcuma
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 45
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Écraser les graines de coriandre et de cumin au mortier pour libérer leurs huiles."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir les oignons émincés dans l'huile, ajouter les épices et le concentré de tomate."
+    lexicon_ids: [emincer]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter carottes et navets en gros morceaux, couvrir d'eau, saler et laisser mijoter."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter courgettes et pois chiches en fin de cuisson seulement, pour qu'ils ne se défassent pas."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Arroser la semoule d'un volume égal de bouillon chaud et d'un filet d'huile, couvrir, laisser gonfler puis égrainer à la fourchette."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: maghrebine
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: convivial

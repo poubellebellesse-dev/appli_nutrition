@@ -1,0 +1,71 @@
+id: pain_maison
+nom: "Pain de campagne maison"
+description: >
+  Une pâte à pain simple — farine, eau, levure, sel — pétrie, levée deux fois et cuite à four très chaud.
+temps_prep_min: 25
+temps_cuisson_min: 40
+difficulte: 3
+portions_base: 8
+image_path: null
+types_repas: [petit_dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.2
+  leger_consistant: 0.6
+  chaud_froid: 0.4
+  texture: croquant
+
+ingredients:
+  - food_id: farine_ble
+    quantite_g: 500
+    unite_affichage: "500 g"
+    optionnel: false
+  - food_id: levure_boulangere
+    quantite_g: 20
+    unite_affichage: "20 g fraîche"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 10
+    unite_affichage: "10 g"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Délayer la levure dans 30 cl d'eau tiède — jamais chaude, elle tuerait la levure — et laisser mousser."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 2
+    texte: "Mêler la farine et le sel, verser l'eau levurée et pétrir dix minutes jusqu'à ce que la pâte devienne lisse et élastique."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: null
+  - ordre: 3
+    texte: "Couvrir d'un linge et laisser lever à l'abri des courants d'air jusqu'à ce que le volume double."
+    lexicon_ids: []
+    timer_s: 5400
+    timer_type: repos
+  - ordre: 4
+    texte: "Dégazer la pâte du plat de la main, la façonner en boule, puis laisser lever une seconde fois."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: repos
+  - ordre: 5
+    texte: "Grigner le dessus au couteau, enfourner à 240 °C avec un récipient d'eau — la vapeur fait la croûte."
+    lexicon_ids: []
+    timer_s: 2400
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

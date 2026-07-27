@@ -1,0 +1,79 @@
+id: salade_fraises_basilic
+nom: "Fraises au basilic et au citron"
+description: >
+  Des fraises macérées quelques minutes avec du sucre, du citron et du basilic déchiré.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.9
+  leger_consistant: -0.8
+  chaud_froid: -0.9
+  texture: croquant
+
+ingredients:
+  - food_id: fraise
+    quantite_g: 700
+    unite_affichage: "700 g"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 10
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 40
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: vinaigre_balsamique
+    quantite_g: 10
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Rincer les fraises AVANT de les équeuter — l'inverse les gorge d'eau par la blessure."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les couper en deux ou en quatre selon leur taille."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Les saupoudrer de sucre, arroser de jus de citron et mélanger doucement."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser macérer au frais le temps que le sucre fonde et tire le jus."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+  - ordre: 5
+    texte: "Ajouter le basilic déchiré à la main, quelques gouttes de balsamique et un tour de poivre juste avant de servir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

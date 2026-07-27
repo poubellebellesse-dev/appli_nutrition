@@ -1,0 +1,85 @@
+id: saint_jacques_poelees
+nom: "Saint-Jacques poêlées au beurre"
+description: >
+  Des noix de Saint-Jacques saisies au beurre mousseux, à peine dorées, citron et persil.
+temps_prep_min: 10
+temps_cuisson_min: 6
+difficulte: 3
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: fete
+conservation_jours: 1
+axes:
+  sucre_sale: -0.3
+  leger_consistant: -0.2
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: coquille_saint_jacques
+    quantite_g: 600
+    unite_affichage: "16 noix"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 50
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Éponger les noix une par une : la moindre humidité les ferait bouillir au lieu de dorer."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire mousser le beurre dans une poêle jusqu'à ce qu'il cesse de crépiter, sans le laisser noircir."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Poser les noix espacées et NE PAS Y TOUCHER — c'est le contact immobile qui crée la croûte dorée."
+    lexicon_ids: []
+    timer_s: 90
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Les retourner une seule fois et compter une minute de plus : au-delà elles deviennent caoutchouteuses."
+    lexicon_ids: []
+    timer_s: 90
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Réserver les noix, jeter l'échalote émincée dans le beurre, déglacer au citron et napper."
+    lexicon_ids: [emincer, deglacer]
+    timer_s: 120
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: occasion
+    valeur: repas_de_fete
+  - facette: style
+    valeur: convivial

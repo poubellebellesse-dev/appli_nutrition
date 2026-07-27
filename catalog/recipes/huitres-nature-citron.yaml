@@ -1,0 +1,81 @@
+id: huitres_nature_citron
+nom: "Huîtres nature au citron"
+description: >
+  Des huîtres ouvertes à la minute, servies sur glace avec du citron et du pain beurré.
+temps_prep_min: 25
+temps_cuisson_min: 0
+difficulte: 3
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: fete
+conservation_jours: 1
+axes:
+  sucre_sale: -0.8
+  leger_consistant: -0.7
+  chaud_froid: -0.9
+  texture: fondant
+
+ingredients:
+  - food_id: huitre
+    quantite_g: 1200
+    unite_affichage: "24 huîtres"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 120
+    unite_affichage: "2 citrons"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 200
+    unite_affichage: "8 tranches fines"
+    optionnel: false
+  - food_id: beurre_demi_sel
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Rincer les coquilles à l'eau froide et écarter toute huître dont la coquille est fêlée ou déjà entrouverte."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ouvrir chaque huître à plat, la charnière vers soi, en glissant la lame le long de la coquille supérieure. Protéger sa main d'un torchon épais."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "JETER la première eau, trouble et salée. Une seconde eau, plus claire, se reforme en quelques minutes."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: repos
+  - ordre: 4
+    texte: "Préparer une échalote émincée très fin dans le vinaigre pour ceux qui l'aiment ainsi."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Dresser sur un lit de glace et servir aussitôt avec les quartiers de citron et le pain beurré."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: occasion
+    valeur: repas_de_fete
+  - facette: style
+    valeur: convivial

@@ -1,0 +1,87 @@
+id: clafoutis_prunes
+nom: "Clafoutis aux prunes"
+description: >
+  Des prunes dénoyautées noyées dans un appareil à flan, cuites au four jusqu'à ce qu'il prenne.
+temps_prep_min: 15
+temps_cuisson_min: 45
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: 0.8
+  leger_consistant: 0.3
+  chaud_froid: 0.3
+  texture: fondant
+
+ingredients:
+  - food_id: prune
+    quantite_g: 700
+    unite_affichage: "700 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 200
+    unite_affichage: "4 œufs"
+    optionnel: false
+  - food_id: lait_entier
+    quantite_g: 400
+    unite_affichage: "40 cl"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 110
+    unite_affichage: "110 g"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 90
+    unite_affichage: "90 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 20
+    unite_affichage: "pour le moule"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 180 °C et beurrer un moule à bords hauts."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Couper les prunes en deux et les dénoyauter, puis les ranger face coupée vers le haut."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Fouetter les œufs avec le sucre et le sel, incorporer la farine, puis détendre au lait."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Verser l'appareil sur les fruits et saupoudrer de cannelle."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner jusqu'à ce que la lame d'un couteau ressorte propre — les prunes rendent plus d'eau que les framboises, compter un peu plus long."
+    lexicon_ids: []
+    timer_s: 2700
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial
