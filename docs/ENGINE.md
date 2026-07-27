@@ -277,6 +277,54 @@ l'API reste lisible derrière un accesseur.
 > construction du catalogue (§9) et livrés dans le `.db`. La fonction reste dans le moteur parce
 > que c'est elle que le script de build utilise, et parce qu'elle est testable isolément.
 
+#### 5.1 bis — COUVERTURE nutritionnelle (2026-07-27), décision 29 TRANCHÉE et CODÉE
+
+CIQUAL ne renseigne pas tout : pour certains aliments, une case est vide parce que l'ANSES n'a pas
+mesuré ce nutriment. `aggregateRecipe` lit une case vide et **compte 0**, ce qui confond « on ne
+sait pas » et « il n'y en a pas ».
+
+Le défaut n'est pas d'affichage : `scoreNutri` **classe** la recette sur ce chiffre, et le sens de
+l'erreur dépend du `NutrientSense` — donc ce n'est même pas un biais dans une direction, c'est du
+**bruit** :
+
+| Sens | Trou compté 0 | Effet | Cas réel mesuré |
+|---|---|---|---|
+| `plancher` (vitamine C, fer, calcium) | la recette paraît **pauvre** | **pénalisée à tort** | « Truite aux amandes », 76 % de la masse sans valeur |
+| `plafond` (sodium) | la recette paraît **inoffensive** | **récompensée à tort** | « Gratin de blettes à la brousse », 64 % sans valeur |
+
+**Le mécanisme.** `computeNutrientCoverage` (`engine/nutrition/nutrient-coverage.ts`) produit, par
+nutriment, la **part de la masse dont la valeur est connue** ∈ [0, 1] — index
+`CatalogIndexes.recipeNutrientCoverage`. Il ne corrige ni n'invente aucune valeur.
+
+`scoreNutri` **s'abstient** de noter un nutriment dont la couverture est sous `NUTRI_MIN_COVERAGE` :
+il le saute, et `count` se renormalise sur les nutriments restants. Aucun nutriment notable →
+`NEUTRAL_SCORE`, comme avant.
+
+> ⚠️ **Même périmètre d'ingrédients que `aggregateRecipe`, optionnels INCLUS.** La couverture
+> qualifie l'agrégat ; si l'une inclut les optionnels et pas l'autre, elle décrit un autre plat.
+> Un `foodId` absent du catalogue ne compte **ni** au numérateur **ni** au dénominateur — il est
+> déjà ignoré par l'agrégation, l'inclure déclencherait une abstention à cause d'un fantôme.
+
+> ⚠️ **`NUTRI_MIN_COVERAGE = 0,7` est un seuil de JUGEMENT, pas de mesure** — contrairement à ceux
+> de `variety`, il n'existe pas de jeu de cas jugés pour « ce nutriment est-il notable ». Il sépare
+> les situations réelles, qui se répartissent sous 30 % d'inconnu ou au-dessus de 39 %, sans rien
+> entre les deux. Effet sur le catalogue : **13 recettes sur 212** perdent un nutriment (12 la
+> vitamine C, 1 le sodium), **aucune ne les perd tous**.
+
+**L'import ne refuse plus** un aliment sans énergie (`catalog/import-ciqual.mjs`) — c'était l'état
+sûr provisoire, mais il **façonnait le catalogue sur ce que l'ANSES a documenté** plutôt que sur la
+cuisine : la ricotta a dû être remplacée à l'écriture des recettes. Désormais un avertissement.
+
+`NutrientSummary.coverage` remonte l'information jusqu'à l'appelant, pour un futur libellé honnête.
+Ce champ ne protège **pas** le classement — c'est l'abstention de `scoreNutri` qui le fait ; il ne
+fait que rendre la chose lisible.
+
+> **Reste interdit** : inventer une valeur, ou la recalculer depuis les macros (4/4/9), et l'écrire
+> dans le même champ que les chiffres ANSES — un chiffre maison indistinguable d'un chiffre sourcé
+> est exactement ce que le badge de preuve existe pour empêcher. Une seconde source (USDA, CoFID)
+> reste possible **à condition d'être tracée par valeur** ; le vecteur de couverture est justement
+> ce qui rendra ça faisable. Avant d'y aller, chercher d'abord une entrée voisine **dans CIQUAL**.
+
 ### 5.2 `guards/` — la sécurité comme post-condition
 
 Le point clé : **les garde-fous ne sont pas des recommandations d'UI, ce sont des assertions que le

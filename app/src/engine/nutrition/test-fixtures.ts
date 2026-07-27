@@ -113,6 +113,7 @@ function makeEmptyIndexes(): CatalogIndexes {
     recipesByDiet: new Map(),
     recipesBySlot: new Map(),
     recipeNutrients: new Map(),
+    recipeNutrientCoverage: new Map(),
     recipeMainIngredient: new Map(),
     recipeSignature: new Map(),
     recipeFamilySignature: new Map(),

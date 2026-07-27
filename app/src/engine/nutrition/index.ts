@@ -63,5 +63,6 @@ export type ComputeGap = (consumed: NutrientVector, target: NutrientVector) => N
 
 export { aggregateRecipe } from './aggregation.js'
 export { computeRecipeNutrients } from './recipe-nutrients.js'
+export { computeNutrientCoverage, computeRecipeNutrientCoverage } from './nutrient-coverage.js'
 export { computeRecipeMainIngredient } from './main-ingredient.js'
 export { attachDerivedIndexes } from './derived-indexes.js'

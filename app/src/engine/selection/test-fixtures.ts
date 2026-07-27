@@ -147,6 +147,7 @@ function buildIndexes(
     recipesByDiet,
     recipesBySlot,
     recipeNutrients: new Map(),
+    recipeNutrientCoverage: new Map(),
     recipeMainIngredient: new Map(),
     // Calculés par les VRAIES fonctions du moteur, pas re-simulés ici : les couches `variety` et
     // `habit` lisent `recipeFamilySignature` (§6.6 quater), et un index vide les rendrait aveugles
@@ -183,6 +184,7 @@ const EMPTY_INDEXES: CatalogIndexes = {
   recipesByDiet: new Map(),
   recipesBySlot: new Map(),
   recipeNutrients: new Map(),
+  recipeNutrientCoverage: new Map(),
   recipeMainIngredient: new Map(),
   recipeSignature: new Map(),
   recipeFamilySignature: new Map(),

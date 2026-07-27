@@ -2,7 +2,7 @@
 // précision 1).
 
 import { describe, expect, it } from 'vitest'
-import { scoreNutri, nutriLayer } from './nutri.js'
+import { NUTRI_MIN_COVERAGE, scoreNutri, nutriLayer } from './nutri.js'
 import { NEUTRAL_SCORE } from './index.js'
 import type { Catalog, Nutrient, NutrientId, NutrientSense, NutrientVector, RecipeId } from '../../domain/index.js'
 import { asScoringResult, makeCatalog, makeRecipe, makeRequest } from '../test-fixtures.js'
@@ -208,5 +208,82 @@ describe('scoring/nutri — nutriLayer (contrat SelectionLayer, §6.2 ENGINE)', 
     expect(result.scores.get(proche.id)).toBe(1)
     expect(result.scores.get(loin.id)).toBe(0)
     expect(result.scores.get(proche.id)!).toBeGreaterThan(result.scores.get(loin.id)!)
+  })
+})
+
+describe('scoring/nutri — abstention sur couverture insuffisante (décision 29)', () => {
+  const v = (...xs: number[]) => new Float64Array(xs)
+
+  it('couverture ABSENTE → comportement d’avant la décision 29, aucun changement', () => {
+    // Le paramètre est optionnel exprès : des dizaines d'appels unitaires ne testent pas cette
+    // dimension et ne doivent pas devenir des abstentions silencieuses.
+    const recipe = v(50, 20)
+    const target = v(50, 20)
+    expect(scoreNutri(recipe, target, ['cible', 'cible'])).toBe(1)
+  })
+
+  it('un nutriment sous le seuil n’est PAS noté — le score se renormalise sur les autres', () => {
+    const recipe = v(50, 999) // 2ᵉ nutriment aberrant…
+    const target = v(50, 20)
+    const senses: NutrientSense[] = ['cible', 'cible']
+
+    // …mais on ne sait presque rien de sa composition : il ne doit pas peser dans le verdict.
+    const couverturePartielle = v(1, 0.1)
+    expect(scoreNutri(recipe, target, senses, couverturePartielle)).toBe(1)
+    // Contre-épreuve : bien renseigné, le même écart compte pleinement.
+    expect(scoreNutri(recipe, target, senses, v(1, 1))).toBeLessThan(1)
+  })
+
+  it('CAS QUI MOTIVE LA RÈGLE (plafond) : un trou de données ne récompense plus la recette', () => {
+    // « Gratin de blettes à la brousse » : 64 % de la masse sans valeur de sodium. Compté 0, le
+    // plat paraît parfaitement sobre en sel — un écart NUL sur un plafond, donc un bonus gratuit.
+    const sansValeurComptéeZero = v(50, 0)
+    const target = v(50, 100)
+    const senses: NutrientSense[] = ['cible', 'plafond']
+
+    const avecTrou = scoreNutri(sansValeurComptéeZero, target, senses) // 0 < plafond → écart nul
+    const abstenu = scoreNutri(sansValeurComptéeZero, target, senses, v(1, 0.36))
+
+    expect(avecTrou).toBe(1) // le zéro inventé décroche la note maximale
+    expect(abstenu).toBe(1) // ici l'autre nutriment est parfait, donc même note…
+    // …mais le sodium n'entre plus dans la moyenne : il ne peut plus SAUVER une recette médiocre.
+    const mediocre = v(10, 0)
+    expect(scoreNutri(mediocre, target, senses)).toBeGreaterThan(
+      scoreNutri(mediocre, target, senses, v(1, 0.36))
+    )
+  })
+
+  it('CAS SYMÉTRIQUE (plancher) : un trou de données ne punit plus la recette', () => {
+    // « Truite aux amandes » : 76 % de la masse sans valeur de vitamine C. Comptée 0, la recette
+    // paraît carencée et se fait pénaliser pour une case vide de l'ANSES.
+    const recipe = v(50, 0)
+    const target = v(50, 80)
+    const senses: NutrientSense[] = ['cible', 'plancher']
+
+    const punie = scoreNutri(recipe, target, senses)
+    const abstenue = scoreNutri(recipe, target, senses, v(1, 0.24))
+
+    expect(punie).toBeLessThan(1)
+    expect(abstenue).toBe(1) // jugée sur ce qu'on sait, pas sur ce qu'on ignore
+  })
+
+  it('couverture nulle partout → NEUTRAL_SCORE, jamais 0', () => {
+    // « On ne sait rien » ne doit pas se traduire par « c'est mauvais » (§6.1 ENGINE).
+    expect(scoreNutri(v(50, 20), v(50, 20), ['cible', 'cible'], v(0, 0))).toBe(NEUTRAL_SCORE)
+  })
+
+  it('le seuil est strict : exactement à la limite, le nutriment EST noté', () => {
+    const recipe = v(999)
+    const target = v(20)
+    expect(scoreNutri(recipe, target, ['cible'], v(NUTRI_MIN_COVERAGE))).toBeLessThan(1)
+    expect(scoreNutri(recipe, target, ['cible'], v(NUTRI_MIN_COVERAGE - 0.01))).toBe(NEUTRAL_SCORE)
+  })
+
+  it('la couche transmet la couverture du catalogue, pas un vecteur vide', () => {
+    const recette = makeRecipe('r')
+    const catalog = makeCatalog([recette])
+    const config = nutriLayer.configure(makeRequest(), catalog)
+
+    expect(config.recipeNutrientCoverage).toBe(catalog.indexes.recipeNutrientCoverage)
   })
 })

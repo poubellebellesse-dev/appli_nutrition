@@ -275,6 +275,9 @@ function runSuggestMeals(catalog: Catalog, req: SuggestionRequest, now: (() => n
       throw new Error(`suggestMeals : recette '${recipeId}' absente du catalogue (incohérence d'index) — §9.1 ENGINE`)
     }
     const perPortion = catalog.indexes.recipeNutrients.get(recipeId) ?? new Float64Array(catalog.nutrients.length)
+    // Absent → vecteur de zéros, soit « rien de connu ». C'est le repli SÛR : il pousse l'affichage
+    // à taire une valeur plutôt qu'à la présenter comme certaine.
+    const coverage = catalog.indexes.recipeNutrientCoverage.get(recipeId) ?? new Float64Array(catalog.nutrients.length)
 
     return {
       recipeId,
@@ -287,7 +290,7 @@ function runSuggestMeals(catalog: Catalog, req: SuggestionRequest, now: (() => n
       // de `scaleRecipe` (§10.1 ENGINE, non câblé dans ce lot). Mélanger les deux produirait une
       // mise à l'échelle silencieuse, invisible pour qui lit `ScoredSuggestion.portions`.
       portions: recipe.portionsBase,
-      nutrition: { perPortion },
+      nutrition: { perPortion, coverage },
     }
   })
 

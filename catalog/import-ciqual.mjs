@@ -224,26 +224,31 @@ function checkMapping({ foods, mapping, foodsByCode, compo }) {
       errors.push(`'${food.id}' → ${alimCode} (${alim.alim_nom_fr}) : aucune valeur pour les 9 nutriments`)
       continue
     }
-    // ⚠️ ÉTAT SÛR PROVISOIRE, PAS LA RÉPONSE FINALE — décision 29 ouverte (docs/ETAT.md §4).
+    // Décision 29, TRANCHÉE le 2026-07-27 : l'absence d'énergie n'est plus une ERREUR BLOQUANTE.
     //
-    // Un aliment sans énergie contribue silencieusement 0 kcal au total d'une recette (voir
-    // engine/nutrition/aggregation.ts) : le plat paraît moins calorique qu'il ne l'est, ET la
-    // couche `nutri` le CLASSE sur ce total faux. Le défaut n'est donc pas seulement d'affichage.
-    // Échouer ici est bruyant plutôt que mensonger — mais ça appauvrit le catalogue pour une raison
-    // de données : la ricotta et les câpres existent en cuisine, Ciqual ne les chiffre simplement
-    // pas (19585, 11040, 11095 — aucune des quatre conventions d'énergie n'est renseignée).
+    // Ce garde-fou refusait tout aliment sans énergie, au motif qu'il contribuerait silencieusement
+    // 0 kcal à ses recettes et fausserait le classement de `nutri`. Le motif était juste, la
+    // réponse trop brutale : elle FAÇONNAIT LE CATALOGUE SUR CE QUE L'ANSES A DOCUMENTÉ plutôt que
+    // sur la cuisine. La ricotta a dû être remplacée à l'écriture des recettes ; les câpres et la
+    // ciboulette séchée sont dans le même cas (19585, 11040, 11095 — aucune des quatre conventions
+    // d'énergie n'est renseignée). Cette distorsion est invisible et s'aggrave à chaque lot.
     //
-    // La vraie réponse est de PROPAGER l'incomplétude : aliment marqué → recette marquée →
-    // `nutri` rend NEUTRAL_SCORE au lieu de noter sur du faux → libellé à l'écran. Ce garde-fou
-    // disparaîtra alors. En attendant, ne jamais inventer la valeur ni la recalculer depuis les
-    // macros sans la tracer : ce serait un chiffre maison indistinguable d'un chiffre sourcé,
-    // exactement ce que le badge de preuve existe pour empêcher.
+    // L'incomplétude est désormais PROPAGÉE et traitée en aval, là où elle nuit :
+    // `computeNutrientCoverage` (engine/nutrition/) mesure la part de la masse dont la valeur est
+    // connue, `scoreNutri` s'ABSTIENT de noter un nutriment sous `NUTRI_MIN_COVERAGE` au lieu de le
+    // noter sur un zéro inventé, et `NutrientSummary.coverage` remonte l'information jusqu'à
+    // l'affichage. Le trou de données ne se traduit plus par un chiffre faux.
+    //
+    // ⚠️ CE QUI RESTE INTERDIT : inventer la valeur, ou la recalculer depuis les macros (4/4/9), et
+    // l'écrire dans le même champ que les chiffres ANSES. Ce serait un chiffre maison
+    // indistinguable d'un chiffre sourcé — exactement ce que le badge de preuve existe pour
+    // empêcher. Une seconde source (USDA, CoFID) reste possible, à condition d'être TRACÉE par
+    // valeur ; le vecteur de couverture est justement ce qui rendra ça faisable.
     if (!('energie_kcal' in nutrients)) {
-      errors.push(
-        `'${food.id}' → ${alimCode} (${alim.alim_nom_fr}) : Ciqual ne donne AUCUNE énergie pour cet ` +
-          `aliment. Choisir une autre entrée équivalente, ou retirer l'aliment du catalogue.`
+      warnings.push(
+        `'${food.id}' → ${alim.alim_nom_fr} : Ciqual ne donne AUCUNE énergie. Aliment accepté, mais ` +
+          `ses recettes ne seront pas notées sur l'énergie (couverture insuffisante).`
       )
-      continue
     }
 
     const manquants = Object.keys(NUTRIENT_CONST_CODES).filter((k) => !(k in nutrients))

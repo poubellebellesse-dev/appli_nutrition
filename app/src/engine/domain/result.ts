@@ -30,6 +30,17 @@ export interface Explanation {
 export interface NutrientSummary {
   /** Vecteur complet par portion — affichage optionnel, jamais un budget (§6.5 ARCHITECTURE). */
   readonly perPortion: NutrientVector
+  /**
+   * Part de la masse du plat dont la valeur est CONNUE, par nutriment, ∈ [0, 1] (décision 29).
+   * Qualifie `perPortion` : CIQUAL laisse des cases vides, comptées comme des zéros à l'agrégation.
+   * Une couverture basse veut dire « on ne sait pas », PAS « il n'y en a pas ».
+   *
+   * Destiné à la future couche d'affichage — permettre un libellé honnête (« valeur incomplète »)
+   * plutôt qu'un chiffre présenté comme certain. Le moteur, lui, s'abstient déjà de noter en
+   * dessous de `NUTRI_MIN_COVERAGE` : ce champ N'EST PAS ce qui protège le classement, il ne fait
+   * que le rendre lisible.
+   */
+  readonly coverage: NutrientVector
 }
 
 export interface ScoredSuggestion {

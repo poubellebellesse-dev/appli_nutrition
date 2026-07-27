@@ -247,6 +247,13 @@ export interface CatalogIndexes {
   /** Calculé à l'init du moteur (`createEngine`), pas au build — `aggregateRecipe` est une fonction pure de engine/nutrition/ (§6.5 ENGINE précision 8). */
   readonly recipeNutrients: ReadonlyMap<RecipeId, NutrientVector>
   /**
+   * Part de la masse dont la valeur est CONNUE, par nutriment, ∈ [0, 1] (§5.1 bis, décision 29).
+   * Qualifie `recipeNutrients` : CIQUAL laisse des cases vides, et `aggregateRecipe` les compte
+   * comme des zéros — ce vecteur dit combien il en manque, pour que `scoreNutri` puisse s'abstenir
+   * plutôt que de noter sur une valeur inventée. Ratio, donc PAS divisé par `portionsBase`.
+   */
+  readonly recipeNutrientCoverage: ReadonlyMap<RecipeId, NutrientVector>
+  /**
    * L'ingrédient non optionnel LE PLUS LOURD. ⚠️ Ce n'est PAS l'ingrédient qui définit le plat —
    * mesuré faux sur le catalogue réel (« mousse au chocolat » → œuf, « hachis de bœuf » → pomme de
    * terre). ⚠️ PLUS AUCUNE COUCHE NE LE LIT depuis §6.6 quater : la similarité est passée à

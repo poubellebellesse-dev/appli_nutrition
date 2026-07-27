@@ -44,10 +44,29 @@ function deviationFor(sens: NutrientSense, recipeValue: number, targetValue: num
   return Math.min(raw, 1)
 }
 
+/**
+ * Couverture minimale (part de la masse dont la valeur est connue) sous laquelle un nutriment
+ * n'est PAS noté — décision 29, voir engine/nutrition/nutrient-coverage.ts pour le problème.
+ *
+ * ⚠️ SEUIL DE JUGEMENT, PAS DE MESURE — à la différence des seuils de `variety`, il n'existe pas de
+ * jeu de cas jugés pour « ce nutriment est-il notable ». La valeur retenue sépare nettement les
+ * situations observées sur le catalogue réel, qui se répartissent en dessous de 30 % d'inconnu ou
+ * au-dessus de 39 %, sans rien entre les deux. Effet à 0,7 : 1 recette cesse d'être notée sur le
+ * sodium, 13 sur la vitamine C, aucune sur le calcium ni le fer.
+ */
+export const NUTRI_MIN_COVERAGE = 0.7
+
 export function scoreNutri(
   recipePerPortion: NutrientVector,
   target: NutrientVector,
-  senses: readonly NutrientSense[]
+  senses: readonly NutrientSense[],
+  /**
+   * Part connue par nutriment (`catalog.indexes.recipeNutrientCoverage`). ABSENT = couverture non
+   * renseignée, donc aucune abstention : comportement d'avant la décision 29, conservé pour les
+   * appels unitaires qui ne testent pas cette dimension. Ne pas confondre avec un vecteur de zéros,
+   * qui lui signifie « on ne sait rien » et fait tout ignorer.
+   */
+  coverage?: NutrientVector
 ): number {
   const length = Math.min(recipePerPortion.length, target.length)
 
@@ -57,6 +76,11 @@ export function scoreNutri(
   for (let i = 0; i < length; i++) {
     const targetValue = target[i]!
     if (targetValue <= 0) continue
+
+    // S'ABSTENIR plutôt que noter un zéro inventé. Un trou de données compté 0 pénalise à tort sur
+    // un `plancher` et récompense à tort sur un `plafond` : ne pas le compter du tout est la seule
+    // position neutre. `count` se renormalise seul, donc le score reste comparable entre recettes.
+    if (coverage !== undefined && (coverage[i] ?? 0) < NUTRI_MIN_COVERAGE) continue
 
     const recipeValue = recipePerPortion[i]!
     const sens = senses[i] ?? 'cible'
@@ -97,6 +121,8 @@ const MEAL_SLOT_SHARE: Readonly<Record<MealSlot, number>> = {
 
 export interface NutriLayerConfig {
   readonly recipeNutrients: ReadonlyMap<RecipeId, NutrientVector>
+  /** Part connue par nutriment — `catalog.indexes.recipeNutrientCoverage`, voir `NUTRI_MIN_COVERAGE`. */
+  readonly recipeNutrientCoverage: ReadonlyMap<RecipeId, NutrientVector>
   readonly senses: readonly NutrientSense[]
   readonly target: NutrientVector
 }
@@ -116,6 +142,7 @@ export const nutriLayer: SelectionLayer<NutriLayerConfig> = {
 
     return {
       recipeNutrients: catalog.indexes.recipeNutrients,
+      recipeNutrientCoverage: catalog.indexes.recipeNutrientCoverage,
       senses: catalog.nutrients.map((n) => n.sens),
       target,
     }
@@ -125,7 +152,12 @@ export const nutriLayer: SelectionLayer<NutriLayerConfig> = {
     const scores = new Map<RecipeId, number>()
     for (const recipeId of candidates) {
       const recipeVector = config.recipeNutrients.get(recipeId)
-      scores.set(recipeId, recipeVector ? scoreNutri(recipeVector, config.target, config.senses) : NEUTRAL_SCORE)
+      scores.set(
+        recipeId,
+        recipeVector
+          ? scoreNutri(recipeVector, config.target, config.senses, config.recipeNutrientCoverage.get(recipeId))
+          : NEUTRAL_SCORE
+      )
     }
     return { scores }
   },
