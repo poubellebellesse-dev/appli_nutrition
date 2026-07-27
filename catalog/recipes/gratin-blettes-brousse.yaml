@@ -1,0 +1,83 @@
+id: gratin_blettes_brousse
+nom: "Gratin de blettes à la brousse"
+description: >
+  Des côtes de blettes fondues, mêlées à de la brousse et gratinées au parmesan.
+temps_prep_min: 20
+temps_cuisson_min: 40
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.3
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: blette
+    quantite_g: 800
+    unite_affichage: "1 botte"
+    optionnel: false
+  - food_id: brousse
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: parmesan
+    quantite_g: 60
+    unite_affichage: "60 g râpé"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 100
+    unite_affichage: "2 œufs"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Séparer les côtes des feuilles. Détailler les côtes en tronçons et les blanchir dix minutes à l'eau salée."
+    lexicon_ids: [blanchir]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Ajouter les feuilles pour les deux dernières minutes, puis tout égoutter et presser pour retirer l'eau."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire revenir l'ail émincé dans l'huile, y faire sauter les blettes égouttées."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Hors du feu, mélanger la brousse écrasée et les œufs battus aux blettes, saler."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Verser dans un plat, couvrir de parmesan et enfourner à 190 °C jusqu'à ce que le dessus soit doré."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: provencale
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

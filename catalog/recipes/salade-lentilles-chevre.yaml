@@ -1,0 +1,91 @@
+id: salade_lentilles_chevre
+nom: "Salade de lentilles tièdes au chèvre"
+description: >
+  Des lentilles vertes tièdes en vinaigrette à l'échalote, avec du chèvre frais et de la roquette.
+temps_prep_min: 15
+temps_cuisson_min: 30
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.3
+  chaud_froid: -0.1
+  texture: fondant
+
+ingredients:
+  - food_id: lentilles_vertes
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: chevre_frais
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: roquette
+    quantite_g: 80
+    unite_affichage: "2 poignées"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 60
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 12
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_noix
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire les lentilles à l'eau non salée avec le laurier — le sel en début de cuisson durcit leur peau."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Préparer la vinaigrette : moutarde, vinaigre, sel, puis huile de noix versée en filet."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Émincer les échalotes très finement."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Égoutter les lentilles encore tièdes et les mélanger aussitôt à la vinaigrette et aux échalotes — tièdes, elles absorbent mieux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Dresser sur un lit de roquette et parsemer de chèvre frais émietté."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,83 @@
+id: bar_vapeur_gingembre
+nom: "Bar vapeur au gingembre et sauce soja"
+description: >
+  Un bar entier cuit à la vapeur, arrosé d'huile de sésame brûlante, sauce soja et gingembre.
+temps_prep_min: 15
+temps_cuisson_min: 20
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.3
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: bar
+    quantite_g: 600
+    unite_affichage: "1 bar vidé"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_sesame
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 40
+    unite_affichage: "1/2 citron"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Inciser le bar sur chaque flanc, le saler légèrement à l'intérieur et à l'extérieur."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Poser le poisson dans un panier vapeur et le cuire jusqu'à ce que la chair se détache de l'arête."
+    lexicon_ids: []
+    timer_s: 1080
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Mélanger la sauce soja avec le gingembre, en arroser le poisson à la sortie du panier."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Chauffer l'huile de sésame jusqu'à ce qu'elle fume légèrement, puis la verser sur le poisson — elle doit grésiller au contact."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Parsemer de coriandre et servir aussitôt, avec un trait de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: asiatique
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

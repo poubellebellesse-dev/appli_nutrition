@@ -34,7 +34,7 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
 **État vérifié : `npm test` → 387 verts (34 fichiers) · `npm run typecheck` propre ·
-`npm run build` → **193 aliments, 67 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
+`npm run build` → **193 aliments, 73 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
 plus aucun `PROV-`. Cible v1 revue (décision 4) : ~200 aliments **atteint**, 200-300 recettes **en
 cours**.**
 
@@ -110,12 +110,21 @@ récence, l'override les décale toutes pareil sans changer l'ordre). Le contenu
 - **Le lexique banni existe en deux copies** (`catalog/build.mjs`,
   `app/src/engine/guards/banned-terms.ts`), synchronisées par
   `tests/banned-terms-consistency.test.mjs`. Si ce test disparaît, la duplication devient dangereuse.
-- **Contenu** : valeurs nutritionnelles en `PROV-`, 9 nutriments sur ~40 prévus, 10 recettes.
-  `roquefort` porte l'allergène `lait` mais pas `sulfites`.
+- **Contenu** : ~~valeurs `PROV-`~~ **résolu** (import CIQUAL 2025, 193 aliments). Reste :
+  `roquefort` porte l'allergène `lait` mais pas `sulfites` ; les 9 nutriments sont un choix assumé
+  (décision 25), pas une dette.
+- **Aliments sans énergie CIQUAL** (décision 29, ouverte) : l'import les REFUSE, ce qui a coûté la
+  ricotta, les câpres et la ciboulette. État sûr provisoire — un aliment sans kcal fausserait à la
+  fois l'affichage et le classement par `nutri`. La vraie réponse est de propager l'incomplétude.
+- **Les tests de propriété ne passent plus tous à l'échelle du catalogue.** Celui des allergènes
+  énumérait le powerset (32 combinaisons à 5 allergènes, 4 096 à 12) et a dépassé le délai : il
+  couvre désormais vide + singletons + paires + complet. Trois autres assertions figées (comptes,
+  régimes, temps) ont dû devenir des propriétés. **À surveiller à chaque palier de contenu.**
 
 ## Décisions ouvertes
 
-- **9 nutriments ou ~40 ?** — à trancher avant l'import CIQUAL.
+- ~~**9 nutriments ou ~40 ?**~~ — **tranché : 9**, et l'import est fait (décision 25).
+- **Aliments sans énergie CIQUAL** — décision 29, la seule ouverte qui bloque du contenu.
 - **Radar** : rayons cuisine/saveur = v2 (v1 = 6 pôles sensoriels).
 - **Scan produit** (OpenFoodFacts, jamais Yuka) : opt-in **v2+++++**.
 - **Token de push GitHub** : à fournir si on veut que l'agent pousse lui-même.

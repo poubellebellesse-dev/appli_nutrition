@@ -1,0 +1,83 @@
+id: porc_caramel_gingembre
+nom: "Porc au caramel et au gingembre"
+description: >
+  Des dés de porc laqués dans un caramel de sucre roux, sauce soja et gingembre.
+temps_prep_min: 15
+temps_cuisson_min: 40
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.3
+  leger_consistant: 0.8
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: porc_roti
+    quantite_g: 700
+    unite_affichage: "700 g d'échine"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 50
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: riz_blanc
+    quantite_g: 280
+    unite_affichage: "280 g"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Couper le porc en cubes de trois centimètres et émincer l'ail."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire fondre le sucre à sec dans une cocotte jusqu'à obtenir un caramel ambré, sans le laisser noircir."
+    lexicon_ids: []
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les cubes de porc et les enrober de caramel, puis verser la sauce soja avec précaution."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter l'ail, le gingembre et un verre d'eau, couvrir et laisser mijoter à feu doux."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Découvrir en fin de cuisson pour laisser la sauce napper la viande, et servir avec le riz."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: vietnamienne
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien
