@@ -25,13 +25,36 @@
 // (aucun `RecipeId` en entrée) : une recette dépourvue des DEUX signaux ne peut, par construction,
 // atteindre 1 avec elle-même — assumé, pas un bug (voir rapport de lot).
 //
-// Pondération (constantes nommées ci-dessous, Σ = 1) : la composition pèse le plus (0.5) — c'est
-// le signal qui produit littéralement les « 5 variations du même plat » que §6.6 veut éviter (mêmes
-// ingrédients réemployés). Le profil sensoriel (0.3) capture une redondance
-// plus subtile (deux plats différents mais « également légers et froids ») : réel mais plus faible
-// que la répétition d'ingrédient. La cuisine (0.2) est le signal le plus grossier : deux recettes
-// de la même famille culinaire peuvent être très différentes (curry vs. dal, tous deux « indien »)
-// — elle affine sans jamais dominer.
+// PONDÉRATION 0.8 / 0.15 / 0.05 (constantes nommées ci-dessous, Σ = 1) — MESURÉE, pas devinée.
+//
+// La répartition d'origine était 0.5 / 0.3 / 0.2, posée par la spécification §6.6 sur un
+// raisonnement plausible mais jamais vérifié. Une fois le signal « ingrédients » corrigé, elle est
+// devenue le facteur limitant : le sensoriel et la cuisine suffisaient À EUX SEULS à fabriquer
+// 50 % de similarité entre deux plats N'AYANT AUCUN INGRÉDIENT COMMUN. Mesuré sur le catalogue
+// réel : « bœuf haché sauce tomate » × « ratatouille » (plat végétalien) à 61 %, « coq au vin » ×
+// « gigot d'agneau » à 50 % avec zéro ingrédient partagé.
+//
+// Sept jeux de poids comparés (banc app/src/cli/compare-ponderation.ts), sur des paires réelles :
+//
+//   pondération      plats sans rapport   quasi-doublons   PLANCHER*   paires > 60 %
+//   50/30/20 (avant)        57 %               79 %          50 %          81
+//   70/20/10                40 %               79 %          30 %          33
+//   80/15/05  ← RETENU      32 %               78 %          20 %          30
+//   100/00/00               16 %               78 %           0 %          25
+//   * score maximum atteignable par deux plats sans AUCUN ingrédient commun.
+//
+// Les quasi-doublons ne perdent rien sur toute la plage (79 → 78 %) : alléger le sensoriel ne
+// dégrade pas la détection des vraies redondances, il cesse seulement d'en inventer.
+//
+// POURQUOI PAS 100/0/0, malgré le meilleur score brut : le sensoriel garde une utilité réelle.
+// À poids nul, cinq salades froides et croquantes sans ingrédient commun seraient à 0 % de
+// similarité — la diversification les proposerait toutes les cinq sans y voir de répétition. Le
+// signal n'était pas mauvais, il était surdimensionné.
+//
+// POURQUOI LA CUISINE TOMBE À 0.05 : « francaise » couvre près de la moitié du catalogue. À 0.2,
+// deux plats français pris au hasard touchaient 20 points gratuits — du bruit déguisé en signal.
+// Elle reste non nulle parce qu'elle discrimine encore un peu sur les familles minoritaires
+// (japonaise, libanaise, mexicaine…).
 //
 // Fonction PURE, sans dépendance à `Catalog` : comme les fonctions `scoreX` de scoring/, elle
 // prend en paramètres ce dont elle a besoin (`RecipeSimilarityProfile`), pas un `Catalog` entier —
@@ -54,12 +77,12 @@ const NUMERIC_AXES = ['sucreSale', 'legerConsistant', 'chaudFroid'] as const
  * qu'un sous-ensemble). */
 const SENSORY_MAX_DISTANCE = 2 * Math.sqrt(NUMERIC_AXES.length)
 
-/** Composition (chevauchement des signatures) : 0.5 — le signal qui pèse le plus (voir en-tête). */
-export const SIMILARITY_WEIGHT_MAIN_INGREDIENT = 0.5
-/** Profil sensoriel : 0.3 — redondance plus subtile que l'ingrédient, mais réelle. */
-export const SIMILARITY_WEIGHT_SENSORY = 0.3
-/** Famille de cuisine : 0.2 — signal le plus grossier des trois, affine sans dominer. */
-export const SIMILARITY_WEIGHT_CUISINE = 0.2
+/** Composition (chevauchement des signatures) : 0.8 — mesuré, voir l'en-tête pour les 7 jeux comparés. */
+export const SIMILARITY_WEIGHT_INGREDIENTS = 0.8
+/** Profil sensoriel : 0.15 — garde le cas « cinq salades froides différentes », sans plus. */
+export const SIMILARITY_WEIGHT_SENSORY = 0.15
+/** Famille de cuisine : 0.05 — « francaise » couvre la moitié du catalogue ; au-delà, c'est du bruit. */
+export const SIMILARITY_WEIGHT_CUISINE = 0.05
 
 /**
  * Ce dont `similarity` a besoin d'une recette — extrait par `buildSimilarityProfiles` depuis un
@@ -111,7 +134,7 @@ export function similarity(a: RecipeSimilarityProfile, b: RecipeSimilarityProfil
   const sensoryComponent = sensorySimilarity(a.axes, b.axes)
 
   return clamp01(
-    SIMILARITY_WEIGHT_MAIN_INGREDIENT * ingredientComponent +
+    SIMILARITY_WEIGHT_INGREDIENTS * ingredientComponent +
       SIMILARITY_WEIGHT_CUISINE * cuisineComponent +
       SIMILARITY_WEIGHT_SENSORY * sensoryComponent
   )

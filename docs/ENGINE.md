@@ -830,6 +830,43 @@ Effet sur le catalogue réel : similarité maximale **98,4 % → 82,9 %**, p99 6
 six paires les plus proches sont désormais toutes légitimes — deux soupes de carottes, deux plats de
 maquereau, deux plats de bœuf-tomate, deux plats de moules, deux plats d'œufs, deux taboulés.
 
+#### 6.6 ter — Pondération des trois signaux (2026-07-27), MESURÉE et CODÉE
+
+**0,8 ingrédients / 0,15 sensoriel / 0,05 cuisine**, au lieu de 0,5 / 0,3 / 0,2.
+
+La répartition d'origine était une intuition de cette spécification, jamais vérifiée. Une fois le
+signal « ingrédients » corrigé (§6.6 bis), elle est devenue le facteur limitant : le sensoriel et la
+cuisine suffisaient À EUX SEULS à fabriquer **50 % de similarité entre deux plats n'ayant AUCUN
+ingrédient commun**. Cas réels mesurés : « bœuf haché sauce tomate » × « ratatouille » (plat
+végétalien) à **61 %**, « coq au vin » × « gigot d'agneau » à **50 %** sans un ingrédient partagé.
+
+Sept jeux de poids comparés (`app/src/cli/compare-ponderation.ts`) :
+
+| Pondération | Plats sans rapport | Quasi-doublons | Plancher* | Paires > 60 % |
+|---|---|---|---|---|
+| 50/30/20 (avant) | 57 % | 79 % | **50 %** | 81 |
+| 70/20/10 | 40 % | 79 % | 30 % | 33 |
+| **80/15/05 — RETENU** | **32 %** | **78 %** | **20 %** | **30** |
+| 100/00/00 | 16 % | 78 % | 0 % | 25 |
+
+\* score maximum atteignable par deux plats **sans aucun ingrédient commun**.
+
+Les quasi-doublons ne perdent rien sur toute la plage (79 → 78 %) : alléger le sensoriel ne dégrade
+pas la détection des vraies redondances, il cesse seulement d'en inventer.
+
+**Pourquoi pas 100/0/0**, malgré le meilleur score brut : à poids nul, cinq salades froides et
+croquantes sans ingrédient commun seraient à 0 % de similarité, et la diversification les
+proposerait toutes les cinq sans y voir de répétition. Le signal sensoriel n'était pas mauvais, il
+était surdimensionné.
+
+**Pourquoi la cuisine tombe à 0,05** : `francaise` couvre près de la moitié du catalogue. À 0,2,
+deux plats français pris au hasard touchaient 20 points gratuits — du bruit déguisé en signal. Elle
+reste non nulle parce qu'elle discrimine encore sur les familles minoritaires.
+
+Effet mesuré sur les 22 366 paires du catalogue : médiane 22,8 % → **9,5 %**, p99 52,4 % → **38,2 %**,
+paires au-dessus de 60 % : 81 → **30**. Dans la bande 55-70 %, où MMR arbitre réellement, toutes les
+paires ont désormais **au moins 56 % d'ingrédients communs** — contre 17-30 % avant.
+
 > ⚠️ **`variety` et `habit` utilisent TOUJOURS `recipeMainIngredient`.** Mesuré : sur 290 paires
 > partageant un même « ingrédient principal », **194 (67 %)** ont une composition très différente —
 > une mousse au chocolat rend « récentes » des galettes de sarrasin, les deux étant majoritairement

@@ -201,7 +201,7 @@ export { ARCHETYPE_WEIGHT_OVERRIDES, DEFAULT_ARCHETYPE, archetypeWeightOverride 
 // similarity.ts / diversify.ts pour le détail. Réexportées ici pour la même surface unique.
 // ------------------------------------------------------------------------------------------
 
-export { SIMILARITY_WEIGHT_MAIN_INGREDIENT, SIMILARITY_WEIGHT_SENSORY, SIMILARITY_WEIGHT_CUISINE, similarity, buildSimilarityProfiles } from './similarity.js'
+export { SIMILARITY_WEIGHT_INGREDIENTS, SIMILARITY_WEIGHT_SENSORY, SIMILARITY_WEIGHT_CUISINE, similarity, buildSimilarityProfiles } from './similarity.js'
 export type { RecipeSimilarityProfile } from './similarity.js'
 export { DEFAULT_MMR_LAMBDA, diversify } from './diversify.js'
 export type { DiversifiedCandidate } from './diversify.js'

@@ -33,7 +33,7 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Garde-fous** | 4 sur 5 codés — reste `assertCalorieFloor`, qui attend le planning |
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
-**État vérifié : `npm test` → 399 verts (35 fichiers) · `npm run typecheck` propre ·
+**État vérifié : `npm test` → 401 verts (35 fichiers) · `npm run typecheck` propre ·
 `npm run build` → **193 aliments, 212 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
 plus aucun `PROV-`. Cible v1 revue (décision 4) : ~200 aliments **atteint**,
 200-300 recettes **ATTEINTE**.**
@@ -105,10 +105,13 @@ recettes ont donc la même récence et l'override les décale identiquement.
   ingrédient le plus lourd, même sans rapport. La correction n'est PAS la même que pour la
   similarité (« ai-je mangé ça récemment » n'est pas « ces plats se ressemblent-ils »), donc elle
   demande sa propre mesure avant d'être écrite. Ne pas copier la signature ici sans mesurer.
-- **λ (diversification) n'est pas calibré.** Distribution mesurée sur 200 recettes / 19 900 paires
-  APRÈS correction : max 82,9 % · p99 52,6 % · médiane 23,3 % · moyenne 22,6 % · 72 paires au-dessus
-  de 60 %. C'est désormais une base saine pour calibrer — les mesures antérieures (48,7 % sur 45
-  paires, puis 98,4 % sur 4 950) sont caduques.
+- **λ (diversification) n'est pas calibré**, mais la base l'est enfin. Distribution mesurée sur
+  212 recettes / 22 366 paires, après correction de l'ingrédient (§6.6 bis) ET de la pondération
+  (§6.6 ter, 0,8/0,15/0,05) : max 94,2 % · p99 38,2 % · médiane 9,5 % · **30 paires au-dessus de
+  60 %** (contre 81 avant). Dans la bande 55-70 %, où MMR arbitre vraiment, toutes les paires ont
+  désormais ≥ 56 % d'ingrédients communs. Trois outils de mesure : `npm run engine:similarity`
+  (distribution), `compare-similarite.ts` (modèles), `compare-ponderation.ts` (poids),
+  `audit-similarite.ts` (inspection paire par paire, avec décomposition).
 - **Le banc n'affiche plus la similarité** de chaque recette retenue (perdue en passant par
   `suggestMeals` — `ScoredSuggestion` ne porte pas cette information). À rétablir avant de calibrer λ.
 - **L'explication distingue peu** : les cinq suggestions affichent souvent les mêmes trois phrases,

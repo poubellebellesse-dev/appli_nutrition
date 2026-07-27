@@ -6,7 +6,7 @@ import type { FoodId, RecipeSignature, SensoryAxes } from '../domain/index.js'
 import type { RecipeSimilarityProfile } from './similarity.js'
 import {
   SIMILARITY_WEIGHT_CUISINE,
-  SIMILARITY_WEIGHT_MAIN_INGREDIENT,
+  SIMILARITY_WEIGHT_INGREDIENTS,
   SIMILARITY_WEIGHT_SENSORY,
   similarity,
 } from './similarity.js'
@@ -101,10 +101,26 @@ describe('selection/similarity — similarity (§6.6 ENGINE)', () => {
     expect(similarity(base, textureIdentique)).toBeGreaterThan(similarity(base, textureDifferente))
   })
 
-  it('ingrédient principal identique pèse le plus : son poids nommé dépasse individuellement chacun des deux autres', () => {
-    // Propriété au niveau des constantes de pondération, pas d'un cas d'exécution particulier —
-    // seule garantie que §6.6 exige explicitement (« l'ingrédient principal doit peser le plus »).
-    expect(SIMILARITY_WEIGHT_MAIN_INGREDIENT).toBeGreaterThan(SIMILARITY_WEIGHT_SENSORY)
-    expect(SIMILARITY_WEIGHT_MAIN_INGREDIENT).toBeGreaterThan(SIMILARITY_WEIGHT_CUISINE)
+  it('la composition domine : son poids dépasse la SOMME des deux autres', () => {
+    // Renforcé après la mesure des pondérations (§6.6 ter) : « dépasse chacun des deux autres » ne
+    // suffisait pas — l'ancienne répartition 50/30/20 le vérifiait déjà tout en laissant sensoriel
+    // et cuisine fabriquer 50 % de similarité ENTRE DEUX PLATS SANS AUCUN INGRÉDIENT COMMUN.
+    // La propriété qui compte est que les signaux accessoires ne puissent pas, à eux seuls,
+    // atteindre la moitié du score.
+    expect(SIMILARITY_WEIGHT_INGREDIENTS).toBeGreaterThan(SIMILARITY_WEIGHT_SENSORY + SIMILARITY_WEIGHT_CUISINE)
+  })
+
+  it('PLANCHER : deux plats sans aucun ingrédient commun ne peuvent pas atteindre 50 %', () => {
+    // Le défaut mesuré sur le catalogue réel avant correction : « coq au vin » × « gigot d'agneau »
+    // à 50 % avec zéro ingrédient partagé, uniquement via cuisine identique + sensoriel proche.
+    // Ici le pire cas possible — mêmes axes, même cuisine, signatures disjointes.
+    const a = makeProfile({ signature: sig('boeuf') })
+    const b = makeProfile({ signature: sig('agneau') })
+
+    expect(similarity(a, b)).toBeLessThan(0.5)
+  })
+
+  it('les trois poids somment à 1 — un score reste dans [0, 1] sans dépendre du clamp', () => {
+    expect(SIMILARITY_WEIGHT_INGREDIENTS + SIMILARITY_WEIGHT_SENSORY + SIMILARITY_WEIGHT_CUISINE).toBeCloseTo(1, 10)
   })
 })
