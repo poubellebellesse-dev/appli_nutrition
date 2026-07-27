@@ -198,3 +198,101 @@ mapping:
   noisette: 15004                # Noisette, sans sel ajouté
   sesame_graine: 15010           # Sésame, graine
   graine_tournesol: 15011        # Tournesol, graine
+
+  # --------------------------------------------------------------------------
+  # Lot 3 — montée vers ~200 aliments (2026-07-27).
+  # --------------------------------------------------------------------------
+
+  # Viandes — le groupe le plus pauvre du catalogue (4 entrées pour 21 légumes)
+  porc_filet_mignon: 28204       # Porc, filet mignon cru
+  porc_roti: 28300               # Porc, rôti cru
+  porc_poitrine: 28002           # Porc, poitrine crue
+  jambon_blanc: 28700            # Jambon de porc à cuire ou jambon à rôtir/cuire au four
+  veau_escalope: 6521            # Veau, escalope crue
+  canard_magret: 36201           # Canard, viande crue
+  lapin: 34001                   # Lapin, viande crue
+  poulet_cuisse: 36024           # Poulet, cuisse, viande crue
+  agneau_epaule: 21504           # Agneau, épaule crue
+
+  # Poissons
+  dorade: 26088                  # Dorade royale, élevage, crue
+  bar: 26072                     # Bar commun ou loup, cru
+  sole: 26058                    # Sole, crue
+  lotte: 26018                   # Lotte ou baudroie, crue
+  raie: 26052                    # Raie, crue
+  eglefin: 26122                 # Églefin, cru
+
+  # Fruits de mer
+  calamar: 10001                 # Calmar ou calamar ou encornet, cru
+  poulpe: 10018                  # Poulpe, cru
+  langoustine: 10024             # Langoustine, crue
+  crabe: 10039                   # Crabe, cru
+
+  # Légumes
+  artichaut: 20052               # Artichaut, cru
+  asperge_verte: 20279           # Asperge, verte, crue
+  blette: 20004                  # Bette ou blette, côte (sans feuille), crue
+  celeri_rave: 20055             # Céleri-rave, cru
+  chou_bruxelles: 20058          # Chou de Bruxelles, cru
+  chou_rouge: 20014              # Chou rouge, cru
+  endive: 20026                  # Endive, crue
+  panais: 20181                  # Panais, cru
+  roquette: 20217                # Roquette, crue
+  topinambour: 20196             # Topinambour, cru
+  mache: 20099                   # Mâche, crue
+  poivron_vert: 20085            # Poivron vert, cru
+
+  # Fruits
+  ananas: 13002                  # Ananas, chair sans peau, cru
+  avocat: 13004                  # Avocat, chair sans peau, sans noyau, cru
+  figue: 13012                   # Figue, crue
+  figue_seche: 13013             # Figue, sèche
+  framboise: 13015               # Framboise, crue
+  kiwi: 13021                    # Kiwi, chair sans peau, avec pépins, cru
+  mangue: 13025                  # Mangue, chair sans peau, sans noyau, crue
+  myrtille: 13028                # Myrtille, crue
+  pasteque: 13036                # Pastèque, chair sans peau, sans pépins, crue
+  rhubarbe: 13047                # Rhubarbe, tige, crue
+  clementine: 13024              # Clémentine ou mandarine, chair sans peau, crue
+  olive_verte: 13033             # Olive verte, en saumure, égouttée
+
+  # Céréales et dérivés
+  polenta: 9614                  # Polenta ou semoule de maïs, précuite, à cuire
+  sarrasin: 9380                 # Sarrasin complet, cru
+  orge_perle: 9321               # Orge perlée, crue
+  pate_feuilletee: 23420         # Pâte feuilletée, matière grasse végétale, crue
+
+  # Lait et produits laitiers
+  gruyere: 12114                 # Gruyère, sans précision (origine France ou Suisse)
+  feta: 12066                    # Feta, au lait de brebis 70% minimum
+  brousse: 12071                 # Brousse (fromage de brebis frais au lactoserum) - remplace la ricotta, voir foods.yaml
+  brie: 12020                    # Brie, sans précision
+  mascarpone: 19584              # Mascarpone
+
+  # Légumineuses
+  haricot_blanc: 20511           # Haricot blanc, appertisé, égoutté
+  feve: 20517                    # Fève à écosser, fraîche, crue
+
+  # Fruits à coque et graines
+  pistache: 15044                # Pistache, grillée, sans sel ajouté
+  noix_cajou: 15054              # Noix de cajou, grillée, sans sel ajouté
+  cacahuete: 15001               # Cacahuète, sans sel ajouté
+  pignon_pin: 15025              # Pignon de pin
+
+  # Matières grasses
+  huile_noix: 17220              # Huile de noix
+  huile_sesame: 17400            # Huile de sésame
+
+  # Condiments, herbes, épices
+  vinaigre_balsamique: 11091     # Vinaigre balsamique
+  cornichon: 11004               # Cornichon, au vinaigre
+  curcuma: 11089                 # Curcuma, poudre
+  coriandre_graine: 11026        # Coriandre, graine
+  coriandre_fraiche: 11094       # Coriandre, fraiche
+  aneth_frais: 11093             # Aneth, frais
+  menthe_fraiche: 11027          # Menthe, fraîche
+
+  # Produits sucrés
+  chocolat_noir: 31005           # Chocolat noir 50 % de cacao environ, tablette
+  cacao_poudre: 18100            # Cacao, sans sucres ajoutés, poudre soluble
+  sucre_roux: 31017              # Sucre roux

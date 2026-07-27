@@ -224,6 +224,28 @@ function checkMapping({ foods, mapping, foodsByCode, compo }) {
       errors.push(`'${food.id}' → ${alimCode} (${alim.alim_nom_fr}) : aucune valeur pour les 9 nutriments`)
       continue
     }
+    // ⚠️ ÉTAT SÛR PROVISOIRE, PAS LA RÉPONSE FINALE — décision 29 ouverte (docs/ETAT.md §4).
+    //
+    // Un aliment sans énergie contribue silencieusement 0 kcal au total d'une recette (voir
+    // engine/nutrition/aggregation.ts) : le plat paraît moins calorique qu'il ne l'est, ET la
+    // couche `nutri` le CLASSE sur ce total faux. Le défaut n'est donc pas seulement d'affichage.
+    // Échouer ici est bruyant plutôt que mensonger — mais ça appauvrit le catalogue pour une raison
+    // de données : la ricotta et les câpres existent en cuisine, Ciqual ne les chiffre simplement
+    // pas (19585, 11040, 11095 — aucune des quatre conventions d'énergie n'est renseignée).
+    //
+    // La vraie réponse est de PROPAGER l'incomplétude : aliment marqué → recette marquée →
+    // `nutri` rend NEUTRAL_SCORE au lieu de noter sur du faux → libellé à l'écran. Ce garde-fou
+    // disparaîtra alors. En attendant, ne jamais inventer la valeur ni la recalculer depuis les
+    // macros sans la tracer : ce serait un chiffre maison indistinguable d'un chiffre sourcé,
+    // exactement ce que le badge de preuve existe pour empêcher.
+    if (!('energie_kcal' in nutrients)) {
+      errors.push(
+        `'${food.id}' → ${alimCode} (${alim.alim_nom_fr}) : Ciqual ne donne AUCUNE énergie pour cet ` +
+          `aliment. Choisir une autre entrée équivalente, ou retirer l'aliment du catalogue.`
+      )
+      continue
+    }
+
     const manquants = Object.keys(NUTRIENT_CONST_CODES).filter((k) => !(k in nutrients))
     if (manquants.length > 0) {
       warnings.push(`'${food.id}' → ${alim.alim_nom_fr} : non déterminé pour ${manquants.join(', ')}`)
