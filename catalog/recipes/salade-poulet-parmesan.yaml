@@ -1,0 +1,91 @@
+id: salade_poulet_parmesan
+nom: "Salade de poulet grillé au parmesan"
+description: >
+  De la laitue croquante, du blanc de poulet grillé, des copeaux de parmesan et des croûtons.
+temps_prep_min: 15
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.1
+  chaud_froid: -0.3
+  texture: croquant
+
+ingredients:
+  - food_id: laitue
+    quantite_g: 300
+    unite_affichage: "1 grosse laitue"
+    optionnel: false
+  - food_id: poulet_blanc
+    quantite_g: 400
+    unite_affichage: "3 blancs"
+    optionnel: false
+  - food_id: parmesan
+    quantite_g: 70
+    unite_affichage: "70 g en copeaux"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 120
+    unite_affichage: "4 tranches"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 50
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 10
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 6
+    unite_affichage: "1 gousse"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Couper le pain en cubes, les faire dorer à la poêle dans un peu d'huile avec la gousse d'ail écrasée."
+    lexicon_ids: []
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Saler les blancs de poulet et les griller à feu moyen, puis les laisser reposer avant de les trancher."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Délayer la moutarde avec le jus de citron et le sel, puis monter à l'huile d'olive."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laver et essorer la laitue, la déchirer à la main plutôt qu'au couteau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Assaisonner la salade, dresser le poulet tranché dessus, puis parsemer de croûtons et de copeaux de parmesan."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

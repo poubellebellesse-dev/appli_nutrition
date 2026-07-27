@@ -34,7 +34,7 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
 **État vérifié : `npm test` → 388 verts (34 fichiers) · `npm run typecheck` propre ·
-`npm run build` → **193 aliments, 100 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
+`npm run build` → **193 aliments, 112 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
 plus aucun `PROV-`. Cible v1 revue (décision 4) : ~200 aliments **atteint**, 200-300 recettes **en
 cours**.**
 

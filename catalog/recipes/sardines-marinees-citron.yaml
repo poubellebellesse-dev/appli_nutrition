@@ -1,0 +1,83 @@
+id: sardines_marinees_citron
+nom: "Sardines marinées au citron et à la coriandre"
+description: >
+  Des filets de sardines marinés à cru dans le citron, l'huile d'olive et la coriandre.
+temps_prep_min: 25
+temps_cuisson_min: 0
+difficulte: 3
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.7
+  leger_consistant: -0.3
+  chaud_froid: -0.8
+  texture: fondant
+
+ingredients:
+  - food_id: sardine
+    quantite_g: 600
+    unite_affichage: "12 sardines"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 150
+    unite_affichage: "3 citrons"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 20
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 60
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 80
+    unite_affichage: "1/2 poivron"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Lever les filets de sardines, retirer l'arête centrale et vérifier qu'il n'en reste aucune."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ranger les filets à plat dans un plat creux, peau vers le bas, et les saler."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Les couvrir entièrement de jus de citron — l'acidité « cuit » la chair, elle doit blanchir."
+    lexicon_ids: []
+    timer_s: 7200
+    timer_type: repos
+  - ordre: 4
+    texte: "Égoutter le jus, puis couvrir d'huile d'olive avec les échalotes émincées et le poivron en dés."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Laisser reposer au frais encore une heure et parsemer de coriandre au moment de servir."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

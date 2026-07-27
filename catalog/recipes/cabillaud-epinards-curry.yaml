@@ -1,0 +1,87 @@
+id: cabillaud_epinards_curry
+nom: "Cabillaud aux épinards et au curry"
+description: >
+  Des dos de cabillaud posés sur une fondue d'épinards à la crème et au curry.
+temps_prep_min: 15
+temps_cuisson_min: 20
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.1
+  chaud_froid: 0.8
+  texture: creme
+
+ingredients:
+  - food_id: cabillaud
+    quantite_g: 600
+    unite_affichage: "4 dos"
+    optionnel: false
+  - food_id: epinard
+    quantite_g: 800
+    unite_affichage: "800 g frais"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 120
+    unite_affichage: "12 cl"
+    optionnel: false
+  - food_id: curry_poudre
+    quantite_g: 6
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 60
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 40
+    unite_affichage: "1/2 citron"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Laver les épinards et les faire tomber par poignées dans une grande sauteuse — leur volume s'effondre."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Les égoutter en pressant, puis les hacher grossièrement."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire suer les échalotes émincées dans le beurre, ajouter le curry et remuer une minute."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter les épinards et la crème, saler, laisser réduire jusqu'à une texture nappante."
+    lexicon_ids: []
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Poser les dos de cabillaud sur les épinards, couvrir et laisser cuire à feu doux jusqu'à ce que la chair se détache en lamelles."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: indienne
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

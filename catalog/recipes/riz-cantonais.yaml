@@ -1,0 +1,83 @@
+id: riz_cantonais
+nom: "Riz sauté au jambon et aux petits pois"
+description: >
+  Du riz froid sauté à feu vif avec œuf brouillé, dés de jambon et petits pois.
+temps_prep_min: 15
+temps_cuisson_min: 15
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: croquant
+
+ingredients:
+  - food_id: riz_blanc
+    quantite_g: 300
+    unite_affichage: "300 g (cuit la veille)"
+    optionnel: false
+  - food_id: jambon_blanc
+    quantite_g: 200
+    unite_affichage: "4 tranches épaisses"
+    optionnel: false
+  - food_id: petit_pois
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 150
+    unite_affichage: "3 œufs"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 80
+    unite_affichage: "1 petit oignon"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Utiliser du riz cuit la veille et bien froid — un riz chaud collerait au lieu de sauter."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Battre les œufs, les cuire en omelette plate dans un peu d'huile, puis les découper en lanières."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire sauter l'oignon émincé et les dés de jambon à feu vif dans le reste d'huile."
+    lexicon_ids: [emincer]
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter le riz en l'égrainant, puis les petits pois, et faire sauter sans cesser de remuer."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Remettre l'œuf, verser la sauce soja sur les bords de la poêle et mélanger une dernière fois."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: chinoise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

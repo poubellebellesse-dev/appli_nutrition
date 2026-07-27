@@ -1,0 +1,83 @@
+id: gratin_dauphinois
+nom: "Gratin dauphinois"
+description: >
+  Des pommes de terre en fines tranches cuites lentement dans le lait et la crème à l'ail.
+temps_prep_min: 20
+temps_cuisson_min: 70
+difficulte: 2
+portions_base: 6
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.8
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: pomme_de_terre
+    quantite_g: 1200
+    unite_affichage: "1,2 kg"
+    optionnel: false
+  - food_id: lait_entier
+    quantite_g: 400
+    unite_affichage: "40 cl"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 250
+    unite_affichage: "25 cl"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 20
+    unite_affichage: "pour le plat"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Peler les pommes de terre et les couper en tranches de trois millimètres. NE PAS les rincer — l'amidon lie le gratin."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Frotter un plat avec une gousse d'ail coupée, puis le beurrer généreusement."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire chauffer le lait et la crème avec l'ail restant émincé, le sel et le poivre."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Y pocher les tranches dix minutes en remuant doucement, le temps que le liquide épaississe."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Transvaser dans le plat et enfourner à 160 °C — feu doux et longue cuisson, c'est ce qui rend les tranches fondantes."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

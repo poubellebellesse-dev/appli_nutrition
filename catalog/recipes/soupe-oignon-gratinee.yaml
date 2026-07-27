@@ -1,0 +1,87 @@
+id: soupe_oignon_gratinee
+nom: "Soupe à l'oignon gratinée"
+description: >
+  Des oignons longuement blondis en bouillon, servis avec du pain et du gruyère gratiné.
+temps_prep_min: 15
+temps_cuisson_min: 60
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.2
+  leger_consistant: 0.4
+  chaud_froid: 0.9
+  texture: liquide
+
+ingredients:
+  - food_id: oignon
+    quantite_g: 900
+    unite_affichage: "6 gros oignons"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 200
+    unite_affichage: "8 tranches"
+    optionnel: false
+  - food_id: gruyere
+    quantite_g: 150
+    unite_affichage: "150 g râpé"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 15
+    unite_affichage: "1,5 cube pour 1,5 L"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: vin_blanc_cuisine
+    quantite_g: 100
+    unite_affichage: "10 cl"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les oignons en lamelles fines et régulières."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les faire blondir dans le beurre à feu doux, très longtemps, en remuant — c'est cette caramélisation lente qui fait tout le goût."
+    lexicon_ids: []
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Saupoudrer de farine, remuer, déglacer au vin blanc puis verser le bouillon chaud."
+    lexicon_ids: [deglacer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Laisser mijoter à découvert, puis rectifier le sel."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Répartir en bols, poser les tranches de pain, couvrir de gruyère et passer sous le gril jusqu'à ce que le fromage boursoufle."
+    lexicon_ids: []
+    timer_s: 420
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

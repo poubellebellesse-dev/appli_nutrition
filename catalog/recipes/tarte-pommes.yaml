@@ -1,0 +1,79 @@
+id: tarte_pommes
+nom: "Tarte aux pommes"
+description: >
+  Des lamelles de pomme rangées en rosace sur une pâte feuilletée, dorées au four.
+temps_prep_min: 20
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: 0.9
+  leger_consistant: 0.4
+  chaud_froid: 0.4
+  texture: croquant
+
+ingredients:
+  - food_id: pate_feuilletee
+    quantite_g: 250
+    unite_affichage: "1 rouleau"
+    optionnel: false
+  - food_id: pomme
+    quantite_g: 800
+    unite_affichage: "5 pommes"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 60
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 30
+    unite_affichage: "30 g"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: true
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Dérouler la pâte sur sa plaque et la piquer à la fourchette."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Peler les pommes, les couper en deux, retirer le cœur puis les détailler en lamelles fines."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Les citronner légèrement et les ranger en rosace serrée, en les faisant se chevaucher."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Parsemer de sucre roux, de cannelle et de noisettes de beurre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner jusqu'à ce que les bords de la pâte soient bien dorés et les pointes des pommes caramélisées."
+    lexicon_ids: []
+    timer_s: 2100
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

@@ -1,0 +1,79 @@
+id: haricots_verts_amandes
+nom: "Haricots verts aux amandes"
+description: >
+  Des haricots verts croquants sautés au beurre avec des amandes effilées dorées.
+temps_prep_min: 10
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: -0.4
+  chaud_froid: 0.7
+  texture: croquant
+
+ingredients:
+  - food_id: haricot_vert
+    quantite_g: 700
+    unite_affichage: "700 g"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 35
+    unite_affichage: "35 g"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Équeuter les haricots et les cuire à grande eau bouillante salée, non couverts, pour garder leur vert."
+    lexicon_ids: [blanchir]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Les égoutter et les plonger aussitôt dans l'eau glacée pour stopper la cuisson net."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: repos
+  - ordre: 3
+    texte: "Faire dorer les amandes à sec dans une poêle, puis les réserver."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Faire mousser le beurre, y faire suer l'échalote émincée, puis sauter les haricots égouttés."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Saler, ajouter les amandes et un trait de citron hors du feu."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

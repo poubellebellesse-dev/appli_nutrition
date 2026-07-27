@@ -1,0 +1,75 @@
+id: carottes_vichy
+nom: "Carottes Vichy"
+description: >
+  Des rondelles de carottes glacées au beurre et à une pointe de sucre, jusqu'à ce qu'elles brillent.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.3
+  leger_consistant: -0.3
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: carotte
+    quantite_g: 800
+    unite_affichage: "8 carottes"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 40
+    unite_affichage: "40 g"
+    optionnel: false
+  - food_id: sucre_blanc
+    quantite_g: 10
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Peler les carottes et les couper en rondelles régulières de cinq millimètres."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les mettre dans une sauteuse large, en une seule couche si possible, avec le beurre, le sucre et le sel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Mouiller d'eau à mi-hauteur seulement — les carottes doivent cuire dans un fond de liquide, pas nager."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Cuire à découvert à feu moyen, en secouant la sauteuse de temps en temps, jusqu'à évaporation quasi complète."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Le fond doit devenir sirupeux et enrober les rondelles. Parsemer de persil ciselé."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

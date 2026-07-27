@@ -1,0 +1,91 @@
+id: courgettes_farcies_agneau
+nom: "Courgettes farcies à l'agneau et à la menthe"
+description: >
+  Des courgettes évidées, garnies d'agneau haché au cumin et à la menthe, cuites au four.
+temps_prep_min: 30
+temps_cuisson_min: 45
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: courgette
+    quantite_g: 1000
+    unite_affichage: "4 grosses courgettes"
+    optionnel: false
+  - food_id: agneau_epaule
+    quantite_g: 450
+    unite_affichage: "450 g haché"
+    optionnel: false
+  - food_id: riz_blanc
+    quantite_g: 100
+    unite_affichage: "100 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 300
+    unite_affichage: "3 tomates"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Couper les courgettes en deux dans la longueur et les évider à la cuillère en gardant un centimètre de chair."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Hacher la chair prélevée et cuire le riz à moitié seulement."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire revenir l'oignon émincé, ajouter l'agneau puis la chair de courgette et le cumin."
+    lexicon_ids: [emincer]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Hors du feu, mêler le riz, la menthe ciselée et le sel, puis garnir les demi-courgettes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Poser dans un plat sur un lit de tomates concassées, arroser d'huile et enfourner à 190 °C à couvert."
+    lexicon_ids: []
+    timer_s: 2400
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial
