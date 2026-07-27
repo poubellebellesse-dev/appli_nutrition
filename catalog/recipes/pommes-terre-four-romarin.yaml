@@ -1,0 +1,79 @@
+id: pommes_terre_four_romarin
+nom: "Pommes de terre rôties au romarin"
+description: >
+  Des quartiers de pommes de terre rôtis au four avec ail en chemise et romarin.
+temps_prep_min: 10
+temps_cuisson_min: 45
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: croquant
+
+ingredients:
+  - food_id: pomme_de_terre
+    quantite_g: 1000
+    unite_affichage: "1 kg"
+    optionnel: false
+  - food_id: romarin_seche
+    quantite_g: 4
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 30
+    unite_affichage: "6 gousses en chemise"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 210 °C. Couper les pommes de terre en quartiers réguliers, sans les peler."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les rincer à l'eau froide pour retirer l'amidon de surface, puis les sécher — mouillées, elles cuiraient à la vapeur au lieu de rôtir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Les mélanger à l'huile, au sel et au romarin, puis les étaler en une seule couche sur la plaque."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ajouter les gousses d'ail non pelées et enfourner sans y toucher pendant la première demi-heure."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Retourner les quartiers et poursuivre jusqu'à ce qu'ils soient dorés et croustillants."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

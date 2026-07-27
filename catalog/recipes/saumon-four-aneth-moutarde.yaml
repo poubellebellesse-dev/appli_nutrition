@@ -1,0 +1,83 @@
+id: saumon_four_aneth_moutarde
+nom: "Pavé de saumon au four, moutarde et aneth"
+description: >
+  Des pavés de saumon nappés de moutarde et de crème à l'aneth, cuits au four.
+temps_prep_min: 10
+temps_cuisson_min: 18
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.3
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: saumon
+    quantite_g: 600
+    unite_affichage: "4 pavés"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 40
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 100
+    unite_affichage: "10 cl"
+    optionnel: false
+  - food_id: aneth_frais
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 190 °C et poser les pavés dans un plat, peau vers le bas."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mélanger la moutarde, la crème, l'aneth ciselé et le sel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Napper généreusement chaque pavé de ce mélange."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Enfourner sans dépasser le temps : le saumon doit rester légèrement rosé au centre."
+    lexicon_ids: []
+    timer_s: 1080
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Servir avec des quartiers de citron et un tour de poivre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: scandinave
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

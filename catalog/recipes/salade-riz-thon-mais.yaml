@@ -1,0 +1,91 @@
+id: salade_riz_thon_mais
+nom: "Salade de riz au thon et maïs"
+description: >
+  Du riz froid mélangé au thon, maïs, tomates et cornichons, en vinaigrette moutardée.
+temps_prep_min: 15
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.4
+  chaud_froid: -0.7
+  texture: croquant
+
+ingredients:
+  - food_id: riz_blanc
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: thon_conserve
+    quantite_g: 200
+    unite_affichage: "2 boîtes égouttées"
+    optionnel: false
+  - food_id: mais_doux
+    quantite_g: 200
+    unite_affichage: "1 petite conserve"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 250
+    unite_affichage: "3 tomates"
+    optionnel: false
+  - food_id: cornichon
+    quantite_g: 60
+    unite_affichage: "6 cornichons"
+    optionnel: true
+  - food_id: moutarde_dijon
+    quantite_g: 12
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_colza
+    quantite_g: 45
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire le riz à l'eau salée, l'égoutter et l'étaler pour qu'il refroidisse vite sans coller."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Préparer la vinaigrette : moutarde, vinaigre, sel, puis huile versée en filet."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Couper les tomates en dés et les cornichons en rondelles."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mélanger le riz froid, le thon émietté, le maïs égoutté et les légumes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Verser la vinaigrette, mélanger et laisser reposer au frais avant de servir."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: quotidien

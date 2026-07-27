@@ -1,0 +1,95 @@
+id: poulet_citron_olives
+nom: "Poulet au citron et aux olives"
+description: >
+  Des cuisses de poulet mijotées au citron, olives vertes, curcuma et coriandre.
+temps_prep_min: 20
+temps_cuisson_min: 55
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: poulet_cuisse
+    quantite_g: 900
+    unite_affichage: "4 cuisses"
+    optionnel: false
+  - food_id: olive_verte
+    quantite_g: 120
+    unite_affichage: "une belle poignée"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 120
+    unite_affichage: "2 citrons"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 250
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: curcuma
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 20
+    unite_affichage: "1/2 bouquet"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 15
+    unite_affichage: "3 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les oignons et l'ail. Frotter les cuisses de curcuma, de gingembre et de sel."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Colorer les cuisses dans l'huile, côté peau d'abord, puis les réserver."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire fondre les oignons et l'ail dans la même cocotte, sans les brûler."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Remettre le poulet, ajouter le jus d'un citron et l'autre en rondelles, mouiller d'un verre d'eau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Couvrir et laisser mijoter, puis ajouter les olives et la coriandre pour les dix dernières minutes."
+    lexicon_ids: []
+    timer_s: 2100
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: maghrebine
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

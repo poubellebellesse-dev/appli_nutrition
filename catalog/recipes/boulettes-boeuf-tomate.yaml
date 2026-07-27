@@ -1,0 +1,99 @@
+id: boulettes_boeuf_tomate
+nom: "Boulettes de bœuf à la sauce tomate"
+description: >
+  Des boulettes liées à la chapelure et à l'œuf, mijotées dans une sauce tomate au basilic.
+temps_prep_min: 25
+temps_cuisson_min: 35
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.8
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: boeuf_hache_5
+    quantite_g: 600
+    unite_affichage: "600 g"
+    optionnel: false
+  - food_id: chapelure
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 50
+    unite_affichage: "1 œuf"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 600
+    unite_affichage: "6 tomates"
+    optionnel: false
+  - food_id: concentre_tomate
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 20
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: parmesan
+    quantite_g: 40
+    unite_affichage: "40 g râpé"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et l'ail. Réserver la moitié de l'oignon pour la sauce."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mêler la viande, la chapelure, l'œuf, la moitié de l'oignon et du sel, puis former des boulettes de la taille d'une noix."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Les colorer dans l'huile sur toutes leurs faces, sans chercher à les cuire à cœur, puis les réserver."
+    lexicon_ids: []
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Faire revenir le reste d'oignon et l'ail, ajouter les tomates en dés et le concentré, saler."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Remettre les boulettes dans la sauce, couvrir et laisser mijoter. Ajouter le basilic et le parmesan au moment de servir."
+    lexicon_ids: []
+    timer_s: 1200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

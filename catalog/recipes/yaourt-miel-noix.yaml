@@ -1,0 +1,70 @@
+id: yaourt_miel_noix
+nom: "Yaourt au miel et aux noix"
+description: >
+  Du yaourt nature avec du miel, des cerneaux de noix concassés et une pointe de cannelle.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.7
+  leger_consistant: -0.3
+  chaud_froid: -0.8
+  texture: creme
+
+ingredients:
+  - food_id: yaourt_nature
+    quantite_g: 250
+    unite_affichage: "2 yaourts"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 30
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 40
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: poire
+    quantite_g: 150
+    unite_affichage: "1 poire"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Concasser grossièrement les cerneaux de noix au couteau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Répartir le yaourt dans deux bols."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter la poire en dés si on en met, puis arroser de miel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Parsemer de noix et d'une pincée de cannelle au dernier moment, pour garder le croquant."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: grecque
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

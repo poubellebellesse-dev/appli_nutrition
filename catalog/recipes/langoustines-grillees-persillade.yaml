@@ -1,0 +1,81 @@
+id: langoustines_grillees_persillade
+nom: "Langoustines grillées en persillade"
+description: >
+  Des langoustines fendues en deux, grillées et arrosées d'un beurre à l'ail et au persil.
+temps_prep_min: 15
+temps_cuisson_min: 8
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: fete
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: -0.2
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: langoustine
+    quantite_g: 1200
+    unite_affichage: "16 langoustines"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 80
+    unite_affichage: "80 g"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 20
+    unite_affichage: "4 gousses"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 30
+    unite_affichage: "1 bouquet"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 80
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Fendre les langoustines en deux dans la longueur et retirer le boyau noir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'ail très finement, ciseler le persil, puis les mêler au beurre ramolli et au sel."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Répartir ce beurre sur la chair de chaque demi-langoustine."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Passer sous le gril du four, chair vers le haut, en surveillant — quelques minutes suffisent."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Arroser du jus de cuisson et servir aussitôt avec des quartiers de citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: occasion
+    valeur: repas_de_fete
+  - facette: style
+    valeur: convivial

@@ -9,6 +9,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "catalog:ciqual": "node catalog/import-ciqual.mjs",
+    "engine:similarity": "tsx app/src/cli/mesure-similarite.ts",
     "catalog:list": "tsx app/src/cli/list-recipes.ts",
     "engine:try": "tsx app/src/cli/try-engine.ts"
   },

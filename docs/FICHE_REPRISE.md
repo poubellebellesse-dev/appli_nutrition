@@ -34,7 +34,7 @@ P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c ✅ (lots 1-4
 | **Banc CLI** | `npm run engine:try` — entonnoir, poids appliqués, classement, explications |
 
 **État vérifié : `npm test` → 388 verts (34 fichiers) · `npm run typecheck` propre ·
-`npm run build` → **193 aliments, 85 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
+`npm run build` → **193 aliments, 100 recettes** — valeurs nutritionnelles **CIQUAL 2025 réelles**,
 plus aucun `PROV-`. Cible v1 revue (décision 4) : ~200 aliments **atteint**, 200-300 recettes **en
 cours**.**
 
@@ -95,10 +95,21 @@ sans changer l'ordre. Ce second point ne se règle PAS par le contenu : il deman
 
 ## Dette connue
 
-- **λ (diversification) n'est pas calibré** — mesuré sur les 45 paires du catalogue réel : similarité
-  maximale **48,7 %** (`boeuf_hache_sauce_tomate` × `saumon_poele_courgettes`), et MMR déplace
-  `bœuf haché sauce tomate` du rang 5 au rang 8. **Mesure faite quand le catalogue comptait 10
-  recettes — à refaire au palier de 100**, la distribution des similarités a forcément changé.
+- 🔴 **`recipeMainIngredient` désigne le plus LOURD, pas le plus caractéristique** — défaut de
+  conception révélé par la mesure au palier de 100 recettes (`npm run engine:similarity`). Exemples
+  réels : « lentilles aux carottes » et « poulet rôti aux carottes » ont tous deux **carotte** pour
+  ingrédient principal (égalité 300/300 et 500/500 g, départage arbitraire) → **98,4 % de
+  similarité** ; la mousse au chocolat a **œuf** pour principal (300 g d'œufs contre 200 g de
+  chocolat) et ressemble donc à 91 % aux œufs brouillés ; le hachis de bœuf a **pomme de terre**.
+  **Deux couches sont touchées, pas une** : `similarity` (pondère le principal à 0,5, donc MMR
+  écarte des plats sans rapport) et `variety` (la lassitude se propage entre plats qui partagent un
+  faux principal). Piste : privilégier l'aliment porteur de protéines (`Food.groupe` ∈ viandes,
+  poissons, fruits de mer, légumineuses, œufs) avant de retomber sur le plus lourd. **À trancher
+  avant de calibrer λ** — calibrer sur une similarité fausse n'a aucun sens.
+- **λ (diversification) n'est pas calibré.** Distribution mesurée sur 100 recettes / 4 950 paires :
+  max 98,4 % · p99 63,0 % · médiane 25,9 % · moyenne 24,3 % · 54 paires au-dessus de 60 %.
+  L'ancienne mesure (max 48,7 % sur 45 paires) est caduque. Ne pas calibrer avant d'avoir corrigé
+  l'ingrédient principal ci-dessus.
 - **Le banc n'affiche plus la similarité** de chaque recette retenue (perdue en passant par
   `suggestMeals` — `ScoredSuggestion` ne porte pas cette information). À rétablir avant de calibrer λ.
 - **L'explication distingue peu** : les cinq suggestions affichent souvent les mêmes trois phrases,

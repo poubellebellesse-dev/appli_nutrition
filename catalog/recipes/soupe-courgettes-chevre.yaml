@@ -1,0 +1,83 @@
+id: soupe_courgettes_chevre
+nom: "Velouté de courgettes au chèvre frais"
+description: >
+  Des courgettes fondues au bouillon, mixées et liées au chèvre frais, avec de la menthe.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.4
+  chaud_froid: 0.7
+  texture: liquide
+
+ingredients:
+  - food_id: courgette
+    quantite_g: 900
+    unite_affichage: "4 courgettes"
+    optionnel: false
+  - food_id: chevre_frais
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 10
+    unite_affichage: "1 cube"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 10
+    unite_affichage: "quelques feuilles"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et couper les courgettes en rondelles, sans les peler."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire suer l'oignon dans l'huile, ajouter les courgettes et les laisser rendre leur eau."
+    lexicon_ids: []
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Couvrir d'eau à mi-hauteur seulement — les courgettes en contiennent déjà beaucoup — et émietter le bouillon."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser cuire jusqu'à ce que les rondelles se défassent."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Mixer avec le chèvre frais, rectifier le sel et parsemer de menthe ciselée."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

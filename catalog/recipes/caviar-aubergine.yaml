@@ -1,0 +1,83 @@
+id: caviar_aubergine
+nom: "Caviar d'aubergine"
+description: >
+  Des aubergines rôties au four, écrasées avec ail, citron, huile d'olive et cumin.
+temps_prep_min: 10
+temps_cuisson_min: 50
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.4
+  chaud_froid: -0.4
+  texture: creme
+
+ingredients:
+  - food_id: aubergine
+    quantite_g: 900
+    unite_affichage: "3 aubergines"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 50
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: coriandre_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Piquer les aubergines à la fourchette pour qu'elles n'éclatent pas."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les enfourner entières jusqu'à ce que la peau se ride et que la chair s'affaisse."
+    lexicon_ids: []
+    timer_s: 3000
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Les couper en deux et récupérer la chair à la cuillère, en laissant la peau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser égoutter la chair dans une passoire — l'eau rendue délaierait le caviar."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: repos
+  - ordre: 5
+    texte: "Écraser à la fourchette avec l'ail émincé, le jus de citron, l'huile, le cumin et le sel. Parsemer de coriandre."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

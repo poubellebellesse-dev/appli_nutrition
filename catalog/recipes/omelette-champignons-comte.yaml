@@ -1,0 +1,79 @@
+id: omelette_champignons_comte
+nom: "Omelette aux champignons et au comté"
+description: >
+  Une omelette baveuse garnie de champignons poêlés et de comté râpé.
+temps_prep_min: 5
+temps_cuisson_min: 12
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.3
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: oeuf
+    quantite_g: 250
+    unite_affichage: "5 œufs"
+    optionnel: false
+  - food_id: champignon_paris
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: comte_rape
+    quantite_g: 60
+    unite_affichage: "60 g râpé"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 25
+    unite_affichage: "25 g"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les champignons et les faire sauter à feu vif dans la moitié du beurre jusqu'à évaporation de leur eau."
+    lexicon_ids: [emincer]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Battre les œufs à la fourchette avec le sel, sans excès — trop battus, ils rendent l'omelette sèche."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire mousser le reste du beurre dans la poêle et verser les œufs sur les champignons."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ramener les bords vers le centre à la spatule tant que le dessus reste liquide."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Parsemer de comté, plier l'omelette en deux et la faire glisser dans l'assiette encore baveuse."
+    lexicon_ids: []
+    timer_s: 60
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

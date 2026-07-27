@@ -1,0 +1,83 @@
+id: tarte_tomates_moutarde
+nom: "Tarte aux tomates et à la moutarde"
+description: >
+  Une pâte feuilletée tapissée de moutarde, couverte de tomates en rondelles et d'origan.
+temps_prep_min: 15
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.4
+  chaud_froid: 0.6
+  texture: croquant
+
+ingredients:
+  - food_id: pate_feuilletee
+    quantite_g: 250
+    unite_affichage: "1 rouleau"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 800
+    unite_affichage: "6 tomates"
+    optionnel: false
+  - food_id: moutarde_dijon
+    quantite_g: 40
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: gruyere
+    quantite_g: 100
+    unite_affichage: "100 g râpé"
+    optionnel: false
+  - food_id: origan_seche
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Dérouler la pâte sur sa plaque et la piquer à la fourchette."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Couper les tomates en rondelles et les laisser dégorger sur du papier absorbant avec un peu de sel."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: repos
+  - ordre: 3
+    texte: "Étaler la moutarde sur le fond de pâte et saupoudrer de la moitié du gruyère — cette couche protège la pâte de l'eau des tomates."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ranger les rondelles épongées en rosace, arroser d'huile, parsemer d'origan et du reste de gruyère."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner jusqu'à ce que les bords soient dorés et le dessous de la pâte cuit."
+    lexicon_ids: []
+    timer_s: 2100
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

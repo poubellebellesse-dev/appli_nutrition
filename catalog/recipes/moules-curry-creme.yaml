@@ -1,0 +1,87 @@
+id: moules_curry_creme
+nom: "Moules au curry et à la crème"
+description: >
+  Des moules ouvertes au vin blanc, liées d'une crème au curry et au gingembre.
+temps_prep_min: 15
+temps_cuisson_min: 15
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.0
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: moule
+    quantite_g: 2000
+    unite_affichage: "2 kg"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 150
+    unite_affichage: "15 cl"
+    optionnel: false
+  - food_id: curry_poudre
+    quantite_g: 8
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: gingembre_poudre
+    quantite_g: 2
+    unite_affichage: "1/2 cuillère à café"
+    optionnel: true
+  - food_id: echalote
+    quantite_g: 80
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 30
+    unite_affichage: "30 g"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Gratter et rincer les moules, écarter celles qui restent ouvertes au toucher."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire suer les échalotes émincées dans le beurre, ajouter le curry et le gingembre et remuer une minute."
+    lexicon_ids: [emincer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Verser le vin blanc, porter à frémissement, ajouter les moules et couvrir."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Retirer les moules dès qu'elles sont ouvertes et les tenir au chaud, sinon elles se rétractent."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Faire réduire le jus de moitié, incorporer la crème, puis en napper les moules et parsemer de coriandre."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

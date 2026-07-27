@@ -1,0 +1,71 @@
+id: bananes_roties_chocolat
+nom: "Bananes rôties au chocolat noir"
+description: >
+  Des bananes fendues, garnies de chocolat noir et passées au four jusqu'à ce qu'il fonde.
+temps_prep_min: 5
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.9
+  leger_consistant: 0.3
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: banane
+    quantite_g: 600
+    unite_affichage: "4 bananes"
+    optionnel: false
+  - food_id: chocolat_noir
+    quantite_g: 80
+    unite_affichage: "80 g"
+    optionnel: false
+  - food_id: noisette
+    quantite_g: 30
+    unite_affichage: "une petite poignée"
+    optionnel: true
+  - food_id: cannelle
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 190 °C."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Fendre chaque banane dans la longueur sans la couper complètement, en laissant la peau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Glisser des morceaux de chocolat dans la fente, sur toute la longueur."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Poser les bananes sur une plaque, peau vers le bas, et enfourner jusqu'à ce que la peau noircisse et que le chocolat fonde."
+    lexicon_ids: []
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Parsemer de noisettes concassées et d'une pincée de cannelle, servir dans la peau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien
