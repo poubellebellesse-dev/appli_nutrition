@@ -1,0 +1,60 @@
+id: porridge_soja_banane
+nom: "Porridge d'avoine à la boisson de soja et à la banane"
+description: >
+  Des flocons d'avoine cuits dans une boisson au soja, garnis de banane en rondelles.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: flocons_avoine
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: boisson_soja
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: banane
+    quantite_g: 100
+    unite_affichage: "1 banane"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Porter la boisson au soja à frémissement dans une casserole."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser les flocons d'avoine et cuire à feu doux en remuant."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Couper la banane en rondelles et la déposer sur le porridge."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

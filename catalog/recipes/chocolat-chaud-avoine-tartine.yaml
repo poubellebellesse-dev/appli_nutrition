@@ -1,0 +1,60 @@
+id: chocolat_chaud_avoine_tartine
+nom: "Chocolat chaud à la boisson d'avoine et tartine"
+description: >
+  Un chocolat chaud au cacao pur, accompagné d'une tartine.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: boisson_avoine
+    quantite_g: 250
+    unite_affichage: "25 cl"
+    optionnel: false
+  - food_id: cacao_poudre
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 8
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 90
+    unite_affichage: "2 tranches"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Délayer le cacao et le sucre dans un peu de boisson froide."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Chauffer le reste et verser sur le mélange en fouettant."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Servir avec la tranche de pain grillée."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

@@ -1,0 +1,60 @@
+id: bol_avoine_raisins_noisettes
+nom: "Bol de flocons d'avoine, raisins secs et noisettes"
+description: >
+  Un bol sec et croquant, à verser dans une boisson végétale.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: flocons_avoine
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: boisson_soja
+    quantite_g: 180
+    unite_affichage: "18 cl"
+    optionnel: false
+  - food_id: raisin_sec
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: noisette
+    quantite_g: 20
+    unite_affichage: "10 noisettes"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Concasser grossièrement les noisettes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mélanger les flocons, les raisins secs et les noisettes."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Verser la boisson au soja au moment de servir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

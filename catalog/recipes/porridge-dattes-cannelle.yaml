@@ -1,0 +1,60 @@
+id: porridge_dattes_cannelle
+nom: "Porridge d'avoine aux dattes et à la cannelle"
+description: >
+  Un porridge sucré uniquement par les dattes, parfumé à la cannelle.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: flocons_avoine
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: boisson_avoine
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: datte
+    quantite_g: 40
+    unite_affichage: "3 dattes"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Dénoyauter et couper les dattes en petits morceaux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Cuire les flocons dans la boisson à l'avoine avec les dattes et la cannelle."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Laisser épaissir hors du feu avant de servir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

@@ -1,0 +1,77 @@
+id: riz_saute_tofu_petits_pois
+nom: "Riz sauté au tofu et aux petits pois"
+description: >
+  Un riz sauté au wok, tofu doré et petits pois.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: riz_blanc
+    quantite_g: 320
+    unite_affichage: "320 g"
+    optionnel: false
+  - food_id: tofu_nature
+    quantite_g: 320
+    unite_affichage: "320 g"
+    optionnel: false
+  - food_id: petit_pois
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 120
+    unite_affichage: "1 carotte"
+    optionnel: false
+  - food_id: sauce_soja
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_sesame
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Cuire le riz et le laisser refroidir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Couper le tofu en cubes et le dorer à l'huile de sésame."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter la carotte en dés, les petits pois et l'ail, faire sauter à feu vif."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Incorporer le riz et la sauce soja, mélanger jusqu'à ce que tout soit chaud."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: reconfortant

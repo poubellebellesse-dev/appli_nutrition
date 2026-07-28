@@ -1,0 +1,55 @@
+id: muesli_amande_myrtilles
+nom: "Muesli aux flocons, boisson d'amande et myrtilles"
+description: >
+  Un muesli non cuit, trempé quelques minutes dans une boisson à l'amande.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: flocons_avoine
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: boisson_amande
+    quantite_g: 180
+    unite_affichage: "18 cl"
+    optionnel: false
+  - food_id: myrtille
+    quantite_g: 80
+    unite_affichage: "1 poignée"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Verser la boisson à l'amande sur les flocons et laisser reposer."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ajouter les myrtilles et les amandes effilées au moment de servir."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

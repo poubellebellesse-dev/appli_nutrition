@@ -296,3 +296,12 @@ mapping:
   chocolat_noir: 31005           # Chocolat noir 50 % de cacao environ, tablette
   cacao_poudre: 18100            # Cacao, sans sucres ajoutés, poudre soluble
   sucre_roux: 31017              # Sucre roux
+
+  # Boissons végétales et sucrants végétaliens (2026-07-28) — comblent le trou mesuré des
+  # petits-déjeuners et goûters végétaliens (décision 37).
+  boisson_soja: 18901            # Boisson au soja, nature, enrichie en calcium, préemballée
+  boisson_amande: 18107          # Boisson à l'amande, nature, sans sucres ajoutés, non enrichie
+  boisson_avoine: 18899          # Boisson à l'avoine, nature, sans sucres ajoutés, non enrichie
+  sirop_erable: 31034            # Sirop d'érable
+  datte: 13011                   # Datte, chair et peau, sans noyau, sèche
+  raisin_sec: 13046              # Raisin sec

@@ -1,0 +1,42 @@
+id: figues_noisettes
+nom: "Figues sèches et noisettes"
+description: >
+  Deux ingrédients, rien à préparer.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [gouter]
+service: dessert
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.7
+  leger_consistant: -0.3
+  chaud_froid: -0.3
+  texture: fondant
+
+ingredients:
+  - food_id: figue_seche
+    quantite_g: 50
+    unite_affichage: "4 figues"
+    optionnel: false
+  - food_id: noisette
+    quantite_g: 25
+    unite_affichage: "12 noisettes"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Servir les figues et les noisettes ensemble."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

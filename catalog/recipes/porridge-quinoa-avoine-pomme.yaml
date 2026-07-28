@@ -1,0 +1,60 @@
+id: porridge_quinoa_avoine_pomme
+nom: "Porridge de quinoa à la boisson d'avoine et à la pomme"
+description: >
+  Le quinoa remplace les flocons pour un porridge plus tenu.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: quinoa
+    quantite_g: 70
+    unite_affichage: "7 cuillères à soupe"
+    optionnel: false
+  - food_id: boisson_avoine
+    quantite_g: 220
+    unite_affichage: "22 cl"
+    optionnel: false
+  - food_id: pomme
+    quantite_g: 120
+    unite_affichage: "1 pomme"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le quinoa à l'eau claire."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Le cuire dans la boisson à l'avoine jusqu'à absorption complète."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Râper la pomme et l'incorporer avec la cannelle."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

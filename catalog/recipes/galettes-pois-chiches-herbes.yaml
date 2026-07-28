@@ -1,0 +1,89 @@
+id: galettes_pois_chiches_herbes
+nom: "Galettes de pois chiches aux herbes"
+description: >
+  Des galettes façon falafel, cuites au four plutôt que frites.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: pois_chiches
+    quantite_g: 500
+    unite_affichage: "2 grandes boîtes égouttées"
+    optionnel: false
+  - food_id: semoule_ble
+    quantite_g: 240
+    unite_affichage: "240 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 20
+    unite_affichage: "1 bouquet"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques tiges"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 5
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Écraser les pois chiches à la fourchette avec l'ail et l'oignon hachés."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ajouter les herbes ciselées, la farine, le cumin et le sel."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Former des galettes et les disposer sur une plaque huilée."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Enfourner en les retournant à mi-cuisson."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: reconfortant

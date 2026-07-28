@@ -13,7 +13,8 @@
     "catalog:list": "tsx app/src/cli/list-recipes.ts",
     "engine:try": "tsx app/src/cli/try-engine.ts",
     "engine:plan": "tsx app/src/cli/try-planning.ts",
-    "engine:plan-stress": "tsx app/src/cli/stress-planning.ts"
+    "engine:plan-stress": "tsx app/src/cli/stress-planning.ts",
+    "engine:couverture": "tsx app/src/cli/diag-couverture.ts"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

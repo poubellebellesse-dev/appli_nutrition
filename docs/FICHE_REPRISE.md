@@ -17,7 +17,7 @@ P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── su
 ```
 
 **Vérifié le 2026-07-28** : `npm test` → **480 verts (38 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
-`npm run build` → **193 aliments, 212 recettes** (valeurs CIQUAL 2025 réelles).
+`npm run build` → **199 aliments, 242 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
 des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusion + 11 score, dont
@@ -27,13 +27,17 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 
 **Les restes** (`planLeftovers`, [ENGINE §7.3](./ENGINE.md)), puis la liste de courses.
 
-Le planning est utilisable : 7 jours × 3 créneaux, 21 recettes distinctes, aucun doublon. Les
-journées sous le plancher calorique sont **signalées** dans `WeekPlan.warnings`, plus fatales.
+Le planning est sain : **20/20 configurations** au banc de stress
+(`npm run engine:plan-stress`), et le cas nominal — 7 jours × 3 créneaux — ne déclenche **plus
+aucun avertissement** calorique.
 
-> ⚠️ **Le cinquième garde-fou n'est pas de même nature que les quatre autres.** `checkCalorieFloor`
-> AVERTIT, il ne lève pas — §6.5 ARCHITECTURE dit « sans écran d'avertissement explicite ». Une
-> première version jetait `EngineSafetyError` et faisait perdre sept jours de planning pour une
-> seule journée légère. Ne pas le réaligner sur les autres : la différence est voulue.
+> ⚠️ **Avant d'écrire des recettes, lancer `npm run engine:couverture`.** Le critère n'est pas
+> « combien » mais « un plan de 14 jours est-il remplissable pour CHAQUE régime ». Écrire des
+> recettes omnivores ne comblait aucun trou ; les 30 recettes végétaliennes du 28 juillet ont
+> profité à tous les régimes d'un coup.
+
+> Deux combinaisons extrêmes restent incomplètes et c'est assumé : « sans gluten NI lait NI œuf »
+> (16 créneaux sur 21) et « végétalien + sans gluten » (36 sur 56).
 
 ## Les cinq acquis à ne pas défaire
 

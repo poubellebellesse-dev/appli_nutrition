@@ -1,0 +1,64 @@
+id: tartine_avocat_citron
+nom: "Tartine de pain complet à l'avocat et au citron"
+description: >
+  Un demi-avocat écrasé au citron sur du pain complet grillé.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: pain_complet
+    quantite_g: 80
+    unite_affichage: "2 tranches"
+    optionnel: false
+  - food_id: avocat
+    quantite_g: 100
+    unite_affichage: "1/2 avocat"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 15
+    unite_affichage: "1 filet"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 5
+    unite_affichage: "1 filet"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 2
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire griller les tranches de pain complet."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Écraser l'avocat à la fourchette avec le jus de citron, le sel et l'huile."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Étaler sur les tartines."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

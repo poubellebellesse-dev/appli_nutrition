@@ -1,0 +1,55 @@
+id: bol_fruits_graines
+nom: "Bol de fruits frais et graines de tournesol"
+description: >
+  Trois fruits coupés, une poignée de graines, rien d'autre.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: pomme
+    quantite_g: 120
+    unite_affichage: "1 pomme"
+    optionnel: false
+  - food_id: orange
+    quantite_g: 150
+    unite_affichage: "1 orange"
+    optionnel: false
+  - food_id: banane
+    quantite_g: 100
+    unite_affichage: "1 banane"
+    optionnel: false
+  - food_id: graine_tournesol
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher et couper les fruits en morceaux réguliers."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mélanger et parsemer de graines de tournesol."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

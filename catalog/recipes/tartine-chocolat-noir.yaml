@@ -1,0 +1,42 @@
+id: tartine_chocolat_noir
+nom: "Tartine de pain complet au chocolat noir"
+description: >
+  Le goûter le plus simple : du pain, du chocolat.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [gouter]
+service: dessert
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.7
+  leger_consistant: -0.3
+  chaud_froid: -0.3
+  texture: fondant
+
+ingredients:
+  - food_id: pain_complet
+    quantite_g: 70
+    unite_affichage: "2 tranches"
+    optionnel: false
+  - food_id: chocolat_noir
+    quantite_g: 25
+    unite_affichage: "3 carrés"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Poser les carrés de chocolat sur le pain encore tiède pour qu'ils ramollissent."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

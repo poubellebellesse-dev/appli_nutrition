@@ -1,0 +1,64 @@
+id: tartine_tomate_huile
+nom: "Tartine de pain complet à la tomate et à l'huile d'olive"
+description: >
+  Un petit-déjeuner salé, à la manière catalane.
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: pain_complet
+    quantite_g: 90
+    unite_affichage: "2 tranches épaisses"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 120
+    unite_affichage: "1 tomate"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 3
+    unite_affichage: "1/2 gousse"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 2
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Faire griller le pain."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Frotter la tranche avec la gousse d'ail puis avec la tomate coupée en deux."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Arroser d'huile d'olive et saler."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

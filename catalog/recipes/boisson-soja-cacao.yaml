@@ -1,0 +1,51 @@
+id: boisson_soja_cacao
+nom: "Boisson au soja au cacao"
+description: >
+  Un cacao froid ou chaud, à la boisson au soja.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [gouter]
+service: dessert
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.7
+  leger_consistant: -0.3
+  chaud_froid: -0.3
+  texture: fondant
+
+ingredients:
+  - food_id: boisson_soja
+    quantite_g: 250
+    unite_affichage: "25 cl"
+    optionnel: false
+  - food_id: cacao_poudre
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 8
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Délayer le cacao et le sucre dans un fond de boisson."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Compléter avec le reste, chaud ou froid."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

@@ -1,0 +1,51 @@
+id: smoothie_fraise_banane_avoine
+nom: "Smoothie fraise-banane à la boisson d'avoine"
+description: >
+  Un smoothie rose, sans sucre ajouté.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [gouter]
+service: dessert
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.7
+  leger_consistant: -0.3
+  chaud_froid: -0.3
+  texture: fondant
+
+ingredients:
+  - food_id: fraise
+    quantite_g: 150
+    unite_affichage: "1 barquette"
+    optionnel: false
+  - food_id: banane
+    quantite_g: 100
+    unite_affichage: "1 banane"
+    optionnel: false
+  - food_id: boisson_avoine
+    quantite_g: 150
+    unite_affichage: "15 cl"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Équeuter les fraises."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mixer avec la banane et la boisson à l'avoine."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

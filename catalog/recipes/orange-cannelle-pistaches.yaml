@@ -1,0 +1,51 @@
+id: orange_cannelle_pistaches
+nom: "Orange à la cannelle et aux pistaches"
+description: >
+  Des rondelles d'orange saupoudrées de cannelle.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [gouter]
+service: dessert
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.7
+  leger_consistant: -0.3
+  chaud_froid: -0.3
+  texture: fondant
+
+ingredients:
+  - food_id: orange
+    quantite_g: 250
+    unite_affichage: "2 oranges"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: pistache
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Peler les oranges à vif et les couper en rondelles."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Saupoudrer de cannelle et parsemer de pistaches concassées."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

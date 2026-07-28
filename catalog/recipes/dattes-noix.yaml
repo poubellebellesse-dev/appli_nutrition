@@ -1,0 +1,47 @@
+id: dattes_noix
+nom: "Dattes aux noix"
+description: >
+  Des dattes ouvertes et garnies d'un cerneau de noix.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [gouter]
+service: dessert
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.7
+  leger_consistant: -0.3
+  chaud_froid: -0.3
+  texture: fondant
+
+ingredients:
+  - food_id: datte
+    quantite_g: 60
+    unite_affichage: "4 dattes"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 25
+    unite_affichage: "5 cerneaux"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Ouvrir les dattes et retirer le noyau."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Glisser un cerneau de noix dans chacune."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

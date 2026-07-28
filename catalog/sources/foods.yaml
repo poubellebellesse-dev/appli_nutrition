@@ -3695,3 +3695,113 @@ foods:
       sodium_mg: 28
       vitamine_c_mg: 0
     allergenes: []
+
+  # --- Boissons végétales et sucrants végétaliens (2026-07-28) ---------------------------------
+  # Ajoutés pour combler un trou MESURÉ : le catalogue n'avait AUCUN lait végétal, ce qui rendait
+  # impossible d'écrire des petits-déjeuners végétaliens (1 seul au catalogue pour 14 nécessaires,
+  # décision 37). ⚠️ `miel` n'est PAS végétalien — c'est un produit d'abeille ; d'où le sirop
+  # d'érable, seul sucrant liquide utilisable dans ces recettes.
+  - id: boisson_soja
+    code_ciqual: "18901"
+    nom: "Boisson au soja, nature, enrichie en calcium"
+    groupe: "lait et produits laitiers"
+    sous_famille: boisson_vegetale
+    toute_annee: true
+    nutriments:
+      energie_kcal: 44.2
+      proteines_g: 3.42
+      lipides_g: 2.05
+      glucides_g: 2.18
+      fibres_g: 1
+      fer_mg: 0.45
+      calcium_mg: 98
+      sodium_mg: 38.8
+    allergenes:
+      - code: soja
+        certitude: contient
+  - id: boisson_amande
+    code_ciqual: "18107"
+    nom: "Boisson à l'amande, nature, sans sucres ajoutés"
+    groupe: "lait et produits laitiers"
+    sous_famille: boisson_vegetale
+    toute_annee: true
+    nutriments:
+      energie_kcal: 35.8
+      proteines_g: 1.06
+      lipides_g: 3.2
+      glucides_g: 0.68
+      fibres_g: 0.5
+      fer_mg: 0.1
+      calcium_mg: 12
+      sodium_mg: 20.5
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: fruits_a_coque
+        certitude: contient
+  - id: boisson_avoine
+    code_ciqual: "18899"
+    nom: "Boisson à l'avoine, nature, sans sucres ajoutés"
+    groupe: "lait et produits laitiers"
+    sous_famille: boisson_vegetale
+    toute_annee: true
+    nutriments:
+      energie_kcal: 41
+      proteines_g: 0.25
+      lipides_g: 1.1
+      glucides_g: 7.78
+      fibres_g: 0.5
+      fer_mg: 0.02
+      calcium_mg: 1
+      sodium_mg: 26.4
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: gluten
+        certitude: contient
+  - id: sirop_erable
+    code_ciqual: "31034"
+    nom: "Sirop d'érable"
+    groupe: "produits sucrés"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 269
+      proteines_g: 0.04
+      lipides_g: 0.06
+      glucides_g: 67.2
+      fibres_g: 0
+      fer_mg: 0.11
+      calcium_mg: 106
+      sodium_mg: 10.5
+      vitamine_c_mg: 0
+    allergenes: []
+  - id: datte
+    code_ciqual: "13011"
+    nom: "Datte, sèche, dénoyautée"
+    groupe: "fruits"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 287
+      proteines_g: 1.81
+      lipides_g: 0.25
+      glucides_g: 64.7
+      fibres_g: 7.3
+      fer_mg: 0.9
+      calcium_mg: 44.9
+      sodium_mg: 39
+      vitamine_c_mg: 0
+    allergenes: []
+  - id: raisin_sec
+    code_ciqual: "13046"
+    nom: "Raisin sec"
+    groupe: "fruits"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 322
+      proteines_g: 3
+      lipides_g: 0.9
+      glucides_g: 73.2
+      fibres_g: 4.2
+      fer_mg: 1.7
+      calcium_mg: 54
+      sodium_mg: 5
+      vitamine_c_mg: 0.5
+    allergenes: []
