@@ -44,12 +44,32 @@ export interface MealPlanEntry {
   readonly service: CourseKind | null
 }
 
+/**
+ * Avertissement porté par un plan — §6.5 ARCHITECTURE, « sans écran d'avertissement explicite ».
+ *
+ * ⚠️ CE N'EST PAS UNE ERREUR. Le plan est rendu quand même : un avertissement PRÉVIENT, il
+ * n'interdit pas. C'est la différence avec `EngineSafetyError`, que lèvent les quatre autres
+ * garde-fous (allergène déclaré, claim thérapeutique…) et qui, elle, annule la sortie.
+ */
+export interface PlanWarning {
+  readonly kind: 'plancher_calorique'
+  /** ISO yyyy-mm-dd du jour concerné. */
+  readonly date: string
+  readonly kcal: number
+  readonly seuil: number
+}
+
 export interface WeekPlan {
   readonly id: string
   readonly startDate: string
   readonly days: number
   readonly seed: number
   readonly entries: readonly MealPlanEntry[]
+  /**
+   * Vide = rien à signaler. Non vide = le plan est utilisable MAIS l'appelant doit afficher
+   * l'écran d'avertissement de §6.5 ARCHITECTURE avant de le présenter comme tel.
+   */
+  readonly warnings: readonly PlanWarning[]
 }
 
 export interface RerollOptions {

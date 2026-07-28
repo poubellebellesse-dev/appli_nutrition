@@ -25,6 +25,7 @@ import type {
   UserProfile,
   WeekPlan,
   MealSlot,
+  PlanWarning,
 } from '../domain/index.js'
 import { EngineSafetyError } from '../domain/index.js'
 import { findBannedTerms } from './banned-terms.js'
@@ -76,8 +77,8 @@ export const assertNoDeclaredAllergen: AssertNoDeclaredAllergen = (candidates, c
   }
 }
 
-/** Aucun jour < 1200 kcal (F) / 1500 kcal (H) — voir l'implémentation en bas de fichier. */
-export type AssertCalorieFloor = (plan: WeekPlan, profile: UserProfile, catalog: Catalog) => void
+/** Aucun jour < 1200 kcal (F) / 1500 kcal (H) — RAPPORTE, ne lève pas. Voir le bas du fichier. */
+export type CheckCalorieFloor = (plan: WeekPlan, profile: UserProfile, catalog: Catalog) => readonly PlanWarning[]
 
 // --- assertCriticalLayersRan (§6.3 ENGINE) — implémenté P1c -----------------------------------
 //
@@ -149,10 +150,25 @@ export const assertNoTherapeuticClaim: AssertNoTherapeuticClaim = (explanations)
   }
 }
 
-// --- assertCalorieFloor (§6.5 ARCHITECTURE) — implémenté 2026-07-28, avec `planWeek` ------------
+// --- checkCalorieFloor (§6.5 ARCHITECTURE) — implémenté 2026-07-28, CORRIGÉ le même jour ---------
 //
-// « Aucun jour sous 1 200 kcal (F) / 1 500 (H) ». Le seul garde-fou qui manquait, parce qu'il n'a
-// de sens qu'appliqué à un PLAN : une suggestion isolée n'est pas un apport journalier.
+// « Aucun jour sous 1 200 kcal (F) / 1 500 (H) ». Le seul contrôle qui n'a de sens qu'appliqué à un
+// PLAN : une suggestion isolée n'est pas un apport journalier.
+//
+// ⚠️ IL NE LÈVE PAS, ET C'EST UNE CORRECTION. Première version : `assertCalorieFloor` jetait une
+// `EngineSafetyError`, donc un planning de 7 jours était intégralement REFUSÉ dès qu'une seule
+// journée passait sous le seuil — l'utilisateur ne recevait rien. Relecture de §6.5 : le texte dit
+// « aucune suggestion ne peut descendre sous 1 200 kcal/jour **sans écran d'avertissement
+// explicite** ». Il demandait un AVERTISSEMENT, pas un blocage.
+//
+// D'où le renommage : ce n'est plus un `assert*`, puisqu'il n'assère rien. Il RAPPORTE. Les quatre
+// autres garde-fous continuent de lever — un allergène déclaré ou un claim thérapeutique annulent
+// la sortie, un jour un peu léger la fait seulement signaler. Ne pas les réaligner entre eux : la
+// différence de nature est voulue et vient de §6.5.
+//
+// ⚠️ NE PAS le rendre silencieux pour autant. Retourner un tableau vide quand le seuil est franchi
+// reviendrait à supprimer la protection : c'est l'appelant qui doit afficher l'écran, et il ne peut
+// le faire que s'il reçoit l'information.
 //
 // ⚠️ SIGNATURE ADAPTÉE — `(plan, profile, catalog)` là où §5.2 ENGINE écrit `(plan, profile)`. Un
 // plan ne porte que des `recipeId` : sans catalogue, impossible d'en tirer une énergie. Même écart
@@ -176,9 +192,13 @@ const CALORIE_FLOOR_BY_SEX: Readonly<Record<UserProfile['sexe'], number>> = { F:
 
 const MAIN_SLOTS: readonly MealSlot[] = ['dejeuner', 'diner']
 
-export const assertCalorieFloor = (plan: WeekPlan, profile: UserProfile, catalog: Catalog): void => {
+export const checkCalorieFloor = (
+  plan: WeekPlan,
+  profile: UserProfile,
+  catalog: Catalog
+): readonly PlanWarning[] => {
   const energyIndex = catalog.nutrients.findIndex((nutrient) => nutrient.code === 'energie')
-  if (energyIndex < 0) return // catalogue sans nutriment d'énergie : rien à vérifier, pas de faux positif
+  if (energyIndex < 0) return [] // catalogue sans nutriment d'énergie : rien à vérifier
 
   const floor = CALORIE_FLOOR_BY_SEX[profile.sexe]
   const parJour = new Map<string, { kcal: number; remplis: Set<MealSlot> }>()
@@ -192,12 +212,11 @@ export const assertCalorieFloor = (plan: WeekPlan, profile: UserProfile, catalog
     parJour.set(entry.slot.date, jour)
   }
 
+  const warnings: PlanWarning[] = []
   for (const [date, jour] of parJour) {
     if (!MAIN_SLOTS.every((slot) => jour.remplis.has(slot))) continue
     if (jour.kcal >= floor) continue
-    throw new EngineSafetyError(
-      `assertCalorieFloor : le ${date} totalise ${Math.round(jour.kcal)} kcal, sous le plancher de ` +
-        `${floor} kcal (§6.5 ARCHITECTURE). Un planning ne doit jamais proposer une journée sous ce seuil.`
-    )
+    warnings.push({ kind: 'plancher_calorique', date, kcal: Math.round(jour.kcal), seuil: floor })
   }
+  return warnings
 }

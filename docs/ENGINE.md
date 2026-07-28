@@ -341,12 +341,20 @@ assertNoTherapeuticClaim(explanations: readonly Explanation[]): void
 | Garde-fou | Vérifie | Référence | État |
 |---|---|---|---|
 | `assertNoDeclaredAllergen` | Aucune suggestion ne contient un allergène déclaré | §5.2 ARCHI | **CODÉ** (P1a) — signature adaptée, voir note |
-| `assertCalorieFloor` | Aucun jour < 1 200 kcal (F) / 1 500 (H) | §6.5 ARCHI | **CODÉ** (2026-07-28, avec `planWeek`) — signature adaptée `(plan, profile, catalog)` |
+| `checkCalorieFloor` | Aucun jour < 1 200 kcal (F) / 1 500 (H) | §6.5 ARCHI | **CODÉ** (2026-07-28) — ⚠️ **AVERTIT, ne lève pas** : rapporte dans `WeekPlan.warnings`. Signature `(plan, profile, catalog)` |
 | `assertCriticalLayersRan` | Les couches `critical` ont bien été exécutées | §6.3 | **CODÉ** (P1c) |
 | `assertScoringLayersNeverExclude` | **Aucune** couche de score n'a réduit l'ensemble | §6.1 ARCHI · §6.3 | **CODÉ** (P1b-2) |
 | `assertNoTherapeuticClaim` | Aucune explication ne contient le lexique banni | §6.2 ARCHI | **CODÉ** (P1c) |
 
 **Les 5 garde-fous sont codés** depuis le 2026-07-28.
+
+> ⚠️ **Le cinquième n'est pas de même nature, et il ne faut pas l'aligner sur les autres.** Quatre
+> garde-fous LÈVENT `EngineSafetyError` et annulent la sortie ; `checkCalorieFloor` RAPPORTE. §6.5
+> ARCHITECTURE écrit « sans écran d'avertissement explicite » — il demande un avertissement, pas un
+> refus. D'où le nom : ce n'est plus un `assert*`, puisqu'il n'assère rien.
+>
+> Première version : il jetait, et un planning de 7 jours était intégralement refusé dès qu'UNE
+> journée passait sous le seuil. L'utilisateur perdait les six autres pour un repas un peu léger.
 
 > ⚠️ `assertCalorieFloor` n'évalue QUE les jours où `dejeuner` ET `diner` sont remplis. Un
 > utilisateur qui ne planifie que ses dîners mange par ailleurs : lui opposer un plancher journalier

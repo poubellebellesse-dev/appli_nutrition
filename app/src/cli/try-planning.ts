@@ -20,12 +20,9 @@ const engine = createEngine(loadCatalog(dbPath))
 
 const jours = Number(process.argv[2] ?? 7)
 
-// ⚠️ QUATRE créneaux, goûter compris — ce n'est pas un détail de confort. MESURÉ le 2026-07-28 :
-// sur TROIS repas, le catalogue actuel ne permet PAS d'atteindre le plancher de 1 200 kcal, et
-// `assertCalorieFloor` fait échouer le plan (1 061 kcal au plus bas jour mesuré). La recette
-// médiane apporte la moitié de la cible de son créneau : petit-déjeuner 334 kcal pour 500 visées,
-// déjeuner 401 pour 700, dîner 381 pour 600. Avec le goûter, les 7 jours passent (min 1 258).
-const SLOTS: readonly MealSlot[] = ['petit_dejeuner', 'dejeuner', 'gouter', 'diner']
+// TROIS créneaux : le cas qui faisait ÉCHOUER le planning avant que `checkCalorieFloor` cesse de
+// lever (§6.5 — il avertit, il n'annule pas). Le banc doit exercer ce cas, pas le contourner.
+const SLOTS: readonly MealSlot[] = ['petit_dejeuner', 'dejeuner', 'diner']
 
 const req: WeekPlanRequest = {
   profile: {
@@ -82,6 +79,14 @@ console.log(
   `Energie : min ${Math.round(Math.min(...totaux))} · max ${Math.round(Math.max(...totaux))} kcal/jour ` +
     `(plancher §6.5 : 1 200 F / 1 500 H)`
 )
+
+if (plan.warnings.length > 0) {
+  console.log(`
+AVERTISSEMENTS (§6.5 — le plan reste utilisable, l'ecran d'avertissement s'impose) :`)
+  for (const w of plan.warnings) {
+    console.log(`   ${w.date} : ${w.kcal} kcal, sous le plancher de ${w.seuil}`)
+  }
+}
 
 const nonRemplis = new Map<MealSlot, number>()
 for (const e of plan.entries) {

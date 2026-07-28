@@ -166,7 +166,17 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
     }
   }
 
-  return { id: `plan-${req.startDate}-${req.days}`, startDate: req.startDate, days: req.days, seed: req.seed, entries }
+  // `warnings` vide ici : le contrôle du plancher calorique (§6.5) appartient à guards/, que L4 ne
+  // peut pas importer. C'est `createEngine` qui l'exécute et enrichit le plan — même motif que
+  // l'injection de `suggest`.
+  return {
+    id: `plan-${req.startDate}-${req.days}`,
+    startDate: req.startDate,
+    days: req.days,
+    seed: req.seed,
+    entries,
+    warnings: [],
+  }
 }
 
 /**

@@ -206,10 +206,28 @@ describe('planning/plan-week — addDays', () => {
 /** Le catalogue de fixtures n'a pas de nutriments : `assertCalorieFloor` doit rester silencieux. */
 describe('planning/plan-week — interaction avec assertCalorieFloor', () => {
   it('un catalogue sans nutriment d’énergie ne déclenche AUCUN faux positif', async () => {
-    const { assertCalorieFloor } = await import('../guards/index.js')
+    const { checkCalorieFloor } = await import('../guards/index.js')
     const plan = planWeek(CATALOG, makePlanRequest({ days: 2 }), fakeSuggest(['a', 'b']))
 
-    expect(() => assertCalorieFloor(plan, makePlanRequest().profile, CATALOG as Catalog)).not.toThrow()
+    expect(checkCalorieFloor(plan, makePlanRequest().profile, CATALOG as Catalog)).toEqual([])
+  })
+
+  it('le plan sort TOUJOURS — un jour sous le plancher AVERTIT, il n’annule pas', async () => {
+    // Régression de fond : la première version levait `EngineSafetyError` et faisait perdre les
+    // sept jours pour une seule journée légère. §6.5 demande un écran d'avertissement, pas un refus.
+    const { checkCalorieFloor } = await import('../guards/index.js')
+    const maigre = {
+      ...CATALOG,
+      nutrients: [{ id: 'energie', code: 'energie', nom: 'Énergie', unite: 'kcal', vnrAdulte: 2000, categorie: 'macronutriment', sens: 'cible' }],
+      indexes: { ...CATALOG.indexes, recipeNutrients: new Map(RECIPES.map((r) => [r.id, new Float64Array([50])])) },
+    } as unknown as Catalog
+
+    const plan = planWeek(maigre, makePlanRequest({ days: 2, slots: ['dejeuner', 'diner'] }), fakeSuggest(['a', 'b', 'c', 'd']))
+    const warnings = checkCalorieFloor(plan, makePlanRequest().profile, maigre)
+
+    expect(plan.entries.filter((e) => e.recipeId !== null)).toHaveLength(4) // le plan existe
+    expect(warnings.length).toBeGreaterThan(0) // et il est signalé
+    expect(warnings[0]).toMatchObject({ kind: 'plancher_calorique', seuil: 1200 })
   })
 })
 

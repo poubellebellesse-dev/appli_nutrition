@@ -16,7 +16,7 @@ P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── su
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **477 verts (38 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **478 verts (38 fichiers)** · `npm run typecheck` propre ·
 `npm run build` → **193 aliments, 212 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
@@ -25,20 +25,15 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 
 ## ▶ La prochaine étape
 
-**Une étape de réparation dans `planWeek`** : quand une journée finit sous le plancher calorique,
-re-choisir le créneau le plus faible sous contrainte d'énergie. C'est ce qui reste pour rendre le
-planning utilisable sur une journée à 3 repas.
+**Les restes** (`planLeftovers`, [ENGINE §7.3](./ENGINE.md)), puis la liste de courses.
 
-> Les 212 recettes portent désormais un `service` (`CourseKind`) — 125 plats, 39 entrées,
-> 27 desserts, 21 accompagnements. ⚠️ Ça n'a **pas** réglé le plancher : un accompagnement peut être
-> servi seul, donc « Carottes Vichy » (147 kcal) reste un dîner valide.
+Le planning est utilisable : 7 jours × 3 créneaux, 21 recettes distinctes, aucun doublon. Les
+journées sous le plancher calorique sont **signalées** dans `WeekPlan.warnings`, plus fatales.
 
-> ⚠️ **`service` et `types_repas` sont ORTHOGONAUX**, pas des alternatives — c'est l'erreur que
-> j'avais faite. `types_repas` dit QUAND, `service` dit QUEL RÔLE. Une purée est un accompagnement
-> servi au déjeuner ET au dîner. Retirer un accompagnement des créneaux principaux le ferait
-> **disparaître** : `MealSlot` n'a pas de case pour lui.
-
-Ensuite : les restes (`planLeftovers`, §7.3) et la liste de courses.
+> ⚠️ **Le cinquième garde-fou n'est pas de même nature que les quatre autres.** `checkCalorieFloor`
+> AVERTIT, il ne lève pas — §6.5 ARCHITECTURE dit « sans écran d'avertissement explicite ». Une
+> première version jetait `EngineSafetyError` et faisait perdre sept jours de planning pour une
+> seule journée légère. Ne pas le réaligner sur les autres : la différence est voulue.
 
 ## Les cinq acquis à ne pas défaire
 

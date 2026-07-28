@@ -61,7 +61,7 @@ import {
 import type { NutritionReport } from '../nutrition/index.js'
 import { attachDerivedIndexes } from '../nutrition/index.js'
 import {
-  assertCalorieFloor, assertCriticalLayersRan, assertNoDeclaredAllergen, assertNoTherapeuticClaim } from '../guards/index.js'
+  checkCalorieFloor, assertCriticalLayersRan, assertNoDeclaredAllergen, assertNoTherapeuticClaim } from '../guards/index.js'
 
 export interface Engine {
   readonly version: string
@@ -363,8 +363,11 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
     // ensuite `assertCalorieFloor`, cinquième et dernier garde-fou (§5.2).
     planWeek: (req) => {
       const plan = runPlanWeek(enrichedCatalog, req, (slotReq) => runSuggestMeals(enrichedCatalog, slotReq, now))
-      assertCalorieFloor(plan, req.profile, enrichedCatalog)
-      return plan
+      // ⚠️ Le plancher calorique AVERTIT, il n'annule pas (§6.5 ARCHITECTURE : « sans écran
+      // d'avertissement explicite »). Le plan sort toujours ; c'est l'appelant qui doit montrer
+      // l'écran. Ne pas transformer ça en `throw` : une première version le faisait et refusait
+      // sept jours de planning pour une seule journée légère.
+      return { ...plan, warnings: checkCalorieFloor(plan, req.profile, enrichedCatalog) }
     },
     rerollSlot: () => notImplemented('rerollSlot'),
     planLeftovers: () => notImplemented('planLeftovers'),

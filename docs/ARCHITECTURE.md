@@ -532,8 +532,12 @@ avec niveau de preuve → rappel de consultation médicale.
 
 Les applications de nutrition sont un vecteur documenté de TCA. Contraintes de conception :
 
-- **Plancher calorique dur** : aucune suggestion ne peut descendre sous 1 200 kcal/jour (femme) /
-  1 500 (homme) sans écran d'avertissement explicite
+- **Plancher calorique** : aucune suggestion ne peut descendre sous 1 200 kcal/jour (femme) /
+  1 500 (homme) **sans écran d'avertissement explicite**. ⚠️ C'est un AVERTISSEMENT, pas un refus —
+  `checkCalorieFloor` (engine/guards/) rapporte les jours concernés dans `WeekPlan.warnings` et le
+  plan est rendu quand même. Une première implémentation levait une `EngineSafetyError` et faisait
+  perdre sept jours de planning pour une seule journée légère : plus strict que ce texte, et
+  hostile. Les quatre autres garde-fous, eux, annulent bien la sortie.
 - **Pas d'IMC affiché** comme jugement de valeur ni de code couleur sur le poids
 - **Pas d'objectif de perte de poids** en v1 — l'appli équilibre, elle ne restreint pas
 - **Pas de série / streak** ni de culpabilisation en cas de repas non suivi
@@ -554,9 +558,25 @@ quotidien** qui est le vecteur de restriction, et lui seul doit être proscrit :
 recette ; elle n'est jamais un budget à tenir.
 
 **Le « mode avancé »** (destiné aux sportifs) est le seul réglage qui active cet affichage. Il rend
-visibles calories et macros sur les recettes, le total du jour et le bilan de la semaine. Il reste
-**descriptif** : aucun objectif journalier, aucun compteur de reste, aucun déficit. La frontière
-descriptif / prescriptif est la ligne à ne jamais franchir.
+visibles calories et macros sur les recettes, le total du jour et le bilan de la semaine.
+
+#### Objectifs caloriques personnels — AMENDEMENT du 2026-07-28
+
+La version initiale de ce paragraphe interdisait tout objectif journalier, sans exception.
+**Décision utilisateur : un objectif personnel devient possible, sous quatre conditions cumulatives.**
+
+| Condition | Raison |
+|---|---|
+| **Opt-in explicite** | Personne ne le rencontre sans l'avoir cherché |
+| **Jamais par défaut** | L'appli reste sans compteur pour qui ne demande rien |
+| **Non mis en avant** | Ni onboarding, ni suggestion, ni écran d'accueil — enfoui dans les réglages avancés |
+| **Aucun compteur de reste** | Voir ci-dessous : c'est LE mécanisme identifié comme dangereux |
+
+> ⚠️ **La quatrième condition n'est pas négociable et ne relève pas d'une préférence.** Le tableau
+> ci-dessus le dit : ce n'est pas l'affichage d'un chiffre qui pose problème, c'est **« il te reste
+> 340 kcal aujourd'hui »**. Un objectif peut être affiché *à côté* du total du jour ; il ne doit
+> jamais être présenté comme un solde qui se vide. La frontière descriptif / prescriptif reste la
+> ligne à ne pas franchir — l'amendement déplace ce qui est permis, pas cette ligne.
 
 #### Encouragements — ton chaleureux, jamais retour de performance
 
