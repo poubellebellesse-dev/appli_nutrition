@@ -309,3 +309,39 @@ describe('planning/plan-week — cible nutritionnelle RESTANTE (§7.1, cumul ré
     expect(vu[1]!.nutrientTarget![0]).toBe(0)
   })
 })
+
+describe('planning/plan-week — la FENÊTRE DE CANDIDATS demandée à `suggest`', () => {
+  // ⚠️ RÉGRESSION D'UN BUG RÉEL, trouvé au banc de stress le 2026-07-28. `slotRequest` ne fixait ni
+  // `limit` ni `skipDiversification` : `suggestMeals` rendait donc 5 suggestions diversifiées, et
+  // quand ces 5 étaient déjà placées le créneau restait VIDE alors que des dizaines de candidats
+  // attendaient. Mesuré sur le catalogue réel : 11 petits-déjeuners placés sur 14 demandés, pour
+  // 17 recettes disponibles ; 39 créneaux sur 42 en 14 jours × 3.
+  it('demande AU MOINS autant de candidats qu’il peut y en avoir de déjà placés', () => {
+    const vu: SuggestionRequest[] = []
+    const suggest = (r: SuggestionRequest) => {
+      vu.push(r)
+      return fakeSuggest(['a', 'b', 'c'])(r)
+    }
+
+    planWeek(CATALOG, makePlanRequest({ days: 7, slots: ['dejeuner', 'diner'] }), suggest)
+
+    // 7 × 2 = 14 créneaux : une limite de 5 laisserait des créneaux vides sans raison.
+    for (const requete of vu) {
+      expect(requete.limit).toBeGreaterThan(14)
+    }
+  })
+
+  it('désactive la diversification — le glouton fait sa propre variété', () => {
+    // MMR réordonnerait un ensemble dont `planWeek` ne prend qu'un élément, sans rien apporter :
+    // la variété du plan vient de l'historique de travail et de `placedRecipeIds`.
+    const vu: SuggestionRequest[] = []
+    const suggest = (r: SuggestionRequest) => {
+      vu.push(r)
+      return fakeSuggest(['a'])(r)
+    }
+
+    planWeek(CATALOG, makePlanRequest({ days: 2 }), suggest)
+
+    expect(vu.every((r) => r.skipDiversification === true)).toBe(true)
+  })
+})

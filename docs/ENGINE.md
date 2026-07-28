@@ -1327,6 +1327,23 @@ nutriment du score au lieu de dire « on a assez ».
 > Le mécanisme est **conforme à §7.1 et correct** — un déjeuner léger DOIT relever la cible du dîner
 > — mais il ne résout pas la décision 34. La cause réelle est ailleurs : voir ci-dessous.
 
+#### La fenêtre de candidats demandée à `suggest` — un bug et sa correction
+
+`slotRequest` doit fixer `limit` **et** `skipDiversification`. Ce n'est pas un réglage de confort :
+sans eux, `suggestMeals` rend **5** suggestions diversifiées, le glouton écarte celles déjà placées,
+et le créneau reste **vide** dès que les 5 le sont — alors que des dizaines de candidats attendent.
+
+Mesuré avant correction : **11 petits-déjeuners placés sur 14** avec 17 recettes disponibles ;
+39 créneaux sur 42 en 14 jours × 3. Après : 14/14 et 42/42.
+
+> `limit` vaut `jours × créneaux + 1` — tout ce qui peut déjà avoir été placé, plus un. La
+> diversification MMR est désactivée : elle réordonnerait un ensemble dont on ne prend qu'un
+> élément, et la variété du plan vient déjà de l'historique de travail et de `placedRecipeIds`.
+
+> ⚠️ **Ce bug était invisible en test unitaire**, qui utilise une suggestion factice sans limite.
+> Il a fallu le banc de stress sur données réelles (`npm run engine:plan-stress`, 20 configurations)
+> pour le voir. Le relancer après toute modification du glouton.
+
 #### Résultat mesuré sur le catalogue réel (2026-07-28)
 
 7 jours × 4 créneaux : **28 créneaux remplis, 28 recettes distinctes, aucun doublon**, 1 258 à

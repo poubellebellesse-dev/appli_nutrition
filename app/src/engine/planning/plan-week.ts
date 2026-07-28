@@ -87,7 +87,8 @@ function slotRequest(
   date: string,
   creneau: MealSlot,
   history: MealHistory,
-  nutrientTarget: NutrientVector
+  nutrientTarget: NutrientVector,
+  nombreDeCreneaux: number
 ): SuggestionRequest {
   return {
     nutrientTarget,
@@ -104,6 +105,19 @@ function slotRequest(
     history,
     preferences: new Map(),
     favoriteRecipeIds: new Set(),
+    // ⚠️ DEUX RÉGLAGES INDISPENSABLES, et leur absence était un BUG (trouvé au banc de stress
+    // 2026-07-28) : `suggestMeals` rend 5 suggestions par défaut, diversifiées. Le glouton écarte
+    // celles déjà placées ; quand les 5 l'étaient toutes, le créneau restait VIDE alors que des
+    // dizaines de candidats attendaient. Mesuré : 11 petits-déjeuners placés sur 14 demandés, avec
+    // 17 recettes disponibles.
+    //
+    // `limit` couvre le pire cas — tout ce qui peut déjà avoir été placé, plus un. Garantit qu'un
+    // candidat libre apparaît s'il en existe un.
+    limit: nombreDeCreneaux + 1,
+    // La diversification MMR est INUTILE ici et nuisible : elle réordonne un ensemble dont on ne
+    // prend qu'un élément, et la variété du plan est déjà assurée autrement — l'historique de
+    // travail fait baisser le score des plats récents, `placedRecipeIds` interdit le doublon.
+    skipDiversification: true,
     activeTopics: req.activeTopics,
     ...(req.weights === undefined ? {} : { weights: req.weights }),
     seed: req.seed,
@@ -142,7 +156,7 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       const cible = remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex)
       const scored = pickForSlot(
         suggest,
-        slotRequest(req, date, creneau, history, cible),
+        slotRequest(req, date, creneau, history, cible, req.days * req.slots.length),
         placedRecipeIds
       )
 
