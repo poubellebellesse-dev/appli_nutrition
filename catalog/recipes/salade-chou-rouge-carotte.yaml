@@ -8,6 +8,7 @@ difficulte: 1
 portions_base: 4
 image_path: null
 types_repas: [dejeuner]
+service: entree
 saison_mois: []
 envergure: quotidien
 conservation_jours: 3

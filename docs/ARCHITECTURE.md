@@ -133,6 +133,8 @@ food(id, code_ciqual, nom, groupe, sous_famille?, saison_mois[], toute_annee)
     --   RÉCENCE de `variety`/`habit`, pas la similarité. Ce n'est PAS le `sous_groupe`
     --   taxonomique de l'esquisse initiale, qui n'existe toujours pas au schéma réel : celui-ci
     --   classerait TOUS les aliments, `sous_famille` n'en regroupe qu'une poignée.
+    -- piquant : 0 a 4 (0 pas piquant, 4 extreme). NULL = non renseigne, JAMAIS « doux ».
+    --   Pose le 2026-07-28, NON CABLE — aucune couche ne le lit encore.
 food_nutrient(food_id, nutrient_id, valeur_pour_100g)
 allergen(id, code, nom)                          -- 14 allergènes réglementaires UE
 food_allergen(food_id, allergen_id, certitude)   -- 'contient' | 'traces'
@@ -141,6 +143,16 @@ recipe(id, nom, description, temps_prep_min, temps_cuisson_min, difficulte,
        portions_base, image_path, types_repas[], saison_mois[], envergure,
        conservation_jours, axe_sucre_sale, axe_leger_consistant,
        axe_chaud_froid, axe_texture)
+    -- service : TYPE DE RECETTE (entree/plat/accompagnement/fromage/dessert), REEL depuis le
+    --   2026-07-28. ⚠️ AXE ORTHOGONAL A types_repas, PAS une alternative : types_repas dit QUAND
+    --   (petit-dejeuner, dejeuner, gouter, diner), service dit QUEL ROLE. Une puree est un
+    --   `accompagnement` servi au `dejeuner` ET au `diner` — les deux dimensions se cumulent.
+    --   Vouloir « sortir » un accompagnement des creneaux principaux le ferait DISPARAITRE de
+    --   l'appli : MealSlot n'a pas de case « accompagnement ». Ordre de service francais, le
+    --   fromage AVANT le dessert. Les 212 recettes sont annotees (125 plats, 39 entrees,
+    --   27 desserts, 21 accompagnements, 0 fromage).
+    -- piquant : idem food.piquant, mais EDITORIAL au niveau du plat — il ne se derive pas des
+    --   ingredients (quantite d'epice, rapport au reste, mode de cuisson). NON CABLE.
     -- envergure ∈ {'quotidien','convivial','fete'}
     -- temps total = dérivé, JAMAIS une facette saisie (pas de désynchronisation possible)
 recipe_ingredient(recipe_id, food_id, quantite_g, unite_affichage, optionnel)

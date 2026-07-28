@@ -8,6 +8,7 @@ difficulte: 2
 portions_base: 8
 image_path: null
 types_repas: [dejeuner, gouter]
+service: accompagnement
 saison_mois: []
 envergure: convivial
 conservation_jours: 2

@@ -8,6 +8,7 @@ difficulte: 1
 portions_base: 4
 image_path: null
 types_repas: [diner]
+service: plat
 saison_mois: []
 envergure: convivial
 conservation_jours: 1

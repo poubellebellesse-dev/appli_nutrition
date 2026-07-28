@@ -21,6 +21,8 @@
 
 import { DatabaseSync } from 'node:sqlite'
 import type {
+  CourseKind,
+  PiquantLevel,
   Allergen,
   AllergenCertitude,
   AllergenId,
@@ -78,6 +80,7 @@ interface FoodRow {
   readonly sous_famille: string | null
   readonly saison_mois: string
   readonly toute_annee: number
+  readonly piquant: number | null
 }
 
 interface FoodNutrientRow {
@@ -109,6 +112,8 @@ interface RecipeRow {
   readonly axe_leger_consistant: number
   readonly axe_chaud_froid: number
   readonly axe_texture: string
+  readonly service: string | null
+  readonly piquant: number | null
 }
 
 interface RecipeIngredientRow {
@@ -214,6 +219,7 @@ function loadFoods(db: DatabaseSync): Map<FoodId, Food> {
       nom: row.nom,
       groupe: row.groupe,
       sousFamille: row.sous_famille,
+    piquant: (row.piquant as 0 | 1 | 2 | 3 | 4 | null) ?? null,
       nutrimentsPour100g,
       allergenes,
       saisonMois: parseJsonArray<Month>(row.saison_mois),
@@ -288,6 +294,8 @@ function loadRecipes(db: DatabaseSync): Map<RecipeId, Recipe> {
       ingredients,
       etapes,
       facettes,
+      service: (row.service as CourseKind | null) ?? null,
+      piquant: (row.piquant as PiquantLevel | null) ?? null,
     })
   }
   return map

@@ -6,6 +6,7 @@
 // les index de CatalogIndexes cohérents avec les données chargées.
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { COURSE_ORDER } from '../engine/domain/index.js'
 import { spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -158,5 +159,35 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
   it('topics et substitutions sont des Map vides (tables absentes de catalog.db)', () => {
     expect(catalog.topics.size).toBe(0)
     expect(catalog.substitutions.size).toBe(0)
+  })
+
+  // --- service / piquant (CourseKind, 2026-07-28) ---------------------------------------------
+
+  it('charge `service` sur TOUTES les recettes — aucune ne reste sans rôle', () => {
+    expect([...catalog.recipes.values()].filter((r) => r.service === null)).toHaveLength(0)
+  })
+
+  it('les cinq valeurs de CourseKind sont les seules employées', () => {
+    for (const service of new Set([...catalog.recipes.values()].map((r) => r.service))) {
+      expect(COURSE_ORDER).toContain(service)
+    }
+  })
+
+  it('`service` et `typesRepas` sont des axes INDÉPENDANTS — un accompagnement reste servi au dîner', () => {
+    // L'invariant qui a motivé le champ : annoter le rôle ne retire personne d'un créneau. Si un
+    // accompagnement perdait `diner`, il deviendrait INVISIBLE — `MealSlot` n'a pas de case pour
+    // lui. C'est l'erreur que ce test empêche de refaire.
+    const accompagnements = [...catalog.recipes.values()].filter((r) => r.service === 'accompagnement')
+
+    expect(accompagnements.length).toBeGreaterThan(0)
+    expect(accompagnements.every((r) => r.typesRepas.length > 0)).toBe(true)
+    expect(accompagnements.some((r) => r.typesRepas.includes('diner'))).toBe(true)
+  })
+
+  it('`piquant` vaut `null` partout tant que rien n’est annoté — jamais 0 par défaut', () => {
+    // `null` ≠ 0 : l'absence d'information n'est pas « doux ». Ce test échouera utilement le jour
+    // où on annotera le piquant, forçant à le mettre à jour sciemment.
+    expect([...catalog.recipes.values()].every((r) => r.piquant === null)).toBe(true)
+    expect([...catalog.foods.values()].every((f) => f.piquant === null)).toBe(true)
   })
 })

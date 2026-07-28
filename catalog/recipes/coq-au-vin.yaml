@@ -8,6 +8,7 @@ difficulte: 3
 portions_base: 6
 image_path: null
 types_repas: [dejeuner, diner]
+service: plat
 saison_mois: []
 envergure: fete
 conservation_jours: 3

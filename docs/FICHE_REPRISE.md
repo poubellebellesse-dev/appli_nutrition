@@ -16,7 +16,7 @@ P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── su
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **473 verts (38 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **477 verts (38 fichiers)** · `npm run typecheck` propre ·
 `npm run build` → **193 aliments, 212 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
@@ -25,21 +25,18 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 
 ## ▶ La prochaine étape
 
-**Arbitrer la décision 34** ([ETAT §4](./ETAT.md)) — elle bloque l'usage réel du planning sur une
-journée à 3 repas.
+**Une étape de réparation dans `planWeek`** : quand une journée finit sous le plancher calorique,
+re-choisir le créneau le plus faible sous contrainte d'énergie. C'est ce qui reste pour rendre le
+planning utilisable sur une journée à 3 repas.
 
-**61 des 183 recettes** étiquetées `dejeuner`/`diner` apportent moins de 300 kcal : ce sont des
-entrées, des accompagnements et des desserts marqués comme repas principaux (« Soupe de carottes à
-l'ail » 103 kcal, « Carottes Vichy » 147, « Blancs en neige sucrés » 126).
+> Les 212 recettes portent désormais un `service` (`CourseKind`) — 125 plats, 39 entrées,
+> 27 desserts, 21 accompagnements. ⚠️ Ça n'a **pas** réglé le plancher : un accompagnement peut être
+> servi seul, donc « Carottes Vichy » (147 kcal) reste un dîner valide.
 
-> ⚠️ **Ce n'est PAS « le catalogue est trop léger »** — je l'ai cru, la mesure l'a démenti : la
-> meilleure journée possible sur 3 repas atteint **2 127 kcal**. Le contenu suffit, c'est le choix
-> qui est mauvais.
-
-> ⚠️ **Le correctif moteur a été tenté et mesuré insuffisant.** La cible nutritionnelle restante
-> (§7.1) est codée ; elle ne fait passer le pire jour que de 1 061 à 1 125 kcal. L'énergie ne pèse
-> que **2,8 %** de la note (`nutri` 0,25 ÷ 9 nutriments) — aucune cible ne renversera un classement
-> arbitré par la saison et les préférences. **Ne pas affaiblir `assertCalorieFloor` pour autant.**
+> ⚠️ **`service` et `types_repas` sont ORTHOGONAUX**, pas des alternatives — c'est l'erreur que
+> j'avais faite. `types_repas` dit QUAND, `service` dit QUEL RÔLE. Une purée est un accompagnement
+> servi au déjeuner ET au dîner. Retirer un accompagnement des créneaux principaux le ferait
+> **disparaître** : `MealSlot` n'a pas de case pour lui.
 
 Ensuite : les restes (`planLeftovers`, §7.3) et la liste de courses.
 

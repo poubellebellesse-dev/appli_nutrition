@@ -65,6 +65,7 @@ export function makeFood(
     allergenes: [],
     saisonMois: [],
     touteAnnee: true,
+    piquant: null,
   };
 }
 
@@ -104,6 +105,8 @@ export function makeRecipe(
     ingredients: overrides.ingredients ?? [],
     etapes: [],
     facettes: [],
+    service: null,
+    piquant: null,
   };
 }
 

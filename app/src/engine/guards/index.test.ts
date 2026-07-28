@@ -52,6 +52,7 @@ function food(id: string, allergenId: string | null): Food {
       : [],
     saisonMois: [],
     touteAnnee: false,
+    piquant: null,
   };
 }
 
@@ -80,6 +81,8 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
     ],
     etapes: [],
     facettes: [],
+    service: null,
+    piquant: null,
   };
 }
 

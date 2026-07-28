@@ -8,6 +8,7 @@ difficulte: 2
 portions_base: 4
 image_path: null
 types_repas: [gouter, diner]
+service: dessert
 saison_mois: []
 envergure: convivial
 conservation_jours: 1

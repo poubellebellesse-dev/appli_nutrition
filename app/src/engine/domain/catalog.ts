@@ -103,6 +103,11 @@ export interface Food {
    * ingrédient hors saison dans `scoreSeason`, ne l'exclut pas.
    */
   readonly touteAnnee: boolean
+  /**
+   * Piquant de l'ALIMENT lui-même (§ `PiquantLevel`). `null` = non renseigné.
+   * ⚠️ Le piquant d'une recette n'en est PAS la somme — voir `Recipe.piquant`.
+   */
+  readonly piquant: PiquantLevel | null
 }
 
 // --- Recettes (table `recipe` + tables liées) -------------------------------------------------
@@ -133,13 +138,51 @@ export type Month = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12
 export type MealSlot = 'petit_dejeuner' | 'dejeuner' | 'gouter' | 'diner'
 
 /**
- * Service dans un repas composé — mode *repas* du §2.7 CONCEPTION_B_VIN_REPAS (entrée+plat+dessert,
- * v1.5). À NE PAS CONFONDRE avec `MealSlot` ci-dessus : `MealSlot` est le CRÉNEAU de la journée
- * (petit-déjeuner, déjeuner…), `CourseKind` est la PLACE d'un plat À L'INTÉRIEUR d'un même créneau
- * quand celui-ci contient plusieurs recettes. Un créneau en mode recette (un plat unique, comportement
- * actuel) n'a pas de `CourseKind` — voir `MealPlanEntry.service` (planning.ts).
+ * TYPE DE RECETTE — le rôle qu'elle joue dans un repas.
+ *
+ * ⚠️ AXE ORTHOGONAL À `MealSlot`, PAS UNE ALTERNATIVE. C'est la confusion qu'il faut éviter :
+ *   - `MealSlot` répond à QUAND — petit-déjeuner, déjeuner, goûter, dîner ;
+ *   - `CourseKind` répond à QUEL RÔLE — entrée, plat, accompagnement, fromage, dessert.
+ * Une « Carottes Vichy » est un `accompagnement` servi au `dejeuner` ET au `diner`. Les deux
+ * dimensions se cumulent ; aucune ne remplace l'autre. Croire le contraire mène à vouloir « sortir »
+ * un accompagnement des créneaux principaux, ce qui le ferait disparaître de l'appli faute de
+ * créneau d'accueil — `MealSlot` n'a pas de case « accompagnement ».
+ *
+ * L'ORDRE DE LA LISTE EST L'ORDRE DE SERVICE FRANÇAIS : entrée, plat, accompagnement, **fromage,
+ * puis dessert**. Le fromage précède le dessert, contrairement à l'usage anglo-saxon — il servira
+ * au mode repas de v1.5 (§2.1 CONCEPTION_B_VIN_REPAS).
+ *
+ * ⚠️ Un `accompagnement` PEUT être servi seul (décision utilisateur, 2026-07-28) — une purée ou des
+ * légumes sautés font un dîner léger recevable, au même titre qu'un goûter salé. Ne pas coder de
+ * règle « jamais seul » : elle serait fausse.
  */
-export type CourseKind = 'entree' | 'plat' | 'dessert' | 'accompagnement'
+export type CourseKind = 'entree' | 'plat' | 'accompagnement' | 'fromage' | 'dessert'
+
+/** L'ordre de service (§2.1 CONCEPTION_B_VIN_REPAS) — figé ici pour ne pas être redéduit ailleurs. */
+export const COURSE_ORDER: readonly CourseKind[] = ['entree', 'plat', 'accompagnement', 'fromage', 'dessert']
+
+/**
+ * Niveau de piquant, 0 à 4 : 0 pas piquant · 1 un peu · 2 moyen · 3 fort · 4 extrême.
+ *
+ * ⚠️ `null` = NON RENSEIGNÉ, jamais « doux ». Même principe que partout ailleurs dans ce moteur
+ * (§5.1 bis) : l'absence d'information n'est pas une information.
+ *
+ * ⚠️ POURQUOI UN NIVEAU ÉDITORIAL ET PAS UN CALCUL. Le piquant d'un plat ne se dérive pas de ses
+ * ingrédients : il dépend de la QUANTITÉ d'épice, de son RAPPORT au reste du plat, et du MODE DE
+ * CUISSON — des épices jetées sur du riz sec ne diffusent pas comme un mijoté. Aucune source ne
+ * tabule ce dernier facteur.
+ *
+ * Sources écartées et pourquoi : l'échelle de **Scoville** ne mesure que la capsaïcine, donc que le
+ * piment — ni le poivre, ni la moutarde, ni le wasabi, ni le gingembre n'y figurent. Et la pungence
+ * n'est pas un axe unique : capsaïcine et pipérine agissent sur le récepteur TRPV1, l'isothiocyanate
+ * d'allyle (moutarde, wasabi) et l'allicine sur TRPA1 — d'où un wasabi qui monte au nez et retombe
+ * là où un piment s'installe. Une échelle par famille de molécule a été envisagée puis ÉCARTÉE
+ * (décision utilisateur) : trop fine pour être annotée honnêtement à la main.
+ *
+ * ⚠️ NON CÂBLÉ. Aucune couche ne lit ce champ aujourd'hui — la feature (seuil de tolérance,
+ * exclusion ou score) viendra plus tard. Le champ est posé pour qu'elle ne reparte pas de zéro.
+ */
+export type PiquantLevel = 0 | 1 | 2 | 3 | 4
 
 export interface RecipeIngredient {
   readonly foodId: FoodId
@@ -188,6 +231,21 @@ export interface Recipe {
   readonly ingredients: readonly RecipeIngredient[]
   readonly etapes: readonly RecipeStep[]
   readonly facettes: readonly RecipeFacet[]
+  /**
+   * TYPE DE RECETTE (§ `CourseKind`) — le rôle joué dans un repas, INDÉPENDANT de `typesRepas`.
+   * `null` = non renseigné ; le moteur ne le lit pas encore, il ne fait qu'exposer l'information.
+   */
+  readonly service: CourseKind | null
+  /**
+   * Niveau de piquant PERÇU du plat (§ `PiquantLevel`). `null` = non renseigné, jamais « doux ».
+   *
+   * ⚠️ ÉDITORIAL, PAS DÉRIVÉ des ingrédients — il dépend de la quantité d'épice, de son rapport au
+   * reste du plat et du mode de cuisson (des épices sur du riz sec ne diffusent pas comme un
+   * mijoté). Ne surtout pas le recalculer depuis `Food.piquant` : ce serait faux.
+   *
+   * ⚠️ NON CÂBLÉ — aucune couche ne le lit. Posé pour la feature à venir.
+   */
+  readonly piquant: PiquantLevel | null
 }
 
 // --- Lexique de cuisine (table `lexicon_entry`) -----------------------------------------------

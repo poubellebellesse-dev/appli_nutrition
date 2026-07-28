@@ -42,6 +42,7 @@ function food(id: string, kcalPer100g: number): Food {
     allergenes: [],
     saisonMois: [],
     touteAnnee: true,
+    piquant: null,
   };
 }
 
@@ -70,6 +71,8 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
     ],
     etapes: [],
     facettes: [],
+    service: null,
+    piquant: null,
   };
 }
 
@@ -215,6 +218,7 @@ function ferFood(id: string, ferPer100g: number): Food {
     allergenes: [],
     saisonMois: [],
     touteAnnee: true,
+    piquant: null,
   };
 }
 
@@ -249,6 +253,8 @@ function ferRecipe(id: string, foodId: string): Recipe {
     ],
     etapes: [],
     facettes: [],
+    service: null,
+    piquant: null,
   };
 }
 

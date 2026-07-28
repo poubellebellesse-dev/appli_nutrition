@@ -313,7 +313,10 @@ CREATE TABLE food (
   -- ('viandes' melange boeuf, poulet, porc et agneau).
   sous_famille TEXT,
   saison_mois TEXT NOT NULL,
-  toute_annee INTEGER NOT NULL DEFAULT 0
+  toute_annee INTEGER NOT NULL DEFAULT 0,
+  -- piquant de l'ALIMENT lui-meme, 0 a 4. NULL = non renseigne. Le piquant d'une recette n'en est
+  --   PAS la somme : voir recipe.piquant.
+  piquant INTEGER CHECK (piquant BETWEEN 0 AND 4)
 );
 
 CREATE TABLE food_nutrient (
@@ -352,7 +355,16 @@ CREATE TABLE recipe (
   axe_sucre_sale REAL NOT NULL,
   axe_leger_consistant REAL NOT NULL,
   axe_chaud_froid REAL NOT NULL,
-  axe_texture TEXT NOT NULL
+  axe_texture TEXT NOT NULL,
+  -- service : TYPE DE RECETTE (entree/plat/accompagnement/fromage/dessert), axe ORTHOGONAL a
+  --   types_repas qui dit QUAND. Une puree est un accompagnement servi au dejeuner ET au diner ;
+  --   les deux dimensions se cumulent. Ordre de service francais : le fromage precede le dessert.
+  --   NULLABLE le temps de l'annotation. Voir docs/ENGINE.md et domain/catalog.ts CourseKind.
+  service TEXT CHECK (service IN ('entree', 'plat', 'accompagnement', 'fromage', 'dessert')),
+  -- piquant : 0 pas piquant, 1 un peu, 2 moyen, 3 fort, 4 extreme. NULL = non renseigne, jamais
+  --   « doux ». EDITORIAL : ne se derive PAS des ingredients (quantite, rapport au plat, mode de
+  --   cuisson). NON CABLE — aucune couche ne le lit encore.
+  piquant INTEGER CHECK (piquant BETWEEN 0 AND 4)
 );
 
 CREATE TABLE recipe_ingredient (
@@ -405,7 +417,7 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
     for (const a of ALLERGENS) insertAllergen.run(a.id, a.code, a.nom)
 
     const insertFood = db.prepare(
-      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee, piquant) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     )
     const insertFoodNutrient = db.prepare(
       'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g) VALUES (?, ?, ?)'
@@ -422,7 +434,8 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
         food.groupe,
         food.sous_famille ?? null,
         JSON.stringify(food.saison_mois ?? []),
-        food.toute_annee ? 1 : 0
+        food.toute_annee ? 1 : 0,
+        food.piquant ?? null
       )
       for (const [key, valeur] of Object.entries(food.nutriments ?? {})) {
         insertFoodNutrient.run(food.id, nutrientByKey.get(key), valeur)
@@ -443,8 +456,9 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
       INSERT INTO recipe (
         id, nom, description, temps_prep_min, temps_cuisson_min, difficulte,
         portions_base, image_path, types_repas, saison_mois, envergure,
-        conservation_jours, axe_sucre_sale, axe_leger_consistant, axe_chaud_froid, axe_texture
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        conservation_jours, axe_sucre_sale, axe_leger_consistant, axe_chaud_froid, axe_texture,
+        service, piquant
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     const insertIngredient = db.prepare(`
       INSERT INTO recipe_ingredient (recipe_id, food_id, quantite_g, unite_affichage, optionnel)
@@ -473,7 +487,9 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
         recipe.axes?.sucre_sale ?? 0,
         recipe.axes?.leger_consistant ?? 0,
         recipe.axes?.chaud_froid ?? 0,
-        recipe.axes?.texture ?? ''
+        recipe.axes?.texture ?? '',
+        recipe.service ?? null,
+        recipe.piquant ?? null
       )
       for (const ing of recipe.ingredients ?? []) {
         insertIngredient.run(recipe.id, ing.food_id, ing.quantite_g, ing.unite_affichage, ing.optionnel ? 1 : 0)
