@@ -19,7 +19,16 @@
 //
 // Dépendances autorisées : domain/ uniquement — §2/§3 ENGINE.
 
-import type { Catalog, Food, FoodId, ShoppingList, ShoppingListItem, WeekPlan } from '../domain/index.js'
+import type {
+  Catalog,
+  Food,
+  FoodId,
+  ShoppingList,
+  ShoppingListItem,
+  ShoppingOptions,
+  SlotRef,
+  WeekPlan,
+} from '../domain/index.js'
 import { resolveAnimalOrigin } from '../domain/index.js'
 
 /**
@@ -107,15 +116,33 @@ function trancheDe(dateEntree: string, dateDepart: string, joursDeCourses: numbe
   return Math.max(0, Math.floor(jours / joursDeCourses))
 }
 
+/**
+ * Quantité et unité D'AFFICHAGE. Trois régimes, dans cet ordre de priorité :
+ *
+ *  1. **à la pièce** (`poidsPieceG`) — « 3 carottes ». Prime, parce que c'est ce qu'on compte
+ *     devant le bac. Le grammage disparaît volontairement : il n'aide personne à choisir.
+ *  2. **au conditionnement** (`conditionnementG`) — « 500 g » = deux plaquettes.
+ *  3. **au poids** — arrondi générique.
+ */
+function quantiteAffichee(food: Food, grammes: number): { quantiteTotale: number; unite: string } {
+  if (food.poidsPieceG !== null && food.poidsPieceG > 0) {
+    return { quantiteTotale: Math.ceil(grammes / food.poidsPieceG), unite: 'pièce' }
+  }
+  return { quantiteTotale: arrondiAchat(grammes, food.conditionnementG), unite: 'g' }
+}
+
 export function buildShoppingList(
   plan: WeekPlan,
   catalog: Catalog,
-  opts: { readonly joursDeCourses?: number } = {},
+  opts: ShoppingOptions = {},
   generatedAt = plan.startDate
 ): ShoppingList {
+  // Ce que l'utilisateur déclare avoir déjà — tout ou rien, voir `ShoppingOptions.pantryFoodIds`.
+  const deja = new Set(opts.pantryFoodIds ?? [])
+
   // Clé = aliment + tranche : le même aliment acheté en deux fois donne deux lignes, sinon la
   // scission de §7.4 ne servirait à rien.
-  const cumul = new Map<string, { foodId: FoodId; grammes: number; tranche: number }>()
+  const cumul = new Map<string, { foodId: FoodId; grammes: number; tranche: number; pourSlots: SlotRef[] }>()
 
   for (const entree of plan.entries) {
     if (entree.recipeId === null || entree.isLeftover) continue // voir l'en-tête : un reste ne se rachète pas
@@ -124,23 +151,31 @@ export function buildShoppingList(
 
     const tranche = trancheDe(entree.slot.date, plan.startDate, opts.joursDeCourses)
     for (const ingredient of recette.ingredients) {
+      if (deja.has(ingredient.foodId)) continue
+      const food = catalog.foods.get(ingredient.foodId)
+      if (food !== undefined && food.fondDePlacard && opts.inclureFondDePlacard !== true) continue
+
       const cle = `${ingredient.foodId}#${tranche}`
       const existant = cumul.get(cle)
-      if (existant === undefined) cumul.set(cle, { foodId: ingredient.foodId, grammes: ingredient.quantiteG, tranche })
-      else existant.grammes += ingredient.quantiteG
+      if (existant === undefined) {
+        cumul.set(cle, { foodId: ingredient.foodId, grammes: ingredient.quantiteG, tranche, pourSlots: [entree.slot] })
+      } else {
+        existant.grammes += ingredient.quantiteG
+        existant.pourSlots.push(entree.slot)
+      }
     }
   }
 
   const items: ShoppingListItem[] = []
-  for (const { foodId, grammes, tranche } of cumul.values()) {
+  for (const { foodId, grammes, tranche, pourSlots } of cumul.values()) {
     const food = catalog.foods.get(foodId)
     if (food === undefined) continue // intégrité garantie au build ; garde purement défensive
     items.push({
       foodId,
-      quantiteTotale: arrondiAchat(grammes, food.conditionnementG),
-      unite: 'g',
+      ...quantiteAffichee(food, grammes),
       rayon: rayonDe(food, catalog.foods),
       tranche,
+      pourSlots,
     })
   }
 

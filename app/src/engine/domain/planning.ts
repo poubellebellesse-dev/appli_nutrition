@@ -91,6 +91,21 @@ export interface RerollOptions {
 export interface ShoppingOptions {
   /** Scinde la liste : conservable d'un côté, frais à racheter en milieu de semaine (§7.4 ENGINE). */
   readonly joursDeCourses?: number
+  /**
+   * Aliments que l'utilisateur DÉCLARE avoir déjà — table `user_pantry`, « vider le frigo » (§4.3
+   * ARCHITECTURE, v1). Retirés de la liste.
+   *
+   * ⚠️ FACULTATIF ET PONCTUEL, jamais un inventaire à tenir. L'appli ne demande rien : si le champ
+   * reste vide, la liste est complète. C'est ce qui le distingue de la « gestion du garde-manger »
+   * (v3), qui suppose un stock maintenu dans le temps.
+   *
+   * ⚠️ TOUT OU RIEN : l'aliment sort de la liste, il n'est pas décompté partiellement. `user_pantry`
+   * porte une `quantite_approx`, mais « il me reste un peu de farine » ne permet pas de calculer
+   * combien en racheter — prétendre le contraire ferait manquer l'ingrédient.
+   */
+  readonly pantryFoodIds?: readonly FoodId[]
+  /** Réaffiche sel, poivre et épices, écartés par défaut (`Food.fondDePlacard`). */
+  readonly inclureFondDePlacard?: boolean
 }
 
 export interface ShoppingListItem {
@@ -108,6 +123,14 @@ export interface ShoppingListItem {
    * milieu de semaine de l'autre »). Toujours 0 quand l'option est absente.
    */
   readonly tranche: number
+  /**
+   * Les créneaux qui demandent cet aliment — sa PROVENANCE.
+   *
+   * ⚠️ SANS CE CHAMP, §2 ARCHITECTURE est inapplicable : il exige une liste « rangeable par rayon /
+   * repas / jour », et l'agrégation détruit l'information de repas si on ne la conserve pas ici.
+   * Le manque ne se voyait pas — la liste avait l'air complète.
+   */
+  readonly pourSlots: readonly SlotRef[]
 }
 
 export interface ShoppingList {

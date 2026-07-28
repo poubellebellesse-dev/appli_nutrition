@@ -123,6 +123,25 @@ export interface Food {
    */
   readonly piquant: PiquantLevel | null
   /**
+   * Poids MOYEN d'une pièce, en grammes — une carotte 120 g, un oignon 110 g, un œuf 60 g. `null` =
+   * ne se compte pas à la pièce (farine, riz, épinards).
+   *
+   * ⚠️ UN SEUL POIDS, pas petit/moyen/gros. Trois tailles demanderaient à l'utilisateur laquelle il
+   * trouvera en magasin — information qu'il n'a PAS au moment de planifier. Un poids moyen plus un
+   * arrondi à la hausse suffit, et c'est ce que font les livres de cuisine.
+   *
+   * ⚠️ PRIME sur `conditionnementG` : « 3 carottes » est plus utile que « 350 g » devant le bac.
+   */
+  readonly poidsPieceG: number | null
+  /**
+   * Fond de placard — sel, poivre, épices sèches. Écarté de la liste de courses PAR DÉFAUT.
+   *
+   * ⚠️ CE N'EST PAS « on n'en a jamais besoin », c'est « on ne le rachète pas chaque semaine ».
+   * `sel_fin` apparaît 163 fois « au goût » dans le catalogue : le lister à chaque virée noierait
+   * les vraies lignes sous du bruit. `ShoppingOptions.inclureFondDePlacard` le réaffiche.
+   */
+  readonly fondDePlacard: boolean
+  /**
    * Taille du CONDITIONNEMENT de vente, en grammes — plaquette de beurre 250 g, brique de lait
    * 1 000 g, œuf 60 g. `null` = vendu au poids (fruits, légumes, viande à la coupe).
    *

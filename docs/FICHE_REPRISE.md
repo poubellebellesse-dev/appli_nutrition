@@ -16,7 +16,7 @@ P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── su
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **528 verts (41 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **541 verts (41 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
 `npm run build` → **199 aliments, 241 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir

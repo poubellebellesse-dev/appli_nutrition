@@ -320,6 +320,13 @@ CREATE TABLE food (
   -- conditionnement_g : taille du paquet de vente (plaquette 250 g, brique 1000 g, oeuf 60 g).
   --   NULL = vendu au poids. On achete ceil(besoin / conditionnement) paquets — 240 g d'un besoin
   --   donnent une plaquette de 250 g, 260 g en donnent deux. TOUJOURS au-dessus (§7.4 ENGINE).
+  -- poids_piece_g : poids MOYEN d'une piece (carotte 120 g, oeuf 60 g). NULL = ne se compte pas a
+  --   la piece. PRIME sur conditionnement_g : « 3 carottes » est plus utile que « 350 g ».
+  --   Un seul poids, pas petit/moyen/gros : l'utilisateur ne sait pas quelle taille il trouvera.
+  poids_piece_g INTEGER CHECK (poids_piece_g > 0),
+  -- fond_de_placard : sel, poivre, epices seches. Ecarte de la liste de courses PAR DEFAUT — on ne
+  --   les rachete pas chaque semaine, et les lister noierait les vraies lignes.
+  fond_de_placard INTEGER NOT NULL DEFAULT 0,
   conditionnement_g INTEGER CHECK (conditionnement_g > 0),
   -- origine_animale : de quel animal l'aliment provient. FACTUEL, pas un regime — la chaine
   --   DIET_CHAIN en deduit ce qu'elle veut, un futur filtre halal/casher lira le meme champ.
@@ -431,7 +438,7 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
     for (const a of ALLERGENS) insertAllergen.run(a.id, a.code, a.nom)
 
     const insertFood = db.prepare(
-      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee, piquant, conditionnement_g, origine_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee, piquant, poids_piece_g, fond_de_placard, conditionnement_g, origine_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     const insertFoodNutrient = db.prepare(
       'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g) VALUES (?, ?, ?)'
@@ -450,6 +457,8 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
         JSON.stringify(food.saison_mois ?? []),
         food.toute_annee ? 1 : 0,
         food.piquant ?? null,
+        food.poids_piece_g ?? null,
+        food.fond_de_placard ? 1 : 0,
         food.conditionnement_g ?? null,
         food.origine_animale ?? null,
         food.derive_de ?? null

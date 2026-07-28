@@ -230,3 +230,122 @@ describe('planning/shopping-list — invariants', () => {
     for (const item of liste.items) expect(item.quantiteTotale).toBeGreaterThan(0)
   })
 })
+
+describe('planning/shopping-list — affichage À LA PIÈCE', () => {
+  const catalogPiece = () =>
+    makeCatalog(
+      [makeRecipe('r', { ingredients: [makeIngredient('carotte', { quantiteG: 350 }), makeIngredient('farine', { quantiteG: 350 })] })],
+      [{ ...food('carotte', 'légumes'), poidsPieceG: 120 }, food('farine', 'céréales et dérivés')]
+    )
+
+  it('compte des PIÈCES et cache le grammage — « 3 carottes », pas « 350 g »', () => {
+    const carotte = buildShoppingList(plan([entree('2026-08-03', 'diner', 'r')]), catalogPiece()).items.find(
+      (i) => i.foodId === 'carotte'
+    )!
+
+    expect(carotte.quantiteTotale).toBe(3) // ⌈350 / 120⌉
+    expect(carotte.unite).toBe('pièce')
+  })
+
+  it('arrondit À LA HAUSSE : 100 g de carotte réclame quand même une pièce entière', () => {
+    const catalog = makeCatalog(
+      [makeRecipe('r', { ingredients: [makeIngredient('carotte', { quantiteG: 100 })] })],
+      [{ ...food('carotte', 'légumes'), poidsPieceG: 120 }]
+    )
+    expect(buildShoppingList(plan([entree('2026-08-03', 'diner', 'r')]), catalog).items[0]!.quantiteTotale).toBe(1)
+  })
+
+  it('la pièce PRIME sur le conditionnement', () => {
+    // Un œuf porte les deux : 60 g de pièce et 60 g de « paquet ». On compte des œufs.
+    const catalog = makeCatalog(
+      [makeRecipe('r', { ingredients: [makeIngredient('oeuf', { quantiteG: 180 })] })],
+      [{ ...food('oeuf', 'œufs'), poidsPieceG: 60, conditionnementG: 60 }]
+    )
+    const item = buildShoppingList(plan([entree('2026-08-03', 'diner', 'r')]), catalog).items[0]!
+
+    expect(item.quantiteTotale).toBe(3)
+    expect(item.unite).toBe('pièce')
+  })
+
+  it('un aliment sans poids de pièce reste en grammes', () => {
+    const farine = buildShoppingList(plan([entree('2026-08-03', 'diner', 'r')]), catalogPiece()).items.find(
+      (i) => i.foodId === 'farine'
+    )!
+    expect(farine.unite).toBe('g')
+  })
+})
+
+describe('planning/shopping-list — fond de placard', () => {
+  const catalog = () =>
+    makeCatalog(
+      [makeRecipe('r', { ingredients: [makeIngredient('sel', { quantiteG: 5 }), makeIngredient('carotte', { quantiteG: 200 })] })],
+      [{ ...food('sel', 'condiments'), fondDePlacard: true }, food('carotte', 'légumes')]
+    )
+  const p = plan([entree('2026-08-03', 'diner', 'r')])
+
+  it('sel, poivre et épices sont ÉCARTÉS par défaut', () => {
+    // `sel_fin` apparaît 163 fois « au goût » au catalogue : le lister noierait les vraies lignes.
+    expect(buildShoppingList(p, catalog()).items.map((i) => i.foodId)).toEqual(['carotte'])
+  })
+
+  it('`inclureFondDePlacard` les réaffiche', () => {
+    const ids = buildShoppingList(p, catalog(), { inclureFondDePlacard: true }).items.map((i) => i.foodId)
+    expect(ids).toContain('sel')
+  })
+
+  it('les écarter ne fait pas disparaître le reste de la recette', () => {
+    expect(buildShoppingList(p, catalog()).items).toHaveLength(1)
+  })
+})
+
+describe('planning/shopping-list — ce que l’utilisateur a déjà (`pantryFoodIds`)', () => {
+  const p = plan([entree('2026-08-03', 'diner', 'gratin')])
+
+  it('un aliment déclaré présent sort de la liste', () => {
+    const ids = buildShoppingList(p, CATALOG(), { pantryFoodIds: ['pomme_de_terre' as FoodId] }).items.map((i) => i.foodId)
+
+    expect(ids).not.toContain('pomme_de_terre')
+    expect(ids).toContain('creme') // le reste est intact
+  })
+
+  it('sans l’option, la liste est COMPLÈTE — l’appli ne demande rien', () => {
+    // Le champ est facultatif et ponctuel : ne rien remplir doit donner une liste utilisable.
+    expect(buildShoppingList(p, CATALOG()).items.map((i) => i.foodId)).toContain('pomme_de_terre')
+  })
+
+  it('c’est TOUT OU RIEN — pas de décompte partiel', () => {
+    // « Il me reste un peu de farine » ne permet pas de calculer combien en racheter ; prétendre le
+    // contraire ferait manquer l'ingrédient.
+    const items = buildShoppingList(p, CATALOG(), { pantryFoodIds: ['pomme_de_terre' as FoodId] }).items
+    expect(items.every((i) => i.foodId !== 'pomme_de_terre')).toBe(true)
+  })
+})
+
+describe('planning/shopping-list — provenance (§2 : rangeable par repas / jour)', () => {
+  it('chaque ligne porte les créneaux qui la demandent', () => {
+    const p = plan([entree('2026-08-03', 'diner', 'gratin'), entree('2026-08-04', 'dejeuner', 'soupe')])
+    const pdt = buildShoppingList(p, CATALOG()).items.find((i) => i.foodId === 'pomme_de_terre')!
+
+    // La pomme de terre sert aux DEUX repas — sans ce champ, l'information est perdue à
+    // l'agrégation et « ranger par repas » devient impossible.
+    expect(pdt.pourSlots).toHaveLength(2)
+    expect(pdt.pourSlots.map((s) => `${s.date}/${s.creneau}`)).toEqual(['2026-08-03/diner', '2026-08-04/dejeuner'])
+  })
+
+  it('un ingrédient d’une seule recette ne porte qu’un créneau', () => {
+    const p = plan([entree('2026-08-03', 'diner', 'gratin')])
+    const creme = buildShoppingList(p, CATALOG()).items.find((i) => i.foodId === 'creme')!
+
+    expect(creme.pourSlots).toEqual([{ date: '2026-08-03', creneau: 'diner' }])
+  })
+
+  it('permet de reconstituer la liste d’un SEUL jour', () => {
+    // L'usage concret que §2 ARCHITECTURE demande : « rangeable par rayon / repas / jour ».
+    const p = plan([entree('2026-08-03', 'diner', 'gratin'), entree('2026-08-04', 'dejeuner', 'soupe')])
+    const items = buildShoppingList(p, CATALOG()).items
+
+    const pourLe4 = items.filter((i) => i.pourSlots.some((s) => s.date === '2026-08-04'))
+
+    expect(pourLe4.map((i) => i.foodId)).toEqual(['pomme_de_terre'])
+  })
+})

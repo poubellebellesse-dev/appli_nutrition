@@ -53,6 +53,8 @@ function food(id: string, allergenId: string | null): Food {
     saisonMois: [],
     touteAnnee: false,
     piquant: null,
+    poidsPieceG: null,
+    fondDePlacard: false,
     conditionnementG: null,
     origineAnimale: null,
     deriveDe: null,

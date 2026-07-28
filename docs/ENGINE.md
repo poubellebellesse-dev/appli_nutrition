@@ -1480,6 +1480,48 @@ Effet sur la liste réelle : `70 g de beurre` devient **une plaquette de 250 g**
 > ⚠️ L'`unite` reste `'g'`. Afficher « 4 œufs » ou « 1 plaquette » plutôt que « 240 g » est un
 > travail d'INTERFACE — le moteur donne la quantité, pas sa formulation.
 
+#### Quatre usages que la liste doit servir (§2 ARCHITECTURE)
+
+| Usage | État |
+|---|---|
+| **Faire les courses** — ranger par **rayon** | ✅ six rayons |
+| Ranger par **repas** et par **jour** | ✅ `ShoppingListItem.pourSlots` |
+| **Scinder en plusieurs virées** | ✅ `joursDeCourses` → `tranche` |
+| **Ne pas racheter ce qu'on a** | ✅ `pantryFoodIds` |
+
+> ⚠️ **`pourSlots` a été ajouté après coup, et le manque ne se voyait pas.** §2 exige une liste
+> « rangeable par rayon / repas / jour » ; l'agrégation DÉTRUIT l'information de repas si on ne la
+> conserve pas. La liste avait pourtant l'air complète — c'est le genre de trou qu'on ne trouve
+> qu'en énumérant les usages, pas en relisant le code.
+
+#### Compter en pièces, et taire le grammage
+
+`Food.poidsPieceG` — « 3 carottes » plutôt que « 350 g », parce que c'est ce qu'on compte devant le
+bac. **Prime sur le conditionnement** : un œuf porte les deux, on compte des œufs.
+
+> ⚠️ **UN SEUL poids moyen, pas petit/moyen/gros.** Trois tailles demanderaient à l'utilisateur
+> laquelle il trouvera en magasin — information qu'il n'a pas au moment de planifier. Un poids moyen
+> plus l'arrondi à la hausse suffit ; c'est ce que font les livres de cuisine.
+
+#### Les fonds de placard sortent par défaut
+
+`Food.fondDePlacard` — sel, poivre, épices sèches. `sel_fin` apparaît **163 fois « au goût »** au
+catalogue : le lister à chaque virée noierait les vraies lignes sous du bruit.
+`inclureFondDePlacard` les réaffiche. Effet mesuré : 77 → **68 lignes** sur une semaine.
+
+#### « Vider le frigo » ne viole pas le principe de non-sollicitation
+
+`pantryFoodIds` (table `user_pantry`, §4.3 ARCHITECTURE, **v1**) retire ce que l'utilisateur déclare
+avoir. Le principe n°2 interdit d'**exfiltrer** des données, pas d'en demander ; et la règle « l'appli
+ne demande rien » de §6.2 vise les **pathologies**.
+
+> ⚠️ **TOUT OU RIEN.** `user_pantry` porte une `quantite_approx`, mais « il me reste un peu de
+> farine » ne permet pas de calculer combien en racheter — prétendre le contraire ferait manquer
+> l'ingrédient. L'aliment sort de la liste ou y reste entier.
+>
+> Ponctuel, jamais un inventaire à tenir : c'est ce qui le distingue de la « gestion du
+> garde-manger » (v3). Champ vide → liste complète.
+
 #### Deux choix qui pourraient surprendre
 
 - **Les quantités ne sont pas divisées par les convives.** On cuisine la recette entière — c'est
