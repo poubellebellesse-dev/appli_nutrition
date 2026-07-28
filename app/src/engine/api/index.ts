@@ -17,6 +17,7 @@
 // est au sommet de la pile engine/, elle peut connaître tout ce qui est en dessous d'elle).
 
 import type {
+  AlternativeSuggestion,
   Catalog,
   EngineDiagnostics,
   ExclusionLayerId,
@@ -39,6 +40,7 @@ import type {
   WeekPlan,
   WeekPlanRequest,
 } from '../domain/index.js'
+import { suggestAlternatives as runSuggestAlternatives } from '../selection/alternatives.js'
 import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
@@ -64,6 +66,18 @@ export interface Engine {
   readonly catalogVersion: string
 
   suggestMeals(req: SuggestionRequest): SuggestionResult
+  /**
+   * « Je n'aime pas cet ingrédient » — §8.4 ENGINE, décision 26.
+   *
+   * ⚠️ Prend un `SuggestionRequest`, pas seulement `(recipeId, dislikedFoodId)` comme le proposait
+   * la spec initiale de §8 : sans lui, les alternatives ne repasseraient pas les filtres et
+   * pourraient proposer un plat contenant un allergène déclaré.
+   */
+  suggestAlternatives(
+    req: SuggestionRequest,
+    recipeId: RecipeId,
+    dislikedFoodId: FoodId
+  ): AlternativeSuggestion
   planWeek(req: WeekPlanRequest): WeekPlan
   rerollSlot(plan: WeekPlan, slot: SlotRef, opts?: RerollOptions): WeekPlan
   planLeftovers(plan: WeekPlan): WeekPlan
@@ -340,6 +354,8 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
     catalogVersion: enrichedCatalog.version,
 
     suggestMeals: (req) => runSuggestMeals(enrichedCatalog, req, now),
+    suggestAlternatives: (req, recipeId, dislikedFoodId) =>
+      runSuggestAlternatives(enrichedCatalog, req, recipeId, dislikedFoodId),
     planWeek: () => notImplemented('planWeek'),
     rerollSlot: () => notImplemented('rerollSlot'),
     planLeftovers: () => notImplemented('planLeftovers'),

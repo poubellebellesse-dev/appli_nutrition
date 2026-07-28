@@ -118,6 +118,7 @@ function makeEmptyIndexes(): CatalogIndexes {
     recipeSignature: new Map(),
     recipeFamilySignature: new Map(),
     declaredFamilies: new Set(),
+    recipeCharacteristic: new Map(),
   };
 }
 

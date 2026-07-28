@@ -4,7 +4,7 @@
 // (§6 ENGINE) — y compris PipelineTrace, nécessaire à guards/ (§5.2 ENGINE) qui ne doit
 // dépendre que de domain/ (§2/§3 ENGINE : GUARD --> DOM uniquement, jamais SEL).
 
-import type { EvidenceSheetId, RecipeId } from './ids.js'
+import type { EvidenceSheetId, FoodId, RecipeId } from './ids.js'
 import type { ExclusionLayerId, LayerId, ScoringLayerId } from './layer-ids.js'
 import type { NutrientVector } from './catalog.js'
 
@@ -116,4 +116,37 @@ export interface PipelineTrace {
    * violation.
    */
   readonly scoringLayerCounts: ReadonlyMap<ScoringLayerId, number>
+}
+
+// --- Alternatives (§8.4 ENGINE, décision 26) ---------------------------------------------------
+
+/**
+ * La MÊME recette, autrement. `replacementFoodId` vaut `null` pour un retrait — le champ dit ce qui
+ * remplace, et un retrait ne remplace rien.
+ */
+export interface RecipeVariant {
+  readonly kind: 'retrait_optionnel' | 'substitution'
+  readonly recipeId: RecipeId
+  /** L'aliment rejeté, celui qui est retiré ou remplacé. */
+  readonly foodId: FoodId
+  readonly replacementFoodId: FoodId | null
+}
+
+/**
+ * Une AUTRE recette du même genre. `characteristicFoodId` est ce qui a changé — même `Food.groupe`
+ * que la recette d'origine, aliment différent (§8.4 ENGINE).
+ */
+export interface AlternativeRecipe {
+  readonly recipeId: RecipeId
+  readonly characteristicFoodId: FoodId
+}
+
+/**
+ * ⚠️ Les deux listes répondent à deux demandes différentes et ne se substituent pas l'une à
+ * l'autre : `variants` garde le plat, `alternatives` en change. Une UI qui les fusionnerait
+ * ferait croire qu'on propose la même chose.
+ */
+export interface AlternativeSuggestion {
+  readonly variants: readonly RecipeVariant[]
+  readonly alternatives: readonly AlternativeRecipe[]
 }

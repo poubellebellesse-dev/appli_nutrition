@@ -330,6 +330,7 @@ function buildIndexes(recipes: ReadonlyMap<RecipeId, Recipe>, foods: ReadonlyMap
     recipeSignature: new Map(),
     recipeFamilySignature: new Map(),
     declaredFamilies: new Set(),
+    recipeCharacteristic: new Map(),
   }
 }
 

@@ -12,11 +12,11 @@ SQLite construit au build. **On code le moteur en ligne de commande avant toute 
 ## Où on en est
 
 ```
-P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ⬜ ── planning ⬜ ── UI ⬜
-                                                            ⬅ ICI
+P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ⬜ ── UI ⬜
+                                                                              ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **437 verts (36 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **451 verts (37 fichiers)** · `npm run typecheck` propre ·
 `npm run build` → **193 aliments, 212 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
@@ -25,15 +25,13 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 
 ## ▶ La prochaine étape
 
-**`suggestAlternatives`** (décision 26, [ETAT §4](./ETAT.md)). Le report tenait à un catalogue de
-10 recettes ; il en compte 212. Deux notions à ne pas confondre :
+**Le planning** (`planWeek`, [ENGINE §7](./ENGINE.md)). C'est le dernier gros morceau moteur avant
+l'UI, et **le seul moment où l'on saura si le moteur produit des semaines crédibles** — un plat pris
+isolément peut être bon cinq fois de suite et faire une mauvaise semaine.
 
-- **variante** = ingrédient principal INVARIANT (retrait d'un `optionnel`, substitution d'un
-  ingrédient secondaire) ;
-- **alternative** = autre recette, ingrédient principal libre **dans le même `Food.groupe`**,
-  toujours dans les filtres de l'utilisateur.
-
-La table `substitution` se conçoit **avec** les recettes, pas avant (décision 27).
+> `suggestAlternatives` est **codé** depuis le 2026-07-28 (§8.4). Il a exigé une TROISIÈME notion
+> d'ingrédient — l'ingrédient *caractéristique*, mesuré séparément du « plus lourd » et de la
+> signature. Ne pas les confondre : trois questions, trois réponses.
 
 ## Les cinq acquis à ne pas défaire
 

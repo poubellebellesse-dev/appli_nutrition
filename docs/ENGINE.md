@@ -1069,6 +1069,58 @@ légitimes (deux flans au goûter, deux porridges au petit-déjeuner), et les ab
 > `recipeMainIngredient` n'est désormais lu par **aucune couche**. Il reste calculé à l'init et
 > employé seulement par les bancs de comparaison, qui documentent pourquoi il a été abandonné.
 
+### 8.4 `suggestAlternatives` — « je n'aime pas cet ingrédient » — CODÉ (2026-07-28)
+
+Décision 26. **Deux notions que la spec initiale confondait**, et qui ne doivent jamais être
+refondues :
+
+| | Ce qui change | Mécanisme |
+|---|---|---|
+| **Variante** | rien — le même plat, autrement | retrait d'un ingrédient `optionnel`, ou substitution d'un ingrédient **secondaire** |
+| **Alternative** | la recette entière | autre plat dont l'ingrédient caractéristique est dans le **même `Food.groupe`**, mais **différent** |
+
+> ⚠️ **Pas `argmax(similarity)` pour le plat frère.** La similarité pondère la composition à 0,80
+> (§6.6 ter) : la maximiser revient à privilégier les recettes qui **gardent** l'ingrédient rejeté —
+> l'inverse du service rendu. Le piège était déjà noté quand le poids valait 0,5 ; il s'est aggravé.
+
+> ⚠️ **Signature révisée.** `(recipeId, dislikedFoodId)` est insuffisant : les alternatives passent
+> par `runExclusionPass`, donc par les mêmes sept couches d'exclusion que `suggestMeals`.
+
+#### L'ingrédient CARACTÉRISTIQUE — troisième notion, troisième mesure
+
+`engine/nutrition/characteristic-ingredient.ts`. À ne confondre ni avec `recipeMainIngredient` (le
+plus lourd, mesuré faux) ni avec `recipeSignature` (comparer deux plats). Ici la question est
+« quel aliment un plat frère doit-il remplacer ».
+
+**Modèle mesuré** (banc jeté après usage, 212 recettes) : le plus lourd d'un **groupe définissant**
+— `viandes`, `poissons`, `fruits de mer`, `légumineuses` — avec repli sur le plus lourd sinon.
+
+Sur **29 recettes** les deux modèles divergent, et les 29 fois le groupe définissant a raison :
+
+| Recette | Le plus lourd | Caractéristique |
+|---|---|---|
+| Hachis de bœuf aux pommes de terre | pomme de terre | **bœuf** |
+| Cabillaud aux épinards et au curry | épinard | **cabillaud** |
+| Dahl de lentilles corail | tomate | **lentilles corail** |
+| Caldo verde | pomme de terre | **poitrine de porc** |
+
+> ⚠️ **`œufs` est volontairement absent des groupes définissants.** Mesuré : l'y inclure fait de
+> « Clafoutis aux framboises » un plat d'ŒUF. L'œuf est un ingrédient de structure (crêpes, flans,
+> mousses, panures) — **exactement le piège déjà rencontré en §6.6 quinquies**, écarté pour la même
+> raison. Le retirer fait tomber les désaccords de 49 à 29, les 20 disparus étant tous des desserts.
+
+Le repli concerne **114 recettes sur 212** (soupes, gratins de légumes, desserts) : pour elles « le
+plus lourd » redevient le meilleur candidat — une soupe de carottes *est* un plat de carottes.
+
+#### Limites assumées
+
+- **Classement par ordre d'id**, faute de critère mesuré. Classer par similarité serait activement
+  nuisible (voir ci-dessus) ; classer par score demanderait la passe complète pour un service
+  secondaire. Ce qui est verrouillé par test, c'est le **déterminisme**, pas la pertinence de l'ordre.
+- **La table `substitution` est vide** (décision 27 : elle se conçoit avec les recettes). Le chemin
+  de code existe et est testé ; il ne rend rien. Ce n'est pas un bug à corriger en inventant des
+  substitutions.
+
 ### 6.7 Explication — CODÉ (P1c, `engine/selection/explain.ts`)
 
 ```ts
@@ -1318,13 +1370,16 @@ export interface Engine {
   suggestSubstitutions(id: RecipeId, missing: readonly FoodId[]): readonly Substitution[]
 
   /**
-   * P1c/P2, PROPOSÉ — pas encore implémenté (session 2026-07-24, voir docs/archive/RECAP_SESSION.md).
-   * « Pâtes sans ail / autre sauce » : trois mécanismes combinés, dans cet ordre de préférence —
-   * (1) retirer l'ingrédient marqué `optionnel`, (2) piocher dans la table `substitution`,
-   * (3) proposer un plat frère via le regroupement de la diversification (§6.6). Le socle
-   * (respect de `optionnel`, table `substitution` chargée) se prépare en P1b.
+   * CODÉ (2026-07-28) — §8.4. ⚠️ Signature RÉVISÉE : prend un `SuggestionRequest`, que la version
+   * proposée ci-dessus omettait. Sans lui, une alternative ne repasserait pas les filtres et
+   * pourrait proposer un plat contenant un allergène déclaré. Rend un objet à DEUX listes, pas un
+   * tableau : `variants` garde le plat, `alternatives` en change (décision 26).
    */
-  suggestAlternatives(recipeId: RecipeId, dislikedFoodId: FoodId): readonly AlternativeSuggestion[]
+  suggestAlternatives(
+    req: SuggestionRequest,
+    recipeId: RecipeId,
+    dislikedFoodId: FoodId
+  ): AlternativeSuggestion
 
   /** Accès individuel à une couche — §6.8 */
   layer<C>(id: LayerId): SelectionLayer<C>

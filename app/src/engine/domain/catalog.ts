@@ -279,6 +279,12 @@ export interface CatalogIndexes {
    * distinguer ; ce jeu tranche. Catalogue-global, pas par recette — d'où l'absence de `RecipeId`.
    */
   readonly declaredFamilies: ReadonlySet<string>
+  /**
+   * L'aliment qu'un « plat frère » devrait remplacer (§8.4 ENGINE, décision 26). ⚠️ Ce n'est NI
+   * `recipeMainIngredient` (le plus lourd, mesuré faux) NI la signature : le plus lourd d'un GROUPE
+   * DÉFINISSANT, avec repli. « Hachis de bœuf aux pommes de terre » est un plat de bœuf.
+   */
+  readonly recipeCharacteristic: ReadonlyMap<RecipeId, FoodId>
 }
 
 export interface Catalog {

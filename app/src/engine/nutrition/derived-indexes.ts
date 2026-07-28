@@ -15,6 +15,7 @@ import { computeRecipeNutrients } from './recipe-nutrients.js'
 import { computeRecipeMainIngredient } from './main-ingredient.js'
 import { computeDeclaredFamilies, computeRecipeFamilySignature, computeRecipeSignature } from './signature.js'
 import { computeRecipeNutrientCoverage } from './nutrient-coverage.js'
+import { computeRecipeCharacteristic } from './characteristic-ingredient.js'
 
 export function attachDerivedIndexes(catalog: Catalog): Catalog {
   return {
@@ -27,6 +28,7 @@ export function attachDerivedIndexes(catalog: Catalog): Catalog {
       recipeSignature: computeRecipeSignature(catalog),
       recipeFamilySignature: computeRecipeFamilySignature(catalog),
       declaredFamilies: computeDeclaredFamilies(catalog),
+      recipeCharacteristic: computeRecipeCharacteristic(catalog),
     },
   }
 }
