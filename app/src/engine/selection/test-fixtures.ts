@@ -65,6 +65,8 @@ export function makeFood(
     saisonMois: [],
     touteAnnee: false,
     piquant: null,
+    origineAnimale: null,
+    deriveDe: null,
   }
 }
 

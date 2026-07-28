@@ -316,7 +316,17 @@ CREATE TABLE food (
   toute_annee INTEGER NOT NULL DEFAULT 0,
   -- piquant de l'ALIMENT lui-meme, 0 a 4. NULL = non renseigne. Le piquant d'une recette n'en est
   --   PAS la somme : voir recipe.piquant.
-  piquant INTEGER CHECK (piquant BETWEEN 0 AND 4)
+  piquant INTEGER CHECK (piquant BETWEEN 0 AND 4),
+  -- origine_animale : de quel animal l'aliment provient. FACTUEL, pas un regime — la chaine
+  --   DIET_CHAIN en deduit ce qu'elle veut, un futur filtre halal/casher lira le meme champ.
+  --   NULL = vegetal, mineral, OU derive (l'origine se lit alors sur derive_de).
+  origine_animale TEXT CHECK (origine_animale IN ('mammifere','volaille','poisson','fruit_de_mer','insecte')),
+  -- derive_de : aliment dont celui-ci est tire (beurre_doux -> lait_entier). L'origine animale se
+  --   PROPAGE le long de cette chaine. C'est ce champ qui rattrape les derives que groupe laisse
+  --   passer : le beurre est en « matieres grasses », le miel en « produits sucres ».
+  -- DEFERRABLE : un derive peut apparaitre AVANT sa source dans foods.yaml (beurre_doux precede
+  --   lait_entier). La verification est donc reportee au COMMIT, ou toutes les lignes existent.
+  derive_de TEXT REFERENCES food(id) DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE TABLE food_nutrient (
@@ -417,7 +427,7 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
     for (const a of ALLERGENS) insertAllergen.run(a.id, a.code, a.nom)
 
     const insertFood = db.prepare(
-      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee, piquant) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee, piquant, origine_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     const insertFoodNutrient = db.prepare(
       'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g) VALUES (?, ?, ?)'
@@ -435,7 +445,9 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
         food.sous_famille ?? null,
         JSON.stringify(food.saison_mois ?? []),
         food.toute_annee ? 1 : 0,
-        food.piquant ?? null
+        food.piquant ?? null,
+        food.origine_animale ?? null,
+        food.derive_de ?? null
       )
       for (const [key, valeur] of Object.entries(food.nutriments ?? {})) {
         insertFoodNutrient.run(food.id, nutrientByKey.get(key), valeur)

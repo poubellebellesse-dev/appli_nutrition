@@ -70,6 +70,20 @@ export interface FoodAllergen {
   readonly certitude: AllergenCertitude
 }
 
+/**
+ * De quel animal un aliment provient — FACTUEL, indépendant des règles qui le lisent.
+ *
+ * ⚠️ CE N'EST PAS UN RÉGIME. Même leçon que `MealSlot` / `CourseKind` : le fait et la règle sont
+ * deux axes. `DIET_CHAIN` (§6.3 ter) en DÉDUIT ce qu'elle veut — `poisson` et `fruit_de_mer`
+ * autorisent le pescétarien, `mammifere` et `volaille` non — mais un futur filtre halal, casher ou
+ * « sans porc » lira le même champ pour en tirer autre chose. Encoder directement le régime ici
+ * fermerait la porte à tout le reste.
+ *
+ * `null` = origine végétale ou minérale. Ce n'est PAS « inconnu » : le champ est obligatoire et
+ * chaque aliment du catalogue est annoté.
+ */
+export type AnimalOrigin = 'mammifere' | 'volaille' | 'poisson' | 'fruit_de_mer' | 'insecte'
+
 // --- Aliments (table `food` + `food_nutrient` + `food_allergen`) -----------------------------
 
 export interface Food {
@@ -108,6 +122,47 @@ export interface Food {
    * ⚠️ Le piquant d'une recette n'en est PAS la somme — voir `Recipe.piquant`.
    */
   readonly piquant: PiquantLevel | null
+  /**
+   * Origine animale DIRECTE (§ `AnimalOrigin`). `null` = végétal, minéral, **ou dérivé** — dans ce
+   * dernier cas l'origine se lit sur `deriveDe`. Toujours passer par `resolveAnimalOrigin`, jamais
+   * lire ce champ seul : le beurre a `origineAnimale: null` et vient pourtant d'un mammifère.
+   */
+  readonly origineAnimale: AnimalOrigin | null
+  /**
+   * Aliment dont celui-ci est TIRÉ — `beurre_doux` → `lait_entier`. L'origine animale se propage le
+   * long de cette chaîne : le beurre vient du lait, qui vient d'un mammifère, donc le beurre vient
+   * d'un mammifère.
+   *
+   * ⚠️ C'est ce champ qui rattrape les dérivés que `Food.groupe` laisse passer. Le beurre est classé
+   * en « matières grasses » et le miel en « produits sucrés » — aucun groupe animal. Une règle
+   * fondée sur le seul groupe déclarait « Radis au beurre » végétalienne, et une recette au miel
+   * s'est réellement retrouvée étiquetée `vegetalien` au catalogue (décision 38).
+   */
+  readonly deriveDe: FoodId | null
+}
+
+/**
+ * Remonte la chaîne `deriveDe` jusqu'à trouver une origine animale déclarée. `null` = végétal ou
+ * minéral, une fois la chaîne épuisée.
+ *
+ * ⚠️ GARDE ANTI-CYCLE. Une chaîne mal saisie (`a` dérive de `b` qui dérive de `a`) boucle sans fin.
+ * Le build la refuse déjà, mais cette fonction est appelée sur des données qui peuvent venir
+ * d'ailleurs : elle s'arrête et rend `null` plutôt que de figer l'appelant. Ne pas retirer cette
+ * garde au motif que « le build vérifie » — le build vérifie SON catalogue, pas tous.
+ */
+export function resolveAnimalOrigin(
+  food: Food | undefined,
+  foods: ReadonlyMap<FoodId, Food>
+): AnimalOrigin | null {
+  const vus = new Set<FoodId>()
+  let courant = food
+  while (courant !== undefined) {
+    if (courant.origineAnimale !== null) return courant.origineAnimale
+    if (courant.deriveDe === null || vus.has(courant.id)) return null
+    vus.add(courant.id)
+    courant = foods.get(courant.deriveDe)
+  }
+  return null
 }
 
 // --- Recettes (table `recipe` + tables liées) -------------------------------------------------

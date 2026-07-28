@@ -121,7 +121,7 @@ nutrient(id, code, nom, unite, vnr_adulte, categorie, sens)
     --   (énergie, macros) ; 'plancher' ne punit que le manque (fibres, fer, calcium, vitamine C) ;
     --   'plafond' ne punit que le dépassement (sodium). Corrige un écart auparavant SYMÉTRIQUE qui
     --   pénalisait un plat riche en fer pour sa richesse (docs/ENGINE.md §6.5 précision 1).
-food(id, code_ciqual, nom, groupe, sous_famille?, saison_mois[], toute_annee)
+food(id, code_ciqual, nom, groupe, sous_famille?, saison_mois[], toute_annee, piquant?, origine_animale?, derive_de?)
     -- saison_mois[] + toute_annee : RÉELS depuis P1b-1 (build.mjs + loader). Deux dimensions
     --   INDÉPENDANTES et cumulables : saison_mois = pleine saison (production locale) ;
     --   toute_annee = disponibilité (rayon/conservation). Un légume de garde porte les deux.
@@ -135,6 +135,18 @@ food(id, code_ciqual, nom, groupe, sous_famille?, saison_mois[], toute_annee)
     --   classerait TOUS les aliments, `sous_famille` n'en regroupe qu'une poignée.
     -- piquant : 0 a 4 (0 pas piquant, 4 extreme). NULL = non renseigne, JAMAIS « doux ».
     --   Pose le 2026-07-28, NON CABLE — aucune couche ne le lit encore.
+    -- origine_animale + derive_de : D'OU VIENT L'ALIMENT, en cascade (2026-07-28, decision 39).
+    --   origine_animale ∈ {mammifere, volaille, poisson, fruit_de_mer, insecte}, NULL = vegetal,
+    --   mineral OU derive. derive_de pointe vers l'aliment source (beurre_doux -> lait_entier) et
+    --   l'origine se PROPAGE le long de cette chaine.
+    --   ⚠️ POURQUOI : `groupe` ne suffit pas. Le beurre est en « matieres grasses », le miel en
+    --   « produits sucres » — aucun groupe animal. Une regime deduite du seul groupe declarait
+    --   « Radis au beurre » vegetalienne, et une recette AU MIEL etait etiquetee `vegetalien` au
+    --   catalogue. A l'inverse les boissons vegetales portent le groupe « lait et produits
+    --   laitiers » sans etre animales.
+    --   ⚠️ FACTUEL, PAS UN REGIME : DIET_CHAIN en deduit ce qu'elle veut, un futur filtre halal ou
+    --   casher lira le meme champ pour en tirer autre chose. Ne pas y encoder le regime.
+    --   La cle etrangere est DEFERRABLE : un derive peut preceder sa source dans foods.yaml.
 food_nutrient(food_id, nutrient_id, valeur_pour_100g)
 allergen(id, code, nom)                          -- 14 allergènes réglementaires UE
 food_allergen(food_id, allergen_id, certitude)   -- 'contient' | 'traces'

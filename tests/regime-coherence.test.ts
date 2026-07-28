@@ -23,7 +23,8 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { Catalog, DietCode, Food, Recipe } from '../app/src/engine/domain/index.js'
+import type { Catalog, DietCode, Food, FoodId, Recipe } from '../app/src/engine/domain/index.js'
+import { resolveAnimalOrigin } from '../app/src/engine/domain/index.js'
 import { DIET_CHAIN } from '../app/src/engine/selection/index.js'
 import { loadCatalog } from '../app/src/data/catalog-loader.js'
 
@@ -31,26 +32,33 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..')
 const BUILD_SCRIPT = path.join(REPO_ROOT, 'catalog', 'build.mjs')
 
-/** Boissons végétales : elles portent le groupe `lait et produits laitiers` sans en être. */
-const BOISSONS_VEGETALES = new Set(['boisson_soja', 'boisson_amande', 'boisson_avoine'])
-
 /**
- * Le régime le plus RESTRICTIF qu'un aliment autorise encore.
+ * Le régime le plus RESTRICTIF qu'un aliment autorise encore, déduit de son ORIGINE ANIMALE.
  *
- * ⚠️ Le beurre et la crème sont classés en « matières grasses », PAS en « lait et produits
- * laitiers » — s'en remettre au seul groupe les ferait passer pour végétaliens. Une première
- * version de cette règle signalait « Radis au beurre » comme végétalienne.
+ * ⚠️ NE PLUS DEVINER DEPUIS `Food.groupe`. La première version de cette règle le faisait et se
+ * trompait : le beurre vit en « matières grasses » et le miel en « produits sucrés » — aucun groupe
+ * animal. Elle déclarait « Radis au beurre » végétalienne et rapportait 20 faux positifs.
+ * `resolveAnimalOrigin` remonte la chaîne `deriveDe` (beurre → lait entier → mammifère), donc un
+ * dérivé ne peut plus passer à travers, quel que soit son rayon.
  *
- * ⚠️ Le miel non plus n'est dans aucun groupe animal : c'est un produit sucré. C'est précisément
- * lui qui a fait passer une recette au miel pour végétalienne.
+ * La correspondance origine → régime est faite ICI et pas dans le domaine : `AnimalOrigin` est un
+ * FAIT, `DietCode` une règle. Un futur filtre halal lira la même origine pour en tirer autre chose.
  */
-function exigenceDe(food: Food): DietCode {
-  if (food.groupe === 'viandes') return 'omnivore'
-  if (food.groupe === 'poissons' || food.groupe === 'fruits de mer') return 'pescetarien'
-  if (food.groupe === 'œufs') return 'vegetarien'
-  if (food.groupe === 'lait et produits laitiers' && !BOISSONS_VEGETALES.has(food.id)) return 'vegetarien'
-  if (food.id === 'miel' || food.id.startsWith('beurre') || food.id.startsWith('creme')) return 'vegetarien'
-  return 'vegetalien'
+function exigenceDe(food: Food, foods: ReadonlyMap<FoodId, Food>): DietCode {
+  switch (resolveAnimalOrigin(food, foods)) {
+    case 'mammifere':
+    case 'volaille':
+      // La CHAIR impose omnivore ; le lait et l'œuf s'arrêtent à végétarien. Le groupe tranche, il
+      // est fiable pour ça : ce qui vient d'un mammifère sans être en « viandes » est un produit.
+      return food.groupe === 'viandes' ? 'omnivore' : 'vegetarien'
+    case 'poisson':
+    case 'fruit_de_mer':
+      return 'pescetarien'
+    case 'insecte':
+      return 'vegetarien' // le miel
+    case null:
+      return 'vegetalien'
+  }
 }
 
 const rang = (diet: string) => DIET_CHAIN.indexOf(diet as DietCode)
@@ -62,7 +70,7 @@ function exigenceRecette(recipe: Recipe, catalog: Catalog): { diet: DietCode; co
   for (const ingredient of recipe.ingredients) {
     const food = catalog.foods.get(ingredient.foodId)
     if (food === undefined) continue
-    const exigence = exigenceDe(food)
+    const exigence = exigenceDe(food, catalog.foods)
     if (rang(exigence) > rang(diet)) {
       diet = exigence
       coupable = food.nom
@@ -125,5 +133,82 @@ describe('catalogue réel — cohérence entre l’étiquette `regime` et les in
       const regimes = recipe.facettes.filter((f) => f.facette === 'regime')
       expect(regimes, `« ${recipe.nom} »`).toHaveLength(1)
     }
+  })
+})
+
+describe('catalogue réel — la chaîne `deriveDe` (origine animale en cascade)', () => {
+  let catalog: Catalog
+  const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-origine-'))
+  const dbPath = path.join(fixtureDir, 'catalog.db')
+
+  beforeAll(() => {
+    const result = spawnSync(process.execPath, ['--experimental-sqlite', BUILD_SCRIPT, '--out', dbPath], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+    })
+    expect(result.status).toBe(0)
+    catalog = loadCatalog(dbPath)
+  })
+
+  afterAll(() => {
+    rmSync(fixtureDir, { recursive: true, force: true })
+  })
+
+  it('LE CAS QUI MOTIVE LA CASCADE : le beurre vient d’un mammifère sans le déclarer', () => {
+    const beurre = catalog.foods.get('beurre_doux' as FoodId)!
+
+    expect(beurre.groupe).toBe('matières grasses') // aucun groupe animal
+    expect(beurre.origineAnimale).toBeNull() // il ne déclare rien lui-même
+    expect(beurre.deriveDe).toBe('lait_entier')
+    expect(resolveAnimalOrigin(beurre, catalog.foods)).toBe('mammifere') // et pourtant
+  })
+
+  it('le miel est un produit d’INSECTE, invisible pour qui regarde son groupe', () => {
+    // C'est lui qui a fait passer « Tofu laqué » pour végétalien : « produits sucrés ».
+    const miel = catalog.foods.get('miel' as FoodId)!
+
+    expect(miel.groupe).toBe('produits sucrés')
+    expect(resolveAnimalOrigin(miel, catalog.foods)).toBe('insecte')
+  })
+
+  it('une boisson végétale reste VÉGÉTALE malgré son groupe « lait et produits laitiers »', () => {
+    // Le défaut inverse : le groupe suggère l'animal là où il n'y en a pas.
+    for (const id of ['boisson_soja', 'boisson_amande', 'boisson_avoine'] as FoodId[]) {
+      const food = catalog.foods.get(id)!
+      expect(food.groupe).toBe('lait et produits laitiers')
+      expect(resolveAnimalOrigin(food, catalog.foods)).toBeNull()
+    }
+  })
+
+  it('tout aliment d’un groupe animal a une origine résolue — aucun oubli', () => {
+    const GROUPES_ANIMAUX = new Set(['viandes', 'poissons', 'fruits de mer', 'œufs'])
+    const oublies = [...catalog.foods.values()]
+      .filter((f) => GROUPES_ANIMAUX.has(f.groupe) && resolveAnimalOrigin(f, catalog.foods) === null)
+      .map((f) => f.id)
+
+    expect(oublies).toEqual([])
+  })
+
+  it('toute chaîne `deriveDe` pointe vers un aliment EXISTANT et se termine', () => {
+    // Une chaîne rompue rendrait `null` en silence, donc « végétal » — exactement le mode de
+    // défaillance que ce champ existe pour supprimer.
+    for (const food of catalog.foods.values()) {
+      if (food.deriveDe === null) continue
+      expect(catalog.foods.has(food.deriveDe), `${food.id} → ${food.deriveDe}`).toBe(true)
+      // Se termine : la résolution ne boucle pas et rend une origine déclarée.
+      expect(resolveAnimalOrigin(food, catalog.foods)).not.toBeNull()
+    }
+  })
+
+  it('un cycle ne fait pas boucler la résolution — garde défensive', () => {
+    // Le build refuse les cycles, mais `resolveAnimalOrigin` est appelable sur d'autres données.
+    const a = { ...catalog.foods.get('beurre_doux' as FoodId)!, id: 'a' as FoodId, deriveDe: 'b' as FoodId }
+    const b = { ...a, id: 'b' as FoodId, deriveDe: 'a' as FoodId }
+    const cyclique = new Map([
+      ['a' as FoodId, a],
+      ['b' as FoodId, b],
+    ])
+
+    expect(resolveAnimalOrigin(a, cyclique)).toBeNull()
   })
 })

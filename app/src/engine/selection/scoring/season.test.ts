@@ -23,6 +23,8 @@ function makeFood(id: string, opts: { readonly touteAnnee: boolean; readonly sai
     saisonMois: opts.saisonMois ?? [],
     touteAnnee: opts.touteAnnee,
     piquant: null,
+    origineAnimale: null,
+    deriveDe: null,
   }
 }
 

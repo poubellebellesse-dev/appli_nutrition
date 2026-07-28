@@ -52,6 +52,7 @@ foods:
     code_ciqual: "22000"
     nom: "Œuf de poule, entier, cru"
     groupe: "œufs"
+    origine_animale: volaille
     toute_annee: true
     nutriments:
       energie_kcal: 140
@@ -90,6 +91,7 @@ foods:
     code_ciqual: "19041"
     nom: "Lait demi-écrémé"
     groupe: "lait et produits laitiers"
+    origine_animale: mammifere
     sous_famille: "lait"
     toute_annee: true
     nutriments:
@@ -110,6 +112,7 @@ foods:
     code_ciqual: "16400"
     nom: "Beurre doux"
     groupe: "matières grasses"
+    derive_de: lait_entier
     sous_famille: "beurre"
     toute_annee: true
     nutriments:
@@ -386,6 +389,7 @@ foods:
     code_ciqual: "36007"
     nom: "Blanc de poulet, cru"
     groupe: "viandes"
+    origine_animale: volaille
     sous_famille: "poulet"
     toute_annee: true
     nutriments:
@@ -403,6 +407,7 @@ foods:
     code_ciqual: "6250"
     nom: "Bœuf haché 5% MG, cru"
     groupe: "viandes"
+    origine_animale: mammifere
     toute_annee: true
     nutriments:
       energie_kcal: 130
@@ -420,6 +425,7 @@ foods:
     code_ciqual: "26036"
     nom: "Saumon, cru"
     groupe: "poissons"
+    origine_animale: poisson
     # Poisson d'élevage (aquaculture) — pas de saisonnalité de pêche à respecter.
     toute_annee: true
     nutriments:
@@ -475,6 +481,7 @@ foods:
     code_ciqual: "19593"
     nom: "Yaourt nature au lait entier"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 50.1
@@ -494,6 +501,7 @@ foods:
     code_ciqual: "12118"
     nom: "Emmental râpé"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 368
@@ -513,6 +521,7 @@ foods:
     code_ciqual: "19410"
     nom: "Crème fraîche épaisse 30% MG"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 285
@@ -1024,6 +1033,7 @@ foods:
     code_ciqual: "26039"
     nom: "Thon, conserve au naturel, égoutté"
     groupe: "poissons"
+    origine_animale: poisson
     toute_annee: true
     nutriments:
       energie_kcal: 143
@@ -1065,6 +1075,7 @@ foods:
     code_ciqual: "36304"
     nom: "Escalope de dinde, crue"
     groupe: "viandes"
+    origine_animale: volaille
     toute_annee: true
     nutriments:
       energie_kcal: 108
@@ -1137,6 +1148,7 @@ foods:
     code_ciqual: "31008"
     nom: "Miel"
     groupe: "produits sucrés"
+    origine_animale: insecte
     toute_annee: true
     nutriments:
       energie_kcal: 331
@@ -1154,6 +1166,7 @@ foods:
     code_ciqual: "12110"
     nom: "Comté, râpé"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 413
@@ -1172,6 +1185,7 @@ foods:
     code_ciqual: "12001"
     nom: "Camembert"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 280
@@ -1191,6 +1205,7 @@ foods:
     code_ciqual: "12805"
     nom: "Chèvre, fromage frais"
     groupe: "lait et produits laitiers"
+    origine_animale: mammifere
     toute_annee: true
     nutriments:
       energie_kcal: 194
@@ -1210,6 +1225,7 @@ foods:
     code_ciqual: "19590"
     nom: "Mozzarella"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 227
@@ -1229,6 +1245,7 @@ foods:
     code_ciqual: "12500"
     nom: "Roquefort"
     groupe: "lait et produits laitiers"
+    origine_animale: mammifere
     toute_annee: true
     nutriments:
       energie_kcal: 384
@@ -1248,6 +1265,7 @@ foods:
     code_ciqual: "26043"
     nom: "Cabillaud, cru"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [10, 11, 12, 1, 2, 3]
     toute_annee: false
     nutriments:
@@ -1268,6 +1286,7 @@ foods:
     code_ciqual: "26065"
     nom: "Sardine, crue"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [6, 7, 8, 9, 10]
     toute_annee: false
     nutriments:
@@ -1288,6 +1307,7 @@ foods:
     code_ciqual: "26051"
     nom: "Maquereau, cru"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [9, 10, 11, 12, 1, 2]
     toute_annee: false
     nutriments:
@@ -1308,6 +1328,7 @@ foods:
     code_ciqual: "27008"
     nom: "Truite, crue"
     groupe: "poissons"
+    origine_animale: poisson
     # Poisson d'élevage (aquaculture) — pas de saisonnalité de pêche à respecter,
     # même choix éditorial que saumon.
     toute_annee: true
@@ -1328,6 +1349,7 @@ foods:
     code_ciqual: "10014"
     nom: "Moule, crue"
     groupe: "fruits de mer"
+    origine_animale: fruit_de_mer
     saison_mois: [7, 8, 9, 10, 11, 12]
     toute_annee: false
     nutriments:
@@ -1348,6 +1370,7 @@ foods:
     code_ciqual: "10011"
     nom: "Huître, crue"
     groupe: "fruits de mer"
+    origine_animale: fruit_de_mer
     saison_mois: [9, 10, 11, 12, 1, 2, 3, 4]
     toute_annee: false
     nutriments:
@@ -1368,6 +1391,7 @@ foods:
     code_ciqual: "10003"
     nom: "Coquille Saint-Jacques, crue"
     groupe: "fruits de mer"
+    origine_animale: fruit_de_mer
     saison_mois: [10, 11, 12, 1, 2, 3]
     toute_annee: false
     nutriments:
@@ -1388,6 +1412,7 @@ foods:
     code_ciqual: "10021"
     nom: "Crevette, crue"
     groupe: "fruits de mer"
+    origine_animale: fruit_de_mer
     # Majoritairement importée/élevage (aquaculture) — pas de saisonnalité de pêche
     # locale à respecter, même choix éditorial que saumon/truite.
     toute_annee: true
@@ -1792,6 +1817,7 @@ foods:
     code_ciqual: "16402"
     nom: "Beurre demi-sel"
     groupe: "matières grasses"
+    derive_de: lait_entier
     sous_famille: "beurre"
     toute_annee: true
     nutriments:
@@ -2082,6 +2108,7 @@ foods:
     code_ciqual: "21502"
     nom: "Agneau, gigot cru"
     groupe: "viandes"
+    origine_animale: mammifere
     sous_famille: "agneau"
     toute_annee: true
     nutriments:
@@ -2102,6 +2129,7 @@ foods:
     code_ciqual: "26006"
     nom: "Lieu ou colin, cru"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [10, 11, 12, 1, 2, 3]
     toute_annee: false
     nutriments:
@@ -2122,6 +2150,7 @@ foods:
     code_ciqual: "26044"
     nom: "Merlu, cru"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [5, 6, 7, 8, 9]
     toute_annee: false
     nutriments:
@@ -2142,6 +2171,7 @@ foods:
     code_ciqual: "26011"
     nom: "Hareng, cru"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [10, 11, 12, 1]
     toute_annee: false
     nutriments:
@@ -2162,6 +2192,7 @@ foods:
     code_ciqual: "26000"
     nom: "Anchois, filets marinés à l'huile, égouttés"
     groupe: "poissons"
+    origine_animale: poisson
     # Semi-conserve : disponibilité permanente, pas de saison de pêche à afficher.
     toute_annee: true
     nutriments:
@@ -2181,6 +2212,7 @@ foods:
     code_ciqual: "19023"
     nom: "Lait entier, UHT"
     groupe: "lait et produits laitiers"
+    origine_animale: mammifere
     sous_famille: "lait"
     toute_annee: true
     nutriments:
@@ -2201,6 +2233,7 @@ foods:
     code_ciqual: "19501"
     nom: "Fromage blanc nature"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 80
@@ -2220,6 +2253,7 @@ foods:
     code_ciqual: "12120"
     nom: "Parmesan"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 411
@@ -2384,6 +2418,7 @@ foods:
     code_ciqual: "28204"
     nom: "Porc, filet mignon cru"
     groupe: "viandes"
+    origine_animale: mammifere
     sous_famille: "porc"
     toute_annee: true
     nutriments:
@@ -2402,6 +2437,7 @@ foods:
     code_ciqual: "28300"
     nom: "Porc, rôti cru"
     groupe: "viandes"
+    origine_animale: mammifere
     sous_famille: "porc"
     toute_annee: true
     nutriments:
@@ -2420,6 +2456,7 @@ foods:
     code_ciqual: "28002"
     nom: "Porc, poitrine crue"
     groupe: "viandes"
+    origine_animale: mammifere
     sous_famille: "porc"
     toute_annee: true
     nutriments:
@@ -2438,6 +2475,7 @@ foods:
     code_ciqual: "28700"
     nom: "Jambon à cuire"
     groupe: "viandes"
+    origine_animale: mammifere
     toute_annee: true
     nutriments:
       energie_kcal: 163
@@ -2455,6 +2493,7 @@ foods:
     code_ciqual: "6521"
     nom: "Veau, escalope crue"
     groupe: "viandes"
+    origine_animale: mammifere
     toute_annee: true
     nutriments:
       energie_kcal: 114
@@ -2471,6 +2510,7 @@ foods:
     code_ciqual: "36201"
     nom: "Canard, viande crue"
     groupe: "viandes"
+    origine_animale: volaille
     toute_annee: true
     nutriments:
       energie_kcal: 127
@@ -2488,6 +2528,7 @@ foods:
     code_ciqual: "34001"
     nom: "Lapin, viande crue"
     groupe: "viandes"
+    origine_animale: mammifere
     toute_annee: true
     nutriments:
       energie_kcal: 188
@@ -2505,6 +2546,7 @@ foods:
     code_ciqual: "36024"
     nom: "Poulet, cuisse, viande crue"
     groupe: "viandes"
+    origine_animale: volaille
     sous_famille: "poulet"
     toute_annee: true
     nutriments:
@@ -2523,6 +2565,7 @@ foods:
     code_ciqual: "21504"
     nom: "Agneau, épaule crue"
     groupe: "viandes"
+    origine_animale: mammifere
     sous_famille: "agneau"
     toute_annee: true
     nutriments:
@@ -2543,6 +2586,7 @@ foods:
     code_ciqual: "26088"
     nom: "Dorade royale, crue"
     groupe: "poissons"
+    origine_animale: poisson
     # Élevage : pas de saisonnalité de pêche à respecter, même choix que le saumon.
     toute_annee: true
     nutriments:
@@ -2563,6 +2607,7 @@ foods:
     code_ciqual: "26072"
     nom: "Bar ou loup, cru"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [1, 2, 3, 9, 10, 11, 12]
     toute_annee: false
     nutriments:
@@ -2583,6 +2628,7 @@ foods:
     code_ciqual: "26058"
     nom: "Sole, crue"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [4, 5, 6, 7, 8, 9]
     toute_annee: false
     nutriments:
@@ -2603,6 +2649,7 @@ foods:
     code_ciqual: "26018"
     nom: "Lotte ou baudroie, crue"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [10, 11, 12, 1, 2]
     toute_annee: false
     nutriments:
@@ -2623,6 +2670,7 @@ foods:
     code_ciqual: "26052"
     nom: "Raie, crue"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [9, 10, 11, 12, 1, 2]
     toute_annee: false
     nutriments:
@@ -2643,6 +2691,7 @@ foods:
     code_ciqual: "26122"
     nom: "Églefin, cru"
     groupe: "poissons"
+    origine_animale: poisson
     saison_mois: [10, 11, 12, 1, 2, 3]
     toute_annee: false
     nutriments:
@@ -2665,6 +2714,7 @@ foods:
     code_ciqual: "10001"
     nom: "Calamar ou encornet, cru"
     groupe: "fruits de mer"
+    origine_animale: fruit_de_mer
     saison_mois: [5, 6, 7, 8, 9, 10]
     toute_annee: false
     nutriments:
@@ -2685,6 +2735,7 @@ foods:
     code_ciqual: "10018"
     nom: "Poulpe, cru"
     groupe: "fruits de mer"
+    origine_animale: fruit_de_mer
     saison_mois: [5, 6, 7, 8, 9, 10]
     toute_annee: false
     nutriments:
@@ -2705,6 +2756,7 @@ foods:
     code_ciqual: "10024"
     nom: "Langoustine, crue"
     groupe: "fruits de mer"
+    origine_animale: fruit_de_mer
     saison_mois: [4, 5, 6, 7, 8]
     toute_annee: false
     nutriments:
@@ -2725,6 +2777,7 @@ foods:
     code_ciqual: "10039"
     nom: "Crabe, cru"
     groupe: "fruits de mer"
+    origine_animale: fruit_de_mer
     saison_mois: [5, 6, 7, 8, 9, 10]
     toute_annee: false
     nutriments:
@@ -3262,6 +3315,7 @@ foods:
     code_ciqual: "12114"
     nom: "Gruyère"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 408
@@ -3281,6 +3335,7 @@ foods:
     code_ciqual: "12066"
     nom: "Feta"
     groupe: "lait et produits laitiers"
+    origine_animale: mammifere
     toute_annee: true
     nutriments:
       energie_kcal: 284
@@ -3299,6 +3354,7 @@ foods:
     code_ciqual: "12071"
     nom: "Brousse, fromage frais de lactosérum"
     groupe: "lait et produits laitiers"
+    origine_animale: mammifere
     # C'était `ricotta` à l'écriture. Ciqual ne donne AUCUNE énergie pour la ricotta (19585) :
     # l'aliment aurait contribué 0 kcal à toute recette l'employant, en silence. La brousse est le
     # même produit — un fromage frais obtenu du lactosérum — et Ciqual la renseigne complètement.
@@ -3320,6 +3376,7 @@ foods:
     code_ciqual: "12020"
     nom: "Brie"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 345
@@ -3339,6 +3396,7 @@ foods:
     code_ciqual: "19584"
     nom: "Mascarpone"
     groupe: "lait et produits laitiers"
+    derive_de: lait_entier
     toute_annee: true
     nutriments:
       energie_kcal: 369
