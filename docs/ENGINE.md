@@ -1044,12 +1044,14 @@ trois axes numériques, pas fondue dedans.
 > famille ».
 
 `DEFAULT_MMR_LAMBDA = 0.4` (`engine/selection/diversify.ts`) — valeur de référence issue d'une
-intuition de conception, **pas d'une mesure sur le catalogue réel**, **à calibrer**. Cette
-calibration reste hors de portée sur le catalogue de test actuel (10 recettes,
-`catalog/recipes/`) : un jeu de recettes composées à la main pour couvrir des cas de test n'a pas
-la distribution d'un catalogue de production (~150-200 recettes, §2 ARCHITECTURE) — trop petit et
-non représentatif pour tirer une valeur de λ statistiquement défendable. `λ` reste donc au défaut
-de conception tant qu'un catalogue plus proche de la taille de production n'est pas disponible.
+intuition de conception, **pas d'une mesure**, **toujours à calibrer**.
+
+> **Le blocage est levé** (2026-07-27). Cette calibration était hors de portée tant que le catalogue
+> de test comptait 10 recettes composées à la main. Il en compte **212**, et le modèle de similarité
+> a été corrigé (§6.6 bis) puis repondéré par mesure (§6.6 ter). Distribution mesurée sur
+> 22 366 paires : max 94,2 % · p99 38,2 % · médiane 9,5 %, avec 30 paires au-dessus de 60 % contre
+> 81 avant correction. La base est saine ; λ reste au défaut faute d'avoir été mesuré, pas faute de
+> pouvoir l'être.
 
 ### 6.7 Explication — CODÉ (P1c, `engine/selection/explain.ts`)
 
@@ -1696,11 +1698,14 @@ appliqués** (après archétype, bascule d'envie, normalisation), puis le **clas
 > sont un marque-page), `--only-favoris` seul ne conserve rien et lève `NoViableRecipeError`.
 > `--variete auto|surprise|classiques` (§8.1, CODÉ) fixe `varietyMode`.
 >
-> ⚠️ **Sur le catalogue de test, `--variete` déplace les SCORES sans changer l'ORDRE** : l'historique
-> du banc est vide (§7.5, démarrage à froid), donc les 10 recettes ont exactement la même récence et
-> la même familiarité — l'override les décale toutes du même montant. Mesuré : `auto` 57,6 ·
-> `surprise` 65,5 · `classiques` 49,7 pour la même tête de classement. L'effet sur le CLASSEMENT ne
-> sera observable qu'avec un historique réel, au même titre que la calibration de λ (§6.6).
+> ⚠️ **Au banc, `--variete` déplace les SCORES sans changer l'ORDRE** : l'historique du banc est
+> VIDE (§7.5, démarrage à froid), donc toutes les recettes ont la même récence et la même
+> familiarité — l'override les décale toutes du même montant. Mesuré à 10 recettes : `auto` 57,6 ·
+> `surprise` 65,5 · `classiques` 49,7 pour la même tête de classement.
+>
+> ⚠️ **Ce blocage-ci n'est PAS celui de λ et le contenu ne l'a pas levé.** La cause est l'absence
+> d'HISTORIQUE au banc, pas la taille du catalogue : passer à 212 recettes n'y change rien. Observer
+> l'effet sur le classement demande d'injecter un historique de repas, pas plus de recettes.
 
 **Le banc passe désormais entièrement par `engine.suggestMeals(request)` (CODÉ, P1c)** — c'est le
 changement de structure du lot : il n'appelle plus `runExclusionPass`/`runScoringPass`/`diversify`/
@@ -1754,11 +1759,11 @@ gantt
 |---|---|---|
 | **P0** Fondations | Repo, Vite, TS strict, Vitest, `build.mjs`, import CIQUAL | `catalog.db` généré depuis 10 recettes de test ; le build échoue sur une recette invalide |
 | **P1** Domaine & nutrition | L1 + L2 + guards | Besoins énergétiques conformes à Mifflin-St Jeor sur 20 cas de référence ; 4 garde-fous couverts à 100 % |
-| **P2** Sélection | Registre de **18** couches + banc CLI | Banc CLI **outillé** (`engine:try`, CODÉ — §11.3), qui passe désormais par `suggestMeals` (§8). Diversification (§6.6) et explication (§6.7) sont **CODÉES et câblées bout-en-bout** (P1c) : le pipeline produit mécaniquement des suggestions diversifiées et expliquées, démontré par le banc CLI et par les tests (380 tests verts, 34 fichiers). Le critère littéral (« 5 suggestions expliquées et diversifiées ») est donc rempli sur le plan mécanique — **ce que le catalogue de test ne permet toujours pas**, c'est de calibrer `DEFAULT_MMR_LAMBDA` (§6.6) : 10 recettes composées à la main n'ont pas la distribution d'un catalogue de production (~150-200 recettes, §2 ARCHITECTURE), donc cette calibration reste non atteinte ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
+| **P2** Sélection | Registre de **18** couches + banc CLI | Banc CLI **outillé** (`engine:try`, CODÉ — §11.3), qui passe désormais par `suggestMeals` (§8). Diversification (§6.6) et explication (§6.7) sont **CODÉES et câblées bout-en-bout** (P1c) : le pipeline produit mécaniquement des suggestions diversifiées et expliquées, démontré par le banc CLI et par les tests (437 tests verts, 36 fichiers). Le critère littéral (« 5 suggestions expliquées et diversifiées ») est rempli. `DEFAULT_MMR_LAMBDA` (§6.6) reste NON CALIBRÉ, mais ce n'est plus le catalogue qui l'empêche : il compte 212 recettes et la distribution de similarité a été mesurée ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
 | **P3** Planning & API | L4 + L5 + restes + courses | Un planning 7 jours cohérent et une liste de courses agrégée, produits **entièrement en CLI** |
 | **P4** Coquille PWA | React, routage, SQLite/OPFS, consentement, sauvegarde | Installation sur iPhone et PC ; données conservées après 8 jours sans ouverture |
 | **P5** Parcours principal | Onboarding, suggestions, planning, courses, tips | Un utilisateur non accompagné planifie sa semaine et obtient sa liste |
-| **P6** Contenu v1 | 150-200 recettes, photos, ~60 tips | Bundle < 15 Mo ; 7 jours planifiables sans répétition ; `CREDITS.md` complet |
+| **P6** Contenu v1 | **200-300 recettes** (cible revue, décision 4), photos, ~60 tips | Bundle < 15 Mo ; 7 jours planifiables sans répétition ; `CREDITS.md` complet. **Recettes et aliments ATTEINTS** (212 / 193) ; restent les photos et les tips |
 | **P7** Durcissement | Hors-ligne, export/import, garde-fous TCA, lint de contenu | Zéro requête réseau après chargement (test automatisé) ; restauration d'une sauvegarde vérifiée |
 | **P8** Bêta fermée | 15-25 testeurs, collecte manuelle des retours | Aucun bug bloquant ; ≥ 60 % des testeurs planifient une 2ᵉ semaine |
 | **P9** Bibliothèque santé | 8-10 chapitres, fiches, filtre optionnel | Relecture externe des chapitres ; revue juridique ; `assertTopicsNeverExclude` verte |

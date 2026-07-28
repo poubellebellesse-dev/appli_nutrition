@@ -1,6 +1,6 @@
 # Index de la documentation
 
-Dix documents, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel lire**,
+Onze documents, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel lire**,
 **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
 
 ## Par où commencer
@@ -36,18 +36,24 @@ corrige dans le document, elle ne se contourne pas dans le code.
 > ce qu'on consulte quand on cherche une décision précise. Si la fiche dépasse une page, c'est
 > qu'elle contient quelque chose qui appartient à `ETAT.md`.
 
-### 📖 Récits de session — **ne jamais réécrire**
+### 📖 Instantanés datés — **ne jamais réécrire**
 
-| Document | Session |
+| Document | Ce qu'il consigne |
 |---|---|
-| [RECAP_SESSION.md](./RECAP_SESSION.md) | 1 — mise sous git, P0/P1a, conception du scoring |
-| [RECAP_SESSION_2.md](./RECAP_SESSION_2.md) | 2 — P1b-1 codé, saison en crédits, catalogue à 76 aliments, 5ᵉ couche |
-| [RECAP_SESSION_3.md](./RECAP_SESSION_3.md) | 3 — P1b-2 et P1c : passe de score, archétypes, banc CLI, `suggestMeals` |
+| [RECAP_SESSION.md](./RECAP_SESSION.md) | Session 1 — mise sous git, P0/P1a, conception du scoring |
+| [RECAP_SESSION_2.md](./RECAP_SESSION_2.md) | Session 2 — P1b-1 codé, saison en crédits, catalogue à 76 aliments, 5ᵉ couche |
+| [RECAP_SESSION_3.md](./RECAP_SESSION_3.md) | Session 3 — P1b-2 et P1c : passe de score, archétypes, banc CLI, `suggestMeals` |
+| [AUDIT_2026-07-27.md](./AUDIT_2026-07-27.md) | Regard **extérieur** sur le dépôt au commit `e2625d3` (112 recettes) — architecture, code, planification, marché |
 
 Ils décrivent un état **vrai à leur date**. Les corriger après coup falsifierait l'historique : une
 affirmation devenue fausse se corrige dans les documents de référence, pas dans le récit qui l'a
 consignée. C'est aussi pourquoi ils gardent les raisonnements abandonnés en route — savoir pourquoi
 une piste a été écartée vaut souvent l'énoncé de celle qui a été retenue.
+
+> ⚠️ **Ces documents contiennent donc, par construction, des affirmations aujourd'hui fausses** —
+> comptes de tests, taille du catalogue, décisions depuis tranchées. C'est voulu et ce n'est pas une
+> dette : ils sont datés et se lisent comme tels. Ne jamais s'en servir pour établir l'état courant,
+> qui est dans `FICHE_REPRISE.md` et `ETAT.md`.
 
 ### 🎯 Chantiers — conception d'un sujet précis
 

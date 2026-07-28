@@ -793,7 +793,7 @@ YAML/Markdown (lisibles, versionnables, relisibles par un tiers) ; `build.mjs` p
 | # | Décision | Retenu |
 |---|---|---|
 | 1 | Framework | **React** + Vite + TypeScript |
-| 2 | Recettes en v1 | **150-200** — suffisant pour 7 jours sans répétition |
+| 2 | Recettes en v1 | ~~150-200~~ → **200-300** (revu le 2026-07-27, décision 4 ETAT §3 ; **atteint** : 212). Suffisant pour 7 jours sans répétition |
 | 3 | Données de santé | **Aucune collecte.** Bibliothèque de thématiques consultables (§6.1) |
 | 4 | Couplage thématique ↔ moteur | **Filtre optionnel activé manuellement**, poids nul par défaut, révocable |
 | 5 | Chiffrement applicatif | **Sans objet** — dissous par la décision 3 |
