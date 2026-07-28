@@ -114,7 +114,7 @@ describe('planning/shopping-list — rayon', () => {
   })
 })
 
-describe('planning/shopping-list — arrondi', () => {
+describe('planning/shopping-list — arrondi AU POIDS (aucun conditionnement)', () => {
   it('arrondit toujours À LA HAUSSE — mieux vaut un reste qu’un manque', () => {
     expect(arrondiAchat(43)).toBe(50)
     expect(arrondiAchat(101)).toBe(150)
@@ -135,6 +135,48 @@ describe('planning/shopping-list — arrondi', () => {
   it('une valeur déjà ronde n’est pas gonflée', () => {
     expect(arrondiAchat(50)).toBe(50)
     expect(arrondiAchat(800)).toBe(800)
+  })
+})
+
+describe('planning/shopping-list — arrondi AU CONDITIONNEMENT (§7.4)', () => {
+  it('LA RÈGLE : ⌈besoin ÷ paquet⌉ — plaquette de beurre de 250 g', () => {
+    // Les deux exemples qui définissent la règle : on ne descend jamais sous le besoin, et on
+    // prend le paquet AU-DESSUS dès qu'on le dépasse d'un gramme.
+    expect(arrondiAchat(240, 250)).toBe(250) // une plaquette suffit
+    expect(arrondiAchat(260, 250)).toBe(500) // il en faut deux
+  })
+
+  it('un besoin minuscule coûte quand même un paquet entier', () => {
+    // « On n'achète pas 43 g de beurre » — on en achète une plaquette.
+    expect(arrondiAchat(43, 250)).toBe(250)
+  })
+
+  it('un besoin exactement égal au paquet n’en déclenche pas un second', () => {
+    // Le piège classique de `Math.ceil` mal posé : 250 / 250 = 1, pas 2.
+    expect(arrondiAchat(250, 250)).toBe(250)
+    expect(arrondiAchat(500, 250)).toBe(500)
+  })
+
+  it('le conditionnement PRIME sur l’arrondi générique', () => {
+    // 700 g au poids donneraient 700 ; en plaquettes de 250 il en faut trois, soit 750.
+    expect(arrondiAchat(700)).toBe(700)
+    expect(arrondiAchat(700, 250)).toBe(750)
+  })
+
+  it('un conditionnement absurde (0 ou négatif) retombe sur l’arrondi au poids', () => {
+    expect(arrondiAchat(43, 0)).toBe(50)
+    expect(arrondiAchat(43, -250)).toBe(50)
+  })
+
+  it('la liste applique le conditionnement de CHAQUE aliment', () => {
+    const catalog = makeCatalog(
+      [makeRecipe('r', { ingredients: [makeIngredient('beurre', { quantiteG: 260 }), makeIngredient('carotte', { quantiteG: 260 })] })],
+      [{ ...food('beurre', 'matières grasses'), conditionnementG: 250 }, food('carotte', 'légumes')]
+    )
+    const items = buildShoppingList(plan([entree('2026-08-03', 'diner', 'r')]), catalog).items
+
+    expect(items.find((i) => i.foodId === 'beurre')!.quantiteTotale).toBe(500) // 2 plaquettes
+    expect(items.find((i) => i.foodId === 'carotte')!.quantiteTotale).toBe(300) // au poids
   })
 })
 

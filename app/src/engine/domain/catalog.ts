@@ -123,6 +123,19 @@ export interface Food {
    */
   readonly piquant: PiquantLevel | null
   /**
+   * Taille du CONDITIONNEMENT de vente, en grammes — plaquette de beurre 250 g, brique de lait
+   * 1 000 g, œuf 60 g. `null` = vendu au poids (fruits, légumes, viande à la coupe).
+   *
+   * ⚠️ UN SEUL NOMBRE SUFFIT, pas une échelle de tailles. On achète `⌈besoin ÷ conditionnement⌉`
+   * paquets : avec une plaquette de 250 g, 240 g d'un besoin donnent 1 plaquette (250 g) et 260 g
+   * en donnent 2 (500 g). Une liste de tailles disponibles n'ajouterait rien — deux plaquettes de
+   * 250 g valent une de 500 g au moment de payer.
+   *
+   * ⚠️ TOUJOURS AU-DESSUS, jamais au-dessous : il vaut mieux un reste de course qu'un ingrédient
+   * manquant au moment de cuisiner.
+   */
+  readonly conditionnementG: number | null
+  /**
    * Origine animale DIRECTE (§ `AnimalOrigin`). `null` = végétal, minéral, **ou dérivé** — dans ce
    * dernier cas l'origine se lit sur `deriveDe`. Toujours passer par `resolveAnimalOrigin`, jamais
    * lire ce champ seul : le beurre a `origineAnimale: null` et vient pourtant d'un mammifère.

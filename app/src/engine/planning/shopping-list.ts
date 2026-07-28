@@ -70,18 +70,27 @@ export function rayonDe(food: Food, foods: ReadonlyMap<FoodId, Food>): string {
 }
 
 /**
- * Arrondi À LA HAUSSE, jamais à la baisse : mieux vaut un reste de course qu'un ingrédient
- * manquant au moment de cuisiner. Le pas grossit avec la quantité — on pèse au gramme près pour
- * une pincée d'épices, pas pour trois kilos de pommes de terre.
+ * Quantité à ACHETER pour couvrir `grammes`. Toujours AU-DESSUS, jamais au-dessous : mieux vaut un
+ * reste de course qu'un ingrédient manquant au moment de cuisiner.
  *
- * ⚠️ CE N'EST PAS L'ARRONDI AUX CONDITIONNEMENTS que demande §7.4 (« on n'achète pas 43 g de
- * beurre » — on en achète une plaquette de 250 g). Le vrai conditionnement est propre à CHAQUE
- * aliment : plaquette de 250 g, boîte de 6 œufs, brique d'un litre. Il demande un champ sur `Food`
- * qui n'existe pas, et l'inventer ici aliment par aliment serait le cacher dans du code au lieu de
- * le poser dans les données. Décision ouverte — voir ETAT §4.
+ * Deux régimes, selon que l'aliment se vende en paquet ou au poids :
+ *
+ *  - **CONDITIONNÉ** (`conditionnementG` non nul) — on achète `⌈besoin ÷ paquet⌉` paquets. Avec une
+ *    plaquette de 250 g : 240 g de besoin donnent UNE plaquette (250 g), 260 g en donnent DEUX
+ *    (500 g). C'est la règle de §7.4, « on n'achète pas 43 g de beurre ».
+ *
+ *  - **AU POIDS** (`null` — fruits, légumes, viande à la coupe) — arrondi générique dont le pas
+ *    grossit avec la quantité : on pèse au gramme près une pincée d'épices, pas trois kilos de
+ *    pommes de terre.
+ *
+ * ⚠️ NE PAS « optimiser » le cas conditionné en arrondissant au plus proche. Descendre sous le
+ * besoin économise quelques grammes et fait rater la recette : l'asymétrie est voulue.
  */
-export function arrondiAchat(grammes: number): number {
+export function arrondiAchat(grammes: number, conditionnementG: number | null = null): number {
   if (grammes <= 0) return 0
+  if (conditionnementG !== null && conditionnementG > 0) {
+    return Math.ceil(grammes / conditionnementG) * conditionnementG
+  }
   const pas = grammes < 100 ? 10 : grammes < 1000 ? 50 : 100
   return Math.ceil(grammes / pas) * pas
 }
@@ -128,7 +137,7 @@ export function buildShoppingList(
     if (food === undefined) continue // intégrité garantie au build ; garde purement défensive
     items.push({
       foodId,
-      quantiteTotale: arrondiAchat(grammes),
+      quantiteTotale: arrondiAchat(grammes, food.conditionnementG),
       unite: 'g',
       rayon: rayonDe(food, catalog.foods),
       tranche,

@@ -16,7 +16,7 @@ P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── su
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **522 verts (41 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **528 verts (41 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
 `npm run build` → **199 aliments, 241 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
@@ -27,11 +27,6 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 
 **L'UI** (P3). Le moteur est complet pour la v1 : suggestion, alternatives, planning, restes, liste
 de courses, et les 5 garde-fous.
-
-> ⛔ **Un préalable à ne pas oublier : les conditionnements** ([ETAT §4 n°40](./ETAT.md)). La liste
-> de courses affiche « 200 g d'œuf » et « 70 g de beurre » — deux choses qu'aucun magasin ne vend.
-> L'arrondi actuel est correct mais générique ; le vrai conditionnement (plaquette de 250 g, boîte
-> de 6 œufs) demande un champ sur `Food`. Je ne l'ai pas inventé dans le code exprès.
 
 > Et les points de l'audit toujours ouverts : **zéro photo sur 241 recettes**, lexique à 4 gestes,
 > revue juridique avant publication.

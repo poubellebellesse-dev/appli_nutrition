@@ -317,6 +317,10 @@ CREATE TABLE food (
   -- piquant de l'ALIMENT lui-meme, 0 a 4. NULL = non renseigne. Le piquant d'une recette n'en est
   --   PAS la somme : voir recipe.piquant.
   piquant INTEGER CHECK (piquant BETWEEN 0 AND 4),
+  -- conditionnement_g : taille du paquet de vente (plaquette 250 g, brique 1000 g, oeuf 60 g).
+  --   NULL = vendu au poids. On achete ceil(besoin / conditionnement) paquets — 240 g d'un besoin
+  --   donnent une plaquette de 250 g, 260 g en donnent deux. TOUJOURS au-dessus (§7.4 ENGINE).
+  conditionnement_g INTEGER CHECK (conditionnement_g > 0),
   -- origine_animale : de quel animal l'aliment provient. FACTUEL, pas un regime — la chaine
   --   DIET_CHAIN en deduit ce qu'elle veut, un futur filtre halal/casher lira le meme champ.
   --   NULL = vegetal, mineral, OU derive (l'origine se lit alors sur derive_de).
@@ -427,7 +431,7 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
     for (const a of ALLERGENS) insertAllergen.run(a.id, a.code, a.nom)
 
     const insertFood = db.prepare(
-      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee, piquant, origine_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee, piquant, conditionnement_g, origine_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     const insertFoodNutrient = db.prepare(
       'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g) VALUES (?, ?, ?)'
@@ -446,6 +450,7 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
         JSON.stringify(food.saison_mois ?? []),
         food.toute_annee ? 1 : 0,
         food.piquant ?? null,
+        food.conditionnement_g ?? null,
         food.origine_animale ?? null,
         food.derive_de ?? null
       )

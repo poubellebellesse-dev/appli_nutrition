@@ -1457,17 +1457,28 @@ autre question, signe qu'il est au bon niveau.
 Six rayons : `fruits et légumes` · `boucherie` · `poissonnerie` · `crèmerie` · `épicerie` · `cave`.
 C'est le nombre de fois qu'on traverse un magasin, pas le nombre de familles d'aliments.
 
-#### Ce que l'arrondi fait, et ce qu'il ne fait PAS
+#### L'arrondi — deux régimes, toujours au-dessus
 
-`arrondiAchat` arrondit **à la hausse** — mieux vaut un reste de course qu'un ingrédient manquant —
-avec un pas qui grossit : 10 g sous 100 g, 50 g sous 1 kg, 100 g au-delà.
+`arrondiAchat` ne descend **jamais** sous le besoin : mieux vaut un reste de course qu'un ingrédient
+manquant au moment de cuisiner. L'asymétrie est voulue, ne pas « optimiser » en arrondissant au plus
+proche.
 
-> ⛔ **Ce n'est PAS l'arrondi aux conditionnements** que demande §7.4. « On n'achète pas 43 g de
-> beurre » — on en achète une **plaquette de 250 g**. Le vrai conditionnement est propre à chaque
-> aliment : plaquette, boîte de 6 œufs, brique d'un litre. La liste actuelle affiche « 200 g
-> d'œuf », ce qu'aucun magasin ne vend. Il faudrait un champ sur `Food` ; l'inventer aliment par
-> aliment dans le code le cacherait au lieu de le poser dans les données. **Décision ouverte,
-> ETAT §4 n°40.**
+| Cas | Règle | Exemple |
+|---|---|---|
+| **Conditionné** (`Food.conditionnementG`) | `⌈besoin ÷ paquet⌉` paquets | plaquette de 250 g : **240 g → 250 g**, **260 g → 500 g** |
+| **Au poids** (`null`) | pas croissant : 10 g sous 100 g, 50 g sous 1 kg, 100 g au-delà | 43 g → 50 g |
+
+**Un seul nombre par aliment suffit**, pas une échelle de tailles : deux plaquettes de 250 g valent
+une de 500 g au moment de payer.
+
+**107 aliments sur 199 sont conditionnés**, 92 restent au poids — légumes, fruits, viandes et
+poissons se vendent à la coupe, leur inventer un paquet produirait des quantités fausses.
+
+Effet sur la liste réelle : `70 g de beurre` devient **une plaquette de 250 g**, `150 g de lait`
+**une brique d'un litre**, `200 g d'œuf` **4 œufs**.
+
+> ⚠️ L'`unite` reste `'g'`. Afficher « 4 œufs » ou « 1 plaquette » plutôt que « 240 g » est un
+> travail d'INTERFACE — le moteur donne la quantité, pas sa formulation.
 
 #### Deux choix qui pourraient surprendre
 

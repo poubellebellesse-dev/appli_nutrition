@@ -43,6 +43,7 @@ function food(id: string, kcalPer100g: number): Food {
     saisonMois: [],
     touteAnnee: true,
     piquant: null,
+    conditionnementG: null,
     origineAnimale: null,
     deriveDe: null,
   };
@@ -221,6 +222,7 @@ function ferFood(id: string, ferPer100g: number): Food {
     saisonMois: [],
     touteAnnee: true,
     piquant: null,
+    conditionnementG: null,
     origineAnimale: null,
     deriveDe: null,
   };

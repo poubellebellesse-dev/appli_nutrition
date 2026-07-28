@@ -82,6 +82,7 @@ interface FoodRow {
   readonly saison_mois: string
   readonly toute_annee: number
   readonly piquant: number | null
+  readonly conditionnement_g: number | null
   readonly origine_animale: string | null
   readonly derive_de: string | null
 }
@@ -223,6 +224,7 @@ function loadFoods(db: DatabaseSync): Map<FoodId, Food> {
       groupe: row.groupe,
       sousFamille: row.sous_famille,
     piquant: (row.piquant as PiquantLevel | null) ?? null,
+      conditionnementG: row.conditionnement_g ?? null,
       origineAnimale: (row.origine_animale as AnimalOrigin | null) ?? null,
       deriveDe: (row.derive_de as FoodId | null) ?? null,
       nutrimentsPour100g,

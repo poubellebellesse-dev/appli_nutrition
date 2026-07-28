@@ -52,6 +52,7 @@ foods:
     code_ciqual: "22000"
     nom: "Œuf de poule, entier, cru"
     groupe: "œufs"
+    conditionnement_g: 60
     origine_animale: volaille
     toute_annee: true
     nutriments:
@@ -72,6 +73,7 @@ foods:
     code_ciqual: "9436"
     nom: "Farine de blé tendre T55"
     groupe: "céréales et dérivés"
+    conditionnement_g: 1000
     toute_annee: true
     nutriments:
       energie_kcal: 350
@@ -91,6 +93,7 @@ foods:
     code_ciqual: "19041"
     nom: "Lait demi-écrémé"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 1000
     origine_animale: mammifere
     sous_famille: "lait"
     toute_annee: true
@@ -112,6 +115,7 @@ foods:
     code_ciqual: "16400"
     nom: "Beurre doux"
     groupe: "matières grasses"
+    conditionnement_g: 250
     derive_de: lait_entier
     sous_famille: "beurre"
     toute_annee: true
@@ -133,6 +137,7 @@ foods:
     code_ciqual: "17270"
     nom: "Huile d'olive vierge extra"
     groupe: "matières grasses"
+    conditionnement_g: 750
     toute_annee: true
     nutriments:
       energie_kcal: 899
@@ -150,6 +155,7 @@ foods:
     code_ciqual: "31016"
     nom: "Sucre blanc cristal"
     groupe: "produits sucrés"
+    conditionnement_g: 1000
     toute_annee: true
     nutriments:
       energie_kcal: 399
@@ -201,6 +207,7 @@ foods:
     code_ciqual: "9100"
     nom: "Riz blanc, cru"
     groupe: "céréales et dérivés"
+    conditionnement_g: 1000
     sous_famille: "riz"
     toute_annee: true
     nutriments:
@@ -219,6 +226,7 @@ foods:
     code_ciqual: "9810"
     nom: "Pâtes spaghetti, crues"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     toute_annee: true
     nutriments:
       energie_kcal: 364
@@ -446,6 +454,7 @@ foods:
     code_ciqual: "20359"
     nom: "Lentilles corail, crues"
     groupe: "légumineuses"
+    conditionnement_g: 500
     sous_famille: "lentilles"
     toute_annee: true
     nutriments:
@@ -464,6 +473,7 @@ foods:
     code_ciqual: "20532"
     nom: "Pois chiches cuits, conserve égouttée"
     groupe: "légumineuses"
+    conditionnement_g: 400
     toute_annee: true
     nutriments:
       energie_kcal: 122
@@ -481,6 +491,7 @@ foods:
     code_ciqual: "19593"
     nom: "Yaourt nature au lait entier"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 125
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -501,6 +512,7 @@ foods:
     code_ciqual: "12118"
     nom: "Emmental râpé"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 200
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -521,6 +533,7 @@ foods:
     code_ciqual: "19410"
     nom: "Crème fraîche épaisse 30% MG"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 200
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -582,6 +595,7 @@ foods:
     code_ciqual: "15041"
     nom: "Amande effilée"
     groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 125
     # Fruit à coque séché/transformé — épicerie sèche, pas de saisonnalité fraîche.
     toute_annee: true
     nutriments:
@@ -602,6 +616,7 @@ foods:
     code_ciqual: "11010"
     nom: "Levure de boulanger fraîche"
     groupe: "céréales et dérivés"
+    conditionnement_g: 5
     # Produite industriellement en continu — disponibilité toute l'année.
     toute_annee: true
     nutriments:
@@ -1015,6 +1030,7 @@ foods:
     code_ciqual: "20359"
     nom: "Lentilles vertes, crues"
     groupe: "légumineuses"
+    conditionnement_g: 500
     sous_famille: "lentilles"
     toute_annee: true
     nutriments:
@@ -1033,6 +1049,7 @@ foods:
     code_ciqual: "26039"
     nom: "Thon, conserve au naturel, égoutté"
     groupe: "poissons"
+    conditionnement_g: 140
     origine_animale: poisson
     toute_annee: true
     nutriments:
@@ -1053,6 +1070,7 @@ foods:
     code_ciqual: "20904"
     nom: "Tofu nature"
     groupe: "légumineuses"
+    conditionnement_g: 250
     # Pas de groupe "soja/dérivés" dans le référentiel existant — rattaché à
     # légumineuses (le soja en est une) plutôt que d'inventer un groupe.
     # Décision prise seule, à valider si un groupe dédié est préféré.
@@ -1093,6 +1111,7 @@ foods:
     code_ciqual: "9610"
     nom: "Semoule de blé (couscous), crue"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     toute_annee: true
     nutriments:
       energie_kcal: 350
@@ -1112,6 +1131,7 @@ foods:
     code_ciqual: "7110"
     nom: "Pain complet"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     toute_annee: true
     nutriments:
       energie_kcal: 234
@@ -1131,6 +1151,7 @@ foods:
     code_ciqual: "17130"
     nom: "Huile de colza"
     groupe: "matières grasses"
+    conditionnement_g: 750
     toute_annee: true
     nutriments:
       energie_kcal: 900
@@ -1148,6 +1169,7 @@ foods:
     code_ciqual: "31008"
     nom: "Miel"
     groupe: "produits sucrés"
+    conditionnement_g: 250
     origine_animale: insecte
     toute_annee: true
     nutriments:
@@ -1166,6 +1188,7 @@ foods:
     code_ciqual: "12110"
     nom: "Comté, râpé"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 200
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -1185,6 +1208,7 @@ foods:
     code_ciqual: "12001"
     nom: "Camembert"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 250
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -1205,6 +1229,7 @@ foods:
     code_ciqual: "12805"
     nom: "Chèvre, fromage frais"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 150
     origine_animale: mammifere
     toute_annee: true
     nutriments:
@@ -1225,6 +1250,7 @@ foods:
     code_ciqual: "19590"
     nom: "Mozzarella"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 125
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -1245,6 +1271,7 @@ foods:
     code_ciqual: "12500"
     nom: "Roquefort"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 100
     origine_animale: mammifere
     toute_annee: true
     nutriments:
@@ -1507,6 +1534,7 @@ foods:
     code_ciqual: "11220"
     nom: "Vinaigre de vin rouge"
     groupe: "condiments"
+    conditionnement_g: 750
     sous_famille: "vinaigre"
     toute_annee: true
     nutriments:
@@ -1527,6 +1555,7 @@ foods:
     code_ciqual: "11013"
     nom: "Moutarde"
     groupe: "condiments"
+    conditionnement_g: 200
     toute_annee: true
     nutriments:
       energie_kcal: 151
@@ -1547,6 +1576,7 @@ foods:
     code_ciqual: "11038"
     nom: "Thym séché"
     groupe: "condiments"
+    conditionnement_g: 20
     toute_annee: true
     nutriments:
       energie_kcal: 285
@@ -1564,6 +1594,7 @@ foods:
     code_ciqual: "11053"
     nom: "Laurier, feuille"
     groupe: "condiments"
+    conditionnement_g: 20
     toute_annee: true
     nutriments:
       energie_kcal: 353
@@ -1601,6 +1632,7 @@ foods:
     code_ciqual: "11035"
     nom: "Origan séché"
     groupe: "condiments"
+    conditionnement_g: 20
     toute_annee: true
     nutriments:
       energie_kcal: 265
@@ -1618,6 +1650,7 @@ foods:
     code_ciqual: "11036"
     nom: "Romarin séché"
     groupe: "condiments"
+    conditionnement_g: 20
     toute_annee: true
     nutriments:
       energie_kcal: 328
@@ -1635,6 +1668,7 @@ foods:
     code_ciqual: "11042"
     nom: "Cumin, graine"
     groupe: "condiments"
+    conditionnement_g: 40
     toute_annee: true
     nutriments:
       energie_kcal: 427
@@ -1652,6 +1686,7 @@ foods:
     code_ciqual: "11049"
     nom: "Paprika en poudre"
     groupe: "condiments"
+    conditionnement_g: 40
     toute_annee: true
     nutriments:
       energie_kcal: 318
@@ -1669,6 +1704,7 @@ foods:
     code_ciqual: "11005"
     nom: "Curry en poudre"
     groupe: "condiments"
+    conditionnement_g: 40
     toute_annee: true
     nutriments:
       energie_kcal: 301
@@ -1686,6 +1722,7 @@ foods:
     code_ciqual: "11006"
     nom: "Gingembre en poudre"
     groupe: "condiments"
+    conditionnement_g: 40
     toute_annee: true
     nutriments:
       energie_kcal: 335
@@ -1703,6 +1740,7 @@ foods:
     code_ciqual: "11025"
     nom: "Cannelle en poudre"
     groupe: "condiments"
+    conditionnement_g: 40
     toute_annee: true
     nutriments:
       energie_kcal: 243
@@ -1720,6 +1758,7 @@ foods:
     code_ciqual: "11104"
     nom: "Sauce soja"
     groupe: "condiments"
+    conditionnement_g: 250
     # Gluten DÉCLARÉ, pas en traces : la sauce soja de fabrication traditionnelle
     # (shoyu) est brassée à parts égales de soja ET de blé. Les versions sans blé
     # (tamari) sont un produit distinct qu'il faudra ajouter séparément.
@@ -1763,6 +1802,7 @@ foods:
     code_ciqual: "20068"
     nom: "Concentré de tomate"
     groupe: "condiments"
+    conditionnement_g: 140
     toute_annee: true
     nutriments:
       energie_kcal: 99.2
@@ -1780,6 +1820,7 @@ foods:
     code_ciqual: "13032"
     nom: "Olive noire en saumure, égouttée"
     groupe: "fruits"
+    conditionnement_g: 200
     sous_famille: "olive"
     toute_annee: true
     nutriments:
@@ -1800,6 +1841,7 @@ foods:
     code_ciqual: "17440"
     nom: "Huile de tournesol"
     groupe: "matières grasses"
+    conditionnement_g: 1000
     toute_annee: true
     nutriments:
       energie_kcal: 900
@@ -1817,6 +1859,7 @@ foods:
     code_ciqual: "16402"
     nom: "Beurre demi-sel"
     groupe: "matières grasses"
+    conditionnement_g: 250
     derive_de: lait_entier
     sous_famille: "beurre"
     toute_annee: true
@@ -1972,6 +2015,7 @@ foods:
     code_ciqual: "20066"
     nom: "Maïs doux, conserve égouttée"
     groupe: "légumes"
+    conditionnement_g: 300
     # Conserve : disponibilité permanente, aucune saisonnalité fraîche à afficher.
     toute_annee: true
     nutriments:
@@ -1992,6 +2036,7 @@ foods:
     code_ciqual: "9102"
     nom: "Riz complet, cru"
     groupe: "céréales et dérivés"
+    conditionnement_g: 1000
     sous_famille: "riz"
     toute_annee: true
     nutriments:
@@ -2010,6 +2055,7 @@ foods:
     code_ciqual: "9340"
     nom: "Quinoa, cru"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     toute_annee: true
     nutriments:
       energie_kcal: 358
@@ -2026,6 +2072,7 @@ foods:
     code_ciqual: "9690"
     nom: "Boulgour de blé, cru"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     toute_annee: true
     nutriments:
       energie_kcal: 347
@@ -2045,6 +2092,7 @@ foods:
     code_ciqual: "32140"
     nom: "Flocons d'avoine"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     # L'avoine est une céréale à gluten au sens du règlement 1169/2011 annexe II
     # (« céréales contenant du gluten »), indépendamment du débat sur l'avénine.
     toute_annee: true
@@ -2066,6 +2114,7 @@ foods:
     code_ciqual: "7500"
     nom: "Chapelure"
     groupe: "céréales et dérivés"
+    conditionnement_g: 250
     toute_annee: true
     nutriments:
       energie_kcal: 365
@@ -2085,6 +2134,7 @@ foods:
     code_ciqual: "7200"
     nom: "Pain de mie blanc"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     toute_annee: true
     nutriments:
       energie_kcal: 279
@@ -2192,6 +2242,7 @@ foods:
     code_ciqual: "26000"
     nom: "Anchois, filets marinés à l'huile, égouttés"
     groupe: "poissons"
+    conditionnement_g: 50
     origine_animale: poisson
     # Semi-conserve : disponibilité permanente, pas de saison de pêche à afficher.
     toute_annee: true
@@ -2212,6 +2263,7 @@ foods:
     code_ciqual: "19023"
     nom: "Lait entier, UHT"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 1000
     origine_animale: mammifere
     sous_famille: "lait"
     toute_annee: true
@@ -2233,6 +2285,7 @@ foods:
     code_ciqual: "19501"
     nom: "Fromage blanc nature"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 500
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -2253,6 +2306,7 @@ foods:
     code_ciqual: "12120"
     nom: "Parmesan"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 100
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -2275,6 +2329,7 @@ foods:
     code_ciqual: "20524"
     nom: "Haricot rouge, conserve égouttée"
     groupe: "légumineuses"
+    conditionnement_g: 400
     toute_annee: true
     nutriments:
       energie_kcal: 108
@@ -2292,6 +2347,7 @@ foods:
     code_ciqual: "20508"
     nom: "Haricot flageolet, conserve égouttée"
     groupe: "légumineuses"
+    conditionnement_g: 400
     toute_annee: true
     nutriments:
       energie_kcal: 92.9
@@ -2309,6 +2365,7 @@ foods:
     code_ciqual: "20515"
     nom: "Pois cassé, sec"
     groupe: "légumineuses"
+    conditionnement_g: 500
     toute_annee: true
     nutriments:
       energie_kcal: 347
@@ -2328,6 +2385,7 @@ foods:
     code_ciqual: "15005"
     nom: "Noix, cerneau"
     groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 125
     saison_mois: [9, 10, 11]
     toute_annee: true
     nutriments:
@@ -2348,6 +2406,7 @@ foods:
     code_ciqual: "15004"
     nom: "Noisette"
     groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 125
     saison_mois: [9, 10, 11]
     toute_annee: true
     nutriments:
@@ -2368,6 +2427,7 @@ foods:
     code_ciqual: "15010"
     nom: "Sésame, graine"
     groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 100
     toute_annee: true
     nutriments:
       energie_kcal: 606
@@ -2387,6 +2447,7 @@ foods:
     code_ciqual: "15011"
     nom: "Tournesol, graine"
     groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 150
     toute_annee: true
     nutriments:
       energie_kcal: 653
@@ -3077,6 +3138,7 @@ foods:
     code_ciqual: "13013"
     nom: "Figue sèche"
     groupe: "fruits"
+    conditionnement_g: 250
     toute_annee: true
     nutriments:
       energie_kcal: 261
@@ -3219,6 +3281,7 @@ foods:
     code_ciqual: "13033"
     nom: "Olive verte en saumure, égouttée"
     groupe: "fruits"
+    conditionnement_g: 200
     sous_famille: "olive"
     toute_annee: true
     nutriments:
@@ -3239,6 +3302,7 @@ foods:
     code_ciqual: "9614"
     nom: "Polenta, semoule de maïs précuite"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     # Maïs : PAS de gluten, contrairement aux autres céréales du catalogue.
     toute_annee: true
     nutriments:
@@ -3256,6 +3320,7 @@ foods:
     code_ciqual: "9380"
     nom: "Sarrasin complet, cru"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     # Le sarrasin n'est pas une graminée : pas de gluten malgré le nom « blé noir ».
     toute_annee: true
     nutriments:
@@ -3274,6 +3339,7 @@ foods:
     code_ciqual: "9321"
     nom: "Orge perlée, crue"
     groupe: "céréales et dérivés"
+    conditionnement_g: 500
     toute_annee: true
     nutriments:
       energie_kcal: 346
@@ -3293,6 +3359,7 @@ foods:
     code_ciqual: "23420"
     nom: "Pâte feuilletée crue"
     groupe: "céréales et dérivés"
+    conditionnement_g: 230
     toute_annee: true
     nutriments:
       energie_kcal: 385
@@ -3315,6 +3382,7 @@ foods:
     code_ciqual: "12114"
     nom: "Gruyère"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 200
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -3335,6 +3403,7 @@ foods:
     code_ciqual: "12066"
     nom: "Feta"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 200
     origine_animale: mammifere
     toute_annee: true
     nutriments:
@@ -3354,6 +3423,7 @@ foods:
     code_ciqual: "12071"
     nom: "Brousse, fromage frais de lactosérum"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 200
     origine_animale: mammifere
     # C'était `ricotta` à l'écriture. Ciqual ne donne AUCUNE énergie pour la ricotta (19585) :
     # l'aliment aurait contribué 0 kcal à toute recette l'employant, en silence. La brousse est le
@@ -3376,6 +3446,7 @@ foods:
     code_ciqual: "12020"
     nom: "Brie"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 200
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -3396,6 +3467,7 @@ foods:
     code_ciqual: "19584"
     nom: "Mascarpone"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 250
     derive_de: lait_entier
     toute_annee: true
     nutriments:
@@ -3418,6 +3490,7 @@ foods:
     code_ciqual: "20511"
     nom: "Haricot blanc, conserve égouttée"
     groupe: "légumineuses"
+    conditionnement_g: 400
     toute_annee: true
     nutriments:
       energie_kcal: 85.5
@@ -3455,6 +3528,7 @@ foods:
     code_ciqual: "15044"
     nom: "Pistache grillée, non salée"
     groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 125
     toute_annee: true
     nutriments:
       energie_kcal: 631
@@ -3474,6 +3548,7 @@ foods:
     code_ciqual: "15054"
     nom: "Noix de cajou grillée, non salée"
     groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 125
     toute_annee: true
     nutriments:
       energie_kcal: 618
@@ -3493,6 +3568,7 @@ foods:
     code_ciqual: "15001"
     nom: "Cacahuète, non salée"
     groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 200
     # Allergène ARACHIDES, pas fruits_a_coque : la cacahuète est une légumineuse,
     # et le règlement 1169/2011 en fait une catégorie d'allergène distincte.
     toute_annee: true
@@ -3514,6 +3590,7 @@ foods:
     code_ciqual: "15025"
     nom: "Pignon de pin"
     groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 50
     toute_annee: true
     nutriments:
       energie_kcal: 712
@@ -3535,6 +3612,7 @@ foods:
     code_ciqual: "17220"
     nom: "Huile de noix"
     groupe: "matières grasses"
+    conditionnement_g: 250
     toute_annee: true
     nutriments:
       energie_kcal: 900
@@ -3554,6 +3632,7 @@ foods:
     code_ciqual: "17400"
     nom: "Huile de sésame"
     groupe: "matières grasses"
+    conditionnement_g: 250
     toute_annee: true
     nutriments:
       energie_kcal: 900
@@ -3575,6 +3654,7 @@ foods:
     code_ciqual: "11091"
     nom: "Vinaigre balsamique"
     groupe: "condiments"
+    conditionnement_g: 250
     sous_famille: "vinaigre"
     toute_annee: true
     nutriments:
@@ -3595,6 +3675,7 @@ foods:
     code_ciqual: "11004"
     nom: "Cornichon au vinaigre"
     groupe: "condiments"
+    conditionnement_g: 200
     toute_annee: true
     nutriments:
       energie_kcal: 16
@@ -3614,6 +3695,7 @@ foods:
     code_ciqual: "11089"
     nom: "Curcuma en poudre"
     groupe: "condiments"
+    conditionnement_g: 40
     toute_annee: true
     nutriments:
       energie_kcal: 291
@@ -3631,6 +3713,7 @@ foods:
     code_ciqual: "11026"
     nom: "Coriandre, graine"
     groupe: "condiments"
+    conditionnement_g: 40
     sous_famille: "coriandre"
     toute_annee: true
     nutriments:
@@ -3703,6 +3786,7 @@ foods:
     code_ciqual: "31005"
     nom: "Chocolat noir 50 % de cacao"
     groupe: "produits sucrés"
+    conditionnement_g: 100
     toute_annee: true
     nutriments:
       energie_kcal: 521
@@ -3724,6 +3808,7 @@ foods:
     code_ciqual: "18100"
     nom: "Cacao en poudre non sucré"
     groupe: "produits sucrés"
+    conditionnement_g: 250
     toute_annee: true
     nutriments:
       energie_kcal: 387
@@ -3741,6 +3826,7 @@ foods:
     code_ciqual: "31017"
     nom: "Sucre roux"
     groupe: "produits sucrés"
+    conditionnement_g: 750
     toute_annee: true
     nutriments:
       energie_kcal: 393
@@ -3763,6 +3849,7 @@ foods:
     code_ciqual: "18901"
     nom: "Boisson au soja, nature, enrichie en calcium"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 1000
     sous_famille: boisson_vegetale
     toute_annee: true
     nutriments:
@@ -3781,6 +3868,7 @@ foods:
     code_ciqual: "18107"
     nom: "Boisson à l'amande, nature, sans sucres ajoutés"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 1000
     sous_famille: boisson_vegetale
     toute_annee: true
     nutriments:
@@ -3800,6 +3888,7 @@ foods:
     code_ciqual: "18899"
     nom: "Boisson à l'avoine, nature, sans sucres ajoutés"
     groupe: "lait et produits laitiers"
+    conditionnement_g: 1000
     sous_famille: boisson_vegetale
     toute_annee: true
     nutriments:
@@ -3819,6 +3908,7 @@ foods:
     code_ciqual: "31034"
     nom: "Sirop d'érable"
     groupe: "produits sucrés"
+    conditionnement_g: 250
     toute_annee: true
     nutriments:
       energie_kcal: 269
@@ -3835,6 +3925,7 @@ foods:
     code_ciqual: "13011"
     nom: "Datte, sèche, dénoyautée"
     groupe: "fruits"
+    conditionnement_g: 250
     toute_annee: true
     nutriments:
       energie_kcal: 287
@@ -3851,6 +3942,7 @@ foods:
     code_ciqual: "13046"
     nom: "Raisin sec"
     groupe: "fruits"
+    conditionnement_g: 250
     toute_annee: true
     nutriments:
       energie_kcal: 322
