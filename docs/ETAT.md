@@ -24,15 +24,15 @@ quatre défauts du moteur, tous corrigés **par mesure et non au jugé** : l'ing
 (§6.6 bis), la pondération de la similarité (§6.6 ter), la règle de récence (§6.6 quater et
 quinquies), la couverture nutritionnelle (§5.1 bis).
 
-**Prochaine étape : le PLANNING** (`planWeek`, §7 ENGINE) — dernier gros morceau moteur avant l'UI.
-`suggestAlternatives` est codé depuis le 2026-07-28.
+**Prochaine étape : arbitrer la décision 34** (catalogue trop léger pour une journée à 3 repas), puis
+les restes (`planLeftovers`, §7.3) et la liste de courses. `planWeek` et les 5 garde-fous sont codés.
 
 ---
 
 ## 2. Où en est-on
 
 ```
-Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ─▶ planning ⬜ ── UI ⬜
+Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ─▶ UI ⬜
   ✅          ✅            ✅           ✅              ✅                                                                                                    ⬅ ICI
 ```
 
@@ -201,6 +201,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | ~~32~~ | Pondération des trois signaux de similarité | **Tranchée PAR MESURE et CODÉE (2026-07-27)** — §6.6 ter ENGINE. **0,8 / 0,15 / 0,05** au lieu de 0,5 / 0,3 / 0,2. L'ancienne répartition, jamais vérifiée, laissait le sensoriel et la cuisine fabriquer **50 % de similarité entre deux plats sans aucun ingrédient commun** (« coq au vin » × « gigot d'agneau »). Sept jeux comparés ; les quasi-doublons ne perdent rien sur toute la plage (79 → 78 %), seuls les faux rapprochements tombent. **Pas 100/0/0** malgré son meilleur score brut : cinq salades froides sans ingrédient commun seraient alors à 0 % et la diversification n'y verrait aucune répétition |
 | 27 | Table `substitution` : quand la créer ? | **Avec le contenu, pas avant** — quels couples ont du sens dépend des recettes qui existent. Le type `Substitution` et `Catalog.substitutions` existent déjà ; le loader retourne une Map vide (`catalog-loader.ts`, une ligne à changer) et un test verrouille ce vide. Le moteur n'aura rien à changer quand la table arrivera |
 | 33 | **Codes de confiance CIQUAL — les importer ou non ?** | **OUVERTE, mesurée le 2026-07-28.** Le fichier CIQUAL donne, POUR CHAQUE VALEUR, un `code_confiance` (A→D) et un `source_code` bibliographique. `import-ciqual.mjs` **jette les deux**. Mesuré sur nos 1 728 valeurs : hors énergie, **34 % sont cotées C ou D** par l'ANSES elle-même (vitamine C 48 %, fibres 47 %, glucides 46 %). Une valeur C/D est souvent précisément une valeur EMPRUNTÉE à une table étrangère (la table des sources cite Paul & Southgate UK, Souci-Fachmann-Kraut DE) : **CIQUAL est déjà un recoupement**, et ajouter l'USDA reviendrait en partie à réimporter ce qu'elle a déjà emprunté. Piste : colonne sur `food_nutrient`, puis pondérer le vecteur de couverture (§5.1 bis) au lieu du binaire connu/inconnu. ⚠️ **PIÈGE** : l'énergie est à 191 D sur 192 **par construction** — « Energie, Règlement UE N° 1169/2011 » est CALCULÉE depuis les macros, pas mesurée. Pondérer naïvement la sortirait du scoring pour tout le catalogue. Mesurer avant de figer des poids |
+| 34 | **Le catalogue est trop léger pour une journée à 3 repas** | **OUVERTE, mesurée le 2026-07-28 au premier plan réel.** `assertCalorieFloor` fait ÉCHOUER un planning à 3 créneaux : 1 061 kcal le plus bas jour, sous le plancher de 1 200. Ni le moteur ni le garde-fou ne sont en cause — **la recette médiane apporte la moitié de la cible de son créneau** : petit-déjeuner 334 kcal pour 500 visées, déjeuner 401 pour 700, dîner 381 pour 600 ; le maximum de TOUT le catalogue est 819 kcal. Trois repas médians font 1 116 kcal. Avec un 4ᵉ créneau (goûter) les 7 jours passent (min 1 258). Trois pistes : **(a)** enrichir le catalogue en plats denses — c'est le fond du problème, un déjeuner à 400 kcal n'est pas un déjeuner ; **(b)** exiger 4 créneaux dans l'appli, ce qui déguise le symptôme ; **(c)** exploiter `UserProfile.facteurPortion` pour servir 1,5 portion, ce qui fausserait la liste de courses. ⚠️ NE PAS affaiblir `assertCalorieFloor` pour faire passer le test : c'est le seul garde-fou qui protège d'un planning de sous-alimentation, et il a fonctionné exactement comme prévu dès le premier essai réel. Reco : **(a)** |
 
 ---
 

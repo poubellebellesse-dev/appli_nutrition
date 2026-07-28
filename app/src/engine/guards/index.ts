@@ -24,6 +24,7 @@ import type {
   RecipeId,
   UserProfile,
   WeekPlan,
+  MealSlot,
 } from '../domain/index.js'
 import { EngineSafetyError } from '../domain/index.js'
 import { findBannedTerms } from './banned-terms.js'
@@ -75,10 +76,8 @@ export const assertNoDeclaredAllergen: AssertNoDeclaredAllergen = (candidates, c
   }
 }
 
-// --- Signatures restantes (§5.2 ENGINE) — implémentation P2/P3 ---------------------------------
-
-/** Aucun jour < 1200 kcal (F) / 1500 kcal (H) sans avertissement explicite (§6.5 ARCHITECTURE). */
-export type AssertCalorieFloor = (plan: WeekPlan, profile: UserProfile) => void
+/** Aucun jour < 1200 kcal (F) / 1500 kcal (H) — voir l'implémentation en bas de fichier. */
+export type AssertCalorieFloor = (plan: WeekPlan, profile: UserProfile, catalog: Catalog) => void
 
 // --- assertCriticalLayersRan (§6.3 ENGINE) — implémenté P1c -----------------------------------
 //
@@ -147,5 +146,58 @@ export const assertNoTherapeuticClaim: AssertNoTherapeuticClaim = (explanations)
           `le(s) terme(s) banni(s) (${hits.join(', ')}) — §6.2 ARCHITECTURE : "${explanation.label}"`
       )
     }
+  }
+}
+
+// --- assertCalorieFloor (§6.5 ARCHITECTURE) — implémenté 2026-07-28, avec `planWeek` ------------
+//
+// « Aucun jour sous 1 200 kcal (F) / 1 500 (H) ». Le seul garde-fou qui manquait, parce qu'il n'a
+// de sens qu'appliqué à un PLAN : une suggestion isolée n'est pas un apport journalier.
+//
+// ⚠️ SIGNATURE ADAPTÉE — `(plan, profile, catalog)` là où §5.2 ENGINE écrit `(plan, profile)`. Un
+// plan ne porte que des `recipeId` : sans catalogue, impossible d'en tirer une énergie. Même écart
+// que `assertNoDeclaredAllergen`, et pour la même raison.
+//
+// ⚠️ QUELS JOURS SONT ÉVALUÉS. Uniquement ceux où `dejeuner` ET `diner` sont REMPLIS. Ce n'est pas
+// une échappatoire, c'est la condition pour que la question ait un sens :
+//   - un utilisateur qui ne planifie que ses dîners mange par ailleurs ; le plan n'est pas son
+//     apport de la journée, et lui opposer un plancher journalier serait un faux positif SYSTÉMATIQUE ;
+//   - un jour dont un repas principal n'a PAS pu être rempli n'est pas « un plan qui affame », c'est
+//     un plan INCOMPLET — problème réel mais différent, déjà visible dans `entries` (`recipeId: null`).
+//     Le confondre avec une alerte de sécurité ferait échouer tout le plan pour une pénurie de
+//     catalogue, et rendrait le vrai signal inaudible à force de se déclencher pour autre chose.
+//
+// L'énergie est lue dans `catalog.indexes.recipeNutrients`, qui est PAR PORTION (§6.5 précision 8) :
+// on compte UNE portion par créneau, ce que mange une personne. `MealPlanEntry.portions` dit combien
+// la recette en PRODUIT — s'en servir ici multiplierait l'apport par le nombre de convives.
+
+/** Planchers §6.5 ARCHITECTURE. `NP` prend le plus HAUT : mieux vaut alerter à tort que laisser passer. */
+const CALORIE_FLOOR_BY_SEX: Readonly<Record<UserProfile['sexe'], number>> = { F: 1200, M: 1500, NP: 1500 }
+
+const MAIN_SLOTS: readonly MealSlot[] = ['dejeuner', 'diner']
+
+export const assertCalorieFloor = (plan: WeekPlan, profile: UserProfile, catalog: Catalog): void => {
+  const energyIndex = catalog.nutrients.findIndex((nutrient) => nutrient.code === 'energie')
+  if (energyIndex < 0) return // catalogue sans nutriment d'énergie : rien à vérifier, pas de faux positif
+
+  const floor = CALORIE_FLOOR_BY_SEX[profile.sexe]
+  const parJour = new Map<string, { kcal: number; remplis: Set<MealSlot> }>()
+
+  for (const entry of plan.entries) {
+    const jour = parJour.get(entry.slot.date) ?? { kcal: 0, remplis: new Set<MealSlot>() }
+    if (entry.recipeId !== null) {
+      jour.kcal += catalog.indexes.recipeNutrients.get(entry.recipeId)?.[energyIndex] ?? 0
+      jour.remplis.add(entry.slot.creneau)
+    }
+    parJour.set(entry.slot.date, jour)
+  }
+
+  for (const [date, jour] of parJour) {
+    if (!MAIN_SLOTS.every((slot) => jour.remplis.has(slot))) continue
+    if (jour.kcal >= floor) continue
+    throw new EngineSafetyError(
+      `assertCalorieFloor : le ${date} totalise ${Math.round(jour.kcal)} kcal, sous le plancher de ` +
+        `${floor} kcal (§6.5 ARCHITECTURE). Un planning ne doit jamais proposer une journée sous ce seuil.`
+    )
   }
 }

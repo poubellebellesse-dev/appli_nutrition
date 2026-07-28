@@ -41,6 +41,7 @@ import type {
   WeekPlanRequest,
 } from '../domain/index.js'
 import { suggestAlternatives as runSuggestAlternatives } from '../selection/alternatives.js'
+import { planWeek as runPlanWeek } from '../planning/plan-week.js'
 import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
@@ -59,7 +60,8 @@ import {
 } from '../selection/index.js'
 import type { NutritionReport } from '../nutrition/index.js'
 import { attachDerivedIndexes } from '../nutrition/index.js'
-import { assertCriticalLayersRan, assertNoDeclaredAllergen, assertNoTherapeuticClaim } from '../guards/index.js'
+import {
+  assertCalorieFloor, assertCriticalLayersRan, assertNoDeclaredAllergen, assertNoTherapeuticClaim } from '../guards/index.js'
 
 export interface Engine {
   readonly version: string
@@ -356,7 +358,14 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
     suggestMeals: (req) => runSuggestMeals(enrichedCatalog, req, now),
     suggestAlternatives: (req, recipeId, dislikedFoodId) =>
       runSuggestAlternatives(enrichedCatalog, req, recipeId, dislikedFoodId),
-    planWeek: () => notImplemented('planWeek'),
+    // La suggestion est INJECTÉE dans le planning (§7.1, `P->>S: suggest`) : planning/ ne peut pas
+    // importer api/, et une copie du pipeline finirait par perdre les garde-fous. Le plan passe
+    // ensuite `assertCalorieFloor`, cinquième et dernier garde-fou (§5.2).
+    planWeek: (req) => {
+      const plan = runPlanWeek(enrichedCatalog, req, (slotReq) => runSuggestMeals(enrichedCatalog, slotReq, now))
+      assertCalorieFloor(plan, req.profile, enrichedCatalog)
+      return plan
+    },
     rerollSlot: () => notImplemented('rerollSlot'),
     planLeftovers: () => notImplemented('planLeftovers'),
     buildShoppingList: () => notImplemented('buildShoppingList'),

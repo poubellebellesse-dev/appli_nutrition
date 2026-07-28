@@ -12,26 +12,33 @@ SQLite construit au build. **On code le moteur en ligne de commande avant toute 
 ## Où on en est
 
 ```
-P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ⬜ ── UI ⬜
-                                                                              ⬅ ICI
+P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── UI ⬜
+                                                                                          ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **451 verts (37 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **469 verts (38 fichiers)** · `npm run typecheck` propre ·
 `npm run build` → **193 aliments, 212 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
 des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusion + 11 score, dont
-7 implémentées), 6 archétypes, 4 garde-fous sur 5.
+7 implémentées), 6 archétypes, **les 5 garde-fous**.
 
 ## ▶ La prochaine étape
 
-**Le planning** (`planWeek`, [ENGINE §7](./ENGINE.md)). C'est le dernier gros morceau moteur avant
-l'UI, et **le seul moment où l'on saura si le moteur produit des semaines crédibles** — un plat pris
-isolément peut être bon cinq fois de suite et faire une mauvaise semaine.
+**Arbitrer la décision 34** ([ETAT §4](./ETAT.md)) — elle bloque l'usage réel du planning.
 
-> `suggestAlternatives` est **codé** depuis le 2026-07-28 (§8.4). Il a exigé une TROISIÈME notion
-> d'ingrédient — l'ingrédient *caractéristique*, mesuré séparément du « plus lourd » et de la
-> signature. Ne pas les confondre : trois questions, trois réponses.
+Le planning est codé et tourne (7 jours × 4 créneaux : 28 recettes distinctes, aucun doublon,
+1 258–1 788 kcal/jour). Mais **sur trois repas il ÉCHOUE** : `assertCalorieFloor` lève à 1 061 kcal.
+
+Ce n'est ni un bug du moteur ni un défaut du garde-fou — **le catalogue est trop léger**. La recette
+médiane apporte la moitié de la cible de son créneau (déjeuner 401 kcal pour 700 visées), et le
+maximum de tout le catalogue est 819. Trois repas médians font 1 116 kcal.
+
+> ⚠️ **Ne pas affaiblir le garde-fou pour faire passer le test.** C'est le seul qui protège d'un
+> planning de sous-alimentation, et il a fonctionné exactement comme prévu dès le premier essai
+> réel. La réponse est dans le contenu : des plats plus denses.
+
+Ensuite : les restes (`planLeftovers`, §7.3) et la liste de courses.
 
 ## Les cinq acquis à ne pas défaire
 

@@ -341,13 +341,18 @@ assertNoTherapeuticClaim(explanations: readonly Explanation[]): void
 | Garde-fou | Vérifie | Référence | État |
 |---|---|---|---|
 | `assertNoDeclaredAllergen` | Aucune suggestion ne contient un allergène déclaré | §5.2 ARCHI | **CODÉ** (P1a) — signature adaptée, voir note |
-| `assertCalorieFloor` | Aucun jour < 1 200 kcal (F) / 1 500 (H) | §6.5 ARCHI | signature seule (P2/P3, attend `planWeek`) |
+| `assertCalorieFloor` | Aucun jour < 1 200 kcal (F) / 1 500 (H) | §6.5 ARCHI | **CODÉ** (2026-07-28, avec `planWeek`) — signature adaptée `(plan, profile, catalog)` |
 | `assertCriticalLayersRan` | Les couches `critical` ont bien été exécutées | §6.3 | **CODÉ** (P1c) |
 | `assertScoringLayersNeverExclude` | **Aucune** couche de score n'a réduit l'ensemble | §6.1 ARCHI · §6.3 | **CODÉ** (P1b-2) |
 | `assertNoTherapeuticClaim` | Aucune explication ne contient le lexique banni | §6.2 ARCHI | **CODÉ** (P1c) |
 
-**4 garde-fous codés sur 5** — seul `assertCalorieFloor` reste une signature seule, en attente de
-`planWeek` (planning/, non câblé).
+**Les 5 garde-fous sont codés** depuis le 2026-07-28.
+
+> ⚠️ `assertCalorieFloor` n'évalue QUE les jours où `dejeuner` ET `diner` sont remplis. Un
+> utilisateur qui ne planifie que ses dîners mange par ailleurs : lui opposer un plancher journalier
+> serait un faux positif systématique. Et un jour dont un repas principal n'a pas pu être rempli
+> n'est pas « un plan qui affame » mais un plan INCOMPLET — déjà visible dans `entries`. Confondre
+> les deux rendrait le vrai signal inaudible.
 
 > **Écart assumé pour `assertNoDeclaredAllergen` (P1a)** : implémenté aujourd'hui sur
 > `(candidates: ReadonlySet<RecipeId>, catalog: Catalog, constraints: HardConstraints): void`
@@ -1222,7 +1227,7 @@ moteur explicable.
 
 ## 7. L4 — Planification
 
-### 7.1 Algorithme de planification
+### 7.1 Algorithme de planification — CODÉ (2026-07-28, `engine/planning/plan-week.ts`)
 
 Glouton jour par jour, état nutritionnel cumulé réinjecté à chaque créneau.
 
@@ -1267,6 +1272,48 @@ sequenceDiagram
 contraintes multiples est NP-difficile, mais surtout **elle est incompréhensible pour
 l'utilisateur** — modifier une préférence rebat toutes les cartes, y compris les repas qu'il
 aimait. Le glouton produit un résultat stable, où chaque changement est local et explicable.
+
+#### Ce qui fait une SEMAINE et non N suggestions — l'historique de travail
+
+Après chaque choix, la recette retenue est ajoutée à l'historique passé au créneau suivant, avec
+`origine: 'choisi'` et la date du créneau. `variety` et `habit` la voient donc comme un repas
+réellement pris.
+
+**Sans ce mécanisme, `planWeek` ne serait qu'une boucle appelant `suggestMeals`** : chaque créneau
+verrait le même historique initial, donc les mêmes scores, donc la même tête de classement — sept
+fois le même dîner, sans que rien ne le signale.
+
+Deux protections se cumulent, et ce n'est **pas** une redondance : l'historique fait *baisser* le
+score d'un plat récent (signal continu qui décroît avec les jours), `placedRecipeIds` *interdit* le
+doublon exact (garantie dure). Le premier seul laisserait passer un doublon quand tous les autres
+candidats sont mauvais ; le second seul ne dirait rien de la lassitude à J+3.
+
+> La suggestion est **injectée** (`SuggestForSlot`), pas reconstruite : L4 ne peut pas importer
+> `api/` (L5), et surtout une copie du pipeline **dériverait** — `suggestMeals` exécute au passage
+> `assertNoDeclaredAllergen` et `assertCriticalLayersRan`. C'est le `P->>S: suggest` du diagramme.
+
+> Un créneau que le catalogue ne peut pas remplir devient **vide** (`recipeId: null`), il ne fait
+> pas échouer le plan : `NoViableRecipeError` est rattrapée ici, et seulement ici. Faire perdre
+> treize créneaux pour un impossible serait pire.
+
+#### ⚠️ Ce que ce lot ne fait PAS
+
+- **La cible nutritionnelle RESTANTE.** §7.1 parle d'« état nutritionnel cumulé réinjecté », mais
+  `nutriLayer` vise toujours la part fixe du créneau (`MEAL_SLOT_SHARE`). Le câbler demande un point
+  d'injection de cible dans `SuggestionRequest`, qui n'existe pas.
+- **Les restes** (`planLeftovers`, §7.3) — `isLeftover` reste `false`.
+- **Le mode repas** (`service`, v1.5) — un plat par créneau.
+
+#### Résultat mesuré sur le catalogue réel (2026-07-28)
+
+7 jours × 4 créneaux : **28 créneaux remplis, 28 recettes distinctes, aucun doublon**, 1 258 à
+1 788 kcal/jour.
+
+> ⛔ **Sur TROIS créneaux (sans goûter), le plan ÉCHOUE** — `assertCalorieFloor` lève à 1 061 kcal.
+> Ce n'est ni un bug du moteur ni un défaut du garde-fou : **le catalogue est trop léger**. La
+> recette médiane apporte la moitié de la cible de son créneau — petit-déjeuner 334 kcal pour 500
+> visées, déjeuner 401 pour 700, dîner 381 pour 600, et le maximum de tout le catalogue est 819.
+> Trois repas médians font 1 116 kcal. **Décision ouverte** — voir ETAT §4 n°34.
 
 ### 7.2 États d'un créneau
 

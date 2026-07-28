@@ -158,17 +158,21 @@ describe("engine/api — createEngine (§8 ENGINE)", () => {
     expect(() => engine.layer("inconnu" as never)).toThrow(/inconnu/);
   });
 
-  it("les méthodes de planification restantes (planning/, non câblé) lèvent explicitement « non implémenté (P1c) »", () => {
+  it("les méthodes de planification ENCORE non câblées lèvent explicitement « non implémenté (P1c) »", () => {
+    // ⚠️ `planWeek` a QUITTÉ cette liste le 2026-07-28 (§7.1) : il est implémenté. Ne pas l'y
+    // remettre par réflexe si ce test casse — vérifier d'abord ce qui a bougé.
     const engine = createEngine(makeCatalog());
-    expect(() => engine.planWeek({} as never)).toThrow(
-      /non implémenté \(P1c\)/,
-    );
     expect(() => engine.scaleRecipe("omelette" as RecipeId, 4)).toThrow(
       /non implémenté \(P1c\)/,
     );
     expect(() => engine.rerollSlot({} as never, {} as never)).toThrow(
       /non implémenté \(P1c\)/,
     );
+  });
+
+  it("planWeek est CÂBLÉ — il refuse une fenêtre hors bornes plutôt que « non implémenté »", () => {
+    const engine = createEngine(makeCatalog());
+    expect(() => engine.planWeek({ days: 99, slots: ["diner"] } as never)).toThrow(RangeError);
   });
 });
 
