@@ -143,7 +143,7 @@ stateDiagram-v2
   utilisant l'aliment (couche `pantry`). **2 ajouts ou plus** → ouvre « Vider le frigo » pré-rempli
 - Un mode « extra » permet d'ajouter des articles **non alimentaires** (10 rayons : hygiène,
   entretien, animaux, bébé, vêtements…) à la liste, pour faire les courses complètes en une appli ;
-  table séparée du catalogue alimentaire (détail : `ARCHITECTURE.md`, `RECAP_SESSION_2.md`)
+  table séparée du catalogue alimentaire (détail : `ARCHITECTURE.md`, `archive/RECAP_SESSION_2.md`)
 
 ### 4.4 Recettes
 
@@ -189,7 +189,7 @@ Conçu pour être **lu debout, mains occupées, parfois de loin** — gros carac
 - **Notes** : commentaires locaux par recette et par étape, exportables (opt-in) avec le partage
 - **Roue des goûts** : radar sensoriel à 6 pôles (Salé/Sucré, Léger/Consistant, Chaud/Froid) affiché
   sur chaque fiche plat ; agrégée sur les plats aimés, la même roue apparaît dans le profil et
-  s'exporte en carte-image partageable (conçu session 2 — `RECAP_SESSION_2.md`)
+  s'exporte en carte-image partageable (conçu session 2 — `archive/RECAP_SESSION_2.md`)
 - Bas : « Ajouter à ma semaine »
 
 ### 4.7 Savoir
@@ -271,4 +271,4 @@ puis garantis par le test de lint de contenu.
 | **Thèmes d'accent curatés** | Décidé, jetons à définir |
 | **Toggles « Mes favoris » / variété** (Aujourd'hui, §4.1) | Proposé, pas maquetté — P3 |
 | **Sélecteur d'archétype** (onboarding + Paramètres, §ENGINE 6.3 bis) | Proposé, pas maquetté — P3 |
-| **Conseils vin** (Réglages/préférences) — affichage éditorial optionnel, masquable, jamais un jugement | Décidé (session 2), pas maquetté — `RECAP_SESSION_2.md` |
+| **Conseils vin** (Réglages/préférences) — affichage éditorial optionnel, masquable, jamais un jugement | Décidé (session 2), pas maquetté — `archive/RECAP_SESSION_2.md` |

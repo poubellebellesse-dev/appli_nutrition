@@ -4,7 +4,7 @@
 > Index de toute la documentation : [README.md](./README.md). État complet : [ETAT.md](./ETAT.md).
 > Spécification (fait foi) : [ENGINE.md](./ENGINE.md), [ARCHITECTURE.md](./ARCHITECTURE.md).
 > Dernière mise à jour : **2026-07-28** (session 4 — chantier CONTENU terminé, puis quatre
-> corrections mesurées du moteur. Récit de la session précédente : `RECAP_SESSION_3.md`).
+> corrections mesurées du moteur. Récit de la session précédente : `archive/RECAP_SESSION_3.md`).
 
 ---
 

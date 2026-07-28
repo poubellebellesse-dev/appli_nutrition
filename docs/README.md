@@ -1,7 +1,11 @@
 # Index de la documentation
 
-Onze documents, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel lire**,
-**lequel fait foi**, et **lequel ne doit jamais être réécrit**.
+Huit documents vivants, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel
+lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
+
+> Les récits des sessions 1 à 3 sont dans [archive/](./archive/) depuis le 2026-07-28 : ils ne
+> décrivent plus l'état du projet. Ils ne sont ni faux ni supprimables — voir
+> [archive/README.md](./archive/README.md).
 
 ## Par où commencer
 
@@ -40,10 +44,8 @@ corrige dans le document, elle ne se contourne pas dans le code.
 
 | Document | Ce qu'il consigne |
 |---|---|
-| [RECAP_SESSION.md](./RECAP_SESSION.md) | Session 1 — mise sous git, P0/P1a, conception du scoring |
-| [RECAP_SESSION_2.md](./RECAP_SESSION_2.md) | Session 2 — P1b-1 codé, saison en crédits, catalogue à 76 aliments, 5ᵉ couche |
-| [RECAP_SESSION_3.md](./RECAP_SESSION_3.md) | Session 3 — P1b-2 et P1c : passe de score, archétypes, banc CLI, `suggestMeals` |
-| [AUDIT_2026-07-27.md](./AUDIT_2026-07-27.md) | Regard **extérieur** sur le dépôt au commit `e2625d3` (112 recettes) — architecture, code, planification, marché |
+| [AUDIT_2026-07-27.md](./AUDIT_2026-07-27.md) | Regard **extérieur** sur le dépôt au commit `e2625d3` (112 recettes) — architecture, code, planification, marché. **Chiffres dépassés, constats VIVANTS et non traités** : zéro photo, lexique à 4 gestes, revue juridique |
+| [archive/](./archive/) | Récits des sessions 1 à 3, écartés du dossier principal — voir [archive/README.md](./archive/README.md) |
 
 Ils décrivent un état **vrai à leur date**. Les corriger après coup falsifierait l'historique : une
 affirmation devenue fausse se corrige dans les documents de référence, pas dans le récit qui l'a

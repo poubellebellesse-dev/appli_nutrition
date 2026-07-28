@@ -1,6 +1,6 @@
 # Conception B — conseils vin & modes recette/repas
 
-> Chantier de conception B annoncé en session 2 (`RECAP_SESSION_2.md` §6, `ENGINE.md` §6.5 ter).
+> Chantier de conception B annoncé en session 2 (`archive/RECAP_SESSION_2.md` §6, `ENGINE.md` §6.5 ter).
 > **Conception seule : aucun code, aucun contenu.** Les décisions ci-dessous ne font foi qu'une
 > fois répercutées dans `ARCHITECTURE.md` / `ENGINE.md` / `DESIGN.md`, au moment de
 > l'implémentation. Ce document est la pièce d'entrée de cette répercussion.
@@ -427,4 +427,4 @@ alcool, `FICHE_REPRISE.md` § décisions ouvertes) — voir §3 ci-dessus.
 
 > Rang 3 est volontairement **après** rang 2 alors qu'il n'en dépend pas : coder une table sans
 > consommateur est exactement ce qu'on a refusé pour les courses non alimentaires
-> (`RECAP_SESSION_2.md` §6). Le vin attend son écran.
+> (`archive/RECAP_SESSION_2.md` §6). Le vin attend son écran.

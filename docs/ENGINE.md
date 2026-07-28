@@ -587,7 +587,7 @@ préréglages nommés, **jamais douze curseurs**.
 
 > Généralise et remplace l'idée initiale de « quatre préréglages nommés » (§6.3, §13). Le principe
 > ne change pas : peu de choix nommés, jamais un tableau de bord de curseurs. Décision de
-> conception de la session du 2026-07-24 (`docs/RECAP_SESSION.md`), **codée et noms validés par
+> conception de la session du 2026-07-24 (`docs/archive/RECAP_SESSION.md`), **codée et noms validés par
 > l'utilisateur en session du 2026-07-25** (`app/src/engine/selection/archetypes.ts`,
 > `ArchetypeId` dans `app/src/engine/domain/archetype-ids.ts` — placé en `domain/`, pas
 > `selection/`, pour que `SuggestionRequest.archetype` puisse le référencer sans faire dépendre
@@ -654,7 +654,7 @@ Ajouter une fonctionnalité, c'est **ajouter une entrée au registre** — le pi
 > **Statut : conception figée cette session (2026-07-24), implémentation P1b-1/P1b-2, pas encore
 > codée.** Ce qui suit précise et complète les couches déjà décrites en §6.3 ; `speed` est un
 > signal nouveau, `topic`/`cost` restent en réserve à poids nul (v2/v3). Récit complet :
-> `docs/RECAP_SESSION.md`.
+> `docs/archive/RECAP_SESSION.md`.
 
 | Couche | Calcul | Poids |
 |---|---|---|
@@ -794,7 +794,7 @@ Sans cette distinction, ne pas posséder de mixeur supprimerait la moitié du ca
 ### 6.5 ter — Décisions de conception (session 2, 2026-07-24 — partiellement codées)
 
 Tranchées ; une partie est désormais implémentée (détail par point ci-dessous). Récit :
-`docs/RECAP_SESSION_2.md`.
+`docs/archive/RECAP_SESSION_2.md`.
 
 - **`variety` — trois réglages séparés.**
   (1) *Vitesse d'oubli* : TAU réglable à trois crans 3 / 7 / 14 jours (défaut 7) — **CODÉ**
@@ -1302,7 +1302,7 @@ export interface Engine {
   suggestSubstitutions(id: RecipeId, missing: readonly FoodId[]): readonly Substitution[]
 
   /**
-   * P1c/P2, PROPOSÉ — pas encore implémenté (session 2026-07-24, voir docs/RECAP_SESSION.md).
+   * P1c/P2, PROPOSÉ — pas encore implémenté (session 2026-07-24, voir docs/archive/RECAP_SESSION.md).
    * « Pâtes sans ail / autre sauce » : trois mécanismes combinés, dans cet ordre de préférence —
    * (1) retirer l'ingrédient marqué `optionnel`, (2) piocher dans la table `substitution`,
    * (3) proposer un plat frère via le regroupement de la diversification (§6.6). Le socle

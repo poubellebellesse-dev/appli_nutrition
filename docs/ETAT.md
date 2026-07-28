@@ -4,7 +4,7 @@
 > Dernière mise à jour : **2026-07-28** (session 4 — chantier CONTENU terminé : import CIQUAL 2025
 > réel, 193 aliments / 212 recettes ; puis quatre corrections mesurées du moteur — signature de
 > recette, pondération de similarité, récence de `variety`/`habit`, couverture nutritionnelle).
-> Sessions précédentes : `docs/RECAP_SESSION_2.md`, `docs/RECAP_SESSION_3.md`. Regard extérieur
+> Sessions précédentes : `docs/archive/RECAP_SESSION_2.md`, `docs/archive/RECAP_SESSION_3.md`. Regard extérieur
 > daté : `docs/AUDIT_2026-07-27.md`.
 
 ---
@@ -176,7 +176,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 8 | **Mode cuisine** (multi-recettes, timers par étape) en v1 ou v1.5 ? | Feature nouvelle, sizeable — après le socle P0 |
 | 9 | Cible iOS : PWA seule ou Capacitor + App Store ? | **PWA** par défaut (gratuit, pas de Mac) ; Capacitor si API native |
 | ~~10~~ | Noms définitifs des **archétypes** (§ENGINE 6.3 bis) | **Fermé, tranché et CODÉ** (session du 2026-07-25) — `equilibre` (défaut) · `envie` · `decouverte` · `de_saison` · `mes_gouts` · `rapide` (`ArchetypeId`, `domain/archetype-ids.ts`) ; table des surcharges dans `selection/archetypes.ts` — §3 |
-| 11 | Token de push GitHub (pour que l'utilisateur pousse les commits Claude) | À fournir par l'utilisateur — voir `docs/RECAP_SESSION.md` § Reprendre ici |
+| 11 | Token de push GitHub (pour que l'utilisateur pousse les commits Claude) | À fournir par l'utilisateur — voir `docs/archive/RECAP_SESSION.md` § Reprendre ici |
 | ~~12~~ | Rattachement de `speed` au pipeline | **Fermé, tranché et CODÉ** — `speed` EST une couche du registre à part entière (11ᵉ couche de score, poids nul par défaut, relevée par l'archétype « Rapide ») ; le registre est désormais à 17 (6 exclusion + 11 score) — §3 |
 | ~~13~~ | `requiredFoodIds` (miroir du rejet) : filtre dur ou gros bonus ? | **Fermé, tranché et CODÉ** — dur en contexte « Aujourd'hui » seulement, couche `requis` (`MealContext.requiredFoodIds`, hors de `HardConstraints`) — §3 |
 | 14 | Alcool : ingrédient de cuisine vs boisson | Ingrédient v1 (décidé) ; une boisson alcoolisée n'est jamais un aliment du repas, mais un alcool employé **comme ingrédient** est agrégé dans le calcul nutritionnel comme les autres (option A, `docs/CONCEPTION_B_VIN_REPAS.md` §1.7) ; boisson servie = article de courses |
@@ -234,7 +234,7 @@ recette invalide.
 
 ### P1b — Scoring — **conception §6.5/§6.3 bis ENGINE ; P1b-1 et P1b-2 codés et committés, P1c = prochaine étape (⬅ ICI)**
 
-Conception détaillée : `docs/ENGINE.md` §6.5 et §6.3 bis, `docs/RECAP_SESSION.md`. Découpage
+Conception détaillée : `docs/ENGINE.md` §6.5 et §6.3 bis, `docs/archive/RECAP_SESSION.md`. Découpage
 retenu :
 
 ### P1b-1 — Socle scoring ✅ terminé et committé
@@ -394,8 +394,8 @@ appli_nutrition/
 │  ├─ FICHE_REPRISE.md   ← ⭐ à lire en premier — état condensé + prochaines étapes
 │  ├─ ENGINE.md          ← moteur · 18 couches · API · plan de lancement
 │  ├─ DESIGN.md          ← 8 écrans · navigation · badge de preuve
-│  ├─ RECAP_SESSION.md   ← récit session 1 (conception P1b)
-│  ├─ RECAP_SESSION_2.md ← récit session 2 (P1b-1 codé, saison, contenu, 5ᵉ couche, conception variety/radar)
+│  ├─ archive/RECAP_SESSION.md   ← récit session 1 (conception P1b)
+│  ├─ archive/RECAP_SESSION_2.md ← récit session 2 (P1b-1 codé, saison, contenu, 5ᵉ couche, conception variety/radar)
 │  ├─ CONCEPTION_B_VIN_REPAS.md ← conception validée : accords vin, modes recette/repas (chantier B)
 │  └─ STRATEGIE_DISTRIBUTION.md
 ├─ app/src/

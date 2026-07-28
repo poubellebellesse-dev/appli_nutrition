@@ -380,7 +380,7 @@ bascule et synchronisation du service), **suivi d'étape** (taper une étape mar
 API), décompte in-app, notification best-effort. Argument de plus pour Capacitor si le mode cuisine
 devient central. L'interdiction de `Date.now` ne vise que `engine/` — l'UI utilise l'heure réelle.
 
-### Fonctionnalités conçues en session 2 — état d'implémentation par point, voir docs/RECAP_SESSION_2.md
+### Fonctionnalités conçues en session 2 — état d'implémentation par point, voir docs/archive/RECAP_SESSION_2.md
 
 - **Rejet personnel d'aliments** — `HardConstraints.excludedFoodIds` est désormais LU par une 5ᵉ
   couche d'exclusion `exclusions` (exclusion dure). Son miroir `requiredFoodIds` (« je veux ça »)
