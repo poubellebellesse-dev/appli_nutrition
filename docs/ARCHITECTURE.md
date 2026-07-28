@@ -294,7 +294,7 @@ Score = Σ (poids_i × critère_i)
 | `S_nutri` | Adéquation aux apports de référence **restants** sur la journée / semaine |
 | `S_pref` | Moyenne pondérée des préférences sur ingrédients et tags |
 | `S_envie` | Distance sur les axes sensoriels demandés (sucré/salé, léger/consistant, chaud/froid, texture) |
-| `S_variete` | Pénalité si la recette ou son ingrédient principal apparaît dans les N derniers jours |
+| `S_variete` | Pénalité si la recette **ou un plat de composition proche** apparaît dans les N derniers jours. ⚠️ L'esquisse disait « son ingrédient principal » : **mesuré faux** — 194 paires sur 290 partageaient un ingrédient le plus lourd avec des compositions très différentes (une mousse au chocolat rendait « récentes » des galettes de sarrasin). Règle réelle : chevauchement de signature repliée par sous-famille, second déclencheur par famille, filtre de créneau — `ENGINE.md` §6.6 quater et quinquies |
 | `S_saison` | Bonus produits de saison au mois courant |
 | `S_criteres` | **Uniquement si une thématique est active** : bonus `PRIVILEGIE`, malus `LIMITE`. Jamais d'exclusion. Poids nul par défaut. |
 | `S_cout` | v3 — pénalité au-delà du budget par repas |
@@ -323,11 +323,17 @@ Renvoyer les 5 meilleurs scores produit souvent 5 variations du même plat. Corr
 
 > ⚠️ Cette esquisse décrivait auparavant un **regroupement** par ingrédient principal + famille de
 > cuisine avec un représentant par groupe. Ce n'est pas ce qui a été implémenté : `docs/ENGINE.md`
-> §6.6 spécifie une boucle MMR pondérée sur **trois** signaux (ingrédient principal 0,5 · profil
-> sensoriel 0,3 · famille de cuisine 0,2), c'est elle qui a été codée (P1c,
-> `engine/selection/{similarity,diversify}.ts`) et **c'est ENGINE.md qui fait foi**. Différence de
+> §6.6 spécifie une boucle MMR pondérée sur trois signaux, codée en P1c
+> (`engine/selection/{similarity,diversify}.ts`), et **c'est ENGINE.md qui fait foi**. Différence de
 > fond : le MMR arbitre en continu score contre redondance, là où un regroupement écarte d'office
 > tout un groupe même quand ses membres sont excellents.
+>
+> ⚠️ **Les poids cités ici étaient faux** (« ingrédient principal 0,5 · sensoriel 0,3 · cuisine
+> 0,2 »). MESURÉ le 2026-07-27 : cette répartition laissait le sensoriel et la cuisine fabriquer
+> **50 % de similarité entre deux plats sans aucun ingrédient commun**. Valeurs réelles :
+> **composition 0,80 · sensoriel 0,15 · cuisine 0,05** — et le premier signal n'est plus « le même
+> ingrédient principal » (catégoriel) mais le chevauchement continu de deux signatures de
+> 3 ingrédients. `ENGINE.md` §6.6 bis et ter.
 
 ### 5.5 Étape 4 — Explication
 

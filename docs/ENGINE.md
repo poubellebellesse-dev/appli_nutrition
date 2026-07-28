@@ -844,6 +844,55 @@ doit repousser. Sur un ensemble retenu vide (premier tour), `simMax = 0` par con
 meilleur score gagne naturellement, sans cas particulier codé — et `λ = 0` fait dégénérer la boucle
 en un simple classement par score, non-régression vérifiée par test.
 
+#### La fonction `similarity` — ÉTAT COURANT (mesuré)
+
+> Tout ce qui suit est le résultat de MESURES sur le catalogue réel, pas de la conception initiale.
+> Les sous-sections « bis » à « quinquies » plus bas racontent **comment on y est arrivé** et ce qui
+> a été écarté en route ; elles ne spécifient rien. En cas de doute, **c'est ce bloc-ci qui décrit
+> le code**.
+
+`similarity(a, b) ∈ [0, 1]` (`engine/selection/similarity.ts`) combine trois signaux pondérés en
+constantes nommées (Σ = 1) :
+
+| Signal | Constante | Poids | Nature |
+|---|---|---|---|
+| Composition (chevauchement de signatures) | `SIMILARITY_WEIGHT_INGREDIENTS` | 0.80 | continu ∈ [0, 1] (Jaccard pondéré) |
+| Profil sensoriel proche | `SIMILARITY_WEIGHT_SENSORY` | 0.15 | distance euclidienne (3 axes numériques) + `texture` |
+| Famille de cuisine identique | `SIMILARITY_WEIGHT_CUISINE` | 0.05 | catégoriel (match / pas-match) |
+
+> Ces trois poids **et** la nature continue du premier signal viennent de §6.6 bis et §6.6 ter, qui
+> les ont mesurés. Le tableau ci-dessus est l'état **courant** du code, pas l'état d'origine.
+
+La **texture** reste, comme dans `craving` (§6.5 précision 2), un axe **catégoriel** — match ou
+pas-match — jamais une distance numérique : elle est recombinée avec la distance euclidienne des
+trois axes numériques, pas fondue dedans.
+
+> ⚠️ **Piège documenté — absence ≠ égalité.** Deux recettes dont la composition est **inconnue** des
+> deux côtés (signature vide) ne sont **pas** réputées similaires sur ce signal : la composante vaut
+> 0, pas 1. Une composition inconnue ne veut rien dire de comparable ; la traiter comme un match
+> gonflerait artificiellement la similarité de recettes dont on ne sait justement rien. Même règle
+> pour la facette `cuisine` : deux recettes sans cuisine renseignée ne sont pas « de la même
+> famille ».
+
+`DEFAULT_MMR_LAMBDA = 0.4` (`engine/selection/diversify.ts`) — valeur de référence issue d'une
+intuition de conception, **pas d'une mesure**, **toujours à calibrer**.
+
+> **Le blocage est levé** (2026-07-27). Cette calibration était hors de portée tant que le catalogue
+> de test comptait 10 recettes composées à la main. Il en compte **212**, et le modèle de similarité
+> a été corrigé (§6.6 bis) puis repondéré par mesure (§6.6 ter). Distribution mesurée sur
+> 22 366 paires : max 94,2 % · p99 38,2 % · médiane 9,5 %, avec 30 paires au-dessus de 60 % contre
+> 81 avant correction. La base est saine ; λ reste au défaut faute d'avoir été mesuré, pas faute de
+> pouvoir l'être.
+
+---
+
+### Historique des corrections mesurées (§6.6 bis → quinquies)
+
+Quatre défauts trouvés en remplissant le catalogue, invisibles sur 10 recettes. On les conserve
+parce que le RAISONNEMENT ÉCARTÉ vaut souvent l'énoncé retenu : trois pistes intuitives ont été
+mesurées perdantes (pondération par rareté, repli par `Food.groupe`, « principal + secondaires »).
+Ces sections sont **datées et historiques** — elles ne font pas foi sur l'état du code.
+
 #### 6.6 bis — Correction du signal « ingrédient » (2026-07-27), CODÉE
 
 Le premier signal comparait UN SEUL ingrédient — le non-optionnel le plus lourd
@@ -1019,39 +1068,6 @@ légitimes (deux flans au goûter, deux porridges au petit-déjeuner), et les ab
 
 > `recipeMainIngredient` n'est désormais lu par **aucune couche**. Il reste calculé à l'init et
 > employé seulement par les bancs de comparaison, qui documentent pourquoi il a été abandonné.
-
-`similarity(a, b) ∈ [0, 1]` (`engine/selection/similarity.ts`) combine trois signaux pondérés en
-constantes nommées (Σ = 1) :
-
-| Signal | Constante | Poids | Nature |
-|---|---|---|---|
-| Composition (chevauchement de signatures) | `SIMILARITY_WEIGHT_INGREDIENTS` | 0.80 | continu ∈ [0, 1] (Jaccard pondéré) |
-| Profil sensoriel proche | `SIMILARITY_WEIGHT_SENSORY` | 0.15 | distance euclidienne (3 axes numériques) + `texture` |
-| Famille de cuisine identique | `SIMILARITY_WEIGHT_CUISINE` | 0.05 | catégoriel (match / pas-match) |
-
-> Ces trois poids **et** la nature continue du premier signal viennent de §6.6 bis et §6.6 ter, qui
-> les ont mesurés. Le tableau ci-dessus est l'état **courant** du code, pas l'état d'origine.
-
-La **texture** reste, comme dans `craving` (§6.5 précision 2), un axe **catégoriel** — match ou
-pas-match — jamais une distance numérique : elle est recombinée avec la distance euclidienne des
-trois axes numériques, pas fondue dedans.
-
-> ⚠️ **Piège documenté — absence ≠ égalité.** Deux recettes dont la composition est **inconnue** des
-> deux côtés (signature vide) ne sont **pas** réputées similaires sur ce signal : la composante vaut
-> 0, pas 1. Une composition inconnue ne veut rien dire de comparable ; la traiter comme un match
-> gonflerait artificiellement la similarité de recettes dont on ne sait justement rien. Même règle
-> pour la facette `cuisine` : deux recettes sans cuisine renseignée ne sont pas « de la même
-> famille ».
-
-`DEFAULT_MMR_LAMBDA = 0.4` (`engine/selection/diversify.ts`) — valeur de référence issue d'une
-intuition de conception, **pas d'une mesure**, **toujours à calibrer**.
-
-> **Le blocage est levé** (2026-07-27). Cette calibration était hors de portée tant que le catalogue
-> de test comptait 10 recettes composées à la main. Il en compte **212**, et le modèle de similarité
-> a été corrigé (§6.6 bis) puis repondéré par mesure (§6.6 ter). Distribution mesurée sur
-> 22 366 paires : max 94,2 % · p99 38,2 % · médiane 9,5 %, avec 30 paires au-dessus de 60 % contre
-> 81 avant correction. La base est saine ; λ reste au défaut faute d'avoir été mesuré, pas faute de
-> pouvoir l'être.
 
 ### 6.7 Explication — CODÉ (P1c, `engine/selection/explain.ts`)
 
@@ -1496,17 +1512,28 @@ export interface CatalogIndexes {
   readonly recipesByAllergen: ReadonlyMap<AllergenId, ReadonlySet<RecipeId>>
   readonly recipesByDiet: ReadonlyMap<DietCode, ReadonlySet<RecipeId>>
   readonly recipesBySlot: ReadonlyMap<MealSlot, ReadonlySet<RecipeId>>
-  readonly recipeNutrients: ReadonlyMap<RecipeId, NutrientVector>   // pré-agrégé
-  readonly recipeMainIngredient: ReadonlyMap<RecipeId, FoodId>      // ⚠️ le plus LOURD — voir §6.6 bis
-  readonly recipeSignature: ReadonlyMap<RecipeId, RecipeSignature>  // pour la diversification
+  readonly recipeNutrients: ReadonlyMap<RecipeId, NutrientVector>   // pré-agrégé, PAR PORTION
+  readonly recipeNutrientCoverage: ReadonlyMap<RecipeId, NutrientVector> // part CONNUE — §5.1 bis
+  readonly recipeMainIngredient: ReadonlyMap<RecipeId, FoodId>      // ⚠️ MORT — lu par aucune couche
+  readonly recipeSignature: ReadonlyMap<RecipeId, RecipeSignature>  // similarité — §6.6 bis
+  readonly recipeFamilySignature: ReadonlyMap<RecipeId, RecipeFamilySignature> // récence — §6.6 quater
+  readonly declaredFamilies: ReadonlySet<string>                    // sous-familles réelles — §6.6 quinquies
 }
 ```
 
-> **Précision P1b (session 2026-07-24) sur `recipeNutrients` et `recipeMainIngredient`** : ces
-> deux index sont calculés **à l'init du moteur** (`createEngine(catalog)`, fonctions pures de
-> `engine/nutrition/`), pas par `catalog/build.mjs` — pour ne pas coupler le script de build au
-> moteur (§6.5 précision 8). Aujourd'hui ce sont des `Map` vides, laissées telles quelles par
-> `data/catalog-loader.ts` ; à peupler en **P1b-1**. Voir aussi la note de §9.2.
+> **Tous les index dérivés sont calculés à l'init du moteur** (`createEngine(catalog)` →
+> `attachDerivedIndexes`, fonctions pures de `engine/nutrition/`), jamais par `catalog/build.mjs` —
+> pour ne pas coupler le script de build au moteur (§6.5 précision 8). `data/catalog-loader.ts` les
+> retourne vides ; ils sont peuplés depuis P1b-1. Voir aussi la note de §9.2.
+>
+> ⚠️ **Deux espaces de signature, à ne pas fusionner.** `recipeSignature` (clés = `FoodId`) sert la
+> SIMILARITÉ, qui doit encore distinguer un blanc de poulet rôti d'un tajine de cuisses.
+> `recipeFamilySignature` (clés = nom de sous-famille OU `foodId`) sert la RÉCENCE, qui se moque du
+> morceau. La pondération de la similarité a été mesurée sur le brut : les fusionner invaliderait
+> cette mesure — §6.6 quater.
+>
+> ⚠️ `recipeMainIngredient` n'est lu par **aucune couche** depuis §6.6 bis. Il survit pour les bancs
+> de comparaison, qui documentent pourquoi il a été abandonné. C'est de la dette, pas un index actif.
 
 ### 9.2 Où se fait le travail
 

@@ -280,7 +280,9 @@ retenu :
 ### P1c lots 1-3 — Diversification, explication, `suggestMeals` bout-en-bout ✅ terminés et committés (3 commits)
 
 - [x] Diversification MMR (§6.6 ENGINE) — `engine/selection/similarity.ts` (similarité pondérée :
-  ingrédient principal 0,5 · profil sensoriel 0,3 · famille de cuisine 0,2 ; texture catégorielle,
+  ingrédient principal 0,5 · profil sensoriel 0,3 · famille de cuisine 0,2 — **⚠️ valeurs de
+  l'époque, depuis remplacées PAR MESURE par composition 0,80 · sensoriel 0,15 · cuisine 0,05,
+  décisions 30 et 32** ; texture catégorielle,
   comme `craving` ; piège absence ≠ égalité codé et documenté) + `diversify.ts` (boucle gloutonne
   `argmax(score − λ·simMax)`, MAX et non moyenne, `DEFAULT_MMR_LAMBDA = 0.4` — à calibrer)
 - [x] Explication (§6.7 ENGINE) — `engine/selection/explain.ts` : règle de non-citation des couches
