@@ -39,22 +39,22 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Délayer la levure dans 30 cl d'eau tiède — jamais chaude, elle tuerait la levure — et laisser mousser."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: 600
     timer_type: repos
   - ordre: 2
     texte: "Mêler la farine et le sel, verser l'eau levurée et pétrir dix minutes jusqu'à ce que la pâte devienne lisse et élastique."
-    lexicon_ids: []
+    lexicon_ids: [petrir]
     timer_s: 600
     timer_type: null
   - ordre: 3
     texte: "Couvrir d'un linge et laisser lever à l'abri des courants d'air jusqu'à ce que le volume double."
-    lexicon_ids: []
+    lexicon_ids: [pousser]
     timer_s: 5400
     timer_type: repos
   - ordre: 4
     texte: "Dégazer la pâte du plat de la main, la façonner en boule, puis laisser lever une seconde fois."
-    lexicon_ids: []
+    lexicon_ids: [pousser]
     timer_s: 3600
     timer_type: repos
   - ordre: 5

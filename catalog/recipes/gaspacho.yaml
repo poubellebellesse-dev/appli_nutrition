@@ -65,7 +65,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Mixer les légumes avec l'ail, le pain pressé, le vinaigre et le sel."
-    lexicon_ids: []
+    lexicon_ids: [mixer]
     timer_s: null
     timer_type: null
   - ordre: 4
@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Passer au tamis si l'on veut une texture lisse, puis réfrigérer au moins deux heures — un gaspacho tiède ne vaut rien."
-    lexicon_ids: []
+    lexicon_ids: [chinois]
     timer_s: 7200
     timer_type: repos
 

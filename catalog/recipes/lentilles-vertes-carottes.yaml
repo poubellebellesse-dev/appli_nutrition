@@ -56,17 +56,17 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Faire revenir les légumes dans l'huile de colza jusqu'à ce que l'oignon devienne translucide."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 420
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les lentilles rincées et couvrir d'eau à hauteur de trois centimètres au-dessus."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Laisser mijoter à découvert jusqu'à ce que les lentilles soient tendres, saler en fin de cuisson et parsemer de persil."
-    lexicon_ids: []
+    lexicon_ids: [mijoter, parsemer]
     timer_s: 1500
     timer_type: cuisson
 

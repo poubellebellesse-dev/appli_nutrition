@@ -56,17 +56,17 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Délayer la moutarde avec le vinaigre, puis monter la vinaigrette en versant l'huile de noix en filet."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Couper la pomme en fins bâtonnets et concasser grossièrement les cerneaux de noix."
-    lexicon_ids: []
+    lexicon_ids: [concasser]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Mélanger les endives à la vinaigrette juste avant de servir, puis parsemer de roquefort émietté, de noix et de pomme."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 

@@ -57,12 +57,12 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire mousser le beurre dans une poêle et y dorer les tranches à feu moyen."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 4
     texte: "Retourner, dorer l'autre face, puis saupoudrer du reste de sucre à la sortie de la poêle."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 300
     timer_type: cuisson
 

@@ -61,12 +61,12 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les tomates coupées en dés et laisser réduire jusqu'à obtenir une sauce courte."
-    lexicon_ids: []
+    lexicon_ids: [reduire]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4
     texte: "Émietter le thon dans la sauce, mélanger avec les pâtes égouttées et parsemer de persil."
-    lexicon_ids: []
+    lexicon_ids: [egoutter, parsemer]
     timer_s: null
     timer_type: null
 

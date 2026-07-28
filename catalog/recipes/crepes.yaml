@@ -57,7 +57,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Incorporer le beurre fondu, puis laisser reposer la pâte à température ambiante."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: 3600
     timer_type: repos
   - ordre: 4
@@ -67,7 +67,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Retourner dès que les bords se décollent et que le dessous est doré, puis compter quelques secondes de plus."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 45
     timer_type: cuisson
 

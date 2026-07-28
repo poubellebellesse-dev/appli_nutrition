@@ -65,17 +65,17 @@ etapes:
     timer_type: repos
   - ordre: 3
     texte: "Râper les carottes et la pomme, et les mêler au chou."
-    lexicon_ids: []
+    lexicon_ids: [raper]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Délayer la moutarde avec le vinaigre, monter à l'huile, puis verser sur les légumes."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Laisser reposer au frais au moins une heure, puis parsemer de graines de tournesol grillées à sec."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 3600
     timer_type: repos
 

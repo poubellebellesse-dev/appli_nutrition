@@ -52,17 +52,17 @@ etapes:
     timer_type: repos
   - ordre: 2
     texte: "Fouetter les jaunes avec le sucre jusqu'à ce que le mélange blanchisse et double de volume."
-    lexicon_ids: []
+    lexicon_ids: [blanchir, fouetter]
     timer_s: 300
     timer_type: null
   - ordre: 3
     texte: "Incorporer le mascarpone en trois fois, sans travailler la crème plus que nécessaire — elle tournerait granuleuse."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Monter les blancs en neige ferme avec la pincée de sel, puis les incorporer à la spatule en soulevant la masse."
-    lexicon_ids: [monter_blancs]
+    lexicon_ids: [monter_blancs, incorporer]
     timer_s: 300
     timer_type: null
   - ordre: 5

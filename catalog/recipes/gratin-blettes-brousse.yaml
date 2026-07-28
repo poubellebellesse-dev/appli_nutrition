@@ -56,22 +56,22 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Ajouter les feuilles pour les deux dernières minutes, puis tout égoutter et presser pour retirer l'eau."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 120
     timer_type: cuisson
   - ordre: 3
     texte: "Faire revenir l'ail émincé dans l'huile, y faire sauter les blettes égouttées."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, revenir, egoutter]
     timer_s: 300
     timer_type: cuisson
   - ordre: 4
     texte: "Hors du feu, mélanger la brousse écrasée et les œufs battus aux blettes, saler."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Verser dans un plat, couvrir de parmesan et enfourner à 190 °C jusqu'à ce que le dessus soit doré."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 1800
     timer_type: cuisson
 

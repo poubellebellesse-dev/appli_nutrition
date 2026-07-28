@@ -70,12 +70,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Mixer, puis passer au tamis si l'on veut retirer peaux et pépins. Ajouter une pincée de sucre si les tomates sont acides."
-    lexicon_ids: []
+    lexicon_ids: [mixer, chinois]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Ajouter la crème et le basilic ciselé hors du feu — cuit, il noircit et perd son parfum."
-    lexicon_ids: []
+    lexicon_ids: [ciseler]
     timer_s: null
     timer_type: null
 

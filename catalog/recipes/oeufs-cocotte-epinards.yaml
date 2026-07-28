@@ -51,12 +51,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 180 °C et mettre à chauffer un plat rempli d'eau, qui servira de bain-marie."
-    lexicon_ids: []
+    lexicon_ids: [bain_marie]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Faire tomber les épinards au beurre, les égoutter en pressant, puis les hacher et les saler."
-    lexicon_ids: []
+    lexicon_ids: [hacher, egoutter]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
@@ -66,7 +66,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Casser un œuf dans chaque ramequin, ajouter le comté et poser les ramequins dans le bain-marie."
-    lexicon_ids: []
+    lexicon_ids: [bain_marie]
     timer_s: null
     timer_type: null
   - ordre: 5

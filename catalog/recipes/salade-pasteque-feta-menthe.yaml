@@ -56,7 +56,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Les laisser s'égoutter quelques minutes dans une passoire — la pastèque rend beaucoup d'eau."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 600
     timer_type: repos
   - ordre: 3
@@ -66,12 +66,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Réunir pastèque, feta et olives, sans mélanger trop fort pour ne pas écraser les cubes."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Arroser d'huile et de citron, déchirer la menthe par-dessus, poivrer et servir aussitôt. Ne pas saler : la feta suffit."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
 

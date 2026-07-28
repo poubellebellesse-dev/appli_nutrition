@@ -62,12 +62,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Réserver la viande au chaud. Faire suer l'échalote émincée, déglacer au vinaigre, ajouter le miel et laisser sirupeux."
-    lexicon_ids: [emincer, deglacer]
+    lexicon_ids: [emincer, suer, deglacer, reserver]
     timer_s: 240
     timer_type: cuisson
   - ordre: 5
     texte: "Laisser reposer le magret cinq minutes avant de le trancher en biais, puis napper de sauce."
-    lexicon_ids: []
+    lexicon_ids: [napper]
     timer_s: 300
     timer_type: repos
 

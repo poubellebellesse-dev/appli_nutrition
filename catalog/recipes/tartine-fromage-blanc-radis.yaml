@@ -56,7 +56,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Le laisser s'égoutter quelques minutes s'il est très liquide, pour qu'il tienne sur le pain."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 600
     timer_type: repos
   - ordre: 3
@@ -71,7 +71,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Ranger les rondelles de radis en écailles, ciseler le persil dessus et donner un tour de poivre."
-    lexicon_ids: []
+    lexicon_ids: [ciseler]
     timer_s: null
     timer_type: null
 

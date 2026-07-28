@@ -56,7 +56,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Peler les pommes de terre et les couper en tranches de trois millimètres."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Ajouter thym et laurier, parsemer du reste de beurre et enfourner à 190 °C jusqu'à absorption du bouillon."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 3600
     timer_type: cuisson
 

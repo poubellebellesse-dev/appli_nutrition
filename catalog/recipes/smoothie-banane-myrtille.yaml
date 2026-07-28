@@ -47,12 +47,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Éplucher les bananes et les couper en tronçons — bien mûres, elles suffisent souvent à sucrer le smoothie."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Rincer les myrtilles et les égoutter."
-    lexicon_ids: []
+    lexicon_ids: [rincer, egoutter]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -62,7 +62,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Mixer jusqu'à obtenir une texture lisse, en ajoutant du lait si c'est trop épais."
-    lexicon_ids: []
+    lexicon_ids: [mixer]
     timer_s: null
     timer_type: null
   - ordre: 5

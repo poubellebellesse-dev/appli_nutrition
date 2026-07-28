@@ -53,7 +53,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Arroser d'huile d'olive et saler."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
 

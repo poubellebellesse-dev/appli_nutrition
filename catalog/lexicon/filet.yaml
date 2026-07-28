@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: filet
+terme: "Lever les filets"
+definition: >
+  Détacher la chair d'un poisson de son arête centrale, en glissant la lame le long de l'arête, de la tête vers la queue.

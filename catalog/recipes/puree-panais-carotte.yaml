@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler les panais, les carottes et les pommes de terre, puis les couper en morceaux de taille égale."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -66,7 +66,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Égoutter, écraser au presse-purée en incorporant le lait chaud petit à petit — le mixeur rendrait la purée élastique."
-    lexicon_ids: []
+    lexicon_ids: [egoutter, ecraser]
     timer_s: null
     timer_type: null
   - ordre: 5

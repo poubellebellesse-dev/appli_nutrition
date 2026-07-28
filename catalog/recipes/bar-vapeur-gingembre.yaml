@@ -61,7 +61,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Mélanger la sauce soja avec le gingembre, en arroser le poisson à la sortie du panier."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
   - ordre: 4
@@ -71,7 +71,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Parsemer de coriandre et servir aussitôt, avec un trait de citron."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 

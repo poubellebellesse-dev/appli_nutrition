@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Retirer le cône amer à la base de chaque endive, puis les braiser à couvert dans un peu de beurre et d'eau."
-    lexicon_ids: []
+    lexicon_ids: [braiser]
     timer_s: 1500
     timer_type: cuisson
   - ordre: 2
@@ -61,17 +61,17 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Égoutter les endives en les pressant, puis rouler chacune dans une tranche de jambon."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Ranger les rouleaux dans un plat, napper de béchamel salée, parsemer de gruyère."
-    lexicon_ids: []
+    lexicon_ids: [napper, parsemer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Gratiner au four à 200 °C jusqu'à ce que le dessus soit doré."
-    lexicon_ids: []
+    lexicon_ids: [dorer, gratiner]
     timer_s: 1200
     timer_type: cuisson
 

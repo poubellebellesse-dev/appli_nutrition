@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: egoutter
+terme: "Égoutter"
+definition: >
+  Laisser s'écouler l'eau ou l'huile d'un aliment, dans une passoire ou sur du papier absorbant.

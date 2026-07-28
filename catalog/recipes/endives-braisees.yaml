@@ -62,12 +62,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Couvrir et laisser braiser à feu doux, en les retournant à mi-cuisson."
-    lexicon_ids: []
+    lexicon_ids: [braiser]
     timer_s: 1500
     timer_type: cuisson
   - ordre: 5
     texte: "Découvrir et laisser le jus réduire jusqu'à ce qu'il caramélise légèrement autour des endives."
-    lexicon_ids: []
+    lexicon_ids: [reduire]
     timer_s: 600
     timer_type: cuisson
 

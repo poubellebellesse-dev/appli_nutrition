@@ -72,7 +72,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Faire revenir l'aubergine seule dans l'huile chaude jusqu'à ce qu'elle dore, puis la réserver."
-    lexicon_ids: []
+    lexicon_ids: [revenir, reserver]
     timer_s: 600
     timer_type: cuisson
   - ordre: 3
@@ -87,7 +87,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Réunir tous les légumes, couvrir à demi et laisser mijoter à feu doux. Retirer le laurier avant de servir."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1200
     timer_type: cuisson
 

@@ -69,7 +69,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Faire revenir l'oignon émincé et la chair de courgette hachée, jusqu'à évaporation de l'eau."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, hacher, revenir]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4
@@ -79,7 +79,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Garnir les demi-courgettes, les poser sur un lit de tomates concassées, arroser d'huile et enfourner à 190 °C."
-    lexicon_ids: []
+    lexicon_ids: [concasser, arroser]
     timer_s: 2400
     timer_type: cuisson
 

@@ -47,12 +47,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Gratter et rincer les moules à grande eau, écarter celles qui restent ouvertes au toucher."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Émincer l'oignon et le faire suer dans le beurre au fond d'un grand faitout."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, suer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
@@ -62,7 +62,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Secouer le faitout à mi-cuisson. Dès que toutes les moules sont ouvertes, poivrer et parsemer de persil."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 

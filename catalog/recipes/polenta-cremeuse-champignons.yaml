@@ -70,12 +70,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Hors du feu, incorporer le beurre et le parmesan à la polenta en fouettant pour la rendre crémeuse."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Dresser la polenta dans les assiettes, garnir de champignons et de persil ciselé."
-    lexicon_ids: []
+    lexicon_ids: [ciseler]
     timer_s: null
     timer_type: null
 

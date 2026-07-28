@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Ne garder que les blancs et le vert tendre, les fendre en deux et les rincer à grande eau."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -71,7 +71,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Ranger les poireaux dans un plat, napper de béchamel, couvrir de comté et gratiner à 200 °C."
-    lexicon_ids: []
+    lexicon_ids: [gratiner, napper]
     timer_s: 1500
     timer_type: cuisson
 

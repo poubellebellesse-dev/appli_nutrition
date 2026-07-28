@@ -39,12 +39,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Éplucher et couper les fruits en morceaux réguliers."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Mélanger et parsemer de graines de tournesol."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 

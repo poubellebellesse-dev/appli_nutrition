@@ -56,7 +56,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Saisir les cuisses côté peau dans l'huile chaude, sans les bouger, jusqu'à ce qu'elles dorent."
-    lexicon_ids: []
+    lexicon_ids: [saisir]
     timer_s: 480
     timer_type: cuisson
   - ordre: 3
@@ -66,12 +66,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Laisser réduire à feu moyen en arrosant sans arrêt : la sauce doit épaissir et laquer la viande."
-    lexicon_ids: []
+    lexicon_ids: [reduire]
     timer_s: 480
     timer_type: cuisson
   - ordre: 5
     texte: "Trancher en lanières, napper du reste de sauce et parsemer de graines de sésame grillées."
-    lexicon_ids: []
+    lexicon_ids: [napper, parsemer]
     timer_s: null
     timer_type: null
 

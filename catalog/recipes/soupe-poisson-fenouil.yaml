@@ -83,7 +83,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Laisser pocher à frémissement doux jusqu'à ce que la chair devienne opaque — à gros bouillons elle se déferait."
-    lexicon_ids: []
+    lexicon_ids: [pocher]
     timer_s: 480
     timer_type: cuisson
 

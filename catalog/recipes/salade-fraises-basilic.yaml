@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Rincer les fraises AVANT de les équeuter — l'inverse les gorge d'eau par la blessure."
-    lexicon_ids: []
+    lexicon_ids: [equeuter, rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -57,7 +57,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Les saupoudrer de sucre, arroser de jus de citron et mélanger doucement."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
   - ordre: 4

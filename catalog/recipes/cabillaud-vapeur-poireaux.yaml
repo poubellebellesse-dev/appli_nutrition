@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer les poireaux en fines rondelles et les rincer à grande eau."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, rincer]
     timer_s: null
     timer_type: null
   - ordre: 2

@@ -60,22 +60,22 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Les saisir côté peau dans l'huile chaude, sans les bouger, jusqu'à ce qu'elle croustille."
-    lexicon_ids: []
+    lexicon_ids: [saisir]
     timer_s: 240
     timer_type: cuisson
   - ordre: 3
     texte: "Les retourner trente secondes seulement, puis les réserver — le maquereau cuit très vite."
-    lexicon_ids: []
+    lexicon_ids: [reserver]
     timer_s: 60
     timer_type: cuisson
   - ordre: 4
     texte: "Faire suer l'échalote émincée dans la même poêle, déglacer au vin blanc et laisser réduire."
-    lexicon_ids: [emincer, deglacer]
+    lexicon_ids: [emincer, suer, reduire, deglacer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 5
     texte: "Incorporer la moutarde et la crème hors du feu, saler, napper les filets et parsemer de persil."
-    lexicon_ids: []
+    lexicon_ids: [incorporer, napper, parsemer]
     timer_s: null
     timer_type: null
 

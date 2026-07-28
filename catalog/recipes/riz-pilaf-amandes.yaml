@@ -55,12 +55,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Faire dorer les amandes effilées à sec, puis les réserver."
-    lexicon_ids: []
+    lexicon_ids: [dorer, reserver]
     timer_s: 180
     timer_type: cuisson
   - ordre: 2
     texte: "Faire suer l'oignon émincé dans le beurre sans coloration."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, suer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3

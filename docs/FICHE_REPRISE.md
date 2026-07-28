@@ -16,7 +16,7 @@ P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── su
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **541 verts (41 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **547 verts (42 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
 `npm run build` → **199 aliments, 241 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
@@ -28,8 +28,8 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 **L'UI** (P3). Le moteur est complet pour la v1 : suggestion, alternatives, planning, restes, liste
 de courses, et les 5 garde-fous.
 
-> Et les points de l'audit toujours ouverts : **zéro photo sur 241 recettes**, lexique à 4 gestes,
-> revue juridique avant publication.
+> Points de l'audit encore ouverts : **zéro photo sur 241 recettes** (l'utilisateur s'en charge) et
+> **revue juridique** avant publication. Le lexique est fait — 43 gestes, 615 étapes annotées.
 
 ## Les cinq acquis à ne pas défaire
 

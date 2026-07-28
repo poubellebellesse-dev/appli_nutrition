@@ -63,7 +63,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner, puis parsemer du reste d'amandes effilées à mi-cuisson pour qu'elles dorent sans brûler."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 2400
     timer_type: cuisson
 

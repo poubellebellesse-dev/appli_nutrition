@@ -59,12 +59,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer l'oignon et l'ail, les faire revenir dans l'huile."
-    lexicon_ids: []
+    lexicon_ids: [emincer, revenir]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Ajouter les lentilles, les tomates en dés et le concentré, couvrir d'eau et laisser mijoter."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -74,7 +74,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Napper les pâtes de sauce et parfumer d'origan."
-    lexicon_ids: []
+    lexicon_ids: [napper]
     timer_s: null
     timer_type: null
 

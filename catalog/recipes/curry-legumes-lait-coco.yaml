@@ -72,7 +72,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Faire revenir l'oignon dans l'huile, puis ajouter curry, curcuma et gingembre et remuer une minute."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 360
     timer_type: cuisson
   - ordre: 3
@@ -82,12 +82,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Couvrir et laisser mijoter jusqu'à ce que la patate douce s'écrase sous la fourchette."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 5
     texte: "Ajouter les pois chiches pour les dernières minutes, saler et parsemer de coriandre."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 420
     timer_type: cuisson
 

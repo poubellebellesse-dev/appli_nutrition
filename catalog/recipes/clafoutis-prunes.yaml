@@ -60,12 +60,12 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Couper les prunes en deux et les dénoyauter, puis les ranger face coupée vers le haut."
-    lexicon_ids: []
+    lexicon_ids: [denoyauter]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Fouetter les œufs avec le sucre et le sel, incorporer la farine, puis détendre au lait."
-    lexicon_ids: []
+    lexicon_ids: [fouetter, incorporer, detendre]
     timer_s: null
     timer_type: null
   - ordre: 4

@@ -61,7 +61,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Garnir chaque creux de chèvre frais et arroser de miel."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
   - ordre: 4

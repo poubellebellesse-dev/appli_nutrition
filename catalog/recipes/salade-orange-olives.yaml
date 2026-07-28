@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler les oranges À VIF : couper les deux extrémités, puis suivre la courbe du fruit au couteau pour retirer toute la peau blanche."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -66,12 +66,12 @@ etapes:
     timer_type: repos
   - ordre: 4
     texte: "Écraser les graines de cumin au mortier et les mêler à l'huile et au jus récupéré."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Dresser les rondelles en rosace, parsemer d'oignon et d'olives, arroser et saler légèrement."
-    lexicon_ids: []
+    lexicon_ids: [arroser, parsemer]
     timer_s: null
     timer_type: null
 

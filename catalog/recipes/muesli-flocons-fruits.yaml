@@ -61,12 +61,12 @@ etapes:
     timer_type: repos
   - ordre: 3
     texte: "Au matin, râper la pomme avec sa peau et l'arroser de quelques gouttes de citron."
-    lexicon_ids: []
+    lexicon_ids: [raper, arroser]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Mélanger la pomme aux flocons, ajouter le miel et la cannelle, puis parsemer de noisettes concassées."
-    lexicon_ids: []
+    lexicon_ids: [concasser, parsemer]
     timer_s: null
     timer_type: null
 

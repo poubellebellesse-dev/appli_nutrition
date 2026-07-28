@@ -65,17 +65,17 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Cuire les œufs durs, les écaler et les écraser à la fourchette."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4
     texte: "Délayer la moutarde avec le vinaigre et le sel, puis monter la vinaigrette à l'huile. Ajouter l'échalote émincée."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, detendre]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Dresser les asperges, napper de vinaigrette et couvrir d'œuf émietté et de persil."
-    lexicon_ids: []
+    lexicon_ids: [napper]
     timer_s: null
     timer_type: null
 

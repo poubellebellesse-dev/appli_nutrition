@@ -60,7 +60,7 @@ etapes:
     timer_type: repos
   - ordre: 2
     texte: "Couper les tomates et le concombre en petits dés, ciseler finement le persil, émincer l'échalote."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, ciseler]
     timer_s: null
     timer_type: null
   - ordre: 3

@@ -43,12 +43,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Éplucher la banane et la mangue, les couper en morceaux."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Mixer avec la boisson à l'amande jusqu'à obtenir une texture lisse."
-    lexicon_ids: []
+    lexicon_ids: [mixer]
     timer_s: null
     timer_type: null
 

@@ -61,7 +61,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Faire chauffer l'huile d'olive dans une cocotte et faire dorer le bœuf haché en l'émiettant."
-    lexicon_ids: []
+    lexicon_ids: [hacher, dorer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Ajouter les tomates coupées en dés, saler, poivrer et laisser mijoter à couvert."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1200
     timer_type: cuisson
 

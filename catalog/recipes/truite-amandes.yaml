@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Faire dorer les amandes effilées à sec dans une poêle, puis les réserver."
-    lexicon_ids: []
+    lexicon_ids: [dorer, reserver]
     timer_s: 180
     timer_type: cuisson
   - ordre: 2
@@ -62,7 +62,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Déglacer avec le jus de citron, parsemer d'amandes et de persil, servir aussitôt."
-    lexicon_ids: [deglacer]
+    lexicon_ids: [deglacer, parsemer]
     timer_s: null
     timer_type: null
 

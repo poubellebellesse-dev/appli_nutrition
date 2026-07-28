@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer les poireaux en rondelles et les rincer à grande eau."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -70,7 +70,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Mélanger moutarde et crème, en napper les filets."
-    lexicon_ids: []
+    lexicon_ids: [napper]
     timer_s: null
     timer_type: null
   - ordre: 5

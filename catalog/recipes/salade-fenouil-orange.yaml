@@ -61,12 +61,12 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Le plonger dix minutes dans l'eau glacée pour qu'il croque, puis l'égoutter."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 600
     timer_type: repos
   - ordre: 4
     texte: "Peler les oranges à vif et prélever les quartiers au-dessus d'un bol, en gardant le jus."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 5

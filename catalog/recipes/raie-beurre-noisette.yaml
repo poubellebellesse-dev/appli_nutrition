@@ -56,12 +56,12 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Y glisser les ailes de raie et les pocher sans bouillir, jusqu'à ce que la chair se détache du cartilage."
-    lexicon_ids: []
+    lexicon_ids: [pocher]
     timer_s: 600
     timer_type: cuisson
   - ordre: 3
     texte: "Égoutter les ailes et retirer la peau des deux côtés, qui s'enlève facilement à chaud."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
   - ordre: 4
@@ -71,7 +71,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Hors du feu, ajouter le jus de citron et le persil, puis napper la raie de ce beurre."
-    lexicon_ids: []
+    lexicon_ids: [napper]
     timer_s: null
     timer_type: null
 

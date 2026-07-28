@@ -70,7 +70,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Arroser d'huile d'olive, saupoudrer d'origan et saler légèrement — la feta apporte déjà du sel."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
 

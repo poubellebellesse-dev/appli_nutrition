@@ -76,22 +76,22 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Les faire revenir dans l'huile, puis ajouter cumin et paprika et laisser chauffer une minute."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 480
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les tomates en dés et le concentré, saler, laisser réduire."
-    lexicon_ids: []
+    lexicon_ids: [reduire]
     timer_s: 900
     timer_type: cuisson
   - ordre: 4
     texte: "Verser les haricots rouges rincés, couvrir à demi et laisser mijoter à feu doux."
-    lexicon_ids: []
+    lexicon_ids: [mijoter, rincer]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 5
     texte: "Ajouter le maïs pour les cinq dernières minutes et parsemer de coriandre au service."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 300
     timer_type: cuisson
 

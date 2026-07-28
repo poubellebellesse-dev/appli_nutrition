@@ -64,22 +64,22 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Couper le poulet en gros dés et le colorer dans l'huile, puis le réserver."
-    lexicon_ids: []
+    lexicon_ids: [reserver]
     timer_s: 480
     timer_type: cuisson
   - ordre: 3
     texte: "Faire revenir les oignons et l'ail émincés, ajouter le gingembre et les tomates en dés."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, revenir]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4
     texte: "Délayer la pâte de cacahuètes avec un verre d'eau chaude et la verser dans la cocotte."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Remettre le poulet, saler, couvrir et laisser mijoter à feu doux en remuant — la sauce attache facilement. Servir sur le riz."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1500
     timer_type: cuisson
 

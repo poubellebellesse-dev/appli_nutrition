@@ -65,12 +65,12 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Mélanger le boulgour, les pois chiches et les courgettes rôties."
-    lexicon_ids: []
+    lexicon_ids: [rotir]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Arroser de jus de citron et ajouter la menthe ciselée."
-    lexicon_ids: []
+    lexicon_ids: [ciseler, arroser]
     timer_s: null
     timer_type: null
 

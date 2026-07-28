@@ -60,17 +60,17 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Les égoutter en pressant, puis les hacher grossièrement."
-    lexicon_ids: []
+    lexicon_ids: [hacher, egoutter]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Faire suer les échalotes émincées dans le beurre, ajouter le curry et remuer une minute."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, suer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter les épinards et la crème, saler, laisser réduire jusqu'à une texture nappante."
-    lexicon_ids: []
+    lexicon_ids: [reduire]
     timer_s: 420
     timer_type: cuisson
   - ordre: 5

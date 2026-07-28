@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Rincer le riz complet et le cuire dans deux fois son volume d'eau salée."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: 2100
     timer_type: cuisson
   - ordre: 2
@@ -65,17 +65,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire revenir l'oignon dans l'huile, ajouter le curry et le gingembre et remuer une minute pour libérer les arômes."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 360
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter le poulet, le faire dorer sur toutes ses faces, verser la crème et un demi-verre d'eau, saler."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 5
     texte: "Laisser mijoter à couvert et à feu doux jusqu'à ce que la sauce nappe la cuillère. Servir sur le riz."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 900
     timer_type: cuisson
 

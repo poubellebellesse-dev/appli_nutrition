@@ -65,17 +65,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Laisser mariner au frais — une nuit vaut mieux qu'une heure, la chair s'attendrit et prend les aromates."
-    lexicon_ids: []
+    lexicon_ids: [mariner]
     timer_s: 43200
     timer_type: repos
   - ordre: 4
     texte: "Cuire les pommes de terre en robe des champs dans l'eau salée, puis les peler encore chaudes."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: 1500
     timer_type: cuisson
   - ordre: 5
     texte: "Couper les pommes de terre en rondelles épaisses, les arroser d'un peu d'huile de la marinade et poser les filets dessus."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
 

@@ -66,12 +66,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Ranger les rondelles épongées en rosace, arroser d'huile, parsemer d'origan et du reste de gruyère."
-    lexicon_ids: []
+    lexicon_ids: [arroser, parsemer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que les bords soient dorés et le dessous de la pâte cuit."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 2100
     timer_type: cuisson
 

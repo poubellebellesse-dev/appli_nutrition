@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner : la papillote doit gonfler. L'ouvrir à table, la vapeur emporte tout le parfum."
-    lexicon_ids: []
+    lexicon_ids: [papillote]
     timer_s: 1200
     timer_type: cuisson
 

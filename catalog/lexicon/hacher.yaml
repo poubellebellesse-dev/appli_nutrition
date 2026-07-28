@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: hacher
+terme: "Hacher"
+definition: >
+  Couper un aliment en morceaux très fins et irréguliers, au couteau ou au hachoir. Plus grossier qu'un ciselage, plus fin qu'une découpe en dés.

@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Mélanger sauce soja, gingembre et miel, y faire mariner les pavés au frais."
-    lexicon_ids: []
+    lexicon_ids: [mariner]
     timer_s: 1800
     timer_type: repos
   - ordre: 2
@@ -65,12 +65,12 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Égoutter les pavés et les presser côté chair dans les graines de sésame."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Les saisir côté sésame dans l'huile chaude sans y toucher, pour que les graines dorent sans se détacher."
-    lexicon_ids: []
+    lexicon_ids: [saisir]
     timer_s: 240
     timer_type: cuisson
   - ordre: 5

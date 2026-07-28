@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer les poireaux en rondelles fines et les rincer à grande eau."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,7 +61,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Hors du feu, incorporer la crème et l'œuf battu, saler."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
   - ordre: 4
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Couvrir de lamelles de brie et enfourner à 200 °C jusqu'à ce que la pâte soit dorée dessous."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 2100
     timer_type: cuisson
 

@@ -77,7 +77,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Faire sauter les champignons émincés au beurre à part, puis les réserver."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, reserver]
     timer_s: 480
     timer_type: cuisson
   - ordre: 4
@@ -87,7 +87,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Hors du feu, incorporer la crème et le jus de citron à la sauce, puis y réunir la viande, les légumes et les champignons."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
 

@@ -59,7 +59,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Rincer les haricots blancs à grande eau et les laisser s'égoutter."
-    lexicon_ids: []
+    lexicon_ids: [rincer, egoutter]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -69,12 +69,12 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les tomates en dés et le concentré, le thym et le laurier, puis laisser réduire."
-    lexicon_ids: []
+    lexicon_ids: [reduire]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4
     texte: "Verser les haricots, saler, couvrir à demi et laisser mijoter à feu doux sans remuer trop fort — ils se délitent facilement."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1080
     timer_type: cuisson
   - ordre: 5

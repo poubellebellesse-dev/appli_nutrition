@@ -56,22 +56,22 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Peler les clémentines à vif, en retirant la peau blanche, et détacher les quartiers."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Concasser grossièrement les pistaches au couteau."
-    lexicon_ids: []
+    lexicon_ids: [concasser]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Fouetter le vinaigre balsamique, le miel et le sel, puis monter à l'huile de noix."
-    lexicon_ids: []
+    lexicon_ids: [fouetter]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Assaisonner les endives au dernier moment — elles rendent de l'eau — puis ajouter clémentines et pistaches."
-    lexicon_ids: []
+    lexicon_ids: [assaisonner]
     timer_s: null
     timer_type: null
 

@@ -66,12 +66,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Écraser les jaunes à la fourchette avec le fromage blanc, la moutarde, le sel et le citron."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Garnir les blancs de cette crème, réserver un jaune pour l'émietter par-dessus, et parsemer de persil."
-    lexicon_ids: []
+    lexicon_ids: [parsemer, reserver]
     timer_s: null
     timer_type: null
 

@@ -79,7 +79,7 @@ etapes:
     timer_type: repos
   - ordre: 5
     texte: "L'égrainer à la fourchette, y mêler les légumes chauds, le reste d'huile, le jus de citron et la menthe ciselée."
-    lexicon_ids: []
+    lexicon_ids: [ciseler]
     timer_s: null
     timer_type: null
 

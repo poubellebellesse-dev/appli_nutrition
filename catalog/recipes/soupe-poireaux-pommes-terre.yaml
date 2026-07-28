@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer les poireaux en rondelles et les rincer à grande eau, le sable se loge entre les feuilles."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -67,7 +67,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Servir tel quel pour une soupe rustique, ou mixer pour un velouté, puis ajouter la crème."
-    lexicon_ids: []
+    lexicon_ids: [mixer]
     timer_s: null
     timer_type: null
 

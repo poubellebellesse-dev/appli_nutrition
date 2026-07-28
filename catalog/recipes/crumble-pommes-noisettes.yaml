@@ -51,12 +51,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 180 °C. Peler les pommes, les couper en cubes et les citronner."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Concasser les noisettes, puis les mélanger à la farine et au sucre roux."
-    lexicon_ids: []
+    lexicon_ids: [concasser]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que le dessus soit doré et que le jus des pommes bouillonne sur les bords."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 2400
     timer_type: cuisson
 

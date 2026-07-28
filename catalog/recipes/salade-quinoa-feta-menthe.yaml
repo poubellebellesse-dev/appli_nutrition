@@ -59,22 +59,22 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Rincer le quinoa à l'eau froide, ce qui retire son amertume de surface, puis le cuire dans deux fois son volume d'eau salée."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: 900
     timer_type: cuisson
   - ordre: 2
     texte: "L'égoutter et l'étaler sur un plat pour qu'il refroidisse vite sans continuer à cuire."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 1200
     timer_type: repos
   - ordre: 3
     texte: "Couper le concombre et les tomates en petits dés, émincer l'échalote, ciseler la menthe."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, ciseler]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Mélanger le quinoa froid aux légumes, arroser d'huile d'olive et de jus de citron, saler."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
   - ordre: 5

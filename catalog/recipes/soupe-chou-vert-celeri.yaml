@@ -68,17 +68,17 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Blanchir le chou cinq minutes puis l'égoutter — cette étape enlève son amertume et son odeur forte."
-    lexicon_ids: [blanchir]
+    lexicon_ids: [blanchir, egoutter]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
     texte: "Faire revenir l'oignon, le céleri et les carottes dans l'huile."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 480
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter le chou égoutté, les pommes de terre en cubes, le laurier et le bouillon, couvrir d'eau."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 1800
     timer_type: cuisson
   - ordre: 5

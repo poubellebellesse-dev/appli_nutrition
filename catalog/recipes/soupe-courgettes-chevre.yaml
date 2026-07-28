@@ -51,12 +51,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer l'oignon et couper les courgettes en rondelles, sans les peler."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Faire suer l'oignon dans l'huile, ajouter les courgettes et les laisser rendre leur eau."
-    lexicon_ids: []
+    lexicon_ids: [suer]
     timer_s: 600
     timer_type: cuisson
   - ordre: 3
@@ -71,7 +71,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Mixer avec le chèvre frais, rectifier le sel et parsemer de menthe ciselée."
-    lexicon_ids: []
+    lexicon_ids: [ciseler, mixer, parsemer]
     timer_s: null
     timer_type: null
 

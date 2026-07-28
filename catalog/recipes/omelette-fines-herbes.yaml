@@ -54,7 +54,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire fondre le beurre dans une poêle à feu moyen, verser les œufs battus et parsemer de persil."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 180
     timer_type: cuisson
   - ordre: 4

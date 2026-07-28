@@ -67,7 +67,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer l'oignon et l'ail. Réserver la moitié de l'oignon pour la sauce."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, reserver]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -77,17 +77,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Les colorer dans l'huile sur toutes leurs faces, sans chercher à les cuire à cœur, puis les réserver."
-    lexicon_ids: []
+    lexicon_ids: [reserver]
     timer_s: 480
     timer_type: cuisson
   - ordre: 4
     texte: "Faire revenir le reste d'oignon et l'ail, ajouter les tomates en dés et le concentré, saler."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 600
     timer_type: cuisson
   - ordre: 5
     texte: "Remettre les boulettes dans la sauce, couvrir et laisser mijoter. Ajouter le basilic et le parmesan au moment de servir."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1200
     timer_type: cuisson
 

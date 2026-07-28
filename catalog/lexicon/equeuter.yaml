@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: equeuter
+terme: "Équeuter"
+definition: >
+  Retirer la queue et les parties vertes d'un fruit ou d'un légume — fraise, haricot vert, radis.

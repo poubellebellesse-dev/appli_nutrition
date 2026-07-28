@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Faire revenir la poitrine coupée en lardons dans une cocotte, sans matière grasse, jusqu'à ce qu'elle rende son gras."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 480
     timer_type: cuisson
   - ordre: 2
@@ -65,12 +65,12 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Verser les lentilles rincées, le laurier et le thym, couvrir d'eau de trois centimètres."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Laisser mijoter à découvert sans saler — le sel en début de cuisson durcit la peau des lentilles."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 2100
     timer_type: cuisson
   - ordre: 5

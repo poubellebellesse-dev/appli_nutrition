@@ -43,7 +43,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Concasser grossièrement les cerneaux de noix au couteau."
-    lexicon_ids: []
+    lexicon_ids: [concasser]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -53,12 +53,12 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Ajouter la poire en dés si on en met, puis arroser de miel."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Parsemer de noix et d'une pincée de cannelle au dernier moment, pour garder le croquant."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 

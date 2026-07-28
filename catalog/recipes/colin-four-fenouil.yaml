@@ -56,12 +56,12 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Étaler le fenouil dans un plat, arroser de la moitié de l'huile, saler et enfourner seul."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: 900
     timer_type: cuisson
   - ordre: 3
     texte: "Poser les dos de colin sur le fenouil, couvrir de rondelles de citron, parsemer de thym et arroser du reste d'huile."
-    lexicon_ids: []
+    lexicon_ids: [arroser, parsemer]
     timer_s: null
     timer_type: null
   - ordre: 4

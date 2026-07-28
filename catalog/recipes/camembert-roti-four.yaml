@@ -61,7 +61,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Glisser des éclats d'ail dans les entailles, parsemer de thym et arroser d'un trait de vin blanc."
-    lexicon_ids: []
+    lexicon_ids: [arroser, parsemer]
     timer_s: null
     timer_type: null
   - ordre: 4

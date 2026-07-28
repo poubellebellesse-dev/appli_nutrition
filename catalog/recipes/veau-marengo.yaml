@@ -82,7 +82,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter les oignons émincés, le thym, le laurier et le sel, couvrir et laisser mijoter à feu très doux."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, mijoter]
     timer_s: 4200
     timer_type: cuisson
   - ordre: 5

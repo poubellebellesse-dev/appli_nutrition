@@ -63,12 +63,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Râper l'oignon plutôt que l'émincer : son jus attendrit la viande et la boulette se tient mieux."
-    lexicon_ids: []
+    lexicon_ids: [emincer, raper]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Mêler l'agneau, l'oignon râpé, la chapelure, le cumin, la moitié de la menthe ciselée et le sel."
-    lexicon_ids: []
+    lexicon_ids: [ciseler, raper]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -83,7 +83,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Battre le yaourt avec l'ail écrasé, le jus de citron et le reste de menthe, servir à part."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
 

@@ -56,12 +56,12 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Fouetter les œufs avec le sucre et le sel, puis incorporer la farine sans grumeaux."
-    lexicon_ids: []
+    lexicon_ids: [fouetter, incorporer]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Détendre avec le lait versé en filet jusqu'à obtenir une pâte fluide, proche d'une pâte à crêpes."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: null
     timer_type: null
   - ordre: 4
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que la lame d'un couteau ressorte propre et que le dessus soit doré. Servir tiède."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 2400
     timer_type: cuisson
 

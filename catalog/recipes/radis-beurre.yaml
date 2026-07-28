@@ -59,7 +59,7 @@ etapes:
     timer_type: repos
   - ordre: 5
     texte: "Servir les radis égouttés avec le beurre, le pain et une soucoupe de sel."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
 

@@ -64,12 +64,12 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Faire dorer les noix de cajou à sec dans le wok, puis les réserver — elles brûleraient avec le reste."
-    lexicon_ids: []
+    lexicon_ids: [dorer, reserver]
     timer_s: 180
     timer_type: cuisson
   - ordre: 3
     texte: "Saisir le poulet à feu très vif dans l'huile de tournesol, en une seule couche, sans le remuer d'abord."
-    lexicon_ids: []
+    lexicon_ids: [saisir]
     timer_s: 300
     timer_type: cuisson
   - ordre: 4
@@ -79,7 +79,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Verser la sauce soja, laisser réduire une minute, puis ajouter les cajous et l'huile de sésame hors du feu."
-    lexicon_ids: []
+    lexicon_ids: [reduire]
     timer_s: 120
     timer_type: cuisson
 

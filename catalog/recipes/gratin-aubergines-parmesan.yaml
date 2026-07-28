@@ -60,7 +60,7 @@ etapes:
     timer_type: repos
   - ordre: 2
     texte: "Les éponger, puis les faire dorer à la poêle dans l'huile, en plusieurs fois — elles boivent beaucoup."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 3
@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Terminer par du parmesan et enfourner à 190 °C jusqu'à ce que le dessus soit doré et le gratin bouillonnant."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 2700
     timer_type: cuisson
 

@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: suer
+terme: "Faire suer"
+definition: >
+  Cuire un légume à feu doux dans un peu de matière grasse, à couvert, pour qu'il rende son eau SANS colorer. Différent de faire revenir, qui cherche la coloration.

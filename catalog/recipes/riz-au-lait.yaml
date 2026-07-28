@@ -43,7 +43,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Rincer le riz à l'eau froide pour retirer l'excès d'amidon de surface."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2

@@ -64,12 +64,12 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Colorer les cuisses de poulet dans l'huile, côté peau d'abord, puis les réserver."
-    lexicon_ids: []
+    lexicon_ids: [reserver]
     timer_s: 600
     timer_type: cuisson
   - ordre: 3
     texte: "Faire revenir oignons et poivrons dans la même cocotte jusqu'à ce qu'ils fondent."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 720
     timer_type: cuisson
   - ordre: 4
@@ -79,7 +79,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Couvrir et laisser mijoter à feu doux jusqu'à ce que la chair se détache de l'os."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1800
     timer_type: cuisson
 

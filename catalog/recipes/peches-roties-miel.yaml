@@ -57,7 +57,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Déposer une noisette de beurre dans chaque creux et arroser de miel et de citron."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
   - ordre: 4
@@ -67,7 +67,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Servir tiède, arrosé du jus du plat, avec les pistaches concassées et une cuillère de yaourt."
-    lexicon_ids: []
+    lexicon_ids: [concasser, arroser]
     timer_s: null
     timer_type: null
 

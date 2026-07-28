@@ -51,22 +51,22 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Éplucher les pommes de terre, les couper en morceaux et les cuire dans l'eau salée jusqu'à ce qu'elles s'écrasent facilement."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 2
     texte: "Émincer l'oignon et le faire revenir, puis ajouter le bœuf haché et le cuire en l'écrasant à la cuillère."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, hacher, revenir]
     timer_s: 600
     timer_type: cuisson
   - ordre: 3
     texte: "Écraser les pommes de terre avec le lait chaud et le beurre, saler."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Étaler la viande dans un plat, recouvrir de purée, parsemer d'emmental et gratiner au four à 200 °C."
-    lexicon_ids: []
+    lexicon_ids: [gratiner, parsemer]
     timer_s: 1200
     timer_type: cuisson
 

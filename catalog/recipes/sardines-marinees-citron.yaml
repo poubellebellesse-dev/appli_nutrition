@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Lever les filets de sardines, retirer l'arête centrale et vérifier qu'il n'en reste aucune."
-    lexicon_ids: []
+    lexicon_ids: [filet]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,17 +61,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Les couvrir entièrement de jus de citron — l'acidité « cuit » la chair, elle doit blanchir."
-    lexicon_ids: []
+    lexicon_ids: [blanchir]
     timer_s: 7200
     timer_type: repos
   - ordre: 4
     texte: "Égoutter le jus, puis couvrir d'huile d'olive avec les échalotes émincées et le poivron en dés."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, egoutter]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Laisser reposer au frais encore une heure et parsemer de coriandre au moment de servir."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 3600
     timer_type: repos
 

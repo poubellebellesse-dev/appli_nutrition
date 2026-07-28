@@ -62,7 +62,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter le reste du beurre, le jus de citron et le persil ciselé, arroser les poissons de ce jus et servir aussitôt."
-    lexicon_ids: []
+    lexicon_ids: [ciseler, arroser]
     timer_s: null
     timer_type: null
 

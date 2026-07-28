@@ -70,7 +70,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Laisser mijoter à découvert, puis rectifier le sel."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 5

@@ -47,22 +47,22 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Équeuter les haricots et les cuire à grande eau bouillante salée, non couverts, pour garder leur vert."
-    lexicon_ids: [blanchir]
+    lexicon_ids: [equeuter]
     timer_s: 480
     timer_type: cuisson
   - ordre: 2
     texte: "Les égoutter et les plonger aussitôt dans l'eau glacée pour stopper la cuisson net."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 120
     timer_type: repos
   - ordre: 3
     texte: "Faire dorer les amandes à sec dans une poêle, puis les réserver."
-    lexicon_ids: []
+    lexicon_ids: [dorer, reserver]
     timer_s: 180
     timer_type: cuisson
   - ordre: 4
     texte: "Faire mousser le beurre, y faire suer l'échalote émincée, puis sauter les haricots égouttés."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, suer, egoutter]
     timer_s: 300
     timer_type: cuisson
   - ordre: 5

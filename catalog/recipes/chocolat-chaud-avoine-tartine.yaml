@@ -39,7 +39,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Délayer le cacao et le sucre dans un peu de boisson froide."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: null
     timer_type: null
   - ordre: 2

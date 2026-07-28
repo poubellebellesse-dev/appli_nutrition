@@ -55,17 +55,17 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Cuire le riz à l'eau salée, l'égoutter et le laisser tiédir."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 900
     timer_type: cuisson
   - ordre: 2
     texte: "Râper les courgettes, les saler et les laisser dégorger dans une passoire, puis les presser fort."
-    lexicon_ids: []
+    lexicon_ids: [raper]
     timer_s: 1200
     timer_type: repos
   - ordre: 3
     texte: "Faire revenir l'oignon et l'ail émincés dans l'huile, ajouter les courgettes pressées."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, revenir]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4

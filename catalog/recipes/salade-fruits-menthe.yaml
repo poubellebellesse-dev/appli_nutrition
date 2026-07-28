@@ -56,7 +56,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Ajouter la banane en rondelles en dernier, arrosée aussitôt de jus de citron pour qu'elle ne noircisse pas."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -66,7 +66,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Laisser reposer au frais, puis ciseler la menthe au dernier moment — elle noircit vite une fois coupée."
-    lexicon_ids: []
+    lexicon_ids: [ciseler]
     timer_s: 1800
     timer_type: repos
 

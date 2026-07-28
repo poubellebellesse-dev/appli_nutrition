@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: parsemer
+terme: "Parsemer"
+definition: >
+  Répartir un ingrédient en petite quantité sur toute la surface d'un plat — herbes, fromage râpé, graines.

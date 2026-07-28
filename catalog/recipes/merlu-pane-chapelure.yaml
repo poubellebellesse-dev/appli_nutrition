@@ -66,7 +66,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Retourner délicatement à la spatule et terminer la cuisson, puis égoutter sur du papier absorbant."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 240
     timer_type: cuisson
   - ordre: 5

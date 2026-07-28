@@ -39,7 +39,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Rincer le quinoa à l'eau claire."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -49,7 +49,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Râper la pomme et l'incorporer avec la cannelle."
-    lexicon_ids: []
+    lexicon_ids: [raper, incorporer]
     timer_s: null
     timer_type: null
 

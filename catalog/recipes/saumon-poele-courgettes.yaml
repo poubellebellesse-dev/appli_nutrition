@@ -52,17 +52,17 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Faire chauffer l'huile d'olive dans une poêle et faire revenir les rondelles de courgette, saler, réserver."
-    lexicon_ids: []
+    lexicon_ids: [revenir, reserver]
     timer_s: 480
     timer_type: cuisson
   - ordre: 3
     texte: "Saler et poivrer les pavés de saumon, les saisir côté peau puis de l'autre côté."
-    lexicon_ids: []
+    lexicon_ids: [saisir]
     timer_s: 420
     timer_type: cuisson
   - ordre: 4
     texte: "Déglacer la poêle avec le jus du demi-citron et napper le saumon de ce jus avant de servir avec les courgettes."
-    lexicon_ids: [deglacer]
+    lexicon_ids: [deglacer, napper]
     timer_s: null
     timer_type: null
 

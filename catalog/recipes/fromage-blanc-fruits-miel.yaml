@@ -43,12 +43,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Faire dorer les amandes effilées à sec dans une poêle, puis les laisser refroidir."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 180
     timer_type: cuisson
   - ordre: 2
     texte: "Rincer les fruits rouges et les égoutter sans les écraser."
-    lexicon_ids: []
+    lexicon_ids: [rincer, egoutter, ecraser]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -58,7 +58,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Arroser de miel et parsemer d'amandes juste avant de servir, pour qu'elles restent croquantes."
-    lexicon_ids: []
+    lexicon_ids: [arroser, parsemer]
     timer_s: null
     timer_type: null
 

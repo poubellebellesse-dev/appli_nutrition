@@ -60,7 +60,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Faire suer l'oignon au beurre, ajouter le curry et remuer une minute pour le réveiller."
-    lexicon_ids: []
+    lexicon_ids: [suer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
@@ -75,7 +75,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Mixer très finement, saler, et parsemer d'amandes grillées à sec au service."
-    lexicon_ids: []
+    lexicon_ids: [mixer, parsemer]
     timer_s: null
     timer_type: null
 

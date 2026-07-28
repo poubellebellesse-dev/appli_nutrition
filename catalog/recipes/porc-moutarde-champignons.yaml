@@ -60,22 +60,22 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Colorer le filet mignon entier dans le beurre, sur toutes ses faces, puis le réserver."
-    lexicon_ids: []
+    lexicon_ids: [reserver]
     timer_s: 420
     timer_type: cuisson
   - ordre: 3
     texte: "Faire suer les échalotes, ajouter les champignons et laisser rendre leur eau."
-    lexicon_ids: []
+    lexicon_ids: [suer]
     timer_s: 480
     timer_type: cuisson
   - ordre: 4
     texte: "Déglacer au vin blanc, laisser réduire de moitié, puis incorporer la moutarde et la crème."
-    lexicon_ids: [deglacer]
+    lexicon_ids: [reduire, deglacer, incorporer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 5
     texte: "Remettre la viande, saler, couvrir et laisser mijoter à feu doux. Trancher au moment de servir."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1200
     timer_type: cuisson
 

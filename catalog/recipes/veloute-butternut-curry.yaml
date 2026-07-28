@@ -55,12 +55,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler la courge, retirer les graines et couper la chair en cubes."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Faire suer l'oignon émincé dans l'huile, ajouter le curry et remuer une minute pour le réveiller."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, suer]
     timer_s: 360
     timer_type: cuisson
   - ordre: 3
@@ -75,7 +75,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Mixer, saler, incorporer la crème et parsemer de graines de tournesol grillées à sec."
-    lexicon_ids: []
+    lexicon_ids: [mixer, incorporer, parsemer]
     timer_s: null
     timer_type: null
 

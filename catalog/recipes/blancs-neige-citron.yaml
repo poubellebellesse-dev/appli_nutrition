@@ -50,7 +50,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Répartir les blancs en neige dans des coupelles et napper du sirop de citron tiède avant de servir."
-    lexicon_ids: []
+    lexicon_ids: [monter_blancs, napper]
     timer_s: null
     timer_type: null
 

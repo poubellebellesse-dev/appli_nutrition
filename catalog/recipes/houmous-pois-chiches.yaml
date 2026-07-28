@@ -60,22 +60,22 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Rincer les pois chiches et retirer les peaux qui se détachent — c'est ce qui rend le houmous lisse."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Mixer les pois chiches avec le sésame moulu, l'ail, le jus de citron, le cumin et le sel."
-    lexicon_ids: []
+    lexicon_ids: [mixer]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Verser l'huile en filet pendant que le robot tourne, et détendre avec un peu d'eau froide jusqu'à la texture voulue."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Dresser en creusant un sillon à la cuillère, arroser d'huile et saupoudrer de paprika."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
 

@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: reserver
+terme: "Réserver"
+definition: >
+  Mettre de côté un élément déjà prêt, à température adaptée, le temps de terminer le reste de la recette.

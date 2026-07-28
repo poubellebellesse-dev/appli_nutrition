@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Détailler le brocoli en petits bouquets et les blanchir deux minutes à l'eau bouillante salée, puis les égoutter."
-    lexicon_ids: [blanchir]
+    lexicon_ids: [blanchir, egoutter]
     timer_s: 120
     timer_type: cuisson
   - ordre: 2
@@ -57,7 +57,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire dorer les dés de tofu sur toutes leurs faces dans l'huile bien chaude, puis les réserver."
-    lexicon_ids: []
+    lexicon_ids: [dorer, reserver]
     timer_s: 480
     timer_type: cuisson
   - ordre: 4

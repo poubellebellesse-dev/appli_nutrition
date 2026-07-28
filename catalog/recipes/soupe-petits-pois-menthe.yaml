@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Faire suer l'oignon émincé au beurre sans coloration."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, suer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 2
@@ -66,12 +66,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Mixer aussitôt avec la menthe, hors du feu, pour fixer la couleur verte."
-    lexicon_ids: []
+    lexicon_ids: [mixer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Saler, incorporer la crème, et servir chaud ou bien froid selon la saison."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
 

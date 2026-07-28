@@ -55,17 +55,17 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Rincer les flageolets à grande eau, puis les laisser s'égoutter dans une passoire."
-    lexicon_ids: []
+    lexicon_ids: [rincer, egoutter]
     timer_s: 300
     timer_type: repos
   - ordre: 2
     texte: "Délayer la moutarde avec le vinaigre et une pincée de sel, puis monter la vinaigrette en versant l'huile en filet."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Émincer les échalotes très finement et ciseler le persil."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, ciseler]
     timer_s: null
     timer_type: null
   - ordre: 4

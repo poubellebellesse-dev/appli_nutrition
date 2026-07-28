@@ -62,12 +62,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Faire suer l'échalote émincée au beurre sans coloration."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, suer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 5
     texte: "Ajouter les fèves, étuver deux minutes à couvert, saler, puis ajouter la menthe ciselée et un trait de citron hors du feu."
-    lexicon_ids: []
+    lexicon_ids: [ciseler]
     timer_s: 180
     timer_type: cuisson
 

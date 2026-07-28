@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Gratter et rincer les moules, écarter celles qui restent ouvertes au toucher."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -66,7 +66,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Mêler le beurre mou, la chapelure, l'ail émincé très fin et le persil ciselé."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, ciseler]
     timer_s: null
     timer_type: null
   - ordre: 5

@@ -39,7 +39,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Dénoyauter et couper les dattes en petits morceaux."
-    lexicon_ids: []
+    lexicon_ids: [denoyauter]
     timer_s: null
     timer_type: null
   - ordre: 2

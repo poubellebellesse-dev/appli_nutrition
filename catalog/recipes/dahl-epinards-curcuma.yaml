@@ -73,7 +73,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Verser les lentilles rincées et un litre d'eau, laisser mijoter jusqu'à ce qu'elles se défassent."
-    lexicon_ids: []
+    lexicon_ids: [mijoter, rincer]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 4

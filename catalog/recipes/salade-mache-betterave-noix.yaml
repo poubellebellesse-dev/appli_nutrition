@@ -60,22 +60,22 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Couper les betteraves en dés d'un centimètre et concasser grossièrement les cerneaux."
-    lexicon_ids: []
+    lexicon_ids: [concasser]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Délayer la moutarde avec le vinaigre balsamique et le sel, puis monter à l'huile de noix."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Assaisonner la betterave à part, sinon elle teint toute la salade en rose."
-    lexicon_ids: []
+    lexicon_ids: [assaisonner]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Dresser la mâche, poser la betterave dessus, parsemer de noix et de copeaux de comté."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 

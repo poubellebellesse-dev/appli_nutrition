@@ -39,7 +39,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Éplucher les pommes de terre et les couper en morceaux réguliers."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -49,7 +49,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Égoutter, écraser au presse-purée, puis incorporer le beurre et le lait tiède jusqu'à obtenir une texture homogène."
-    lexicon_ids: []
+    lexicon_ids: [egoutter, ecraser, incorporer]
     timer_s: null
     timer_type: null
 

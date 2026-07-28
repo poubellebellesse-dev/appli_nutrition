@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Détailler le brocoli en petits bouquets et peler les tiges, qui se mangent aussi."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,12 +61,12 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Faire griller les graines de sésame à sec, puis les réserver."
-    lexicon_ids: []
+    lexicon_ids: [reserver]
     timer_s: 180
     timer_type: cuisson
   - ordre: 4
     texte: "Faire sauter le brocoli bien égoutté à feu très vif dans l'huile de tournesol, avec l'ail émincé et le gingembre."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, egoutter]
     timer_s: 300
     timer_type: cuisson
   - ordre: 5

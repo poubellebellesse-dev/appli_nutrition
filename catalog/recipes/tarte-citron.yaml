@@ -57,17 +57,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Fouetter les œufs, le sucre et le jus des citrons dans une casserole, hors du feu d'abord."
-    lexicon_ids: []
+    lexicon_ids: [fouetter]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Chauffer à feu doux SANS CESSER DE FOUETTER, jusqu'à ce que la crème nappe la cuillère — elle coagulerait autrement."
-    lexicon_ids: []
+    lexicon_ids: [fouetter]
     timer_s: 600
     timer_type: cuisson
   - ordre: 5
     texte: "Hors du feu, incorporer le beurre froid en dés morceau par morceau, verser sur le fond cuit et réfrigérer."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: 10800
     timer_type: repos
 

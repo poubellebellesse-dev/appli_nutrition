@@ -59,7 +59,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Passer au tamis, verser sur le caramel, cuire au bain-marie à 160 °C, puis refroidir plusieurs heures avant de démouler."
-    lexicon_ids: []
+    lexicon_ids: [bain_marie, chinois]
     timer_s: 3000
     timer_type: cuisson
 

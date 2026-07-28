@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: carameliser
+terme: "Caraméliser"
+definition: >
+  Chauffer un sucre — ajouté ou naturellement présent dans l'aliment — jusqu'à ce qu'il brunisse et développe un goût de caramel.

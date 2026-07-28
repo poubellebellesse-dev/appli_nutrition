@@ -39,17 +39,17 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Éplucher les pommes, les couper et les cuire à couvert avec un fond d'eau."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Écraser à la fourchette et parfumer à la cannelle."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Dorer les flocons à sec dans une poêle et les répartir sur la compote."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: null
     timer_type: null
 

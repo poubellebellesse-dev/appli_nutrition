@@ -59,12 +59,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Cuire les pâtes, les rincer à l'eau froide pour stopper la cuisson et les empêcher de coller."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: 600
     timer_type: cuisson
   - ordre: 2
     texte: "Faire dorer les pignons à sec, puis les laisser refroidir."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 180
     timer_type: cuisson
   - ordre: 3
@@ -79,7 +79,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Mélanger le tout aux pâtes froides, saler, parsemer du reste de pignons et laisser reposer au frais."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 1800
     timer_type: repos
 

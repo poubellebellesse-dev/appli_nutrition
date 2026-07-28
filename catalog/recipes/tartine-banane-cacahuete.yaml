@@ -35,7 +35,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Écraser les cacahuètes au pilon ou au couteau."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 2

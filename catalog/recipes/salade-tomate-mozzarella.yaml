@@ -66,12 +66,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Saler les tomates seulement, parsemer de basilic déchiré à la main."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Arroser d'huile d'olive et d'un filet de balsamique au dernier moment, puis poivrer."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
 

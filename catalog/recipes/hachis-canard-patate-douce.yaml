@@ -65,7 +65,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Retirer la viande, la hacher grossièrement, puis faire fondre les oignons émincés dans le gras rendu."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, hacher]
     timer_s: 720
     timer_type: cuisson
   - ordre: 4
@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Écraser les patates douces avec le lait chaud et le beurre, en couvrir la viande, parsemer de comté et gratiner à 200 °C."
-    lexicon_ids: []
+    lexicon_ids: [gratiner, ecraser, parsemer]
     timer_s: 1500
     timer_type: cuisson
 

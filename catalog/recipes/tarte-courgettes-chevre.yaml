@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Verser l'appareil et enfourner à 190 °C jusqu'à ce qu'il soit pris et la pâte dorée."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 2100
     timer_type: cuisson
 

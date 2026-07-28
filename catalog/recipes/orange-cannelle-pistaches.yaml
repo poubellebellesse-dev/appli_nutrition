@@ -35,12 +35,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler les oranges à vif et les couper en rondelles."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Saupoudrer de cannelle et parsemer de pistaches concassées."
-    lexicon_ids: []
+    lexicon_ids: [concasser, parsemer]
     timer_s: null
     timer_type: null
 

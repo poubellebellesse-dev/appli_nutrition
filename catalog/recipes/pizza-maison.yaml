@@ -55,17 +55,17 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Délayer la levure dans 30 cl d'eau tiède, puis pétrir avec la farine, le sel et deux cuillères d'huile."
-    lexicon_ids: []
+    lexicon_ids: [detendre, petrir]
     timer_s: 600
     timer_type: null
   - ordre: 2
     texte: "Laisser lever à couvert jusqu'à ce que la pâte double de volume."
-    lexicon_ids: []
+    lexicon_ids: [pousser]
     timer_s: 5400
     timer_type: repos
   - ordre: 3
     texte: "Faire réduire les tomates en dés avec un peu d'huile et de sel, jusqu'à une sauce COURTE — humide, elle détremperait la pâte."
-    lexicon_ids: []
+    lexicon_ids: [reduire]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 4
@@ -75,7 +75,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Étaler la pâte à la main, garnir de sauce et de mozzarella égouttée, enfourner, puis ajouter le basilic à la sortie."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 720
     timer_type: cuisson
 

@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Rincer les coquilles à l'eau froide et écarter toute huître dont la coquille est fêlée ou déjà entrouverte."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2

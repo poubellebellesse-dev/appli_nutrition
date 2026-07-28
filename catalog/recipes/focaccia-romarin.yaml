@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Délayer la levure dans 35 cl d'eau tiède. La pâte à focaccia est TRÈS hydratée, elle doit coller."
-    lexicon_ids: []
+    lexicon_ids: [detendre]
     timer_s: 600
     timer_type: repos
   - ordre: 2
@@ -57,12 +57,12 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Laisser lever à couvert jusqu'au doublement, puis verser sur une plaque bien huilée."
-    lexicon_ids: []
+    lexicon_ids: [pousser]
     timer_s: 5400
     timer_type: repos
   - ordre: 4
     texte: "Étaler du bout des doigts en creusant des trous profonds, y verser le reste d'huile, saler et parsemer de romarin."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
   - ordre: 5

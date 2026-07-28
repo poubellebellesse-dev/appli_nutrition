@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: mijoter
+terme: "Mijoter"
+definition: >
+  Cuire longuement à feu très doux, dans un liquide qui frémit à peine, à couvert. Les saveurs se mêlent et les chairs fermes s'attendrissent.

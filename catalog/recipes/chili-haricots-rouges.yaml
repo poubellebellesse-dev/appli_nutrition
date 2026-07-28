@@ -72,17 +72,17 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Faire revenir les légumes dans l'huile, puis ajouter le cumin et le paprika et laisser chauffer une minute pour libérer les arômes."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 420
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter le bœuf haché, l'écraser à la cuillère et le laisser colorer, puis incorporer les tomates en dés et le concentré."
-    lexicon_ids: []
+    lexicon_ids: [hacher, ecraser, incorporer]
     timer_s: 480
     timer_type: cuisson
   - ordre: 4
     texte: "Verser les haricots rouges égouttés, saler, couvrir à moitié et laisser mijoter à feu doux en remuant de temps en temps."
-    lexicon_ids: []
+    lexicon_ids: [mijoter, egoutter]
     timer_s: 1800
     timer_type: cuisson
 

@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: pocher
+terme: "Pocher"
+definition: >
+  Cuire un aliment dans un liquide frémissant, jamais bouillant, pour qu'il reste tendre et garde sa forme — œuf, poisson, fruit.

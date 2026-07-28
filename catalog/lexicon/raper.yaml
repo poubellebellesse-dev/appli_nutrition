@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: raper
+terme: "Râper"
+definition: >
+  Réduire un aliment en filaments ou en poudre en le frottant sur une râpe. La taille des trous change la texture obtenue.

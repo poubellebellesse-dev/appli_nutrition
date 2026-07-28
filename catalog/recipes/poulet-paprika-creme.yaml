@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Colorer les cuisses dans l'huile, côté peau d'abord, puis les réserver."
-    lexicon_ids: []
+    lexicon_ids: [reserver]
     timer_s: 600
     timer_type: cuisson
   - ordre: 2
@@ -75,7 +75,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Incorporer la crème hors du feu, en la détendant d'abord avec un peu de sauce chaude pour qu'elle ne tranche pas."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
 

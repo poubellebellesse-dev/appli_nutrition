@@ -56,7 +56,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Couper le tofu en cubes et le dorer à l'huile de sésame."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -66,7 +66,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Incorporer le riz et la sauce soja, mélanger jusqu'à ce que tout soit chaud."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
 

@@ -59,7 +59,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper les pointes d'asperges et les blanchir trois minutes, réserver. Détailler les tiges en rondelles."
-    lexicon_ids: [blanchir]
+    lexicon_ids: [blanchir, reserver]
     timer_s: 180
     timer_type: cuisson
   - ordre: 2
@@ -69,7 +69,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire suer les échalotes émincées dans l'huile, ajouter le riz et le remuer jusqu'à ce qu'il devienne translucide."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, suer]
     timer_s: 180
     timer_type: cuisson
   - ordre: 4
@@ -79,7 +79,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Hors du feu, incorporer le beurre froid et le parmesan en battant, ajouter les pointes et servir sans attendre."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
 

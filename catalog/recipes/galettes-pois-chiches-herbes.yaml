@@ -63,12 +63,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Écraser les pois chiches à la fourchette avec l'ail et l'oignon hachés."
-    lexicon_ids: []
+    lexicon_ids: [hacher, ecraser]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Ajouter les herbes ciselées, la farine, le cumin et le sel."
-    lexicon_ids: []
+    lexicon_ids: [ciseler]
     timer_s: null
     timer_type: null
   - ordre: 3

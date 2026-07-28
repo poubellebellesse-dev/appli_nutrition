@@ -66,12 +66,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Mélanger les pâtes égouttées, le jambon en dés et la sauce, puis verser dans un plat beurré."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Couvrir du reste de gruyère et enfourner à 200 °C jusqu'à ce que le dessus soit doré et boursouflé."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 1800
     timer_type: cuisson
 

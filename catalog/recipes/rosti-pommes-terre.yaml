@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Râper les pommes de terre crues à gros trous, ainsi que l'oignon."
-    lexicon_ids: []
+    lexicon_ids: [raper]
     timer_s: null
     timer_type: null
   - ordre: 2

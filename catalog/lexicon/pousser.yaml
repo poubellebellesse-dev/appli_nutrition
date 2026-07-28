@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: pousser
+terme: "Laisser pousser"
+definition: >
+  Laisser une pâte lever à température ambiante, le temps que la levure produise le gaz qui la fait gonfler.

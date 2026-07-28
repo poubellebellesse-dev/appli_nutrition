@@ -57,12 +57,12 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Couper les bananes en rondelles et concasser grossièrement les noisettes."
-    lexicon_ids: []
+    lexicon_ids: [concasser]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Répartir le porridge dans les bols, garnir de banane, saupoudrer de cannelle et arroser de miel."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: null
     timer_type: null
 

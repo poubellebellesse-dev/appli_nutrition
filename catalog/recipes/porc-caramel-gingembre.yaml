@@ -66,12 +66,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter l'ail, le gingembre et un verre d'eau, couvrir et laisser mijoter à feu doux."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1800
     timer_type: cuisson
   - ordre: 5
     texte: "Découvrir en fin de cuisson pour laisser la sauce napper la viande, et servir avec le riz."
-    lexicon_ids: []
+    lexicon_ids: [napper]
     timer_s: 300
     timer_type: cuisson
 

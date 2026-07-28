@@ -66,12 +66,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Laisser égoutter la chair dans une passoire — l'eau rendue délaierait le caviar."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 900
     timer_type: repos
   - ordre: 5
     texte: "Écraser à la fourchette avec l'ail émincé, le jus de citron, l'huile, le cumin et le sel. Parsemer de coriandre."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, ecraser, parsemer]
     timer_s: null
     timer_type: null
 

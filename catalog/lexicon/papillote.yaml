@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: papillote
+terme: "En papillote"
+definition: >
+  Enfermer un aliment dans du papier cuisson ou de l'aluminium avant de l'enfourner. Il cuit dans sa propre vapeur, avec les aromates ajoutés.

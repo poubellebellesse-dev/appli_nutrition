@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: assaisonner
+terme: "Assaisonner"
+definition: >
+  Ajuster le sel, le poivre et les aromates en fin de préparation, en goûtant.

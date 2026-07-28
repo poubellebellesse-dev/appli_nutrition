@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler la mangue et détacher la chair du noyau plat en suivant ses deux faces."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -62,7 +62,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Mixer jusqu'à obtenir une texture lisse, en ajoutant un peu d'eau si c'est trop épais."
-    lexicon_ids: []
+    lexicon_ids: [mixer]
     timer_s: null
     timer_type: null
   - ordre: 5

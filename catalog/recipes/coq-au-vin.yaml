@@ -67,17 +67,17 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Faire mariner les cuisses dans le vin avec le thym et le laurier, au frais, la veille de préférence."
-    lexicon_ids: []
+    lexicon_ids: [mariner]
     timer_s: 43200
     timer_type: repos
   - ordre: 2
     texte: "Égoutter les morceaux et les sécher — mouillés, ils ne coloreraient pas. Garder la marinade."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Faire rendre leur gras aux lardons, les réserver, puis colorer le poulet dans la même cocotte."
-    lexicon_ids: []
+    lexicon_ids: [reserver]
     timer_s: 900
     timer_type: cuisson
   - ordre: 4
@@ -87,7 +87,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Saler, couvrir et laisser mijoter à feu très doux ; ajouter champignons et lardons pour la dernière demi-heure."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 4200
     timer_type: cuisson
 

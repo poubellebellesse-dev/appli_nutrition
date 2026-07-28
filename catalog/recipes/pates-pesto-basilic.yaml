@@ -61,12 +61,12 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Incorporer les cerneaux de noix concassés et le parmesan râpé, puis verser l'huile d'olive en filet sans cesser de piler."
-    lexicon_ids: []
+    lexicon_ids: [concasser, raper, incorporer]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Égoutter les pâtes en gardant une louche d'eau de cuisson, mélanger au pesto hors du feu et détendre avec l'eau réservée."
-    lexicon_ids: []
+    lexicon_ids: [egoutter, detendre, reserver]
     timer_s: null
     timer_type: null
 

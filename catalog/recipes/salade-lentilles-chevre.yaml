@@ -74,12 +74,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Égoutter les lentilles encore tièdes et les mélanger aussitôt à la vinaigrette et aux échalotes — tièdes, elles absorbent mieux."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Dresser sur un lit de roquette et parsemer de chèvre frais émietté."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 

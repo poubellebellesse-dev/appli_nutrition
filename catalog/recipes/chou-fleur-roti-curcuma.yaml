@@ -65,7 +65,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Les étaler en UNE SEULE COUCHE : entassés, ils cuiraient à la vapeur au lieu de rôtir."
-    lexicon_ids: []
+    lexicon_ids: [rotir, vapeur]
     timer_s: null
     timer_type: null
   - ordre: 4
@@ -75,7 +75,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Ajouter les amandes effilées pour les cinq dernières minutes, puis citronner et parsemer de coriandre."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 300
     timer_type: cuisson
 

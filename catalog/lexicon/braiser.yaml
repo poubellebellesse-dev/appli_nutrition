@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: braiser
+terme: "Braiser"
+definition: >
+  Cuire à couvert, à feu doux, avec peu de liquide, après avoir souvent saisi l'aliment. Convient aux légumes fermes et aux viandes de longue cuisson.

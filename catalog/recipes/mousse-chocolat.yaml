@@ -39,12 +39,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Séparer les blancs des jaunes. Casser le chocolat en morceaux et le faire fondre au bain-marie."
-    lexicon_ids: []
+    lexicon_ids: [bain_marie]
     timer_s: 300
     timer_type: cuisson
   - ordre: 2
     texte: "Hors du feu, incorporer les jaunes un à un au chocolat encore tiède, en mélangeant vivement."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -54,7 +54,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Détendre le chocolat avec un tiers des blancs, puis incorporer le reste en soulevant la masse à la spatule."
-    lexicon_ids: []
+    lexicon_ids: [incorporer, detendre]
     timer_s: null
     timer_type: null
   - ordre: 5

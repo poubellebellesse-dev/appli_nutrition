@@ -59,7 +59,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler les topinambours et les plonger au fur et à mesure dans de l'eau citronnée, ils noircissent très vite à l'air."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -79,7 +79,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Mixer finement, saler, incorporer la crème et parsemer de noisettes concassées et grillées à sec."
-    lexicon_ids: []
+    lexicon_ids: [concasser, mixer, incorporer, parsemer]
     timer_s: null
     timer_type: null
 

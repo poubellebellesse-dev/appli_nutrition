@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: reduire
+terme: "Réduire"
+definition: >
+  Laisser un liquide s'évaporer à découvert pour le concentrer et l'épaissir. On réduit une sauce, jamais un aliment solide.

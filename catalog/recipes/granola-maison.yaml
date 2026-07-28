@@ -60,7 +60,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Concasser grossièrement les noisettes et mêler tous les ingrédients secs."
-    lexicon_ids: []
+    lexicon_ids: [concasser]
     timer_s: null
     timer_type: null
   - ordre: 3

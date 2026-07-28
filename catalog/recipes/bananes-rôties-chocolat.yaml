@@ -59,7 +59,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Parsemer de noisettes concassées et d'une pincée de cannelle, servir dans la peau."
-    lexicon_ids: []
+    lexicon_ids: [concasser, parsemer]
     timer_s: null
     timer_type: null
 

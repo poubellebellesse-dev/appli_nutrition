@@ -65,17 +65,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire dorer les dés dans l'huile très chaude sur toutes leurs faces, sans les remuer trop souvent."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4
     texte: "Mélanger sauce soja, sirop d'érable, gingembre et ail émincé, verser sur le tofu et laisser réduire jusqu'à ce que la sauce nappe."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, reduire]
     timer_s: 180
     timer_type: cuisson
   - ordre: 5
     texte: "Parsemer de graines de sésame et servir sur le riz."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 

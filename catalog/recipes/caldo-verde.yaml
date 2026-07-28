@@ -56,7 +56,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Faire revenir l'oignon et l'ail dans l'huile, ajouter les pommes de terre en morceaux."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: 480
     timer_type: cuisson
   - ordre: 3
@@ -66,12 +66,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Écraser au presse-purée dans le bouillon — sans mixer, la soupe doit rester un peu rustique."
-    lexicon_ids: []
+    lexicon_ids: [ecraser, mixer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Faire dorer la poitrine à part, jeter le chou dans le bouillon frémissant cinq minutes, puis servir avec les lardons."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 300
     timer_type: cuisson
 

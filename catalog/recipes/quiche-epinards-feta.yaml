@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Faire tomber les épinards par poignées dans une sauteuse, puis les égoutter en PRESSANT fort."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 480
     timer_type: cuisson
   - ordre: 2
@@ -65,7 +65,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire suer les échalotes émincées dans l'huile, ajouter les épinards hachés."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, hacher, suer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 4

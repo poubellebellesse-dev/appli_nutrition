@@ -55,12 +55,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Gratter et rincer les moules, écarter celles qui restent ouvertes au toucher."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Faire suer les échalotes émincées dans le beurre, ajouter le curry et le gingembre et remuer une minute."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, suer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Faire réduire le jus de moitié, incorporer la crème, puis en napper les moules et parsemer de coriandre."
-    lexicon_ids: []
+    lexicon_ids: [reduire, incorporer, napper, parsemer]
     timer_s: 300
     timer_type: cuisson
 

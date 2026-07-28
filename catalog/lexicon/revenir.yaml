@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: revenir
+terme: "Faire revenir"
+definition: >
+  Cuire un aliment à feu moyen dans un corps gras, en remuant, jusqu'à ce qu'il colore légèrement. C'est le point de départ de la plupart des plats mijotés.

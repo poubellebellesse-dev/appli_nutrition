@@ -56,12 +56,12 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Les blanchir cinq minutes à l'eau bouillante salée, puis les égoutter — cette étape retire leur amertume."
-    lexicon_ids: [blanchir]
+    lexicon_ids: [blanchir, egoutter]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
     texte: "Faire rendre leur gras aux lardons dans une poêle, sans matière grasse, puis les réserver."
-    lexicon_ids: []
+    lexicon_ids: [reserver]
     timer_s: 420
     timer_type: cuisson
   - ordre: 4
@@ -71,7 +71,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Ajouter l'échalote émincée et les lardons, saler, poivrer et parsemer de noisettes concassées."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, concasser, parsemer]
     timer_s: 240
     timer_type: cuisson
 

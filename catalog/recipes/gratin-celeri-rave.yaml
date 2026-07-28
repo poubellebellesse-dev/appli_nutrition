@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler le céleri-rave et le couper en tranches fines et régulières."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,7 +61,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire chauffer le lait et la crème avec le sel, y pocher les tranches quelques minutes pour les attendrir."
-    lexicon_ids: []
+    lexicon_ids: [pocher]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner à 180 °C jusqu'à ce que la pointe d'un couteau traverse sans résistance et que le dessus soit doré."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 2400
     timer_type: cuisson
 

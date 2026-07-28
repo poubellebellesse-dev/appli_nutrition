@@ -57,7 +57,7 @@ etapes:
     timer_type: repos
   - ordre: 3
     texte: "Égoutter la rhubarbe en jetant le jus rendu, puis la ranger serrée sur la pâte piquée."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
   - ordre: 4
@@ -67,7 +67,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Verser l'appareil œufs-crème-sucre restant, parsemer d'amandes et remettre au four jusqu'à ce qu'il soit pris."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 1200
     timer_type: cuisson
 

@@ -75,7 +75,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Les retourner une seule fois, puis les égoutter sur du papier absorbant et servir avec le citron."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 360
     timer_type: cuisson
 

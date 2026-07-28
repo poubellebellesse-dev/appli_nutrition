@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer l'ail finement et ciseler le persil."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, ciseler]
     timer_s: null
     timer_type: null
   - ordre: 2

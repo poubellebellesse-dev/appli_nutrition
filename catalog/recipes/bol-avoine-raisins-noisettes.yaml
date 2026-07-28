@@ -39,7 +39,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Concasser grossièrement les noisettes."
-    lexicon_ids: []
+    lexicon_ids: [concasser]
     timer_s: null
     timer_type: null
   - ordre: 2

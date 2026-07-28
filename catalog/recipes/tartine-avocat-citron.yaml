@@ -48,7 +48,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Écraser l'avocat à la fourchette avec le jus de citron, le sel et l'huile."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 3

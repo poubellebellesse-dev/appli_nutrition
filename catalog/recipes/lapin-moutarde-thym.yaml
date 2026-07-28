@@ -74,12 +74,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter le thym, le laurier et le sel, couvrir et laisser mijoter à feu doux."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 2400
     timer_type: cuisson
   - ordre: 5
     texte: "Retirer le laurier, incorporer la crème hors du feu et servir."
-    lexicon_ids: []
+    lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
 

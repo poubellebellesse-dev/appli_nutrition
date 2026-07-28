@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: concasser
+terme: "Concasser"
+definition: >
+  Écraser grossièrement un aliment ferme — tomate, noisette, grain de poivre — en morceaux inégaux, au couteau, au pilon ou au fond d'une casserole.

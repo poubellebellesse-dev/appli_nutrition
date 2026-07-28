@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: bain_marie
+terme: "Au bain-marie"
+definition: >
+  Chauffer un récipient posé sur — ou dans — un second contenant d'eau chaude. La chaleur reste douce et régulière, ce qui évite de brûler le chocolat ou de coaguler les œufs.

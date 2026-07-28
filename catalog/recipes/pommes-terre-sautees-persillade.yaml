@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper les pommes de terre en dés de deux centimètres, les rincer puis les SÉCHER complètement."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -62,7 +62,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Découvrir, monter le feu et ajouter le beurre pour finir de dorer."
-    lexicon_ids: []
+    lexicon_ids: [dorer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 5

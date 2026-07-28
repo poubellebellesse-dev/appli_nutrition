@@ -68,22 +68,22 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Faire suer l'oignon dans l'huile, ajouter le curcuma et le cumin et remuer une minute."
-    lexicon_ids: []
+    lexicon_ids: [suer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les carottes et les lentilles rincées, couvrir d'un litre d'eau et émietter le bouillon."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Laisser mijoter jusqu'à ce que les lentilles se défassent complètement — elles n'ont pas besoin de trempage."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1500
     timer_type: cuisson
   - ordre: 5
     texte: "Mixer ou laisser rustique, saler, puis réveiller d'un bon trait de jus de citron et de coriandre."
-    lexicon_ids: []
+    lexicon_ids: [mixer]
     timer_s: null
     timer_type: null
 

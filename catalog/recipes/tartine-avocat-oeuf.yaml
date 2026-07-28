@@ -65,17 +65,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Compter trois minutes : le blanc doit être pris, le jaune encore liquide. Égoutter sur du papier absorbant."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 180
     timer_type: cuisson
   - ordre: 4
     texte: "Griller le pain. Écraser l'avocat à la fourchette avec le jus de citron et le sel."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: 180
     timer_type: cuisson
   - ordre: 5
     texte: "Tartiner généreusement, poser l'œuf poché dessus, poivrer et arroser d'un filet d'huile."
-    lexicon_ids: []
+    lexicon_ids: [pocher, arroser]
     timer_s: null
     timer_type: null
 

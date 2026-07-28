@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler les oranges À VIF au couteau, en retirant toute la peau blanche."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,17 +61,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Éplucher les clémentines et séparer les quartiers, peler et couper les kiwis en rondelles."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Délayer le miel dans le jus récupéré et en arroser les fruits."
-    lexicon_ids: []
+    lexicon_ids: [detendre, arroser]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Laisser reposer au frais, puis parsemer de pistaches concassées, de menthe et d'une pincée de cannelle."
-    lexicon_ids: []
+    lexicon_ids: [concasser, parsemer]
     timer_s: 1800
     timer_type: repos
 

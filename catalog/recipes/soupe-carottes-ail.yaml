@@ -48,17 +48,17 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Blanchir les carottes coupées en rondelles dans une casserole d'eau bouillante, puis égoutter."
-    lexicon_ids: [blanchir]
+    lexicon_ids: [blanchir, egoutter]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
     texte: "Faire suer l'oignon et l'ail dans l'huile d'olive, ajouter les carottes et couvrir d'eau à hauteur, saler."
-    lexicon_ids: []
+    lexicon_ids: [suer]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 4
     texte: "Mixer finement jusqu'à obtenir une texture veloutée et rectifier l'assaisonnement."
-    lexicon_ids: []
+    lexicon_ids: [mixer]
     timer_s: null
     timer_type: null
 

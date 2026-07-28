@@ -70,7 +70,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Mixer finement, incorporer la crème, rectifier le sel et parsemer de noisettes concassées à l'assiette."
-    lexicon_ids: []
+    lexicon_ids: [concasser, mixer, incorporer, parsemer]
     timer_s: null
     timer_type: null
 

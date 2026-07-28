@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Ne garder que les blancs et le vert tendre, les fendre en deux et les rincer à grande eau."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -65,17 +65,17 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Les égoutter et les PRESSER doucement pour chasser l'eau, sinon la vinaigrette sera diluée."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 600
     timer_type: repos
   - ordre: 4
     texte: "Cuire les œufs durs, les écaler et les écraser à la fourchette."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: 600
     timer_type: cuisson
   - ordre: 5
     texte: "Délayer la moutarde avec le vinaigre et le sel, monter à l'huile, ajouter l'échalote émincée, puis en napper les poireaux tièdes et couvrir d'œuf."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, detendre, napper]
     timer_s: null
     timer_type: null
 

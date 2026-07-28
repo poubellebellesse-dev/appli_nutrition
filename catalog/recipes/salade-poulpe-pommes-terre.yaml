@@ -69,12 +69,12 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Cuire les pommes de terre en robe des champs dans l'eau salée, puis les peler encore chaudes."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: 1500
     timer_type: cuisson
   - ordre: 4
     texte: "Couper le poulpe égoutté en rondelles et les pommes de terre en gros dés."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
   - ordre: 5

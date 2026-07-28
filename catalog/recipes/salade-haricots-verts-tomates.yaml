@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Équeuter les haricots et les cuire à grande eau bouillante salée, à découvert."
-    lexicon_ids: [blanchir]
+    lexicon_ids: [equeuter]
     timer_s: 540
     timer_type: cuisson
   - ordre: 2
@@ -65,17 +65,17 @@ etapes:
     timer_type: repos
   - ordre: 3
     texte: "Les égoutter longuement, une salade tiède d'eau serait fade."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 300
     timer_type: repos
   - ordre: 4
     texte: "Délayer la moutarde avec le vinaigre et le sel, monter à l'huile, ajouter l'échalote émincée."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, detendre]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Mélanger haricots et tomates en quartiers à la vinaigrette juste avant de servir, parsemer de persil."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 

@@ -69,7 +69,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Mouiller à mi-hauteur d'eau chaude, couvrir et laisser mijoter à feu très doux."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 4200
     timer_type: cuisson
   - ordre: 4
@@ -79,7 +79,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Faire dorer les amandes à sec et en parsemer le plat au moment de servir."
-    lexicon_ids: []
+    lexicon_ids: [dorer, parsemer]
     timer_s: 180
     timer_type: cuisson
 

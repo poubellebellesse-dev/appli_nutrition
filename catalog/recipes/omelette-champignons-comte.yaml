@@ -67,7 +67,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Parsemer de comté, plier l'omelette en deux et la faire glisser dans l'assiette encore baveuse."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: 60
     timer_type: cuisson
 

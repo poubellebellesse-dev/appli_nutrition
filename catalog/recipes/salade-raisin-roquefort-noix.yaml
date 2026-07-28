@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Laver la mâche dans un grand volume d'eau et l'essorer sans l'écraser."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,17 +61,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Concasser les cerneaux et émietter le roquefort en gros morceaux."
-    lexicon_ids: []
+    lexicon_ids: [concasser]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Fouetter le vinaigre balsamique et l'huile de noix. NE PAS SALER : le roquefort s'en charge amplement."
-    lexicon_ids: []
+    lexicon_ids: [fouetter]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Assaisonner la mâche au dernier moment, puis répartir raisin, roquefort et noix par-dessus."
-    lexicon_ids: []
+    lexicon_ids: [assaisonner]
     timer_s: null
     timer_type: null
 

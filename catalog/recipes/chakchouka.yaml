@@ -83,7 +83,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Couvrir et laisser pocher jusqu'à ce que les blancs soient pris et les jaunes encore coulants. Parsemer de coriandre."
-    lexicon_ids: []
+    lexicon_ids: [pocher, parsemer]
     timer_s: 480
     timer_type: cuisson
 

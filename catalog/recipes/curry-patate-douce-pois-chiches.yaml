@@ -59,12 +59,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Éplucher les patates douces et les couper en gros cubes."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Faire revenir l'oignon avec le curry et le gingembre."
-    lexicon_ids: []
+    lexicon_ids: [revenir]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -74,7 +74,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Laisser mijoter jusqu'à ce que la patate douce s'écrase à la fourchette."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: null
     timer_type: null
 

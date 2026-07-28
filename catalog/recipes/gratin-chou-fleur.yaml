@@ -56,7 +56,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Les égoutter longuement — l'eau restante délaierait la béchamel dans le plat."
-    lexicon_ids: []
+    lexicon_ids: [egoutter]
     timer_s: 300
     timer_type: repos
   - ordre: 3
@@ -66,12 +66,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Saler la béchamel, y incorporer la moitié du comté, puis en napper les bouquets rangés dans un plat."
-    lexicon_ids: []
+    lexicon_ids: [incorporer, napper]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Couvrir du reste de comté et de chapelure, puis gratiner à 200 °C jusqu'à ce que le dessus soit doré."
-    lexicon_ids: []
+    lexicon_ids: [dorer, gratiner]
     timer_s: 1500
     timer_type: cuisson
 

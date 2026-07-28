@@ -39,7 +39,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler les fruits, retirer les cœurs et couper la chair en morceaux réguliers."
-    lexicon_ids: []
+    lexicon_ids: [eplucher]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -54,7 +54,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Écraser à la fourchette pour garder des morceaux, ajouter la cannelle et laisser tiédir."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
 

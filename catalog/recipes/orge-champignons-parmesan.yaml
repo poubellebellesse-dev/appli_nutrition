@@ -63,17 +63,17 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Rincer l'orge perlé à l'eau froide et maintenir le bouillon frémissant à côté."
-    lexicon_ids: []
+    lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Émincer les échalotes et les champignons, faire sauter les champignons à feu vif dans l'huile puis les réserver."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, reserver]
     timer_s: 600
     timer_type: cuisson
   - ordre: 3
     texte: "Faire suer les échalotes, ajouter l'orge et le remuer une minute, puis déglacer au vin blanc."
-    lexicon_ids: [deglacer]
+    lexicon_ids: [suer, deglacer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 4
@@ -83,7 +83,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Hors du feu, incorporer le beurre, le parmesan et les champignons réservés, saler et parsemer de persil."
-    lexicon_ids: []
+    lexicon_ids: [incorporer, parsemer, reserver]
     timer_s: null
     timer_type: null
 

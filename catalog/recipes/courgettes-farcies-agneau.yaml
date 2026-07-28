@@ -64,22 +64,22 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Hacher la chair prélevée et cuire le riz à moitié seulement."
-    lexicon_ids: []
+    lexicon_ids: [hacher]
     timer_s: 480
     timer_type: cuisson
   - ordre: 3
     texte: "Faire revenir l'oignon émincé, ajouter l'agneau puis la chair de courgette et le cumin."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, revenir]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4
     texte: "Hors du feu, mêler le riz, la menthe ciselée et le sel, puis garnir les demi-courgettes."
-    lexicon_ids: []
+    lexicon_ids: [ciseler]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Poser dans un plat sur un lit de tomates concassées, arroser d'huile et enfourner à 190 °C à couvert."
-    lexicon_ids: []
+    lexicon_ids: [concasser, arroser]
     timer_s: 2400
     timer_type: cuisson
 

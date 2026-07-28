@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: chinois
+terme: "Passer au chinois"
+definition: >
+  Filtrer une préparation liquide à travers une passoire fine pour retirer les morceaux et obtenir une texture lisse.

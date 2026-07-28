@@ -71,17 +71,17 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Écraser les graines de coriandre et de cumin au mortier pour libérer leurs huiles."
-    lexicon_ids: []
+    lexicon_ids: [ecraser]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Faire revenir les oignons émincés dans l'huile, ajouter les épices et le concentré de tomate."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, revenir]
     timer_s: 480
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter carottes et navets en gros morceaux, couvrir d'eau, saler et laisser mijoter."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 1500
     timer_type: cuisson
   - ordre: 4
@@ -91,7 +91,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Arroser la semoule d'un volume égal de bouillon chaud et d'un filet d'huile, couvrir, laisser gonfler puis égrainer à la fourchette."
-    lexicon_ids: []
+    lexicon_ids: [arroser]
     timer_s: 600
     timer_type: repos
 

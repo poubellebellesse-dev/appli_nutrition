@@ -77,7 +77,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Mouiller à hauteur d'eau chaude, ajouter le thym et le sel, couvrir et laisser mijoter."
-    lexicon_ids: []
+    lexicon_ids: [mijoter]
     timer_s: 2700
     timer_type: cuisson
   - ordre: 4

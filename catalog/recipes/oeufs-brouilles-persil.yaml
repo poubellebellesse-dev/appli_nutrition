@@ -62,7 +62,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Retirer du feu quand les œufs sont encore brillants, ajouter la crème pour stopper la cuisson, saler et parsemer de persil."
-    lexicon_ids: []
+    lexicon_ids: [parsemer]
     timer_s: null
     timer_type: null
 
