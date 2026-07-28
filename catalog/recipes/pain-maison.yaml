@@ -59,7 +59,7 @@ etapes:
     timer_type: repos
   - ordre: 5
     texte: "Grigner le dessus au couteau, enfourner à 240 °C avec un récipient d'eau — la vapeur fait la croûte."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 2400
     timer_type: cuisson
 

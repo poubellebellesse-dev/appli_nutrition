@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper la rhubarbe en tronçons, la saupoudrer d'un tiers du sucre et la laisser dégorger."
-    lexicon_ids: []
+    lexicon_ids: [saupoudrer]
     timer_s: 2700
     timer_type: repos
   - ordre: 2
@@ -66,12 +66,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Ajouter le beurre FROID en dés et sabler du bout des doigts, sans former de pâte."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Répartir les fruits dans un plat, couvrir de pâte sans tasser, et enfourner à 180 °C jusqu'à ce que le jus bouillonne sur les bords."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 2400
     timer_type: cuisson
 

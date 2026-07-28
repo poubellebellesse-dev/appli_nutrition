@@ -39,7 +39,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Porter la boisson à l'amande à frémissement."
-    lexicon_ids: []
+    lexicon_ids: [fremir]
     timer_s: null
     timer_type: null
   - ordre: 2

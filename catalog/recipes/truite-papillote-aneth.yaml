@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 190 °C et découper deux grandes feuilles de papier cuisson."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Fermer hermétiquement et enfourner : la chair doit se détacher de l'arête sans résistance."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1500
     timer_type: cuisson
 

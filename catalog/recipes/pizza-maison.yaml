@@ -65,17 +65,17 @@ etapes:
     timer_type: repos
   - ordre: 3
     texte: "Faire réduire les tomates en dés avec un peu d'huile et de sel, jusqu'à une sauce COURTE — humide, elle détremperait la pâte."
-    lexicon_ids: [reduire]
+    lexicon_ids: [reduire, tailler_des, tremper]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 4
     texte: "Préchauffer le four au maximum avec la plaque à l'intérieur : c'est la chaleur du support qui fait la croûte."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 5
     texte: "Étaler la pâte à la main, garnir de sauce et de mozzarella égouttée, enfourner, puis ajouter le basilic à la sortie."
-    lexicon_ids: [egoutter]
+    lexicon_ids: [egoutter, enfourner, etaler]
     timer_s: 720
     timer_type: cuisson
 

@@ -62,7 +62,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire chauffer l'huile d'olive dans un wok ou une grande poêle et faire sauter les légumes émincés en remuant régulièrement."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, sauter]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4

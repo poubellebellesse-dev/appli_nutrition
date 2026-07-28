@@ -43,7 +43,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Dérouler la pâte sur sa plaque et la piquer à la fourchette."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer, piquer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -53,17 +53,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Cette couche d'amandes absorbe le jus des abricots — sans elle, la pâte serait détrempée."
-    lexicon_ids: []
+    lexicon_ids: [tremper]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Ranger les demi-abricots serrés, face coupée vers le haut, saupoudrer du reste de sucre et de noisettes de beurre."
-    lexicon_ids: []
+    lexicon_ids: [saupoudrer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Enfourner, puis parsemer du reste d'amandes effilées à mi-cuisson pour qu'elles dorent sans brûler."
-    lexicon_ids: [parsemer]
+    lexicon_ids: [parsemer, enfourner]
     timer_s: 2400
     timer_type: cuisson
 

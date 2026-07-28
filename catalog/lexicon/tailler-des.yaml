@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: tailler_des
+terme: "Tailler en dés"
+definition: >
+  Couper un aliment en cubes réguliers. La régularité n'est pas de l'esthétique : des morceaux de même taille cuisent en même temps.

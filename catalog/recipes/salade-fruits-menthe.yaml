@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper l'ananas, la mangue et les kiwis en dés réguliers d'environ un centimètre."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 2

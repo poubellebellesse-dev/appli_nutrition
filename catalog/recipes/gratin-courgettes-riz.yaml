@@ -70,12 +70,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Hors du feu, mélanger courgettes, riz, œufs battus et la moitié de l'emmental, rectifier le sel."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Verser dans un plat, couvrir du reste de fromage et enfourner à 190 °C jusqu'à ce que le dessus dore."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 2100
     timer_type: cuisson
 

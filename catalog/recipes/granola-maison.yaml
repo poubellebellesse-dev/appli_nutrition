@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 150 °C — une chaleur douce, le miel brûlerait plus haut."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -70,7 +70,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Étaler sur une plaque et enfourner en remuant toutes les dix minutes, pour que tout dore également."
-    lexicon_ids: []
+    lexicon_ids: [enfourner, etaler]
     timer_s: 1800
     timer_type: cuisson
   - ordre: 5

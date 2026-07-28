@@ -29,7 +29,7 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 de courses, et les 5 garde-fous.
 
 > Points de l'audit encore ouverts : **zéro photo sur 241 recettes** (l'utilisateur s'en charge) et
-> **revue juridique** avant publication. Le lexique est fait — 43 gestes, 615 étapes annotées.
+> **revue juridique** avant publication. Le lexique est fait — **62 gestes, 763 étapes annotées (70 %)** — mais il n'est pas encore ILLUSTRÉ, ce que §2 promet.
 
 ## Les cinq acquis à ne pas défaire
 

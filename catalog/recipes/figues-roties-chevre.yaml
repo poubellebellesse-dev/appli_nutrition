@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Fendre chaque figue en croix par le haut, sans la couper en deux."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -66,7 +66,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Enfourner juste le temps que le fromage fonde et que les figues s'attendrissent — trop longtemps, elles s'affaissent."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 720
     timer_type: cuisson
   - ordre: 5

@@ -57,7 +57,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Les saupoudrer de sucre, arroser de jus de citron et mélanger doucement."
-    lexicon_ids: [arroser]
+    lexicon_ids: [arroser, saupoudrer]
     timer_s: null
     timer_type: null
   - ordre: 4

@@ -52,7 +52,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Les saupoudrer de la moitié du sucre et les laisser dégorger — c'est ce qui évite une tarte détrempée."
-    lexicon_ids: []
+    lexicon_ids: [saupoudrer, tremper]
     timer_s: 3600
     timer_type: repos
   - ordre: 3
@@ -62,7 +62,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Enfourner à 200 °C une vingtaine de minutes, le temps que la pâte prenne."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 5

@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Porter une casserole d'eau à frémissement — jamais à gros bouillons — et y verser le vinaigre."
-    lexicon_ids: []
+    lexicon_ids: [fremir]
     timer_s: 300
     timer_type: cuisson
   - ordre: 2

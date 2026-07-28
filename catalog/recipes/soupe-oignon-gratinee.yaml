@@ -65,7 +65,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Saupoudrer de farine, remuer, déglacer au vin blanc puis verser le bouillon chaud."
-    lexicon_ids: [deglacer]
+    lexicon_ids: [deglacer, saupoudrer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 4

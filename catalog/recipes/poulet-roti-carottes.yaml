@@ -47,17 +47,17 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 190 °C. Couper les carottes en bâtonnets et émincer l'oignon."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Étaler les légumes dans un plat, arroser de la moitié de l'huile, saler et enfourner."
-    lexicon_ids: [arroser]
+    lexicon_ids: [arroser, enfourner, etaler]
     timer_s: 900
     timer_type: cuisson
   - ordre: 3
     texte: "Poser les blancs de poulet sur les légumes, badigeonner du reste d'huile, saler et poivrer."
-    lexicon_ids: []
+    lexicon_ids: [badigeonner]
     timer_s: null
     timer_type: null
   - ordre: 4

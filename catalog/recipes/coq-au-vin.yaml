@@ -82,7 +82,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter oignons et carottes émincés, saupoudrer de farine, remuer, puis verser la marinade filtrée."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, saupoudrer]
     timer_s: 480
     timer_type: cuisson
   - ordre: 5

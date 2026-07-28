@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Verser les flocons d'avoine et le lait dans une casserole, porter à frémissement."
-    lexicon_ids: []
+    lexicon_ids: [fremir]
     timer_s: 180
     timer_type: cuisson
   - ordre: 2
@@ -62,7 +62,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Répartir le porridge dans les bols, garnir de banane, saupoudrer de cannelle et arroser de miel."
-    lexicon_ids: [arroser]
+    lexicon_ids: [arroser, saupoudrer]
     timer_s: null
     timer_type: null
 

@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: badigeonner
+terme: "Badigeonner"
+definition: >
+  Étaler une fine couche de liquide au pinceau sur une surface — huile, jaune d'œuf, sirop.

@@ -65,7 +65,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Couper les avocats en dés et les citronner aussitôt pour qu'ils ne noircissent pas."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 4
@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Dresser sur la mâche, parsemer de coriandre et servir sans attendre."
-    lexicon_ids: [parsemer]
+    lexicon_ids: [parsemer, dresser]
     timer_s: null
     timer_type: null
 

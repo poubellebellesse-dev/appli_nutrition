@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: battre
+terme: "Battre"
+definition: >
+  Mélanger vivement à la fourchette ou au fouet pour rendre homogène, sans chercher à incorporer de l'air.

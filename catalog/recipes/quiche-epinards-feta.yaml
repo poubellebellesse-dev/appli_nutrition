@@ -60,7 +60,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "L'eau retenue est l'ennemie de la quiche : elle détremperait la pâte et empêcherait l'appareil de prendre."
-    lexicon_ids: []
+    lexicon_ids: [tremper]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -70,12 +70,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Battre les œufs avec la crème et le poivre. Ne pas saler : la feta apporte déjà beaucoup de sel."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Garnir la pâte piquée d'épinards et de feta émiettée, verser l'appareil et enfourner à 190 °C."
-    lexicon_ids: []
+    lexicon_ids: [enfourner, emietter]
     timer_s: 2400
     timer_type: cuisson
 

@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper les courgettes en rondelles épaisses et les enfourner avec l'huile et le cumin."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: null
     timer_type: null
   - ordre: 2

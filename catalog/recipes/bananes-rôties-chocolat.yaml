@@ -39,7 +39,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 190 °C."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -54,7 +54,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Poser les bananes sur une plaque, peau vers le bas, et enfourner jusqu'à ce que la peau noircisse et que le chocolat fonde."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 900
     timer_type: cuisson
   - ordre: 5

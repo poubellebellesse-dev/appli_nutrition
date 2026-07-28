@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper la pastèque en cubes de trois centimètres, en retirant les pépins."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,7 +61,7 @@ etapes:
     timer_type: repos
   - ordre: 3
     texte: "Émietter la feta grossièrement, en gros morceaux plutôt qu'en miettes fines."
-    lexicon_ids: []
+    lexicon_ids: [emietter]
     timer_s: null
     timer_type: null
   - ordre: 4

@@ -60,22 +60,22 @@ etapes:
     timer_type: repos
   - ordre: 2
     texte: "Les éponger puis les faire sauter rapidement à l'huile pour évaporer le reste d'eau."
-    lexicon_ids: []
+    lexicon_ids: [sauter, eponger]
     timer_s: 480
     timer_type: cuisson
   - ordre: 3
     texte: "Battre les œufs avec la crème, le thym et une pincée de sel."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Étaler la pâte, la piquer, répartir les courgettes puis le chèvre en morceaux."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Verser l'appareil et enfourner à 190 °C jusqu'à ce qu'il soit pris et la pâte dorée."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, enfourner]
     timer_s: 2100
     timer_type: cuisson
 

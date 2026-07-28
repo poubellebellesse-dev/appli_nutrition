@@ -47,12 +47,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Dérouler la pâte sur sa plaque et la piquer à la fourchette."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer, piquer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Peler les pommes, les couper en deux, retirer le cœur puis les détailler en lamelles fines."
-    lexicon_ids: [eplucher]
+    lexicon_ids: [eplucher, detailler]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -67,7 +67,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que les bords de la pâte soient bien dorés et les pointes des pommes caramélisées."
-    lexicon_ids: [dorer, carameliser]
+    lexicon_ids: [dorer, carameliser, enfourner]
     timer_s: 2100
     timer_type: cuisson
 

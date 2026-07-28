@@ -56,7 +56,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Effeuiller le basilic. Piler l'ail avec une pincée de sel, puis ajouter les feuilles petit à petit."
-    lexicon_ids: []
+    lexicon_ids: [effeuiller]
     timer_s: null
     timer_type: null
   - ordre: 3

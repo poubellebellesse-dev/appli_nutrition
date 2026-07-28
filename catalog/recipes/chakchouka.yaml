@@ -73,7 +73,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter l'ail, le cumin et le paprika, remuer une minute, puis verser les tomates en dés et saler."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4

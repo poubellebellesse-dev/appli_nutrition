@@ -61,7 +61,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Couvrir d'eau à mi-hauteur seulement — les courgettes en contiennent déjà beaucoup — et émietter le bouillon."
-    lexicon_ids: []
+    lexicon_ids: [emietter]
     timer_s: null
     timer_type: null
   - ordre: 4

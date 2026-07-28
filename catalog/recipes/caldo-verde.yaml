@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Faire dorer la poitrine à part, jeter le chou dans le bouillon frémissant cinq minutes, puis servir avec les lardons."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, fremir]
     timer_s: 300
     timer_type: cuisson
 

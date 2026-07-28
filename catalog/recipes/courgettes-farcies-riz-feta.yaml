@@ -74,12 +74,12 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Hors du feu, mêler le riz, la feta émiettée, la menthe et les pignons. Saler très peu, la feta sale déjà."
-    lexicon_ids: []
+    lexicon_ids: [emietter]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Garnir les demi-courgettes, les poser sur un lit de tomates concassées, arroser d'huile et enfourner à 190 °C."
-    lexicon_ids: [concasser, arroser]
+    lexicon_ids: [concasser, arroser, enfourner]
     timer_s: 2400
     timer_type: cuisson
 

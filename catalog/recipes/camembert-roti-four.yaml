@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 180 °C. Retirer l'emballage et remettre le fromage dans sa boîte en bois."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -66,7 +66,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Enfourner jusqu'à ce que le cœur soit coulant — la croûte doit gonfler légèrement."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 5

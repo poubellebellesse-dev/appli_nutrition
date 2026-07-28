@@ -79,7 +79,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Poser dans un plat sur un lit de tomates concassées, arroser d'huile et enfourner à 190 °C à couvert."
-    lexicon_ids: [concasser, arroser]
+    lexicon_ids: [concasser, arroser, enfourner]
     timer_s: 2400
     timer_type: cuisson
 

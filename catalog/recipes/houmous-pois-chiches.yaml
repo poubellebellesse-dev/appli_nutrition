@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Dresser en creusant un sillon à la cuillère, arroser d'huile et saupoudrer de paprika."
-    lexicon_ids: [arroser]
+    lexicon_ids: [arroser, saupoudrer, dresser]
     timer_s: null
     timer_type: null
 

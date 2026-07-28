@@ -78,7 +78,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter le chou égoutté, les pommes de terre en cubes, le laurier et le bouillon, couvrir d'eau."
-    lexicon_ids: [egoutter]
+    lexicon_ids: [egoutter, tailler_des]
     timer_s: 1800
     timer_type: cuisson
   - ordre: 5

@@ -62,7 +62,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les tomates coupées en dés et les lentilles rincées, couvrir d'eau et laisser mijoter en remuant de temps en temps."
-    lexicon_ids: [mijoter, rincer]
+    lexicon_ids: [mijoter, rincer, tailler_des]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 4

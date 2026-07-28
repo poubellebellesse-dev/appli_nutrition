@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Ajouter les tomates coupées en dés, saler, poivrer et laisser mijoter à couvert."
-    lexicon_ids: [mijoter]
+    lexicon_ids: [mijoter, tailler_des]
     timer_s: 1200
     timer_type: cuisson
 

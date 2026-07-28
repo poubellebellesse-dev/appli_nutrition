@@ -60,7 +60,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Émincer l'oignon et couper le poulet en dés d'environ trois centimètres."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 3

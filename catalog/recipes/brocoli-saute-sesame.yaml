@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Détailler le brocoli en petits bouquets et peler les tiges, qui se mangent aussi."
-    lexicon_ids: [eplucher]
+    lexicon_ids: [eplucher, detailler]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -66,7 +66,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Faire sauter le brocoli bien égoutté à feu très vif dans l'huile de tournesol, avec l'ail émincé et le gingembre."
-    lexicon_ids: [emincer, egoutter]
+    lexicon_ids: [emincer, egoutter, sauter]
     timer_s: 300
     timer_type: cuisson
   - ordre: 5

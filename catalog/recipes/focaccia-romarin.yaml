@@ -62,12 +62,12 @@ etapes:
     timer_type: repos
   - ordre: 4
     texte: "Étaler du bout des doigts en creusant des trous profonds, y verser le reste d'huile, saler et parsemer de romarin."
-    lexicon_ids: [parsemer]
+    lexicon_ids: [parsemer, etaler]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Laisser regonfler une demi-heure puis enfourner à 220 °C jusqu'à ce que la surface dore."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1500
     timer_type: cuisson
 

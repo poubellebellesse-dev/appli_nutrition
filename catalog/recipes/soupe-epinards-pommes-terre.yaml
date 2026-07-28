@@ -55,12 +55,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Faire suer l'oignon émincé au beurre, ajouter les pommes de terre en cubes."
-    lexicon_ids: [emincer, suer]
+    lexicon_ids: [emincer, suer, tailler_des]
     timer_s: 420
     timer_type: cuisson
   - ordre: 2
     texte: "Couvrir d'eau, émietter le bouillon et cuire jusqu'à ce que les pommes de terre s'écrasent."
-    lexicon_ids: []
+    lexicon_ids: [emietter]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 3

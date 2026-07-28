@@ -66,7 +66,7 @@ etapes:
     timer_type: repos
   - ordre: 4
     texte: "Égoutter le jus, puis couvrir d'huile d'olive avec les échalotes émincées et le poivron en dés."
-    lexicon_ids: [emincer, egoutter]
+    lexicon_ids: [emincer, egoutter, tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 5

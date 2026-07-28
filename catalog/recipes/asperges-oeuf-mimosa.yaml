@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Dresser les asperges, napper de vinaigrette et couvrir d'œuf émietté et de persil."
-    lexicon_ids: [napper]
+    lexicon_ids: [napper, emietter, dresser]
     timer_s: null
     timer_type: null
 

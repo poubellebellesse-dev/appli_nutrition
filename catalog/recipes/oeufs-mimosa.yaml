@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Cuire les œufs dix minutes à l'eau frémissante, puis les refroidir aussitôt à l'eau glacée."
-    lexicon_ids: []
+    lexicon_ids: [fremir]
     timer_s: 600
     timer_type: cuisson
   - ordre: 2
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Garnir les blancs de cette crème, réserver un jaune pour l'émietter par-dessus, et parsemer de persil."
-    lexicon_ids: [parsemer, reserver]
+    lexicon_ids: [parsemer, reserver, emietter]
     timer_s: null
     timer_type: null
 

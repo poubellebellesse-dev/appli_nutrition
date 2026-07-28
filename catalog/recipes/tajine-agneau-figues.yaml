@@ -74,7 +74,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Faire tremper les figues dans l'eau tiède pendant la cuisson, puis les ajouter avec le miel pour la dernière demi-heure."
-    lexicon_ids: []
+    lexicon_ids: [tremper]
     timer_s: 1800
     timer_type: cuisson
   - ordre: 5

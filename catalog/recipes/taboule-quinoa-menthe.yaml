@@ -64,7 +64,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "L'étaler sur un plat pour le refroidir rapidement, sinon il continue de cuire et devient pâteux."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: 1200
     timer_type: repos
   - ordre: 3
@@ -74,7 +74,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Couper tomates et concombre en petits dés, émincer l'échalote."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 5

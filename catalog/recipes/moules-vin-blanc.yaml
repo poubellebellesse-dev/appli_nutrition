@@ -57,7 +57,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Verser le vin blanc, porter à frémissement, ajouter les moules et couvrir."
-    lexicon_ids: []
+    lexicon_ids: [fremir]
     timer_s: 300
     timer_type: cuisson
   - ordre: 4

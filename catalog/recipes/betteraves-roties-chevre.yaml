@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 190 °C. Brosser les betteraves sans les peler et couper les fanes à deux centimètres."
-    lexicon_ids: [eplucher]
+    lexicon_ids: [eplucher, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -65,7 +65,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Enfourner jusqu'à ce qu'une lame traverse sans résistance — rôtir concentre le sucre, contrairement à la cuisson à l'eau."
-    lexicon_ids: [rotir]
+    lexicon_ids: [rotir, enfourner]
     timer_s: 3600
     timer_type: cuisson
   - ordre: 4
@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Dresser tiède avec le chèvre émietté, les noix concassées, l'huile de noix et le balsamique."
-    lexicon_ids: [concasser]
+    lexicon_ids: [concasser, emietter, dresser]
     timer_s: null
     timer_type: null
 

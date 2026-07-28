@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: sauter
+terme: "Faire sauter"
+definition: >
+  Cuire à feu vif dans peu de matière grasse en remuant sans arrêt, pour colorer sans laisser rendre l'eau. Plus vif que faire revenir, plus sec que mijoter.

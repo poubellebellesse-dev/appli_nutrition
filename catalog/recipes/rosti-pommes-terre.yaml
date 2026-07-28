@@ -57,7 +57,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Saler, poivrer, puis étaler la préparation dans une poêle avec le beurre et l'huile chauds."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: null
     timer_type: null
   - ordre: 4

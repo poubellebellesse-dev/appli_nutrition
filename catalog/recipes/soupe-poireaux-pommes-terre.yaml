@@ -57,7 +57,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les pommes de terre en cubes, couvrir d'eau à hauteur et saler."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 4

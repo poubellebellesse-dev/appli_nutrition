@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper les pommes de terre en dés de deux centimètres, les rincer puis les SÉCHER complètement."
-    lexicon_ids: [rincer]
+    lexicon_ids: [rincer, tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 2

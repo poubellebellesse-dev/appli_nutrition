@@ -70,7 +70,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Mêler viande, oignons et thym, saler, puis étaler au fond d'un plat."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: null
     timer_type: null
   - ordre: 5

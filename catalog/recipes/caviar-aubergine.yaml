@@ -51,12 +51,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Piquer les aubergines à la fourchette pour qu'elles n'éclatent pas."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Les enfourner entières jusqu'à ce que la peau se ride et que la chair s'affaisse."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 3000
     timer_type: cuisson
   - ordre: 3

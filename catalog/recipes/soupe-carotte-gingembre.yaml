@@ -65,7 +65,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les carottes, couvrir d'eau à hauteur et émietter le bouillon."
-    lexicon_ids: []
+    lexicon_ids: [emietter]
     timer_s: null
     timer_type: null
   - ordre: 4

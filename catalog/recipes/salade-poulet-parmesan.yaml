@@ -59,7 +59,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper le pain en cubes, les faire dorer à la poêle dans un peu d'huile avec la gousse d'ail écrasée."
-    lexicon_ids: [dorer, ecraser]
+    lexicon_ids: [dorer, ecraser, tailler_des]
     timer_s: 420
     timer_type: cuisson
   - ordre: 2
@@ -74,12 +74,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Laver et essorer la laitue, la déchirer à la main plutôt qu'au couteau."
-    lexicon_ids: []
+    lexicon_ids: [essorer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Assaisonner la salade, dresser le poulet tranché dessus, puis parsemer de croûtons et de copeaux de parmesan."
-    lexicon_ids: [parsemer, assaisonner]
+    lexicon_ids: [parsemer, assaisonner, dresser]
     timer_s: null
     timer_type: null
 

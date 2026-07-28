@@ -47,12 +47,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer les champignons et les faire sauter à feu vif dans la moitié du beurre jusqu'à évaporation de leur eau."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, sauter]
     timer_s: 480
     timer_type: cuisson
   - ordre: 2
     texte: "Battre les œufs à la fourchette avec le sel, sans excès — trop battus, ils rendent l'omelette sèche."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 3

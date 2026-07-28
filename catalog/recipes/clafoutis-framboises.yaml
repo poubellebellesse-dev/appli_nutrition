@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 180 °C et beurrer généreusement un moule à bords hauts."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que la lame d'un couteau ressorte propre et que le dessus soit doré. Servir tiède."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, enfourner]
     timer_s: 2400
     timer_type: cuisson
 

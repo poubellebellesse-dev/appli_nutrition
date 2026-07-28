@@ -59,7 +59,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Cuire le riz. Couper le poulet en dés et le poivron en lanières."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: 720
     timer_type: cuisson
   - ordre: 2
@@ -74,7 +74,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter le poivron, l'ail émincé et le gingembre, faire sauter en remuant sans arrêt."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, sauter]
     timer_s: 240
     timer_type: cuisson
   - ordre: 5

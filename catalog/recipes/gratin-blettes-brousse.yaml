@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Séparer les côtes des feuilles. Détailler les côtes en tronçons et les blanchir dix minutes à l'eau salée."
-    lexicon_ids: [blanchir]
+    lexicon_ids: [blanchir, detailler]
     timer_s: 600
     timer_type: cuisson
   - ordre: 2
@@ -61,17 +61,17 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Faire revenir l'ail émincé dans l'huile, y faire sauter les blettes égouttées."
-    lexicon_ids: [emincer, revenir, egoutter]
+    lexicon_ids: [emincer, revenir, egoutter, sauter]
     timer_s: 300
     timer_type: cuisson
   - ordre: 4
     texte: "Hors du feu, mélanger la brousse écrasée et les œufs battus aux blettes, saler."
-    lexicon_ids: [ecraser]
+    lexicon_ids: [ecraser, battre]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Verser dans un plat, couvrir de parmesan et enfourner à 190 °C jusqu'à ce que le dessus soit doré."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, enfourner]
     timer_s: 1800
     timer_type: cuisson
 

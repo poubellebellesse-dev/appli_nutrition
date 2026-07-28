@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Rincer les maquereaux et les inciser légèrement sur chaque flanc."
-    lexicon_ids: [rincer]
+    lexicon_ids: [rincer, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -57,7 +57,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Poser les maquereaux sur une plaque, arroser d'huile d'olive, saler et enfourner."
-    lexicon_ids: [arroser]
+    lexicon_ids: [arroser, enfourner]
     timer_s: 1500
     timer_type: cuisson
   - ordre: 4

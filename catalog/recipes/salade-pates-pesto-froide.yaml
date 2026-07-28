@@ -74,7 +74,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Couper les tomates en quartiers et la mozzarella en dés."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 5

@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: fremir
+terme: "Frémir"
+definition: >
+  État d'un liquide juste avant l'ébullition : la surface tremble, quelques bulles montent, mais il ne bout PAS. Un liquide qui bout casse les chairs délicates.

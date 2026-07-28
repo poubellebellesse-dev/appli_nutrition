@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Laver la mâche dans un grand volume d'eau et l'essorer sans l'écraser."
-    lexicon_ids: [ecraser]
+    lexicon_ids: [ecraser, essorer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,7 +61,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Concasser les cerneaux et émietter le roquefort en gros morceaux."
-    lexicon_ids: [concasser]
+    lexicon_ids: [concasser, emietter]
     timer_s: null
     timer_type: null
   - ordre: 4

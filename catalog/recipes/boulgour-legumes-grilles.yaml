@@ -59,17 +59,17 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 210 °C. Couper les légumes en cubes de deux centimètres."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Les mélanger à la moitié de l'huile, au cumin et au sel, puis les étaler en une seule couche."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Enfourner en remuant une fois à mi-cuisson, jusqu'à ce que les bords caramélisent."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 2100
     timer_type: cuisson
   - ordre: 4

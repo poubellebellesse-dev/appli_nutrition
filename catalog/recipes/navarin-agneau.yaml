@@ -72,12 +72,12 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Saupoudrer de farine, remuer, puis ajouter le concentré de tomate et l'oignon émincé."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, saupoudrer]
     timer_s: 300
     timer_type: cuisson
   - ordre: 3
     texte: "Mouiller à hauteur d'eau chaude, ajouter le thym et le sel, couvrir et laisser mijoter."
-    lexicon_ids: [mijoter]
+    lexicon_ids: [mijoter, mouiller]
     timer_s: 2700
     timer_type: cuisson
   - ordre: 4

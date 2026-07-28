@@ -47,12 +47,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Battre les œufs avec le lait, la moitié du sucre et la cannelle dans un plat creux."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Tremper chaque tranche des deux côtés sans la laisser se détremper — quelques secondes suffisent."
-    lexicon_ids: []
+    lexicon_ids: [tremper]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -62,7 +62,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Retourner, dorer l'autre face, puis saupoudrer du reste de sucre à la sortie de la poêle."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, saupoudrer]
     timer_s: 300
     timer_type: cuisson
 

@@ -73,7 +73,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les carottes et les lentilles rincées, couvrir d'un litre d'eau et émietter le bouillon."
-    lexicon_ids: [rincer]
+    lexicon_ids: [rincer, emietter]
     timer_s: null
     timer_type: null
   - ordre: 4

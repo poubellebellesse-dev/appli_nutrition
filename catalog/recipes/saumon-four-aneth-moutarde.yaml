@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 190 °C et poser les pavés dans un plat, peau vers le bas."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -66,7 +66,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Enfourner sans dépasser le temps : le saumon doit rester légèrement rosé au centre."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1080
     timer_type: cuisson
   - ordre: 5

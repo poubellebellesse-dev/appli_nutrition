@@ -77,7 +77,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter le bœuf haché, l'écraser à la cuillère et le laisser colorer, puis incorporer les tomates en dés et le concentré."
-    lexicon_ids: [hacher, ecraser, incorporer]
+    lexicon_ids: [hacher, ecraser, incorporer, tailler_des]
     timer_s: 480
     timer_type: cuisson
   - ordre: 4

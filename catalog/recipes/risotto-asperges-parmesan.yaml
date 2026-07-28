@@ -59,12 +59,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper les pointes d'asperges et les blanchir trois minutes, réserver. Détailler les tiges en rondelles."
-    lexicon_ids: [blanchir, reserver]
+    lexicon_ids: [blanchir, reserver, detailler]
     timer_s: 180
     timer_type: cuisson
   - ordre: 2
     texte: "Maintenir le bouillon frémissant dans une casserole à côté — un bouillon froid stopperait la cuisson à chaque louche."
-    lexicon_ids: []
+    lexicon_ids: [fremir]
     timer_s: null
     timer_type: null
   - ordre: 3

@@ -79,7 +79,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Dresser sur un lit de roquette et parsemer de chèvre frais émietté."
-    lexicon_ids: [parsemer]
+    lexicon_ids: [parsemer, emietter, dresser]
     timer_s: null
     timer_type: null
 

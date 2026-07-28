@@ -55,12 +55,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Laver la mâche en la plongeant dans un grand volume d'eau, le sable tombe au fond. L'essorer sans la brutaliser."
-    lexicon_ids: []
+    lexicon_ids: [essorer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Couper les betteraves en dés d'un centimètre et concasser grossièrement les cerneaux."
-    lexicon_ids: [concasser]
+    lexicon_ids: [concasser, tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -75,7 +75,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Dresser la mâche, poser la betterave dessus, parsemer de noix et de copeaux de comté."
-    lexicon_ids: [parsemer]
+    lexicon_ids: [parsemer, dresser]
     timer_s: null
     timer_type: null
 

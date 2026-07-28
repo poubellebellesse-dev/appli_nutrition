@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Battre le fromage blanc à la fourchette avec le sel, le poivre et quelques gouttes de citron."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 2

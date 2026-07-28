@@ -78,7 +78,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Enfourner en les retournant à mi-cuisson."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: null
     timer_type: null
 

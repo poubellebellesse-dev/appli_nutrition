@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Dérouler la pâte sur sa plaque et la piquer à la fourchette."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer, piquer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,17 +61,17 @@ etapes:
     timer_type: repos
   - ordre: 3
     texte: "Étaler la moutarde sur le fond de pâte et saupoudrer de la moitié du gruyère — cette couche protège la pâte de l'eau des tomates."
-    lexicon_ids: []
+    lexicon_ids: [etaler, saupoudrer]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Ranger les rondelles épongées en rosace, arroser d'huile, parsemer d'origan et du reste de gruyère."
-    lexicon_ids: [arroser, parsemer]
+    lexicon_ids: [arroser, parsemer, eponger]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que les bords soient dorés et le dessous de la pâte cuit."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, enfourner]
     timer_s: 2100
     timer_type: cuisson
 

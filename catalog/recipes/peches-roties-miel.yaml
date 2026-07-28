@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Couper les pêches en deux et retirer les noyaux."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -62,7 +62,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Enfourner jusqu'à ce que la chair s'affaisse et que le jus caramélise sur les bords."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1500
     timer_type: cuisson
   - ordre: 5

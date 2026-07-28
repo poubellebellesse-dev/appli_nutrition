@@ -67,7 +67,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper tous les légumes en cubes de deux centimètres, en gardant chaque légume à part."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 2

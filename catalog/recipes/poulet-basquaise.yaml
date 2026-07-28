@@ -59,7 +59,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Émincer les oignons, les poivrons et l'ail. Couper les tomates en dés."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 2

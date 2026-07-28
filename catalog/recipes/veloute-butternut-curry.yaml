@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Peler la courge, retirer les graines et couper la chair en cubes."
-    lexicon_ids: [eplucher]
+    lexicon_ids: [eplucher, tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -65,7 +65,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter la courge, couvrir d'eau à mi-hauteur et émietter le cube de bouillon."
-    lexicon_ids: []
+    lexicon_ids: [emietter]
     timer_s: null
     timer_type: null
   - ordre: 4

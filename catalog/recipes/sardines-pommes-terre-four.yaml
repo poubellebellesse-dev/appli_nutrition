@@ -59,12 +59,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Émincer les pommes de terre en tranches fines et l'oignon en lamelles."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Les étaler dans un plat huilé avec l'ail émincé, saler, et enfourner SEULES d'abord."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, enfourner, etaler]
     timer_s: 1800
     timer_type: cuisson
   - ordre: 3
@@ -79,7 +79,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Arroser d'huile, saupoudrer d'origan et remettre au four jusqu'à ce que la peau des sardines grille."
-    lexicon_ids: [arroser]
+    lexicon_ids: [arroser, saupoudrer]
     timer_s: 900
     timer_type: cuisson
 

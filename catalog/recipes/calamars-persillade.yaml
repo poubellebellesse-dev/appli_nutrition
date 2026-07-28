@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Couper les calamars en anneaux réguliers et les éponger, l'eau empêcherait la coloration."
-    lexicon_ids: []
+    lexicon_ids: [eponger]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -66,7 +66,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Ajouter l'ail, saler, faire sauter encore une minute — au-delà la chair devient caoutchouteuse."
-    lexicon_ids: []
+    lexicon_ids: [sauter]
     timer_s: 120
     timer_type: cuisson
   - ordre: 5

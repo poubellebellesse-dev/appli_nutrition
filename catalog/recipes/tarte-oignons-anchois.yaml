@@ -61,17 +61,17 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Découvrir en fin de cuisson pour évaporer le jus rendu — une garniture humide détremperait la pâte. Ne pas saler : les anchois s'en chargent."
-    lexicon_ids: []
+    lexicon_ids: [tremper]
     timer_s: 600
     timer_type: cuisson
   - ordre: 4
     texte: "Étaler la pâte, la piquer, puis répartir les oignons refroidis."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Disposer les filets d'anchois en croisillons, poser une olive dans chaque losange, et enfourner à 200 °C."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1500
     timer_type: cuisson
 

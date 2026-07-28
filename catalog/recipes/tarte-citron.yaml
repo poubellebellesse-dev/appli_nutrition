@@ -47,12 +47,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Étaler la pâte dans un moule, la piquer, la couvrir de papier et de poids, puis la cuire À BLANC à 180 °C."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 2
     texte: "Sans cette cuisson à blanc, la crème détremperait le fond : la tarte au citron ne cuit pas garnie."
-    lexicon_ids: []
+    lexicon_ids: [tremper]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -67,7 +67,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Hors du feu, incorporer le beurre froid en dés morceau par morceau, verser sur le fond cuit et réfrigérer."
-    lexicon_ids: [incorporer]
+    lexicon_ids: [incorporer, tailler_des]
     timer_s: 10800
     timer_type: repos
 

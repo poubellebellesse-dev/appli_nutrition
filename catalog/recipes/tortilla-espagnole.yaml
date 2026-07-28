@@ -53,7 +53,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Les égoutter en gardant un peu d'huile, saler, puis les mêler aux œufs battus et laisser reposer."
-    lexicon_ids: [egoutter]
+    lexicon_ids: [egoutter, battre]
     timer_s: 600
     timer_type: repos
   - ordre: 4

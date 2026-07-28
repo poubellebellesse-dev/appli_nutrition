@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 210 °C. Couper les pommes de terre en quartiers réguliers, sans les peler."
-    lexicon_ids: [eplucher]
+    lexicon_ids: [eplucher, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -57,12 +57,12 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Les mélanger à l'huile, au sel et au romarin, puis les étaler en une seule couche sur la plaque."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Ajouter les gousses d'ail non pelées et enfourner sans y toucher pendant la première demi-heure."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1800
     timer_type: cuisson
   - ordre: 5

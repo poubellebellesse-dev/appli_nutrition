@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 180 °C et beurrer un moule à bords hauts."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -70,12 +70,12 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Verser l'appareil sur les fruits et saupoudrer de cannelle."
-    lexicon_ids: []
+    lexicon_ids: [saupoudrer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que la lame d'un couteau ressorte propre — les prunes rendent plus d'eau que les framboises, compter un peu plus long."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 2700
     timer_type: cuisson
 

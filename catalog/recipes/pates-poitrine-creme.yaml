@@ -61,7 +61,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Battre les œufs avec le parmesan, la crème et beaucoup de poivre."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 4

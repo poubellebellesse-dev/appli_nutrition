@@ -70,7 +70,7 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Mélanger les flageolets à la vinaigrette, ajouter le thon émietté, l'échalote et le persil, puis laisser reposer au frais."
-    lexicon_ids: []
+    lexicon_ids: [emietter]
     timer_s: 1800
     timer_type: repos
 

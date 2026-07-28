@@ -47,12 +47,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Battre les œufs à la fourchette sans chercher à les faire mousser."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Faire fondre le beurre dans une casserole posée sur une seconde casserole d'eau frémissante."
-    lexicon_ids: []
+    lexicon_ids: [fremir]
     timer_s: 120
     timer_type: cuisson
   - ordre: 3

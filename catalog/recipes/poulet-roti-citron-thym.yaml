@@ -51,12 +51,12 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Couper les pommes de terre en gros quartiers, sans les peler."
-    lexicon_ids: [eplucher]
+    lexicon_ids: [eplucher, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
     texte: "Les mélanger à la moitié de l'huile, au sel et au thym, puis les étaler dans un plat."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner sans couvrir, en arrosant du jus rendu à mi-cuisson — c'est ce qui fait la peau croustillante."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 3000
     timer_type: cuisson
 

@@ -71,7 +71,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Transvaser dans le plat et enfourner à 160 °C — feu doux et longue cuisson, c'est ce qui rend les tranches fondantes."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 3600
     timer_type: cuisson
 

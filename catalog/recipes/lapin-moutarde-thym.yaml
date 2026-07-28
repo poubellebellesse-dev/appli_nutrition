@@ -59,7 +59,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Badigeonner chaque morceau de lapin de moutarde et laisser reposer le temps de préparer le reste."
-    lexicon_ids: []
+    lexicon_ids: [badigeonner]
     timer_s: 900
     timer_type: repos
   - ordre: 2

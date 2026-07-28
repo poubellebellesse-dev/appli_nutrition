@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 180 °C. Peler les pommes, les couper en cubes et les citronner."
-    lexicon_ids: [eplucher]
+    lexicon_ids: [eplucher, tailler_des, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -61,17 +61,17 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Ajouter le beurre FROID en dés et travailler du bout des doigts jusqu'à obtenir un sable grossier — le beurre mou donnerait une pâte, pas un crumble."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Répartir les pommes dans un plat, saupoudrer de cannelle, puis couvrir de pâte sableuse sans tasser."
-    lexicon_ids: []
+    lexicon_ids: [saupoudrer]
     timer_s: null
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que le dessus soit doré et que le jus des pommes bouillonne sur les bords."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, enfourner]
     timer_s: 2400
     timer_type: cuisson
 

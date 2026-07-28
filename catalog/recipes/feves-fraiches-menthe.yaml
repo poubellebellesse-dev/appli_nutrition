@@ -47,7 +47,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Écosser les fèves. Sur 1,2 kg de cosses il reste environ 400 g de grains — le rendement est faible, c'est normal."
-    lexicon_ids: []
+    lexicon_ids: [ecosser]
     timer_s: null
     timer_type: null
   - ordre: 2

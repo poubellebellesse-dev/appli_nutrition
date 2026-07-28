@@ -40,7 +40,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Les arroser de sirop d'érable et les enfourner."
-    lexicon_ids: [arroser]
+    lexicon_ids: [arroser, enfourner]
     timer_s: null
     timer_type: null
   - ordre: 3

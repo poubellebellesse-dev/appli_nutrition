@@ -44,7 +44,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Casser les œufs dans un saladier, saler, poivrer et battre à la fourchette jusqu'à obtenir un mélange homogène."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -54,7 +54,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Faire fondre le beurre dans une poêle à feu moyen, verser les œufs battus et parsemer de persil."
-    lexicon_ids: [parsemer]
+    lexicon_ids: [parsemer, battre]
     timer_s: 180
     timer_type: cuisson
   - ordre: 4

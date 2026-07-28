@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préparer un court-bouillon : eau salée, vinaigre et laurier, porté à frémissement."
-    lexicon_ids: []
+    lexicon_ids: [fremir]
     timer_s: 600
     timer_type: cuisson
   - ordre: 2

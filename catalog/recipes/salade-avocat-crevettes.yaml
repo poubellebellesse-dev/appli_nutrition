@@ -61,12 +61,12 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Couper les avocats en deux, retirer le noyau et détailler la chair en tranches."
-    lexicon_ids: []
+    lexicon_ids: [detailler]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Dresser la mâche, les tranches d'avocat et les crevettes, puis arroser de vinaigrette au moment de servir."
-    lexicon_ids: [arroser]
+    lexicon_ids: [arroser, dresser]
     timer_s: null
     timer_type: null
 

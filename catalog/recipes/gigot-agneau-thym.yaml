@@ -56,12 +56,12 @@ etapes:
     timer_type: repos
   - ordre: 2
     texte: "Préchauffer le four à 210 °C. Piquer le gigot d'éclats d'ail, le frotter d'huile, de thym et de sel."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Couper les pommes de terre en gros quartiers, les disposer autour du gigot dans le plat et enfourner."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 4

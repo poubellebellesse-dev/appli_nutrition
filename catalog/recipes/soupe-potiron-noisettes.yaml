@@ -60,7 +60,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Ajouter le potiron et les pommes de terre en cubes, couvrir d'eau à hauteur et émietter le cube de bouillon."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des, emietter]
     timer_s: null
     timer_type: null
   - ordre: 3

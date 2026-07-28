@@ -56,7 +56,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Les détailler en rondelles d'un demi-centimètre, en récupérant le jus qui s'écoule."
-    lexicon_ids: []
+    lexicon_ids: [detailler]
     timer_s: null
     timer_type: null
   - ordre: 3
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Dresser les rondelles en rosace, parsemer d'oignon et d'olives, arroser et saler légèrement."
-    lexicon_ids: [arroser, parsemer]
+    lexicon_ids: [arroser, parsemer, dresser]
     timer_s: null
     timer_type: null
 

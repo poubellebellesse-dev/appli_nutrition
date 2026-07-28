@@ -53,7 +53,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Étaler sur les tartines."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: null
     timer_type: null
 

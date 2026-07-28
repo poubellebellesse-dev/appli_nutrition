@@ -68,7 +68,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Ajouter les tomates en dés et le curcuma, laisser compoter."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des]
     timer_s: 600
     timer_type: cuisson
   - ordre: 3
@@ -83,7 +83,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Laisser pocher à frémissement doux jusqu'à ce que la chair devienne opaque — à gros bouillons elle se déferait."
-    lexicon_ids: [pocher]
+    lexicon_ids: [pocher, fremir]
     timer_s: 480
     timer_type: cuisson
 

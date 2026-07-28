@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Faire tremper le pain dans un peu d'eau — c'est lui qui donnera au gaspacho sa texture veloutée."
-    lexicon_ids: []
+    lexicon_ids: [tremper]
     timer_s: 600
     timer_type: repos
   - ordre: 2

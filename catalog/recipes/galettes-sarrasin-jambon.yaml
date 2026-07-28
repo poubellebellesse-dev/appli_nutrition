@@ -57,7 +57,7 @@ etapes:
     timer_type: repos
   - ordre: 3
     texte: "Beurrer une poêle bien chaude, verser une louche de pâte et l'étaler d'un mouvement circulaire."
-    lexicon_ids: []
+    lexicon_ids: [etaler]
     timer_s: 120
     timer_type: cuisson
   - ordre: 4

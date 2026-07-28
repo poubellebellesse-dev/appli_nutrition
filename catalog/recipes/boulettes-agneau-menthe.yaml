@@ -83,7 +83,7 @@ etapes:
     timer_type: cuisson
   - ordre: 5
     texte: "Battre le yaourt avec l'ail écrasé, le jus de citron et le reste de menthe, servir à part."
-    lexicon_ids: [ecraser]
+    lexicon_ids: [ecraser, battre]
     timer_s: null
     timer_type: null
 

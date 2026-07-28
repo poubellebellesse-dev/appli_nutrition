@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Éponger les noix une par une : la moindre humidité les ferait bouillir au lieu de dorer."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, eponger]
     timer_s: null
     timer_type: null
   - ordre: 2

@@ -60,7 +60,7 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Éponger le tofu entre deux feuilles de papier absorbant, puis le couper en dés de deux centimètres."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des, eponger]
     timer_s: null
     timer_type: null
   - ordre: 3

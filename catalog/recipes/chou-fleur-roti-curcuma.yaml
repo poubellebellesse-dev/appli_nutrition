@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 210 °C. Détailler le chou-fleur en petits bouquets."
-    lexicon_ids: []
+    lexicon_ids: [prechauffer, detailler]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -65,12 +65,12 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Les étaler en UNE SEULE COUCHE : entassés, ils cuiraient à la vapeur au lieu de rôtir."
-    lexicon_ids: [rotir, vapeur]
+    lexicon_ids: [rotir, vapeur, etaler]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Enfourner en remuant une fois, jusqu'à ce que les pointes brunissent et croustillent."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 1500
     timer_type: cuisson
   - ordre: 5

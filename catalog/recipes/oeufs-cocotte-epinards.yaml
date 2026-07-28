@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 180 °C et mettre à chauffer un plat rempli d'eau, qui servira de bain-marie."
-    lexicon_ids: [bain_marie]
+    lexicon_ids: [bain_marie, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que le blanc soit pris et le jaune encore coulant — c'est une question de minutes, surveiller."
-    lexicon_ids: []
+    lexicon_ids: [enfourner]
     timer_s: 600
     timer_type: cuisson
 

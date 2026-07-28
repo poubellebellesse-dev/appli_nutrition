@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Détailler le chou-fleur en bouquets et les blanchir à l'eau salée jusqu'à ce qu'ils soient tendres mais fermes."
-    lexicon_ids: [blanchir]
+    lexicon_ids: [blanchir, detailler]
     timer_s: 600
     timer_type: cuisson
   - ordre: 2

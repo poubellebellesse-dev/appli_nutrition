@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: enfourner
+terme: "Enfourner"
+definition: >
+  Mettre au four, à la hauteur indiquée. Le bas chauffe par-dessous, le haut colore la surface.

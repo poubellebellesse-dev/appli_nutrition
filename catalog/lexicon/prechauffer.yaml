@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: prechauffer
+terme: "Préchauffer"
+definition: >
+  Faire monter le four en température AVANT d'y mettre le plat. Sans cela, le temps de cuisson annoncé ne veut plus rien dire.

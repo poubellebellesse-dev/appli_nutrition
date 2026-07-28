@@ -69,7 +69,7 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter les tomates en dés, le romarin et le sel, mouiller à hauteur et couvrir."
-    lexicon_ids: []
+    lexicon_ids: [tailler_des, mouiller]
     timer_s: null
     timer_type: null
   - ordre: 4

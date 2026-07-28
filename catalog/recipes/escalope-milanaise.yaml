@@ -60,7 +60,7 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Préparer trois assiettes : farine salée, œufs battus, chapelure mêlée au parmesan."
-    lexicon_ids: []
+    lexicon_ids: [battre]
     timer_s: null
     timer_type: null
   - ordre: 3

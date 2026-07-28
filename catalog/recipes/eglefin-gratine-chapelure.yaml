@@ -51,7 +51,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Préchauffer le four à 200 °C. Émincer l'ail très finement et ciseler le persil."
-    lexicon_ids: [emincer, ciseler]
+    lexicon_ids: [emincer, ciseler, prechauffer]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner jusqu'à ce que la croûte soit dorée et la chair opaque — au-delà le poisson se dessèche."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, enfourner]
     timer_s: 1200
     timer_type: cuisson
 

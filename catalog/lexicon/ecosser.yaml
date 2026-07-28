@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: ecosser
+terme: "Écosser"
+definition: >
+  Ouvrir les cosses pour en retirer les grains — fèves, petits pois. Le rendement est faible, prévoir large.

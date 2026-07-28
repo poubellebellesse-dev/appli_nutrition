@@ -1,0 +1,5 @@
+# Geste de cuisine — référencé par recipe_step.lexicon_ids (docs/ARCHITECTURE.md §4.2, §8.5).
+code: etaler
+terme: "Étaler"
+definition: >
+  Aplatir une pâte au rouleau jusqu'à l'épaisseur voulue, ou répartir une préparation en couche régulière.

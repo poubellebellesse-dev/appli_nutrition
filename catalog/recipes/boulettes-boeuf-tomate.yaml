@@ -82,7 +82,7 @@ etapes:
     timer_type: cuisson
   - ordre: 4
     texte: "Faire revenir le reste d'oignon et l'ail, ajouter les tomates en dés et le concentré, saler."
-    lexicon_ids: [revenir]
+    lexicon_ids: [revenir, tailler_des]
     timer_s: 600
     timer_type: cuisson
   - ordre: 5

@@ -53,7 +53,7 @@ etapes:
     timer_type: null
   - ordre: 3
     texte: "Ajouter la poire en dés si on en met, puis arroser de miel."
-    lexicon_ids: [arroser]
+    lexicon_ids: [arroser, tailler_des]
     timer_s: null
     timer_type: null
   - ordre: 4

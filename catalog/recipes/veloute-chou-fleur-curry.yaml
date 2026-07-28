@@ -55,7 +55,7 @@ ingredients:
 etapes:
   - ordre: 1
     texte: "Détailler le chou-fleur en bouquets et émincer l'oignon."
-    lexicon_ids: [emincer]
+    lexicon_ids: [emincer, detailler]
     timer_s: null
     timer_type: null
   - ordre: 2
@@ -65,12 +65,12 @@ etapes:
     timer_type: cuisson
   - ordre: 3
     texte: "Ajouter le chou-fleur, le lait et 30 cl d'eau avec le bouillon émietté."
-    lexicon_ids: []
+    lexicon_ids: [emietter]
     timer_s: null
     timer_type: null
   - ordre: 4
     texte: "Laisser frémir SANS BOUILLIR — le lait déborderait — jusqu'à ce que les bouquets s'écrasent."
-    lexicon_ids: []
+    lexicon_ids: [fremir]
     timer_s: 1200
     timer_type: cuisson
   - ordre: 5

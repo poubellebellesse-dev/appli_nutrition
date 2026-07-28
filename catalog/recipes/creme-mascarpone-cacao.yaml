@@ -67,7 +67,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Répartir en verrines, réfrigérer au moins quatre heures, puis saupoudrer de cacao et de noisettes juste avant de servir."
-    lexicon_ids: []
+    lexicon_ids: [saupoudrer]
     timer_s: 14400
     timer_type: repos
 

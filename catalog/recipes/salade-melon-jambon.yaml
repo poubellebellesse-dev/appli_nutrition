@@ -48,12 +48,12 @@ etapes:
     timer_type: null
   - ordre: 2
     texte: "Le couper en deux, retirer les graines, puis le détailler en quartiers et retirer l'écorce."
-    lexicon_ids: []
+    lexicon_ids: [detailler]
     timer_s: null
     timer_type: null
   - ordre: 3
     texte: "Dresser les quartiers sur un plat et les draper de tranches de jambon."
-    lexicon_ids: []
+    lexicon_ids: [dresser]
     timer_s: null
     timer_type: null
   - ordre: 4

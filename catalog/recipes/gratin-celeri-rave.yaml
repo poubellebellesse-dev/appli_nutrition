@@ -71,7 +71,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Enfourner à 180 °C jusqu'à ce que la pointe d'un couteau traverse sans résistance et que le dessus soit doré."
-    lexicon_ids: [dorer]
+    lexicon_ids: [dorer, enfourner]
     timer_s: 2400
     timer_type: cuisson
 

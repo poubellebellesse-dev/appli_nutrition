@@ -67,7 +67,7 @@ etapes:
     timer_type: null
   - ordre: 5
     texte: "Dresser sur un lit de glace et servir aussitôt avec les quartiers de citron et le pain beurré."
-    lexicon_ids: []
+    lexicon_ids: [dresser]
     timer_s: null
     timer_type: null
 
