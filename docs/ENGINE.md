@@ -1388,12 +1388,43 @@ Une recette de 4 portions cuisinée pour 2 personnes laisse 2 portions. Le plani
 dans un créneau ultérieur compatible, dans la limite de `recipe.conservationJours`.
 
 ```ts
-planLeftovers(plan: WeekPlan, catalog: Catalog): WeekPlan
+planLeftovers(plan: WeekPlan, profile: UserProfile, convives?: number): WeekPlan
 ```
 
 Gain : moins de cuisine, moins de gaspillage, et un planning qui ressemble à la façon dont les gens
 cuisinent réellement. C'est la fonctionnalité qui distingue le plus un vrai planificateur d'un
 générateur de recettes.
+
+**CODÉ le 2026-07-28** (`engine/planning/plan-leftovers.ts`). Mesuré sur le catalogue réel,
+7 jours × 3 créneaux pour 2 convives : **6 créneaux deviennent des restes** et le gaspillage tombe
+de **26 à 2 portions**.
+
+#### Signature étendue, et pourquoi
+
+`convives` **n'existait nulle part**. §7.3 parle d'« une recette de 4 portions cuisinée pour
+2 personnes », mais rien dans le domaine ne disait combien de personnes mangent — `facteurPortion`
+(0,7…1,5) est un APPÉTIT individuel, pas une taille de foyer. Sans ce champ, aucun reste n'est
+calculable. Ajouté sur `WeekPlanRequest`, défaut 1.
+
+`profile` sert à **recalculer les avertissements** : placer un reste remplace un plat, donc les
+totaux caloriques du jour changent. Conserver ceux du plan d'origine ferait mentir le plan.
+
+#### Les cinq règles de placement, et ce qu'elles protègent
+
+| Règle | Ce qu'elle empêche |
+|---|---|
+| Un reste **remplace** un plat prévu | Un mécanisme qui ne comblerait que les créneaux vides ne servirait qu'aux plannings incomplets |
+| **Le lendemain au plus tôt** | Le même plat midi et soir. `variety` ne peut pas l'empêcher : le reste est placé APRÈS le scoring |
+| Dans la limite de `conservationJours` | Servir un plat périmé |
+| Créneau que la recette **porte** | Un reste de dîner au petit-déjeuner |
+| Jamais un créneau **verrouillé** (§7.2) | Écraser un choix que l'utilisateur a figé — sa seule garantie face au glouton |
+
+> ⚠️ **Idempotent**, et ça a demandé une correction : la première version recalculait les portions
+> plaçables sans déduire les restes DÉJÀ placés, si bien qu'un second appel en ajoutait d'autres.
+> Trouvé par test.
+
+> Un plan contenant des restes répète volontairement une recette. Tout comptage de variété doit donc
+> ignorer les entrées `isLeftover` — le banc CLI le faisait à tort et signalait un faux doublon.
 
 ### 7.4 Liste de courses
 

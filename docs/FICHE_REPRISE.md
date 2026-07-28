@@ -12,11 +12,11 @@ SQLite construit au build. **On code le moteur en ligne de commande avant toute 
 ## Où on en est
 
 ```
-P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── UI ⬜
+P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── UI ⬜
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **489 verts (39 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **504 verts (40 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
 `npm run build` → **199 aliments, 241 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
@@ -25,19 +25,14 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 
 ## ▶ La prochaine étape
 
-**Les restes** (`planLeftovers`, [ENGINE §7.3](./ENGINE.md)), puis la liste de courses.
+**La liste de courses** (`buildShoppingList`, [ENGINE §7.4](./ENGINE.md)) — dernier morceau du
+planning avant l'UI.
 
-Le planning est sain : **20/20 configurations** au banc de stress
-(`npm run engine:plan-stress`), et le cas nominal — 7 jours × 3 créneaux — ne déclenche **plus
-aucun avertissement** calorique.
+Le planning est complet et mesuré : **20/20** configurations au banc de stress, et les restes font
+tomber le gaspillage de **26 à 2 portions** sur une semaine à 2 convives.
 
-> ⚠️ **Avant d'écrire des recettes, lancer `npm run engine:couverture`.** Le critère n'est pas
-> « combien » mais « un plan de 14 jours est-il remplissable pour CHAQUE régime ». Écrire des
-> recettes omnivores ne comblait aucun trou ; les 30 recettes végétaliennes du 28 juillet ont
-> profité à tous les régimes d'un coup.
-
-> Deux combinaisons extrêmes restent incomplètes et c'est assumé : « sans gluten NI lait NI œuf »
-> (16 créneaux sur 21) et « végétalien + sans gluten » (36 sur 56).
+> ⚠️ Un plan avec restes **répète volontairement** une recette. Tout comptage de variété doit
+> ignorer les entrées `isLeftover` — le banc CLI signalait un faux doublon avant correction.
 
 ## Les cinq acquis à ne pas défaire
 

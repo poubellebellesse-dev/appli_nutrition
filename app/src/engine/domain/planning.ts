@@ -25,6 +25,17 @@ export interface WeekPlanRequest {
   readonly history: MealHistory
   readonly activeTopics: readonly TopicId[]
   readonly weights?: Partial<ScoreWeights>
+  /**
+   * Nombre de personnes à table, pour le calcul des RESTES (§7.3). Défaut 1.
+   *
+   * ⚠️ À NE PAS CONFONDRE avec `UserProfile.facteurPortion` (0,7…1,5), qui est un APPÉTIT
+   * personnel — « je mange un peu plus / un peu moins » — et s'applique à une portion. `convives`
+   * compte des assiettes.
+   *
+   * Sans ce champ, `planLeftovers` ne peut rien calculer : une recette de 4 portions ne laisse un
+   * reste que si l'on sait combien en sont mangées sur le coup.
+   */
+  readonly convives?: number
   readonly seed: number
 }
 

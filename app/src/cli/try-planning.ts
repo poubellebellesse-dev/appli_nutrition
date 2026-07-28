@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { loadCatalog } from '../data/catalog-loader.js'
 import { createEngine } from '../engine/api/index.js'
 import { attachDerivedIndexes } from '../engine/nutrition/index.js'
+import { portionsGaspillees } from '../engine/planning/plan-leftovers.js'
 import type { MealSlot, RecipeId, WeekPlanRequest } from '../engine/domain/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -42,7 +43,9 @@ const req: WeekPlanRequest = {
   seed: 1,
 }
 
-const plan = engine.planWeek(req)
+const CONVIVES = Number(process.argv[3] ?? 2)
+const planSansRestes = engine.planWeek(req)
+const plan = engine.planLeftovers(planSansRestes, req.profile, CONVIVES)
 const nom = (id: RecipeId | null) => (id === null ? '— (vide)' : (catalog.recipes.get(id)?.nom ?? id))
 const energyIndex = catalog.nutrients.findIndex((n) => n.code === 'energie')
 const kcalOf = (id: RecipeId | null) =>
@@ -55,7 +58,8 @@ for (const entry of plan.entries) {
   const jour = parDate.get(entry.slot.date) ?? { lignes: [], kcal: 0 }
   const kcal = kcalOf(entry.recipeId)
   jour.lignes.push(
-    `${entry.slot.creneau.padEnd(15)} ${Math.round(kcal).toString().padStart(4)} kcal  ${nom(entry.recipeId)}`
+    `${entry.slot.creneau.padEnd(15)} ${Math.round(kcal).toString().padStart(4)} kcal  ${nom(entry.recipeId)}` +
+      (entry.isLeftover ? '   (reste)' : '')
   )
   jour.kcal += kcal
   parDate.set(entry.slot.date, jour)
@@ -72,8 +76,13 @@ const distincts = new Set(remplis.map((e) => e.recipeId))
 const totaux = [...parDate.values()].map((j) => j.kcal)
 
 console.log(`\n${remplis.length} creneau(x) rempli(s) sur ${plan.entries.length}, ${vides} vide(s)`)
+// ⚠️ Les restes REPÈTENT volontairement une recette : ce n'est pas un doublon. On ne compte donc
+// que les créneaux CUISINÉS pour juger de la variété.
+const cuisines = remplis.filter((e) => !e.isLeftover)
+const distinctsCuisines = new Set(cuisines.map((e) => e.recipeId))
 console.log(
-  `${distincts.size} recette(s) distincte(s) — ${distincts.size === remplis.length ? 'aucun doublon' : 'DOUBLON'}`
+  `${distinctsCuisines.size} recette(s) cuisinee(s) distincte(s) sur ${cuisines.length} — ` +
+    `${distinctsCuisines.size === cuisines.length ? 'aucun doublon' : 'DOUBLON'}`
 )
 console.log(
   `Energie : min ${Math.round(Math.min(...totaux))} · max ${Math.round(Math.max(...totaux))} kcal/jour ` +
@@ -87,6 +96,12 @@ AVERTISSEMENTS (§6.5 — le plan reste utilisable, l'ecran d'avertissement s'im
     console.log(`   ${w.date} : ${w.kcal} kcal, sous le plancher de ${w.seuil}`)
   }
 }
+
+const restes = plan.entries.filter((e) => e.isLeftover).length
+console.log(
+  `Restes : ${restes} creneau(x) sur ${plan.entries.length} pour ${CONVIVES} convive(s) — ` +
+    `portions gaspillees ${portionsGaspillees(planSansRestes, catalog, CONVIVES)} -> ${portionsGaspillees(plan, catalog, CONVIVES)}`
+)
 
 const nonRemplis = new Map<MealSlot, number>()
 for (const e of plan.entries) {

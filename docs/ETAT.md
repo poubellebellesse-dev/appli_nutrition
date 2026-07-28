@@ -24,15 +24,15 @@ quatre défauts du moteur, tous corrigés **par mesure et non au jugé** : l'ing
 (§6.6 bis), la pondération de la similarité (§6.6 ter), la règle de récence (§6.6 quater et
 quinquies), la couverture nutritionnelle (§5.1 bis).
 
-**Prochaine étape : arbitrer la décision 34** (catalogue trop léger pour une journée à 3 repas), puis
-les restes (`planLeftovers`, §7.3) et la liste de courses. `planWeek` et les 5 garde-fous sont codés.
+**Prochaine étape : la liste de courses** (`buildShoppingList`, §7.4) — dernier morceau du planning
+avant l'UI. `planWeek`, `planLeftovers` et les 5 garde-fous sont codés.
 
 ---
 
 ## 2. Où en est-on
 
 ```
-Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ─▶ UI ⬜
+Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ─▶ liste de courses ⬜ ── UI ⬜
   ✅          ✅            ✅           ✅              ✅                                                                                                    ⬅ ICI
 ```
 
@@ -60,6 +60,8 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Contenu — 193 aliments (cible ~200) | `catalog/sources/foods.yaml`, `ciqual-mapping.yaml` | ✅ Atteint |
 | Contenu — montée à 200-300 recettes (décision 4 revue) | `catalog/recipes/` | ▓▓ **▓▓ ****212 écrites** — cible v1 (200-300) atteinte, modèles départagés**, cible 200**, palier intermédiaire visé : 100 |
 | Code — `suggestAlternatives` (variante vs alternative) | `app/src/engine/selection/alternatives.ts`, `app/src/engine/nutrition/characteristic-ingredient.ts`, `app/src/engine/api/index.ts` | ✅ Terminé et committé — 451 tests verts (37 fichiers). Vérifié sur le catalogue réel : cabillaud → bar/colin/dorade, hachis de bœuf → veau/agneau/porc, dahl → haricots/pois chiches |
+| Code — `planWeek` + `checkCalorieFloor` (§7.1) | `app/src/engine/planning/plan-week.ts`, `app/src/engine/guards/index.ts` | ✅ Terminé et committé — banc de stress à 20 configurations (`npm run engine:plan-stress`) |
+| Code — `planLeftovers` (§7.3) | `app/src/engine/planning/plan-leftovers.ts` | ✅ Terminé et committé — 6 créneaux sur 21 deviennent des restes, gaspillage 26 → 2 portions pour 2 convives |
 
 ---
 

@@ -42,6 +42,7 @@ import type {
 } from '../domain/index.js'
 import { suggestAlternatives as runSuggestAlternatives } from '../selection/alternatives.js'
 import { planWeek as runPlanWeek } from '../planning/plan-week.js'
+import { planLeftovers as runPlanLeftovers } from '../planning/plan-leftovers.js'
 import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
@@ -82,7 +83,17 @@ export interface Engine {
   ): AlternativeSuggestion
   planWeek(req: WeekPlanRequest): WeekPlan
   rerollSlot(plan: WeekPlan, slot: SlotRef, opts?: RerollOptions): WeekPlan
-  planLeftovers(plan: WeekPlan): WeekPlan
+  /**
+   * Place les restes dans un plan existant (§7.3) — rend un NOUVEAU plan, n'altère pas l'entrée.
+   * `convives` = assiettes servies par repas, défaut 1. Un reste REMPLACE un plat prévu ; il ne
+   * s'ajoute pas.
+   *
+   * ⚠️ Signature ÉTENDUE par rapport à §7.3 (`(plan, catalog)`) : `profile` est nécessaire pour
+   * RECALCULER les avertissements de plancher calorique — les totaux du jour changent quand un
+   * reste remplace un plat, et conserver les anciens ferait mentir le plan. `convives` l'est pour
+   * calculer les restes eux-mêmes : `WeekPlan` ne dit pas combien de personnes mangent.
+   */
+  planLeftovers(plan: WeekPlan, profile: UserProfile, convives?: number): WeekPlan
   buildShoppingList(plan: WeekPlan, opts?: ShoppingOptions): ShoppingList
   analyzeWeek(plan: WeekPlan, profile: UserProfile): NutritionReport
   scaleRecipe(id: RecipeId, portions: number): ScaledRecipe
@@ -370,7 +381,17 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       return { ...plan, warnings: checkCalorieFloor(plan, req.profile, enrichedCatalog) }
     },
     rerollSlot: () => notImplemented('rerollSlot'),
-    planLeftovers: () => notImplemented('planLeftovers'),
+    // ⚠️ `convives` n'est pas dans `WeekPlan` — il vient de la REQUÊTE. `planLeftovers` étant
+    // appelable seul sur un plan déjà rendu, l'appelant doit le repasser ; défaut 1.
+    //
+    // ⚠️ LES AVERTISSEMENTS SONT RECALCULÉS. Placer un reste REMPLACE un plat, donc les totaux
+    // caloriques du jour changent : les conserver tels quels laisserait un avertissement obsolète,
+    // ou en tairait un nouveau. Ce n'est pas une optimisation, c'est une correction — un plan qui
+    // porte les avertissements d'un autre plan ment.
+    planLeftovers: (plan, profile, convives) => {
+      const avecRestes = runPlanLeftovers(plan, enrichedCatalog, convives)
+      return { ...avecRestes, warnings: checkCalorieFloor(avecRestes, profile, enrichedCatalog) }
+    },
     buildShoppingList: () => notImplemented('buildShoppingList'),
     analyzeWeek: () => notImplemented('analyzeWeek'),
     scaleRecipe: () => notImplemented('scaleRecipe'),
