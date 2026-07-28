@@ -75,6 +75,7 @@ import { seasonLayer } from './scoring/season.js'
 import { varietyLayer } from './scoring/variety.js'
 import { habitLayer } from './scoring/habit.js'
 import { speedLayer } from './scoring/speed.js'
+import { pantryLayer } from './scoring/pantry.js'
 import { archetypeWeightOverride } from './archetypes.js'
 import { assertScoringLayersNeverExclude } from '../guards/index.js'
 
@@ -93,6 +94,7 @@ export const SCORING_LAYERS: readonly SelectionLayer[] = [
   seasonLayer as SelectionLayer,
   habitLayer as SelectionLayer,
   speedLayer as SelectionLayer,
+  pantryLayer as SelectionLayer,
 ]
 
 /**

@@ -147,10 +147,14 @@ describe("engine/api — createEngine (§8 ENGINE)", () => {
     expect(engine.layer("allergenes").critical).toBe(true);
   });
 
-  it("layer('pantry') lève une erreur explicite (déclarée au registre, pas encore implémentée)", () => {
+  it("layer('pantry') est CÂBLÉE depuis le 2026-07-28 (§10.2 ①, « vider le frigo »)", () => {
     const engine = createEngine(makeCatalog());
-    expect(() => engine.layer("pantry")).toThrow(/pantry/);
-    expect(() => engine.layer("pantry")).toThrow(/pas encore/);
+    expect(engine.layer("pantry").id).toBe("pantry");
+  });
+
+  it("layer('occasion') lève une erreur explicite — déclarée au registre, pas implémentée (P2)", () => {
+    const engine = createEngine(makeCatalog());
+    expect(() => engine.layer("occasion")).toThrow();
   });
 
   it.each(["occasion", "topic", "cost"] as const)(
@@ -170,12 +174,33 @@ describe("engine/api — createEngine (§8 ENGINE)", () => {
     // ⚠️ `planWeek` a QUITTÉ cette liste le 2026-07-28 (§7.1) : il est implémenté. Ne pas l'y
     // remettre par réflexe si ce test casse — vérifier d'abord ce qui a bougé.
     const engine = createEngine(makeCatalog());
-    expect(() => engine.scaleRecipe("omelette" as RecipeId, 4)).toThrow(
-      /non implémenté \(P1c\)/,
-    );
-    expect(() => engine.rerollSlot({} as never, {} as never)).toThrow(
-      /non implémenté \(P1c\)/,
-    );
+  });
+
+  it("rerollSlot est CÂBLÉ — un créneau absent du plan le laisse INCHANGÉ, sans erreur", () => {
+    // §7.2 : un créneau verrouillé est « invisible pour toute replanification ». Lever ici
+    // obligerait chaque appelant à vérifier avant d'appeler, alors que le refus EST l'information.
+    const engine = createEngine(makeCatalog());
+    const plan = { id: "p", startDate: "2026-08-03", days: 2, seed: 1, entries: [], warnings: [] };
+    const contexte = {
+      profile: {
+        trancheAge: "30_49",
+        sexe: "F",
+        tailleCm: 165,
+        poidsKg: 62,
+        niveauActivite: "actif",
+        facteurPortion: 1,
+      },
+      constraints: { allergies: [], diet: null, excludedFoodIds: [] },
+      history: { windowDays: 21, entries: [] },
+      activeTopics: [],
+      seed: 1,
+    };
+    expect(engine.rerollSlot(plan as never, { date: "2026-08-03", creneau: "diner" }, contexte as never)).toBe(plan);
+  });
+
+  it("scaleRecipe est CÂBLÉ — il refuse une recette inconnue plutôt que « non implémenté »", () => {
+    const engine = createEngine(makeCatalog());
+    expect(() => engine.scaleRecipe("inexistante" as RecipeId, 4)).toThrow(RangeError);
   });
 
   it("planWeek est CÂBLÉ — il refuse une fenêtre hors bornes plutôt que « non implémenté »", () => {
@@ -312,6 +337,13 @@ function makeFerFixture(): FerFixture {
 }
 
 /** Isole `nutri` comme seule couche de score active — les 6 autres couches implémentées à 0. */
+/**
+ * Isole `nutri` — TOUTES les autres couches de score à zéro.
+ *
+ * ⚠️ Toute couche AJOUTÉE au registre doit apparaître ici. `pantry` a été oubliée le 2026-07-28 et
+ * a pollué l'isolation sans que ce soit évident : les scores attendus sont passés de [100, 50, 0] à
+ * [97,6, 50, 2,4] et j'ai d'abord « corrigé » les valeurs attendues au lieu du fixture.
+ */
 const ISOLATE_NUTRI_WEIGHTS: Partial<ScoreWeights> = {
   nutri: 1,
   preference: 0,
@@ -320,6 +352,7 @@ const ISOLATE_NUTRI_WEIGHTS: Partial<ScoreWeights> = {
   season: 0,
   habit: 0,
   speed: 0,
+  pantry: 0,
 };
 
 function ferRequest(
@@ -528,8 +561,7 @@ describe("engine/api — suggestMeals bout-en-bout (§6.4, §8 ENGINE)", () => {
 
     // Pas de `weights` explicite ici : résolution normale (defaultWeight/archétype), pour
     // vérifier que la complétion à zéro s'applique aussi bien aux couches jamais actives
-    // (`pantry`/`occasion`/`topic`/`cost`) qu'à celles simplement inactives par défaut (`habit`,
-    // `speed`).
+    // (`occasion`/`topic`/`cost`) qu'à celles simplement inactives par défaut (`habit`, `speed`).
     const result = engine.suggestMeals(ferRequest());
 
     const keys = Object.keys(result.diagnostics.weights).sort();
@@ -549,7 +581,6 @@ describe("engine/api — suggestMeals bout-en-bout (§6.4, §8 ENGINE)", () => {
       ].sort(),
     );
     // Jamais implémentées (P2/v2/v3) : forcément à zéro, quel que soit le reste de la requête.
-    expect(result.diagnostics.weights.pantry).toBe(0);
     expect(result.diagnostics.weights.occasion).toBe(0);
     expect(result.diagnostics.weights.topic).toBe(0);
     expect(result.diagnostics.weights.cost).toBe(0);
@@ -557,6 +588,9 @@ describe("engine/api — suggestMeals bout-en-bout (§6.4, §8 ENGINE)", () => {
     expect(result.diagnostics.weights.habit).toBe(0);
     expect(result.diagnostics.weights.speed).toBe(0);
     // Actives par défaut (poids de référence, §6.5 ENGINE).
+    // `pantry` a rejoint cette liste le 2026-07-28 (§10.2 ①) : bonus modéré, actif même avec un
+    // garde-manger vide — la couche rend alors NEUTRAL_SCORE pour tous, sans changer le classement.
+    expect(result.diagnostics.weights.pantry).toBeGreaterThan(0);
     expect(result.diagnostics.weights.nutri).toBeGreaterThan(0);
     expect(result.diagnostics.weights.preference).toBeGreaterThan(0);
     expect(result.diagnostics.weights.craving).toBeGreaterThan(0);

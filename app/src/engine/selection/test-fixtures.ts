@@ -209,6 +209,7 @@ export function makeRequest(
     readonly diet?: DietCode | null
     readonly excludedFoodIds?: readonly string[]
     readonly requiredFoodIds?: readonly string[]
+    readonly pantryFoodIds?: readonly string[]
     readonly creneau?: SuggestionRequest['context']['creneau']
     readonly tempsDisponibleMin?: number | null
     readonly preferences?: ReadonlyMap<FoodId, number>
@@ -242,7 +243,7 @@ export function makeRequest(
       date: overrides.date ?? '2026-07-23',
       tempsDisponibleMin: overrides.tempsDisponibleMin == null ? null : min(overrides.tempsDisponibleMin),
       envie: overrides.envie ?? null,
-      pantryFoodIds: [],
+      pantryFoodIds: (overrides.pantryFoodIds ?? []) as readonly FoodId[],
       requiredFoodIds: (overrides.requiredFoodIds ?? []) as readonly FoodId[],
     },
     history: overrides.history ?? { windowDays: 21, entries: [] },

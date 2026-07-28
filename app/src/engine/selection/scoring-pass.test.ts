@@ -238,10 +238,12 @@ describe('selection/scoring-pass — garde-fou §6.1 (assertScoringLayersNeverEx
   })
 })
 
-describe('selection/scoring-pass — câblage des 7 vraies couches (SCORING_LAYERS)', () => {
-  it('SCORING_LAYERS contient exactement les 7 couches de score implémentées', () => {
+describe('selection/scoring-pass — câblage des vraies couches (SCORING_LAYERS)', () => {
+  it('SCORING_LAYERS contient exactement les 8 couches de score implémentées', () => {
+    // `pantry` a rejoint la liste le 2026-07-28 (§10.2 ①, « vider le frigo »). Restent déclarées
+    // mais non implémentées : `occasion`, `topic`, `cost` (P2).
     expect(SCORING_LAYERS.map((layer) => layer.id).sort()).toEqual(
-      ['craving', 'habit', 'nutri', 'preference', 'season', 'speed', 'variety'].sort()
+      ['craving', 'habit', 'nutri', 'pantry', 'preference', 'season', 'speed', 'variety'].sort()
     )
   })
 
@@ -277,7 +279,9 @@ describe('selection/scoring-pass — archétypes (§6.3 bis ENGINE)', () => {
     craving: 0.2,
     variety: 0.15,
     season: 0.1,
-    pantry: 0,
+    // `pantry` est un bonus MODÉRÉ en mode normal (§10.2 ①) ; le mode « vider le frigo » passe
+    // par `req.weights`, qui prime sur tout — pas de drapeau supplémentaire.
+    pantry: 0.05,
     habit: 0,
     occasion: 0,
     speed: 0,

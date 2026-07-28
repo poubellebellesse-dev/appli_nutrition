@@ -44,6 +44,9 @@ import { suggestAlternatives as runSuggestAlternatives } from '../selection/alte
 import { planWeek as runPlanWeek } from '../planning/plan-week.js'
 import { planLeftovers as runPlanLeftovers } from '../planning/plan-leftovers.js'
 import { buildShoppingList as runBuildShoppingList } from '../planning/shopping-list.js'
+import { scaleRecipe as runScaleRecipe } from '../planning/scale-recipe.js'
+import { rerollSlot as runRerollSlot } from '../planning/reroll-slot.js'
+import type { RerollContext } from '../planning/reroll-slot.js'
 import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
@@ -83,7 +86,12 @@ export interface Engine {
     dislikedFoodId: FoodId
   ): AlternativeSuggestion
   planWeek(req: WeekPlanRequest): WeekPlan
-  rerollSlot(plan: WeekPlan, slot: SlotRef, opts?: RerollOptions): WeekPlan
+  /**
+   * Repropose UN créneau, en excluant le plat refusé et tout ce qui est déjà au plan (§7.2).
+   * ⚠️ `contexte` est nécessaire parce qu'un `WeekPlan` ne porte NI le profil NI les contraintes :
+   * il garde le résultat, pas la demande qui l'a produit.
+   */
+  rerollSlot(plan: WeekPlan, slot: SlotRef, contexte: RerollContext, opts?: RerollOptions): WeekPlan
   /**
    * Place les restes dans un plan existant (§7.3) — rend un NOUVEAU plan, n'altère pas l'entrée.
    * `convives` = assiettes servies par repas, défaut 1. Un reste REMPLACE un plat prévu ; il ne
@@ -381,7 +389,12 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       // sept jours de planning pour une seule journée légère.
       return { ...plan, warnings: checkCalorieFloor(plan, req.profile, enrichedCatalog) }
     },
-    rerollSlot: () => notImplemented('rerollSlot'),
+    // ⚠️ Signature ÉTENDUE : `rerollSlot` a besoin du PROFIL et des CONTRAINTES pour reconstruire
+    // une requête de suggestion, et `WeekPlan` ne les porte pas — il ne garde que le résultat.
+    // Même motif que `planLeftovers`, qui a dû recevoir `profile` pour recalculer ses
+    // avertissements. Un plan n'est pas une requête.
+    rerollSlot: (plan, slot, contexte, opts) =>
+      runRerollSlot(enrichedCatalog, plan, slot, contexte, (r) => runSuggestMeals(enrichedCatalog, r, now), opts),
     // ⚠️ `convives` n'est pas dans `WeekPlan` — il vient de la REQUÊTE. `planLeftovers` étant
     // appelable seul sur un plan déjà rendu, l'appelant doit le repasser ; défaut 1.
     //
@@ -403,7 +416,7 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
         now === undefined ? plan.startDate : new Date(now()).toISOString().slice(0, 10)
       ),
     analyzeWeek: () => notImplemented('analyzeWeek'),
-    scaleRecipe: () => notImplemented('scaleRecipe'),
+    scaleRecipe: (id, portions) => runScaleRecipe(enrichedCatalog, id, portions),
     suggestSubstitutions: () => notImplemented('suggestSubstitutions'),
 
     layer: <C>(id: LayerId) => resolveLayer<C>(id),
