@@ -15,7 +15,7 @@
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadCatalog } from '../data/catalog-loader.js'
+import { loadCatalog } from '../data/catalog-loader-node.js'
 import { attachDerivedIndexes } from '../engine/nutrition/index.js'
 import { signatureOverlap } from '../engine/nutrition/signature.js'
 import type { RecipeId } from '../engine/domain/index.js'

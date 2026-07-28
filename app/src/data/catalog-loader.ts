@@ -1,7 +1,7 @@
 // data/catalog-loader.ts
 //
 // Pont data/ → engine/domain (docs/ARCHITECTURE.md §3, §9 ; docs/ENGINE.md §3, §9.2). Seule
-// couche autorisée à importer `node:sqlite` : ouvre `catalog.db` et mappe chaque ligne SQL vers
+// couche autorisée à importer une base de données : ouvre `catalog.db` et mappe chaque ligne SQL vers
 // les types domaine de engine/domain/catalog.ts. Aucune logique de sélection (filtrage, score,
 // agrégation nutritionnelle métier) — uniquement du mapping et du regroupement de lignes. Le
 // schéma lu est celui produit par catalog/build.mjs (constante SCHEMA_SQL).
@@ -18,8 +18,16 @@
 //  - `recipesByAllergen` : un allergène "touche" une recette dès qu'il apparaît sur un de ses
 //    ingrédients, y compris optionnel ou en simple trace — c'est un index neutre (pas un filtre
 //    d'éviction), la sévérité relève de engine/guards.
+//
+// ⚠️ CE FICHIER NE DOIT IMPORTER AUCUN MODULE NODE, et c'est vérifié par le build de la PWA.
+// Il est chargé par le NAVIGATEUR (§3 ARCHITECTURE : l'appli cible est une PWA), où `node:sqlite`
+// n'existe pas. Un simple `import { DatabaseSync } from 'node:sqlite'` en tête de fichier suffit à
+// casser le bundle, même si la fonction qui s'en sert n'est jamais appelée : l'import est hoisté.
+// C'est arrivé le 2026-07-28, et le message d'erreur ne désigne pas la cause.
+//
+// L'ouverture d'un FICHIER vit donc dans `catalog-loader-node.ts` — build, tests, bancs CLI.
+// Ici, seulement `loadCatalogFrom(source)`, commun aux deux mondes.
 
-import { DatabaseSync } from 'node:sqlite'
 import type {
   AnimalOrigin,
   CourseKind,
@@ -154,8 +162,24 @@ interface LexiconRow {
 
 // --- Utilitaires de mapping -------------------------------------------------------------------
 
-function queryAll<T>(db: DatabaseSync, sql: string): readonly T[] {
-  return db.prepare(sql).all() as unknown as T[]
+/**
+ * Le STRICT MINIMUM que ce module demande à une base SQLite : exécuter une requête sans paramètre
+ * et rendre les lignes.
+ *
+ * ⚠️ POURQUOI CETTE INTERFACE EXISTE. `node:sqlite` n'existe pas dans un navigateur, et l'appli
+ * cible est une PWA (§3 ARCHITECTURE) : le même mapping doit tourner sous Node — build, tests,
+ * bancs CLI — et sous SQLite WASM côté client. Tout le reste de ce fichier est du mapping PUR ;
+ * seule cette frontière était couplée à Node.
+ *
+ * Volontairement réduite à `all(sql)` : ce module ne fait aucune requête paramétrée, n'écrit
+ * jamais, et n'a pas besoin de transactions. Une interface plus riche inviterait à s'en servir.
+ */
+export interface SqlSource {
+  all<T>(sql: string): readonly T[]
+}
+
+function queryAll<T>(db: SqlSource, sql: string): readonly T[] {
+  return db.all<T>(sql)
 }
 
 /** Regroupe des lignes par clé étrangère — pas de logique métier, un simple index en mémoire. */
@@ -177,7 +201,7 @@ function parseJsonArray<T>(json: string): readonly T[] {
 
 // --- Chargement par table ----------------------------------------------------------------------
 
-function loadNutrients(db: DatabaseSync): Nutrient[] {
+function loadNutrients(db: SqlSource): Nutrient[] {
   const rows = queryAll<NutrientRow>(db, 'SELECT * FROM nutrient')
   return rows.map((row) => ({
     id: row.id as NutrientId,
@@ -190,7 +214,7 @@ function loadNutrients(db: DatabaseSync): Nutrient[] {
   }))
 }
 
-function loadAllergens(db: DatabaseSync): Map<AllergenId, Allergen> {
+function loadAllergens(db: SqlSource): Map<AllergenId, Allergen> {
   const rows = queryAll<AllergenRow>(db, 'SELECT * FROM allergen')
   const map = new Map<AllergenId, Allergen>()
   for (const row of rows) {
@@ -200,7 +224,7 @@ function loadAllergens(db: DatabaseSync): Map<AllergenId, Allergen> {
   return map
 }
 
-function loadFoods(db: DatabaseSync): Map<FoodId, Food> {
+function loadFoods(db: SqlSource): Map<FoodId, Food> {
   const foodRows = queryAll<FoodRow>(db, 'SELECT * FROM food')
   const nutrientsByFood = groupByKey(queryAll<FoodNutrientRow>(db, 'SELECT * FROM food_nutrient'), (r) => r.food_id)
   const allergensByFood = groupByKey(queryAll<FoodAllergenRow>(db, 'SELECT * FROM food_allergen'), (r) => r.food_id)
@@ -240,7 +264,7 @@ function loadFoods(db: DatabaseSync): Map<FoodId, Food> {
   return map
 }
 
-function loadLexicon(db: DatabaseSync): Map<LexiconEntryId, LexiconEntry> {
+function loadLexicon(db: SqlSource): Map<LexiconEntryId, LexiconEntry> {
   const rows = queryAll<LexiconRow>(db, 'SELECT * FROM lexicon_entry')
   const map = new Map<LexiconEntryId, LexiconEntry>()
   for (const row of rows) {
@@ -250,7 +274,7 @@ function loadLexicon(db: DatabaseSync): Map<LexiconEntryId, LexiconEntry> {
   return map
 }
 
-function loadRecipes(db: DatabaseSync): Map<RecipeId, Recipe> {
+function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
   const recipeRows = queryAll<RecipeRow>(db, 'SELECT * FROM recipe')
   const ingredientsByRecipe = groupByKey(queryAll<RecipeIngredientRow>(db, 'SELECT * FROM recipe_ingredient'), (r) => r.recipe_id)
   const stepsByRecipe = groupByKey(
@@ -356,24 +380,24 @@ function buildIndexes(recipes: ReadonlyMap<RecipeId, Recipe>, foods: ReadonlyMap
 // --- Point d'entrée ------------------------------------------------------------------------------
 
 /** Ouvre `catalog.db` (lecture seule) et retourne le catalogue en mémoire, formes domaine. */
-export function loadCatalog(dbPath: string): Catalog {
-  const db = new DatabaseSync(dbPath, { readOnly: true })
-  try {
-    const foods = loadFoods(db)
-    const recipes = loadRecipes(db)
+/**
+ * Construit le `Catalog` depuis n'importe quelle source SQL — c'est la fonction que le navigateur
+ * appelle, avec une base SQLite WASM. Ne ferme pas la source : elle ne l'a pas ouverte.
+ */
+export function loadCatalogFrom(db: SqlSource): Catalog {
+  const foods = loadFoods(db)
+  const recipes = loadRecipes(db)
 
-    return {
-      version: CATALOG_VERSION,
-      foods,
-      recipes,
-      nutrients: loadNutrients(db),
-      allergens: loadAllergens(db),
-      lexicon: loadLexicon(db),
-      topics: new Map(),
-      substitutions: new Map(),
-      indexes: buildIndexes(recipes, foods),
-    }
-  } finally {
-    db.close()
+  return {
+    version: CATALOG_VERSION,
+    foods,
+    recipes,
+    nutrients: loadNutrients(db),
+    allergens: loadAllergens(db),
+    lexicon: loadLexicon(db),
+    topics: new Map(),
+    substitutions: new Map(),
+    indexes: buildIndexes(recipes, foods),
   }
 }
+

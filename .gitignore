@@ -22,3 +22,6 @@ app/public/catalog/*.db
 # `catalog/sources/foods.yaml` porte déjà le résultat de l'import. Pour la récupérer et rejouer
 # `npm run catalog:ciqual`, voir l'en-tête de catalog/import-ciqual.mjs.
 documents Ciqual/
+
+# PWA — sortie de `vite build`, reconstructible
+dist/

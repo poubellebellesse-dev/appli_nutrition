@@ -6,7 +6,7 @@
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadCatalog } from '../data/catalog-loader.js'
+import { loadCatalog } from '../data/catalog-loader-node.js'
 import { DIET_CHAIN } from '../engine/selection/index.js'
 import type { DietCode, MealSlot } from '../engine/domain/index.js'
 

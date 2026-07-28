@@ -6,7 +6,7 @@
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadCatalog } from '../data/catalog-loader.js'
+import { loadCatalog } from '../data/catalog-loader-node.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DEFAULT_DB_PATH = path.join(__dirname, '..', '..', 'public', 'catalog', 'catalog.db')

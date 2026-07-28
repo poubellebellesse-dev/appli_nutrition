@@ -1,7 +1,7 @@
 // Script de mesure ponctuel — distribution des similarités du catalogue réel (dette λ, §6.6).
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadCatalog } from '../data/catalog-loader.js'
+import { loadCatalog } from '../data/catalog-loader-node.js'
 import { buildSimilarityProfiles, similarity } from '../engine/selection/index.js'
 import { attachDerivedIndexes } from '../engine/nutrition/index.js'
 

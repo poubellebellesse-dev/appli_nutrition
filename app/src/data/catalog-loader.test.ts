@@ -14,7 +14,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
 import type { AllergenId, Catalog, FoodId, NutrientId, RecipeId } from '../engine/domain/index.js'
-import { loadCatalog } from './catalog-loader.js'
+import { loadCatalog } from './catalog-loader-node.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..', '..', '..')

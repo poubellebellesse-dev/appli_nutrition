@@ -26,7 +26,7 @@ import { fileURLToPath } from 'node:url'
 import type { Catalog, DietCode, Food, FoodId, Recipe } from '../app/src/engine/domain/index.js'
 import { resolveAnimalOrigin } from '../app/src/engine/domain/index.js'
 import { DIET_CHAIN } from '../app/src/engine/selection/index.js'
-import { loadCatalog } from '../app/src/data/catalog-loader.js'
+import { loadCatalog } from '../app/src/data/catalog-loader-node.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..')

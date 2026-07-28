@@ -17,7 +17,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Catalog } from '../app/src/engine/domain/index.js'
-import { loadCatalog } from '../app/src/data/catalog-loader.js'
+import { loadCatalog } from '../app/src/data/catalog-loader-node.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..')

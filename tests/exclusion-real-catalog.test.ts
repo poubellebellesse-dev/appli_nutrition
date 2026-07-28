@@ -23,7 +23,7 @@ import { EngineSafetyError } from '../app/src/engine/domain/index.js'
 import { assertNoDeclaredAllergen } from '../app/src/engine/guards/index.js'
 import { runExclusionPass } from '../app/src/engine/selection/index.js'
 import { makeRequest } from '../app/src/engine/selection/test-fixtures.js'
-import { loadCatalog } from '../app/src/data/catalog-loader.js'
+import { loadCatalog } from '../app/src/data/catalog-loader-node.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..')

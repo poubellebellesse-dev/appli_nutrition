@@ -12,11 +12,11 @@ SQLite construit au build. **On code le moteur en ligne de commande avant toute 
 ## Où on en est
 
 ```
-P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── courses ✅ ── UI ⬜
+P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── courses ✅ ─▶ UI ▓▓
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **572 verts (44 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **572 verts (44 fichiers)** · `npx vite build` OK · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
 `npm run build` → **199 aliments, 241 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
@@ -25,11 +25,21 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 
 ## ▶ La prochaine étape
 
-**L'UI** (P3). Le moteur est complet pour la v1 : suggestion, alternatives, planning, restes, liste
-de courses, et les 5 garde-fous.
+**Les écrans**, à partir de [DESIGN.md](./DESIGN.md) §4 — sept restent après « Aujourd'hui ».
 
-> Points de l'audit encore ouverts : **zéro photo sur 241 recettes** (l'utilisateur s'en charge) et
-> **revue juridique** avant publication. Le lexique est fait — **62 gestes, 763 étapes annotées (70 %)** — mais il n'est pas encore ILLUSTRÉ, ce que §2 promet.
+La PWA existe et tourne : `npm run dev`. Une seule tranche est livrée, l'écran « Aujourd'hui »,
+volontairement — le but était de **prouver la chaîne complète dans un navigateur** (catalog.db
+téléchargé, SQLite WASM, mapping partagé, moteur, suggestions affichées) avant d'investir dans huit
+écrans construits sur une chaîne non vérifiée.
+
+> ⚠️ **`catalog-loader.ts` ne doit importer AUCUN module Node.** Il est chargé par le navigateur, et
+> un `import 'node:sqlite'` en tête de fichier casse le bundle **même si la fonction qui l'utilise
+> n'est jamais appelée** — l'import est hoisté. L'ouverture de fichier vit dans
+> `catalog-loader-node.ts`. Le message de Rollup ne désigne pas cette cause.
+
+> ⚠️ **`vitest.config.ts` est séparé de `vite.config.ts` exprès.** Vitest lit `vite.config.ts` en
+> l'absence de config dédiée : y poser `root: 'app'` a fait passer la suite de 572 tests à 528
+> **sans le moindre échec** — les suites de `tests/` et `catalog/` avaient simplement disparu.
 
 ## Les cinq acquis à ne pas défaire
 

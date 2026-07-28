@@ -29,7 +29,7 @@
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadCatalog } from '../data/catalog-loader.js'
+import { loadCatalog } from '../data/catalog-loader-node.js'
 import { createEngine } from '../engine/api/index.js'
 import { ARCHETYPE_WEIGHT_OVERRIDES, DEFAULT_ARCHETYPE, DEFAULT_MMR_LAMBDA, EXCLUSION_LAYERS } from '../engine/selection/index.js'
 import type {

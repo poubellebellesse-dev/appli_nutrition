@@ -24,7 +24,7 @@ quatre défauts du moteur, tous corrigés **par mesure et non au jugé** : l'ing
 (§6.6 bis), la pondération de la similarité (§6.6 ter), la règle de récence (§6.6 quater et
 quinquies), la couverture nutritionnelle (§5.1 bis).
 
-**Prochaine étape : l'UI** (P3) — le moteur est complet pour la v1. `planWeek`, `planLeftovers`,
+**Prochaine étape : les écrans** (P3, DESIGN §4) — la PWA tourne, un écran sur huit est livré. `planWeek`, `planLeftovers`,
 `buildShoppingList`, `suggestAlternatives` et les 5 garde-fous sont codés.
 
 ---
@@ -32,7 +32,7 @@ quinquies), la couverture nutritionnelle (§5.1 bis).
 ## 2. Où en est-on
 
 ```
-Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── liste de courses ✅ ─▶ UI ⬜
+Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── liste de courses ✅ ─▶ UI ▓▓
   ✅          ✅            ✅           ✅              ✅                                                                                                    ⬅ ICI
 ```
 
@@ -63,6 +63,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Code — `planWeek` + `checkCalorieFloor` (§7.1) | `app/src/engine/planning/plan-week.ts`, `app/src/engine/guards/index.ts` | ✅ Terminé et committé — banc de stress à 20 configurations (`npm run engine:plan-stress`) |
 | Code — `planLeftovers` (§7.3) | `app/src/engine/planning/plan-leftovers.ts` | ✅ Terminé et committé — 6 créneaux sur 21 deviennent des restes, gaspillage 26 → 2 portions pour 2 convives |
 | Code — `buildShoppingList` (§7.4) | `app/src/engine/planning/shopping-list.ts` | ✅ Terminé et committé — 77 lignes rangées par rayon sur une semaine ; les restes font tomber les courses de 24 à 15 kg |
+| Code — PWA, première tranche | `vite.config.ts`, `vitest.config.ts`, `app/index.html`, `app/src/ui/`, `app/src/data/catalog-loader-node.ts` | ✅ Terminé et committé — React 19 + Vite 7 + Tailwind 4 + SQLite WASM. Écran « Aujourd'hui » branché sur le vrai moteur, `vite build` OK, 572 tests intacts |
 
 ---
 
