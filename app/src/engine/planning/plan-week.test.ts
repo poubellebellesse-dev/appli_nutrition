@@ -212,3 +212,82 @@ describe('planning/plan-week — interaction avec assertCalorieFloor', () => {
     expect(() => assertCalorieFloor(plan, makePlanRequest().profile, CATALOG as Catalog)).not.toThrow()
   })
 })
+
+describe('planning/plan-week — cible nutritionnelle RESTANTE (§7.1, cumul réinjecté)', () => {
+  /** Catalogue minimal avec un vrai nutriment, pour que la cible ne soit pas un vecteur vide. */
+  function catalogAvecEnergie() {
+    const base = makeCatalog(RECIPES)
+    return {
+      ...base,
+      nutrients: [{ id: 'energie', code: 'energie', nom: 'Énergie', unite: 'kcal', vnrAdulte: 2000, categorie: 'macronutriment', sens: 'cible' }],
+      indexes: {
+        ...base.indexes,
+        recipeNutrients: new Map(RECIPES.map((r) => [r.id, new Float64Array([500])])),
+      },
+    } as unknown as Catalog
+  }
+
+  it('chaque créneau reçoit une cible, jamais `undefined`', () => {
+    const vu: SuggestionRequest[] = []
+    const suggest = (r: SuggestionRequest) => {
+      vu.push(r)
+      return fakeSuggest(['a', 'b', 'c'])(r)
+    }
+
+    planWeek(catalogAvecEnergie(), makePlanRequest({ days: 3 }), suggest)
+
+    expect(vu.every((r) => r.nutrientTarget !== undefined)).toBe(true)
+  })
+
+  it('un plat déjà placé FAIT MONTER la cible du créneau suivant du même jour', () => {
+    // Le cœur du « cumul réinjecté » : après un repas léger, il reste plus à couvrir, donc le
+    // créneau suivant vise plus haut. Sans ce mécanisme les deux cibles seraient identiques.
+    const vu: SuggestionRequest[] = []
+    const suggest = (r: SuggestionRequest) => {
+      vu.push(r)
+      return fakeSuggest(['a', 'b', 'c', 'd'])(r)
+    }
+
+    planWeek(catalogAvecEnergie(), makePlanRequest({ days: 1 + 1, slots: ['dejeuner', 'diner'] }), suggest)
+
+    // Exprimé en RELATION, pas en valeur absolue : la référence journalière est calculée depuis le
+    // profil (≈ 1 999,89 kcal ici) et n'a pas à être connue du test — la figer le rendrait fragile
+    // au moindre ajustement de `resolveReferenceIntakes`.
+    //   créneau 1 : référence / 2                 → référence = 2 × cible1
+    //   créneau 2 : (référence − 500) / 1         → 2 × cible1 − 500
+    const cible1 = vu[0]!.nutrientTarget![0]!
+    expect(vu[1]!.nutrientTarget![0]).toBeCloseTo(2 * cible1 - 500, 6)
+    expect(vu[1]!.nutrientTarget![0]!).toBeGreaterThan(cible1)
+  })
+
+  it('le cumul est REMIS À ZÉRO chaque jour — la référence est journalière', () => {
+    const vu: SuggestionRequest[] = []
+    const suggest = (r: SuggestionRequest) => {
+      vu.push(r)
+      return fakeSuggest(['a', 'b', 'c', 'd'])(r)
+    }
+
+    planWeek(catalogAvecEnergie(), makePlanRequest({ days: 2, slots: ['dejeuner', 'diner'] }), suggest)
+
+    // Le 1er créneau du jour 2 doit revoir la cible pleine, pas le reliquat du jour 1.
+    expect(vu[2]!.nutrientTarget![0]).toBeCloseTo(vu[0]!.nutrientTarget![0]!, 6)
+  })
+
+  it('cible plancher à ZÉRO quand la journée est déjà couverte, jamais négative', () => {
+    // Un négatif ferait DISPARAÎTRE le nutriment du score (`scoreNutri` ignore les cibles ≤ 0) au
+    // lieu de dire « on a assez » — l'inverse de l'intention.
+    const gros = { ...catalogAvecEnergie() } as Catalog
+    const index = new Map(RECIPES.map((r) => [r.id, new Float64Array([5000])]))
+    const catalog = { ...gros, indexes: { ...gros.indexes, recipeNutrients: index } } as Catalog
+
+    const vu: SuggestionRequest[] = []
+    const suggest = (r: SuggestionRequest) => {
+      vu.push(r)
+      return fakeSuggest(['a', 'b'])(r)
+    }
+
+    planWeek(catalog, makePlanRequest({ days: 2, slots: ['dejeuner', 'diner'] }), suggest)
+
+    expect(vu[1]!.nutrientTarget![0]).toBe(0)
+  })
+})

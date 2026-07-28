@@ -28,7 +28,7 @@
 // Dépendances autorisées : domain/, ./index.js, ../../nutrition/index.js — §2/§3 ENGINE (SEL a le
 // droit de dépendre de NUT, voir en-tête de scoring/index.ts).
 
-import type { MealSlot, NutrientSense, NutrientVector, RecipeId } from '../../domain/index.js'
+import type { Catalog, MealSlot, NutrientSense, NutrientVector, RecipeId, SuggestionRequest } from '../../domain/index.js'
 import type { CandidateSet, ScoringLayerResult, SelectionLayer } from '../index.js'
 import { NEUTRAL_SCORE, clamp01 } from './index.js'
 import { resolveReferenceIntakes } from '../../nutrition/index.js'
@@ -111,6 +111,18 @@ export function scoreNutri(
 // couches de score).
 // ------------------------------------------------------------------------------------------
 
+/**
+ * Cible par défaut : la part du créneau dans la référence journalière. Extraite en fonction nommée
+ * pour que `configure` montre en une ligne l'arbitrage entre cible imposée et cible par défaut.
+ */
+function defaultSlotTarget(req: SuggestionRequest, catalog: Catalog): NutrientVector {
+  const dailyReference = resolveReferenceIntakes(req.profile, catalog)
+  const share = MEAL_SLOT_SHARE[req.context.creneau]
+  const target = new Float64Array(dailyReference.length)
+  for (let i = 0; i < dailyReference.length; i++) target[i] = dailyReference[i]! * share
+  return target
+}
+
 /** Part du créneau dans la référence journalière (§6.5 précision 1 ENGINE) — table fixe. */
 const MEAL_SLOT_SHARE: Readonly<Record<MealSlot, number>> = {
   petit_dejeuner: 0.25,
@@ -134,11 +146,9 @@ export const nutriLayer: SelectionLayer<NutriLayerConfig> = {
   defaultWeight: 0.25,
 
   configure: (req, catalog) => {
-    const dailyReference = resolveReferenceIntakes(req.profile, catalog)
-    const share = MEAL_SLOT_SHARE[req.context.creneau]
-
-    const target = new Float64Array(dailyReference.length)
-    for (let i = 0; i < dailyReference.length; i++) target[i] = dailyReference[i]! * share
+    // Cible IMPOSÉE par l'appelant (planning, §7.1) si elle est fournie : c'est le « cumul
+    // réinjecté ». Sinon la part fixe du créneau — comportement historique, inchangé.
+    const target = req.nutrientTarget ?? defaultSlotTarget(req, catalog)
 
     return {
       recipeNutrients: catalog.indexes.recipeNutrients,

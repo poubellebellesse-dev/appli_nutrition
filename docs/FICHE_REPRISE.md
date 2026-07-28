@@ -16,7 +16,7 @@ P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── su
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **469 verts (38 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **473 verts (38 fichiers)** · `npm run typecheck` propre ·
 `npm run build` → **193 aliments, 212 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
@@ -25,18 +25,21 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 
 ## ▶ La prochaine étape
 
-**Arbitrer la décision 34** ([ETAT §4](./ETAT.md)) — elle bloque l'usage réel du planning.
+**Arbitrer la décision 34** ([ETAT §4](./ETAT.md)) — elle bloque l'usage réel du planning sur une
+journée à 3 repas.
 
-Le planning est codé et tourne (7 jours × 4 créneaux : 28 recettes distinctes, aucun doublon,
-1 258–1 788 kcal/jour). Mais **sur trois repas il ÉCHOUE** : `assertCalorieFloor` lève à 1 061 kcal.
+**61 des 183 recettes** étiquetées `dejeuner`/`diner` apportent moins de 300 kcal : ce sont des
+entrées, des accompagnements et des desserts marqués comme repas principaux (« Soupe de carottes à
+l'ail » 103 kcal, « Carottes Vichy » 147, « Blancs en neige sucrés » 126).
 
-Ce n'est ni un bug du moteur ni un défaut du garde-fou — **le catalogue est trop léger**. La recette
-médiane apporte la moitié de la cible de son créneau (déjeuner 401 kcal pour 700 visées), et le
-maximum de tout le catalogue est 819. Trois repas médians font 1 116 kcal.
+> ⚠️ **Ce n'est PAS « le catalogue est trop léger »** — je l'ai cru, la mesure l'a démenti : la
+> meilleure journée possible sur 3 repas atteint **2 127 kcal**. Le contenu suffit, c'est le choix
+> qui est mauvais.
 
-> ⚠️ **Ne pas affaiblir le garde-fou pour faire passer le test.** C'est le seul qui protège d'un
-> planning de sous-alimentation, et il a fonctionné exactement comme prévu dès le premier essai
-> réel. La réponse est dans le contenu : des plats plus denses.
+> ⚠️ **Le correctif moteur a été tenté et mesuré insuffisant.** La cible nutritionnelle restante
+> (§7.1) est codée ; elle ne fait passer le pire jour que de 1 061 à 1 125 kcal. L'énergie ne pèse
+> que **2,8 %** de la note (`nutri` 0,25 ÷ 9 nutriments) — aucune cible ne renversera un classement
+> arbitré par la saison et les préférences. **Ne pas affaiblir `assertCalorieFloor` pour autant.**
 
 Ensuite : les restes (`planLeftovers`, §7.3) et la liste de courses.
 

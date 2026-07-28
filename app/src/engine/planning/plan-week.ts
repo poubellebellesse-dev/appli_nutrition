@@ -22,12 +22,18 @@
 // Le premier seul laisserait passer un doublon quand tous les autres candidats sont mauvais ; le
 // second seul ne dirait rien de la lassitude à J+3. Retirer l'un des deux dégrade le résultat.
 //
-// ⚠️ CE QUI N'EST PAS FAIT DANS CE LOT, et qui est assumé :
-//   - la CIBLE NUTRITIONNELLE RESTANTE. §7.1 parle d'« état nutritionnel cumulé réinjecté » et
-//     §5.4 ARCHITECTURE de « référence RESTANTE ». Aujourd'hui `nutriLayer` vise la part fixe du
-//     créneau dans la journée (`MEAL_SLOT_SHARE`, §6.5 précision 1), sans savoir ce qui a déjà été
-//     placé. Le câbler demande un point d'injection de cible dans `SuggestionRequest`, qui n'existe
-//     pas — travail séparé, à ne pas bricoler ici en dupliquant le calcul de `nutri`.
+// ⚠️ LA CIBLE NUTRITIONNELLE RESTANTE (2026-07-28) — le « cumul réinjecté » de §7.1. À chaque
+// créneau, la cible n'est plus la part théorique du créneau mais CE QUI RESTE de la journée, réparti
+// sur les créneaux qui restent : `(référence journalière − déjà placé aujourd'hui) / créneaux
+// restants`. Un déjeuner léger relève donc mécaniquement la cible du dîner.
+//
+// ⚠️ CE QUE ÇA NE FAIT PAS, et il faut le savoir avant d'en attendre trop. `nutri` reste UNE couche
+// de score parmi d'autres, et son écart est moyenné sur les 9 nutriments : MESURÉ, l'énergie pèse
+// environ `0,25 / 9 ≈ 2,8 %` de la note finale. Réinjecter le cumul déplace le classement à la
+// marge — ça ne rend pas l'énergie contraignante. Le seul mécanisme qui REFUSE une journée
+// insuffisante reste `assertCalorieFloor`. Ne pas confondre les deux.
+//
+// ⚠️ CE QUI N'EST TOUJOURS PAS FAIT :
 //   - les RESTES (`planLeftovers`, §7.3) — `isLeftover` reste `false` partout.
 //   - le MODE REPAS (`service`, v1.5) — `service` reste `null`, un plat par créneau.
 //
@@ -53,7 +59,8 @@ import type {
   WeekPlanRequest,
 } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
-import type { SuggestionResult } from '../domain/index.js'
+import type { NutrientVector, SuggestionResult } from '../domain/index.js'
+import { resolveReferenceIntakes } from '../nutrition/index.js'
 
 /** Ce que `planWeek` demande au moteur de sélection — voir l'en-tête sur l'injection. */
 export type SuggestForSlot = (req: SuggestionRequest) => SuggestionResult
@@ -79,9 +86,11 @@ function slotRequest(
   req: WeekPlanRequest,
   date: string,
   creneau: MealSlot,
-  history: MealHistory
+  history: MealHistory,
+  nutrientTarget: NutrientVector
 ): SuggestionRequest {
   return {
+    nutrientTarget,
     profile: req.profile,
     constraints: req.constraints,
     context: {
@@ -111,6 +120,7 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
     throw new RangeError('planWeek : aucun créneau demandé — `slots` ne peut pas être vide.')
   }
 
+  const dailyReference = resolveReferenceIntakes(req.profile, catalog)
   const entries: MealPlanEntry[] = []
   const placedRecipeIds = new Set<RecipeId>()
   // Copie de travail : on n'ajoute JAMAIS à `req.history`, qui appartient à l'appelant.
@@ -119,12 +129,22 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
   for (let dayOffset = 0; dayOffset < req.days; dayOffset++) {
     const date = addDays(req.startDate, dayOffset)
 
-    for (const creneau of req.slots) {
+    // Cumul du JOUR : remis à zéro à chaque date, jamais cumulé sur la semaine — la référence est
+    // journalière (§7.1 : « la cible est calculée sur la durée réelle de la fenêtre » pour la
+    // fenêtre, mais l'apport se juge jour par jour, comme `assertCalorieFloor`).
+    const placedToday = new Float64Array(dailyReference.length)
+
+    for (const [slotIndex, creneau] of req.slots.entries()) {
       // ⚠️ COPIE, pas la référence. `workingEntries` continue de grossir après cet appel : passer
       // le tableau vif ferait voir à la requête du lundi les repas placés le mercredi. Défaut réel,
       // trouvé par test — la sortie du glouton était juste, mais l'objet remis à l'appelant mentait.
       const history: MealHistory = { windowDays: req.history.windowDays, entries: [...workingEntries] }
-      const scored = pickForSlot(suggest, slotRequest(req, date, creneau, history), placedRecipeIds)
+      const cible = remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex)
+      const scored = pickForSlot(
+        suggest,
+        slotRequest(req, date, creneau, history, cible),
+        placedRecipeIds
+      )
 
       entries.push({
         slot: { date, creneau },
@@ -138,6 +158,11 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       if (scored === null) continue
       placedRecipeIds.add(scored)
       workingEntries.push({ recipeId: scored, date, creneau, origine: 'choisi' })
+
+      const apport = catalog.indexes.recipeNutrients.get(scored)
+      if (apport !== undefined) {
+        for (let i = 0; i < placedToday.length; i++) placedToday[i] = (placedToday[i] ?? 0) + (apport[i] ?? 0)
+      }
     }
   }
 
@@ -172,4 +197,27 @@ function pickForSlot(
     if (!placedRecipeIds.has(suggestion.recipeId)) return suggestion.recipeId
   }
   return null
+}
+
+/**
+ * Ce qu'il RESTE à couvrir aujourd'hui, réparti sur les créneaux restants — le « cumul réinjecté ».
+ *
+ * ⚠️ PLANCHER À ZÉRO, pas de valeur négative. Un créneau qui a déjà dépassé la référence du jour
+ * doit viser 0, pas un nombre négatif : `scoreNutri` ignore les cibles ≤ 0 (§6.5 précision 1), donc
+ * un négatif ferait silencieusement DISPARAÎTRE le nutriment du score au lieu de dire « on a assez ».
+ *
+ * `slotsRemaining` inclut le créneau courant : au premier créneau d'une journée à 4, on vise le
+ * quart de la journée, pas le tiers de ce qui reste après lui.
+ */
+function remainingTarget(
+  dailyReference: NutrientVector,
+  placedToday: NutrientVector,
+  slotsRemaining: number
+): NutrientVector {
+  const diviseur = Math.max(1, slotsRemaining)
+  const target = new Float64Array(dailyReference.length)
+  for (let i = 0; i < target.length; i++) {
+    target[i] = Math.max(0, (dailyReference[i] ?? 0) - (placedToday[i] ?? 0)) / diviseur
+  }
+  return target
 }

@@ -1298,22 +1298,47 @@ candidats sont mauvais ; le second seul ne dirait rien de la lassitude à J+3.
 
 #### ⚠️ Ce que ce lot ne fait PAS
 
-- **La cible nutritionnelle RESTANTE.** §7.1 parle d'« état nutritionnel cumulé réinjecté », mais
-  `nutriLayer` vise toujours la part fixe du créneau (`MEAL_SLOT_SHARE`). Le câbler demande un point
-  d'injection de cible dans `SuggestionRequest`, qui n'existe pas.
-- **Les restes** (`planLeftovers`, §7.3) — `isLeftover` reste `false`.
-- **Le mode repas** (`service`, v1.5) — un plat par créneau.
+- ~~La cible nutritionnelle RESTANTE~~ — **CODÉE le 2026-07-28**, voir ci-dessous.
+- **Les restes** (`planLeftovers`, §7.3) et **le mode repas** (`service`, v1.5).
+#### La cible nutritionnelle RESTANTE — CODÉE, et MESURÉE INSUFFISANTE
+
+`SuggestionRequest.nutrientTarget` est le point d'injection qui manquait. À chaque créneau,
+`planWeek` vise `(référence journalière − déjà placé aujourd'hui) / créneaux restants` au lieu de la
+part fixe `MEAL_SLOT_SHARE`. Un déjeuner léger relève donc mécaniquement la cible du dîner. Le cumul
+est remis à zéro chaque jour, et la cible est planchée à zéro — un négatif ferait *disparaître* le
+nutriment du score au lieu de dire « on a assez ».
+
+> ⛔ **MESURÉ : l'effet est marginal, et c'était prévisible.** Pire jour d'un plan à 3 créneaux :
+> 1 061 → **1 125 kcal**, toujours sous le plancher. Sur 4 créneaux, le minimum passe de 1 258 à
+> 1 218 — la différence est du bruit de glouton.
+>
+> **La raison est arithmétique** : `scoreNutri` moyenne l'écart sur les **9 nutriments**, et `nutri`
+> pèse **0,25**. L'énergie représente donc `0,25 / 9 ≈ **2,8 %**` de la note finale. Déplacer sa
+> cible ne peut pas renverser un classement arbitré par la saison, les préférences et l'envie.
+>
+> Le mécanisme est **conforme à §7.1 et correct** — un déjeuner léger DOIT relever la cible du dîner
+> — mais il ne résout pas la décision 34. La cause réelle est ailleurs : voir ci-dessous.
 
 #### Résultat mesuré sur le catalogue réel (2026-07-28)
 
 7 jours × 4 créneaux : **28 créneaux remplis, 28 recettes distinctes, aucun doublon**, 1 258 à
 1 788 kcal/jour.
 
-> ⛔ **Sur TROIS créneaux (sans goûter), le plan ÉCHOUE** — `assertCalorieFloor` lève à 1 061 kcal.
-> Ce n'est ni un bug du moteur ni un défaut du garde-fou : **le catalogue est trop léger**. La
-> recette médiane apporte la moitié de la cible de son créneau — petit-déjeuner 334 kcal pour 500
-> visées, déjeuner 401 pour 700, dîner 381 pour 600, et le maximum de tout le catalogue est 819.
-> Trois repas médians font 1 116 kcal. **Décision ouverte** — voir ETAT §4 n°34.
+> ⛔ **Sur TROIS créneaux (sans goûter), le plan ÉCHOUE** — `assertCalorieFloor` lève à 1 125 kcal.
+>
+> ⚠️ **Le catalogue N'EST PAS trop léger** — c'était ma première conclusion, et la mesure l'a
+> démentie. La meilleure journée possible sur 3 repas atteint **2 127 kcal** (488 + 819 + 819). Le
+> contenu suffit ; c'est le CHOIX qui est mauvais.
+>
+> La cause réelle est un défaut d'ÉTIQUETAGE : **61 des 183 recettes portant `dejeuner` ou `diner`
+> apportent moins de 300 kcal**, parce que des entrées, des accompagnements et des desserts sont
+> étiquetés comme repas principaux — « Carottes Vichy » (147 kcal), « Œufs mimosa » (176),
+> « Blancs en neige sucrés » (126), « Soupe de carottes à l'ail » (103). Une soupe à 103 kcal est
+> une bonne soupe ; ce n'est pas un dîner. En les retirant des créneaux principaux, il reste
+> **122 plats de médiane 432 kcal**.
+>
+> C'est exactement le trou que `CourseKind` (entrée/plat/accompagnement/dessert) comblerait — il
+> existe dans le domaine mais **n'est pas sur `Recipe`**. **Décision ouverte** — ETAT §4 n°34.
 
 ### 7.2 États d'un créneau
 

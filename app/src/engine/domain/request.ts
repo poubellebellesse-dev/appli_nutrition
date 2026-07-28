@@ -4,7 +4,9 @@
 
 import type { AllergenId, FoodId, RecipeId, TopicId } from './ids.js'
 import type { ArchetypeId } from './archetype-ids.js'
-import type { DietCode, MealSlot } from './catalog.js'
+import type { DietCode, MealSlot,
+  NutrientVector,
+} from './catalog.js'
 import type { Minutes } from './units.js'
 import type { UserProfile } from './profile.js'
 import type { ScoreWeights } from './result.js'
@@ -128,6 +130,23 @@ export interface SuggestionRequest {
   /** défaut 5. */
   readonly limit?: number
   /** reproductibilité — PRNG à graine explicite, jamais `Math.random()` (§1 ENGINE). */
+  /**
+   * §7.1 ENGINE — CIBLE NUTRITIONNELLE IMPOSÉE pour ce créneau, en remplacement de la part fixe que
+   * `nutriLayer` calcule sinon (`MEAL_SLOT_SHARE` × référence journalière, §6.5 précision 1).
+   *
+   * Le POINT D'INJECTION qui manquait au planning. §7.1 décrit un « état nutritionnel cumulé
+   * réinjecté à chaque créneau » et §5.4 ARCHITECTURE une référence « RESTANTE » : sans ce champ,
+   * `planWeek` ne pouvait pas les exprimer, chaque créneau visant la même part théorique quoi qu'il
+   * ait déjà été placé dans la journée.
+   *
+   * ⚠️ CE QUE ÇA NE FAIT PAS. Ça ne rend pas l'énergie contraignante — `nutri` reste UNE couche de
+   * score parmi d'autres, et son écart est moyenné sur les 9 nutriments : l'énergie pèse environ
+   * `0,25 / 9 ≈ 2,8 %` de la note finale. Déplacer la cible déplace le classement à la marge, pas
+   * l'arbitrage global. Ne pas confondre avec `assertCalorieFloor`, qui lui REFUSE un plan.
+   *
+   * Absent → comportement d'avant (part fixe du créneau). Aucune régression pour `suggestMeals`.
+   */
+  readonly nutrientTarget?: NutrientVector
   readonly seed: number
   /**
    * §6.6 ENGINE — poids de la pénalité de redondance en diversification MMR (`diversify`,
