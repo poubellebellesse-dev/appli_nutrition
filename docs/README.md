@@ -36,9 +36,10 @@ corrige dans le document, elle ne se contourne pas dans le code.
 | [FICHE_REPRISE.md](./FICHE_REPRISE.md) | Point de reprise condensé. Une page, jamais plus. |
 | [ETAT.md](./ETAT.md) | État complet, avancement, décisions figées et ouvertes. |
 
-> Les deux se recoupent volontairement : la fiche est ce qu'on lit en trente secondes, `ETAT.md`
-> ce qu'on consulte quand on cherche une décision précise. Si la fiche dépasse une page, c'est
-> qu'elle contient quelque chose qui appartient à `ETAT.md`.
+> **Règle d'unicité** : chaque fait vit à UN SEUL endroit. La fiche donne l'état vérifié et la
+> prochaine étape ; tout le reste — avancement détaillé, décisions, **dette connue** (`ETAT.md` §9)
+> — est dans `ETAT.md`, et la fiche ne fait qu'y renvoyer. Si la fiche dépasse une page, c'est
+> qu'elle a repris quelque chose qui appartient à `ETAT.md`.
 
 ### 📖 Instantanés datés — **ne jamais réécrire**
 

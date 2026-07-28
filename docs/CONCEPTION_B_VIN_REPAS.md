@@ -246,7 +246,7 @@ entrée *et* plat).
 | **Facette `service`** *(recommandé)* | CHECK de `recipe_facet` + tableau de validation de `build.mjs` + union `FacetteKind` — 3 lignes ; multi-valeur gratuite (une ligne par valeur) |
 | Colonne `recipe.services TEXT` | Schéma + insertion + mapping loader + type domaine + YAML — plus de surface pour le même résultat |
 
-Contenu à produire : annoter les recettes existantes. Les 10 recettes de test sont toutes des plats
+Contenu à produire : annoter les recettes existantes. ⚠️ Écrit quand le catalogue comptait 10 recettes de test ; il en compte 212 depuis le 2026-07-27, mais le constat tient — elles sont toutes des plats
 sauf `blancs-neige-citron` (dessert) — le catalogue de test devra gagner **2 entrées et 2 desserts**
 pour que le mode repas soit exerçable en CLI.
 

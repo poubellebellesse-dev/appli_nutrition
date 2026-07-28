@@ -232,7 +232,7 @@ recette invalide.
 - [x] Garde-fou `assertNoDeclaredAllergen` (§5.2 ENGINE)
 - [x] 60 tests verts
 
-### P1b — Scoring — **conception §6.5/§6.3 bis ENGINE ; P1b-1 et P1b-2 codés et committés, P1c = prochaine étape (⬅ ICI)**
+### P1b — Scoring — **conception §6.5/§6.3 bis ENGINE ; P1b-1, P1b-2 et P1c codés et committés ✅**
 
 Conception détaillée : `docs/ENGINE.md` §6.5 et §6.3 bis, `docs/archive/RECAP_SESSION.md`. Découpage
 retenu :
@@ -366,7 +366,7 @@ retenu :
 - [x] 380 tests verts (34 fichiers), typecheck propre
 
 > ⚠️ **Mesuré sur le catalogue de test : `--variete` déplace les SCORES sans changer l'ORDRE.**
-> L'historique du banc est vide, donc les 10 recettes ont la même récence et la même familiarité —
+> L'historique du banc est vide, donc TOUTES les recettes ont la même récence et la même familiarité —
 > l'override les décale toutes du même montant (`auto` 57,6 · `surprise` 65,5 · `classiques` 49,7
 > en tête de classement). L'effet sur le classement demande un historique réel, exactement comme la
 > calibration de λ. `onlyFavorites`, lui, agit bien (entonnoir : 9 candidats → 2).
@@ -426,3 +426,59 @@ appli_nutrition/
 - Jamais de commit/push/install/suppression **sans demande explicite**.
 - Jamais lire/modifier de secrets.
 - **Écrire les tests avant de refactorer** la logique métier critique (moteur = business-critical).
+---
+
+## 9. Dette connue
+
+Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
+
+### Calibrations non faites (pas des bugs)
+
+- **λ (diversification) n'est pas calibré.** `DEFAULT_MMR_LAMBDA = 0,4` vient d'une intuition de
+  conception. **Le blocage est levé** : 212 recettes, distribution mesurée sur 22 366 paires
+  (max 94,2 % · p99 38,2 % · médiane 9,5 % · 30 paires > 60 %). Reste à faire, plus à débloquer.
+- **`varietyMode` n'est pas observable au banc**, et le contenu n'y change RIEN — la cause est un
+  historique de repas **vide**, pas un catalogue pauvre. Toutes les recettes ont donc la même
+  récence et l'override les décale identiquement. Il faut injecter un historique, pas des recettes.
+  ⚠️ Ne pas confondre avec le blocage de λ, qui lui a été levé par le contenu.
+- **`NUTRI_MIN_COVERAGE = 0,7` est un seuil de JUGEMENT**, pas de mesure — contrairement à tous les
+  autres seuils du moteur. Aucun jeu de cas jugés n'existe pour « ce nutriment est-il notable ».
+
+### Code mort ou dupliqué
+
+- **`recipeMainIngredient` n'est lu par AUCUNE couche** depuis §6.6 bis. Calculé à l'init, employé
+  seulement par les bancs de comparaison qui documentent son abandon. À supprimer si l'on fige ces bancs.
+- **Le lexique banni existe en deux copies** (`catalog/build.mjs`,
+  `app/src/engine/guards/banned-terms.ts`), synchronisées par `tests/banned-terms-consistency.test.mjs`.
+  Si ce test disparaît, la duplication devient dangereuse.
+- **`ENGINE_VERSION` est codé en dur** dans `api/index.ts` et peut diverger de `package.json`.
+
+### Défauts connus, non corrigés
+
+- **Le lexique banni sur-bloque** : la garde cherche des SOUS-CHAÎNES, donc « rincer
+  **soigne**usement » est rejeté à cause de `soigne`. Contourné en reformulant, jamais corrigé.
+- **L'explication distingue peu** : les cinq suggestions affichent souvent les mêmes trois phrases,
+  seul l'ordre change. Honnête, mais peu utile pour choisir (sujet UI, P5).
+- **Le banc n'affiche plus la similarité** de chaque recette retenue (`ScoredSuggestion` ne porte pas
+  cette information). À rétablir **avant** de calibrer λ.
+- **`roquefort` porte l'allergène `lait` mais pas `sulfites`.** Les 9 nutriments sont un choix assumé
+  (décision 25), pas une dette.
+
+### Contenu — constats de l'audit du 2026-07-27, remesurés le 2026-07-28
+
+- **Zéro photo sur 212 recettes.** Le critère de sortie P6 (« bundle < 15 Mo », budget 40 Ko/image)
+  suppose 200-300 photos originales, sous le même interdit que les recettes (contenu original, pas
+  de scrap). Poste de travail le plus lourd du projet, **chiffré nulle part**.
+- **Lexique à 4 gestes** pour 93 étapes qui en référencent — sous-dimensionné pour la promesse
+  « lexique de gestes de cuisine illustré ». Inchangé depuis l'audit.
+- **Petits-déjeuners : 17** (contre 7 à l'audit). La répétition n'est plus garantie dès la semaine 1,
+  mais c'est toujours le créneau le plus mince — dîner 143, déjeuner 118, goûter 27.
+- **Revue juridique avant publication** : classée « recommandée, non bloquante » (§11 ARCHITECTURE),
+  ce qui est raisonnable en développement mais **pas pour une mise en ligne** — la couche allergènes
+  est saisie à la main et sert à des gens qui en dépendent.
+
+### Tests
+
+- **Les tests de propriété ne passent plus tous à l'échelle du catalogue.** Celui des allergènes
+  énumérait le powerset (4 096 combinaisons à 12 allergènes) et a dépassé le délai : il couvre
+  désormais vide + singletons + paires + complet. **À surveiller à chaque palier de contenu.**
