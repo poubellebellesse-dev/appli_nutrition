@@ -69,6 +69,6 @@ facettes:
   - facette: cuisine
     valeur: mediterraneenne
   - facette: regime
-    valeur: vegetarien
+    valeur: vegetalien
   - facette: style
     valeur: rapide
