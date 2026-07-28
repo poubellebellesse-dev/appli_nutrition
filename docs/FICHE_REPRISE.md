@@ -12,11 +12,11 @@ SQLite construit au build. **On code le moteur en ligne de commande avant toute 
 ## Où on en est
 
 ```
-P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── UI ⬜
+P0 ✅ ── P1a ✅ ── P1b ✅ ── P1c ✅ ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── courses ✅ ── UI ⬜
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-28** : `npm test` → **504 verts (40 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-28** : `npm test` → **522 verts (41 fichiers)** · `npm run engine:plan-stress` → **20/20 configurations saines** · `npm run typecheck` propre ·
 `npm run build` → **199 aliments, 241 recettes** (valeurs CIQUAL 2025 réelles).
 
 `engine.suggestMeals(req)` rend des suggestions classées, diversifiées, expliquées, avec l'entonnoir
@@ -25,14 +25,16 @@ des rejets et des diagnostics rejouables. Registre à **18 couches** (7 exclusio
 
 ## ▶ La prochaine étape
 
-**La liste de courses** (`buildShoppingList`, [ENGINE §7.4](./ENGINE.md)) — dernier morceau du
-planning avant l'UI.
+**L'UI** (P3). Le moteur est complet pour la v1 : suggestion, alternatives, planning, restes, liste
+de courses, et les 5 garde-fous.
 
-Le planning est complet et mesuré : **20/20** configurations au banc de stress, et les restes font
-tomber le gaspillage de **26 à 2 portions** sur une semaine à 2 convives.
+> ⛔ **Un préalable à ne pas oublier : les conditionnements** ([ETAT §4 n°40](./ETAT.md)). La liste
+> de courses affiche « 200 g d'œuf » et « 70 g de beurre » — deux choses qu'aucun magasin ne vend.
+> L'arrondi actuel est correct mais générique ; le vrai conditionnement (plaquette de 250 g, boîte
+> de 6 œufs) demande un champ sur `Food`. Je ne l'ai pas inventé dans le code exprès.
 
-> ⚠️ Un plan avec restes **répète volontairement** une recette. Tout comptage de variété doit
-> ignorer les entrées `isLeftover` — le banc CLI signalait un faux doublon avant correction.
+> Et les points de l'audit toujours ouverts : **zéro photo sur 241 recettes**, lexique à 4 gestes,
+> revue juridique avant publication.
 
 ## Les cinq acquis à ne pas défaire
 

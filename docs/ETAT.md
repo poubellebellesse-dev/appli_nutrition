@@ -24,15 +24,15 @@ quatre défauts du moteur, tous corrigés **par mesure et non au jugé** : l'ing
 (§6.6 bis), la pondération de la similarité (§6.6 ter), la règle de récence (§6.6 quater et
 quinquies), la couverture nutritionnelle (§5.1 bis).
 
-**Prochaine étape : la liste de courses** (`buildShoppingList`, §7.4) — dernier morceau du planning
-avant l'UI. `planWeek`, `planLeftovers` et les 5 garde-fous sont codés.
+**Prochaine étape : l'UI** (P3) — le moteur est complet pour la v1. `planWeek`, `planLeftovers`,
+`buildShoppingList`, `suggestAlternatives` et les 5 garde-fous sont codés.
 
 ---
 
 ## 2. Où en est-on
 
 ```
-Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ─▶ liste de courses ⬜ ── UI ⬜
+Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── liste de courses ✅ ─▶ UI ⬜
   ✅          ✅            ✅           ✅              ✅                                                                                                    ⬅ ICI
 ```
 
@@ -62,6 +62,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | Code — `suggestAlternatives` (variante vs alternative) | `app/src/engine/selection/alternatives.ts`, `app/src/engine/nutrition/characteristic-ingredient.ts`, `app/src/engine/api/index.ts` | ✅ Terminé et committé — 451 tests verts (37 fichiers). Vérifié sur le catalogue réel : cabillaud → bar/colin/dorade, hachis de bœuf → veau/agneau/porc, dahl → haricots/pois chiches |
 | Code — `planWeek` + `checkCalorieFloor` (§7.1) | `app/src/engine/planning/plan-week.ts`, `app/src/engine/guards/index.ts` | ✅ Terminé et committé — banc de stress à 20 configurations (`npm run engine:plan-stress`) |
 | Code — `planLeftovers` (§7.3) | `app/src/engine/planning/plan-leftovers.ts` | ✅ Terminé et committé — 6 créneaux sur 21 deviennent des restes, gaspillage 26 → 2 portions pour 2 convives |
+| Code — `buildShoppingList` (§7.4) | `app/src/engine/planning/shopping-list.ts` | ✅ Terminé et committé — 77 lignes rangées par rayon sur une semaine ; les restes font tomber les courses de 24 à 15 kg |
 
 ---
 
@@ -209,6 +210,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | ~~37~~ | **Trous végétaliens du catalogue** | **FERMÉE le 2026-07-28** — 30 recettes végétaliennes écrites : 13 petits-déjeuners, 11 goûters, 6 plats. Couverture par créneau × régime, cible 14 (fenêtre max §7.1) : petit-déjeuner végétalien **1 → 14** (et 17 → 30 pour tous les régimes), goûter **3 → 14** (27 → 38), plats végétaliens **8 → 14**. Plus aucun trou. A nécessité **6 nouveaux aliments** (199 au total) : boissons au soja / à l'amande / à l'avoine, sirop d'érable, dattes, raisins secs — le catalogue n'avait AUCUN lait végétal, ce qui rendait un petit-déjeuner végétalien quasi impossible à écrire. ⚠️ `miel` n'est PAS végétalien, d'où le sirop d'érable. Effet mesuré au banc de stress : végétalien 14 j × 3 passe de 29/42 à **42/42**, sans gluten de 20/21 à 21/21, sans lait de 19/21 à 21/21 |
 | 38 | **Cohérence entre l'étiquette `regime` et les ingrédients** | **TROUVÉE ET CORRIGÉE le 2026-07-28**, en cherchant les effets de bord des 30 nouvelles recettes. ⛔ **Bug grave** : « Tofu laqué à la sauce soja et au sésame » se déclarait `vegetalien` et contenait du **MIEL**. Rien n'échouait — un utilisateur végétalien se voyait simplement proposer un produit animal, soit la promesse centrale de l'appli en défaut. Corrigé en remplaçant le miel par du sirop d'érable (la recette reste végétalienne et cohérente). ⚠️ **Six recettes** étaient étiquetées `vegetarien` alors qu'elles sont végétaliennes — défaut inverse et silencieux : elles disparaissaient des suggestions de qui pouvait les manger. Ré-étiquetées. C'est le mode de défaillance SILENCIEUX que la décision 28 reprochait aux étiquettes multiples : l'étiquette unique ne l'élimine pas, elle le déplace. **`tests/regime-coherence.test.ts` le verrouille désormais** à chaque build, dans les deux sens. ⚠️ Piège rencontré en écrivant la règle : le beurre, la crème et le miel ne sont dans AUCUN groupe animal (« matières grasses », « produits sucrés ») — s'en remettre au seul `Food.groupe` faisait passer « Radis au beurre » pour végétalienne |
 | ~~39~~ | **Origine animale des aliments, en cascade** | **TRANCHÉE et CODÉE le 2026-07-28** (demande utilisateur, à la suite du bug du miel). `Food.origineAnimale` ∈ {`mammifere`, `volaille`, `poisson`, `fruit_de_mer`, `insecte`} et `Food.deriveDe` — l'origine se PROPAGE le long de la chaîne : `beurre_doux` → `lait_entier` → `mammifere`. **Pourquoi `Food.groupe` ne suffisait pas** : le beurre vit en « matières grasses », le miel en « produits sucrés » — aucun groupe animal. À l'inverse les boissons végétales portent « lait et produits laitiers » sans être animales. Les deux erreurs sont désormais impossibles. 58 aliments annotés sur 199 (15 mammifère, 5 volaille, 16 poisson, 8 fruit de mer, 1 insecte, 13 dérivés). Les fromages d'autres mammifères (feta, brousse, chèvre, roquefort) sont déclarés en SOURCE et non dérivés de `lait_entier`, qui est du lait de vache — les faire dériver de lui affirmerait quelque chose de faux. ⚠️ **FACTUEL, pas un régime** — même leçon que `types_repas`/`service` : `DIET_CHAIN` en déduit ce qu'elle veut, un futur filtre halal ou casher lira le même champ. Ne pas y encoder le régime. ⚠️ `resolveAnimalOrigin` porte une GARDE ANTI-CYCLE, testée : le build refuse les cycles, mais la fonction est appelable sur d'autres données et doit s'arrêter plutôt que figer l'appelant |
+| 40 | **Conditionnements d'achat — « on n'achète pas 43 g de beurre »** | **OUVERTE, délibérément non tranchée le 2026-07-28.** `buildShoppingList` arrondit à la hausse par pas croissants (10 g / 50 g / 100 g), ce qui n'est PAS l'arrondi aux conditionnements que demande §7.4. La liste affiche aujourd'hui « 200 g d'œuf » et « 70 g de beurre » — deux choses qu'aucun magasin ne vend. Le vrai conditionnement est propre à CHAQUE aliment : plaquette de 250 g, boîte de 6 œufs, brique d'un litre. **Pourquoi je ne l'ai pas inventé** : l'écrire aliment par aliment dans le code le cacherait au lieu de le poser dans les données. Il faut un champ sur `Food` (`conditionnement_g` + `unite_achat` ?), donc une colonne, donc une annotation — c'est un lot en soi. Reste à trancher : annoter les 199 aliments, ou seulement ceux qui se vendent au conditionnement (œufs, beurre, lait, farine…) et laisser les autres au poids |
 
 ---
 

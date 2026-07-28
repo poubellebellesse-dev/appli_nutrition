@@ -103,6 +103,33 @@ console.log(
     `portions gaspillees ${portionsGaspillees(planSansRestes, catalog, CONVIVES)} -> ${portionsGaspillees(plan, catalog, CONVIVES)}`
 )
 
+// --- Liste de courses (§7.4) ---------------------------------------------------------------
+const courses = engine.buildShoppingList(plan, { joursDeCourses: 4 })
+const sansRestes = engine.buildShoppingList(planSansRestes, { joursDeCourses: 4 })
+const totalDe = (l: typeof courses) => l.items.reduce((s, i) => s + i.quantiteTotale, 0)
+
+console.log(`
+Liste de courses : ${courses.items.length} lignes`)
+let rayonCourant = ''
+let trancheCourante = -1
+for (const item of courses.items) {
+  if (item.tranche !== trancheCourante) {
+    trancheCourante = item.tranche
+    rayonCourant = ''
+    console.log(`
+  --- virée ${item.tranche + 1} ---`)
+  }
+  if (item.rayon !== rayonCourant) {
+    rayonCourant = item.rayon
+    console.log(`  [${item.rayon}]`)
+  }
+  console.log(`     ${String(item.quantiteTotale).padStart(5)} ${item.unite}  ${item.foodId}`)
+}
+console.log(
+  `
+Effet des restes sur les courses : ${Math.round(totalDe(sansRestes) / 1000)} kg -> ${Math.round(totalDe(courses) / 1000)} kg`
+)
+
 const nonRemplis = new Map<MealSlot, number>()
 for (const e of plan.entries) {
   if (e.recipeId === null) nonRemplis.set(e.slot.creneau, (nonRemplis.get(e.slot.creneau) ?? 0) + 1)

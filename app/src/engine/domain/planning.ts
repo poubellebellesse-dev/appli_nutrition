@@ -97,7 +97,17 @@ export interface ShoppingListItem {
   readonly foodId: FoodId
   readonly quantiteTotale: number
   readonly unite: string
+  /**
+   * Rayon de MAGASIN, dérivé de `Food.groupe` mais distinct de lui (§7.4 ENGINE) : « matières
+   * grasses » réunit le beurre et l'huile d'olive, qui ne sont pas au même endroit.
+   */
   readonly rayon: string
+  /**
+   * Virée de courses : 0 pour la première, 1 pour la suivante… Résulte de
+   * `ShoppingOptions.joursDeCourses` (§7.4 : « ce qui se conserve d'un côté, le frais à racheter en
+   * milieu de semaine de l'autre »). Toujours 0 quand l'option est absente.
+   */
+  readonly tranche: number
 }
 
 export interface ShoppingList {

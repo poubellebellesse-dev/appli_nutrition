@@ -43,6 +43,7 @@ import type {
 import { suggestAlternatives as runSuggestAlternatives } from '../selection/alternatives.js'
 import { planWeek as runPlanWeek } from '../planning/plan-week.js'
 import { planLeftovers as runPlanLeftovers } from '../planning/plan-leftovers.js'
+import { buildShoppingList as runBuildShoppingList } from '../planning/shopping-list.js'
 import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
@@ -392,7 +393,15 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       const avecRestes = runPlanLeftovers(plan, enrichedCatalog, convives)
       return { ...avecRestes, warnings: checkCalorieFloor(avecRestes, profile, enrichedCatalog) }
     },
-    buildShoppingList: () => notImplemented('buildShoppingList'),
+    // `generatedAt` vient de l'horloge INJECTÉE si elle existe, jamais de `Date.now()` (§3) ;
+    // sinon la date de départ du plan, qui est déterministe.
+    buildShoppingList: (plan, opts) =>
+      runBuildShoppingList(
+        plan,
+        enrichedCatalog,
+        opts ?? {},
+        now === undefined ? plan.startDate : new Date(now()).toISOString().slice(0, 10)
+      ),
     analyzeWeek: () => notImplemented('analyzeWeek'),
     scaleRecipe: () => notImplemented('scaleRecipe'),
     suggestSubstitutions: () => notImplemented('suggestSubstitutions'),

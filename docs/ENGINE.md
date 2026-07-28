@@ -1426,17 +1426,55 @@ totaux caloriques du jour changent. Conserver ceux du plan d'origine ferait ment
 > Un plan contenant des restes répète volontairement une recette. Tout comptage de variété doit donc
 > ignorer les entrées `isLeftover` — le banc CLI le faisait à tort et signalait un faux doublon.
 
-### 7.4 Liste de courses
+### 7.4 Liste de courses — CODÉE (2026-07-28, `engine/planning/shopping-list.ts`)
 
 ```ts
-buildShoppingList(plan: WeekPlan, catalog: Catalog, opts: ShoppingOptions): ShoppingList
+buildShoppingList(plan: WeekPlan, opts?: ShoppingOptions): ShoppingList
 ```
 
-Quatre étapes : agrégation des ingrédients → conversion en unités d'achat → **arrondi aux
-conditionnements courants** (on n'achète pas 43 g de beurre) → regroupement par rayon.
+Agrégation des ingrédients → arrondi → regroupement par rayon. `opts.joursDeCourses` scinde la
+liste : chaque `ShoppingListItem` porte sa `tranche` d'achat (0 = première virée).
 
-`opts.joursDeCourses` permet de scinder la liste : ce qui se conserve d'un côté, le frais à
-racheter en milieu de semaine de l'autre.
+#### ⚠️ Un reste ne se rachète pas
+
+**L'interaction essentielle avec §7.3, et la première erreur possible ici.** Un plat cuisiné une
+fois puis mangé trois fois s'achète **une** fois : les entrées `isLeftover` sont ignorées à
+l'agrégation. Les compter multiplierait la liste par le nombre de repas et annulerait exactement le
+gain que les restes existent pour produire.
+
+Mesuré sur le catalogue réel, 7 jours pour 2 convives : **24 kg de courses sans les restes,
+15 kg avec** — un tiers de moins.
+
+#### Le rayon n'est pas le groupe
+
+`Food.groupe` est une classification **nutritionnelle** (celle de Ciqual), un rayon une organisation
+de **magasin**. Assez proches pour qu'on soit tenté de les confondre, et divergentes là où ça
+compte : « matières grasses » réunit le beurre et l'huile d'olive, **qui ne sont pas au même
+endroit**. On départage par `resolveAnimalOrigin`, qui remonte la chaîne `deriveDe`
+(beurre → lait entier → mammifère) — le champ posé pour la cohérence des régimes sert ici une tout
+autre question, signe qu'il est au bon niveau.
+
+Six rayons : `fruits et légumes` · `boucherie` · `poissonnerie` · `crèmerie` · `épicerie` · `cave`.
+C'est le nombre de fois qu'on traverse un magasin, pas le nombre de familles d'aliments.
+
+#### Ce que l'arrondi fait, et ce qu'il ne fait PAS
+
+`arrondiAchat` arrondit **à la hausse** — mieux vaut un reste de course qu'un ingrédient manquant —
+avec un pas qui grossit : 10 g sous 100 g, 50 g sous 1 kg, 100 g au-delà.
+
+> ⛔ **Ce n'est PAS l'arrondi aux conditionnements** que demande §7.4. « On n'achète pas 43 g de
+> beurre » — on en achète une **plaquette de 250 g**. Le vrai conditionnement est propre à chaque
+> aliment : plaquette, boîte de 6 œufs, brique d'un litre. La liste actuelle affiche « 200 g
+> d'œuf », ce qu'aucun magasin ne vend. Il faudrait un champ sur `Food` ; l'inventer aliment par
+> aliment dans le code le cacherait au lieu de le poser dans les données. **Décision ouverte,
+> ETAT §4 n°40.**
+
+#### Deux choix qui pourraient surprendre
+
+- **Les quantités ne sont pas divisées par les convives.** On cuisine la recette entière — c'est
+  précisément ce qui produit les restes (§7.3). Diviser ferait acheter de quoi cuisiner un demi-plat.
+- **Les optionnels sont inclus**, cohérent avec `aggregateRecipe` : un ingrédient `optionnel` fait
+  partie du plat servi par défaut, l'omettre le ferait manquer en cuisine.
 
 ### 7.5 Anticipation sans IA — la couche `habit`
 
