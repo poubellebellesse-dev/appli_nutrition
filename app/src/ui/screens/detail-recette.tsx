@@ -39,6 +39,8 @@ interface Vue {
   readonly quantitePour: (portions: number) => ReadonlyMap<string, number>
   readonly favori: boolean
   readonly manquants: ReadonlySet<string>
+  /** `false` = garde-manger vide : on ne signale rien, sinon TOUT serait « à acheter ». */
+  readonly gardeManger: boolean
   readonly afficherMacros: boolean
   readonly energiePortion: number | null
 }
@@ -94,16 +96,23 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
                 socle.moteur.scaleRecipe(id, n).ingredients.map((i) => [i.foodId as string, i.quantiteG])
               ),
             favori: utilisateur.favoriteRecipeIds.has(id),
+            // ⚠️ LES OPTIONNELS NE MANQUENT PAS. Ne pas avoir une garniture facultative n'empêche
+            // pas de cuisiner le plat — c'est déjà la règle de `ingredientsManquants` côté moteur.
             manquants: new Set(
               recette.ingredients
+                .filter((i) => !i.optionnel)
                 .map((i) => i.foodId as string)
                 .filter((foodId) => !utilisateur.pantryFoodIds.includes(foodId as never))
             ),
+            gardeManger: utilisateur.pantryFoodIds.length > 0,
             afficherMacros: readDisplay(socle.db).afficherMacros,
             energiePortion: energieParPortion(socle.catalogue, id),
           },
         })
-        setPortions((actuel) => actuel ?? recette.portionsBase)
+        // ⚠️ RÉINITIALISÉ À CHAQUE RECETTE, et non conservé. Garder la valeur précédente faisait
+        // s'ouvrir une recette prévue pour 4 sur les 8 portions réglées SUR UNE AUTRE — toutes ses
+        // quantités mises à l'échelle sans que personne ne l'ait demandé.
+        setPortions(recette.portionsBase)
       })
       .catch((erreur: unknown) => {
         setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
@@ -229,8 +238,11 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
                 <span className="text-[0.85rem] text-attenue">· quantité au goût, non ajustée</span>
               )}
               {/* « Absents du garde-manger signalés DISCRÈTEMENT » (§4.6) : une mention, pas un
-                  avertissement — ne rien avoir chez soi est le cas normal, pas un problème. */}
-              {vue.manquants.has(foodId) && (
+                  avertissement — ne rien avoir chez soi est le cas normal, pas un problème.
+                  ⚠️ SEULEMENT SI LE GARDE-MANGER EST RENSEIGNÉ. Sans ce test, un garde-manger vide
+                  — le cas de presque tout le monde — marquait CHAQUE ligne « à acheter », ce qui
+                  n'informe plus de rien et noie la liste. */}
+              {vue.gardeManger && vue.manquants.has(foodId) && (
                 <span className="text-[0.85rem] text-attenue">· à acheter</span>
               )}
             </li>

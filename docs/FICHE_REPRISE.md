@@ -16,7 +16,7 @@ P0 ✅ ─ P1a ✅ ─ P1b ✅ ─ P1c ✅ ─ CONTENU ✅ ─ alternatives ✅ 
                                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-30** : `npm test` → **719 verts (49 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-30** : `npm test` → **725 verts (50 fichiers)** · `npm run typecheck` propre ·
 `npx vite build` OK.
 **Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → **20/20 configurations
 saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes, 8 tips** (valeurs CIQUAL 2025 réelles).
@@ -74,7 +74,7 @@ prêts : le moteur et les données les attendent, et les maquettes existent pour
    connaît la chaîne `vegetalien ⊂ vegetarien ⊂ pescetarien ⊂ omnivore`. **L'origine animale est un
    fait, pas un régime** : `Food.origineAnimale` + `deriveDe`, propagés en cascade.
 
-## Dix pièges qui ne se voient pas
+## Onze pièges qui ne se voient pas
 
 - ⚠️ **`catalog-loader.ts` ne doit importer AUCUN module Node.** L'import est **hoisté** : un
   `import 'node:sqlite'` casse le bundle navigateur même si la fonction qui l'utilise n'est jamais
@@ -96,6 +96,12 @@ prêts : le moteur et les données les attendent, et les maquettes existent pour
   `#bd6a48` — **le bouton principal** — donne 3,95:1, sous le seuil AA. Idem pour le gris des
   libellés d'onglets (3,59:1). Reproduire une maquette « au pixel » peut donc violer le cahier des
   charges qui l'accompagne. Écarts mesurés et documentés en §1 DESIGN.
+- ⚠️ **Hacher les NOMS de fichiers ne suffit pas à invalider un cache.** Vite encode le contenu
+  dans le nom des bundles — mais tout ce qui vit dans `public/` (`catalog.db`, polices, icônes,
+  manifest) a un nom FIXE. Une version de cache calculée sur la liste des noms ne bougeait donc pas
+  quand le catalogue changeait : le service worker servait l'ancien `catalog.db` indéfiniment, et
+  une mise à jour de contenu n'atteignait jamais un utilisateur installé. Invisible en dev (pas de
+  SW) et à tout build où le code change aussi. → hacher le CONTENU des fichiers à nom fixe.
 - ⚠️ **Aucun VFS OPFS de SQLite ne tourne sur le thread principal.** Les deux (`opfs` et
   `opfs-sahpool`) testent `createSyncAccessHandle`, déclaré `[Exposed=DedicatedWorker]` : la méthode
   n'existe pas hors d'un Worker, et **aucune en-tête COOP/COEP n'y change rien**. Erreur affichée :

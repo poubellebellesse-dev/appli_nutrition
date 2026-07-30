@@ -21,7 +21,7 @@
 // ⚠️ LES GESTES SONT DU TEXTE SEUL. §4.7 prévoit « définition simple + animation muette en boucle »
 // et §8.5 annonce un lexique illustré : il n'existe ni image ni clip. L'écran ne fait pas semblant.
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Catalog, LexiconEntry, Tip, TipCategorie } from '../../engine/domain/index.js'
 import { normaliser } from '../../engine/search/index.js'
 import { chargerSocle } from '../socle.js'
@@ -262,7 +262,7 @@ function SourcesEtLimites() {
   )
 }
 
-function Bloc({ titre, children }: { readonly titre: string; readonly children: React.ReactNode }) {
+function Bloc({ titre, children }: { readonly titre: string; readonly children: ReactNode }) {
   return (
     <section className="mt-8">
       <h2 className="font-titre text-[1.5rem] text-texte">{titre}</h2>

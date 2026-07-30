@@ -352,19 +352,7 @@ function Reglage({
     <div className="mt-5 flex flex-wrap gap-4 rounded-[--radius-carte] border border-bordure bg-surface p-4 text-[0.95rem]">
       <label className="flex items-center gap-2">
         <span className="text-texte-doux">Jours</span>
-        <input
-          type="number"
-          min={MIN_PLAN_DAYS}
-          max={MAX_PLAN_DAYS}
-          value={reglages.jours}
-          onChange={(e) => {
-            const jours = Number(e.target.value)
-            // Les bornes de §7.1 sont vérifiées par `planWeek`, qui LÈVE. On filtre ici pour ne pas
-            // transformer une saisie intermédiaire en écran d'erreur.
-            if (jours >= MIN_PLAN_DAYS && jours <= MAX_PLAN_DAYS) onChange({ ...reglages, jours })
-          }}
-          className="min-h-tactile w-20 rounded-[0.6rem] border border-bordure-forte bg-fond px-3 tabular-nums text-texte"
-        />
+        <ChampJours valeur={reglages.jours} onValider={(jours) => onChange({ ...reglages, jours })} />
       </label>
       <label className="flex items-center gap-2">
         <span className="text-texte-doux">Repas par jour</span>
@@ -395,6 +383,59 @@ function Reglage({
         </select>
       </label>
     </div>
+  )
+}
+
+/**
+ * Champ « Jours », avec une SAISIE LOCALE validée à la sortie.
+ *
+ * ⚠️ RÉGRESSION D'UN BUG RÉEL. La version précédente n'appelait `onChange` que si la valeur était
+ * déjà dans [2, 14] — et le champ était contrôlé sur l'état parent. Pour taper « 14 » il fallait
+ * passer par « 1 », rejeté, et React restaurait aussitôt l'ancienne valeur : la frappe était
+ * IMPOSSIBLE, seules les flèches fonctionnaient. Pire, chaque frappe valide replanifiait toute la
+ * semaine.
+ *
+ * D'où la séparation : on tape librement, on ne replanifie qu'à la validation (sortie du champ ou
+ * touche Entrée), et une saisie hors bornes revient à la dernière valeur valable plutôt que de
+ * lever — `planWeek` refuse une fenêtre hors de §7.1, et un écran d'erreur pour une frappe en cours
+ * serait absurde.
+ */
+function ChampJours({
+  valeur,
+  onValider,
+}: {
+  readonly valeur: number
+  readonly onValider: (jours: number) => void
+}) {
+  const [saisie, setSaisie] = useState(String(valeur))
+
+  // Le parent peut changer la valeur sans nous (reprise d'un plan enregistré) : on suit.
+  useEffect(() => setSaisie(String(valeur)), [valeur])
+
+  const valider = () => {
+    const jours = Number(saisie)
+    if (Number.isInteger(jours) && jours >= MIN_PLAN_DAYS && jours <= MAX_PLAN_DAYS) {
+      if (jours !== valeur) onValider(jours)
+      return
+    }
+    setSaisie(String(valeur))
+  }
+
+  return (
+    <input
+      type="number"
+      inputMode="numeric"
+      min={MIN_PLAN_DAYS}
+      max={MAX_PLAN_DAYS}
+      value={saisie}
+      onChange={(e) => setSaisie(e.target.value)}
+      onBlur={valider}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur()
+      }}
+      aria-label={`Nombre de jours, entre ${MIN_PLAN_DAYS} et ${MAX_PLAN_DAYS}`}
+      className="min-h-tactile w-20 rounded-[0.6rem] border border-bordure-forte bg-fond px-3 tabular-nums text-texte"
+    />
   )
 }
 

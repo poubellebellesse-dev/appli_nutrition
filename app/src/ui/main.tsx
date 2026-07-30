@@ -19,7 +19,6 @@ import { DetailRecette } from './screens/detail-recette.js'
 import { Frigo } from './screens/frigo.js'
 import { Savoir } from './screens/savoir.js'
 import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
-import { Bientot } from './screens/bientot.js'
 import { Navigation } from './navigation.js'
 import { chargerSocle } from './socle.js'
 import { aConsenti } from '../data/user-store.js'
@@ -45,14 +44,6 @@ const MESSAGE: Readonly<Record<Exclude<Alerte, 'aucune'>, string>> = {
     "Vos réglages sont enregistrés sur cet appareil, mais le navigateur ne garantit pas de les conserver. Ajoutez l'application à votre écran d'accueil pour ne rien perdre.",
 }
 
-const TITRE: Readonly<Record<Onglet, string>> = {
-  aujourdhui: "Aujourd'hui",
-  semaine: 'Semaine',
-  courses: 'Courses',
-  recettes: 'Recettes',
-  savoir: 'Savoir',
-}
-
 function Ecran({ onglet, sousVue }: { readonly onglet: Onglet; readonly sousVue: SousVue }) {
   // La sous-vue prime sur l'onglet : fiche et frigo appartiennent à `recettes`, mais on y arrive
   // aussi depuis la semaine, les courses ou Aujourd'hui.
@@ -62,8 +53,10 @@ function Ecran({ onglet, sousVue }: { readonly onglet: Onglet; readonly sousVue:
   if (onglet === 'semaine') return <Semaine />
   if (onglet === 'courses') return <Courses />
   if (onglet === 'recettes') return <Recettes />
-  if (onglet === 'savoir') return <Savoir />
-  return <Bientot route={onglet} titre={TITRE[onglet]} />
+  // ⚠️ PAS DE BRANCHE PAR DÉFAUT. Les cinq onglets ont désormais un écran ; un repli
+  // « pas encore construit » serait du code mort qui MENT sur des écrans qui existent. Si un
+  // sixième onglet apparaît sans son écran, TypeScript signalera le chemin manquant ici.
+  return <Savoir />
 }
 
 function Coquille() {

@@ -291,8 +291,15 @@ export function Frigo() {
             />
           )}
 
+          {/* ⚠️ DIRE QUE LA LISTE EST COUPÉE. Annoncer « 241 recettes » puis n'en afficher que 30
+              sans un mot ressemble à un bug d'affichage — c'était le cas. La liste est classée par
+              couverture : au-delà des premières, la couverture devient dérisoire, mais c'est à
+              l'écran de le dire, pas à l'utilisateur de le deviner. */}
           <p className="mt-4 text-[0.95rem] text-attenue">
             {resultats.matches.length} recette{resultats.matches.length > 1 ? 's' : ''}
+            {resultats.matches.length > RESULTATS_AFFICHES && (
+              <> — les {RESULTATS_AFFICHES} mieux couvertes sont affichées</>
+            )}
             {realisablesSeules && resultats.matches.length === 0 && (
               <> — rien n'est réalisable en l'état. Essayez « Tout montrer ».</>
             )}
