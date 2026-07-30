@@ -427,6 +427,13 @@ export interface PantryRequest {
   readonly pantryFoodIds: readonly FoodId[]
   /** §4.5 : réglage « Seulement ce que je peux faire maintenant ». Défaut `false`. */
   readonly seulementRealisables?: boolean
+  /**
+   * Filtres de facettes, LES MÊMES qu'`browseRecipes` — §4.5 veut « les mêmes filtres que
+   * Recettes ». Les faire diverger entre les deux écrans obligerait l'utilisateur à réapprendre le
+   * filtrage selon l'endroit d'où il vient.
+   */
+  readonly facettes?: FiltresFacettes
+  readonly tempsMaxMin?: number | null
 }
 
 export interface PantryMatch {
@@ -624,8 +631,15 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
         depart
       )
 
+      // Les filtres de facettes s'appliquent APRÈS l'exclusion et AVANT le classement : ils
+      // réduisent l'ensemble regardé, ils ne réordonnent rien.
+      const retenues = filtrerRecettes(enrichedCatalog, indexRecherche, exclusion.candidates, {
+        ...(req.facettes === undefined ? {} : { facettes: req.facettes }),
+        ...(req.tempsMaxMin === undefined ? {} : { tempsMaxMin: req.tempsMaxMin }),
+      })
+
       const matches: PantryMatch[] = []
-      for (const recipeId of exclusion.candidates) {
+      for (const recipeId of retenues) {
         const manquants = ingredientsManquants(recipeId, enrichedCatalog, garde)
         if (req.seulementRealisables === true && manquants.length > 0) continue
         matches.push({ recipeId, couverture: scorePantry(recipeId, enrichedCatalog, garde), manquants })

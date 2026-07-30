@@ -287,6 +287,37 @@ describe('searchByPantry — « vider le frigo » sur le catalogue réel', () =>
     expect(resultat.entonnoir.byLayer.get('allergenes')).toBeGreaterThan(0)
   })
 
+  it('accepte LES MÊMES filtres de facette que la recherche — §4.5 « les mêmes que Recettes »', () => {
+    const garde = gardeManger(6)
+    const sansFiltre = moteur.searchByPantry({ constraints: SANS_CONTRAINTE, pantryFoodIds: garde })
+    const filtre = moteur.searchByPantry({
+      constraints: SANS_CONTRAINTE,
+      pantryFoodIds: garde,
+      facettes: new Map([['cuisine' as FacetteKind, ['italienne']]]),
+    })
+
+    expect(filtre.matches.length).toBeLessThan(sansFiltre.matches.length)
+    expect(filtre.matches.length).toBeGreaterThan(0)
+    for (const match of filtre.matches) {
+      const cuisines = catalogue.recipes
+        .get(match.recipeId)!
+        .facettes.filter((f) => f.facette === 'cuisine')
+        .map((f) => f.valeur)
+      expect(cuisines).toContain('italienne')
+    }
+  })
+
+  it('garde le classement par couverture APRÈS filtrage — filtrer ne réordonne pas', () => {
+    const filtre = moteur.searchByPantry({
+      constraints: SANS_CONTRAINTE,
+      pantryFoodIds: gardeManger(6),
+      facettes: new Map([['cuisine' as FacetteKind, ['francaise']]]),
+    })
+    for (let i = 1; i < filtre.matches.length; i++) {
+      expect(filtre.matches[i - 1]!.couverture).toBeGreaterThanOrEqual(filtre.matches[i]!.couverture)
+    }
+  })
+
   it('rend une couverture nulle et tout en manquant sur un garde-manger vide', () => {
     const resultat = moteur.searchByPantry({ constraints: SANS_CONTRAINTE, pantryFoodIds: [] })
     expect(resultat.matches.length).toBe(catalogue.recipes.size)

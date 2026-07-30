@@ -6,10 +6,11 @@
 // les autres restent atteignables, et on écrit EN CLAIR ce qu'il manque. Le réglage « Réalisables
 // maintenant » existe pour ceux qui veulent l'inverse — jamais par défaut.
 //
-// ⚠️ LA COUVERTURE EST PONDÉRÉE PAR LA MASSE. Avoir le sel et le poivre d'un bœuf bourguignon ne
-// couvre rien ; avoir le bœuf couvre l'essentiel. La jauge affiche donc cette masse, pas le
-// « 6 sur 8 » écrit à côté — les deux disent des choses différentes et c'est voulu : le compte
-// parle à l'utilisateur, la masse ordonne la liste.
+// ⚠️ LA COUVERTURE EST PONDÉRÉE PAR LA MASSE, ET L'ÉCRAN DOIT LE DIRE. Avoir le sel et le poivre
+// d'un bœuf bourguignon ne couvre rien ; avoir le bœuf couvre l'essentiel. La jauge affiche donc
+// cette masse, pas le « 1 sur 5 » écrit à côté — et une barre aux trois quarts en face d'un seul
+// ingrédient RESSEMBLE À UN BUG tant que rien ne l'explique. C'était le cas de la première version.
+// Le pourcentage est désormais écrit en toutes lettres à côté du compte.
 //
 // ⚠️ CE N'EST PAS UN ONGLET. §4.5 le veut accessible depuis Aujourd'hui et Recettes ; la barre
 // reste à cinq onglets stables (§2 DESIGN).
@@ -18,15 +19,29 @@
 // `suggestSubstitutions` n'est pas câblée et la table `substitution` est vide par décision 27.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { Catalog, FoodId, RecipeId } from '../../engine/domain/index.js'
-import type { Engine, PantryMatch } from '../../engine/api/index.js'
+import type { Catalog, FacetteKind, FoodId, RecipeId } from '../../engine/domain/index.js'
+import type { Engine, PantryMatch, PantryResult } from '../../engine/api/index.js'
 import { normaliser } from '../../engine/search/index.js'
 import { readUserState, writePantry } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import { hashDe, hashDeRecette } from '../router.js'
+import {
+  FILTRES_VIDES,
+  FiltresActifs,
+  FiltresRecettes,
+  aucunFiltre,
+  compterValeurs,
+  facettesDe,
+  sansFacette,
+  type Comptes,
+  type FiltresRecette,
+} from '../filtres-recettes.js'
 
-/** Combien de raccourcis proposer. Au-delà, la grille devient une liste et ne rend plus service. */
-const NOMBRE_RACCOURCIS = 8
+/** Combien de raccourcis par famille. Au-delà, la grille devient une liste et ne rend plus service. */
+const RACCOURCIS_PAR_FAMILLE = 8
+
+/** Facettes filtrables — les mêmes que l'écran Recettes (§4.4). */
+const FACETTES: readonly FacetteKind[] = ['cuisine' as FacetteKind, 'style' as FacetteKind]
 
 /** Combien de résultats afficher. La liste est classée : au-delà, la couverture devient dérisoire. */
 const RESULTATS_AFFICHES = 30
@@ -42,26 +57,49 @@ type Etat =
   | { readonly phase: 'pret'; readonly socle: Socle }
   | { readonly phase: 'erreur'; readonly message: string }
 
+interface Famille {
+  readonly groupe: string
+  readonly aliments: readonly FoodId[]
+}
+
 /**
- * Raccourcis « ajout rapide » — les aliments les plus PRÉSENTS dans les recettes.
+ * Raccourcis « ajout rapide », RANGÉS PAR FAMILLE — matières grasses, condiments, légumes…
  *
  * ⚠️ DÉRIVÉS DU CATALOGUE, jamais écrits à la main. Une liste figée (« pâtes, fromage, beurre… »)
  * survit à la disparition de ses aliments et propose alors des raccourcis qui ne débloquent rien.
- * Le fond de placard est écarté : déclarer qu'on a du sel n'apprend rien au moteur, tout le monde
- * en a.
+ * Les familles sont les `groupe` du catalogue, ordonnées par usage réel dans les recettes, et
+ * chacune ne montre que ses aliments les plus employés.
+ *
+ * ⚠️ LE FOND DE PLACARD EST INCLUS, contrairement à la première version. L'argument « tout le monde
+ * a du sel » vaut pour le sel — pas pour le curcuma, le cumin ou le laurier, qu'on n'a pas
+ * forcément et qui changent ce qu'on peut cuisiner. Les écarter rendait les épices inatteignables
+ * autrement qu'en tapant leur nom.
  */
-function raccourcis(catalogue: Catalog): readonly FoodId[] {
-  const compte = new Map<FoodId, number>()
+function famillesDeRaccourcis(catalogue: Catalog): readonly Famille[] {
+  const usage = new Map<FoodId, number>()
   for (const recette of catalogue.recipes.values()) {
     for (const ingredient of recette.ingredients) {
-      if (catalogue.foods.get(ingredient.foodId)?.fondDePlacard === true) continue
-      compte.set(ingredient.foodId, (compte.get(ingredient.foodId) ?? 0) + 1)
+      usage.set(ingredient.foodId, (usage.get(ingredient.foodId) ?? 0) + 1)
     }
   }
-  return [...compte.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, NOMBRE_RACCOURCIS)
-    .map(([id]) => id)
+
+  const parGroupe = new Map<string, FoodId[]>()
+  for (const aliment of catalogue.foods.values()) {
+    if ((usage.get(aliment.id) ?? 0) === 0) continue
+    const liste = parGroupe.get(aliment.groupe)
+    if (liste === undefined) parGroupe.set(aliment.groupe, [aliment.id])
+    else liste.push(aliment.id)
+  }
+
+  const total = (ids: readonly FoodId[]) => ids.reduce((n, id) => n + (usage.get(id) ?? 0), 0)
+  return [...parGroupe.entries()]
+    .map(([groupe, ids]) => ({
+      groupe,
+      aliments: [...ids]
+        .sort((a, b) => (usage.get(b) ?? 0) - (usage.get(a) ?? 0))
+        .slice(0, RACCOURCIS_PAR_FAMILLE),
+    }))
+    .sort((a, b) => total(b.aliments) - total(a.aliments))
 }
 
 export function Frigo() {
@@ -69,6 +107,8 @@ export function Frigo() {
   const [garde, setGarde] = useState<readonly FoodId[]>([])
   const [saisie, setSaisie] = useState('')
   const [realisablesSeules, setRealisablesSeules] = useState(false)
+  const [filtres, setFiltres] = useState<FiltresRecette>(FILTRES_VIDES)
+  const [deplie, setDeplie] = useState(false)
 
   useEffect(() => {
     let annule = false
@@ -117,14 +157,41 @@ export function Frigo() {
     [garde, enregistrer]
   )
 
+  /** Une requête frigo, à partir d'un jeu de filtres donné — les MÊMES que l'écran Recettes. */
+  const interroger = useCallback(
+    (socle: Socle, actifs: FiltresRecette): PantryResult =>
+      socle.moteur.searchByPantry({
+        constraints: socle.contraintes,
+        pantryFoodIds: garde,
+        seulementRealisables: realisablesSeules,
+        facettes: facettesDe(actifs),
+        tempsMaxMin: actifs.tempsMaxMin,
+      }),
+    [garde, realisablesSeules]
+  )
+
   const resultats = useMemo(() => {
     if (etat.phase !== 'pret' || garde.length === 0) return null
-    return etat.socle.moteur.searchByPantry({
-      constraints: etat.socle.contraintes,
-      pantryFoodIds: garde,
-      seulementRealisables: realisablesSeules,
-    })
-  }, [etat, garde, realisablesSeules])
+    return interroger(etat.socle, filtres)
+  }, [etat, garde, filtres, interroger])
+
+  /** Comptes dynamiques, chaque facette calculée SANS sa propre sélection — voir l'écran Recettes. */
+  const comptes: Comptes = useMemo(() => {
+    if (etat.phase !== 'pret' || garde.length === 0) return new Map()
+    const parFacette = new Map<FacetteKind, ReadonlyMap<string, number>>()
+    for (const facette of FACETTES) {
+      const sansElle = interroger(etat.socle, sansFacette(filtres, facette))
+      parFacette.set(
+        facette,
+        compterValeurs(
+          etat.socle.catalogue,
+          sansElle.matches.map((m) => m.recipeId),
+          facette
+        )
+      )
+    }
+    return parFacette
+  }, [etat, garde, filtres, interroger])
 
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement…</p>
   if (etat.phase === 'erreur') {
@@ -138,7 +205,7 @@ export function Frigo() {
 
   const { socle } = etat
   const nomDe = (id: FoodId) => socle.catalogue.foods.get(id)?.nom ?? String(id)
-  const suggestionsRapides = raccourcis(socle.catalogue).filter((id) => !garde.includes(id))
+  const familles = famillesDeRaccourcis(socle.catalogue)
 
   return (
     <section>
@@ -183,23 +250,7 @@ export function Frigo() {
         </div>
       )}
 
-      {suggestionsRapides.length > 0 && (
-        <div className="mt-5">
-          <h2 className="text-[0.95rem] text-texte-doux">Ajout rapide</h2>
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {suggestionsRapides.map((foodId) => (
-              <button
-                key={foodId}
-                type="button"
-                onClick={() => ajouter(foodId)}
-                className="flex min-h-tactile items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-2 text-center text-[0.92rem] font-semibold text-texte-doux"
-              >
-                {nomDe(foodId)}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      <AjoutRapide familles={familles} deja={garde} nomDe={nomDe} onAjouter={ajouter} />
 
       {resultats === null ? (
         <p className="mt-8 text-[1.05rem] leading-relaxed text-attenue">
@@ -222,6 +273,23 @@ export function Frigo() {
               />
             </div>
           </fieldset>
+
+          <FiltresRecettes
+            catalogue={socle.catalogue}
+            filtres={filtres}
+            comptes={comptes}
+            deplie={deplie}
+            onChange={setFiltres}
+            onDeplier={() => setDeplie((d) => !d)}
+          />
+
+          {!aucunFiltre(filtres) && (
+            <FiltresActifs
+              filtres={filtres}
+              onChange={setFiltres}
+              onVider={() => setFiltres(FILTRES_VIDES)}
+            />
+          )}
 
           <p className="mt-4 text-[0.95rem] text-attenue">
             {resultats.matches.length} recette{resultats.matches.length > 1 ? 's' : ''}
@@ -306,6 +374,76 @@ function Recherche({
   )
 }
 
+/**
+ * « Ajout rapide », rangé par famille.
+ *
+ * ⚠️ DES ONGLETS ET NON UNE GRILLE UNIQUE. Une grille des huit aliments les plus fréquents ne
+ * contient que des légumes et des bases : les huiles, les épices et la crèmerie n'y apparaissent
+ * jamais, alors que ce sont précisément les choses qu'on a « au fond du placard » et qu'on ne
+ * pense pas à taper. Les familles sont les `groupe` du catalogue, dans l'ordre de leur usage réel.
+ */
+function AjoutRapide({
+  familles,
+  deja,
+  nomDe,
+  onAjouter,
+}: {
+  readonly familles: readonly Famille[]
+  readonly deja: readonly FoodId[]
+  readonly nomDe: (id: FoodId) => string
+  readonly onAjouter: (id: FoodId) => void
+}) {
+  const [ouverte, setOuverte] = useState(0)
+  const famille = familles[ouverte]
+  if (famille === undefined) return null
+
+  const proposes = famille.aliments.filter((id) => !deja.includes(id))
+
+  return (
+    <div className="mt-5">
+      <h2 className="text-[0.95rem] text-texte-doux">Ajout rapide</h2>
+
+      {/* Défilement horizontal : quatorze familles ne tiennent pas sur la largeur d'un téléphone,
+          et les replier derrière un menu contredirait « navigation permanente et visible ». */}
+      <div className="mt-2 -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        {familles.map((f, index) => (
+          <button
+            key={f.groupe}
+            type="button"
+            onClick={() => setOuverte(index)}
+            aria-pressed={index === ouverte}
+            className={
+              'flex min-h-tactile shrink-0 items-center rounded-[0.7rem] px-3 text-[0.9rem] font-semibold ' +
+              (index === ouverte
+                ? 'border-2 border-accent bg-accent-doux text-accent-texte'
+                : 'border border-bordure-forte bg-surface text-texte-doux')
+            }
+          >
+            {f.groupe}
+          </button>
+        ))}
+      </div>
+
+      {proposes.length === 0 ? (
+        <p className="mt-2 text-[0.92rem] text-attenue">Vous avez déjà tout de cette famille.</p>
+      ) : (
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {proposes.map((foodId) => (
+            <button
+              key={foodId}
+              type="button"
+              onClick={() => onAjouter(foodId)}
+              className="flex min-h-tactile items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-2 text-center text-[0.92rem] font-semibold text-texte-doux"
+            >
+              {nomDe(foodId)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function Bascule({
   libelle,
   actif,
@@ -356,8 +494,13 @@ function Resultat({
         </a>
       </h3>
 
+      {/* ⚠️ LE POURCENTAGE EST ÉCRIT, pas seulement dessiné. La jauge mesure la MASSE, pas le
+          nombre : un seul ingrédient sur cinq peut représenter les trois quarts du plat si c'est la
+          pièce de viande. Sans cette phrase, la barre aux trois quarts en face d'un « 1 sur 5 »
+          passe pour un bug — c'est le retour d'usage qui a motivé ce texte. */}
       <p className="mt-2 text-[0.95rem] text-texte-doux">
-        {presents} ingrédient{presents > 1 ? 's' : ''} sur {requis} déjà chez vous
+        {presents} ingrédient{presents > 1 ? 's' : ''} sur {requis} déjà chez vous — soit {pourcent} %
+        du poids du plat
       </p>
 
       {/* ⚠️ La jauge affiche la couverture EN MASSE, pas le « x sur y » ci-dessus : les deux
@@ -366,7 +509,7 @@ function Resultat({
           un vert « ça va » réinstallerait un code couleur de jugement (§5 DESIGN). */}
       <div
         role="img"
-        aria-label={`Couverture ${pourcent} %`}
+        aria-label={`${pourcent} % du poids du plat`}
         className="mt-2 h-2 overflow-hidden rounded-full bg-bordure"
       >
         <span className="block h-full rounded-full bg-accent" style={{ width: `${pourcent}%` }} />

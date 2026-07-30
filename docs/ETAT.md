@@ -620,6 +620,10 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - **Écran Vider le frigo — reste à faire** : la substitution suggérée (« le cas échéant », §4.5).
   `suggestSubstitutions` n'est pas câblée et la table `substitution` est vide par décision 27 — il
   n'y a rien à suggérer tant que les couples n'existent pas.
+- ⚠️ **Les compteurs de pastilles coûtent une requête par facette.** Chaque facette est comptée
+  SANS sa propre sélection — sinon choisir `française` afficherait `italienne (0)` alors que la
+  retirer ramènerait 19 recettes. Deux requêtes de plus par changement de filtre, sur 241 recettes :
+  imperceptible aujourd'hui, à surveiller si le catalogue grossit d'un ordre de grandeur.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

@@ -11,30 +11,35 @@
 // `Engine.browseRecipes`, et le test `tests/recherche-catalogue-reel.test.ts` qui vérifie la
 // propriété sur TOUTES les recettes rendues, y compris quand on cherche explicitement le plat exclu.
 //
-// PÉRIMÈTRE — ce que §4.4 décrit et qui n'est PAS ici : l'état « Pourquoi pas ce plat ? » (nommer
-// la raison d'exclusion d'une recette précise — `entonnoir.entries` porte déjà la matière), le bloc
-// d'entrée « Vider le frigo » (l'écran 4.5 n'existe pas), et la catégorie « Loufoque », qui n'a
-// AUCUNE recette au catalogue : les six styles présents sont quotidien, convivial, simple,
-// reconfortant, rapide et gourmand. C'est du contenu à écrire, pas du code à ajouter.
+// ⚠️ LE CHAMP S'ANNONCE « RECHERCHER UN PLAT », alors que l'index couvre aussi les ingrédients
+// (§4.4 écrivait « plats, ingrédients, cuisines »). Ce n'est pas une omission : chercher par
+// ALIMENT, c'est « Vider le frigo », qui le fait mieux — il classe par couverture et dit ce qui
+// manque. Annoncer les deux ici ferait deux fonctions qui se marchent dessus. Taper « poulet »
+// continue de trouver des plats au poulet ; c'est bien ce que la promesse dit.
+//
+// PÉRIMÈTRE — ce que §4.4 décrit et qui n'est PAS ici : l'état « Pourquoi pas ce plat ? »
+// (`entonnoir.entries` porte déjà la matière), et la catégorie « Loufoque », qui n'a AUCUNE recette
+// au catalogue — six styles seulement, du contenu à écrire, pas du code à ajouter.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Catalog, ExclusionLayerId, FacetteKind, RecipeId } from '../../engine/domain/index.js'
+import { normaliser, valeursDeFacette } from '../../engine/search/index.js'
 import type { BrowseResult, Engine } from '../../engine/api/index.js'
-import { valeursDeFacette } from '../../engine/search/index.js'
+import {
+  FILTRES_VIDES,
+  FiltresActifs,
+  FiltresRecettes,
+  aucunFiltre,
+  compterValeurs,
+  facettesDe,
+  sansFacette,
+  type Comptes,
+  type FiltresRecette,
+} from '../filtres-recettes.js'
 import { readUserState, setFavorite } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { origineDeCuisine } from '../drapeaux.js'
-
-/** Combien de valeurs par facette montrer avant de replier (§4.4 : « deux rangées »). */
-const PASTILLES_VISIBLES = 5
-
-/** Paliers de temps total, en minutes. `null` = sans limite. */
-const PALIERS_TEMPS: readonly { readonly minutes: number | null; readonly libelle: string }[] = [
-  { minutes: 20, libelle: '20 min' },
-  { minutes: 40, libelle: '40 min' },
-  { minutes: 60, libelle: '1 h' },
-]
 
 const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
   allergenes: 'allergènes',
@@ -46,30 +51,20 @@ const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
   favoris: 'favoris',
 }
 
+/** Facettes dont l'écran affiche des pastilles — celles qu'il faut compter dynamiquement. */
+const FACETTES: readonly FacetteKind[] = ['cuisine' as FacetteKind, 'style' as FacetteKind]
+
+/** Ce que cet écran ajoute aux filtres communs à « Recettes » et « Vider le frigo ». */
 interface Filtres {
+  readonly commun: FiltresRecette
   readonly texte: string
-  readonly cuisines: readonly string[]
-  readonly styles: readonly string[]
-  readonly tempsMaxMin: number | null
   readonly favorisSeuls: boolean
 }
 
-const FILTRES_VIDES: Filtres = {
-  texte: '',
-  cuisines: [],
-  styles: [],
-  tempsMaxMin: null,
-  favorisSeuls: false,
-}
+const FILTRES_ECRAN: Filtres = { commun: FILTRES_VIDES, texte: '', favorisSeuls: false }
 
-function aucunFiltre(f: Filtres): boolean {
-  return (
-    f.texte.trim() === '' &&
-    f.cuisines.length === 0 &&
-    f.styles.length === 0 &&
-    f.tempsMaxMin === null &&
-    !f.favorisSeuls
-  )
+function aucunFiltreEcran(f: Filtres): boolean {
+  return aucunFiltre(f.commun) && f.texte.trim() === '' && !f.favorisSeuls
 }
 
 interface Socle {
@@ -86,7 +81,7 @@ type Etat =
 
 export function Recettes() {
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
-  const [filtres, setFiltres] = useState<Filtres>(FILTRES_VIDES)
+  const [filtres, setFiltres] = useState<Filtres>(FILTRES_ECRAN)
   const [deplie, setDeplie] = useState(false)
 
   const rafraichir = useCallback(() => {
@@ -125,20 +120,42 @@ export function Recettes() {
     [rafraichir]
   )
 
-  const resultat: BrowseResult | null = useMemo(() => {
-    if (etat.phase !== 'pret') return null
-    const facettes = new Map<FacetteKind, readonly string[]>()
-    if (filtres.cuisines.length > 0) facettes.set('cuisine' as FacetteKind, filtres.cuisines)
-    if (filtres.styles.length > 0) facettes.set('style' as FacetteKind, filtres.styles)
-    return etat.socle.moteur.browseRecipes({
-      constraints: etat.socle.contraintes,
-      texte: filtres.texte,
-      facettes,
-      tempsMaxMin: filtres.tempsMaxMin,
-      favoriteRecipeIds: etat.socle.favoris,
-      onlyFavorites: filtres.favorisSeuls,
-    })
-  }, [etat, filtres])
+  /** Une requête de parcours, à partir d'un jeu de filtres communs donné. */
+  const interroger = useCallback(
+    (socle: Socle, commun: FiltresRecette): BrowseResult =>
+      socle.moteur.browseRecipes({
+        constraints: socle.contraintes,
+        texte: filtres.texte,
+        facettes: facettesDe(commun),
+        tempsMaxMin: commun.tempsMaxMin,
+        favoriteRecipeIds: socle.favoris,
+        onlyFavorites: filtres.favorisSeuls,
+      }),
+    [filtres.texte, filtres.favorisSeuls]
+  )
+
+  const resultat = useMemo(
+    () => (etat.phase === 'pret' ? interroger(etat.socle, filtres.commun) : null),
+    [etat, filtres.commun, interroger]
+  )
+
+  /**
+   * Comptes des pastilles, recalculés à chaque changement de filtre.
+   *
+   * ⚠️ CHAQUE FACETTE EST COMPTÉE SANS SA PROPRE SÉLECTION. Avec `française` choisie, tous les
+   * résultats sont français ; compter `italienne` sur ce jeu donnerait 0, alors que retirer
+   * `française` ramènerait 19 recettes. On refait donc une requête par facette en neutralisant
+   * celle qu'on compte — deux requêtes de plus sur 241 recettes, sans conséquence perceptible.
+   */
+  const comptes: Comptes = useMemo(() => {
+    if (etat.phase !== 'pret') return new Map()
+    const parFacette = new Map<FacetteKind, ReadonlyMap<string, number>>()
+    for (const facette of FACETTES) {
+      const sansElle = interroger(etat.socle, sansFacette(filtres.commun, facette))
+      parFacette.set(facette, compterValeurs(etat.socle.catalogue, sansElle.recipeIds, facette))
+    }
+    return parFacette
+  }, [etat, filtres.commun, interroger])
 
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement du catalogue…</p>
   if (etat.phase === 'erreur') {
@@ -151,8 +168,6 @@ export function Recettes() {
   }
 
   const { socle } = etat
-  const cuisines = valeursDeFacette(socle.catalogue, 'cuisine' as FacetteKind)
-  const styles = valeursDeFacette(socle.catalogue, 'style' as FacetteKind)
   const trouvees = resultat?.recipeIds ?? []
 
   return (
@@ -166,7 +181,7 @@ export function Recettes() {
       />
 
       {/* « Bloc d'entrée distinct Vider le frigo » (§4.4) — un chemin différent : on n'y cherche
-          pas une recette, on part de ce qu'on a. */}
+          pas une recette, on part de ce qu'on a. C'est là que vit la recherche par ALIMENT. */}
       <a
         href={hashDuFrigo()}
         className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte no-underline"
@@ -189,60 +204,34 @@ export function Recettes() {
         Mes favoris ({socle.favoris.size})
       </button>
 
-      <Pastilles
-        titre="Cuisine"
-        valeurs={cuisines}
-        choisies={filtres.cuisines}
+      <FiltresRecettes
+        catalogue={socle.catalogue}
+        filtres={filtres.commun}
+        comptes={comptes}
         deplie={deplie}
-        onBasculer={(v) => setFiltres({ ...filtres, cuisines: basculerValeur(filtres.cuisines, v) })}
-      />
-      <Pastilles
-        titre="Style"
-        valeurs={styles}
-        choisies={filtres.styles}
-        deplie={deplie}
-        onBasculer={(v) => setFiltres({ ...filtres, styles: basculerValeur(filtres.styles, v) })}
+        onChange={(commun) => setFiltres({ ...filtres, commun })}
+        onDeplier={() => setDeplie((d) => !d)}
       />
 
-      {deplie && (
-        <fieldset className="mt-4">
-          <legend className="text-[0.9rem] text-texte-doux">Temps maximum</legend>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {PALIERS_TEMPS.map((palier) => (
-              <Pastille
-                key={palier.libelle}
-                libelle={palier.libelle}
-                active={filtres.tempsMaxMin === palier.minutes}
-                onBasculer={() =>
-                  setFiltres({
-                    ...filtres,
-                    tempsMaxMin: filtres.tempsMaxMin === palier.minutes ? null : palier.minutes,
-                  })
-                }
-              />
-            ))}
-          </div>
-        </fieldset>
-      )}
-
-      <button
-        type="button"
-        onClick={() => setDeplie((d) => !d)}
-        aria-expanded={deplie}
-        className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux"
-      >
-        {deplie ? 'Moins de filtres' : 'Plus de filtres'}
-      </button>
-
-      {!aucunFiltre(filtres) && (
-        <FiltresActifs filtres={filtres} onVider={() => setFiltres(FILTRES_VIDES)} onChange={setFiltres} />
+      {!aucunFiltreEcran(filtres) && (
+        <FiltresActifs
+          filtres={filtres.commun}
+          extra={[
+            ...(filtres.texte.trim() === ''
+              ? []
+              : [{ libelle: `« ${filtres.texte} »`, retirer: () => setFiltres({ ...filtres, texte: '' }) }]),
+            ...(filtres.favorisSeuls
+              ? [{ libelle: 'Mes favoris', retirer: () => setFiltres({ ...filtres, favorisSeuls: false }) }]
+              : []),
+          ]}
+          onChange={(commun) => setFiltres({ ...filtres, commun })}
+          onVider={() => setFiltres(FILTRES_ECRAN)}
+        />
       )}
 
       {/* Entonnoir des écartées (§6.8 ENGINE) — le différenciateur : dire CE QUI a été retiré et
           par quoi, au lieu de laisser croire que le catalogue est petit. */}
-      {resultat !== null && resultat.entonnoir.totalRejected > 0 && (
-        <Entonnoir resultat={resultat} />
-      )}
+      {resultat !== null && resultat.entonnoir.totalRejected > 0 && <Entonnoir resultat={resultat} />}
 
       <p className="mt-5 text-[0.95rem] text-attenue">
         {trouvees.length} recette{trouvees.length > 1 ? 's' : ''}
@@ -259,17 +248,11 @@ export function Recettes() {
               key={id}
               className="flex items-stretch rounded-[--radius-carte] border border-bordure bg-surface"
             >
-              {/* La CARTE ENTIÈRE ouvre la fiche, pas seulement le titre : même raison que la
-                  ligne cochable des courses — viser un mot de 12 px est hors de portée d'une main
-                  tremblante. L'étoile reste en dehors du lien pour rester actionnable seule. */}
-              <a
-                href={hashDeRecette(id)}
-                className="flex-1 p-3 no-underline"
-              >
+              {/* La CARTE ENTIÈRE ouvre la fiche, pas seulement le titre : viser un mot de 12 px est
+                  hors de portée d'une main tremblante. L'étoile reste hors du lien pour rester
+                  actionnable seule. */}
+              <a href={hashDeRecette(id)} className="flex-1 p-3 no-underline">
                 <h2 className="font-titre text-[1.2rem] leading-snug text-texte">
-                  {/* Drapeau AVANT le nom, purement décoratif : le nom de la cuisine reste lisible
-                      dans les pastilles de filtre, et sur Windows le glyphe se dégrade en « FR »
-                      sans gêner la lecture du titre. */}
                   {drapeauDe(recette)}
                   {recette.nom}
                 </h2>
@@ -299,7 +282,9 @@ export function Recettes() {
 }
 
 /** Premier drapeau connu parmi les cuisines de la recette, ou rien. */
-function drapeauDe(recette: { readonly facettes: readonly { readonly facette: string; readonly valeur: string }[] }) {
+function drapeauDe(recette: {
+  readonly facettes: readonly { readonly facette: string; readonly valeur: string }[]
+}) {
   for (const facette of recette.facettes) {
     if (facette.facette !== 'cuisine') continue
     const origine = origineDeCuisine(facette.valeur)
@@ -314,17 +299,15 @@ function drapeauDe(recette: { readonly facettes: readonly { readonly facette: st
   return null
 }
 
-function basculerValeur(liste: readonly string[], valeur: string): readonly string[] {
-  return liste.includes(valeur) ? liste.filter((v) => v !== valeur) : [...liste, valeur]
-}
-
 /**
  * Champ de recherche avec autocomplétion.
  *
- * ⚠️ `<datalist>` NATIF plutôt qu'une liste déroulante maison. Le composant natif est déjà
- * accessible au clavier et au lecteur d'écran, il s'affiche correctement sur mobile, et il ne
- * capture pas le focus. Une liste maison demanderait de reproduire tout ça — pour un gain visuel
- * que §4.4 ne réclame pas.
+ * ⚠️ `<datalist>` NATIF plutôt qu'une liste maison : déjà accessible au clavier et au lecteur
+ * d'écran, correct sur mobile, et il ne capture pas le focus.
+ *
+ * ⚠️ LES SUGGESTIONS SONT DES PLATS ET DES CUISINES, PAS DES ALIMENTS. Proposer « courgette » ici
+ * enverrait vers une liste de plats qui en contiennent, là où « Vider le frigo » répond bien mieux
+ * à cette intention. Deux entrées pour la même chose brouilleraient la différence entre les écrans.
  */
 function Recherche({
   catalogue,
@@ -335,157 +318,40 @@ function Recherche({
   readonly valeur: string
   readonly onChange: (texte: string) => void
 }) {
-  // Suggestions : plats, ingrédients et cuisines (§4.4). Calculées une fois, pas par frappe.
   const suggestions = useMemo(() => {
     const mots = new Set<string>()
     for (const recette of catalogue.recipes.values()) mots.add(recette.nom)
-    for (const aliment of catalogue.foods.values()) mots.add(aliment.nom)
     for (const { valeur: cuisine } of valeursDeFacette(catalogue, 'cuisine' as FacetteKind)) {
       mots.add(cuisine)
     }
     return [...mots]
   }, [catalogue])
 
+  // Filtrées à la frappe : 267 options dans un `<datalist>` rendent la liste inutilisable sur
+  // mobile, où elle s'ouvre en plein écran.
+  const proposees = useMemo(() => {
+    const cherche = normaliser(valeur.trim())
+    if (cherche.length < 2) return []
+    return suggestions.filter((mot) => normaliser(mot).includes(cherche)).slice(0, 8)
+  }, [suggestions, valeur])
+
   return (
     <label className="mt-4 block">
-      <span className="text-[0.9rem] text-texte-doux">Rechercher un plat, un ingrédient</span>
+      <span className="text-[0.9rem] text-texte-doux">Rechercher un plat</span>
       <input
         type="search"
         list="suggestions-recettes"
         value={valeur}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="poulet, crème, italienne…"
+        placeholder="blanquette, tajine, gratin…"
         className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[1.05rem] text-texte"
       />
       <datalist id="suggestions-recettes">
-        {suggestions.map((mot) => (
+        {proposees.map((mot) => (
           <option key={mot} value={mot} />
         ))}
       </datalist>
     </label>
-  )
-}
-
-function Pastilles({
-  titre,
-  valeurs,
-  choisies,
-  deplie,
-  onBasculer,
-}: {
-  readonly titre: string
-  readonly valeurs: readonly { readonly valeur: string; readonly nombre: number }[]
-  readonly choisies: readonly string[]
-  readonly deplie: boolean
-  readonly onBasculer: (valeur: string) => void
-}) {
-  // Repliées : les plus fréquentes d'abord (l'ordre vient de `valeursDeFacette`), plus celles déjà
-  // choisies — masquer un filtre actif le rendrait impossible à retirer depuis cette rangée.
-  const visibles = deplie
-    ? valeurs
-    : valeurs.filter((v, i) => i < PASTILLES_VISIBLES || choisies.includes(v.valeur))
-
-  return (
-    <fieldset className="mt-4">
-      <legend className="text-[0.9rem] text-texte-doux">{titre}</legend>
-      <div className="mt-2 flex flex-wrap gap-2">
-        {visibles.map((v) => (
-          <Pastille
-            key={v.valeur}
-            libelle={`${v.valeur} (${v.nombre})`}
-            active={choisies.includes(v.valeur)}
-            onBasculer={() => onBasculer(v.valeur)}
-          />
-        ))}
-      </div>
-    </fieldset>
-  )
-}
-
-function Pastille({
-  libelle,
-  active,
-  onBasculer,
-}: {
-  readonly libelle: string
-  readonly active: boolean
-  readonly onBasculer: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onBasculer}
-      aria-pressed={active}
-      className={
-        'flex min-h-tactile items-center rounded-[0.7rem] px-3 text-[0.92rem] font-semibold ' +
-        (active
-          ? 'border-2 border-accent bg-accent-doux text-accent-texte'
-          : 'border border-bordure-forte bg-surface text-texte-doux')
-      }
-    >
-      {libelle}
-    </button>
-  )
-}
-
-/** Filtres actifs, chacun RETIRABLE D'UN TAP (§4.4). */
-function FiltresActifs({
-  filtres,
-  onChange,
-  onVider,
-}: {
-  readonly filtres: Filtres
-  readonly onChange: (filtres: Filtres) => void
-  readonly onVider: () => void
-}) {
-  const actifs: { readonly libelle: string; readonly retirer: () => void }[] = []
-  if (filtres.texte.trim() !== '') {
-    actifs.push({ libelle: `« ${filtres.texte} »`, retirer: () => onChange({ ...filtres, texte: '' }) })
-  }
-  if (filtres.favorisSeuls) {
-    actifs.push({ libelle: 'Mes favoris', retirer: () => onChange({ ...filtres, favorisSeuls: false }) })
-  }
-  for (const cuisine of filtres.cuisines) {
-    actifs.push({
-      libelle: cuisine,
-      retirer: () => onChange({ ...filtres, cuisines: filtres.cuisines.filter((c) => c !== cuisine) }),
-    })
-  }
-  for (const style of filtres.styles) {
-    actifs.push({
-      libelle: style,
-      retirer: () => onChange({ ...filtres, styles: filtres.styles.filter((s) => s !== style) }),
-    })
-  }
-  if (filtres.tempsMaxMin !== null) {
-    actifs.push({
-      libelle: `≤ ${filtres.tempsMaxMin} min`,
-      retirer: () => onChange({ ...filtres, tempsMaxMin: null }),
-    })
-  }
-
-  return (
-    <div className="mt-4 flex flex-wrap items-center gap-2">
-      {actifs.map((actif) => (
-        <button
-          key={actif.libelle}
-          type="button"
-          onClick={actif.retirer}
-          aria-label={`Retirer le filtre ${actif.libelle}`}
-          className="flex min-h-tactile items-center gap-2 rounded-[0.7rem] border-2 border-accent bg-accent-doux px-3 text-[0.92rem] font-semibold text-accent-texte"
-        >
-          {actif.libelle}
-          <span aria-hidden="true">×</span>
-        </button>
-      ))}
-      <button
-        type="button"
-        onClick={onVider}
-        className="flex min-h-tactile items-center px-3 text-[0.92rem] font-semibold text-attenue underline"
-      >
-        Tout retirer
-      </button>
-    </div>
   )
 }
 
@@ -494,7 +360,7 @@ function FiltresActifs({
  *
  * ⚠️ NE COMPTE QUE LES EXCLUSIONS DURES. Les recettes écartées par la recherche ou par une pastille
  * n'y figurent pas : l'utilisateur vient de les exclure lui-même, les présenter comme « écartées »
- * rendrait le chiffre incompréhensible. L'entonnoir dit ce que ses CONTRAINTES lui retirent.
+ * rendrait le chiffre incompréhensible.
  */
 function Entonnoir({ resultat }: { readonly resultat: BrowseResult }) {
   const etapes = [...resultat.entonnoir.byLayer.entries()].filter(([, n]) => n > 0)
