@@ -13,6 +13,7 @@ import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Aujourdhui } from './screens/aujourdhui.js'
 import { Semaine } from './screens/semaine.js'
+import { Courses } from './screens/courses.js'
 import { Bientot } from './screens/bientot.js'
 import { Navigation } from './navigation.js'
 import { chargerSocle } from './socle.js'
@@ -49,6 +50,7 @@ const TITRE: Readonly<Record<Route, string>> = {
 function Ecran({ route }: { readonly route: Route }) {
   if (route === 'aujourdhui') return <Aujourdhui />
   if (route === 'semaine') return <Semaine />
+  if (route === 'courses') return <Courses />
   return <Bientot route={route} titre={TITRE[route]} />
 }
 

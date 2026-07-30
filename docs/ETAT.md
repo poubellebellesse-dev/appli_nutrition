@@ -424,7 +424,7 @@ l'interface mais de **prouver la chaîne complète dans un navigateur** avant d'
 |---|---|---|---|
 | 4.1 | 📅 **Aujourd'hui** | `suggestMeals` ✅ | **Livré**, sans photo ni tags cliquables |
 | 4.2 | 🗓 **Semaine** | `planWeek` · `rerollSlot` · `planLeftovers` ✅ | **Livré** (2026-07-30) — hors carrousel, vue « 3 propositions », écarter/pouce-bas |
-| 4.3 | 🛒 **Courses** | `buildShoppingList` ✅ (`pourSlots` couvre « ranger par repas / jour ») | Prêt à coder |
+| 4.3 | 🛒 **Courses** | `buildShoppingList` ✅ (`pourSlots` couvre « ranger par repas / jour ») | **Livré** (2026-07-30) — hors autocomplétion, impression/export, « Que cuisiner avec ? » |
 | 4.4 | 📖 **Recettes** | ⛔ **rien** — aucune API de recherche / filtre / autocomplétion | À concevoir d'abord |
 | 4.5 | 💡 **Vider le frigo** | couche `pantry` + `ingredientsManquants` ✅ | Prêt à coder |
 | 4.6 | **Détail d'une recette** | `scaleRecipe` ✅ · lexique 62 gestes ✅ | Prêt à coder |
@@ -582,6 +582,10 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   build de production (`npx vite build && npx vite preview`), jamais en `npm run dev`.
 - ⚠️ **Pour Play (TWA), il manque l'hébergement** : origine HTTPS + `/.well-known/assetlinks.json`.
   Sans ce fichier, la barre d'URL ne se masque pas. Hébergeur et domaine non choisis.
+- **Écran Courses — reste à faire** (§4.3 DESIGN) : l'autocomplétion sur les aliments du catalogue
+  (un ajout manuel est aujourd'hui du texte libre, sans `FoodId`), l'impression et l'export CSV/JSON
+  du menu discret, « Que cuisiner avec ? » et « Vider le frigo » pré-rempli (l'écran 4.5 n'existe
+  pas), le découpage en deux virées (`joursDeCourses`, §7.4).
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

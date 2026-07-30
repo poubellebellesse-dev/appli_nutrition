@@ -21,6 +21,7 @@ import type {
   UserProfile,
   WeekPlan,
   MealSlot,
+  ShoppingList,
 } from '../engine/domain/index.js'
 import { openUserDb, type OpenedUserDb } from './user-store-node.js'
 import type { UserDb } from './user-db.js'
@@ -36,10 +37,17 @@ import {
   readPantryFoodIds,
   readPreferences,
   readProfile,
+  addExtraItem,
+  readExtraItems,
   readLatestPlan,
   readPlan,
+  readShoppingList,
   readUserState,
+  removeExtraItem,
   savePlan,
+  saveShoppingList,
+  setCoche,
+  setExtraCoche,
   recordMeal,
   setFavorite,
   writeActiveTopics,
@@ -543,5 +551,133 @@ describe('user-schema — ce que la migration v2 corrige', () => {
       )
     inserer()
     expect(inserer).toThrow()
+  })
+})
+
+describe('user-store — liste de courses', () => {
+  const PLAN_ID = 'plan-2026-08-03-3'
+
+  const liste = (...aliments: readonly string[]): ShoppingList => ({
+    planId: PLAN_ID,
+    generatedAt: '2026-08-03',
+    items: aliments.map((foodId) => ({
+      foodId: foodId as FoodId,
+      quantiteTotale: 250,
+      unite: 'g',
+      rayon: 'épicerie',
+      tranche: 0,
+      pourSlots: [{ date: '2026-08-03', creneau: 'diner' as MealSlot }],
+    })),
+  })
+
+  beforeEach(() => {
+    // La liste référence un plan : sans lui, la clé étrangère refuse l'insertion.
+    savePlan(db, {
+      id: PLAN_ID,
+      startDate: '2026-08-03',
+      days: 3,
+      seed: 1,
+      entries: [],
+      warnings: [],
+    })
+  })
+
+  it('rend null tant qu’aucune liste n’a été enregistrée', () => {
+    expect(readShoppingList(db)).toBeNull()
+  })
+
+  it('enregistre puis relit, avec aucune case cochée au départ', () => {
+    saveShoppingList(db, liste('farine_ble', 'oeuf'))
+    const relue = readShoppingList(db)
+    expect(relue?.planId).toBe(PLAN_ID)
+    expect(relue?.coches.size).toBe(0)
+    expect(relue?.extras).toEqual([])
+  })
+
+  it('CONSERVE les cases cochées quand la liste est régénérée', () => {
+    // Le comportement qui compte : ajouter un dîner à la semaine ne doit pas effacer les vingt
+    // lignes déjà cochées au supermarché.
+    saveShoppingList(db, liste('farine_ble', 'oeuf'))
+    const id = readShoppingList(db)!.id
+    setCoche(db, id, 'farine_ble' as FoodId, true)
+
+    saveShoppingList(db, liste('farine_ble', 'oeuf', 'lait_entier'))
+    const relue = readShoppingList(db)
+    expect(relue?.coches.has('farine_ble' as FoodId)).toBe(true)
+    expect(relue?.coches.has('oeuf' as FoodId)).toBe(false)
+  })
+
+  it('PERD le cochage d’un aliment qui sort du plan — il n’est plus à acheter', () => {
+    saveShoppingList(db, liste('farine_ble', 'oeuf'))
+    const id = readShoppingList(db)!.id
+    setCoche(db, id, 'oeuf' as FoodId, true)
+
+    saveShoppingList(db, liste('farine_ble'))
+    expect(readShoppingList(db)?.coches.has('oeuf' as FoodId)).toBe(false)
+  })
+
+  it('sait décocher', () => {
+    saveShoppingList(db, liste('farine_ble'))
+    const id = readShoppingList(db)!.id
+    setCoche(db, id, 'farine_ble' as FoodId, true)
+    setCoche(db, id, 'farine_ble' as FoodId, false)
+    expect(readShoppingList(db)?.coches.size).toBe(0)
+  })
+
+  it('NE SUPPRIME PAS les articles ajoutés à la main lors d’une régénération', () => {
+    // Ils ne viennent pas du plan : les régénérer n'aurait pas de sens, et les perdre à chaque
+    // replanification serait une trahison.
+    saveShoppingList(db, liste('farine_ble'))
+    const id = readShoppingList(db)!.id
+    addExtraItem(db, id, { libelle: 'Lessive', rayon: 'lessive & linge' })
+
+    saveShoppingList(db, liste('farine_ble', 'oeuf'))
+    const extras = readShoppingList(db)!.extras
+    expect(extras).toHaveLength(1)
+    expect(extras[0]?.libelle).toBe('Lessive')
+  })
+
+  it('fait l’aller-retour sur un article non alimentaire, coché puis supprimé', () => {
+    saveShoppingList(db, liste('farine_ble'))
+    const id = readShoppingList(db)!.id
+    addExtraItem(db, id, { libelle: 'Croquettes chat', rayon: 'animaux', quantite: '2 kg' })
+
+    const article = readExtraItems(db, id)[0]!
+    expect(article.rayon).toBe('animaux')
+    expect(article.quantite).toBe('2 kg')
+    expect(article.coche).toBe(false)
+
+    setExtraCoche(db, article.id, true)
+    expect(readExtraItems(db, id)[0]?.coche).toBe(true)
+
+    removeExtraItem(db, article.id)
+    expect(readExtraItems(db, id)).toEqual([])
+  })
+
+  it('SURVIT à un réenregistrement du plan — verrouiller un créneau ne vide pas les courses', () => {
+    // ⚠️ RÉGRESSION D'UN BUG RÉEL. `savePlan` faisait un `INSERT OR REPLACE`, qui SUPPRIME la ligne
+    // avant de réinsérer et déclenche donc les ON DELETE CASCADE : la liste de courses et ses
+    // articles disparaissaient. Or l'écran Semaine appelle `savePlan` à chaque « Garder ».
+    saveShoppingList(db, liste('farine_ble'))
+    const id = readShoppingList(db)!.id
+    setCoche(db, id, 'farine_ble' as FoodId, true)
+    addExtraItem(db, id, { libelle: 'Éponges' })
+
+    savePlan(db, { id: PLAN_ID, startDate: '2026-08-03', days: 3, seed: 42, entries: [], warnings: [] })
+
+    const relue = readShoppingList(db)
+    expect(relue, 'la liste ne doit pas disparaître').not.toBeNull()
+    expect(relue?.coches.has('farine_ble' as FoodId)).toBe(true)
+    expect(relue?.extras).toHaveLength(1)
+  })
+
+  it('n’expose AUCUN allergène structuré sur les articles non alimentaires', () => {
+    // §4.3 : le système des 14 allergènes UE reste réservé à ce qu'on MANGE. Ici, seulement une
+    // note en texte libre, informative, jamais filtrante.
+    const colonnes = db
+      .all<{ readonly name: string }>('PRAGMA table_info(shopping_extra_item)')
+      .map((c) => c.name)
+    expect(colonnes).toContain('note_allergene')
+    expect(colonnes.some((c) => c === 'allergen_id' || c === 'food_id')).toBe(false)
   })
 })

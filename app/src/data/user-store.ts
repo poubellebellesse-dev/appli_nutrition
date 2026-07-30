@@ -9,11 +9,12 @@
 // le navigateur charge ; `user-store-node.ts` n'existe que pour les tests.
 //
 // PÉRIMÈTRE DES ACCESSEURS. `user-schema.ts` crée les ~23 tables de §4.3, mais ce fichier n'expose
-// que celles dont on a besoin pour reconstruire une `SuggestionRequest`. La règle est simple et
-// tenable : **toute table que le store LIT, il sait aussi l'ÉCRIRE** — une table en lecture seule
-// perpétuelle est un champ qu'aucun écran ne peut remplir. Les autres (`user_signal`,
-// `meal_plan`, `shopping_list`, `user_recipe`, `consent`, `user_display`…) attendent l'écran qui
-// les consommera ; leurs tables existent déjà, il n'y aura pas de migration à faire pour elles.
+// que celles qu'un écran consomme réellement. La règle est simple et tenable : **toute table que le
+// store LIT, il sait aussi l'ÉCRIRE** — une table en lecture seule perpétuelle est un champ
+// qu'aucun écran ne peut remplir. Couvertes à ce jour : profil, contraintes, goûts, favoris,
+// thématiques, garde-manger, historique, planning, courses. Les autres (`user_signal`,
+// `user_recipe`, `user_recipe_note`, `consent`, `user_display`, `user_price`) attendent leur écran ;
+// leurs tables existent déjà, il n'y aura pas de migration à faire pour les brancher.
 
 import type {
   AllergenId,
@@ -28,6 +29,7 @@ import type {
   MealSlot,
   RecipeId,
   TopicId,
+  ShoppingList,
   UserProfile,
   WeekPlan,
 } from '../engine/domain/index.js'
@@ -344,12 +346,17 @@ const ORDRE_CRENEAU = `CASE creneau
 /** Écrit un plan et TOUS ses créneaux, en remplaçant intégralement la version précédente. */
 export function savePlan(db: UserDb, plan: WeekPlan): void {
   withTransaction(db, () => {
-    db.run('INSERT OR REPLACE INTO meal_plan (id, date_debut, jours, seed) VALUES (?, ?, ?, ?)', [
-      plan.id,
-      plan.startDate,
-      plan.days,
-      plan.seed,
-    ])
+    // ⚠️ UPSERT, PAS `INSERT OR REPLACE`, et la différence est destructrice. REPLACE SUPPRIME la
+    // ligne existante avant de réinsérer — ce qui déclenche les `ON DELETE CASCADE` qui pointent
+    // vers elle, donc emporte `shopping_list`, ses lignes ET les articles ajoutés à la main. Or
+    // `savePlan` est appelé à chaque verrouillage de créneau : garder un plan aurait effacé la
+    // liste de courses en silence. Trouvé par le test des articles « extra ».
+    db.run(
+      `INSERT INTO meal_plan (id, date_debut, jours, seed) VALUES (?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         date_debut = excluded.date_debut, jours = excluded.jours, seed = excluded.seed`,
+      [plan.id, plan.startDate, plan.days, plan.seed]
+    )
     // Redondant avec le CASCADE que déclenche le REPLACE ci-dessus, mais seulement SI
     // `PRAGMA foreign_keys` est ON — ce que ce fichier ne peut pas garantir, l'ouverture
     // appartenant aux adaptateurs. Sans ce DELETE, un plan raccourci garderait ses vieux créneaux.
@@ -429,6 +436,158 @@ export function readLatestPlan(db: UserDb): WeekPlan | null {
     'SELECT id FROM meal_plan ORDER BY date_debut DESC, id DESC LIMIT 1'
   )[0]
   return row ? readPlan(db, row.id) : null
+}
+
+// --- Courses ----------------------------------------------------------------------------------
+
+/**
+ * Un article NON ALIMENTAIRE de la liste (§4.3) — lessive, croquettes, dentifrice.
+ *
+ * ⚠️ TABLE SÉPARÉE DE TOUT CE QUI TOUCHE `food`, et ce n'est pas de la propreté de schéma : ces
+ * articles n'ont aucun nutriment, aucun allergène structuré, et ne sont JAMAIS éligibles comme
+ * ingrédient de recette. `noteAllergene` est du texte libre INFORMATIF (« contient : arachide ») —
+ * le système des 14 allergènes UE reste réservé à ce qu'on mange.
+ */
+export interface StoredExtraItem {
+  readonly id: number
+  readonly libelle: string
+  readonly rayon: string | null
+  readonly quantite: string | null
+  readonly coche: boolean
+  readonly noteAllergene: string | null
+}
+
+/**
+ * Ce que `user.db` garde d'une liste de courses.
+ *
+ * ⚠️ LES LIGNES ELLES-MÊMES NE SONT PAS LA SOURCE DE VÉRITÉ. Quantités, unités, rayons, provenance
+ * par créneau : tout se redérive du plan par `buildShoppingList`, et le redériver garantit que la
+ * liste correspond au plan RÉEL. Le seul état irrécupérable est **ce que l'utilisateur a coché** —
+ * aucun calcul ne peut le retrouver. C'est lui que cette structure existe pour porter, avec les
+ * articles ajoutés à la main.
+ */
+export interface StoredShoppingList {
+  readonly id: string
+  readonly planId: string
+  readonly generatedAt: string
+  readonly coches: ReadonlySet<FoodId>
+  readonly extras: readonly StoredExtraItem[]
+}
+
+/** Une liste par plan. Déterministe : pas d'identifiant tiré au hasard (§1 ENGINE). */
+function idDeListe(planId: string): string {
+  return `courses-${planId}`
+}
+
+/**
+ * Enregistre la liste, en CONSERVANT les cases déjà cochées dont l'aliment survit.
+ *
+ * ⚠️ C'est le comportement attendu d'une régénération : ajouter un dîner à la semaine ne doit pas
+ * effacer les vingt lignes déjà cochées au supermarché. Un aliment qui disparaît du plan perd son
+ * cochage, ce qui est correct — il n'est plus à acheter.
+ */
+export function saveShoppingList(db: UserDb, list: ShoppingList): void {
+  const id = idDeListe(list.planId)
+  withTransaction(db, () => {
+    const dejaCoches = new Set(
+      db
+        .all<{ readonly food_id: string }>(
+          'SELECT food_id FROM shopping_list_item WHERE list_id = ? AND coche = 1',
+          [id]
+        )
+        .map((r) => r.food_id)
+    )
+
+    // Upsert pour la même raison que `savePlan` : un REPLACE emporterait les articles ajoutés à la
+    // main par la cascade, à chaque régénération.
+    db.run(
+      `INSERT INTO shopping_list (id, plan_id, genere_le) VALUES (?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET plan_id = excluded.plan_id, genere_le = excluded.genere_le`,
+      [id, list.planId, list.generatedAt]
+    )
+    // Les articles « extra » ne sont PAS effacés : ils ne viennent pas du plan, les régénérer
+    // n'aurait pas de sens, et les perdre à chaque replanification serait une trahison.
+    db.run('DELETE FROM shopping_list_item WHERE list_id = ?', [id])
+    for (const item of list.items) {
+      db.run(
+        `INSERT INTO shopping_list_item (list_id, food_id, quantite_totale, unite, coche)
+         VALUES (?, ?, ?, ?, ?)`,
+        [id, item.foodId, item.quantiteTotale, item.unite, dejaCoches.has(item.foodId) ? 1 : 0]
+      )
+    }
+  })
+}
+
+/** La liste la plus récente, ou `null`. */
+export function readShoppingList(db: UserDb): StoredShoppingList | null {
+  const row = db.all<{ readonly id: string; readonly plan_id: string; readonly genere_le: string }>(
+    'SELECT id, plan_id, genere_le FROM shopping_list ORDER BY genere_le DESC, id DESC LIMIT 1'
+  )[0]
+  if (!row) return null
+
+  const coches = new Set(
+    db
+      .all<{ readonly food_id: string }>(
+        'SELECT food_id FROM shopping_list_item WHERE list_id = ? AND coche = 1',
+        [row.id]
+      )
+      .map((r) => r.food_id as FoodId)
+  )
+
+  return { id: row.id, planId: row.plan_id, generatedAt: row.genere_le, coches, extras: readExtraItems(db, row.id) }
+}
+
+export function setCoche(db: UserDb, listId: string, foodId: FoodId, coche: boolean): void {
+  db.run('UPDATE shopping_list_item SET coche = ? WHERE list_id = ? AND food_id = ?', [
+    coche ? 1 : 0,
+    listId,
+    foodId,
+  ])
+}
+
+export function readExtraItems(db: UserDb, listId: string): readonly StoredExtraItem[] {
+  return db
+    .all<{
+      readonly id: number
+      readonly libelle: string
+      readonly rayon: string | null
+      readonly quantite: string | null
+      readonly coche: number
+      readonly note_allergene: string | null
+    }>(
+      `SELECT id, libelle, rayon, quantite, coche, note_allergene
+       FROM shopping_extra_item WHERE list_id = ? ORDER BY id`,
+      [listId]
+    )
+    .map((r) => ({
+      id: r.id,
+      libelle: r.libelle,
+      rayon: r.rayon,
+      quantite: r.quantite,
+      coche: r.coche === 1,
+      noteAllergene: r.note_allergene,
+    }))
+}
+
+export function addExtraItem(
+  db: UserDb,
+  listId: string,
+  article: { readonly libelle: string; readonly rayon?: string | null; readonly quantite?: string | null }
+): void {
+  db.run('INSERT INTO shopping_extra_item (list_id, libelle, rayon, quantite) VALUES (?, ?, ?, ?)', [
+    listId,
+    article.libelle,
+    article.rayon ?? null,
+    article.quantite ?? null,
+  ])
+}
+
+export function setExtraCoche(db: UserDb, id: number, coche: boolean): void {
+  db.run('UPDATE shopping_extra_item SET coche = ? WHERE id = ?', [coche ? 1 : 0, id])
+}
+
+export function removeExtraItem(db: UserDb, id: number): void {
+  db.run('DELETE FROM shopping_extra_item WHERE id = ?', [id])
 }
 
 // --- Lecture composée -------------------------------------------------------------------------
