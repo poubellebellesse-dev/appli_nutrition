@@ -17,16 +17,19 @@
 
 import type {
   AllergenId,
+  CourseKind,
   DietCode,
   FoodId,
   HardConstraints,
   MealHistory,
   MealHistoryEntry,
   MealOrigin,
+  MealPlanEntry,
   MealSlot,
   RecipeId,
   TopicId,
   UserProfile,
+  WeekPlan,
 } from '../engine/domain/index.js'
 import { withTransaction, type UserDb } from './user-db.js'
 
@@ -326,6 +329,106 @@ export function recordMeal(db: UserDb, entry: MealHistoryEntry): void {
     `INSERT OR REPLACE INTO meal_history (date, creneau, recipe_id, origine) VALUES (?, ?, ?, ?)`,
     [entry.date, entry.creneau, entry.recipeId, entry.origine]
   )
+}
+
+// --- Planning ---------------------------------------------------------------------------------
+
+/**
+ * Ordre chronologique DANS la journée. `creneau` est du texte : trier dessus rendrait « dejeuner »
+ * avant « petit_dejeuner ». L'ordre alphabétique n'a aucun sens ici, et l'écran Semaine affiche les
+ * créneaux de haut en bas dans l'ordre des repas.
+ */
+const ORDRE_CRENEAU = `CASE creneau
+    WHEN 'petit_dejeuner' THEN 0 WHEN 'dejeuner' THEN 1 WHEN 'gouter' THEN 2 ELSE 3 END`
+
+/** Écrit un plan et TOUS ses créneaux, en remplaçant intégralement la version précédente. */
+export function savePlan(db: UserDb, plan: WeekPlan): void {
+  withTransaction(db, () => {
+    db.run('INSERT OR REPLACE INTO meal_plan (id, date_debut, jours, seed) VALUES (?, ?, ?, ?)', [
+      plan.id,
+      plan.startDate,
+      plan.days,
+      plan.seed,
+    ])
+    // Redondant avec le CASCADE que déclenche le REPLACE ci-dessus, mais seulement SI
+    // `PRAGMA foreign_keys` est ON — ce que ce fichier ne peut pas garantir, l'ouverture
+    // appartenant aux adaptateurs. Sans ce DELETE, un plan raccourci garderait ses vieux créneaux.
+    db.run('DELETE FROM meal_plan_entry WHERE plan_id = ?', [plan.id])
+    for (const entry of plan.entries) {
+      db.run(
+        `INSERT INTO meal_plan_entry
+           (plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          plan.id,
+          entry.slot.date,
+          entry.slot.creneau,
+          entry.service,
+          entry.recipeId,
+          entry.portions,
+          entry.locked ? 1 : 0,
+          entry.isLeftover ? 1 : 0,
+        ]
+      )
+    }
+  })
+}
+
+/**
+ * Relit un plan. `null` si l'identifiant est inconnu, ou si la ligne date d'avant la migration v2
+ * (`jours = 0`) — un plan sans durée n'est pas affichable, mieux vaut le dire que d'afficher zéro
+ * jour.
+ *
+ * ⚠️ `warnings` REVIENT TOUJOURS VIDE, et ce n'est pas un oubli. Un avertissement de plancher
+ * calorique (§6.5) se DÉDUIT du plan et du profil ; le stocker le figerait, et il continuerait de
+ * s'afficher — ou pire, de ne pas s'afficher — après un changement de profil. L'appelant DOIT
+ * rappeler `engine.checkPlan(plan, profile)` après lecture. C'est la seule façon pour un plan relu
+ * depuis le disque de ne pas perdre silencieusement une alerte de sécurité.
+ */
+export function readPlan(db: UserDb, planId: string): WeekPlan | null {
+  const row = db.all<{
+    readonly id: string
+    readonly date_debut: string
+    readonly jours: number
+    readonly seed: number
+  }>('SELECT id, date_debut, jours, seed FROM meal_plan WHERE id = ?', [planId])[0]
+  if (!row || row.jours <= 0) return null
+
+  const entries = db
+    .all<{
+      readonly date: string
+      readonly creneau: string
+      readonly service: string | null
+      readonly recipe_id: string | null
+      readonly portions: number
+      readonly verrouille: number
+      readonly est_reste: number
+    }>(
+      `SELECT date, creneau, service, recipe_id, portions, verrouille, est_reste
+       FROM meal_plan_entry WHERE plan_id = ?
+       ORDER BY date, ${ORDRE_CRENEAU}`,
+      [planId]
+    )
+    .map(
+      (e): MealPlanEntry => ({
+        slot: { date: e.date, creneau: e.creneau as MealSlot },
+        recipeId: (e.recipe_id as RecipeId | null) ?? null,
+        portions: e.portions,
+        locked: e.verrouille === 1,
+        isLeftover: e.est_reste === 1,
+        service: (e.service as CourseKind | null) ?? null,
+      })
+    )
+
+  return { id: row.id, startDate: row.date_debut, days: row.jours, seed: row.seed, entries, warnings: [] }
+}
+
+/** Le plan le plus récent par date de début, ou `null`. Même réserve sur `warnings` que `readPlan`. */
+export function readLatestPlan(db: UserDb): WeekPlan | null {
+  const row = db.all<{ readonly id: string }>(
+    'SELECT id FROM meal_plan ORDER BY date_debut DESC, id DESC LIMIT 1'
+  )[0]
+  return row ? readPlan(db, row.id) : null
 }
 
 // --- Lecture composée -------------------------------------------------------------------------

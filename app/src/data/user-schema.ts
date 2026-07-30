@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 1
+export const USER_SCHEMA_VERSION = 2
 
 export interface Migration {
   readonly version: number
@@ -278,7 +278,64 @@ const V1_STATEMENTS: readonly string[] = [
    )`,
 ]
 
-export const MIGRATIONS: readonly Migration[] = [{ version: 1, statements: V1_STATEMENTS }]
+/**
+ * v2 — deux défauts de la v1 qui empêchaient d'écrire puis de relire un plan.
+ *
+ * 1. **`meal_plan` n'était pas relisible.** `WeekPlan` porte `days` et `seed` ; la table n'avait ni
+ *    l'un ni l'autre. On pouvait déduire `days` du nombre de dates distinctes, mais c'est une
+ *    inférence fragile ; et `seed` — la graine qui a produit ce plan, seule façon de reproduire un
+ *    résultat surprenant — était perdue.
+ *
+ * 2. **`CHECK (portions > 0)` était FAUX.** Un créneau vide (`recipeId: null`) sort de `planWeek`
+ *    avec `portions: 0` — c'est le cas normal d'un créneau que le glouton n'a pas pu remplir, pas
+ *    une anomalie. La contrainte refusait donc d'enregistrer un plan parfaitement valide. Elle est
+ *    remplacée par l'invariant RÉEL : une recette a des portions, un créneau vide n'en a aucune.
+ *    Trouvé par le test d'aller-retour, jamais par la lecture du schéma.
+ *
+ * ⚠️ POURQUOI UNE v2 PLUTÔT QUE DE CORRIGER v1. La v1 est committée et a pu créer une base sur une
+ * machine réelle, qui rapporte `schema_version = 1`. Modifier une migration déjà livrée est
+ * exactement la façon d'abîmer une base : elle ne rejouerait pas la version qu'elle croit avoir, et
+ * l'écart ne se verrait qu'à la première requête sur une colonne absente. Une migration livrée est
+ * immuable, même vieille d'une heure — d'où la reconstruction de table ci-dessous plutôt qu'une
+ * retouche du CREATE TABLE de la v1.
+ *
+ * `DEFAULT 0` sur `jours` : imposé par SQLite pour un `ADD COLUMN NOT NULL`. Aucune ligne existante
+ * ne peut en hériter en pratique (rien n'écrivait encore de plan), et `readPlan` rejette `jours = 0`
+ * comme un plan illisible plutôt que d'afficher une semaine de zéro jour.
+ */
+const V2_STATEMENTS: readonly string[] = [
+  `ALTER TABLE meal_plan ADD COLUMN jours INTEGER NOT NULL DEFAULT 0`,
+  `ALTER TABLE meal_plan ADD COLUMN seed INTEGER NOT NULL DEFAULT 0`,
+
+  // SQLite ne sait pas modifier un CHECK : il faut reconstruire la table. Aucune table ne
+  // REFERENCE meal_plan_entry, le DROP est donc sans effet de bord (il emporte l'index, recréé
+  // plus bas sous le même nom).
+  `CREATE TABLE meal_plan_entry_v2 (
+     plan_id TEXT NOT NULL REFERENCES meal_plan(id) ON DELETE CASCADE,
+     date TEXT NOT NULL,
+     creneau TEXT NOT NULL CHECK (creneau IN ('petit_dejeuner','dejeuner','gouter','diner')),
+     service TEXT CHECK (service IN ('entree','plat','accompagnement','fromage','dessert')),
+     recipe_id TEXT,
+     portions REAL NOT NULL,
+     verrouille INTEGER NOT NULL DEFAULT 0 CHECK (verrouille IN (0,1)),
+     est_reste INTEGER NOT NULL DEFAULT 0 CHECK (est_reste IN (0,1)),
+     -- L'invariant reel : une recette a des portions, un creneau vide n'en a aucune.
+     CHECK ((recipe_id IS NULL AND portions = 0) OR (recipe_id IS NOT NULL AND portions > 0))
+   )`,
+  `INSERT INTO meal_plan_entry_v2
+     (plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste)
+   SELECT plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste
+   FROM meal_plan_entry`,
+  `DROP TABLE meal_plan_entry`,
+  `ALTER TABLE meal_plan_entry_v2 RENAME TO meal_plan_entry`,
+  `CREATE UNIQUE INDEX meal_plan_entry_slot
+     ON meal_plan_entry (plan_id, date, creneau, COALESCE(service, ''))`,
+]
+
+export const MIGRATIONS: readonly Migration[] = [
+  { version: 1, statements: V1_STATEMENTS },
+  { version: 2, statements: V2_STATEMENTS },
+]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */
 export function readSchemaVersion(db: UserDb): number {

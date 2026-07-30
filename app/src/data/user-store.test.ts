@@ -19,6 +19,8 @@ import type {
   RecipeId,
   TopicId,
   UserProfile,
+  WeekPlan,
+  MealSlot,
 } from '../engine/domain/index.js'
 import { openUserDb, type OpenedUserDb } from './user-store-node.js'
 import type { UserDb } from './user-db.js'
@@ -34,7 +36,10 @@ import {
   readPantryFoodIds,
   readPreferences,
   readProfile,
+  readLatestPlan,
+  readPlan,
   readUserState,
+  savePlan,
   recordMeal,
   setFavorite,
   writeActiveTopics,
@@ -397,5 +402,146 @@ describe('user-store — readUserState', () => {
     expect(etat.preferences.size).toBe(0)
     expect(etat.favoriteRecipeIds.size).toBe(0)
     expect(etat.history.entries).toEqual([])
+  })
+})
+
+describe('user-store — planning', () => {
+  const plan: WeekPlan = {
+    id: 'plan-2026-08-03-3',
+    startDate: '2026-08-03',
+    days: 3,
+    seed: 7,
+    entries: [
+      {
+        slot: { date: '2026-08-03', creneau: 'diner' },
+        recipeId: 'r1' as RecipeId,
+        portions: 4,
+        locked: true,
+        isLeftover: false,
+        service: null,
+      },
+      {
+        slot: { date: '2026-08-04', creneau: 'diner' },
+        recipeId: 'r2' as RecipeId,
+        portions: 2,
+        locked: false,
+        isLeftover: true,
+        service: null,
+      },
+      {
+        slot: { date: '2026-08-05', creneau: 'diner' },
+        recipeId: null,
+        portions: 0,
+        locked: false,
+        isLeftover: false,
+        service: null,
+      },
+    ],
+    warnings: [],
+  }
+
+  it('rend null pour un plan inconnu, et null tant qu’aucun plan n’existe', () => {
+    expect(readPlan(db, 'inexistant')).toBeNull()
+    expect(readLatestPlan(db)).toBeNull()
+  })
+
+  it('fait l’aller-retour complet — verrous, restes et créneaux vides compris', () => {
+    savePlan(db, plan)
+    expect(readPlan(db, plan.id)).toEqual(plan)
+  })
+
+  it('REMPLACE le plan précédent au lieu d’accumuler ses créneaux', () => {
+    // Un plan raccourci de 3 à 2 jours garderait sinon le créneau du 3ᵉ jour, invisible à l'écran
+    // mais bien présent dans la liste de courses.
+    savePlan(db, plan)
+    savePlan(db, { ...plan, days: 2, entries: plan.entries.slice(0, 2) })
+    expect(readPlan(db, plan.id)?.entries).toHaveLength(2)
+  })
+
+  it('rend les créneaux dans l’ordre des repas, pas dans l’ordre alphabétique', () => {
+    // 'dejeuner' < 'petit_dejeuner' en alphabétique : trier sur la colonne mettrait le déjeuner
+    // avant le petit-déjeuner.
+    const creneaux: readonly MealSlot[] = ['diner', 'petit_dejeuner', 'gouter', 'dejeuner']
+    savePlan(db, {
+      ...plan,
+      days: 2,
+      entries: creneaux.map((creneau) => ({
+        slot: { date: '2026-08-03', creneau },
+        recipeId: `r-${creneau}` as RecipeId,
+        portions: 1,
+        locked: false,
+        isLeftover: false,
+        service: null,
+      })),
+    })
+    expect(readPlan(db, plan.id)?.entries.map((e) => e.slot.creneau)).toEqual([
+      'petit_dejeuner',
+      'dejeuner',
+      'gouter',
+      'diner',
+    ])
+  })
+
+  it('rend TOUJOURS des warnings vides — ils se recalculent, ils ne se stockent pas', () => {
+    // Un avertissement de plancher calorique figé en base continuerait de s'afficher après un
+    // changement de profil. L'appelant doit rappeler engine.checkPlan().
+    savePlan(db, { ...plan, warnings: [{ kind: 'plancher_calorique', date: '2026-08-03', kcal: 900, seuil: 1200 }] })
+    expect(readPlan(db, plan.id)?.warnings).toEqual([])
+  })
+
+  it('rend le plan le plus récent par date de début', () => {
+    savePlan(db, plan)
+    savePlan(db, { ...plan, id: 'plan-2026-09-01-3', startDate: '2026-09-01' })
+    expect(readLatestPlan(db)?.startDate).toBe('2026-09-01')
+  })
+
+  it('refuse un plan d’avant la migration v2 plutôt que d’afficher zéro jour', () => {
+    db.run(`INSERT INTO meal_plan (id, date_debut, jours, seed) VALUES ('vieux', '2026-08-03', 0, 0)`)
+    expect(readPlan(db, 'vieux')).toBeNull()
+  })
+})
+
+describe('user-schema — ce que la migration v2 corrige', () => {
+  it('accepte un créneau VIDE à 0 portion — le CHECK de la v1 le refusait', () => {
+    // `planWeek` rend `portions: 0` quand il ne peut pas remplir un créneau. C'est le cas normal,
+    // pas une anomalie : `CHECK (portions > 0)` refusait d'enregistrer un plan valide.
+    db.run(`INSERT INTO meal_plan (id, date_debut, jours, seed) VALUES ('p', '2026-08-03', 3, 1)`)
+    expect(() =>
+      db.run(
+        `INSERT INTO meal_plan_entry (plan_id, date, creneau, recipe_id, portions)
+         VALUES ('p', '2026-08-03', 'diner', NULL, 0)`
+      )
+    ).not.toThrow()
+  })
+
+  it('refuse en revanche les deux incohérences que le nouvel invariant vise', () => {
+    db.run(`INSERT INTO meal_plan (id, date_debut, jours, seed) VALUES ('p', '2026-08-03', 3, 1)`)
+    // une recette sans portions
+    expect(() =>
+      db.run(
+        `INSERT INTO meal_plan_entry (plan_id, date, creneau, recipe_id, portions)
+         VALUES ('p', '2026-08-03', 'diner', 'r1', 0)`
+      )
+    ).toThrow()
+    // un créneau vide avec des portions
+    expect(() =>
+      db.run(
+        `INSERT INTO meal_plan_entry (plan_id, date, creneau, recipe_id, portions)
+         VALUES ('p', '2026-08-04', 'diner', NULL, 4)`
+      )
+    ).toThrow()
+  })
+
+  it('CONSERVE l’index unique de créneau après la reconstruction de table', () => {
+    // Le piège classique d'un rebuild SQLite : `DROP TABLE` emporte les index. Sans recréation,
+    // le doublon de créneau redeviendrait possible — sans erreur, et sans que rien ne le dise.
+    db.run(`INSERT INTO meal_plan (id, date_debut, jours, seed) VALUES ('p', '2026-08-03', 3, 1)`)
+    const inserer = () =>
+      db.run(
+        `INSERT INTO meal_plan_entry (plan_id, date, creneau, service, recipe_id, portions)
+         VALUES ('p', '2026-08-03', 'diner', NULL, 'r1', 4)`
+      )
+    inserer()
+    expect(inserer).toThrow()
   })
 })
