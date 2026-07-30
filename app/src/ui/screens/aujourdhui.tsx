@@ -4,8 +4,9 @@
 // (catalogue, moteur, `user.db`, profil) vient de `ui/socle.ts`, partagé avec « Semaine ».
 
 import { useCallback, useEffect, useState } from 'react'
-import type { MealSlot, ScoredSuggestion, SuggestionRequest } from '../../engine/domain/index.js'
-import { readUserState, recordMeal, type StoredUserState } from '../../data/user-store.js'
+import type { MealSlot, Minutes, ScoredSuggestion, SuggestionRequest } from '../../engine/domain/index.js'
+import { min } from '../../engine/domain/index.js'
+import { readRythme, readUserState, recordMeal, type StoredUserState } from '../../data/user-store.js'
 import type { UserProfile } from '../../engine/domain/index.js'
 import {
   FENETRE_HISTORIQUE_JOURS,
@@ -23,10 +24,22 @@ const CRENEAU: MealSlot = 'diner'
  * La frontière vaut d'être tenue : `user.db` fournit ce qui SURVIT (profil, contraintes, goûts,
  * historique), l'écran fournit ce qui ne survit pas (le créneau regardé, la date, la graine).
  */
+/**
+ * Est-on samedi ou dimanche ? Le rythme distingue semaine et week-end (§4.8, écran 5).
+ *
+ * `getUTCDay` et non `getDay` : les dates du plan sont des JOURS, pas des instants — lire l'heure
+ * locale ferait basculer le vendredi soir au samedi selon le fuseau du navigateur.
+ */
+function estWeekend(isoDate: string): boolean {
+  const jour = new Date(`${isoDate}T00:00:00Z`).getUTCDay()
+  return jour === 0 || jour === 6
+}
+
 function construireRequete(
   etat: StoredUserState,
   profile: UserProfile,
-  date: string
+  date: string,
+  tempsDisponibleMin: Minutes | null
 ): SuggestionRequest {
   return {
     profile,
@@ -35,7 +48,7 @@ function construireRequete(
       date,
       creneau: CRENEAU,
       envie: null,
-      tempsDisponibleMin: null,
+      tempsDisponibleMin,
       // Exigence ponctuelle « je veux ça » : par construction jamais persistée (§6.5 ter ENGINE).
       requiredFoodIds: [],
       pantryFoodIds: etat.pantryFoodIds,
@@ -65,7 +78,15 @@ async function calculerVue(): Promise<Vue> {
   const date = aujourdhuiIso()
   const profil = profilCourant(socle.db, date)
   const etat = readUserState(socle.db, { windowDays: FENETRE_HISTORIQUE_JOURS, today: date })
-  const resultat = socle.moteur.suggestMeals(construireRequete(etat, profil, date))
+
+  // ⚠️ LE CHAMP EXISTAIT DEPUIS P0 ET RESTAIT `null` : la couche `temps` n'avait aucune source de
+  // données, exactement le défaut corrigé en P1b-2 sur `preference`. Le rythme du premier lancement
+  // la remplit enfin. Absent (parcours sauté) → `null`, soit « pas de limite ».
+  const rythme = readRythme(socle.db)
+  const minutes = estWeekend(date) ? rythme?.tempsWeekendMin : rythme?.tempsSemaineMin
+  const resultat = socle.moteur.suggestMeals(
+    construireRequete(etat, profil, date, minutes === undefined || minutes === null ? null : min(minutes))
+  )
 
   return {
     suggestions: resultat.suggestions,

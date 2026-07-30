@@ -590,6 +590,81 @@ export function removeExtraItem(db: UserDb, id: number): void {
   db.run('DELETE FROM shopping_extra_item WHERE id = ?', [id])
 }
 
+// --- Rythme et consentement ---------------------------------------------------------------------
+
+/**
+ * Le rythme déclaré au premier lancement (§4.8 DESIGN, écran 5).
+ *
+ * ⚠️ CE N'EST PAS UN RÉGLAGE D'AFFICHAGE. Ces deux valeurs changent les SUGGESTIONS : le nombre de
+ * repas fixe les créneaux planifiés, et le temps disponible alimente la couche `temps`, qui n'avait
+ * jusqu'ici aucune source de données — le champ existait, personne ne le remplissait.
+ *
+ * `null` sur un temps = pas de limite. Zéro serait faux et empêcherait de distinguer « je n'ai pas
+ * répondu » de « je suis très pressé ».
+ */
+export interface StoredRythme {
+  readonly repasParJour: number
+  readonly tempsSemaineMin: number | null
+  readonly tempsWeekendMin: number | null
+}
+
+export function readRythme(db: UserDb): StoredRythme | null {
+  const row = db.all<{
+    readonly repas_par_jour: number
+    readonly temps_semaine_min: number | null
+    readonly temps_weekend_min: number | null
+  }>('SELECT repas_par_jour, temps_semaine_min, temps_weekend_min FROM user_rythme WHERE id = 1')[0]
+  if (!row) return null
+  return {
+    repasParJour: row.repas_par_jour,
+    tempsSemaineMin: row.temps_semaine_min,
+    tempsWeekendMin: row.temps_weekend_min,
+  }
+}
+
+export function writeRythme(db: UserDb, rythme: StoredRythme): void {
+  db.run(
+    `INSERT OR REPLACE INTO user_rythme (id, repas_par_jour, temps_semaine_min, temps_weekend_min)
+     VALUES (1, ?, ?, ?)`,
+    [rythme.repasParJour, rythme.tempsSemaineMin, rythme.tempsWeekendMin]
+  )
+}
+
+export interface StoredConsent {
+  readonly versionTexte: string
+  readonly accepteLe: string
+}
+
+/**
+ * Consentements enregistrés, du plus récent au plus ancien.
+ *
+ * ⚠️ UNE LIGNE PAR VERSION, jamais un écrasement (§6.4 ARCHITECTURE) : accepter la v2 ne doit pas
+ * effacer la trace de l'acceptation de la v1. C'est la seule façon de savoir ce que l'utilisateur a
+ * réellement lu, et quand.
+ */
+export function readConsents(db: UserDb): readonly StoredConsent[] {
+  return db
+    .all<{ readonly version_texte: string; readonly accepte_le: string }>(
+      'SELECT version_texte, accepte_le FROM consent ORDER BY accepte_le DESC, version_texte DESC'
+    )
+    .map((r) => ({ versionTexte: r.version_texte, accepteLe: r.accepte_le }))
+}
+
+export function aConsenti(db: UserDb, versionTexte: string): boolean {
+  return (
+    db.all<{ readonly n: number }>('SELECT COUNT(*) AS n FROM consent WHERE version_texte = ?', [
+      versionTexte,
+    ])[0]?.n === 1
+  )
+}
+
+export function recordConsent(db: UserDb, versionTexte: string, accepteLe: string): void {
+  db.run('INSERT OR REPLACE INTO consent (version_texte, accepte_le) VALUES (?, ?)', [
+    versionTexte,
+    accepteLe,
+  ])
+}
+
 // --- Lecture composée -------------------------------------------------------------------------
 
 /**

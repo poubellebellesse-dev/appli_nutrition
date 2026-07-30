@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 2
+export const USER_SCHEMA_VERSION = 3
 
 export interface Migration {
   readonly version: number
@@ -332,9 +332,37 @@ const V2_STATEMENTS: readonly string[] = [
      ON meal_plan_entry (plan_id, date, creneau, COALESCE(service, ''))`,
 ]
 
+/**
+ * v3 — le rythme de l'utilisateur n'avait nulle part où aller.
+ *
+ * L'écran 5 du premier lancement (§4.8 DESIGN) collecte deux réglages que §4.3 ARCHITECTURE
+ * n'avait pas prévus, et qui vivaient donc en dur dans le code :
+ *   - le nombre de repas par jour n'existait qu'en état React dans l'écran Semaine, perdu à chaque
+ *     rechargement ;
+ *   - le temps disponible était codé `null` dans l'écran Aujourd'hui, si bien que la couche `temps`
+ *     ne recevait JAMAIS rien — un réglage documenté mais sans source de données, exactement le
+ *     défaut corrigé en P1b-2 sur la couche `preference`.
+ *
+ * Table à part et non des colonnes de `user_display` : le rythme n'est pas un réglage d'affichage,
+ * il change les suggestions.
+ *
+ * `NULL` sur les deux temps = « pas de limite », qui est le neutre. Zéro serait faux (aucune
+ * recette ne se cuisine en zéro minute) et interdirait de distinguer « je n'ai rien répondu » de
+ * « je suis très pressé ».
+ */
+const V3_STATEMENTS: readonly string[] = [
+  `CREATE TABLE user_rythme (
+     id INTEGER PRIMARY KEY CHECK (id = 1),
+     repas_par_jour INTEGER NOT NULL CHECK (repas_par_jour BETWEEN 1 AND 3),
+     temps_semaine_min INTEGER CHECK (temps_semaine_min IS NULL OR temps_semaine_min > 0),
+     temps_weekend_min INTEGER CHECK (temps_weekend_min IS NULL OR temps_weekend_min > 0)
+   )`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
+  { version: 3, statements: V3_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

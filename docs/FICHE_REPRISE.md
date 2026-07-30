@@ -16,7 +16,7 @@ P0 ✅ ─ P1a ✅ ─ P1b ✅ ─ P1c ✅ ─ CONTENU ✅ ─ alternatives ✅ 
                                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-30** : `npm test` → **650 verts (47 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-30** : `npm test` → **657 verts (47 fichiers)** · `npm run typecheck` propre ·
 `npx vite build` OK.
 **Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → **20/20 configurations
 saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes** (valeurs CIQUAL 2025 réelles).
@@ -28,7 +28,7 @@ et `suggestSubstitutions` (§9 ETAT).
 
 ## ▶ La prochaine étape
 
-**Les écrans** — **3 sur 8** sont livrés (Aujourd'hui, Semaine, Courses), le préalable `user.db` est levé,
+**Les écrans** — **4 sur 8** sont livrés (Premier lancement, Aujourd'hui, Semaine, Courses), le préalable `user.db` est levé,
 l'appli a un routeur à 5 routes et **le système de design des maquettes est posé** (jetons, polices
 auto-hébergées, barre à 5 onglets, mode sombre, cibles 48 px). Tableau complet écran par écran : [ETAT.md](./ETAT.md) §6.
 
@@ -71,7 +71,7 @@ prêts : le moteur et les données les attendent, et les maquettes existent pour
    connaît la chaîne `vegetalien ⊂ vegetarien ⊂ pescetarien ⊂ omnivore`. **L'origine animale est un
    fait, pas un régime** : `Food.origineAnimale` + `deriveDe`, propagés en cascade.
 
-## Huit pièges qui ne se voient pas
+## Neuf pièges qui ne se voient pas
 
 - ⚠️ **`catalog-loader.ts` ne doit importer AUCUN module Node.** L'import est **hoisté** : un
   `import 'node:sqlite'` casse le bundle navigateur même si la fonction qui l'utilise n'est jamais
@@ -98,6 +98,11 @@ prêts : le moteur et les données les attendent, et les maquettes existent pour
   n'existe pas hors d'un Worker, et **aucune en-tête COOP/COEP n'y change rien**. Erreur affichée :
   « Missing required OPFS APIs ». → base en mémoire + fichier OPFS réécrit (`user-source.ts`).
   Typecheck et `vite build` passaient parfaitement ; seul le navigateur l'a dit.
+- ⚠️ **Un garde-fou sans source de données ne garde rien.** Le filtre allergènes est critique et
+  incontournable — et il a tourné sur une liste VIDE jusqu'au 2026-07-30, parce qu'aucun écran ne
+  demandait ses allergies. Même défaut que la couche `preference` en P1b-2. Le prochain sur la
+  liste : `MealContext.requiredFoodIds`, `user_signal` et `user_display`, tous déclarés, aucun
+  rempli.
 - ⚠️ **`INSERT OR REPLACE` SUPPRIME la ligne avant de réinsérer**, donc déclenche les
   `ON DELETE CASCADE` qui pointent vers elle. `savePlan` effaçait ainsi toute la liste de courses et
   ses articles ajoutés à la main — et il est appelé à chaque « Garder » d'un créneau. → `INSERT …

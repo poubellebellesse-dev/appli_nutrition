@@ -14,9 +14,11 @@ import { createRoot } from 'react-dom/client'
 import { Aujourdhui } from './screens/aujourdhui.js'
 import { Semaine } from './screens/semaine.js'
 import { Courses } from './screens/courses.js'
+import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
 import { Bientot } from './screens/bientot.js'
 import { Navigation } from './navigation.js'
 import { chargerSocle } from './socle.js'
+import { aConsenti } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
 import { useRoute, type Route } from './router.js'
 import { enregistrerServiceWorker } from './sw-register.js'
@@ -57,6 +59,12 @@ function Ecran({ route }: { readonly route: Route }) {
 function Coquille() {
   const route = useRoute()
   const [alerte, setAlerte] = useState<Alerte>('aucune')
+  /**
+   * `null` = on ne sait pas encore. Distinguer « pas encore lu » de « pas consenti » évite le
+   * clignotement où l'accueil s'affiche une fraction de seconde à chaque lancement d'une
+   * application déjà configurée.
+   */
+  const [consenti, setConsenti] = useState<boolean | null>(null)
 
   useEffect(() => {
     let annule = false
@@ -73,13 +81,28 @@ function Coquille() {
         if (annule) return
         if (socle.stockage === 'memoire') setAlerte('memoire')
         else if (!socle.persistant) setAlerte('non_persistant')
+        setConsenti(aConsenti(socle.db, VERSION_CONSENTEMENT))
       },
-      () => undefined
+      // Socle indisponible : on n'impose pas l'accueil, les écrans afficheront l'erreur réelle.
+      () => setConsenti(true)
     )
     return () => {
       annule = true
     }
   }, [])
+
+  if (consenti === null) return null
+
+  // ⚠️ PAS DE BARRE DE NAVIGATION PENDANT L'ACCUEIL. §4.8 est un parcours linéaire jusqu'à une
+  // première suggestion utile ; laisser les cinq onglets accessibles permettrait d'atterrir sur
+  // « Semaine » sans avoir déclaré ses allergies, c'est-à-dire exactement le trou qu'on referme.
+  if (!consenti) {
+    return (
+      <div className="mx-auto max-w-3xl px-5 pb-10 pt-8">
+        <Accueil onTermine={() => setConsenti(true)} />
+      </div>
+    )
+  }
 
   return (
     <>

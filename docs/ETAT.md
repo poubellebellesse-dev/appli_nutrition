@@ -429,7 +429,7 @@ l'interface mais de **prouver la chaîne complète dans un navigateur** avant d'
 | 4.5 | 💡 **Vider le frigo** | couche `pantry` + `ingredientsManquants` ✅ | Prêt à coder |
 | 4.6 | **Détail d'une recette** | `scaleRecipe` ✅ · lexique 62 gestes ✅ | Prêt à coder |
 | 4.7 | 💡 **Savoir** | lexique ✅ · ⛔ pas de table de tips · « Comprendre » = v2 | Partiel |
-| 4.8 | **Premier lancement** | `user.db` ✅ · ⛔ pas de routage, pas d'écran de consentement | Prêt à coder |
+| 4.8 | **Premier lancement** | `user.db` ✅ · routeur ✅ · consentement ✅ | **Livré** (2026-07-30) — hors écran 4 « goûts » |
 
 > ✅ **`user.db` existe depuis le 2026-07-30** — c'était le vrai préalable, et il est levé.
 > `requeteDemo()` a disparu de `app/src/ui/main.tsx` : profil, contraintes, préférences, favoris,
@@ -586,6 +586,14 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   (un ajout manuel est aujourd'hui du texte libre, sans `FoodId`), l'impression et l'export CSV/JSON
   du menu discret, « Que cuisiner avec ? » et « Vider le frigo » pré-rempli (l'écran 4.5 n'existe
   pas), le découpage en deux virées (`joursDeCourses`, §7.4).
+- ✅ **Le filtre allergènes a enfin une source.** Jusqu'au 2026-07-30, le garde-fou CRITIQUE et
+  incontournable du moteur tournait sur une liste **vide** : aucun écran ne demandait ses allergies.
+  Le code était juste, il n'avait pas de données. L'écran 3 du premier lancement les collecte.
+- **Écran 4 du premier lancement (« vos goûts ») — NON FAIT**, deux raisons : zéro photo sur 241
+  recettes, et surtout `user_preference` travaille par ALIMENT quand l'écran propose des PLATS.
+  Traduire « j'aime ce curry » en préférences d'aliments (ingrédient caractéristique seul ? tous ?
+  quelle pondération ?) est une décision de conception absente des docs — à trancher par mesure,
+  pas au jugé, sous peine de fausser le démarrage à froid que cet écran existe pour résoudre.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

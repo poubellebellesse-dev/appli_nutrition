@@ -27,6 +27,7 @@ import { openUserDb, type OpenedUserDb } from './user-store-node.js'
 import type { UserDb } from './user-db.js'
 import { MIGRATIONS, USER_SCHEMA_VERSION, migrate, readSchemaVersion } from './user-schema.js'
 import {
+  aConsenti,
   readActiveTopics,
   readAllergies,
   readConstraints,
@@ -39,11 +40,14 @@ import {
   readProfile,
   addExtraItem,
   readExtraItems,
+  readConsents,
   readLatestPlan,
   readPlan,
+  readRythme,
   readShoppingList,
   readUserState,
   removeExtraItem,
+  recordConsent,
   savePlan,
   saveShoppingList,
   setCoche,
@@ -57,6 +61,7 @@ import {
   writePantry,
   writePreference,
   writeProfile,
+  writeRythme,
 } from './user-store.js'
 
 const PROFIL: UserProfile = {
@@ -679,5 +684,52 @@ describe('user-store — liste de courses', () => {
       .map((c) => c.name)
     expect(colonnes).toContain('note_allergene')
     expect(colonnes.some((c) => c === 'allergen_id' || c === 'food_id')).toBe(false)
+  })
+})
+
+describe('user-store — rythme et consentement', () => {
+  it('rend null tant que le premier lancement n’a pas eu lieu', () => {
+    expect(readRythme(db)).toBeNull()
+    expect(readConsents(db)).toEqual([])
+    expect(aConsenti(db, 'v1')).toBe(false)
+  })
+
+  it('fait l’aller-retour sur le rythme, sans limite de temps déclarée', () => {
+    // `null` = pas de limite, et c'est le NEUTRE. Zéro serait faux — aucune recette ne se cuisine
+    // en zéro minute — et empêcherait de distinguer « je n'ai pas répondu » de « je suis pressé ».
+    writeRythme(db, { repasParJour: 2, tempsSemaineMin: 30, tempsWeekendMin: null })
+    expect(readRythme(db)).toEqual({ repasParJour: 2, tempsSemaineMin: 30, tempsWeekendMin: null })
+  })
+
+  it('remplace le rythme au lieu d’en accumuler', () => {
+    writeRythme(db, { repasParJour: 1, tempsSemaineMin: null, tempsWeekendMin: null })
+    writeRythme(db, { repasParJour: 3, tempsSemaineMin: 20, tempsWeekendMin: 90 })
+    expect(readRythme(db)?.repasParJour).toBe(3)
+  })
+
+  it('borne le nombre de repas à 1…3 — la base refuse, pas le code appelant', () => {
+    expect(() => writeRythme(db, { repasParJour: 0, tempsSemaineMin: null, tempsWeekendMin: null })).toThrow()
+    expect(() => writeRythme(db, { repasParJour: 4, tempsSemaineMin: null, tempsWeekendMin: null })).toThrow()
+  })
+
+  it('refuse un temps nul — « zéro minute » n’est pas « pas de limite »', () => {
+    expect(() => writeRythme(db, { repasParJour: 2, tempsSemaineMin: 0, tempsWeekendMin: null })).toThrow()
+  })
+
+  it('garde UNE LIGNE PAR VERSION de consentement, sans écraser la précédente', () => {
+    // §6.4 : accepter la v2 ne doit pas effacer la trace de l'acceptation de la v1. C'est la seule
+    // façon de savoir ce que l'utilisateur a réellement lu, et quand.
+    recordConsent(db, 'accueil-v1', '2026-07-30')
+    recordConsent(db, 'accueil-v2', '2026-09-01')
+    expect(readConsents(db)).toHaveLength(2)
+    expect(aConsenti(db, 'accueil-v1')).toBe(true)
+    expect(aConsenti(db, 'accueil-v2')).toBe(true)
+    expect(aConsenti(db, 'accueil-v3')).toBe(false)
+  })
+
+  it('rend les consentements du plus récent au plus ancien', () => {
+    recordConsent(db, 'accueil-v1', '2026-07-30')
+    recordConsent(db, 'accueil-v2', '2026-09-01')
+    expect(readConsents(db)[0]?.versionTexte).toBe('accueil-v2')
   })
 })

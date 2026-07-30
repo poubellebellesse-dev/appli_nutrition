@@ -24,7 +24,7 @@ import type {
   WeekPlan,
 } from '../../engine/domain/index.js'
 import { MAX_PLAN_DAYS, MIN_PLAN_DAYS } from '../../engine/planning/plan-week.js'
-import { readLatestPlan, readUserState, savePlan } from '../../data/user-store.js'
+import { readLatestPlan, readRythme, readUserState, savePlan } from '../../data/user-store.js'
 import {
   FENETRE_HISTORIQUE_JOURS,
   LIBELLE_CRENEAU,
@@ -126,6 +126,11 @@ function reprendreOuPlanifier(socle: Socle, reglages: Reglages): { readonly vue:
   const date = aujourdhuiIso()
   const profil = profilCourant(socle.db, date)
   const enregistre = readLatestPlan(socle.db)
+  // Le rythme déclaré au premier lancement fixe le défaut ; un plan déjà enregistré prime, parce
+  // que l'utilisateur a pu le changer depuis l'écran.
+  const rythme = readRythme(socle.db)
+  const defauts: Reglages =
+    rythme === null ? reglages : { ...reglages, repasParJour: rythme.repasParJour }
 
   if (enregistre !== null) {
     return {
@@ -136,10 +141,10 @@ function reprendreOuPlanifier(socle: Socle, reglages: Reglages): { readonly vue:
         profil,
         nomDe: (id) => socle.catalogue.recipes.get(id)?.nom ?? id,
       },
-      reglages: { ...reglages, jours: enregistre.days, repasParJour: nombreDeRepas(enregistre), graine: enregistre.seed },
+      reglages: { ...defauts, jours: enregistre.days, repasParJour: nombreDeRepas(enregistre), graine: enregistre.seed },
     }
   }
-  return { vue: planifier(socle, reglages, []), reglages }
+  return { vue: planifier(socle, defauts, []), reglages: defauts }
 }
 
 export function Semaine() {
