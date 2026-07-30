@@ -24,6 +24,7 @@ import type {
   ExclusionLayerId,
   FoodId,
   PipelineTrace,
+  PlanWarning,
   RecipeId,
   RejectionSummary,
   RerollOptions,
@@ -105,6 +106,16 @@ export interface Engine {
    */
   planLeftovers(plan: WeekPlan, profile: UserProfile, convives?: number): WeekPlan
   buildShoppingList(plan: WeekPlan, opts?: ShoppingOptions): ShoppingList
+  /**
+   * Recalcule les avertissements d'un plan — §6.5, cinquième garde-fou.
+   *
+   * ⚠️ INDISPENSABLE À TOUT PLAN RELU DEPUIS `user.db`. Les avertissements ne sont PAS persistés :
+   * ils se déduisent du plan ET du profil, et les figer en base les ferait mentir dès que le
+   * profil change. Sans cet accès, l'appelant n'aurait aucun moyen de les retrouver — `guards/` est
+   * interne à engine/ et `checkCalorieFloor` exige le catalogue ENRICHI, que seul `createEngine`
+   * possède. Un plan restauré afficherait donc zéro avertissement, silencieusement.
+   */
+  checkPlan(plan: WeekPlan, profile: UserProfile): readonly PlanWarning[]
   analyzeWeek(plan: WeekPlan, profile: UserProfile): NutritionReport
   scaleRecipe(id: RecipeId, portions: number): ScaledRecipe
   suggestSubstitutions(id: RecipeId, missing: readonly FoodId[]): readonly Substitution[]
@@ -394,8 +405,28 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
     // une requête de suggestion, et `WeekPlan` ne les porte pas — il ne garde que le résultat.
     // Même motif que `planLeftovers`, qui a dû recevoir `profile` pour recalculer ses
     // avertissements. Un plan n'est pas une requête.
-    rerollSlot: (plan, slot, contexte, opts) =>
-      runRerollSlot(enrichedCatalog, plan, slot, contexte, (r) => runSuggestMeals(enrichedCatalog, r, now), opts),
+    //
+    // ⚠️ LES AVERTISSEMENTS SONT RECALCULÉS ICI AUSSI (corrigé 2026-07-30). `runRerollSlot` rend
+    // `{ ...plan, entries }` : il conservait donc les avertissements du plan D'AVANT. Changer le
+    // dîner de mardi change les totaux caloriques de mardi — le plan sortait avec un avertissement
+    // obsolète, ou sans le nouveau. Exactement le défaut que `planLeftovers` documente ci-dessous,
+    // resté ouvert ici parce que `rerollSlot` n'avait pas encore d'appelant.
+    rerollSlot: (plan, slot, contexte, opts) => {
+      const apres = runRerollSlot(
+        enrichedCatalog,
+        plan,
+        slot,
+        contexte,
+        (r) => runSuggestMeals(enrichedCatalog, r, now),
+        opts
+      )
+      // Créneau absent ou verrouillé : `runRerollSlot` rend le plan D'ENTRÉE, à l'identité près.
+      // Rien n'a bougé, donc aucun avertissement n'a pu changer — et §7.2 promet un plan
+      // « inchangé », ce qu'un objet reconstruit ne serait plus tout à fait.
+      if (apres === plan) return plan
+      return { ...apres, warnings: checkCalorieFloor(apres, contexte.profile, enrichedCatalog) }
+    },
+    checkPlan: (plan, profile) => checkCalorieFloor(plan, profile, enrichedCatalog),
     // ⚠️ `convives` n'est pas dans `WeekPlan` — il vient de la REQUÊTE. `planLeftovers` étant
     // appelable seul sur un plan déjà rendu, l'appelant doit le repasser ; défaut 1.
     //

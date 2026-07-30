@@ -36,6 +36,24 @@ export interface WeekPlanRequest {
    * reste que si l'on sait combien en sont mangées sur le coup.
    */
   readonly convives?: number
+  /**
+   * Créneaux que l'utilisateur GARDE — « Proposer une autre semaine » ne doit pas les toucher
+   * (§7.2 ENGINE, §4.2 DESIGN : « vos repas gardés ne changeront pas »).
+   *
+   * ⚠️ CE CHAMP EXISTE PARCE QUE LE CONTOURNEMENT CÔTÉ APPELANT EST FAUX. Régénérer un plan puis
+   * réécrire les créneaux verrouillés par-dessus casse la garantie dure de `placedRecipeIds` : la
+   * nouvelle semaine peut replacer AILLEURS le plat qu'on vient de réimposer, et le même dîner
+   * apparaît deux fois sans que rien ne le signale. Seul `planWeek` peut amorcer son propre
+   * ensemble de plats déjà placés — d'où le champ ici plutôt qu'une recomposition en aval.
+   *
+   * Absent ou vide → comportement d'avant, aucun créneau verrouillé.
+   *
+   * Un verrou dont le créneau tombe HORS de la fenêtre est ignoré (il n'appartient pas à ce plan).
+   * Un verrou à `recipeId: null` garde le créneau VIDE — « je ne mange pas ici » se garde aussi.
+   * Deux verrous sur le même créneau : le premier gagne (le mode repas, plusieurs `service` par
+   * créneau, n'est pas encore produit par `planWeek` — voir son en-tête).
+   */
+  readonly lockedEntries?: readonly MealPlanEntry[]
   readonly seed: number
 }
 

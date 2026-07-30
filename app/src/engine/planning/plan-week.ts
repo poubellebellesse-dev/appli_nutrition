@@ -124,6 +124,41 @@ function slotRequest(
   }
 }
 
+/** Clé de créneau — `MealPlanEntry.slot` est un objet, inutilisable tel quel dans une Map. */
+function slotKey(date: string, creneau: MealSlot): string {
+  return `${date}|${creneau}`
+}
+
+/** Cumule l'apport d'une recette dans le total du jour. Sans effet si la recette n'est pas indexée. */
+function addNutrients(placedToday: Float64Array, apport: NutrientVector | undefined): void {
+  if (apport === undefined) return
+  for (let i = 0; i < placedToday.length; i++) placedToday[i] = (placedToday[i] ?? 0) + (apport[i] ?? 0)
+}
+
+/**
+ * Verrous ramenés à leur créneau, LIMITÉS À LA FENÊTRE du plan.
+ *
+ * Un verrou hors fenêtre est ignoré : il n'appartient pas à ce plan, et le compter dans
+ * `placedRecipeIds` interdirait sa recette pour rien. Doublon de créneau : le premier gagne.
+ */
+function indexLockedEntries(req: WeekPlanRequest): ReadonlyMap<string, MealPlanEntry> {
+  const lockedBySlot = new Map<string, MealPlanEntry>()
+  if (req.lockedEntries === undefined || req.lockedEntries.length === 0) return lockedBySlot
+
+  const fenetre = new Set<string>()
+  for (let dayOffset = 0; dayOffset < req.days; dayOffset++) {
+    const date = addDays(req.startDate, dayOffset)
+    for (const creneau of req.slots) fenetre.add(slotKey(date, creneau))
+  }
+
+  for (const entry of req.lockedEntries) {
+    const cle = slotKey(entry.slot.date, entry.slot.creneau)
+    if (!fenetre.has(cle) || lockedBySlot.has(cle)) continue
+    lockedBySlot.set(cle, entry)
+  }
+  return lockedBySlot
+}
+
 export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: SuggestForSlot): WeekPlan {
   if (req.days < MIN_PLAN_DAYS || req.days > MAX_PLAN_DAYS) {
     throw new RangeError(
@@ -140,6 +175,15 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
   // Copie de travail : on n'ajoute JAMAIS à `req.history`, qui appartient à l'appelant.
   const workingEntries: MealHistoryEntry[] = [...req.history.entries]
 
+  // ⚠️ AMORÇAGE DES VERROUS AVANT LE GLOUTON, et c'est tout l'intérêt du champ. Les recettes
+  // verrouillées entrent dans `placedRecipeIds` DÈS MAINTENANT : sinon le glouton pourrait placer
+  // lundi le plat verrouillé pour mercredi, et le plan contiendrait deux fois le même dîner.
+  // C'est exactement ce qu'un réassemblage côté appelant ne peut pas garantir.
+  const lockedBySlot = indexLockedEntries(req)
+  for (const verrou of lockedBySlot.values()) {
+    if (verrou.recipeId !== null) placedRecipeIds.add(verrou.recipeId)
+  }
+
   for (let dayOffset = 0; dayOffset < req.days; dayOffset++) {
     const date = addDays(req.startDate, dayOffset)
 
@@ -149,6 +193,19 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
     const placedToday = new Float64Array(dailyReference.length)
 
     for (const [slotIndex, creneau] of req.slots.entries()) {
+      // Créneau gardé par l'utilisateur : on le repose tel quel, sans rien demander à `suggest`.
+      // Son apport et son entrée d'historique sont comptés ICI, à SA date — les semer en amont
+      // ferait voir au lundi un repas du mercredi (`variety` ignore le futur, `habit` non).
+      const verrou = lockedBySlot.get(slotKey(date, creneau))
+      if (verrou !== undefined) {
+        entries.push({ ...verrou, slot: { date, creneau }, locked: true })
+        if (verrou.recipeId !== null) {
+          workingEntries.push({ recipeId: verrou.recipeId, date, creneau, origine: 'choisi' })
+          addNutrients(placedToday, catalog.indexes.recipeNutrients.get(verrou.recipeId))
+        }
+        continue
+      }
+
       // ⚠️ COPIE, pas la référence. `workingEntries` continue de grossir après cet appel : passer
       // le tableau vif ferait voir à la requête du lundi les repas placés le mercredi. Défaut réel,
       // trouvé par test — la sortie du glouton était juste, mais l'objet remis à l'appelant mentait.
@@ -172,11 +229,7 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       if (scored === null) continue
       placedRecipeIds.add(scored)
       workingEntries.push({ recipeId: scored, date, creneau, origine: 'choisi' })
-
-      const apport = catalog.indexes.recipeNutrients.get(scored)
-      if (apport !== undefined) {
-        for (let i = 0; i < placedToday.length; i++) placedToday[i] = (placedToday[i] ?? 0) + (apport[i] ?? 0)
-      }
+      addNutrients(placedToday, catalog.indexes.recipeNutrients.get(scored))
     }
   }
 

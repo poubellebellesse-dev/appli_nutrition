@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { MAX_PLAN_DAYS, MIN_PLAN_DAYS, addDays, planWeek } from './plan-week.js'
 import { makeCatalog, makeRecipe } from '../selection/test-fixtures.js'
 import { NoViableRecipeError } from '../domain/index.js'
-import type { Catalog, MealSlot, RecipeId, SuggestionRequest, SuggestionResult, WeekPlanRequest } from '../domain/index.js'
+import type { Catalog, MealPlanEntry, MealSlot, RecipeId, SuggestionRequest, SuggestionResult, WeekPlanRequest } from '../domain/index.js'
 
 const RECIPES = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => makeRecipe(id))
 const CATALOG = makeCatalog(RECIPES)
@@ -343,5 +343,125 @@ describe('planning/plan-week — la FENÊTRE DE CANDIDATS demandée à `suggest`
     planWeek(CATALOG, makePlanRequest({ days: 2 }), suggest)
 
     expect(vu.every((r) => r.skipDiversification === true)).toBe(true)
+  })
+})
+
+describe('planning/plan-week — créneaux VERROUILLÉS (§7.2, « vos repas gardés ne changeront pas »)', () => {
+  const verrou = (date: string, creneau: MealSlot, recette: string | null): MealPlanEntry => ({
+    slot: { date, creneau },
+    recipeId: recette as RecipeId | null,
+    portions: 4,
+    locked: true,
+    isLeftover: false,
+    service: null,
+  })
+
+  it('garde la recette verrouillée, même quand `suggest` en propose une autre', () => {
+    const plan = planWeek(
+      CATALOG,
+      makePlanRequest({ days: 3, lockedEntries: [verrou('2026-08-04', 'diner', 'f')] }),
+      fakeSuggest(['a', 'b', 'c'])
+    )
+
+    const mardi = plan.entries.find((e) => e.slot.date === '2026-08-04')
+    expect(mardi?.recipeId).toBe('f')
+    expect(mardi?.locked).toBe(true)
+  })
+
+  it('NE REPLACE JAMAIS le plat verrouillé ailleurs dans la fenêtre', () => {
+    // C'est la garantie dure de `placedRecipeIds`. Sans amorçage, le glouton proposerait « a » dès
+    // le lundi et on aurait le même plat deux fois — le défaut exact que le contournement côté UI
+    // aurait introduit.
+    const plan = planWeek(
+      CATALOG,
+      makePlanRequest({ days: 3, lockedEntries: [verrou('2026-08-05', 'diner', 'a')] }),
+      fakeSuggest(['a', 'b', 'c', 'd'])
+    )
+
+    const recettes = plan.entries.map((e) => e.recipeId)
+    // Les trois assertions ensemble : « a » est bien AU CRÉNEAU VERROUILLÉ, il n'y est qu'une fois,
+    // et rien d'autre n'est dupliqué. Sans la première, le test passerait sur un plan qui ignore
+    // purement et simplement le verrou.
+    expect(plan.entries.find((e) => e.slot.date === '2026-08-05')?.recipeId).toBe('a')
+    expect(recettes.filter((r) => r === 'a')).toHaveLength(1)
+    expect(new Set(recettes).size).toBe(recettes.length)
+  })
+
+  it('préserve les métadonnées du verrou — portions, reste, service', () => {
+    const reste: MealPlanEntry = { ...verrou('2026-08-04', 'diner', 'f'), portions: 2, isLeftover: true }
+    const plan = planWeek(
+      CATALOG,
+      makePlanRequest({ days: 3, lockedEntries: [reste] }),
+      fakeSuggest(['a', 'b', 'c'])
+    )
+
+    const mardi = plan.entries.find((e) => e.slot.date === '2026-08-04')
+    expect(mardi?.portions).toBe(2)
+    expect(mardi?.isLeftover).toBe(true)
+  })
+
+  it('honore un verrou VIDE — « je ne mange pas ici » se garde aussi', () => {
+    const plan = planWeek(
+      CATALOG,
+      makePlanRequest({ days: 3, lockedEntries: [verrou('2026-08-04', 'diner', null)] }),
+      fakeSuggest(['a', 'b', 'c'])
+    )
+
+    const mardi = plan.entries.find((e) => e.slot.date === '2026-08-04')
+    expect(mardi?.recipeId).toBeNull()
+    expect(mardi?.locked).toBe(true)
+  })
+
+  it('ignore un verrou hors de la fenêtre plutôt que de le forcer dedans', () => {
+    const plan = planWeek(
+      CATALOG,
+      makePlanRequest({
+        days: 3,
+        slots: ['diner'],
+        // hors fenêtre par la date, puis par le créneau
+        lockedEntries: [verrou('2026-09-01', 'diner', 'f'), verrou('2026-08-04', 'dejeuner', 'e')],
+      }),
+      fakeSuggest(['a', 'b', 'c'])
+    )
+
+    expect(plan.entries).toHaveLength(3)
+    expect(plan.entries.map((e) => e.recipeId)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('n’interroge PAS `suggest` pour un créneau verrouillé', () => {
+    const vu: SuggestionRequest[] = []
+    const suggest = (r: SuggestionRequest) => {
+      vu.push(r)
+      return fakeSuggest(['a', 'b', 'c'])(r)
+    }
+
+    planWeek(CATALOG, makePlanRequest({ days: 3, lockedEntries: [verrou('2026-08-04', 'diner', 'f')] }), suggest)
+
+    expect(vu).toHaveLength(2)
+    expect(vu.map((r) => r.context.date)).toEqual(['2026-08-03', '2026-08-05'])
+  })
+
+  it('n’entre dans l’historique de travail QU’À SA DATE — lundi ne voit pas le mercredi', () => {
+    // Même invariant que la copie de `workingEntries` : semer tous les verrous en amont ferait voir
+    // au lundi un repas du mercredi. `variety` ignore les entrées futures, mais pas `habit`.
+    const vu: SuggestionRequest[] = []
+    const suggest = (r: SuggestionRequest) => {
+      vu.push(r)
+      return fakeSuggest(['a', 'b', 'c'])(r)
+    }
+
+    planWeek(CATALOG, makePlanRequest({ days: 3, lockedEntries: [verrou('2026-08-04', 'diner', 'f')] }), suggest)
+
+    const [lundi, mercredi] = vu
+    expect(lundi!.history.entries.map((e) => e.recipeId)).not.toContain('f')
+    expect(mercredi!.history.entries.map((e) => e.recipeId)).toContain('f')
+  })
+
+  it('sans le champ, le plan est IDENTIQUE à celui d’avant — aucune régression', () => {
+    const sans = planWeek(CATALOG, makePlanRequest({ days: 3 }), fakeSuggest(['a', 'b', 'c', 'd']))
+    const vide = planWeek(CATALOG, makePlanRequest({ days: 3, lockedEntries: [] }), fakeSuggest(['a', 'b', 'c', 'd']))
+
+    expect(vide).toEqual(sans)
+    expect(sans.entries.every((e) => e.locked === false)).toBe(true)
   })
 })

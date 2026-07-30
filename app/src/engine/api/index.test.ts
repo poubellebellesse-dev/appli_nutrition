@@ -20,8 +20,10 @@ import type {
   NutrientId,
   Recipe,
   RecipeId,
+  PlanWarning,
   ScoreWeights,
   SuggestionRequest,
+  UserProfile,
 } from "../domain/index.js";
 import { NoViableRecipeError, g, min } from "../domain/index.js";
 import { LAYER_DESCRIPTORS, nutriLayer } from "../selection/index.js";
@@ -658,5 +660,121 @@ describe("engine/api — createEngine appelle réellement attachDerivedIndexes (
     const scores = result.suggestions.map((s) => s.score);
     expect(new Set(scores).size).toBe(3); // trois scores DISTINCTS : le signal réel a discriminé
     expect(scores).toEqual([100, 50, 0]);
+  });
+});
+
+// ------------------------------------------------------------------------------------------
+// Avertissements de plancher calorique sur un plan — `checkPlan` et la recomposition de
+// `rerollSlot` (§6.5 ARCHITECTURE). Fixture dédiée : `checkCalorieFloor` cherche le nutriment de
+// code `energie`, que le catalogue de tête (code `kcal`) ne contient pas.
+// ------------------------------------------------------------------------------------------
+
+function makeEnergyFixture(): Catalog {
+  const energie: Nutrient = {
+    id: "energie" as NutrientId,
+    code: "energie",
+    nom: "Énergie",
+    unite: "kcal",
+    vnrAdulte: 2000,
+    categorie: null,
+    sens: "cible",
+  };
+  const foods = [food("maigre", 5), food("gras", 900)].map((f) => ({
+    ...f,
+    nutrimentsPour100g: new Map([["energie" as NutrientId, f.nutrimentsPour100g.get("kcal" as NutrientId)!]]),
+  }));
+  // 200 g d'ingrédient sur 2 portions : « maigre » ≈ 5 kcal/portion, « gras » ≈ 900.
+  const recipes = [
+    { ...recipeWithOneIngredient("bouillon", "maigre"), typesRepas: ["dejeuner", "diner"] as const },
+    { ...recipeWithOneIngredient("consomme", "maigre"), typesRepas: ["dejeuner", "diner"] as const },
+    { ...recipeWithOneIngredient("gratin", "gras"), typesRepas: ["dejeuner", "diner"] as const },
+    { ...recipeWithOneIngredient("cassoulet", "gras"), typesRepas: ["dejeuner", "diner"] as const },
+  ] as unknown as Recipe[];
+
+  return {
+    version: "catalog-energie-1",
+    foods: new Map(foods.map((f) => [f.id, f])),
+    recipes: new Map(recipes.map((r) => [r.id, r])),
+    nutrients: [energie],
+    allergens: new Map(),
+    lexicon: new Map(),
+    topics: new Map(),
+    substitutions: new Map(),
+    indexes: EMPTY_INDEXES,
+  };
+}
+
+function planWith(dejeuner: string, diner: string, warnings: readonly PlanWarning[] = []) {
+  const entry = (creneau: "dejeuner" | "diner", recette: string) => ({
+    slot: { date: "2026-08-03", creneau },
+    recipeId: recette as RecipeId,
+    portions: 2,
+    locked: false,
+    isLeftover: false,
+    service: null,
+  });
+  return {
+    id: "p",
+    startDate: "2026-08-03",
+    days: 2,
+    seed: 1,
+    entries: [entry("dejeuner", dejeuner), entry("diner", diner)],
+    warnings,
+  };
+}
+
+const PROFIL_TEST: UserProfile = {
+  trancheAge: "30_49",
+  sexe: "F",
+  tailleCm: 165,
+  poidsKg: 62,
+  niveauActivite: "actif",
+  facteurPortion: 1,
+};
+
+describe("engine/api — avertissements d'un plan (§6.5)", () => {
+  it("checkPlan signale une journée sous le plancher", () => {
+    const engine = createEngine(makeEnergyFixture());
+    const warnings = engine.checkPlan(planWith("bouillon", "consomme"), PROFIL_TEST);
+
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]!.kind).toBe("plancher_calorique");
+    expect(warnings[0]!.date).toBe("2026-08-03");
+  });
+
+  it("checkPlan ne signale rien quand la journée tient", () => {
+    const engine = createEngine(makeEnergyFixture());
+    expect(engine.checkPlan(planWith("gratin", "cassoulet"), PROFIL_TEST)).toEqual([]);
+  });
+
+  it("checkPlan est CE QUI PERMET à un plan relu de garder ses alertes", () => {
+    // `user.db` ne persiste pas les avertissements : ils dépendent du PROFIL, et les figer les
+    // ferait mentir après un changement. Un plan restauré arrive donc avec `warnings: []` — sans
+    // ce recalcul, l'alerte de §6.5 disparaîtrait silencieusement au rechargement de la page.
+    const engine = createEngine(makeEnergyFixture());
+    const relu = planWith("bouillon", "consomme"); // warnings: [] comme le rend readPlan
+    expect(relu.warnings).toEqual([]);
+    expect(engine.checkPlan(relu, PROFIL_TEST)).toHaveLength(1);
+  });
+
+  it("rerollSlot RECALCULE les avertissements au lieu de traîner ceux du plan d'avant", () => {
+    // ⚠️ RÉGRESSION D'UN BUG RÉEL (corrigé 2026-07-30). `runRerollSlot` rend `{ ...plan, entries }`
+    // et conservait donc `warnings`. Un plan dont la journée tient largement sortait d'un reroll en
+    // portant encore l'avertissement d'une version précédente.
+    const engine = createEngine(makeEnergyFixture());
+    const perime: PlanWarning = { kind: "plancher_calorique", date: "2026-08-03", kcal: 900, seuil: 1200 };
+    const apres = engine.rerollSlot(
+      planWith("gratin", "cassoulet", [perime]),
+      { date: "2026-08-03", creneau: "diner" },
+      {
+        profile: PROFIL_TEST,
+        constraints: { allergies: [], diet: null, excludedFoodIds: [] },
+        history: { windowDays: 21, entries: [] },
+        activeTopics: [],
+        seed: 1,
+      }
+    );
+
+    expect(apres.warnings).toEqual([]);
   });
 });
