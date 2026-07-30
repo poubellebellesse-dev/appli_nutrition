@@ -574,6 +574,14 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - ⚠️ **Trois onglets sur cinq n'ont pas d'écran** (Courses, Recettes, Savoir) : ils affichent un
   état « pas encore construit ». La barre porte les 5 dès maintenant, exprès — une navigation qui
   grandit de version en version change de forme sous les doigts de l'utilisateur.
+- ✅ **L'appli est installable** (2026-07-30) — manifest `standalone`, icônes générées par
+  `npm run icons:build` (PNG via `zlib`, aucune dépendance d'image), balises iOS, service worker de
+  pré-cache écrit par un plugin Vite maison à partir des fichiers RÉELLEMENT émis. Test §6.6
+  « zéro requête réseau » en place, détecteur éprouvé sur des extraits synthétiques.
+- ⚠️ **Rien de tout ça n'a été vérifié sur un vrai téléphone.** Le service worker ne tourne qu'en
+  build de production (`npx vite build && npx vite preview`), jamais en `npm run dev`.
+- ⚠️ **Pour Play (TWA), il manque l'hébergement** : origine HTTPS + `/.well-known/assetlinks.json`.
+  Sans ce fichier, la barre d'URL ne se masque pas. Hébergeur et domaine non choisis.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

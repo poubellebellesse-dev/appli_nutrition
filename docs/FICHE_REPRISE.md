@@ -16,7 +16,7 @@ P0 ✅ ─ P1a ✅ ─ P1b ✅ ─ P1c ✅ ─ CONTENU ✅ ─ alternatives ✅ 
                                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-30** : `npm test` → **631 verts (46 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-30** : `npm test` → **641 verts (47 fichiers)** · `npm run typecheck` propre ·
 `npx vite build` OK.
 **Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → **20/20 configurations
 saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes** (valeurs CIQUAL 2025 réelles).
@@ -40,6 +40,16 @@ auto-hébergées, barre à 5 onglets, mode sombre, cibles 48 px). Tableau comple
 > ⚠️ **Ce qui reste non vérifié en navigateur** : le premier essai a fait tomber le VFS OPFS
 > (corrigé). Depuis la correction, **personne n'a rouvert la page**. Premier geste de la prochaine
 > session : `npm run dev`, « J'ai choisi ce plat », recharger, vérifier que le compteur tient.
+
+> ✅ **L'appli est INSTALLABLE** (2026-07-30) — manifest `standalone`, icônes, service worker de
+> pré-cache, test « zéro requête réseau ». Cible de distribution tranchée : **Play via TWA d'abord,
+> iOS plus tard** (STRATEGIE_DISTRIBUTION §3). Il manque l'hébergement HTTPS + `assetlinks.json`
+> pour empaqueter.
+>
+> ⚠️ **Le service worker ne tourne QU'EN BUILD DE PRODUCTION.** `npm run dev` ne l'active pas —
+> exprès : un cache qui sert de vieux fichiers pendant que Vite en pousse d'autres par HMR fait
+> déboguer une version qui n'existe plus. Pour tester l'installation :
+> `npx vite build && npx vite preview`.
 
 La PWA tourne : `npm run dev`. Écrans **Courses (4.3)** et **Premier lancement (4.8)** sont les plus
 prêts : le moteur et les données les attendent, et les maquettes existent pour les huit écrans

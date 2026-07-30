@@ -11,10 +11,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { serviceWorkerPlugin } from './vite-plugin-sw.js'
 
 export default defineConfig({
   root: 'app',
-  plugins: [react(), tailwindcss()],
+  // `serviceWorkerPlugin` ne s'applique qu'au build : un service worker en développement sert des
+  // fichiers en cache pendant que Vite en pousse d'autres par HMR, et on débogue alors une version
+  // qui n'existe plus.
+  plugins: [react(), tailwindcss(), serviceWorkerPlugin()],
   optimizeDeps: { exclude: ['@sqlite.org/sqlite-wasm'] },
   server: {
     // ⚠️ CES EN-TÊTES NE SONT PLUS REQUISES (2026-07-30). Elles avaient été posées pour le VFS OPFS

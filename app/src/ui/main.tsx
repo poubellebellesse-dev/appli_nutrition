@@ -18,6 +18,7 @@ import { Navigation } from './navigation.js'
 import { chargerSocle } from './socle.js'
 import { surErreurDePersistance } from './user-source.js'
 import { useRoute, type Route } from './router.js'
+import { enregistrerServiceWorker } from './sw-register.js'
 import './index.css'
 
 /**
@@ -105,3 +106,7 @@ createRoot(document.getElementById('root')!).render(
     <Coquille />
   </StrictMode>
 )
+
+// Hors du rendu : l'installation du service worker ne concerne pas React, et l'attacher à un
+// composant la relancerait à chaque montage.
+enregistrerServiceWorker()

@@ -2,9 +2,35 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
+    <!-- `viewport-fit=cover` laisse la barre du bas atteindre le bord de l'écran ; c'est
+         `env(safe-area-inset-bottom)` dans navigation.tsx qui l'écarte de la barre système. -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Nutrition — que manger ce soir ?</title>
     <meta name="description" content="Planificateur de repas 100 % local, sans IA, sans compte." />
+
+    <!-- Installation. Sans ce manifest, l'application RESTE une page web : pas d'icône sur l'écran
+         d'accueil, pas de fenêtre autonome, et surtout Safari efface les données au bout de 7 jours
+         d'inactivité (§7 ARCHITECTURE, risque classé critique). Bubblewrap l'exige aussi pour
+         empaqueter en TWA — sans manifest valide, pas de Play Store. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- La barre d'état suit le thème. Deux balises : `prefers-color-scheme` n'est pas exprimable
+         dans le manifest, qui n'a qu'un `theme_color` unique. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#faf6ef" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b1815" />
+
+    <!-- iOS IGNORE le manifest pour l'écran d'accueil : il lit ces balises-là. Sans
+         `apple-touch-icon`, l'icône devient une capture de la page. -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Que manger ?" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+    <!-- Polices auto-hébergées (§6.6) : les précharger évite le saut typographique au premier
+         rendu. `crossorigin` est OBLIGATOIRE même en même origine — sans lui, le navigateur
+         télécharge la police DEUX fois. -->
+    <link rel="preload" href="/fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/newsreader-latin.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
     <div id="root"></div>

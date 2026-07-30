@@ -36,9 +36,21 @@
 
 ## 3. Publication dans les stores (proposition — à confirmer)
 
-> ⚠️ **Non figé.** Piste recommandée, à valider avant tout achat de compte développeur.
-> Cohérent avec ETAT §4 (« iOS : ouverte, reco PWA ») : la PWA reste la base ; passer en
-> store est une **couche de distribution optionnelle**, pas une obligation.
+> ✅ **TRANCHÉ le 2026-07-30 — le store n'est plus optionnel sur Android.** Principe posé par
+> l'utilisateur : *« l'appli ne doit pas ouvrir un navigateur, elle doit être indépendante »*.
+> Une PWA **installée** ne montre effectivement aucun navigateur (fenêtre autonome, icône propre,
+> pas de barre d'URL) — mais **il faut passer par un navigateur UNE fois pour l'installer**, et
+> elle n'apparaît dans aucun store. C'est ce chemin d'entrée qui est refusé, pas le mode
+> d'exécution.
+>
+> **Décision : Play d'abord via TWA, iOS plus tard.** La PWA reste le socle technique (un TWA
+> l'exige : sans manifest valide et service worker, Bubblewrap refuse d'empaqueter et la barre
+> d'URL ne se masque pas). Sur iPhone, on reste provisoirement sur l'installation manuelle.
+> **iOS via Capacitor reste ouvert**, à décider selon la traction.
+>
+> ⚠️ **Le TWA exige un hébergement HTTPS réel**, avec `/.well-known/assetlinks.json` liant le
+> domaine à la signature de l'APK — c'est ce fichier qui fait disparaître la barre d'URL. Choix de
+> l'hébergeur (Cloudflare Pages / GitHub Pages, gratuits) et du nom de domaine : **encore ouvert**.
 
 Une **PWA seule n'est PAS dans les stores** → invisible là où les gens cherchent une appli.
 Deux niveaux, à activer si on veut la découvrabilité :
@@ -52,8 +64,14 @@ Deux niveaux, à activer si on veut la découvrabilité :
 | **Google Play** | **25 $ une fois**, à vie | Faible (wrapper TWA/Capacitor, outillage gratuit) | **Proposé** — bon rapport visibilité/coût |
 | **App Store (iOS)** | **99 $/an + un Mac** (ou build cloud) + revue | Élevée (Apple refuse les wrappers web « nus ») | **Optionnel**, plus tard si traction |
 
-→ **Reco (à confirmer)** : commencer par **Play seul**, ajouter iOS plus tard si la traction le
-justifie. Rien n'est engagé tant que ce n'est pas validé.
+→ **Décidé** : commencer par **Play seul**, ajouter iOS plus tard si la traction le justifie.
+
+**Fait le 2026-07-30 — le socle PWA exigé par le TWA est en place** : `manifest.webmanifest`
+(`display: standalone`), icônes 192/512/maskable générées par `npm run icons:build`, balises iOS,
+service worker de pré-cache, et le test automatisé « zéro requête réseau » de §6.6.
+
+**Reste à faire pour être sur Play** : choisir l'hébergeur, publier, générer l'APK avec Bubblewrap,
+déposer `assetlinks.json`, créer le compte développeur (25 $). Rien n'est engagé côté argent.
 
 ---
 
