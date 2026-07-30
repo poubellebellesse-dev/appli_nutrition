@@ -610,6 +610,13 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   libellé à l'échelle (pas d'arrondi d'achat, on cuisine ce qui est écrit). Elles ne font pas la même
   chose et lisent le même champ `Food.poidsPieceG` — mais si un jour la fiche recette doit rendre des
   pièces, il faudra EXTRAIRE la conversion du domaine, pas la recopier.
+- ⚠️ **7 cuisines sur 26 n'ont AUCUN drapeau**, et c'est voulu : méditerranéenne (20 recettes),
+  asiatique, maghrébine, internationale, scandinave, africaine, tex-mex sont des zones, pas des
+  pays. Leur en attribuer un demanderait de choisir un pays à leur place — le Maghreb n'est pas le
+  Maroc. Elles affichent le libellé seul.
+- ⚠️ **Les drapeaux ne se rendent pas sous Windows** : le système n'embarque pas ces glyphes, le
+  navigateur montre « FR », « IT ». Lisible, pas cassé, et iOS/Android les rendent — mais à savoir
+  avant de conclure à un bug en testant sur PC.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

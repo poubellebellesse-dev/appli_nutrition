@@ -29,6 +29,7 @@ import { readDisplay, readUserState, setFavorite, writeDisplay } from '../../dat
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import { hashDe } from '../router.js'
 import { quantiteAffichee } from '../quantites.js'
+import { origineDeCuisine } from '../drapeaux.js'
 
 interface Vue {
   readonly recette: Recipe
@@ -196,6 +197,8 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
         difficulté {recette.difficulte}/3
       </p>
 
+      <Origines recette={recette} />
+
       <SelecteurPortions
         portions={portionsAffichees}
         base={recette.portionsBase}
@@ -248,6 +251,35 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
         onBasculer={basculerMacros}
       />
     </article>
+  )
+}
+
+/**
+ * Pays d'origine, d'après la facette `cuisine`.
+ *
+ * ⚠️ Le libellé accompagne toujours le drapeau. Sur Windows les drapeaux ne se rendent pas (le
+ * système n'embarque pas les glyphes, le navigateur montre « FR ») ; sans le mot à côté, l'écran y
+ * serait muet. C'est aussi ce qu'impose le bloc commun des maquettes pour toute icône.
+ */
+function Origines({ recette }: { readonly recette: Recipe }) {
+  const cuisines = recette.facettes.filter((f) => f.facette === 'cuisine')
+  if (cuisines.length === 0) return null
+
+  return (
+    <p className="mt-2 flex flex-wrap gap-2 text-[0.95rem] text-texte-doux">
+      {cuisines.map((facette) => {
+        const origine = origineDeCuisine(facette.valeur)
+        return (
+          <span
+            key={facette.valeur}
+            className="flex items-center gap-1 rounded-[0.5rem] bg-accent-doux px-2 py-1"
+          >
+            {origine.drapeau !== null && <span aria-hidden="true">{origine.drapeau}</span>}
+            {origine.libelle}
+          </span>
+        )
+      })}
+    </p>
   )
 }
 

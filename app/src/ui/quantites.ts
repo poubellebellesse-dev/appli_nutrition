@@ -19,21 +19,42 @@
 // centilitres ne sont donc pas dérivables. Ils ne le sont pas non plus par ce fichier — ils sont
 // simplement CONSERVÉS depuis le libellé, ce qui suffit.
 
+/**
+ * Unités de mesure, avec leur précision d'affichage.
+ *
+ * ⚠️ UNE MESURE NE SE FRACTIONNE PAS. « 18 ¾ g de beurre » n'a aucun sens en cuisine : on pèse 19 g.
+ * Les fractions sont réservées à ce qui se COMPTE (un demi-citron, trois quarts de pomme). C'est la
+ * distinction que la première version ratait, et elle produisait des quantités illisibles.
+ *
+ * `decimales: 0` → entier ; `1` → un chiffre après la virgule (2,4 kg).
+ */
+const UNITES_DE_MESURE: Readonly<Record<string, { readonly decimales: 0 | 1 }>> = {
+  g: { decimales: 0 },
+  mg: { decimales: 0 },
+  ml: { decimales: 0 },
+  cl: { decimales: 0 },
+  kg: { decimales: 1 },
+  l: { decimales: 1 },
+  dl: { decimales: 1 },
+}
+
 /** Unités qui ne prennent jamais la marque du pluriel. */
-const UNITES_INVARIABLES = new Set([
-  'g',
-  'kg',
-  'mg',
-  'l',
-  'dl',
-  'cl',
-  'ml',
-  'cs',
-  'cc',
-  'càs',
-  'càc',
-  'c.',
-])
+const UNITES_INVARIABLES = new Set([...Object.keys(UNITES_DE_MESURE), 'cs', 'cc', 'càs', 'càc', 'c.'])
+
+/**
+ * Au-delà de ce nombre de cuillères, on bascule en centilitres.
+ *
+ * Compter neuf cuillères à soupe est une corvée et une source d'erreur ; 9 cl se lisent sur
+ * n'importe quel verre doseur. En dessous du seuil, la cuillère reste la mesure la plus pratique —
+ * personne ne sort un doseur pour 1,5 cl.
+ */
+const SEUIL_CUILLERES = 4
+
+/** Contenances usuelles françaises, en millilitres. */
+const ML_PAR_CUILLERE = { soupe: 15, cafe: 5 } as const
+
+/** « cuillères à soupe », « c. à café », au singulier comme au pluriel. */
+const CUILLERE = /^\s*(?:cuill[eè]res?|c\.?)\s*[àa]\s*(soupe|caf[ée]s?)/i
 
 /** Fractions courantes en cuisine, rendues en caractère plutôt qu'en décimal. */
 const FRACTIONS: Readonly<Record<string, string>> = {
@@ -84,6 +105,21 @@ function formaterNombre(valeur: number): string {
     return entier === 0 ? fraction : `${entier} ${fraction}`
   }
   return Number.isInteger(arrondi) ? String(arrondi) : String(arrondi).replace('.', ',')
+}
+
+/** Le mot qui suit le nombre, en minuscules, ou `''`. */
+function motSuivant(reste: string): string {
+  return (/^\s*([\p{L}.]+)/u.exec(reste)?.[1] ?? '').toLowerCase()
+}
+
+/** Formate une valeur exprimée dans une unité de MESURE — jamais de fraction, arrondi au plus près. */
+function formaterMesure(valeur: number, decimales: 0 | 1): string {
+  if (decimales === 0) {
+    // Plancher à 1 : « 0 g de beurre » ferait croire qu'il n'en faut pas.
+    return String(Math.max(1, Math.round(valeur)))
+  }
+  const arrondi = Math.round(valeur * 10) / 10
+  return String(arrondi).replace('.', ',')
 }
 
 /**
@@ -152,7 +188,29 @@ export function quantiteAffichee(options: OptionsQuantite): QuantiteAffichee {
 
   const valeur = nombre.valeur * facteur
   const reste = libelle.slice(nombre.longueur)
-  return { texte: `${formaterNombre(valeur)}${accorder(reste, valeur)}`, fige: false }
+
+  // 1. Trop de cuillères — on passe au verre doseur.
+  const cuillere = CUILLERE.exec(reste)
+  if (cuillere !== null && valeur > SEUIL_CUILLERES) {
+    const ml = /caf/i.test(cuillere[1] ?? '') ? ML_PAR_CUILLERE.cafe : ML_PAR_CUILLERE.soupe
+    const suite = reste.slice(cuillere[0].length)
+    return { texte: `${formaterMesure((valeur * ml) / 10, 0)} cl${suite}`, fige: false }
+  }
+
+  // 2. Unité de mesure — pas de fraction, on arrondit.
+  const mesure = UNITES_DE_MESURE[motSuivant(reste)]
+  if (mesure !== undefined) {
+    return { texte: `${formaterMesure(valeur, mesure.decimales)}${reste}`, fige: false }
+  }
+
+  // 3. Ce qui se COMPTE — arrondi au quart, jamais moins d'un quart.
+  //
+  // ⚠️ « 0,13 citron » ne veut rien dire et n'est pas actionnable. Le quart est la plus petite
+  // fraction qu'on manipule vraiment en cuisine ; en dessous, on prend un quart. Arrondir vers le
+  // haut est sans risque ici — un peu trop de citron n'a jamais gâché un plat, et le contraire
+  // (« 0 citron ») supprimerait un ingrédient de la recette.
+  const arrondi = Math.max(0.25, Math.round(valeur * 4) / 4)
+  return { texte: `${formaterNombre(arrondi)}${accorder(reste, arrondi)}`, fige: false }
 }
 
 /**

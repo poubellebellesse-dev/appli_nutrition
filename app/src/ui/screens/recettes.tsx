@@ -24,6 +24,7 @@ import { valeursDeFacette } from '../../engine/search/index.js'
 import { readUserState, setFavorite } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import { hashDeRecette } from '../router.js'
+import { origineDeCuisine } from '../drapeaux.js'
 
 /** Combien de valeurs par facette montrer avant de replier (§4.4 : « deux rangées »). */
 const PASTILLES_VISIBLES = 5
@@ -256,7 +257,13 @@ export function Recettes() {
                 href={hashDeRecette(id)}
                 className="flex-1 p-3 no-underline"
               >
-                <h2 className="font-titre text-[1.2rem] leading-snug text-texte">{recette.nom}</h2>
+                <h2 className="font-titre text-[1.2rem] leading-snug text-texte">
+                  {/* Drapeau AVANT le nom, purement décoratif : le nom de la cuisine reste lisible
+                      dans les pastilles de filtre, et sur Windows le glyphe se dégrade en « FR »
+                      sans gêner la lecture du titre. */}
+                  {drapeauDe(recette)}
+                  {recette.nom}
+                </h2>
                 <p className="mt-1 text-[0.92rem] leading-relaxed text-texte-doux">{recette.description}</p>
                 <p className="mt-1 text-[0.85rem] text-attenue">
                   {recette.tempsPrepMin + recette.tempsCuissonMin} min · {recette.portionsBase} portions
@@ -280,6 +287,22 @@ export function Recettes() {
       </ul>
     </section>
   )
+}
+
+/** Premier drapeau connu parmi les cuisines de la recette, ou rien. */
+function drapeauDe(recette: { readonly facettes: readonly { readonly facette: string; readonly valeur: string }[] }) {
+  for (const facette of recette.facettes) {
+    if (facette.facette !== 'cuisine') continue
+    const origine = origineDeCuisine(facette.valeur)
+    if (origine.drapeau !== null) {
+      return (
+        <span aria-hidden="true" className="mr-1">
+          {origine.drapeau}
+        </span>
+      )
+    }
+  }
+  return null
 }
 
 function basculerValeur(liste: readonly string[], valeur: string): readonly string[] {

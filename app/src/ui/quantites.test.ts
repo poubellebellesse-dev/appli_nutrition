@@ -117,3 +117,91 @@ describe('ui/quantites — formaterMasse', () => {
     expect(formaterMasse(2400)).toBe('2,4 kg')
   })
 })
+
+describe('ui/quantites — une MESURE ne se fractionne jamais', () => {
+  it('arrondit les grammes au plus près plutôt que « 18 ¾ g »', () => {
+    // 25 g x 0,75 = 18,75. La première version affichait « 18 ¾ g de beurre » : on ne pèse pas
+    // trois quarts de gramme.
+    expect(
+      quantiteAffichee({ ...base, facteur: 0.75, libelle: '25 g de beurre' }).texte
+    ).toBe('19 g de beurre')
+  })
+
+  it('fait monter la moitié', () => {
+    expect(quantiteAffichee({ ...base, facteur: 0.5, libelle: '25 g de beurre' }).texte).toBe(
+      '13 g de beurre'
+    )
+  })
+
+  it('garde une décimale pour les kilos et les litres', () => {
+    expect(quantiteAffichee({ ...base, facteur: 2, libelle: '1,2 kg de veau' }).texte).toBe(
+      '2,4 kg de veau'
+    )
+    expect(quantiteAffichee({ ...base, facteur: 0.5, libelle: '1,5 l de bouillon' }).texte).toBe(
+      '0,8 l de bouillon'
+    )
+  })
+
+  it('ne descend jamais à zéro — « 0 g de beurre » ferait croire qu’il n’en faut pas', () => {
+    expect(quantiteAffichee({ ...base, facteur: 0.01, libelle: '25 g de beurre' }).texte).toBe(
+      '1 g de beurre'
+    )
+  })
+
+  it('arrondit aussi les centilitres', () => {
+    expect(quantiteAffichee({ ...base, facteur: 0.3, libelle: '20 cl de crème' }).texte).toBe(
+      '6 cl de crème'
+    )
+  })
+})
+
+describe('ui/quantites — les cuillères passent au verre doseur', () => {
+  it('au-delà de quatre cuillères à soupe, bascule en centilitres', () => {
+    // Compter neuf cuillères est une corvée et une source d'erreur ; 9 cl se lisent sur un doseur.
+    expect(
+      quantiteAffichee({ ...base, facteur: 3, libelle: "2 cuillères à soupe d'huile" }).texte
+    ).toBe("9 cl d'huile")
+  })
+
+  it('garde la cuillère en dessous du seuil — personne ne sort un doseur pour 1,5 cl', () => {
+    expect(
+      quantiteAffichee({ ...base, facteur: 2, libelle: "2 cuillères à soupe d'huile" }).texte
+    ).toBe("4 cuillères à soupe d'huile")
+  })
+
+  it('connaît la cuillère à café, trois fois plus petite', () => {
+    expect(
+      quantiteAffichee({ ...base, facteur: 6, libelle: '1 cuillère à café de miel' }).texte
+    ).toBe('3 cl de miel')
+  })
+
+  it('accepte l’abréviation « c. à soupe »', () => {
+    expect(quantiteAffichee({ ...base, facteur: 5, libelle: '2 c. à soupe de crème' }).texte).toBe(
+      '15 cl de crème'
+    )
+  })
+})
+
+describe('ui/quantites — ce qui se COMPTE s’arrondit au quart', () => {
+  it('remplace « 0,13 citron » par un quart de citron', () => {
+    // Le cas signalé : une recette pour 8 ramenée à 1 portion. « 0,13 citron » n'est pas
+    // actionnable ; « ¼ citron » l'est.
+    expect(quantiteAffichee({ ...base, facteur: 0.125, libelle: '1 citron' }).texte).toBe('¼ citron')
+  })
+
+  it('ne descend jamais sous le quart', () => {
+    expect(quantiteAffichee({ ...base, facteur: 0.01, libelle: '1 citron' }).texte).toBe('¼ citron')
+  })
+
+  it('arrondit au quart le plus proche', () => {
+    expect(quantiteAffichee({ ...base, facteur: 0.6, libelle: '4 artichauts' }).texte).toBe(
+      '2 ½ artichauts'
+    )
+  })
+
+  it('laisse les comptes entiers intacts', () => {
+    expect(quantiteAffichee({ ...base, facteur: 2, libelle: '4 artichauts' }).texte).toBe(
+      '8 artichauts'
+    )
+  })
+})
