@@ -142,6 +142,7 @@ export function makeCatalog(
     nutrients,
     allergens: new Map(),
     lexicon: new Map(),
+    tips: [],
     topics: new Map(),
     substitutions: new Map(),
     indexes: makeEmptyIndexes(),

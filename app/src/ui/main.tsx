@@ -17,6 +17,7 @@ import { Courses } from './screens/courses.js'
 import { Recettes } from './screens/recettes.js'
 import { DetailRecette } from './screens/detail-recette.js'
 import { Frigo } from './screens/frigo.js'
+import { Savoir } from './screens/savoir.js'
 import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
 import { Bientot } from './screens/bientot.js'
 import { Navigation } from './navigation.js'
@@ -61,6 +62,7 @@ function Ecran({ onglet, sousVue }: { readonly onglet: Onglet; readonly sousVue:
   if (onglet === 'semaine') return <Semaine />
   if (onglet === 'courses') return <Courses />
   if (onglet === 'recettes') return <Recettes />
+  if (onglet === 'savoir') return <Savoir />
   return <Bientot route={onglet} titre={TITRE[onglet]} />
 }
 

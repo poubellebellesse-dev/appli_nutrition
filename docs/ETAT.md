@@ -428,7 +428,7 @@ l'interface mais de **prouver la chaîne complète dans un navigateur** avant d'
 | 4.4 | 📖 **Recettes** | `browseRecipes` + `engine/search/` ✅ · entonnoir ✅ | **Livré** (2026-07-30) — hors « Pourquoi pas ce plat ? » |
 | 4.5 | 💡 **Vider le frigo** | `searchByPantry` ✅ · couche `pantry` ✅ | **Livré** (2026-07-30) — hors substitution suggérée |
 | 4.6 | **Détail d'une recette** | `scaleRecipe` ✅ · lexique 62 gestes ✅ | **Livré** (2026-07-30) — hors photo, matériel, alternatives, notes |
-| 4.7 | 💡 **Savoir** | lexique ✅ · ⛔ pas de table de tips · « Comprendre » = v2 | Partiel |
+| 4.7 | 💡 **Savoir** | lexique ✅ · table `tip` ✅ (8 tips) · « Comprendre » = v2 | **Livré** (2026-07-30) — « Comprendre » annoncé, pas simulé |
 | 4.8 | **Premier lancement** | `user.db` ✅ · routeur ✅ · consentement ✅ | **Livré** (2026-07-30) — hors écran 4 « goûts » |
 
 > ✅ **`user.db` existe depuis le 2026-07-30** — c'était le vrai préalable, et il est levé.
@@ -624,6 +624,14 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   SANS sa propre sélection — sinon choisir `française` afficherait `italienne (0)` alors que la
   retirer ramènerait 19 recettes. Deux requêtes de plus par changement de filtre, sur 241 recettes :
   imperceptible aujourd'hui, à surveiller si le catalogue grossit d'un ordre de grandeur.
+- ⚠️ **Les 8 tips sont TOUS `biologie_aliment`** — aucune affirmation de santé. Le tuyau existe
+  (table `tip`, chargement YAML, lint de vocabulaire au build, écran) ; le contenu de
+  `nutrition_humaine` reste à écrire, et c'est une décision ÉDITORIALE, pas un lot de code : toute
+  affirmation sur l'alimentation humaine tombe sous §6.1 et §6.2. Règles dans `catalog/tips/README.md`.
+- ⛔ **« Comprendre » (§4.7) n'existe pas et ne doit pas être bricolé.** `HealthTopic` est un type
+  sans table. §4.7 exige un badge de niveau de preuve sur chaque affirmation et §5 DESIGN en fait
+  « l'élément le plus surveillé » : afficher des affirmations santé sans sources ni niveau de preuve
+  serait exactement ce que §6.1 cherche à empêcher. L'écran l'annonce comme à venir.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

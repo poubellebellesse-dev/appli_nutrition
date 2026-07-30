@@ -181,6 +181,7 @@ export function makeCatalog(recipes: readonly Recipe[], foods: readonly Food[] =
     nutrients: [],
     allergens: new Map(),
     lexicon: new Map(),
+    tips: [],
     topics: new Map(),
     substitutions: new Map(),
     indexes: EMPTY_INDEXES,

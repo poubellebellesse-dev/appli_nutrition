@@ -337,6 +337,23 @@ export interface Recipe {
 
 // --- Lexique de cuisine (table `lexicon_entry`) -----------------------------------------------
 
+/** Catégories de §8.4 ARCHITECTURE. Fermée — une valeur inventée n'aurait aucun rendu à l'écran. */
+export type TipCategorie = 'biologie_aliment' | 'nutrition_humaine' | 'nutrition_animale'
+
+/**
+ * Un « Le saviez-vous ? » (§4.7 DESIGN, §8.4 ARCHITECTURE).
+ *
+ * ⚠️ `nutrition_animale` est du contenu CULTUREL, pas un conseil applicable à l'utilisateur — §8.4
+ * impose de le distinguer VISUELLEMENT du reste, « sinon l'utilisateur ne sait plus ce qui
+ * s'applique à lui ». Ne pas fondre les trois catégories dans un même carrousel indifférencié.
+ */
+export interface Tip {
+  readonly id: string
+  readonly code: string
+  readonly categorie: TipCategorie
+  readonly texte: string
+}
+
 export interface LexiconEntry {
   readonly id: LexiconEntryId
   readonly code: string
@@ -440,6 +457,7 @@ export interface Catalog {
   readonly nutrients: readonly Nutrient[]
   readonly allergens: ReadonlyMap<AllergenId, Allergen>
   readonly lexicon: ReadonlyMap<LexiconEntryId, LexiconEntry>
+  readonly tips: readonly Tip[]
   readonly topics: ReadonlyMap<TopicId, HealthTopic>
   readonly substitutions: ReadonlyMap<FoodId, readonly Substitution[]>
   readonly indexes: CatalogIndexes

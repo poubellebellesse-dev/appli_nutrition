@@ -52,6 +52,8 @@ import type {
   NutrientSense,
   Recipe,
   RecipeEnvergure,
+  Tip,
+  TipCategorie,
   RecipeFacet,
   RecipeId,
   RecipeIngredient,
@@ -174,6 +176,13 @@ interface LexiconRow {
  * Volontairement réduite à `all(sql)` : ce module ne fait aucune requête paramétrée, n'écrit
  * jamais, et n'a pas besoin de transactions. Une interface plus riche inviterait à s'en servir.
  */
+interface TipRow {
+  readonly id: string
+  readonly code: string
+  readonly categorie: string
+  readonly texte: string
+}
+
 export interface SqlSource {
   all<T>(sql: string): readonly T[]
 }
@@ -200,6 +209,22 @@ function parseJsonArray<T>(json: string): readonly T[] {
 }
 
 // --- Chargement par table ----------------------------------------------------------------------
+
+/**
+ * Tips « Le saviez-vous ? » (§8.4 ARCHITECTURE, §4.7 DESIGN).
+ *
+ * Ordonnés par code : le catalogue est une donnée, pas un flux — l'ordre d'affichage (rotation,
+ * aléa du jour) appartient à l'écran, qui seul dispose d'une horloge.
+ */
+function loadTips(db: SqlSource): Tip[] {
+  return queryAll<TipRow>(db, 'SELECT id, code, categorie, texte FROM tip ORDER BY code').map((row) => ({
+    id: row.id,
+    code: row.code,
+    // Sûr : la colonne porte un CHECK qui n'admet que les trois catégories de §8.4.
+    categorie: row.categorie as TipCategorie,
+    texte: row.texte,
+  }))
+}
 
 function loadNutrients(db: SqlSource): Nutrient[] {
   const rows = queryAll<NutrientRow>(db, 'SELECT * FROM nutrient')
@@ -395,6 +420,7 @@ export function loadCatalogFrom(db: SqlSource): Catalog {
     nutrients: loadNutrients(db),
     allergens: loadAllergens(db),
     lexicon: loadLexicon(db),
+    tips: loadTips(db),
     topics: new Map(),
     substitutions: new Map(),
     indexes: buildIndexes(recipes, foods),

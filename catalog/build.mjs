@@ -170,12 +170,20 @@ async function loadRecipes() {
   return readYamlDir(path.join(SOURCES_DIR, 'recipes'))
 }
 
+async function loadTips() {
+  return readYamlDir(path.join(SOURCES_DIR, 'tips'))
+}
+
 // ----------------------------------------------------------------------------
 // 5. Validation — collecte toutes les erreurs avant d'échouer (meilleur
 //    diagnostic qu'un exit sur la première erreur trouvée).
 // ----------------------------------------------------------------------------
 
-function validateCatalog({ foods, lexicon, recipes }) {
+// Les trois categories de §8.4 ARCHITECTURE. Fermee : une categorie inventee passerait sinon
+// jusqu'a l'ecran, ou rien ne saurait la presenter.
+const TIP_CATEGORIES = new Set(['biologie_aliment', 'nutrition_humaine', 'nutrition_animale'])
+
+function validateCatalog({ foods, lexicon, recipes, tips }) {
   const errors = []
   const nutrientKeys = new Set(NUTRIENTS.map((n) => n.key))
   const allergenCodes = new Set(ALLERGENS.map((a) => a.code))
@@ -279,6 +287,26 @@ function validateCatalog({ foods, lexicon, recipes }) {
       if (!['cuisine', 'regime', 'occasion', 'style'].includes(facette.facette)) {
         errors.push(`Recette '${recipe.id}' : facette inconnue '${facette.facette}'`)
       }
+    }
+  }
+
+  const tipCodes = new Set()
+  for (const tip of tips) {
+    if (!tip?.code) errors.push('Tip sans code')
+    else if (tipCodes.has(tip.code)) errors.push(`Tip en double : code '${tip.code}'`)
+    else tipCodes.add(tip.code)
+
+    if (!TIP_CATEGORIES.has(tip?.categorie)) {
+      errors.push(`Tip '${tip?.code}' : categorie '${tip?.categorie}' inconnue (§8.4)`)
+    }
+    if (!tip?.texte || String(tip.texte).trim() === '') {
+      errors.push(`Tip '${tip?.code}' : texte vide`)
+    }
+    // Le lint de vocabulaire (§6.2) s'applique au TEXTE des tips comme au reste du contenu :
+    // un tip est affiche tel quel a l'utilisateur.
+    const bannis = findBannedTerms(String(tip?.texte ?? ''))
+    if (bannis.length > 0) {
+      errors.push(`Tip '${tip?.code}' : vocabulaire banni (${bannis.join(', ')})`)
     }
   }
 
@@ -412,6 +440,16 @@ CREATE TABLE recipe_facet (
   valeur TEXT NOT NULL
 );
 
+CREATE TABLE tip (
+  id TEXT PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  -- Les trois categories de §8.4. La nutrition animale detonne volontairement : c'est du contenu
+  -- CULTUREL, et l'ecran doit la distinguer visuellement des conseils qui s'appliquent a soi.
+  categorie TEXT NOT NULL
+    CHECK (categorie IN ('biologie_aliment', 'nutrition_humaine', 'nutrition_animale')),
+  texte TEXT NOT NULL
+);
+
 CREATE TABLE lexicon_entry (
   id TEXT PRIMARY KEY,
   code TEXT NOT NULL UNIQUE,
@@ -420,7 +458,7 @@ CREATE TABLE lexicon_entry (
 );
 `
 
-function buildDatabase({ foods, lexicon, recipes }, outPath) {
+function buildDatabase({ foods, lexicon, recipes, tips }, outPath) {
   if (existsSync(outPath)) rmSync(outPath, { force: true })
 
   const db = new DatabaseSync(outPath)
@@ -469,6 +507,11 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
       for (const allergene of food.allergenes ?? []) {
         insertFoodAllergen.run(food.id, allergene.code, allergene.certitude)
       }
+    }
+
+    const insertTip = db.prepare('INSERT INTO tip (id, code, categorie, texte) VALUES (?, ?, ?, ?)')
+    for (const tip of tips) {
+      insertTip.run(tip.code, tip.code, tip.categorie, String(tip.texte).trim())
     }
 
     const insertLexicon = db.prepare(
@@ -550,9 +593,14 @@ function buildDatabase({ foods, lexicon, recipes }, outPath) {
 // ----------------------------------------------------------------------------
 
 async function main() {
-  const [foods, lexicon, recipes] = await Promise.all([loadFoods(), loadLexicon(), loadRecipes()])
+  const [foods, lexicon, recipes, tips] = await Promise.all([
+    loadFoods(),
+    loadLexicon(),
+    loadRecipes(),
+    loadTips(),
+  ])
 
-  const errors = validateCatalog({ foods, lexicon, recipes })
+  const errors = validateCatalog({ foods, lexicon, recipes, tips })
   if (errors.length > 0) {
     console.error(`Build du catalogue échoué — ${errors.length} erreur(s) :\n`)
     for (const err of errors) console.error(`  - ${err}`)
@@ -560,10 +608,10 @@ async function main() {
   }
 
   await mkdir(path.dirname(OUT_PATH), { recursive: true })
-  buildDatabase({ foods, lexicon, recipes }, OUT_PATH)
+  buildDatabase({ foods, lexicon, recipes, tips }, OUT_PATH)
 
   console.log(
-    `catalog.db généré : ${foods.length} aliments, ${recipes.length} recettes, ${lexicon.length} gestes de lexique.`
+    `catalog.db généré : ${foods.length} aliments, ${recipes.length} recettes, ${lexicon.length} gestes de lexique, ${tips.length} tips.`
   )
   console.log(`→ ${OUT_PATH}`)
 }

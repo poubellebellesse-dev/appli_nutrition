@@ -16,10 +16,10 @@ P0 ✅ ─ P1a ✅ ─ P1b ✅ ─ P1c ✅ ─ CONTENU ✅ ─ alternatives ✅ 
                                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-30** : `npm test` → **719 verts (50 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-30** : `npm test` → **719 verts (49 fichiers)** · `npm run typecheck` propre ·
 `npx vite build` OK.
 **Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → **20/20 configurations
-saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes** (valeurs CIQUAL 2025 réelles).
+saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes, 8 tips** (valeurs CIQUAL 2025 réelles).
 
 **Le moteur est complet.** `suggestMeals`, `suggestAlternatives`, `planWeek`, `rerollSlot`,
 `planLeftovers`, `buildShoppingList`, `scaleRecipe`, **les 5 garde-fous**. Registre à **18 couches**
@@ -29,9 +29,9 @@ et `suggestSubstitutions` (§9 ETAT).
 
 ## ▶ La prochaine étape
 
-**Les écrans** — **7 sur 8** sont livrés (Premier lancement, Aujourd'hui, Semaine, Courses,
-Recettes, Détail d'une recette, Vider le frigo). Reste **Savoir** (4.7), partiel : le lexique existe,
-la table de tips non, le préalable `user.db` est levé,
+**Les huit écrans sont livrés.** Premier lancement, Aujourd'hui, Semaine, Courses, Recettes,
+Détail d'une recette, Vider le frigo, Savoir. Ce qui reste n'est plus de l'écran mais du **contenu**
+et de la **distribution** — voir ETAT §9, le préalable `user.db` est levé,
 l'appli a un routeur à 5 routes et **le système de design des maquettes est posé** (jetons, polices
 auto-hébergées, barre à 5 onglets, mode sombre, cibles 48 px). Tableau complet écran par écran : [ETAT.md](./ETAT.md) §6.
 
