@@ -425,7 +425,7 @@ l'interface mais de **prouver la chaîne complète dans un navigateur** avant d'
 | 4.1 | 📅 **Aujourd'hui** | `suggestMeals` ✅ | **Livré**, sans photo ni tags cliquables |
 | 4.2 | 🗓 **Semaine** | `planWeek` · `rerollSlot` · `planLeftovers` ✅ | **Livré** (2026-07-30) — hors carrousel, vue « 3 propositions », écarter/pouce-bas |
 | 4.3 | 🛒 **Courses** | `buildShoppingList` ✅ (`pourSlots` couvre « ranger par repas / jour ») | **Livré** (2026-07-30) — hors autocomplétion, impression/export, « Que cuisiner avec ? » |
-| 4.4 | 📖 **Recettes** | ⛔ **rien** — aucune API de recherche / filtre / autocomplétion | À concevoir d'abord |
+| 4.4 | 📖 **Recettes** | `browseRecipes` + `engine/search/` ✅ · entonnoir ✅ | **Livré** (2026-07-30) — hors « Pourquoi pas ce plat ? » |
 | 4.5 | 💡 **Vider le frigo** | couche `pantry` + `ingredientsManquants` ✅ | Prêt à coder |
 | 4.6 | **Détail d'une recette** | `scaleRecipe` ✅ · lexique 62 gestes ✅ | Prêt à coder |
 | 4.7 | 💡 **Savoir** | lexique ✅ · ⛔ pas de table de tips · « Comprendre » = v2 | Partiel |
@@ -603,8 +603,17 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - **Ajout à §4.2 : un sélecteur « Convives »**, que la spec ne prévoit pas. `planLeftovers` ne peut
   rien calculer sans lui — une recette de 4 portions ne laisse un reste que si l'on sait combien en
   sont mangées. Le laisser caché ferait apparaître des restes sans explication à l'écran.
-- ⛔ **Aucune API de recherche** (recherche plein texte, autocomplétion, filtres) — l'écran Recettes
-  (§4.4 DESIGN) n'a rien sur quoi se brancher. À concevoir, pas juste à câbler.
+- ✅ **L'API de recherche existe** (2026-07-30) : `engine/search/` (normalisation accent-insensible,
+  texte + facettes) et `Engine.browseRecipes`, qui applique les MÊMES couches d'exclusion que la
+  suggestion et rend l'entonnoir de §6.8. 16 tests sur le catalogue réel, dont la propriété de
+  sécurité vérifiée sur toutes les recettes rendues.
+- ⛔ **La catégorie « Loufoque » de §4.4 n'existe pas au catalogue.** Six styles seulement :
+  quotidien (139), convivial (65), simple (23), reconfortant (10), rapide (3), gourmand (1). C'est
+  du CONTENU à écrire, pas du code — et « rapide » et « gourmand », à 3 et 1 recettes, ne font pas
+  des filtres utiles non plus.
+- **Écran Recettes — reste à faire** : l'état « Pourquoi pas ce plat ? » (nommer la raison
+  d'exclusion d'une recette précise ; `entonnoir.entries` porte déjà la matière) et le bloc d'entrée
+  « Vider le frigo » (écran 4.5 inexistant).
 - ⛔ **Aucune table de tips** pour le carrousel « Le saviez-vous ? » (§4.7 DESIGN).
 - **Pas de routage** : l'app est un composant unique. `react-router-dom` n'est pas installé —
   installation à valider explicitement (CLAUDE.md §4).

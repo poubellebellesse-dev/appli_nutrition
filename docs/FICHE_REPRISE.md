@@ -16,19 +16,20 @@ P0 ✅ ─ P1a ✅ ─ P1b ✅ ─ P1c ✅ ─ CONTENU ✅ ─ alternatives ✅ 
                                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-30** : `npm test` → **657 verts (47 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-30** : `npm test` → **673 verts (48 fichiers)** · `npm run typecheck` propre ·
 `npx vite build` OK.
 **Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → **20/20 configurations
 saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes** (valeurs CIQUAL 2025 réelles).
 
 **Le moteur est complet.** `suggestMeals`, `suggestAlternatives`, `planWeek`, `rerollSlot`,
 `planLeftovers`, `buildShoppingList`, `scaleRecipe`, **les 5 garde-fous**. Registre à **18 couches**
-(7 exclusion + 11 score, dont **8 implémentées**), 6 archétypes. Restent non câblées : `analyzeWeek`
+(7 exclusion + 11 score, dont **8 implémentées**), 6 archétypes. Depuis le 2026-07-30 :
+`checkPlan`, `browseRecipes` et `engine/search/`. Restent non câblées : `analyzeWeek`
 et `suggestSubstitutions` (§9 ETAT).
 
 ## ▶ La prochaine étape
 
-**Les écrans** — **4 sur 8** sont livrés (Premier lancement, Aujourd'hui, Semaine, Courses), le préalable `user.db` est levé,
+**Les écrans** — **5 sur 8** sont livrés (Premier lancement, Aujourd'hui, Semaine, Courses, Recettes), le préalable `user.db` est levé,
 l'appli a un routeur à 5 routes et **le système de design des maquettes est posé** (jetons, polices
 auto-hébergées, barre à 5 onglets, mode sombre, cibles 48 px). Tableau complet écran par écran : [ETAT.md](./ETAT.md) §6.
 

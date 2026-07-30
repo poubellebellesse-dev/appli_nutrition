@@ -64,9 +64,18 @@ export interface ExclusionPassResult {
 export function runExclusionPass(
   catalog: Catalog,
   req: SuggestionRequest,
-  layers: readonly SelectionLayer[] = EXCLUSION_LAYERS
+  layers: readonly SelectionLayer[] = EXCLUSION_LAYERS,
+  initialCandidates?: CandidateSet
 ): ExclusionPassResult {
-  const initial = catalog.indexes.recipesBySlot.get(req.context.creneau) ?? new Set<RecipeId>()
+  // ⚠️ LE CRÉNEAU N'INTERVIENT QU'ICI. Aucune couche d'exclusion ne lit `context.creneau` — la
+  // seule dépendance de toute la passe est le point de départ. C'est ce qui permet à
+  // `Engine.browseRecipes` (§4.4 DESIGN, parcourir le catalogue entier) de réutiliser exactement
+  // les mêmes couches, sans créneau et sans copie : il passe son propre ensemble initial.
+  //
+  // Sans ce paramètre, un écran de recherche devrait refaire le filtrage allergènes lui-même —
+  // c'est-à-dire dupliquer un garde-fou critique, avec le risque d'afficher un plat contenant un
+  // allergène déclaré le jour où les deux versions divergent.
+  const initial = initialCandidates ?? catalog.indexes.recipesBySlot.get(req.context.creneau) ?? new Set<RecipeId>()
 
   let candidates: CandidateSet = initial
   const rejectedRecipeIds = new Set<RecipeId>()

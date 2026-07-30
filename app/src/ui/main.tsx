@@ -14,6 +14,7 @@ import { createRoot } from 'react-dom/client'
 import { Aujourdhui } from './screens/aujourdhui.js'
 import { Semaine } from './screens/semaine.js'
 import { Courses } from './screens/courses.js'
+import { Recettes } from './screens/recettes.js'
 import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
 import { Bientot } from './screens/bientot.js'
 import { Navigation } from './navigation.js'
@@ -53,6 +54,7 @@ function Ecran({ route }: { readonly route: Route }) {
   if (route === 'aujourdhui') return <Aujourdhui />
   if (route === 'semaine') return <Semaine />
   if (route === 'courses') return <Courses />
+  if (route === 'recettes') return <Recettes />
   return <Bientot route={route} titre={TITRE[route]} />
 }
 

@@ -23,6 +23,7 @@ import type {
   EngineDiagnostics,
   ExclusionLayerId,
   FoodId,
+  HardConstraints,
   PipelineTrace,
   PlanWarning,
   RecipeId,
@@ -42,6 +43,7 @@ import type {
   WeekPlan,
   WeekPlanRequest,
 } from '../domain/index.js'
+import { construireIndex, filtrerRecettes, type FiltresFacettes } from '../search/index.js'
 import { suggestAlternatives as runSuggestAlternatives } from '../selection/alternatives.js'
 import { planWeek as runPlanWeek } from '../planning/plan-week.js'
 import { planLeftovers as runPlanLeftovers } from '../planning/plan-leftovers.js'
@@ -116,6 +118,20 @@ export interface Engine {
    * possède. Un plan restauré afficherait donc zéro avertissement, silencieusement.
    */
   checkPlan(plan: WeekPlan, profile: UserProfile): readonly PlanWarning[]
+  /**
+   * Parcourt le CATALOGUE ENTIER — recherche, filtres, favoris (§4.4 DESIGN).
+   *
+   * ⚠️ À NE PAS CONFONDRE AVEC `suggestMeals`. Celui-ci répond à « que me proposer ce soir » : il
+   * part d'un créneau, score, diversifie et classe selon le profil. `browseRecipes` répond à « où
+   * est la recette que je cherche » : aucun score, aucun classement par goût — quand on cherche un
+   * plat précis, le voir passer derrière trois autres « mieux notés » est déroutant.
+   *
+   * ⚠️ LES EXCLUSIONS S'APPLIQUENT QUAND MÊME, et c'est le point. Allergies, régime et rejets
+   * personnels passent par les MÊMES couches que la suggestion — une recherche ne doit jamais
+   * afficher un plat contenant un allergène déclaré. `entonnoir` rend visible ce qui a été écarté
+   * et par quelle couche (§6.8 ENGINE, l'« entonnoir des écartées »).
+   */
+  browseRecipes(req: BrowseRequest): BrowseResult
   analyzeWeek(plan: WeekPlan, profile: UserProfile): NutritionReport
   scaleRecipe(id: RecipeId, portions: number): ScaledRecipe
   suggestSubstitutions(id: RecipeId, missing: readonly FoodId[]): readonly Substitution[]
@@ -361,6 +377,34 @@ function runSuggestMeals(catalog: Catalog, req: SuggestionRequest, now: (() => n
   return { suggestions, rejected, diagnostics }
 }
 
+export interface BrowseRequest {
+  /** Allergies, régime, exclusions durables. Les mêmes couches que `suggestMeals`. */
+  readonly constraints: HardConstraints
+  /** Texte libre — nom, description, ingrédients, cuisine. Insensible à la casse ET aux accents. */
+  readonly texte?: string
+  readonly facettes?: FiltresFacettes
+  readonly tempsMaxMin?: number | null
+  /** Section « Mes favoris » de §4.4 : restreint aux seuls favoris quand `onlyFavorites` est vrai. */
+  readonly favoriteRecipeIds?: ReadonlySet<RecipeId>
+  readonly onlyFavorites?: boolean
+}
+
+export interface BrowseResult {
+  /** Recettes retenues, dans l'ordre du catalogue — aucun classement par goût (voir `browseRecipes`). */
+  readonly recipeIds: readonly RecipeId[]
+  /**
+   * Ce que les couches d'exclusion ont écarté, et par laquelle (§6.8 ENGINE).
+   *
+   * ⚠️ Ne compte QUE les exclusions dures. Les recettes écartées par la recherche textuelle ou par
+   * une pastille de filtre n'y figurent pas : l'utilisateur vient de les demander, les présenter
+   * comme « écartées » serait absurde. L'entonnoir montre ce que ses CONTRAINTES lui retirent, pas
+   * ce que sa recherche a précisé.
+   */
+  readonly entonnoir: RejectionSummary
+  /** Recettes du catalogue avant toute exclusion — le premier nombre de l'entonnoir. */
+  readonly totalCatalogue: number
+}
+
 export interface CreateEngineOptions {
   /**
    * Horloge injectée, pour `EngineDiagnostics.dureeMs` uniquement — jamais `Date.now()` en
@@ -379,8 +423,29 @@ export interface CreateEngineOptions {
  * `suggestMeals` (voir `runSuggestMeals` ci-dessus). Les 7 méthodes de planification restantes
  * lèvent explicitement, `layer`/`layers` exposent le registre.
  */
+/**
+ * Profil neutre servant de porteur à `browseRecipes`.
+ *
+ * ⚠️ IL N'INFLUENCE RIEN. Aucune couche d'EXCLUSION ne lit le profil — seules les couches de score
+ * le font, et `browseRecipes` n'en exécute aucune. Il est là parce que `SuggestionRequest` exige le
+ * champ, pas parce qu'une valeur a du sens ici. Ne pas le confondre avec le profil semé au premier
+ * lancement (`ui/socle.ts`), qui, lui, sert vraiment.
+ */
+const PROFIL_NEUTRE: UserProfile = {
+  trancheAge: '30_49',
+  sexe: 'NP',
+  tailleCm: null,
+  poidsKg: null,
+  niveauActivite: 'actif',
+  facteurPortion: 1,
+}
+
 export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): Engine {
   const enrichedCatalog = attachDerivedIndexes(catalog)
+  // Index de recherche construit UNE FOIS, comme les index dérivés : normaliser 241 recettes et
+  // leurs ingrédients à chaque frappe serait refaire le même travail des dizaines de fois par
+  // seconde, sur le fil principal, pendant que l'utilisateur écrit.
+  const indexRecherche = construireIndex(enrichedCatalog)
   const { now } = opts
 
   return {
@@ -427,6 +492,50 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       return { ...apres, warnings: checkCalorieFloor(apres, contexte.profile, enrichedCatalog) }
     },
     checkPlan: (plan, profile) => checkCalorieFloor(plan, profile, enrichedCatalog),
+    browseRecipes: (req) => {
+      // Point de départ : TOUT le catalogue, ou les seuls favoris (§4.4, section « Mes favoris »).
+      // Un `onlyFavorites` sans favori rend une liste vide — c'est correct et lisible à l'écran,
+      // à la différence de `suggestMeals` qui lève : ici l'utilisateur voit qu'il n'en a aucun.
+      const favoris = req.favoriteRecipeIds ?? new Set<RecipeId>()
+      const depart: ReadonlySet<RecipeId> =
+        req.onlyFavorites === true ? favoris : new Set(enrichedCatalog.recipes.keys())
+
+      // ⚠️ LES MÊMES COUCHES QUE LA SUGGESTION, avec un ensemble initial fourni plutôt que déduit
+      // d'un créneau. La requête ci-dessous n'est qu'un porteur de contraintes : `context.creneau`
+      // n'est LU PAR AUCUNE couche d'exclusion (seul `runExclusionPass` s'en servait pour son point
+      // de départ, que l'on remplace). Le reste est neutre — aucun historique, aucune préférence,
+      // aucun archétype : parcourir n'est pas juger.
+      const requete: SuggestionRequest = {
+        profile: PROFIL_NEUTRE,
+        constraints: req.constraints,
+        context: {
+          date: '1970-01-01',
+          creneau: 'diner',
+          envie: null,
+          tempsDisponibleMin: null,
+          requiredFoodIds: [],
+          pantryFoodIds: [],
+        },
+        history: { windowDays: 0, entries: [] },
+        preferences: new Map(),
+        favoriteRecipeIds: favoris,
+        activeTopics: [],
+        seed: 0,
+      }
+
+      const exclusion = runExclusionPass(enrichedCatalog, requete, EXCLUSION_LAYERS, depart)
+      const recipeIds = filtrerRecettes(enrichedCatalog, indexRecherche, exclusion.candidates, {
+        ...(req.texte === undefined ? {} : { texte: req.texte }),
+        ...(req.facettes === undefined ? {} : { facettes: req.facettes }),
+        ...(req.tempsMaxMin === undefined ? {} : { tempsMaxMin: req.tempsMaxMin }),
+      })
+
+      return {
+        recipeIds,
+        entonnoir: buildRejectionSummary(depart.size, exclusion),
+        totalCatalogue: enrichedCatalog.recipes.size,
+      }
+    },
     // ⚠️ `convives` n'est pas dans `WeekPlan` — il vient de la REQUÊTE. `planLeftovers` étant
     // appelable seul sur un plan déjà rendu, l'appelant doit le repasser ; défaut 1.
     //
