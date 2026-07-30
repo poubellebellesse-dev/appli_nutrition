@@ -1,10 +1,11 @@
 # Index de la documentation
 
-Huit documents vivants, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel
+**Sept documents vivants**, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel
 lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
 
-> Les récits des sessions 1 à 4 sont dans [archive/](./archive/) : ils ne décrivent plus l'état du
-> projet. Ils ne sont ni faux ni supprimables — voir [archive/README.md](./archive/README.md).
+> Les instantanés datés — récits des sessions 1 à 5 et audit du 2026-07-27 — sont dans
+> [archive/](./archive/) : ils ne décrivent plus l'état du projet. Ils ne sont ni faux ni
+> supprimables, voir [archive/README.md](./archive/README.md).
 
 ## Par où commencer
 
@@ -42,10 +43,13 @@ corrige dans le document, elle ne se contourne pas dans le code.
 
 ### 📖 Instantanés datés — **ne jamais réécrire**
 
+Tous rangés dans [archive/](./archive/) — voir [archive/README.md](./archive/README.md) pour le
+détail. Deux repères :
+
 | Document | Ce qu'il consigne |
 |---|---|
-| [AUDIT_2026-07-27.md](./AUDIT_2026-07-27.md) | Regard **extérieur** sur le dépôt au commit `e2625d3` (112 recettes) — architecture, code, planification, marché. **Chiffres dépassés ; deux constats restent VIVANTS et non traités** : zéro photo, revue juridique (le lexique, lui, est passé de 4 à 62 gestes) |
-| [archive/](./archive/) | Récits des sessions 1 à 4, écartés du dossier principal — voir [archive/README.md](./archive/README.md). **Le récit de la session 4 §2 consigne ce que la mesure a démenti** |
+| [archive/AUDIT_2026-07-27.md](./archive/AUDIT_2026-07-27.md) | Regard **extérieur** sur le dépôt au commit `e2625d3` (112 recettes). Chiffres dépassés ; **deux constats restent VIVANTS** : zéro photo, revue juridique |
+| [archive/RECAP_SESSION_5.md](./archive/RECAP_SESSION_5.md) | La session la plus récente — 8 écrans, `user.db`, installabilité. **§2 consigne ce que le navigateur et l'usage ont démenti** |
 
 Ils décrivent un état **vrai à leur date**. Les corriger après coup falsifierait l'historique : une
 affirmation devenue fausse se corrige dans les documents de référence, pas dans le récit qui l'a
@@ -73,3 +77,8 @@ corrections (le compte de couches est passé de 12 à 18 en cinq étapes, chacun
 **Une décision se range à un seul endroit.** Tranchée → `ETAT.md` §3. Encore ouverte → `ETAT.md`
 §4. Propre à un chantier → le document de chantier. La fiche de reprise ne fait que *pointer* vers
 elles.
+
+**Un journal de travail achevé n'est pas de l'état.** `ETAT.md` a porté jusqu'au 2026-07-31 un
+journal de 170 lignes des lots terminés — que git conservait déjà, et qui noyait l'état courant. Il
+est passé dans [archive/RECAP_SESSION_5.md](./archive/RECAP_SESSION_5.md) §7. `ETAT.md` décrit ce
+qui EST, pas ce qui a été fait.

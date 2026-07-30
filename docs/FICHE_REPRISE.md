@@ -1,6 +1,6 @@
 # ⭐ Fiche de reprise — appli_nutrition
 
-> **Mise à jour : 2026-07-30.** Une page, jamais plus. Tout le reste est dans
+> **Mise à jour : 2026-07-31.** Une page, jamais plus. Tout le reste est dans
 > [ETAT.md](./ETAT.md) — avancement, décisions, dette. Index : [README.md](./README.md).
 > Font foi : [ENGINE.md](./ENGINE.md) (moteur), [ARCHITECTURE.md](./ARCHITECTURE.md) (le reste).
 
@@ -12,51 +12,33 @@ SQLite construit au build, PWA React servie en statique.
 ## Où on en est
 
 ```
-P0 ✅ ─ P1a ✅ ─ P1b ✅ ─ P1c ✅ ─ CONTENU ✅ ─ alternatives ✅ ─ planning ✅ ─ courses ✅ ─ lexique ✅ ─ user.db ✅ ─▶ UI ▓▓
-                                                                                                          ⬅ ICI
+MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 8 ÉCRANS ✅ ─ INSTALLABLE ✅ ─▶ CONTENU & DISTRIBUTION ▓▓
+                                                                                        ⬅ ICI
 ```
 
 **Vérifié le 2026-07-30** : `npm test` → **725 verts (50 fichiers)** · `npm run typecheck` propre ·
-`npx vite build` OK.
-**Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → **20/20 configurations
-saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes, 8 tips** (valeurs CIQUAL 2025 réelles).
+`npx vite build` OK · `npm run build` → **199 aliments, 241 recettes, 62 gestes, 8 tips**.
+**Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → 20/20 configurations saines.
 
-**Le moteur est complet.** `suggestMeals`, `suggestAlternatives`, `planWeek`, `rerollSlot`,
-`planLeftovers`, `buildShoppingList`, `scaleRecipe`, **les 5 garde-fous**. Registre à **18 couches**
-(7 exclusion + 11 score, dont **8 implémentées**), 6 archétypes. Depuis le 2026-07-30 :
-`checkPlan`, `browseRecipes` et `engine/search/`. Restent non câblées : `analyzeWeek`
-et `suggestSubstitutions` (§9 ETAT).
+**L'application fait sa boucle complète** : s'installer → déclarer ses allergies → voir une
+suggestion → planifier sa semaine → sortir sa liste de courses → cuisiner. Plus « partir de ce
+qu'on a » et un lexique de 62 gestes.
 
 ## ▶ La prochaine étape
 
-**Les huit écrans sont livrés.** Premier lancement, Aujourd'hui, Semaine, Courses, Recettes,
-Détail d'une recette, Vider le frigo, Savoir. Ce qui reste n'est plus de l'écran mais du **contenu**
-et de la **distribution** — voir ETAT §9, le préalable `user.db` est levé,
-l'appli a un routeur à 5 routes et **le système de design des maquettes est posé** (jetons, polices
-auto-hébergées, barre à 5 onglets, mode sombre, cibles 48 px). Tableau complet écran par écran : [ETAT.md](./ETAT.md) §6.
+**Ce qui reste n'est plus du code d'écran.** Trois chantiers, par ordre de dépendance :
 
-> ✅ **`user.db` existe.** Schéma complet de §4.3 ARCHITECTURE (v2), migrations versionnées sur
-> `app_meta.schema_version`. Base **en mémoire**, persistée en **fichier OPFS** — aucun VFS OPFS de
-> SQLite ne tourne hors Worker, voir les pièges. `requeteDemo()` a disparu : profil, contraintes,
-> goûts, historique et **plan de semaine** sont persistés.
->
-> ⚠️ **Ce qui reste non vérifié en navigateur** : le premier essai a fait tomber le VFS OPFS
-> (corrigé). Depuis la correction, **personne n'a rouvert la page**. Premier geste de la prochaine
-> session : `npm run dev`, « J'ai choisi ce plat », recharger, vérifier que le compteur tient.
+1. **Vérifier sur un vrai téléphone.** `npx vite build && npx vite preview --host`, puis installer.
+   Le service worker et l'installation **ne s'activent qu'en build de production** — `npm run dev`
+   ne les monte pas.
+2. **Hébergement, puis Play.** Origine HTTPS + `/.well-known/assetlinks.json` : sans ce fichier, la
+   barre d'URL ne se masque pas et Bubblewrap ne peut rien empaqueter. Hébergeur et domaine non
+   choisis (STRATEGIE_DISTRIBUTION §3).
+3. **Contenu** — photos (0 sur 241), lexique illustré, tips de nutrition humaine, chapitres
+   « Comprendre ». Rien de tout cela n'est un problème de code.
 
-> ✅ **L'appli est INSTALLABLE** (2026-07-30) — manifest `standalone`, icônes, service worker de
-> pré-cache, test « zéro requête réseau ». Cible de distribution tranchée : **Play via TWA d'abord,
-> iOS plus tard** (STRATEGIE_DISTRIBUTION §3). Il manque l'hébergement HTTPS + `assetlinks.json`
-> pour empaqueter.
->
-> ⚠️ **Le service worker ne tourne QU'EN BUILD DE PRODUCTION.** `npm run dev` ne l'active pas —
-> exprès : un cache qui sert de vieux fichiers pendant que Vite en pousse d'autres par HMR fait
-> déboguer une version qui n'existe plus. Pour tester l'installation :
-> `npx vite build && npx vite preview`.
-
-La PWA tourne : `npm run dev`. Écrans **Courses (4.3)** et **Premier lancement (4.8)** sont les plus
-prêts : le moteur et les données les attendent, et les maquettes existent pour les huit écrans
-(`maquete claude design/`, à lire AVANT de coder un écran — je ne l'avais pas fait pour Semaine).
+**Et une dette qui grossit** : **zéro test d'interface**. Sur les défauts de la session 5, trois ont
+été trouvés en utilisant l'application, un en relisant le code, **aucun par la suite de tests**.
 
 ## Les cinq acquis à ne pas défaire
 
@@ -67,79 +49,64 @@ prêts : le moteur et les données les attendent, et les maquettes existent pour
    *structurellement inexprimable* dans un plan de semaine. La garantie vient de la forme.
 3. **Une couche qui ne discrimine pas n'est jamais citée** dans une explication — sinon on annonce
    « proche de vos goûts » à quelqu'un dont l'appli ne sait rien.
-4. **Deux espaces de signature, à ne pas fusionner.** `recipeSignature` (brut) sert la SIMILARITÉ,
-   qui doit distinguer un blanc de poulet d'un tajine de cuisses ; `recipeFamilySignature` (replié
-   par sous-famille) sert la RÉCENCE, qui se moque du morceau.
-5. **Une recette déclare UN SEUL régime**, le plus restrictif qu'elle respecte. La couche `regime`
-   connaît la chaîne `vegetalien ⊂ vegetarien ⊂ pescetarien ⊂ omnivore`. **L'origine animale est un
-   fait, pas un régime** : `Food.origineAnimale` + `deriveDe`, propagés en cascade.
+4. **Deux espaces de signature, à ne pas fusionner.** `recipeSignature` (brut) sert la SIMILARITÉ ;
+   `recipeFamilySignature` (replié par sous-famille) sert la RÉCENCE, qui se moque du morceau.
+5. **Une recette déclare UN SEUL régime**, le plus restrictif qu'elle respecte. **L'origine animale
+   est un fait, pas un régime** : `Food.origineAnimale` + `deriveDe`, propagés en cascade.
 
-## Onze pièges qui ne se voient pas
+## Les pièges qui ne se voient pas
 
-- ⚠️ **`catalog-loader.ts` ne doit importer AUCUN module Node.** L'import est **hoisté** : un
-  `import 'node:sqlite'` casse le bundle navigateur même si la fonction qui l'utilise n'est jamais
-  appelée. Le message de Rollup ne désigne pas cette cause. → `catalog-loader-node.ts`.
-- ⚠️ **`vitest.config.ts` est séparé de `vite.config.ts` exprès.** Vitest lit `vite.config.ts` faute
-  de config dédiée : y poser `root: 'app'` a fait passer la suite de **572 tests à 528 sans le
-  moindre échec**.
-- ⚠️ **La cohérence ne dit rien de la couverture.** Le lexique avait 43 fiches, zéro référence
-  cassée, zéro fiche orpheline — et des gestes courants annotés nulle part. Un test qui vérifie une
-  liste écrite à la main ne vérifie que lui-même.
-- ⚠️ **`MealHistory.windowDays` n'est lu par AUCUNE couche.** `habit` et `variety` consomment
-  toutes les entrées qu'on leur passe. La fenêtre de 21 jours de §13 ENGINE n'existe que parce que
-  `readHistory` la borne en SQL. Passer un historique complet au moteur le laisserait figer les
-  suggestions sur les plats des premiers mois — sans erreur, sans test rouge.
-- ⚠️ **Une PRIMARY KEY contenant une colonne NULL ne dédoublonne pas** dans SQLite : deux `NULL`
-  n'y sont jamais égaux. `meal_plan_entry` aurait accepté deux plats sur le même créneau en mode
-  recette (`service IS NULL`). → index UNIQUE sur `COALESCE(service, '')`, verrouillé par test.
-- ⚠️ **Les maquettes ne respectent pas leur propre exigence de contraste.** Le blanc sur l'accent
-  `#bd6a48` — **le bouton principal** — donne 3,95:1, sous le seuil AA. Idem pour le gris des
-  libellés d'onglets (3,59:1). Reproduire une maquette « au pixel » peut donc violer le cahier des
-  charges qui l'accompagne. Écarts mesurés et documentés en §1 DESIGN.
-- ⚠️ **Hacher les NOMS de fichiers ne suffit pas à invalider un cache.** Vite encode le contenu
-  dans le nom des bundles — mais tout ce qui vit dans `public/` (`catalog.db`, polices, icônes,
-  manifest) a un nom FIXE. Une version de cache calculée sur la liste des noms ne bougeait donc pas
-  quand le catalogue changeait : le service worker servait l'ancien `catalog.db` indéfiniment, et
-  une mise à jour de contenu n'atteignait jamais un utilisateur installé. Invisible en dev (pas de
-  SW) et à tout build où le code change aussi. → hacher le CONTENU des fichiers à nom fixe.
-- ⚠️ **Aucun VFS OPFS de SQLite ne tourne sur le thread principal.** Les deux (`opfs` et
-  `opfs-sahpool`) testent `createSyncAccessHandle`, déclaré `[Exposed=DedicatedWorker]` : la méthode
-  n'existe pas hors d'un Worker, et **aucune en-tête COOP/COEP n'y change rien**. Erreur affichée :
-  « Missing required OPFS APIs ». → base en mémoire + fichier OPFS réécrit (`user-source.ts`).
-  Typecheck et `vite build` passaient parfaitement ; seul le navigateur l'a dit.
-- ⚠️ **`uniteAffichage` est un texte figé, jamais mis à l'échelle par le moteur** — et c'est voulu
-  (`scale-recipe.ts` refuse de « réécrire du français »). Un écran qui l'affiche tel quel montre donc
-  des quantités qui ne bougent pas ; un écran qui le remplace par des grammes transforme
-  « 4 artichauts » en « 2,4 kg » et « 1 pincée de sel » en « 8 g ». La sortie est de multiplier le
-  NOMBRE DE TÊTE du libellé (`ui/quantites.ts`), qui porte déjà la bonne unité.
-- ⚠️ **Un garde-fou sans source de données ne garde rien.** Le filtre allergènes est critique et
-  incontournable — et il a tourné sur une liste VIDE jusqu'au 2026-07-30, parce qu'aucun écran ne
-  demandait ses allergies. Même défaut que la couche `preference` en P1b-2. Le prochain sur la
-  liste : `MealContext.requiredFoodIds`, `user_signal` et `user_display`, tous déclarés, aucun
-  rempli.
+**Chaîne de build**
+
+- ⚠️ **`catalog-loader.ts` et les `user-*.ts` ne doivent importer AUCUN module Node.** L'import est
+  **hoisté** : un `import 'node:sqlite'` casse le bundle navigateur même si la fonction n'est jamais
+  appelée. Le message de Rollup ne désigne pas la cause. Seul `vite build` l'attrape.
+- ⚠️ **`vitest.config.ts` est séparé de `vite.config.ts` exprès.** Y poser `root: 'app'` a fait
+  passer la suite de **572 tests à 528 sans le moindre échec**.
+- ⚠️ **Hacher les NOMS de fichiers n'invalide pas un cache.** Tout ce qui vit dans `public/`
+  (`catalog.db`, polices, icônes) a un nom FIXE : une mise à jour de contenu n'atteignait **jamais**
+  un utilisateur installé. → hacher le CONTENU. Invisible en dev et à tout build où le code change.
+
+**Navigateur**
+
+- ⚠️ **Aucun VFS OPFS de SQLite ne tourne sur le thread principal.** Les deux testent
+  `createSyncAccessHandle`, `[Exposed=DedicatedWorker]` — **aucune en-tête COOP/COEP n'y change
+  rien**. → base en mémoire + fichier OPFS réécrit (`user-source.ts`).
+- ⚠️ **Les drapeaux ne se rendent pas sous Windows** (« FR », « IT » à la place). Normal, pas un bug.
+
+**Moteur et données**
+
+- ⚠️ **Un garde-fou sans source de données ne garde rien.** Le filtre allergènes a tourné sur une
+  liste VIDE jusqu'à ce que l'onboarding existe. Même défaut que `preference` en P1b-2. Vérifier
+  qu'un champ déclaré est bien REMPLI par un écran.
+- ⚠️ **`MealHistory.windowDays` n'est lu par AUCUNE couche.** La fenêtre de 21 jours n'existe que
+  parce que `readHistory` la borne en SQL.
+- ⚠️ **Une PRIMARY KEY contenant une colonne NULL ne dédoublonne pas** dans SQLite. → index UNIQUE
+  sur `COALESCE(service, '')`.
 - ⚠️ **`INSERT OR REPLACE` SUPPRIME la ligne avant de réinsérer**, donc déclenche les
-  `ON DELETE CASCADE` qui pointent vers elle. `savePlan` effaçait ainsi toute la liste de courses et
-  ses articles ajoutés à la main — et il est appelé à chaque « Garder » d'un créneau. → `INSERT …
-  ON CONFLICT DO UPDATE` quand des enfants dépendent de la ligne. Verrouillé par test.
+  `ON DELETE CASCADE`. `savePlan` effaçait toute la liste de courses à chaque « Garder ». →
+  `INSERT … ON CONFLICT DO UPDATE` dès qu'une ligne a des enfants.
 - ⚠️ **Un plan relu depuis `user.db` arrive SANS ses avertissements.** `readPlan` rend
-  `warnings: []` exprès — un avertissement de plancher calorique dépend du profil, le figer en base
-  le ferait mentir. Tout plan restauré DOIT repasser par `moteur.checkPlan`, sinon l'alerte de §6.5
-  disparaît au rechargement de la page, en silence.
+  `warnings: []` exprès — ils dépendent du profil. Repasser par `moteur.checkPlan`.
+- ⚠️ **`uniteAffichage` est un texte figé, jamais mis à l'échelle par le moteur** — et c'est voulu.
+  Un écran qui l'affiche tel quel montre des quantités qui ne bougent pas ; un écran qui le remplace
+  par des grammes transforme « 4 artichauts » en « 2,4 kg ». → `ui/quantites.ts`.
 
-## La leçon de fond
+**Méthode**
 
-Remplir le catalogue a servi de **banc de mesure** et a révélé cinq défauts invisibles sur
-10 recettes. Tous corrigés **par mesure**, jamais au jugé.
-
-> **Trois de mes propres recommandations ont été démenties par le banc.** Et le diagnostic
-> « le catalogue est trop léger pour le plancher calorique » était faux : la meilleure journée
-> atteignait déjà 2 127 kcal. **Mesurer avant de trancher, et se méfier d'un banc qui ne contredit
-> jamais celui qui l'écrit.** Récit : [archive/RECAP_SESSION_4.md](./archive/RECAP_SESSION_4.md) §2.
+- ⚠️ **La cohérence ne dit rien de la couverture.** Le lexique avait 43 fiches, zéro référence
+  cassée — et des gestes courants annotés nulle part. Un test qui vérifie une liste écrite à la main
+  ne vérifie que lui-même.
+- ⚠️ **Les maquettes contredisent leur propre cahier des charges.** Leur bouton principal est à
+  3,95:1, sous le seuil AA, alors que le même bundle exige 7:1. Reproduire « au pixel » peut violer
+  la spec jointe. Écarts mesurés en §1 DESIGN.
 
 ## Avant de coder
 
 - ⚠️ `git status -sb` — des commits peuvent ne pas être poussés. **Claude committe, l'utilisateur
   pousse** (le shell agent ne peut pas s'authentifier auprès de GitHub).
+- ⚠️ **Lire la maquette de l'écran AVANT de le coder** (`maquete claude design/`). J'ai codé Semaine
+  sans le faire, alors que `DESIGN.md` §1 et §2 documentaient déjà les jetons et la navigation.
 - Les valeurs nutritionnelles **ne s'écrivent JAMAIS à la main** : `foods.yaml` + `ciqual-mapping.yaml`,
   puis `npm run catalog:ciqual -- --write`.
 - Méthode (`CLAUDE.md`) : plan ≤3 bullets avant toute tâche 2+ fichiers · TDD sur la logique moteur ·
@@ -149,9 +116,9 @@ Remplir le catalogue a servi de **banc de mesure** et a révélé cinq défauts 
 
 | Question | Document |
 |---|---|
-| Avancement détaillé, **écrans un par un**, décisions, **dette connue** | [ETAT.md](./ETAT.md) |
+| Avancement, **écrans un par un**, décisions, **dette connue** (§8) | [ETAT.md](./ETAT.md) |
 | Comment marche une couche, un algorithme, l'API | [ENGINE.md](./ENGINE.md) |
 | Périmètre produit, données, cadre légal | [ARCHITECTURE.md](./ARCHITECTURE.md) |
-| Écrans, navigation, badge de preuve | [DESIGN.md](./DESIGN.md) |
-| Ce qui a été essayé **et écarté**, et pourquoi | [archive/RECAP_SESSION_4.md](./archive/RECAP_SESSION_4.md) |
-| Points ouverts non traités (photos, juridique) | [AUDIT_2026-07-27.md](./AUDIT_2026-07-27.md) |
+| Écrans, jetons visuels, badge de preuve | [DESIGN.md](./DESIGN.md) |
+| Stores, hébergement, modèle économique | [STRATEGIE_DISTRIBUTION.md](./STRATEGIE_DISTRIBUTION.md) |
+| Ce qui a été essayé **et écarté**, et pourquoi | [archive/](./archive/) |
