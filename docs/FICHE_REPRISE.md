@@ -16,7 +16,7 @@ P0 ✅ ─ P1a ✅ ─ P1b ✅ ─ P1c ✅ ─ CONTENU ✅ ─ alternatives ✅ 
                                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-30** : `npm test` → **604 verts (45 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-30** : `npm test` → **630 verts (46 fichiers)** · `npm run typecheck` propre ·
 `npx vite build` OK.
 **Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → **20/20 configurations
 saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes** (valeurs CIQUAL 2025 réelles).
@@ -28,8 +28,8 @@ et `suggestSubstitutions` (§9 ETAT).
 
 ## ▶ La prochaine étape
 
-**Les écrans** — 1 sur 8 est livré, et **le préalable `user.db` est levé** (2026-07-30). Tableau
-complet écran par écran : [ETAT.md](./ETAT.md) §6.
+**Les écrans** — **2 sur 8** sont livrés (Aujourd'hui, Semaine), le préalable `user.db` est levé et
+l'appli a un routeur. Tableau complet écran par écran : [ETAT.md](./ETAT.md) §6.
 
 > ✅ **`user.db` existe.** Schéma complet de §4.3 ARCHITECTURE en v1, migrations versionnées sur
 > `app_meta.schema_version`, OPFS via le VFS `opfs-sahpool`. `requeteDemo()` a disparu : l'écran lit
@@ -79,6 +79,10 @@ moteur → écran) avant d'investir dans huit écrans construits sur une chaîne
 - ⚠️ **Une PRIMARY KEY contenant une colonne NULL ne dédoublonne pas** dans SQLite : deux `NULL`
   n'y sont jamais égaux. `meal_plan_entry` aurait accepté deux plats sur le même créneau en mode
   recette (`service IS NULL`). → index UNIQUE sur `COALESCE(service, '')`, verrouillé par test.
+- ⚠️ **Un plan relu depuis `user.db` arrive SANS ses avertissements.** `readPlan` rend
+  `warnings: []` exprès — un avertissement de plancher calorique dépend du profil, le figer en base
+  le ferait mentir. Tout plan restauré DOIT repasser par `moteur.checkPlan`, sinon l'alerte de §6.5
+  disparaît au rechargement de la page, en silence.
 
 ## La leçon de fond
 

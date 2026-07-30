@@ -423,7 +423,7 @@ l'interface mais de **prouver la chaîne complète dans un navigateur** avant d'
 | § DESIGN | Écran | Ce que le moteur fournit | État |
 |---|---|---|---|
 | 4.1 | 📅 **Aujourd'hui** | `suggestMeals` ✅ | **Livré**, sans photo ni tags cliquables |
-| 4.2 | 🗓 **Semaine** | `planWeek` · `rerollSlot` · `planLeftovers` ✅ | Prêt à coder |
+| 4.2 | 🗓 **Semaine** | `planWeek` · `rerollSlot` · `planLeftovers` ✅ | **Livré** (2026-07-30) — hors carrousel, vue « 3 propositions », écarter/pouce-bas |
 | 4.3 | 🛒 **Courses** | `buildShoppingList` ✅ (`pourSlots` couvre « ranger par repas / jour ») | Prêt à coder |
 | 4.4 | 📖 **Recettes** | ⛔ **rien** — aucune API de recherche / filtre / autocomplétion | À concevoir d'abord |
 | 4.5 | 💡 **Vider le frigo** | couche `pantry` + `ingredientsManquants` ✅ | Prêt à coder |
@@ -560,6 +560,15 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   ailleurs », jamais comme une base corrompue — ce message n'est pas encore écrit.
 - ⚠️ **Aucun export / import** (§7 ARCHITECTURE mesures 3 à 5). `user.db` ne se re-télécharge pas :
   tant que la sauvegarde manuelle n'existe pas, un effacement de stockage est une perte sèche.
+- ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
+  `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
+  Les écrans ne sont couverts que par `typecheck` et `vite build`.
+- **Écran Semaine — reste à faire** (§4.2 DESIGN) : le carrousel plein écran de « Changer », la vue
+  comparative « 3 propositions », « écarter » comme exclusion éphémère de session, le pouce-bas vers
+  `user_signal`, et le bouton « Créer ma liste de courses » (attend l'écran 4.3).
+- **Ajout à §4.2 : un sélecteur « Convives »**, que la spec ne prévoit pas. `planLeftovers` ne peut
+  rien calculer sans lui — une recette de 4 portions ne laisse un reste que si l'on sait combien en
+  sont mangées. Le laisser caché ferait apparaître des restes sans explication à l'écran.
 - ⛔ **Aucune API de recherche** (recherche plein texte, autocomplétion, filtres) — l'écran Recettes
   (§4.4 DESIGN) n'a rien sur quoi se brancher. À concevoir, pas juste à câbler.
 - ⛔ **Aucune table de tips** pour le carrousel « Le saviez-vous ? » (§4.7 DESIGN).
