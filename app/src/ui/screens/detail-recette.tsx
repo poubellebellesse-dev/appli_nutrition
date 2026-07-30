@@ -28,11 +28,13 @@ import type {
 import { readDisplay, readUserState, setFavorite, writeDisplay } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import { hashDe } from '../router.js'
+import { quantiteAffichee } from '../quantites.js'
 
 interface Vue {
   readonly recette: Recipe
   readonly catalogue: Catalog
   readonly nomAliment: (id: string) => string
+  readonly estFondDePlacard: (id: string) => boolean
   readonly quantitePour: (portions: number) => ReadonlyMap<string, number>
   readonly favori: boolean
   readonly manquants: ReadonlySet<string>
@@ -78,6 +80,8 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
             recette,
             catalogue: socle.catalogue,
             nomAliment: (foodId) => socle.catalogue.foods.get(foodId as never)?.nom ?? foodId,
+            estFondDePlacard: (foodId) =>
+              socle.catalogue.foods.get(foodId as never)?.fondDePlacard === true,
             // ⚠️ ON LIT `quantiteG`, PAS `uniteAffichage`. C'était le bug de la première version :
             // `scaleRecipe` recalcule les grammes mais laisse le libellé TEL QUEL, à dessein — « 2
             // carottes » ne se met pas à l'échelle sans réécrire du français, et « 1,5 pincée »
@@ -159,7 +163,7 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
   const { recette } = vue
   const portionsAffichees = portions ?? recette.portionsBase
   const quantites = vue.quantitePour(portionsAffichees)
-  const aLaBase = portionsAffichees === recette.portionsBase
+  const facteur = portionsAffichees / (recette.portionsBase > 0 ? recette.portionsBase : 1)
 
   return (
     <article>
@@ -202,23 +206,25 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
       <ul className="mt-3 space-y-1">
         {recette.ingredients.map((ingredient) => {
           const foodId = ingredient.foodId as string
+          const quantite = quantiteAffichee({
+            libelle: ingredient.uniteAffichage,
+            facteur,
+            fondDePlacard: vue.estFondDePlacard(foodId),
+            grammes: quantites.get(foodId) ?? ingredient.quantiteG,
+          })
           return (
             <li key={foodId} className="flex flex-wrap items-baseline gap-x-2 py-1 text-[1.08rem] text-texte">
-              {/* Au nombre de portions de la recette, le libellé écrit à la main est EXACT et plus
-                  lisible que des grammes (« 2 carottes » vaut mieux que « 240 g »). Dès qu'on
-                  s'écarte, il devient faux : on bascule alors sur la quantité recalculée, et on
-                  rappelle le libellé d'origine EN NOTE pour que l'utilisateur puisse s'y retrouver.
-                  Jamais les deux comme s'ils étaient d'accord. */}
-              <span className="tabular-nums text-texte-doux">
-                {aLaBase ? ingredient.uniteAffichage : formaterQuantite(quantites.get(foodId))}
-              </span>
+              {/* Le LIBELLÉ est mis à l'échelle, pas converti en grammes : il porte déjà la bonne
+                  unité (pièces, cuillères, centilitres), que le catalogue, lui, ignore. Voir
+                  ui/quantites.ts pour la règle et ses limites. */}
+              <span className="tabular-nums text-texte-doux">{quantite.texte}</span>
               <span>{vue.nomAliment(foodId)}</span>
-              {!aLaBase && (
-                <span className="text-[0.85rem] text-attenue">
-                  (pour {recette.portionsBase} : {ingredient.uniteAffichage})
-                </span>
-              )}
               {ingredient.optionnel && <span className="text-[0.9rem] text-attenue">(facultatif)</span>}
+              {/* Dire QUAND une quantité ne suit pas les portions, sinon on croit à un bug — c'est
+                  précisément ce qui a été signalé quand tout partait en grammes. */}
+              {quantite.fige && (
+                <span className="text-[0.85rem] text-attenue">· quantité au goût, non ajustée</span>
+              )}
               {/* « Absents du garde-manger signalés DISCRÈTEMENT » (§4.6) : une mention, pas un
                   avertissement — ne rien avoir chez soi est le cas normal, pas un problème. */}
               {vue.manquants.has(foodId) && (
@@ -243,21 +249,6 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
       />
     </article>
   )
-}
-
-/**
- * Grammes → texte lisible.
- *
- * ⚠️ VOLONTAIREMENT PAUVRE : grammes et kilos, jamais de conversion en pièces. `shopping-list.ts`
- * sait convertir en pièces (`Food.poidsPieceG`) et en conditionnements ; refaire ce calcul ici en
- * produirait une seconde version, qui divergerait. Le jour où l'on veut « 3 carottes » sur cette
- * fiche, il faut EXTRAIRE la conversion du domaine et l'appeler des deux côtés — pas la recopier.
- */
-function formaterQuantite(grammes: number | undefined): string {
-  if (grammes === undefined) return ''
-  if (grammes >= 1000) return `${(grammes / 1000).toFixed(grammes % 1000 === 0 ? 0 : 1).replace('.', ',')} kg`
-  // Un dixième de gramme n'a aucun sens en cuisine ; l'arrondi à l'entier évite « 83,3 g ».
-  return `${Math.round(grammes)} g`
 }
 
 /**

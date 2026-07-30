@@ -601,6 +601,15 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   (`user_recipe_note`, table créée sans accesseur), la roue des goûts, « Ajouter à ma semaine ».
 - ⚠️ **Les 62 fiches du lexique sont du TEXTE SEUL.** §8.5 les annonce illustrées et §4.6 prévoit
   une animation par geste ; il n'y a ni image ni clip. Le geste se déplie quand même, en texte.
+- ⚠️ **Le catalogue n'a NI densité NI marqueur de liquide** (199 aliments, aucun des deux). Les
+  centilitres ne sont donc pas dérivables : `ui/quantites.ts` les CONSERVE depuis le libellé écrit à
+  la main plutôt que de les calculer. Suffisant pour la fiche recette ; insuffisant le jour où il
+  faudra convertir une quantité que le libellé n'exprime pas déjà dans la bonne unité.
+- ⚠️ **Deux conversions grammes → unité d'usage coexistent.** `shopping-list.ts` convertit en pièces
+  et en conditionnements (arrondi d'ACHAT, on achète un légume entier) ; `ui/quantites.ts` met le
+  libellé à l'échelle (pas d'arrondi d'achat, on cuisine ce qui est écrit). Elles ne font pas la même
+  chose et lisent le même champ `Food.poidsPieceG` — mais si un jour la fiche recette doit rendre des
+  pièces, il faudra EXTRAIRE la conversion du domaine, pas la recopier.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

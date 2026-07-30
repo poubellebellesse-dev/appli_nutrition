@@ -16,7 +16,7 @@ P0 ✅ ─ P1a ✅ ─ P1b ✅ ─ P1c ✅ ─ CONTENU ✅ ─ alternatives ✅ 
                                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-30** : `npm test` → **677 verts (48 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-30** : `npm test` → **695 verts (49 fichiers)** · `npm run typecheck` propre ·
 `npx vite build` OK.
 **Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → **20/20 configurations
 saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes** (valeurs CIQUAL 2025 réelles).
@@ -73,7 +73,7 @@ prêts : le moteur et les données les attendent, et les maquettes existent pour
    connaît la chaîne `vegetalien ⊂ vegetarien ⊂ pescetarien ⊂ omnivore`. **L'origine animale est un
    fait, pas un régime** : `Food.origineAnimale` + `deriveDe`, propagés en cascade.
 
-## Neuf pièges qui ne se voient pas
+## Dix pièges qui ne se voient pas
 
 - ⚠️ **`catalog-loader.ts` ne doit importer AUCUN module Node.** L'import est **hoisté** : un
   `import 'node:sqlite'` casse le bundle navigateur même si la fonction qui l'utilise n'est jamais
@@ -100,6 +100,11 @@ prêts : le moteur et les données les attendent, et les maquettes existent pour
   n'existe pas hors d'un Worker, et **aucune en-tête COOP/COEP n'y change rien**. Erreur affichée :
   « Missing required OPFS APIs ». → base en mémoire + fichier OPFS réécrit (`user-source.ts`).
   Typecheck et `vite build` passaient parfaitement ; seul le navigateur l'a dit.
+- ⚠️ **`uniteAffichage` est un texte figé, jamais mis à l'échelle par le moteur** — et c'est voulu
+  (`scale-recipe.ts` refuse de « réécrire du français »). Un écran qui l'affiche tel quel montre donc
+  des quantités qui ne bougent pas ; un écran qui le remplace par des grammes transforme
+  « 4 artichauts » en « 2,4 kg » et « 1 pincée de sel » en « 8 g ». La sortie est de multiplier le
+  NOMBRE DE TÊTE du libellé (`ui/quantites.ts`), qui porte déjà la bonne unité.
 - ⚠️ **Un garde-fou sans source de données ne garde rien.** Le filtre allergènes est critique et
   incontournable — et il a tourné sur une liste VIDE jusqu'au 2026-07-30, parce qu'aucun écran ne
   demandait ses allergies. Même défaut que la couche `preference` en P1b-2. Le prochain sur la
