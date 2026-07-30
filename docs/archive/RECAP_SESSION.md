@@ -1,8 +1,8 @@
 # Récap de session — mise sous git, P0/P1a bouclés, conception P1b
 
 > Récit narratif d'une session de travail. Les décisions qu'elle contient sont **répercutées** dans
-> [ETAT.md](./ETAT.md) (avancement), [ARCHITECTURE.md](./ARCHITECTURE.md) (schéma, archétypes),
-> [ENGINE.md](./ENGINE.md) (scoring, §6.3 bis et §6.5) et [DESIGN.md](./DESIGN.md) (toggles
+> [ETAT.md](../ETAT.md) (avancement), [ARCHITECTURE.md](../ARCHITECTURE.md) (schéma, archétypes),
+> [ENGINE.md](../ENGINE.md) (scoring, §6.3 bis et §6.5) et [DESIGN.md](../DESIGN.md) (toggles
 > Aujourd'hui) — ce sont **ces documents qui font foi** en cas d'écart ; celui-ci raconte comment on
 > y est arrivé et sert de point de reprise.
 

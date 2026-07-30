@@ -4,14 +4,15 @@
 // guards/) est interne au module engine/ ; seul ce fichier est destiné à être importé par
 // data/ (qui construit le Catalog) et par l'UI (features/, via une future façade hors engine).
 //
-// `createEngine` est désormais RÉEL (P1b-3) : il enrichit le catalogue (index dérivés, §6.5
-// précision 8) et expose `version` / `catalogVersion` / `layers` / `layer(id)`. `suggestMeals`
-// est maintenant RÉEL également (P1c, ce lot) — assemblage bout-en-bout exclusion → garde-fou
-// allergènes → score → classement + diversification → explication → garde-fous finaux (§6.4, §8
-// ENGINE), voir `runSuggestMeals` plus bas. `planWeek`, `rerollSlot`, `planLeftovers`,
-// `buildShoppingList`, `analyzeWeek`, `scaleRecipe`, `suggestSubstitutions` lèvent toujours
-// explicitement « non implémenté (P1c) » — ce sont des lots ultérieurs (planning/, hors périmètre
-// de celui-ci).
+// `createEngine` enrichit le catalogue (index dérivés, §6.5 précision 8) et expose `version` /
+// `catalogVersion` / `layers` / `layer(id)`. `suggestMeals` est un assemblage bout-en-bout
+// exclusion → garde-fou allergènes → score → classement + diversification → explication →
+// garde-fous finaux (§6.4, §8 ENGINE), voir `runSuggestMeals` plus bas.
+//
+// Sont RÉELS : `suggestMeals`, `suggestAlternatives`, `planWeek`, `rerollSlot`, `planLeftovers`,
+// `buildShoppingList`, `scaleRecipe`. Restent NON CÂBLÉS et lèvent explicitement — `analyzeWeek`
+// (aucun type `NutritionReport` n'est défini) et `suggestSubstitutions` (la table `substitution`
+// est vide par décision 27 : quels couples ont du sens dépend des recettes qui existent).
 //
 // Dépendances autorisées : domain/, selection/, planning/, nutrition/, guards/ (§2 ENGINE — L5
 // est au sommet de la pile engine/, elle peut connaître tout ce qui est en dessous d'elle).

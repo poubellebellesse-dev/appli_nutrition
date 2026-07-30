@@ -18,6 +18,7 @@ reconstitue pas.
 | [RECAP_SESSION.md](./RECAP_SESSION.md) | Session 1 — mise sous git, P0/P1a, conception du scoring |
 | [RECAP_SESSION_2.md](./RECAP_SESSION_2.md) | Session 2 — P1b-1 codé, saison en crédits, catalogue à 76 aliments, 5ᵉ couche |
 | [RECAP_SESSION_3.md](./RECAP_SESSION_3.md) | Session 3 — P1b-2 et P1c : passe de score, archétypes, banc CLI, `suggestMeals` |
+| [RECAP_SESSION_4.md](./RECAP_SESSION_4.md) | Session 4 — contenu à 241 recettes, planification, restes, courses, lexique à 62 gestes, première tranche de PWA. **Sa §2 « ce que la mesure a démenti » est la partie qui ne se reconstitue pas** |
 
 ## ⚠️ Ne pas s'en servir pour établir l'état courant
 
@@ -28,7 +29,11 @@ taille du catalogue, décisions depuis tranchées, blocages depuis levés. L'ét
 ## Ce qui n'est PAS ici, et pourquoi
 
 `AUDIT_2026-07-27.md` est resté dans le dossier principal. Ses chiffres sont dépassés (il mesurait
-112 recettes, il y en a 212), mais **ses constats sont vivants et non traités** : zéro photo sur
-212 recettes, 4 gestes de lexique pour 93 étapes qui en référencent, revue juridique avant
-publication, périmètre v1 large pour une personne seule. L'archiver reviendrait à enterrer des
-points ouverts.
+112 recettes, il y en a 241), et **deux de ses quatre constats de contenu ont été traités depuis** —
+le lexique (4 → 62 gestes) et les trous de couverture par créneau. Mais **deux restent vivants et
+non traités** : **zéro photo sur 241 recettes** et la **revue juridique avant publication**, à quoi
+s'ajoute le constat de méthode (périmètre v1 large pour une personne seule). L'archiver reviendrait
+à enterrer des points ouverts.
+
+⚠️ Le document lui-même n'est PAS corrigé — c'est un instantané daté. L'état à jour de ces constats
+est dans [../ETAT.md](../ETAT.md) §9.

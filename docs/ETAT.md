@@ -1,39 +1,49 @@
 # État du projet — récapitulatif et reprise
 
 > État complet du projet. Pour un démarrage rapide, lire d'abord `docs/FICHE_REPRISE.md`.
-> Dernière mise à jour : **2026-07-28** (session 4 — chantier CONTENU terminé : import CIQUAL 2025
-> réel, 193 aliments / 212 recettes ; puis quatre corrections mesurées du moteur — signature de
-> recette, pondération de similarité, récence de `variety`/`habit`, couverture nutritionnelle).
-> Sessions précédentes : `docs/archive/RECAP_SESSION_2.md`, `docs/archive/RECAP_SESSION_3.md`. Regard extérieur
-> daté : `docs/AUDIT_2026-07-27.md`.
+> Dernière mise à jour : **2026-07-29** — fin de la session 4 : le moteur est complet (planification,
+> restes, courses, alternatives, mise à l'échelle) et la **première tranche d'interface tourne dans
+> un navigateur**. Récit daté de cette session : `docs/archive/RECAP_SESSION_4.md`.
+> Sessions précédentes : `docs/archive/RECAP_SESSION_2.md`, `docs/archive/RECAP_SESSION_3.md`.
+> Regard extérieur daté : `docs/AUDIT_2026-07-27.md`.
 
 ---
 
 ## 1. En une phrase
 
 Application de nutrition et de planification de repas, **100 % locale, sans IA, sans compte**,
-utilisable sur téléphone et PC par toutes les tranches d'âge. Phase actuelle : **P0, P1a, P1b-1,
-P1b-2 et les lots 1-4 de P1c terminés**, puis le **chantier CONTENU terminé** — diversification MMR
-(§6.6 ENGINE), explication avec règle de non-citation (§6.7 ENGINE), `suggestMeals` bout-en-bout
-(§8 ENGINE), 4 garde-fous codés sur 5, flags `onlyFavorites` / `varietyMode` et 7ᵉ couche
-d'exclusion `favoris` (**437 tests verts, 36 fichiers, typecheck propre**).
+utilisable sur téléphone et PC par toutes les tranches d'âge.
 
-**Le catalogue est réel** : 193 aliments aux valeurs CIQUAL 2025 de l'ANSES (plus aucun `PROV-`) et
-212 recettes — cible de la décision 4 atteinte. Le contenu a servi de banc de mesure et a révélé
-quatre défauts du moteur, tous corrigés **par mesure et non au jugé** : l'ingrédient caractéristique
-(§6.6 bis), la pondération de la similarité (§6.6 ter), la règle de récence (§6.6 quater et
-quinquies), la couverture nutritionnelle (§5.1 bis).
+**Le moteur est complet.** Toutes les phases de sélection sont codées (P0 · P1a · P1b-1 · P1b-2 ·
+P1c lots 1-4), puis le chantier CONTENU, puis la planification : `suggestMeals` bout-en-bout
+(§8 ENGINE) avec diversification MMR (§6.6) et explication à règle de non-citation (§6.7),
+`suggestAlternatives`, `planWeek`, `rerollSlot`, `planLeftovers`, `buildShoppingList`, `scaleRecipe`,
+**les 5 garde-fous**. Registre à **18 couches** (7 exclusion + 11 score, dont **8 implémentées** —
+`occasion`, `topic` et `cost` restent déclarées et non codées).
 
-**Prochaine étape : les écrans** (P3, DESIGN §4) — la PWA tourne, un écran sur huit est livré. `planWeek`, `planLeftovers`,
-`buildShoppingList`, `suggestAlternatives` et les 5 garde-fous sont codés.
+**Vérifié le 2026-07-29** : `npm test` → **572 verts (44 fichiers)** · `npm run typecheck` propre ·
+`npx vite build` OK · `npm run engine:plan-stress` → **20/20 configurations saines**.
+
+**Le catalogue est réel** : **199 aliments** aux valeurs CIQUAL 2025 de l'ANSES (plus aucun `PROV-`),
+**241 recettes**, **62 gestes** de lexique — les cibles de la décision 4 sont dépassées. Le contenu a
+servi de banc de mesure et a révélé quatre défauts du moteur, tous corrigés **par mesure et non au
+jugé** : l'ingrédient caractéristique (§6.6 bis), la pondération de la similarité (§6.6 ter), la
+règle de récence (§6.6 quater et quinquies), la couverture nutritionnelle (§5.1 bis).
+
+**Prochaine étape : les écrans** (P3, DESIGN §4). La PWA tourne (`npm run dev`) mais **un seul écran
+sur huit est livré**, volontairement — voir §6.
+✅ Le préalable réel — **`user.db`** — est levé (2026-07-30) : schéma complet de §4.3 ARCHITECTURE
+en v1, migrations versionnées, OPFS (`opfs-sahpool`). L'écran « Aujourd'hui » lit un profil, des
+contraintes, des goûts et un historique **persistés** ; `requeteDemo()` a disparu.
+⚠️ Le chemin OPFS n'a pas encore été exécuté dans un vrai navigateur (voir §9).
 
 ---
 
 ## 2. Où en est-on
 
 ```
-Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── liste de courses ✅ ─▶ UI ▓▓
-  ✅          ✅            ✅           ✅              ✅                                                                                                    ⬅ ICI
+Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design UI ─▶ Code ── P0 ✅ ── P1a ✅ ── P1b-1 ✅ ── P1b-2 ✅ ── P1c (lots 1-4 ✅) ── CONTENU ✅ ── suggestAlternatives ✅ ── planning ✅ ── restes ✅ ── liste de courses ✅ ── lexique ✅ ─▶ UI ▓▓ (1 écran / 8)
+  ✅          ✅            ✅           ✅              ✅                                                                                                                  ⬅ ICI
 ```
 
 | Livrable | Fichier | État |
@@ -57,12 +67,16 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | **Moteur — couverture nutritionnelle** (§5.1 bis, décision 29) | `app/src/engine/nutrition/nutrient-coverage.ts`, `app/src/engine/selection/scoring/nutri.ts`, `catalog/import-ciqual.mjs` | ✅ Terminé et committé — `nutri` s'abstient au lieu de noter un zéro inventé ; l'import ne refuse plus un aliment sans énergie |
 | Contenu — 12 recettes (poissons, viandes, fruits de mer) | `catalog/recipes/` | ✅ Terminé et committé, 10 → 22 recettes |
 | Contenu — import CIQUAL 2025 (9 nutriments, 76 aliments) | `catalog/import-ciqual.mjs`, `catalog/sources/ciqual-mapping.yaml`, `catalog/sources/foods.yaml` | ✅ Terminé — valeurs `PROV-` remplacées par les valeurs ANSES |
-| Contenu — 193 aliments (cible ~200) | `catalog/sources/foods.yaml`, `ciqual-mapping.yaml` | ✅ Atteint |
-| Contenu — montée à 200-300 recettes (décision 4 revue) | `catalog/recipes/` | ▓▓ **▓▓ ****212 écrites** — cible v1 (200-300) atteinte, modèles départagés**, cible 200**, palier intermédiaire visé : 100 |
+| **Contenu — état COURANT du catalogue** | `catalog/sources/foods.yaml`, `catalog/recipes/`, `catalog/lexicon/` | ✅ **199 aliments · 241 recettes · 62 gestes** — les deux cibles de la décision 4 (~200 aliments, 200-300 recettes) sont dépassées. Ⓐ Les lignes ci-dessus datent chacune de la clôture de son lot ; **celle-ci fait foi** |
 | Code — `suggestAlternatives` (variante vs alternative) | `app/src/engine/selection/alternatives.ts`, `app/src/engine/nutrition/characteristic-ingredient.ts`, `app/src/engine/api/index.ts` | ✅ Terminé et committé — 451 tests verts (37 fichiers). Vérifié sur le catalogue réel : cabillaud → bar/colin/dorade, hachis de bœuf → veau/agneau/porc, dahl → haricots/pois chiches |
 | Code — `planWeek` + `checkCalorieFloor` (§7.1) | `app/src/engine/planning/plan-week.ts`, `app/src/engine/guards/index.ts` | ✅ Terminé et committé — banc de stress à 20 configurations (`npm run engine:plan-stress`) |
 | Code — `planLeftovers` (§7.3) | `app/src/engine/planning/plan-leftovers.ts` | ✅ Terminé et committé — 6 créneaux sur 21 deviennent des restes, gaspillage 26 → 2 portions pour 2 convives |
 | Code — `buildShoppingList` (§7.4) | `app/src/engine/planning/shopping-list.ts` | ✅ Terminé et committé — 77 lignes rangées par rayon sur une semaine ; les restes font tomber les courses de 24 à 15 kg |
+| Contenu — 30 recettes végétaliennes + 6 aliments (décision 37) | `catalog/recipes/`, `catalog/sources/foods.yaml` | ✅ Terminé et committé — plus aucun trou de couverture créneau × régime ; végétalien 14 j passe de 29/42 à **42/42** |
+| Contenu — cohérence régime ⇄ ingrédients (décisions 38, 39) | `catalog/sources/foods.yaml`, `app/src/engine/domain/catalog.ts`, `tests/regime-coherence.test.ts` | ✅ Terminé et committé — 1 bug grave corrigé (miel dans une recette végétalienne), 6 étiquettes redressées, `Food.origineAnimale`/`deriveDe` en cascade (58 aliments annotés) |
+| Contenu — conditionnements, pièces, fonds de placard (décisions 40, 41) | `catalog/sources/foods.yaml`, `app/src/engine/planning/shopping-list.ts` | ✅ Terminé et committé — 107 aliments conditionnés sur 199 ; liste 77 → 68 lignes |
+| **Contenu — lexique de gestes** (décision 43) | `catalog/lexicon/`, `catalog/recipes/`, `tests/lexique-coherence.test.ts` | ✅ Terminé et committé **en deux passes** — 4 → **62 fiches**, 155 → **763 étapes** annotées sur 1 097 (70 %). Dernier point de contenu de l'audit du 2026-07-27 |
+| Code — `scaleRecipe`, `rerollSlot`, couche `pantry` (décision 44) | `app/src/engine/planning/{scale-recipe,reroll-slot}.ts`, `app/src/engine/selection/scoring/pantry.ts` | ✅ Terminé et committé — 3 des 4 stubs restants ; `pantry` était déclarée au registre depuis le début et jamais implémentée |
 | Code — PWA, première tranche | `vite.config.ts`, `vitest.config.ts`, `app/index.html`, `app/src/ui/`, `app/src/data/catalog-loader-node.ts` | ✅ Terminé et committé — React 19 + Vite 7 + Tailwind 4 + SQLite WASM. Écran « Aujourd'hui » branché sur le vrai moteur, `vite build` OK, 572 tests intacts |
 
 ---
@@ -173,7 +187,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 1 | Restes en v1 ou v2 ? | **v1** — structurant, coûteux à greffer après |
 | 2 | Choix final du badge de preuve | Variantes maquettées, à trancher à l'intégration |
 | 3 | Libellé onglet « Savoir » | Provisoire (« Apprendre » ? « Comprendre » ?) |
-| ~~4~~ | Nb de recettes et d'aliments v1 | **Revu à la hausse (2026-07-27)** — **200-300 recettes** (au lieu de 150-200) et **~200 aliments**. **Les deux cibles sont ATTEINTES** : 193 aliments, 212 recettes. Conséquence à surveiller : le poids du `.db` et le critère de sortie P6 « bundle < 15 Mo » — 300 recettes sans média restent légères, ce sont les photos qui pèseront |
+| ~~4~~ | Nb de recettes et d'aliments v1 | **Revu à la hausse (2026-07-27)** — **200-300 recettes** (au lieu de 150-200) et **~200 aliments**. **Les deux cibles sont DÉPASSÉES** : 199 aliments, 241 recettes (2026-07-29). Conséquence à surveiller : le poids du `.db` et le critère de sortie P6 « bundle < 15 Mo » — 300 recettes sans média restent légères, ce sont les photos qui pèseront |
 | 5 | Écran d'humeur → envie | Principe validé, pas maquetté |
 | 6 | Hébergement PWA | Cloudflare / Netlify / GitHub Pages (statique, indifférent) |
 | 7 | Chiffrement | Sans objet (aucune donnée de santé collectée) |
@@ -394,11 +408,44 @@ retenu :
 | ✅ **P1c lots 1-3** | Diversification MMR (§ENGINE 6.6) + explication avec règle de non-citation (§ENGINE 6.7) + `suggestMeals` bout-en-bout (§ENGINE 8) + 3ᵉ et 4ᵉ garde-fous CODÉS |
 | ✅ **P1c lot 4** | Flags `onlyFavorites` (7ᵉ couche d'exclusion `favoris`) + `varietyMode` (override de `variety`) + `--favoris`/`--only-favoris`/`--variete` au banc CLI |
 | ✅ **Contenu, lot 1** | 12 recettes (6 poissons, 4 viandes, 2 fruits de mer au lieu de 1/1/0) + import CIQUAL 2025 des 76 aliments |
-| **Contenu, lot 2** ⬅ prochaine étape | Montée à ~100 recettes, puis `suggestAlternatives` (décision 26) sur un catalogue où le « plat frère » a enfin des candidats |
+| ✅ **Contenu, lots 2-4** | Montée à 241 recettes / 199 aliments, chaîne des régimes, import CIQUAL réel, 30 recettes végétaliennes, lexique à 62 gestes |
+| ✅ **Corrections mesurées** | Signature de recette (§6.6 bis) · pondération de similarité (§6.6 ter) · récence (§6.6 quater/quinquies) · couverture nutritionnelle (§5.1 bis) — décisions 29 à 32 |
+| ✅ **Planification** | `suggestAlternatives` · `planWeek` + `checkCalorieFloor` (5ᵉ garde-fou) · `rerollSlot` · `planLeftovers` · `buildShoppingList` · `scaleRecipe` · couche `pantry` |
+| ✅ **P3 lot 1 — PWA** | Chaîne complète prouvée dans un navigateur : `catalog.db` → SQLite WASM → mapping partagé → moteur → écran « Aujourd'hui » |
+| **P3 lots 2+ — les écrans** ⬅ prochaine étape | Voir le tableau ci-dessous |
 
-> ⚠️ Rappel du plan (§12 ENGINE) : **ne pas écrire d'UI avant la phase P3.** Le moteur doit produire
-> des repas crédibles en ligne de commande d'abord. Une UI branchée trop tôt rend douloureux le fait
-> de remettre en cause le moteur.
+### P3 — Interface : 1 écran livré sur 8
+
+`npm run dev`. **La première tranche est volontairement minimale** : le but n'était pas de livrer
+l'interface mais de **prouver la chaîne complète dans un navigateur** avant d'investir dans huit
+écrans construits sur une chaîne non vérifiée.
+
+| § DESIGN | Écran | Ce que le moteur fournit | État |
+|---|---|---|---|
+| 4.1 | 📅 **Aujourd'hui** | `suggestMeals` ✅ | **Livré**, sans photo ni tags cliquables |
+| 4.2 | 🗓 **Semaine** | `planWeek` · `rerollSlot` · `planLeftovers` ✅ | Prêt à coder |
+| 4.3 | 🛒 **Courses** | `buildShoppingList` ✅ (`pourSlots` couvre « ranger par repas / jour ») | Prêt à coder |
+| 4.4 | 📖 **Recettes** | ⛔ **rien** — aucune API de recherche / filtre / autocomplétion | À concevoir d'abord |
+| 4.5 | 💡 **Vider le frigo** | couche `pantry` + `ingredientsManquants` ✅ | Prêt à coder |
+| 4.6 | **Détail d'une recette** | `scaleRecipe` ✅ · lexique 62 gestes ✅ | Prêt à coder |
+| 4.7 | 💡 **Savoir** | lexique ✅ · ⛔ pas de table de tips · « Comprendre » = v2 | Partiel |
+| 4.8 | **Premier lancement** | `user.db` ✅ · ⛔ pas de routage, pas d'écran de consentement | Prêt à coder |
+
+> ✅ **`user.db` existe depuis le 2026-07-30** — c'était le vrai préalable, et il est levé.
+> `requeteDemo()` a disparu de `app/src/ui/main.tsx` : profil, contraintes, préférences, favoris,
+> thématiques, garde-manger et historique viennent de la base. Un profil neutre est **semé en base**
+> au premier lancement, que l'onboarding (4.8) écrasera — il n'y a plus rien à débloquer côté
+> données pour 4.1, 4.2 et 4.4.
+>
+> **Ce que le store expose** (`app/src/data/user-store.ts`) : profil, allergies, régime, aliments
+> exclus, préférences, favoris, thématiques actives, garde-manger, historique — en lecture ET en
+> écriture. Règle tenue : *toute table que le store lit, il sait aussi l'écrire*. Les tables sans
+> écran (`user_signal`, `meal_plan`, `shopping_list`, `user_recipe`, `consent`, `user_display`,
+> `user_price`…) **existent déjà en base** : aucune migration à prévoir pour les brancher.
+
+> ⚠️ **Le plan §12 ENGINE disait « pas d'UI avant P3 »** — cette condition est REMPLIE, elle n'est
+> plus un frein : le moteur produit des repas crédibles en ligne de commande (`engine:try`,
+> `engine:plan-stress`) depuis les corrections mesurées de la décision 31.
 
 ---
 
@@ -406,32 +453,50 @@ retenu :
 
 ```
 appli_nutrition/
-├─ docs/
-│  ├─ ETAT.md            ← CE FICHIER — reprise de session
-│  ├─ ARCHITECTURE.md    ← périmètre · données · cadre légal
-│  ├─ FICHE_REPRISE.md   ← ⭐ à lire en premier — état condensé + prochaines étapes
-│  ├─ ENGINE.md          ← moteur · 18 couches · API · plan de lancement
-│  ├─ DESIGN.md          ← 8 écrans · navigation · badge de preuve
-│  ├─ archive/RECAP_SESSION.md   ← récit session 1 (conception P1b)
-│  ├─ archive/RECAP_SESSION_2.md ← récit session 2 (P1b-1 codé, saison, contenu, 5ᵉ couche, conception variety/radar)
-│  ├─ CONCEPTION_B_VIN_REPAS.md ← conception validée : accords vin, modes recette/repas (chantier B)
-│  └─ STRATEGIE_DISTRIBUTION.md
-├─ app/src/
-│  ├─ engine/            ← moteur TS pur (domain, guards, selection, nutrition, planning, api)
-│  │  ├─ domain/archetype-ids.ts     ← `ArchetypeId` (§ENGINE 6.3 bis)
-│  │  ├─ nutrition/energy-needs.ts   ← `computeEnergyNeeds` (Mifflin-St Jeor × PAL, `Kcal | null`)
-│  │  ├─ nutrition/reference-intakes.ts ← `resolveReferenceIntakes` (VNR à plat / ré-échelonné)
-│  │  └─ selection/{scoring-pass,archetypes}.ts ← passe de score, archétypes (P1b-2)
-│  ├─ data/              ← catalog-loader.ts (pont SQLite → Catalog)
-│  └─ cli/               ← `catalog:list` + banc d'essai du moteur `engine:try` (`try-engine.ts`, §ENGINE 11.3)
-├─ catalog/               ← sources éditables (YAML/MD) + build.mjs → catalog.db
-├─ tests/                 ← tests d'intégration (frontières engine/, catalogue réel)
-├─ maquete claude design/
-│  └─ …handoff.zip       ← maquettes HTML (mobile + bureau)
-├─ Notes/
-│  └─ Note designe.txt   ← notes utilisateur (traitées)
+├─ docs/                      ← voir docs/README.md pour le rôle de chaque document
+│  ├─ FICHE_REPRISE.md        ← ⭐ à lire en premier
+│  ├─ ETAT.md                 ← CE FICHIER — état complet, décisions, dette
+│  ├─ ARCHITECTURE.md · ENGINE.md · DESIGN.md    ← références, FONT FOI
+│  ├─ AUDIT_2026-07-27.md     ← instantané daté, ne jamais réécrire
+│  ├─ CONCEPTION_B_VIN_REPAS.md · STRATEGIE_DISTRIBUTION.md   ← chantiers
+│  └─ archive/RECAP_SESSION{,_2,_3,_4}.md        ← récits datés
+├─ app/
+│  ├─ index.html              ← point d'entrée PWA
+│  ├─ public/catalog/catalog.db  ← base livrée avec l'app (produite par `npm run build`)
+│  └─ src/
+│     ├─ engine/              ← moteur TS pur, 5 couches, aucun import montant (§2 ENGINE)
+│     │  ├─ domain/           ← L1 types + `layer-ids.ts` (registre à 18 couches)
+│     │  ├─ nutrition/ guards/    ← L2 agrégation, signatures, couverture · 5 garde-fous
+│     │  ├─ selection/        ← L3 exclusion, scoring/, similarité, diversification, alternatives
+│     │  ├─ planning/         ← L4 plan-week · reroll-slot · plan-leftovers · shopping-list · scale-recipe
+│     │  └─ api/              ← L5 `createEngine` — SEULE surface publique
+│     ├─ data/
+│     │  ├─ catalog-loader.ts      ← mapping SQL → domaine. ⚠️ AUCUN import Node : chargé par le navigateur
+│     │  └─ catalog-loader-node.ts ← `loadCatalog(dbPath)`, `node:sqlite` — CLI et tests seulement
+│     ├─ ui/                  ← PWA : main.tsx (écran « Aujourd'hui ») · catalog-source.ts (SQLite WASM)
+│     └─ cli/                 ← bancs de mesure : try-engine · stress-planning · compare-* · diag-couverture
+├─ catalog/                   ← sources éditables → build.mjs → catalog.db
+│  ├─ sources/                ← foods.yaml · ciqual-mapping.yaml
+│  ├─ recipes/ lexicon/       ← 241 recettes · 62 gestes
+│  └─ import-ciqual.mjs       ← `npm run catalog:ciqual -- --write`
+├─ tests/                     ← intégration : frontières engine/, catalogue réel, cohérence régime & lexique
+├─ vite.config.ts             ← build PWA (root: 'app', COOP/COEP pour OPFS)
+├─ vitest.config.ts           ← ⚠️ SÉPARÉ EXPRÈS — voir §9, `root: 'app'` faisait disparaître 44 tests
+├─ maquete claude design/…handoff.zip   ← maquettes HTML (mobile + bureau)
+├─ Notes/Note designe.txt     ← notes utilisateur (traitées)
 └─ .claude/
 ```
+
+### Scripts npm
+
+| Commande | Ce qu'elle fait |
+|---|---|
+| `npm test` · `npm run typecheck` | Suite complète (572 tests, 44 fichiers) · TypeScript strict |
+| `npm run build` | Reconstruit `catalog.db` depuis les sources YAML/MD |
+| `npm run dev` · `npm run preview` | PWA en développement · aperçu du build |
+| `npm run catalog:ciqual -- --write` | **Seule** façon d'écrire des valeurs nutritionnelles |
+| `npm run engine:try` · `engine:plan` · `engine:plan-stress` | Bancs : suggestion · plan de semaine · 20 configurations |
+| `npm run engine:similarity` · `engine:couverture` | Bancs de mesure (similarité, couverture nutritionnelle) |
 
 ---
 
@@ -451,8 +516,9 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 ### Calibrations non faites (pas des bugs)
 
 - **λ (diversification) n'est pas calibré.** `DEFAULT_MMR_LAMBDA = 0,4` vient d'une intuition de
-  conception. **Le blocage est levé** : 212 recettes, distribution mesurée sur 22 366 paires
-  (max 94,2 % · p99 38,2 % · médiane 9,5 % · 30 paires > 60 %). Reste à faire, plus à débloquer.
+  conception. **Le blocage est levé** : distribution mesurée sur 22 366 paires (max 94,2 % ·
+  p99 38,2 % · médiane 9,5 % · 30 paires > 60 %). Reste à faire, plus à débloquer.
+  ⚠️ Mesure faite à **212 recettes** ; le catalogue en compte 241 — à rejouer avant de figer λ.
 - **`varietyMode` n'est pas observable au banc**, et le contenu n'y change RIEN — la cause est un
   historique de repas **vide**, pas un catalogue pauvre. Toutes les recettes ont donc la même
   récence et l'override les décale identiquement. Il faut injecter un historique, pas des recettes.
@@ -480,21 +546,55 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - **`roquefort` porte l'allergène `lait` mais pas `sulfites`.** Les 9 nutriments sont un choix assumé
   (décision 25), pas une dette.
 
-### Contenu — constats de l'audit du 2026-07-27, remesurés le 2026-07-28
+### Interface — ce qui manque AVANT de coder les écrans
 
-- **Zéro photo sur 212 recettes.** Le critère de sortie P6 (« bundle < 15 Mo », budget 40 Ko/image)
+- ✅ **`user.db` existe** (2026-07-30) — profil, allergies, régime, aliments exclus, préférences,
+  favoris, thématiques, garde-manger et historique persistés sur OPFS. Ce point n'est plus un
+  manque.
+- ⚠️ **Le chemin OPFS n'a jamais été exécuté dans un navigateur.** Vérifié : `npm run typecheck`,
+  `npx vite build` (seule garde contre l'import Node hoisté), et 32 tests sous Node sur le mapping
+  exact que le navigateur utilise. **Non vérifié** : `installOpfsSAHPoolVfs`, la survie au
+  rechargement, `navigator.storage.persist()`. À faire avant toute nouvelle tranche UI.
+- ⚠️ **Un seul onglet à la fois.** Le VFS `opfs-sahpool` prend des descripteurs d'accès exclusifs :
+  un second onglet échoue à l'ouverture. L'erreur doit être présentée comme « déjà ouvert
+  ailleurs », jamais comme une base corrompue — ce message n'est pas encore écrit.
+- ⚠️ **Aucun export / import** (§7 ARCHITECTURE mesures 3 à 5). `user.db` ne se re-télécharge pas :
+  tant que la sauvegarde manuelle n'existe pas, un effacement de stockage est une perte sèche.
+- ⛔ **Aucune API de recherche** (recherche plein texte, autocomplétion, filtres) — l'écran Recettes
+  (§4.4 DESIGN) n'a rien sur quoi se brancher. À concevoir, pas juste à câbler.
+- ⛔ **Aucune table de tips** pour le carrousel « Le saviez-vous ? » (§4.7 DESIGN).
+- **Pas de routage** : l'app est un composant unique. `react-router-dom` n'est pas installé —
+  installation à valider explicitement (CLAUDE.md §4).
+
+### Contenu — constats de l'audit du 2026-07-27, remesurés le 2026-07-29
+
+- **Zéro photo sur 241 recettes.** Le critère de sortie P6 (« bundle < 15 Mo », budget 40 Ko/image)
   suppose 200-300 photos originales, sous le même interdit que les recettes (contenu original, pas
-  de scrap). Poste de travail le plus lourd du projet, **chiffré nulle part**.
-- **Lexique à 4 gestes** pour 93 étapes qui en référencent — sous-dimensionné pour la promesse
-  « lexique de gestes de cuisine illustré ». Inchangé depuis l'audit.
-- **Petits-déjeuners : 17** (contre 7 à l'audit). La répétition n'est plus garantie dès la semaine 1,
-  mais c'est toujours le créneau le plus mince — dîner 143, déjeuner 118, goûter 27.
+  de scrap). Poste de travail le plus lourd du projet, **chiffré nulle part**. En cours côté
+  utilisateur.
+- ✅ **Lexique — RÉSOLU** (décision 43) : 4 → **62 gestes**, 763 étapes annotées sur 1 097.
+  ⚠️ **Reste « illustré »** : §2 ARCHITECTURE promet un lexique *illustré*, les 62 fiches sont du
+  texte seul. Dépend des visuels.
+- **`Recipe.piquant` n'est renseigné sur AUCUNE des 241 recettes** — colonne présente, valeurs
+  toutes `null`. Attributs posés, annotation et câblage moteur à faire (décision 35).
+- **Aucune recette de type `fromage`.** `CourseKind` prévoit le service, le catalogue n'en a pas :
+  144 plats, 39 entrées, 37 desserts, 21 accompagnements.
+- **Créneaux, remesurés** : dîner 149, déjeuner 124, goûter 37, **petit-déjeuner 30** (7 à l'audit).
+  Toujours le créneau le plus mince, mais plus aucun trou de couverture par régime (décision 37).
 - **Revue juridique avant publication** : classée « recommandée, non bloquante » (§11 ARCHITECTURE),
   ce qui est raisonnable en développement mais **pas pour une mise en ligne** — la couche allergènes
-  est saisie à la main et sert à des gens qui en dépendent.
+  est saisie à la main et sert à des gens qui en dépendent. **Ouverte depuis l'audit.**
 
 ### Tests
 
 - **Les tests de propriété ne passent plus tous à l'échelle du catalogue.** Celui des allergènes
   énumérait le powerset (4 096 combinaisons à 12 allergènes) et a dépassé le délai : il couvre
   désormais vide + singletons + paires + complet. **À surveiller à chaque palier de contenu.**
+- ⚠️ **`vitest.config.ts` doit rester SÉPARÉ de `vite.config.ts`.** Vitest lit `vite.config.ts` en
+  l'absence de config dédiée : y poser `root: 'app'` a fait passer la suite de **572 tests à 528
+  sans le moindre échec** — les suites de `tests/` et `catalog/` étaient simplement hors racine.
+  **Un test qui disparaît ne fait pas rougir la CI, il la rend verte pour de mauvaises raisons.**
+- ⚠️ **`catalog-loader.ts` ne doit importer AUCUN module Node.** Il est chargé par le navigateur, et
+  un `import 'node:sqlite'` en tête de fichier casse le bundle **même si la fonction qui l'utilise
+  n'est jamais appelée** — l'import est hoisté. Le message de Rollup ne désigne pas cette cause.
+  L'ouverture de fichier vit dans `catalog-loader-node.ts`.

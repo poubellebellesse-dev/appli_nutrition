@@ -161,8 +161,8 @@ recipe(id, nom, description, temps_prep_min, temps_cuisson_min, difficulte,
     --   `accompagnement` servi au `dejeuner` ET au `diner` — les deux dimensions se cumulent.
     --   Vouloir « sortir » un accompagnement des creneaux principaux le ferait DISPARAITRE de
     --   l'appli : MealSlot n'a pas de case « accompagnement ». Ordre de service francais, le
-    --   fromage AVANT le dessert. Les 212 recettes sont annotees (125 plats, 39 entrees,
-    --   27 desserts, 21 accompagnements, 0 fromage).
+    --   fromage AVANT le dessert. Les 241 recettes sont annotees (144 plats, 39 entrees,
+    --   37 desserts, 21 accompagnements, 0 fromage — mesure du 2026-07-29).
     -- piquant : idem food.piquant, mais EDITORIAL au niveau du plat — il ne se derive pas des
     --   ingredients (quantite d'epice, rapport au reste, mode de cuisson). NON CABLE.
     -- envergure ∈ {'quotidien','convivial','fete'}
@@ -220,7 +220,18 @@ tip(id, texte, categorie, source_url)             -- nutrition_humaine | nutriti
 user_profile(id, tranche_age, sexe, taille_cm, poids_kg, niveau_activite,
              facteur_portion, cree_le)
 user_allergy(allergen_id, severite)               -- contrainte d'éviction, pas une pathologie
+    -- severite : texte LIBRE et NON LU par le moteur — engine/selection/allergenes.ts exclut dès
+    --   qu'un allergène est déclaré, traces comprises, sans gradation (§5.2). Conservée pour
+    --   l'affichage, jamais pour une décision.
 user_diet(code)
+    -- UNE SEULE ligne (id = 1 en base) : DIET_CHAIN est une chaîne d'inclusion, déclarer deux
+    --   régimes n'a pas de sens, et `HardConstraints.diet` est un scalaire nullable.
+user_excluded_food(food_id)                       -- AJOUT 2026-07-30 (CODÉ)
+    -- Rejet personnel DURABLE d'un aliment, lu par la couche `exclusions` via
+    --   `HardConstraints.excludedFoodIds`. Manquait à ce tableau : aucune table ne portait ce
+    --   réglage, alors que le champ existe depuis P0. À ne PAS confondre avec `user_preference`
+    --   à −2 (« je n'aime pas », pondéré) ni avec `MealContext.requiredFoodIds`, son miroir dur,
+    --   qui est PONCTUEL et n'a donc volontairement aucune table (§6.5 ter ENGINE).
 user_preference(cible_type, cible_id, score)      -- -2 (déteste) … +2 (adore)
     -- lignes cible_type='food' : lues par SuggestionRequest.preferences (ReadonlyMap<FoodId,
     --   number>, docs/ENGINE.md §8.1, CODÉ P1b-2) — champ OBLIGATOIRE consommé par la couche de
@@ -239,11 +250,25 @@ user_pantry(food_id, quantite_approx)             -- « vider le frigo », effac
 user_equipment(equipment_id)                      -- ce que l'utilisateur possède
 user_display(afficher_macros, occasions_actives[])  -- macros : false par défaut (§6.5)
 
+meal_history(date, creneau, recipe_id, origine)    -- AJOUT 2026-07-30 (CODÉ)
+    -- origine ∈ {'choisi','reste'}, NOT NULL. Manquait à ce tableau : l'origine était décrite en
+    --   prose ci-dessous sans qu'aucune table ne puisse la porter, alors que `habit` et `variety`
+    --   n'ont pas d'autre source. Clé (date, creneau, recipe_id) — un créneau porte plusieurs
+    --   plats en mode repas.
+    -- AUCUNE COLONNE DE QUANTITÉ, jamais : c'est ce qui sépare cette table d'un journal (§6.5).
+    -- La fenêtre de 21 jours glissants (§13 ENGINE) est appliquée à la LECTURE
+    --   (`data/user-store.ts`, readHistory) : aucune couche du moteur ne lit `windowDays`.
+
 meal_plan(id, date_debut)
-meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille)
+meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste)
     -- service : NULL en mode recette (un plat unique), sinon 'entree' | 'plat' | 'dessert' |
     --   'accompagnement' (mode repas, §2.7 CONCEPTION_B_VIN_REPAS) ; la clé s'étend à
     --   (plan_id, date, creneau, service)
+    -- ⚠️ cette clé est un INDEX UNIQUE sur COALESCE(service, ''), PAS une PRIMARY KEY : SQLite
+    --   laisse passer les doublons sur une colonne NULL d'une PK (deux NULL n'y sont jamais
+    --   égaux), ce qui aurait autorisé deux plats sur le même créneau en mode recette.
+    -- est_reste : AJOUT 2026-07-30 (CODÉ) — `MealPlanEntry.isLeftover` (§7.3 ENGINE) n'avait pas
+    --   de colonne ; un plan relu depuis la base aurait perdu la trace de ses restes.
 shopping_list(id, plan_id, genere_le)
 shopping_list_item(list_id, food_id, quantite_totale, unite, coche, prix_estime)
 
@@ -267,7 +292,26 @@ app_meta(schema_version, catalog_version, dernier_export_le)
 (placement automatique d'un reste, §7.3 ENGINE). La couche `variety` lit **toutes** les entrées
 quelle que soit l'origine (un reste mangé lasse autant qu'un plat choisi) ; la couche `habit` ne
 compte que les entrées `choisi` (un reste n'est pas une préférence exprimée) — §6.5 ter ENGINE,
-§2.7 CONCEPTION_B_VIN_REPAS.
+§2.7 CONCEPTION_B_VIN_REPAS. Ces entrées vivent dans `meal_history` ci-dessus.
+
+**Aucune clé étrangère vers le catalogue.** `food_id`, `recipe_id`, `allergen_id` et `topic_id` sont
+du TEXT nu : les tables référencées vivent dans un **autre fichier** (`catalog.db`) et SQLite ne
+contraint pas entre bases. C'est le prix de la séparation de §4.1 — un identifiant devenu inconnu
+après une mise à jour du catalogue est un cas **normal**, à ignorer, jamais une erreur.
+
+**Migrations.** `app_meta.schema_version` est le seul compteur (pas de `PRAGMA user_version`, deux
+compteurs divergent). `app_meta` est bootstrappée à la version 0 avant la boucle de migration —
+elle ne peut pas être créée par la migration qu'elle sert à choisir. Chaque migration s'applique
+dans **sa propre transaction**, `UPDATE app_meta` compris : le DDL de SQLite étant transactionnel,
+une migration interrompue laisse la base à sa version précédente, jamais à moitié migrée. Le schéma
+complet de ce tableau est créé dès la **v1**, y compris les tables sans consommateur — une
+migration est gratuite tant que la base est vide, et coûteuse ensuite.
+
+**VFS `opfs-sahpool`, pas le VFS `opfs` classique.** Ce dernier exige `SharedArrayBuffer`, donc les
+en-têtes COOP/COEP — que `vite.config.ts` ne pose que sur le serveur de développement. `npm run
+preview` et tout hébergement statique nu en sont dépourvus, et le VFS classique refuserait de
+démarrer là où l'application est réellement servie. Contrepartie assumée : le pool prend des
+descripteurs d'accès **exclusifs**, donc **un seul onglet à la fois**.
 
 **Pas de chiffrement applicatif.** Aucune donnée de santé n'étant collectée, `user.db` ne contient
 que des préférences alimentaires et un gabarit corporel. Le chiffrement du système d'exploitation
