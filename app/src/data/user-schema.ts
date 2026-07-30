@@ -1,0 +1,310 @@
+// data/user-schema.ts — schéma et migrations de `user.db` (docs/ARCHITECTURE.md §4.1, §4.3).
+//
+// ⚠️ CE FICHIER NE DOIT IMPORTER AUCUN MODULE NODE (voir l'en-tête de `user-db.ts`).
+//
+// POURQUOI DES MIGRATIONS VERSIONNÉES DÈS LA v1. §4.1 : « Jamais touché par une mise à jour.
+// Migrations versionnées uniquement. » `catalog.db` est remplacé en bloc à chaque release ; ici
+// c'est interdit — le fichier contient les seules données que l'utilisateur ne peut pas
+// re-télécharger. Une migration ratée est une perte définitive, pas un rebuild.
+//
+// POURQUOI LE SCHÉMA COMPLET DE §4.3 EN v1, y compris des tables sans consommateur (`user_signal`,
+// `user_recipe`, `shopping_extra_item`, `user_price`…). Décision reprise de RECAP_SESSION_3 §4 :
+// une migration est GRATUITE tant que la base est vide, et coûte une migration versionnée sur
+// données réelles ensuite. La fenêtre de tir est maintenant. Créer une table est du SQL
+// déclaratif ; ce n'est pas de l'abstraction spéculative, il n'y a aucun code à maintenir derrière.
+//
+// TROIS TABLES / COLONNES AJOUTÉES À §4.3, qui n'y figuraient pas et sans lesquelles on ne peut pas
+// reconstruire une `SuggestionRequest` (docs/ARCHITECTURE.md mis à jour en conséquence) :
+//   1. `meal_history` — §4.3 décrivait l'origine `choisi`/`reste` en prose sans jamais donner de
+//      table où l'écrire. Sans elle, les couches `habit` et `variety` n'ont pas de source.
+//   2. `user_excluded_food` — `HardConstraints.excludedFoodIds` est un RÉGLAGE DURABLE (voir
+//      engine/domain/request.ts) lu par la couche `exclusions`. Aucune table ne le portait.
+//      `user_preference` à −2 est un « je n'aime pas » pondéré, pas une exclusion dure.
+//   3. `meal_plan_entry.est_reste` — `MealPlanEntry.isLeftover` (§7.3 ENGINE) n'avait pas de
+//      colonne. Un plan relu depuis la base aurait perdu la trace de ses restes.
+//
+// ⚠️ AUCUNE CLÉ ÉTRANGÈRE VERS LE CATALOGUE. `food_id`, `recipe_id`, `allergen_id`, `topic_id` sont
+// du TEXT nu : les tables référencées vivent dans un AUTRE FICHIER (`catalog.db`), et SQLite ne
+// contraint pas entre bases. C'est le prix de la séparation de §4.1 — la vérification d'existence
+// appartient au code, pas au moteur SQL. Un identifiant devenu inconnu après une mise à jour du
+// catalogue est un cas NORMAL, à ignorer silencieusement, jamais une erreur (voir `user-store.ts`).
+
+import { withTransaction, type UserDb } from './user-db.js'
+
+/** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
+export const USER_SCHEMA_VERSION = 1
+
+export interface Migration {
+  readonly version: number
+  /** Instructions UNIQUES, appliquées dans l'ordre, dans une transaction par migration. */
+  readonly statements: readonly string[]
+}
+
+/**
+ * `app_meta` doit exister AVANT de pouvoir lire la version qui décide des migrations à jouer —
+ * elle ne peut donc pas être créée par la migration 1. Elle est bootstrappée ici, à la version 0
+ * (= base vide), et c'est la seule table à porter `IF NOT EXISTS`.
+ *
+ * Pas de `PRAGMA user_version` : §4.3 fixe `app_meta.schema_version` comme source de vérité, et
+ * deux compteurs de version divergent tôt ou tard.
+ */
+const BOOTSTRAP_SQL: readonly string[] = [
+  `CREATE TABLE IF NOT EXISTS app_meta (
+     id INTEGER PRIMARY KEY CHECK (id = 1),
+     schema_version INTEGER NOT NULL,
+     catalog_version TEXT,
+     dernier_export_le TEXT
+   )`,
+  `INSERT OR IGNORE INTO app_meta (id, schema_version) VALUES (1, 0)`,
+]
+
+const V1_STATEMENTS: readonly string[] = [
+  // --- Profil et contraintes dures -----------------------------------------------------------
+  //
+  // id = 1 verrouille le profil UNIQUE par appareil. L'appli n'a ni compte ni multi-profil (§2
+  // ARCHITECTURE) ; l'exprimer en contrainte plutot qu'en discipline d'appelant evite un second
+  // profil fantome cree par un bug d'insertion.
+  `CREATE TABLE user_profile (
+     id INTEGER PRIMARY KEY CHECK (id = 1),
+     tranche_age TEXT NOT NULL CHECK (tranche_age IN ('18_29','30_49','50_64','65_plus')),
+     sexe TEXT NOT NULL CHECK (sexe IN ('F','M','NP')),
+     taille_cm REAL CHECK (taille_cm IS NULL OR taille_cm > 0),
+     poids_kg REAL CHECK (poids_kg IS NULL OR poids_kg > 0),
+     niveau_activite TEXT NOT NULL
+       CHECK (niveau_activite IN ('sedentaire','peu_actif','actif','tres_actif')),
+     facteur_portion REAL NOT NULL CHECK (facteur_portion BETWEEN 0.7 AND 1.5),
+     cree_le TEXT NOT NULL
+   )`,
+
+  // severite : vocabulaire VOLONTAIREMENT OUVERT (aucun CHECK). Ni ARCHITECTURE ni ENGINE ne
+  // definissent ses valeurs, et le moteur ne la lit PAS : engine/selection/allergenes.ts est
+  // explicite — le filtre allergene n'est jamais pondere, meme les traces excluent. Figer ici une
+  // enumeration inventee serait creer une regle que rien ne fait respecter.
+  `CREATE TABLE user_allergy (
+     allergen_id TEXT PRIMARY KEY,
+     severite TEXT
+   )`,
+
+  // Un seul regime a la fois, et c'est structurel. DIET_CHAIN est une chaine d'inclusion
+  // (vegetalien inclus dans vegetarien inclus dans pescetarien inclus dans omnivore) : declarer
+  // deux regimes ne veut rien dire, le plus restrictif absorbe l'autre. `HardConstraints.diet` est
+  // d'ailleurs un scalaire nullable, pas une liste.
+  `CREATE TABLE user_diet (
+     id INTEGER PRIMARY KEY CHECK (id = 1),
+     code TEXT NOT NULL
+   )`,
+
+  // Rejet personnel DURABLE d'un aliment (couche `exclusions`). A ne pas confondre avec
+  // `MealContext.requiredFoodIds`, son miroir, qui est ponctuel et n'a donc PAS de table.
+  `CREATE TABLE user_excluded_food (
+     food_id TEXT PRIMARY KEY
+   )`,
+
+  // --- Gouts, favoris, thematiques ------------------------------------------------------------
+  //
+  // score de -2 (deteste) a +2 (adore), lu par la couche `preference` pour cible_type = 'food'.
+  `CREATE TABLE user_preference (
+     cible_type TEXT NOT NULL CHECK (cible_type IN ('food','recipe')),
+     cible_id TEXT NOT NULL,
+     score INTEGER NOT NULL CHECK (score BETWEEN -2 AND 2),
+     PRIMARY KEY (cible_type, cible_id)
+   )`,
+
+  `CREATE TABLE user_favorite (
+     recipe_id TEXT PRIMARY KEY,
+     ajoute_le TEXT NOT NULL
+   )`,
+
+  // Reglage d'AFFICHAGE choisi et revocable, jamais une donnee de sante declaree (§4.3, §5.3).
+  `CREATE TABLE user_active_topic (
+     topic_id TEXT PRIMARY KEY,
+     active_le TEXT NOT NULL
+   )`,
+
+  // --- Signaux -------------------------------------------------------------------------------
+  //
+  // ⚠️ AUCUNE COLONNE DE QUANTITE, ET C'EST LA FRONTIERE. §6.5 ARCHITECTURE : « Signaux de
+  // preference != journal alimentaire ». Ajouter ici une quantite mangee, une notion de repas
+  // manque ou un champ « rempli / non rempli » transforme l'appli en tracker et viole le
+  // paragraphe. La saisie est facultative, partielle, sans consequence et sans relance.
+  `CREATE TABLE user_signal (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     recipe_id TEXT NOT NULL,
+     type TEXT NOT NULL CHECK (type IN ('aime','naime_pas','envie')),
+     creneau TEXT CHECK (creneau IN ('petit_dejeuner','dejeuner','gouter','diner')),
+     jour_semaine INTEGER CHECK (jour_semaine IS NULL OR jour_semaine BETWEEN 0 AND 6),
+     mois INTEGER CHECK (mois IS NULL OR mois BETWEEN 1 AND 12),
+     date TEXT
+   )`,
+
+  // --- Historique des repas retenus ------------------------------------------------------------
+  //
+  // Table AJOUTEE a §4.3 (voir l'en-tete du fichier). Source unique des couches `habit` et
+  // `variety`, dont l'asymetrie de lecture repose entierement sur `origine` :
+  //   - `variety` lit TOUTES les lignes (un reste mange lasse autant qu'un plat choisi) ;
+  //   - `habit` ne compte que `origine = 'choisi'` (un reste n'est pas une preference exprimee).
+  // La colonne est donc NOT NULL sans defaut : une ligne sans origine casserait cette asymetrie en
+  // silence, en gonflant `habit` de plats jamais choisis.
+  //
+  // ⚠️ AUCUNE COLONNE DE QUANTITE ICI NON PLUS, meme raison que `user_signal`. Cette table
+  // enregistre « ce plat a ete retenu », jamais « voici ce que tu as mange ».
+  //
+  // Cle (date, creneau, recipe_id) : un creneau peut porter plusieurs plats en mode repas
+  // (entree + plat + dessert), donc ni (date, creneau) ni recipe_id seuls ne suffisent.
+  `CREATE TABLE meal_history (
+     date TEXT NOT NULL,
+     creneau TEXT NOT NULL CHECK (creneau IN ('petit_dejeuner','dejeuner','gouter','diner')),
+     recipe_id TEXT NOT NULL,
+     origine TEXT NOT NULL CHECK (origine IN ('choisi','reste')),
+     PRIMARY KEY (date, creneau, recipe_id)
+   )`,
+  // La fenetre glissante de `MealHistory.windowDays` filtre TOUJOURS sur la date.
+  `CREATE INDEX meal_history_date ON meal_history (date)`,
+
+  // --- Garde-manger, equipement, affichage -----------------------------------------------------
+  //
+  // quantite_approx est INDICATIVE : `ShoppingOptions.pantryFoodIds` est du tout-ou-rien (§7.4
+  // ENGINE), l'aliment sort de la liste ou n'en sort pas. Elle n'est jamais decomptee.
+  `CREATE TABLE user_pantry (
+     food_id TEXT PRIMARY KEY,
+     quantite_approx TEXT
+   )`,
+
+  `CREATE TABLE user_equipment (
+     equipment_id TEXT PRIMARY KEY
+   )`,
+
+  // afficher_macros a 0 PAR DEFAUT (§6.5 ARCHITECTURE : mode avance opt-in). Le defaut est dans le
+  // schema, pas dans le code de lecture : une base ou la ligne existe sans valeur explicite ne
+  // peut pas afficher les macros par accident.
+  `CREATE TABLE user_display (
+     id INTEGER PRIMARY KEY CHECK (id = 1),
+     afficher_macros INTEGER NOT NULL DEFAULT 0 CHECK (afficher_macros IN (0,1))
+   )`,
+  // §4.3 note `occasions_actives[]` — SQLite n'a pas de type tableau. Table fille plutot que JSON
+  // dans une colonne : une occasion reste interrogeable en SQL, un blob JSON ne l'est pas.
+  `CREATE TABLE user_display_occasion (
+     occasion_id TEXT PRIMARY KEY
+   )`,
+
+  // --- Planning --------------------------------------------------------------------------------
+  `CREATE TABLE meal_plan (
+     id TEXT PRIMARY KEY,
+     date_debut TEXT NOT NULL
+   )`,
+
+  // service : NULL = mode recette (un plat unique) ; non-NULL = mode repas (§2.7
+  // CONCEPTION_B_VIN_REPAS). est_reste : colonne AJOUTEE a §4.3 (voir l'en-tete).
+  `CREATE TABLE meal_plan_entry (
+     plan_id TEXT NOT NULL REFERENCES meal_plan(id) ON DELETE CASCADE,
+     date TEXT NOT NULL,
+     creneau TEXT NOT NULL CHECK (creneau IN ('petit_dejeuner','dejeuner','gouter','diner')),
+     service TEXT CHECK (service IN ('entree','plat','accompagnement','fromage','dessert')),
+     recipe_id TEXT,
+     portions REAL NOT NULL CHECK (portions > 0),
+     verrouille INTEGER NOT NULL DEFAULT 0 CHECK (verrouille IN (0,1)),
+     est_reste INTEGER NOT NULL DEFAULT 0 CHECK (est_reste IN (0,1))
+   )`,
+  // ⚠️ INDEX UNIQUE AVEC COALESCE, PAS UNE PRIMARY KEY. §4.3 dit « la cle s'etend a (plan_id, date,
+  // creneau, service) », mais `service` est NULL en mode recette — et SQLite laisse passer les
+  // doublons sur une colonne NULL d'une PRIMARY KEY (deux NULL n'y sont jamais egaux). Une PK
+  // aurait donc autorise deux plats sur le meme creneau, sans erreur.
+  `CREATE UNIQUE INDEX meal_plan_entry_slot
+     ON meal_plan_entry (plan_id, date, creneau, COALESCE(service, ''))`,
+
+  // --- Courses ---------------------------------------------------------------------------------
+  `CREATE TABLE shopping_list (
+     id TEXT PRIMARY KEY,
+     plan_id TEXT NOT NULL REFERENCES meal_plan(id) ON DELETE CASCADE,
+     genere_le TEXT NOT NULL
+   )`,
+
+  `CREATE TABLE shopping_list_item (
+     list_id TEXT NOT NULL REFERENCES shopping_list(id) ON DELETE CASCADE,
+     food_id TEXT NOT NULL,
+     quantite_totale REAL NOT NULL,
+     unite TEXT NOT NULL,
+     coche INTEGER NOT NULL DEFAULT 0 CHECK (coche IN (0,1)),
+     prix_estime REAL,
+     PRIMARY KEY (list_id, food_id)
+   )`,
+
+  // Articles NON alimentaires. Table SEPAREE de tout ce qui touche `food` : aucun nutriment, aucun
+  // allergene structure, jamais eligible comme ingredient. `note_allergene` est du texte libre
+  // INFORMATIF — le systeme des 14 allergenes UE reste reserve a ce qu'on mange (§4.3).
+  `CREATE TABLE shopping_extra_item (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     list_id TEXT NOT NULL REFERENCES shopping_list(id) ON DELETE CASCADE,
+     libelle TEXT NOT NULL,
+     rayon TEXT,
+     quantite TEXT,
+     coche INTEGER NOT NULL DEFAULT 0 CHECK (coche IN (0,1)),
+     note_allergene TEXT
+   )`,
+
+  // --- Recettes personnelles -------------------------------------------------------------------
+  //
+  // Contenu AUTONOME, hors garanties du catalogue source : toujours affiche « non verifie » (§4.3).
+  `CREATE TABLE user_recipe (
+     id TEXT PRIMARY KEY,
+     source TEXT NOT NULL CHECK (source IN ('perso','importe','variante')),
+     contenu_json TEXT NOT NULL,
+     importe_le TEXT NOT NULL
+   )`,
+
+  // etape_ordre NULL = note generale sur la recette. Index unique avec COALESCE pour la meme raison
+  // que meal_plan_entry ci-dessus : une PK contenant une colonne NULL ne dedoublonne pas.
+  `CREATE TABLE user_recipe_note (
+     recipe_id TEXT NOT NULL,
+     etape_ordre INTEGER CHECK (etape_ordre IS NULL OR etape_ordre >= 0),
+     texte TEXT NOT NULL,
+     cree_le TEXT NOT NULL
+   )`,
+  `CREATE UNIQUE INDEX user_recipe_note_cible
+     ON user_recipe_note (recipe_id, COALESCE(etape_ordre, -1))`,
+
+  // --- v3 et consentement ----------------------------------------------------------------------
+  `CREATE TABLE user_price (
+     food_id TEXT PRIMARY KEY,
+     prix_par_kg REAL NOT NULL CHECK (prix_par_kg >= 0),
+     saisi_le TEXT NOT NULL
+   )`,
+
+  // Une ligne PAR VERSION acceptee, pas une ligne unique ecrasee : accepter la v2 ne doit pas
+  // effacer la trace de l'acceptation de la v1 (§6.4 ARCHITECTURE).
+  `CREATE TABLE consent (
+     version_texte TEXT PRIMARY KEY,
+     accepte_le TEXT NOT NULL
+   )`,
+]
+
+export const MIGRATIONS: readonly Migration[] = [{ version: 1, statements: V1_STATEMENTS }]
+
+/** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */
+export function readSchemaVersion(db: UserDb): number {
+  for (const sql of BOOTSTRAP_SQL) db.run(sql)
+  const lignes = db.all<{ readonly schema_version: number }>('SELECT schema_version FROM app_meta WHERE id = 1')
+  return lignes[0]?.schema_version ?? 0
+}
+
+/**
+ * Amène la base à `USER_SCHEMA_VERSION` et rend la version atteinte. IDEMPOTENT : appelée sur une
+ * base déjà à jour, elle ne fait rien.
+ *
+ * Chaque migration est appliquée dans SA PROPRE transaction, avec le `UPDATE app_meta` dedans — le
+ * DDL de SQLite étant transactionnel, une migration interrompue laisse la base à sa version
+ * précédente, jamais à moitié migrée. C'est la seule protection possible pour un fichier qui ne se
+ * re-télécharge pas.
+ */
+export function migrate(db: UserDb): number {
+  let version = readSchemaVersion(db)
+  for (const migration of MIGRATIONS) {
+    if (migration.version <= version) continue
+    withTransaction(db, () => {
+      for (const sql of migration.statements) db.run(sql)
+      db.run('UPDATE app_meta SET schema_version = ? WHERE id = 1', [migration.version])
+    })
+    version = migration.version
+  }
+  return version
+}

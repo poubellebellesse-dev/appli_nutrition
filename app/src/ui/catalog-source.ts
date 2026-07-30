@@ -13,9 +13,9 @@
 // mapping SQL → domaine est celui de `data/catalog-loader.ts`, partagé mot pour mot avec le build
 // et les tests. Dupliquer une seule ligne de mapping pour le navigateur créerait deux vérités.
 
-import sqlite3InitModule from '@sqlite.org/sqlite-wasm'
 import type { Catalog } from '../engine/domain/index.js'
 import { loadCatalogFrom, type SqlSource } from '../data/catalog-loader.js'
+import { initSqlite } from './sqlite-wasm.js'
 
 /** Où le `.db` est servi. `app/public/` est copié tel quel à la racine du site par Vite. */
 const CATALOG_URL = '/catalog/catalog.db'
@@ -35,7 +35,7 @@ export function chargerCatalogue(): Promise<Catalog> {
 }
 
 async function chargerVraiment(): Promise<Catalog> {
-  const [sqlite3, reponse] = await Promise.all([sqlite3InitModule(), fetch(CATALOG_URL)])
+  const [sqlite3, reponse] = await Promise.all([initSqlite(), fetch(CATALOG_URL)])
 
   if (!reponse.ok) {
     throw new Error(`catalog.db introuvable (${reponse.status}) — le build a-t-il tourné ?`)
