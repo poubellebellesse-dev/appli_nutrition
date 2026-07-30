@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url'
 import { loadCatalog } from '../app/src/data/catalog-loader-node.js'
 import { createEngine, type Engine } from '../app/src/engine/api/index.js'
 import { normaliser, valeursDeFacette } from '../app/src/engine/search/index.js'
-import type { AllergenId, Catalog, FacetteKind, RecipeId } from '../app/src/engine/domain/index.js'
+import type { AllergenId, Catalog, FacetteKind, FoodId, RecipeId } from '../app/src/engine/domain/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..')
@@ -199,5 +199,99 @@ describe('browseRecipes — l’entonnoir et la garantie de sécurité', () => {
     // « vous n'avez pas encore de favori » au lieu d'afficher une impasse.
     const sans = moteur.browseRecipes({ constraints: SANS_CONTRAINTE, onlyFavorites: true })
     expect(sans.recipeIds).toEqual([])
+  })
+})
+
+describe('searchByPantry — « vider le frigo » sur le catalogue réel', () => {
+  /** Quelques aliments très courants, présents à coup sûr dans plusieurs recettes. */
+  function gardeManger(n: number): readonly FoodId[] {
+    const compte = new Map<FoodId, number>()
+    for (const recette of catalogue.recipes.values()) {
+      for (const i of recette.ingredients) compte.set(i.foodId, (compte.get(i.foodId) ?? 0) + 1)
+    }
+    return [...compte.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, n)
+      .map(([id]) => id)
+  }
+
+  it('CLASSE sans filtrer — un garde-manger maigre ne vide pas la page', () => {
+    // La décision qui structure l'écran : avec quelques ingrédients, aucune recette n'est
+    // intégralement couverte. Filtrer rendrait zéro résultat et ferait croire à une panne.
+    const resultat = moteur.searchByPantry({
+      constraints: SANS_CONTRAINTE,
+      pantryFoodIds: gardeManger(2),
+    })
+    expect(resultat.matches.length).toBe(catalogue.recipes.size)
+  })
+
+  it('trie par couverture décroissante', () => {
+    const resultat = moteur.searchByPantry({
+      constraints: SANS_CONTRAINTE,
+      pantryFoodIds: gardeManger(6),
+    })
+    for (let i = 1; i < resultat.matches.length; i++) {
+      expect(resultat.matches[i - 1]!.couverture).toBeGreaterThanOrEqual(
+        resultat.matches[i]!.couverture
+      )
+    }
+    expect(resultat.matches[0]!.couverture).toBeGreaterThan(0)
+  })
+
+  it('dit ce qu’il MANQUE, et les manquants sont bien absents du garde-manger', () => {
+    const garde = gardeManger(6)
+    const resultat = moteur.searchByPantry({ constraints: SANS_CONTRAINTE, pantryFoodIds: garde })
+    const dedans = new Set(garde)
+    for (const match of resultat.matches.slice(0, 40)) {
+      for (const manquant of match.manquants) {
+        expect(dedans.has(manquant), 'un manquant ne peut pas être au garde-manger').toBe(false)
+      }
+    }
+  })
+
+  it('n’annonce jamais un ingrédient OPTIONNEL comme manquant', () => {
+    // Ne pas avoir une garniture facultative n'empêche pas de cuisiner le plat.
+    const resultat = moteur.searchByPantry({ constraints: SANS_CONTRAINTE, pantryFoodIds: gardeManger(4) })
+    for (const match of resultat.matches.slice(0, 40)) {
+      const recette = catalogue.recipes.get(match.recipeId)!
+      const optionnels = new Set(recette.ingredients.filter((i) => i.optionnel).map((i) => i.foodId))
+      for (const manquant of match.manquants) expect(optionnels.has(manquant)).toBe(false)
+    }
+  })
+
+  it('« Réalisables maintenant » ne garde QUE les recettes sans manquant', () => {
+    const resultat = moteur.searchByPantry({
+      constraints: SANS_CONTRAINTE,
+      pantryFoodIds: gardeManger(30),
+      seulementRealisables: true,
+    })
+    for (const match of resultat.matches) expect(match.manquants).toEqual([])
+  })
+
+  it('APPLIQUE les allergies — le frigo ne contourne pas le garde-fou', () => {
+    // Même propriété que pour la recherche : un écran qui refiltrerait lui-même finirait par
+    // proposer un plat contenant un allergène déclaré.
+    const resultat = moteur.searchByPantry({
+      constraints: { allergies: ['gluten' as AllergenId], diet: null, excludedFoodIds: [] },
+      pantryFoodIds: gardeManger(6),
+    })
+    for (const match of resultat.matches) {
+      const recette = catalogue.recipes.get(match.recipeId)!
+      for (const ingredient of recette.ingredients) {
+        const porte = catalogue.foods
+          .get(ingredient.foodId)
+          ?.allergenes.some((a) => a.allergenId === ('gluten' as AllergenId))
+        expect(porte, `${recette.nom} contient du gluten`).not.toBe(true)
+      }
+    }
+    expect(resultat.entonnoir.byLayer.get('allergenes')).toBeGreaterThan(0)
+  })
+
+  it('rend une couverture nulle et tout en manquant sur un garde-manger vide', () => {
+    const resultat = moteur.searchByPantry({ constraints: SANS_CONTRAINTE, pantryFoodIds: [] })
+    expect(resultat.matches.length).toBe(catalogue.recipes.size)
+    // `scorePantry` rend NEUTRAL_SCORE quand rien n'est déclaré (l'absence d'information n'est pas
+    // une information) — l'écran, lui, n'appelle pas tant que le garde-manger est vide.
+    expect(resultat.matches.every((m) => m.manquants.length > 0)).toBe(true)
   })
 })

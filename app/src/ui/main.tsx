@@ -16,13 +16,14 @@ import { Semaine } from './screens/semaine.js'
 import { Courses } from './screens/courses.js'
 import { Recettes } from './screens/recettes.js'
 import { DetailRecette } from './screens/detail-recette.js'
+import { Frigo } from './screens/frigo.js'
 import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
 import { Bientot } from './screens/bientot.js'
 import { Navigation } from './navigation.js'
 import { chargerSocle } from './socle.js'
 import { aConsenti } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
-import { useRoute, type Onglet } from './router.js'
+import { useRoute, type Onglet, type SousVue } from './router.js'
 import { enregistrerServiceWorker } from './sw-register.js'
 import './index.css'
 
@@ -51,10 +52,11 @@ const TITRE: Readonly<Record<Onglet, string>> = {
   savoir: 'Savoir',
 }
 
-function Ecran({ onglet, recetteId }: { readonly onglet: Onglet; readonly recetteId: string | null }) {
-  // La fiche recette prime sur l'onglet : elle appartient à `recettes`, mais on y arrive aussi
-  // depuis la semaine ou les courses.
-  if (recetteId !== null) return <DetailRecette recetteId={recetteId} />
+function Ecran({ onglet, sousVue }: { readonly onglet: Onglet; readonly sousVue: SousVue }) {
+  // La sous-vue prime sur l'onglet : fiche et frigo appartiennent à `recettes`, mais on y arrive
+  // aussi depuis la semaine, les courses ou Aujourd'hui.
+  if (sousVue.type === 'recette') return <DetailRecette recetteId={sousVue.id} />
+  if (sousVue.type === 'frigo') return <Frigo />
   if (onglet === 'aujourdhui') return <Aujourdhui />
   if (onglet === 'semaine') return <Semaine />
   if (onglet === 'courses') return <Courses />
@@ -125,7 +127,7 @@ function Coquille() {
           </p>
         )}
         <main>
-          <Ecran onglet={route.onglet} recetteId={route.recetteId} />
+          <Ecran onglet={route.onglet} sousVue={route.sousVue} />
         </main>
       </div>
     </>

@@ -44,6 +44,7 @@ import type {
   WeekPlanRequest,
 } from '../domain/index.js'
 import { construireIndex, filtrerRecettes, type FiltresFacettes } from '../search/index.js'
+import { ingredientsManquants, scorePantry } from '../selection/scoring/pantry.js'
 import { suggestAlternatives as runSuggestAlternatives } from '../selection/alternatives.js'
 import { planWeek as runPlanWeek } from '../planning/plan-week.js'
 import { planLeftovers as runPlanLeftovers } from '../planning/plan-leftovers.js'
@@ -132,6 +133,21 @@ export interface Engine {
    * et par quelle couche (§6.8 ENGINE, l'« entonnoir des écartées »).
    */
   browseRecipes(req: BrowseRequest): BrowseResult
+  /**
+   * « Vider le frigo » — classe le catalogue par TAUX DE COUVERTURE de ce qu'on a chez soi
+   * (§4.5 DESIGN, §10.2 ① ENGINE).
+   *
+   * ⚠️ CLASSE, NE FILTRE PAS. Avec quatre ingrédients au frigo, aucune recette n'est intégralement
+   * couverte : un filtre rendrait zéro résultat et l'utilisateur conclurait que la fonction est
+   * cassée. Les mieux couvertes remontent, les autres restent atteignables — et `manquants` dit
+   * exactement ce qu'il faudrait acheter. `seulementRealisables` n'existe que pour le réglage
+   * explicite de §4.5, jamais par défaut.
+   *
+   * ⚠️ LA COUVERTURE EST PONDÉRÉE PAR LA MASSE, pas comptée en nombre d'ingrédients. Avoir le sel
+   * et le poivre d'un bœuf bourguignon ne couvre rien ; avoir le bœuf couvre l'essentiel. Voir
+   * `scorePantry`.
+   */
+  searchByPantry(req: PantryRequest): PantryResult
   analyzeWeek(plan: WeekPlan, profile: UserProfile): NutritionReport
   scaleRecipe(id: RecipeId, portions: number): ScaledRecipe
   suggestSubstitutions(id: RecipeId, missing: readonly FoodId[]): readonly Substitution[]
@@ -405,6 +421,33 @@ export interface BrowseResult {
   readonly totalCatalogue: number
 }
 
+export interface PantryRequest {
+  /** Les mêmes couches d'exclusion que partout : un allergène déclaré exclut, même ici. */
+  readonly constraints: HardConstraints
+  readonly pantryFoodIds: readonly FoodId[]
+  /** §4.5 : réglage « Seulement ce que je peux faire maintenant ». Défaut `false`. */
+  readonly seulementRealisables?: boolean
+}
+
+export interface PantryMatch {
+  readonly recipeId: RecipeId
+  /** Part de la MASSE non optionnelle déjà disponible, entre 0 et 1. */
+  readonly couverture: number
+  /**
+   * Ce qu'il manque pour réaliser la recette — « il vous manque : crème, thym ».
+   *
+   * ⚠️ Les ingrédients OPTIONNELS n'y figurent pas : ne pas avoir une garniture facultative
+   * n'empêche pas de cuisiner le plat.
+   */
+  readonly manquants: readonly FoodId[]
+}
+
+export interface PantryResult {
+  /** Trié par couverture décroissante. Jamais tronqué — l'appelant décide de ce qu'il montre. */
+  readonly matches: readonly PantryMatch[]
+  readonly entonnoir: RejectionSummary
+}
+
 export interface CreateEngineOptions {
   /**
    * Horloge injectée, pour `EngineDiagnostics.dureeMs` uniquement — jamais `Date.now()` en
@@ -438,6 +481,34 @@ const PROFIL_NEUTRE: UserProfile = {
   poidsKg: null,
   niveauActivite: 'actif',
   facteurPortion: 1,
+}
+
+/**
+ * Requête PORTEUSE DE CONTRAINTES pour les écrans de parcours (`browseRecipes`, `searchByPantry`).
+ *
+ * ⚠️ Tout y est neutre sauf les contraintes : pas d'historique, pas de préférences, pas
+ * d'archétype. `context.creneau` n'est LU PAR AUCUNE couche d'exclusion — seul `runExclusionPass`
+ * s'en servait pour son point de départ, que ces deux appels fournissent eux-mêmes. Parcourir n'est
+ * pas juger.
+ */
+function requeteDeParcours(constraints: HardConstraints): SuggestionRequest {
+  return {
+    profile: PROFIL_NEUTRE,
+    constraints,
+    context: {
+      date: '1970-01-01',
+      creneau: 'diner',
+      envie: null,
+      tempsDisponibleMin: null,
+      requiredFoodIds: [],
+      pantryFoodIds: [],
+    },
+    history: { windowDays: 0, entries: [] },
+    preferences: new Map(),
+    favoriteRecipeIds: new Set(),
+    activeTopics: [],
+    seed: 0,
+  }
 }
 
 export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): Engine {
@@ -505,25 +576,12 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       // n'est LU PAR AUCUNE couche d'exclusion (seul `runExclusionPass` s'en servait pour son point
       // de départ, que l'on remplace). Le reste est neutre — aucun historique, aucune préférence,
       // aucun archétype : parcourir n'est pas juger.
-      const requete: SuggestionRequest = {
-        profile: PROFIL_NEUTRE,
-        constraints: req.constraints,
-        context: {
-          date: '1970-01-01',
-          creneau: 'diner',
-          envie: null,
-          tempsDisponibleMin: null,
-          requiredFoodIds: [],
-          pantryFoodIds: [],
-        },
-        history: { windowDays: 0, entries: [] },
-        preferences: new Map(),
-        favoriteRecipeIds: favoris,
-        activeTopics: [],
-        seed: 0,
-      }
-
-      const exclusion = runExclusionPass(enrichedCatalog, requete, EXCLUSION_LAYERS, depart)
+      const exclusion = runExclusionPass(
+        enrichedCatalog,
+        { ...requeteDeParcours(req.constraints), favoriteRecipeIds: favoris },
+        EXCLUSION_LAYERS,
+        depart
+      )
       const recipeIds = filtrerRecettes(enrichedCatalog, indexRecherche, exclusion.candidates, {
         ...(req.texte === undefined ? {} : { texte: req.texte }),
         ...(req.facettes === undefined ? {} : { facettes: req.facettes }),
@@ -556,6 +614,29 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
         opts ?? {},
         now === undefined ? plan.startDate : new Date(now()).toISOString().slice(0, 10)
       ),
+    searchByPantry: (req) => {
+      const garde = new Set(req.pantryFoodIds)
+      const depart: ReadonlySet<RecipeId> = new Set(enrichedCatalog.recipes.keys())
+      const exclusion = runExclusionPass(
+        enrichedCatalog,
+        requeteDeParcours(req.constraints),
+        EXCLUSION_LAYERS,
+        depart
+      )
+
+      const matches: PantryMatch[] = []
+      for (const recipeId of exclusion.candidates) {
+        const manquants = ingredientsManquants(recipeId, enrichedCatalog, garde)
+        if (req.seulementRealisables === true && manquants.length > 0) continue
+        matches.push({ recipeId, couverture: scorePantry(recipeId, enrichedCatalog, garde), manquants })
+      }
+      // Tri STABLE par couverture décroissante : à couverture égale, l'ordre du catalogue est
+      // conservé. Aucun score de goût n'intervient — on répond à « que puis-je faire avec ça »,
+      // pas à « qu'est-ce qui me plairait ».
+      matches.sort((a, b) => b.couverture - a.couverture)
+
+      return { matches, entonnoir: buildRejectionSummary(depart.size, exclusion) }
+    },
     analyzeWeek: () => notImplemented('analyzeWeek'),
     scaleRecipe: (id, portions) => runScaleRecipe(enrichedCatalog, id, portions),
     suggestSubstitutions: () => notImplemented('suggestSubstitutions'),

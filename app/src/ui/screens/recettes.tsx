@@ -23,7 +23,7 @@ import type { BrowseResult, Engine } from '../../engine/api/index.js'
 import { valeursDeFacette } from '../../engine/search/index.js'
 import { readUserState, setFavorite } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
-import { hashDeRecette } from '../router.js'
+import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { origineDeCuisine } from '../drapeaux.js'
 
 /** Combien de valeurs par facette montrer avant de replier (§4.4 : « deux rangées »). */
@@ -164,6 +164,15 @@ export function Recettes() {
         valeur={filtres.texte}
         onChange={(texte) => setFiltres({ ...filtres, texte })}
       />
+
+      {/* « Bloc d'entrée distinct Vider le frigo » (§4.4) — un chemin différent : on n'y cherche
+          pas une recette, on part de ce qu'on a. */}
+      <a
+        href={hashDuFrigo()}
+        className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte no-underline"
+      >
+        Vider le frigo — partir de ce que j'ai
+      </a>
 
       {/* « Mes favoris » en tête, à UN TAP (§4.4). */}
       <button

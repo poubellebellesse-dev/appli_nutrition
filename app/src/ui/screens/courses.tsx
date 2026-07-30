@@ -32,7 +32,7 @@ import {
   type StoredShoppingList,
 } from '../../data/user-store.js'
 import { LIBELLE_CRENEAU, aujourdhuiIso, chargerSocle, cleCreneau, profilCourant } from '../socle.js'
-import { hashDe } from '../router.js'
+import { hashDe, hashDuFrigo } from '../router.js'
 
 /** Les dix rayons de §4.3 — texte libre côté base, liste fermée côté saisie pour rester rangeable. */
 const RAYONS_EXTRA: readonly string[] = [
@@ -284,6 +284,18 @@ export function Courses() {
       </div>
 
       {ajoutOuvert && <FormulaireAjout onAjouter={ajouter} onAnnuler={() => setAjoutOuvert(false)} />}
+
+      {/* « Chemin inverse » (§4.3) : après des ajouts manuels, proposer d'en faire quelque chose.
+          Invite DISCRÈTE et tardive — §4.3 la déclenche à partir de deux ajouts, pour ne pas
+          harceler quelqu'un qui a juste noté sa lessive. */}
+      {extras.length >= 2 && (
+        <a
+          href={hashDuFrigo()}
+          className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+        >
+          Que cuisiner avec ?
+        </a>
+      )}
 
       <div className="mt-6 space-y-5">
         {sections.map((section) => (

@@ -426,7 +426,7 @@ l'interface mais de **prouver la chaîne complète dans un navigateur** avant d'
 | 4.2 | 🗓 **Semaine** | `planWeek` · `rerollSlot` · `planLeftovers` ✅ | **Livré** (2026-07-30) — hors carrousel, vue « 3 propositions », écarter/pouce-bas |
 | 4.3 | 🛒 **Courses** | `buildShoppingList` ✅ (`pourSlots` couvre « ranger par repas / jour ») | **Livré** (2026-07-30) — hors autocomplétion, impression/export, « Que cuisiner avec ? » |
 | 4.4 | 📖 **Recettes** | `browseRecipes` + `engine/search/` ✅ · entonnoir ✅ | **Livré** (2026-07-30) — hors « Pourquoi pas ce plat ? » |
-| 4.5 | 💡 **Vider le frigo** | couche `pantry` + `ingredientsManquants` ✅ | Prêt à coder |
+| 4.5 | 💡 **Vider le frigo** | `searchByPantry` ✅ · couche `pantry` ✅ | **Livré** (2026-07-30) — hors substitution suggérée |
 | 4.6 | **Détail d'une recette** | `scaleRecipe` ✅ · lexique 62 gestes ✅ | **Livré** (2026-07-30) — hors photo, matériel, alternatives, notes |
 | 4.7 | 💡 **Savoir** | lexique ✅ · ⛔ pas de table de tips · « Comprendre » = v2 | Partiel |
 | 4.8 | **Premier lancement** | `user.db` ✅ · routeur ✅ · consentement ✅ | **Livré** (2026-07-30) — hors écran 4 « goûts » |
@@ -617,6 +617,9 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - ⚠️ **Les drapeaux ne se rendent pas sous Windows** : le système n'embarque pas ces glyphes, le
   navigateur montre « FR », « IT ». Lisible, pas cassé, et iOS/Android les rendent — mais à savoir
   avant de conclure à un bug en testant sur PC.
+- **Écran Vider le frigo — reste à faire** : la substitution suggérée (« le cas échéant », §4.5).
+  `suggestSubstitutions` n'est pas câblée et la table `substitution` est vide par décision 27 — il
+  n'y a rien à suggérer tant que les couples n'existent pas.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

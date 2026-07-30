@@ -24,16 +24,32 @@ import { useSyncExternalStore } from 'react'
 export type Onglet = 'aujourdhui' | 'semaine' | 'courses' | 'recettes' | 'savoir'
 
 /**
+ * Ce qu'on regarde À L'INTÉRIEUR d'un onglet.
+ *
+ * ⚠️ UNION DISCRIMINÉE, et c'est un changement volontaire. La version précédente portait un
+ * `recetteId: string | null` ; ajouter « vider le frigo » aurait demandé un second champ ad hoc, et
+ * un troisième aurait suivi. Trois états mutuellement exclusifs représentés par deux booléens
+ * indépendants, c'est un état impossible à écrire (`{ recetteId: 'x', frigo: true }`) que rien
+ * n'empêche. L'union le rend inexprimable.
+ */
+export type SousVue =
+  | { readonly type: 'liste' }
+  | { readonly type: 'recette'; readonly id: string }
+  | { readonly type: 'frigo' }
+
+/**
  * Où l'on est.
  *
- * `recetteId` non nul = fiche recette. Elle appartient à l'onglet `recettes` MÊME quand on y arrive
- * depuis la semaine ou les courses : la barre doit désigner une section stable, pas le chemin
- * parcouru pour arriver là.
+ * La fiche recette et « vider le frigo » appartiennent à l'onglet `recettes` MÊME quand on y arrive
+ * depuis la semaine, les courses ou Aujourd'hui : la barre doit désigner une section stable, pas le
+ * chemin parcouru pour y arriver.
  */
 export interface Route {
   readonly onglet: Onglet
-  readonly recetteId: string | null
+  readonly sousVue: SousVue
 }
+
+const LISTE: SousVue = { type: 'liste' }
 
 const HASH_PAR_ONGLET: Readonly<Record<Onglet, string>> = {
   aujourdhui: '#/',
@@ -55,6 +71,13 @@ const ONGLET_PAR_HASH: ReadonlyMap<string, Onglet> = new Map([
 
 const PREFIXE_RECETTE = '#/recette/'
 
+/**
+ * « Vider le frigo » N'EST PAS UN ONGLET. §4.5 DESIGN et la maquette le disent accessible « depuis
+ * Aujourd'hui et Recettes » ; la barre reste à cinq onglets stables v1 → v2 (§2 DESIGN). Une barre
+ * qui gagnerait un sixième onglet changerait de forme sous les doigts de l'utilisateur.
+ */
+const HASH_FRIGO = '#/frigo'
+
 function souscrire(auChangement: () => void): () => void {
   window.addEventListener('hashchange', auChangement)
   return () => window.removeEventListener('hashchange', auChangement)
@@ -68,18 +91,20 @@ function souscrire(auChangement: () => void): () => void {
  * `useSyncExternalStore` demanderait un DOM (donc `jsdom`, donc une dépendance de plus).
  */
 export function routeDepuisHash(hash: string): Route {
+  if (hash === HASH_FRIGO) return { onglet: 'recettes', sousVue: { type: 'frigo' } }
+
   if (hash.startsWith(PREFIXE_RECETTE)) {
     // `decodeURIComponent` peut lever sur un `%` isolé, qu'un signet tronqué produit facilement.
     // Une URL malformée doit ramener à la liste, jamais faire planter l'application.
     try {
       const id = decodeURIComponent(hash.slice(PREFIXE_RECETTE.length))
-      if (id !== '') return { onglet: 'recettes', recetteId: id }
+      if (id !== '') return { onglet: 'recettes', sousVue: { type: 'recette', id } }
     } catch {
       /* fragment illisible → liste des recettes */
     }
-    return { onglet: 'recettes', recetteId: null }
+    return { onglet: 'recettes', sousVue: LISTE }
   }
-  return { onglet: ONGLET_PAR_HASH.get(hash) ?? 'aujourdhui', recetteId: null }
+  return { onglet: ONGLET_PAR_HASH.get(hash) ?? 'aujourdhui', sousVue: LISTE }
 }
 
 function lireRoute(): Route {
@@ -92,7 +117,7 @@ function lireRoute(): Route {
  * donc le dernier résultat tant que le fragment n'a pas bougé.
  */
 let dernierHash: string | undefined
-let derniereRoute: Route = { onglet: 'aujourdhui', recetteId: null }
+let derniereRoute: Route = { onglet: 'aujourdhui', sousVue: LISTE }
 
 function lireRouteStable(): Route {
   const hash = window.location.hash
@@ -103,7 +128,7 @@ function lireRouteStable(): Route {
   return derniereRoute
 }
 
-const ROUTE_PAR_DEFAUT: Route = { onglet: 'aujourdhui', recetteId: null }
+const ROUTE_PAR_DEFAUT: Route = { onglet: 'aujourdhui', sousVue: LISTE }
 
 export function useRoute(): Route {
   // Le 3ᵉ argument est le rendu côté serveur : l'application n'en fait pas, mais React l'exige.
@@ -116,6 +141,10 @@ export function hashDe(onglet: Onglet): string {
 
 export function hashDeRecette(id: string): string {
   return `${PREFIXE_RECETTE}${encodeURIComponent(id)}`
+}
+
+export function hashDuFrigo(): string {
+  return HASH_FRIGO
 }
 
 export function naviguer(onglet: Onglet): void {
