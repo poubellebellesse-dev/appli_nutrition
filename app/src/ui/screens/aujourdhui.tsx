@@ -14,6 +14,7 @@ import {
   chargerSocle,
   profilCourant,
 } from '../socle.js'
+import { hashDeRecette } from '../router.js'
 
 /** L'écran ne couvre que le dîner — « Ce soir ». */
 const CRENEAU: MealSlot = 'diner'
@@ -171,7 +172,11 @@ export function Aujourdhui() {
             className="rounded-[--radius-carte] border border-bordure bg-surface p-4"
           >
             <div className="flex items-baseline justify-between gap-4">
-              <h2 className="font-titre text-[1.35rem] text-texte">{vue.nomDe(suggestion.recipeId)}</h2>
+              <h2 className="font-titre text-[1.35rem]">
+                <a href={hashDeRecette(suggestion.recipeId)} className="text-texte no-underline">
+                  {vue.nomDe(suggestion.recipeId)}
+                </a>
+              </h2>
               <span className="shrink-0 text-[0.85rem] tabular-nums text-attenue">
                 {Math.round(suggestion.score)}/100
               </span>

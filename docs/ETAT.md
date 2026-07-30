@@ -427,7 +427,7 @@ l'interface mais de **prouver la chaîne complète dans un navigateur** avant d'
 | 4.3 | 🛒 **Courses** | `buildShoppingList` ✅ (`pourSlots` couvre « ranger par repas / jour ») | **Livré** (2026-07-30) — hors autocomplétion, impression/export, « Que cuisiner avec ? » |
 | 4.4 | 📖 **Recettes** | `browseRecipes` + `engine/search/` ✅ · entonnoir ✅ | **Livré** (2026-07-30) — hors « Pourquoi pas ce plat ? » |
 | 4.5 | 💡 **Vider le frigo** | couche `pantry` + `ingredientsManquants` ✅ | Prêt à coder |
-| 4.6 | **Détail d'une recette** | `scaleRecipe` ✅ · lexique 62 gestes ✅ | Prêt à coder |
+| 4.6 | **Détail d'une recette** | `scaleRecipe` ✅ · lexique 62 gestes ✅ | **Livré** (2026-07-30) — hors photo, matériel, alternatives, notes |
 | 4.7 | 💡 **Savoir** | lexique ✅ · ⛔ pas de table de tips · « Comprendre » = v2 | Partiel |
 | 4.8 | **Premier lancement** | `user.db` ✅ · routeur ✅ · consentement ✅ | **Livré** (2026-07-30) — hors écran 4 « goûts » |
 
@@ -594,6 +594,13 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   Traduire « j'aime ce curry » en préférences d'aliments (ingrédient caractéristique seul ? tous ?
   quelle pondération ?) est une décision de conception absente des docs — à trancher par mesure,
   pas au jugé, sous peine de fausser le démarrage à froid que cet écran existe pour résoudre.
+- **Écran Détail — reste à faire** : la photo (zéro sur 241), la section « Matériel » (le catalogue
+  n'a **aucune table équipement** — c'est aussi pourquoi la couche `equipement` est inerte depuis
+  P1a), les alternatives d'ingrédients (`suggestAlternatives` exige une `SuggestionRequest` complète
+  pour que les substitutions repassent les filtres d'allergènes), les notes locales
+  (`user_recipe_note`, table créée sans accesseur), la roue des goûts, « Ajouter à ma semaine ».
+- ⚠️ **Les 62 fiches du lexique sont du TEXTE SEUL.** §8.5 les annonce illustrées et §4.6 prévoit
+  une animation par geste ; il n'y a ni image ni clip. Le geste se déplie quand même, en texte.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

@@ -665,6 +665,35 @@ export function recordConsent(db: UserDb, versionTexte: string, accepteLe: strin
   ])
 }
 
+// --- Affichage ------------------------------------------------------------------------------------
+
+/**
+ * Réglages d'affichage (§4.3, `user_display`).
+ *
+ * ⚠️ `afficherMacros` est à `false` PAR DÉFAUT, et le défaut vit dans le schéma, pas ici. §6.5
+ * ARCHITECTURE autorise « Cette portion : 520 kcal » mais proscrit le compteur de reste quotidien,
+ * l'objectif présenté comme cible et le code couleur rouge/vert. C'est le MÉCANISME de restriction
+ * qui est interdit, pas le chiffre — mais il reste opt-in, réservé au « mode avancé ».
+ */
+export interface StoredDisplay {
+  readonly afficherMacros: boolean
+}
+
+export function readDisplay(db: UserDb): StoredDisplay {
+  const row = db.all<{ readonly afficher_macros: number }>(
+    'SELECT afficher_macros FROM user_display WHERE id = 1'
+  )[0]
+  // Absent = jamais réglé = le défaut du schéma. Rendre `null` obligerait chaque appelant à traiter
+  // le cas, et un oubli afficherait les macros à quelqu'un qui ne les a jamais demandées.
+  return { afficherMacros: row?.afficher_macros === 1 }
+}
+
+export function writeDisplay(db: UserDb, display: StoredDisplay): void {
+  db.run('INSERT OR REPLACE INTO user_display (id, afficher_macros) VALUES (1, ?)', [
+    display.afficherMacros ? 1 : 0,
+  ])
+}
+
 // --- Lecture composée -------------------------------------------------------------------------
 
 /**

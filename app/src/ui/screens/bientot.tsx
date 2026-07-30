@@ -9,7 +9,7 @@
 // rebours, pas d'inscription à une liste : l'application n'a ni compte ni serveur (§2 ARCHITECTURE),
 // et promettre une date qu'on ne tiendra peut-être pas abîme la confiance pour rien.
 
-import type { Route } from '../router.js'
+import type { Onglet } from '../router.js'
 
 const DESCRIPTION: Readonly<Record<string, string>> = {
   courses: 'La liste de courses se construira à partir de votre semaine.',
@@ -17,7 +17,7 @@ const DESCRIPTION: Readonly<Record<string, string>> = {
   savoir: 'Les fiches de cuisine et les repères de nutrition.',
 }
 
-export function Bientot({ route, titre }: { readonly route: Route; readonly titre: string }) {
+export function Bientot({ route, titre }: { readonly route: Onglet; readonly titre: string }) {
   return (
     <section className="mx-auto max-w-prose py-10 text-center">
       <h1 className="text-[1.9rem] text-texte">{titre}</h1>

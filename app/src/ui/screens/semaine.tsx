@@ -34,6 +34,7 @@ import {
   profilCourant,
   type Socle,
 } from '../socle.js'
+import { hashDeRecette } from '../router.js'
 
 /**
  * « Nombre de repas/jour réglable (1-3) » (§4.2). Le mapping est ici et nulle part ailleurs : quels
@@ -450,6 +451,7 @@ function Creneau({
   readonly onChanger: () => void
 }) {
   const vide = entry.recipeId === null
+  const recipeId = entry.recipeId
   const apparence = entry.locked
     ? 'border-2 border-accent bg-accent-doux'
     : vide
@@ -465,7 +467,13 @@ function Creneau({
       </p>
 
       <p className="mt-1 font-titre text-[1.1rem] leading-snug text-texte">
-        {nom ?? <span className="text-attenue">Aucun plat</span>}
+        {nom === null || recipeId === null ? (
+          <span className="text-attenue">Aucun plat</span>
+        ) : (
+          <a href={hashDeRecette(recipeId)} className="text-texte no-underline">
+            {nom}
+          </a>
+        )}
       </p>
 
       {/* Les états se disent AUSSI en toutes lettres — l'emoji seul serait invisible à un lecteur

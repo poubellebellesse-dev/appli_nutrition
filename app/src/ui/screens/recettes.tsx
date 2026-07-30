@@ -23,6 +23,7 @@ import type { BrowseResult, Engine } from '../../engine/api/index.js'
 import { valeursDeFacette } from '../../engine/search/index.js'
 import { readUserState, setFavorite } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
+import { hashDeRecette } from '../router.js'
 
 /** Combien de valeurs par facette montrer avant de replier (§4.4 : « deux rangées »). */
 const PASTILLES_VISIBLES = 5
@@ -248,13 +249,19 @@ export function Recettes() {
               key={id}
               className="flex items-stretch rounded-[--radius-carte] border border-bordure bg-surface"
             >
-              <div className="flex-1 p-3">
+              {/* La CARTE ENTIÈRE ouvre la fiche, pas seulement le titre : même raison que la
+                  ligne cochable des courses — viser un mot de 12 px est hors de portée d'une main
+                  tremblante. L'étoile reste en dehors du lien pour rester actionnable seule. */}
+              <a
+                href={hashDeRecette(id)}
+                className="flex-1 p-3 no-underline"
+              >
                 <h2 className="font-titre text-[1.2rem] leading-snug text-texte">{recette.nom}</h2>
                 <p className="mt-1 text-[0.92rem] leading-relaxed text-texte-doux">{recette.description}</p>
                 <p className="mt-1 text-[0.85rem] text-attenue">
                   {recette.tempsPrepMin + recette.tempsCuissonMin} min · {recette.portionsBase} portions
                 </p>
-              </div>
+              </a>
               <button
                 type="button"
                 onClick={() => basculerFavori(id, !favori)}

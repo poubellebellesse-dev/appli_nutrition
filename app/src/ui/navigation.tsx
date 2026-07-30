@@ -18,15 +18,16 @@
 // Les tracés SVG viennent des maquettes, repris à l'identique.
 
 import type { JSX } from 'react'
-import { hashDe, type Route } from './router.js'
+import { hashDe, type Onglet } from './router.js'
 
-interface Onglet {
-  readonly route: Route
+/** Un onglet de la barre. Nommé `EntreeOnglet` pour ne pas masquer le type `Onglet` du routeur. */
+interface EntreeOnglet {
+  readonly route: Onglet
   readonly libelle: string
   readonly icone: JSX.Element
 }
 
-const ONGLETS: readonly Onglet[] = [
+const ONGLETS: readonly EntreeOnglet[] = [
   {
     route: 'aujourdhui',
     libelle: "Aujourd'hui",
@@ -83,7 +84,7 @@ const ONGLETS: readonly Onglet[] = [
   },
 ]
 
-export function Navigation({ courante }: { readonly courante: Route }) {
+export function Navigation({ courante }: { readonly courante: Onglet }) {
   return (
     <nav
       aria-label="Navigation principale"

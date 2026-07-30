@@ -163,9 +163,11 @@ export { EXCLUSION_LAYERS, runExclusionPass } from './exclusion-pass.js'
 export type { ExclusionPassResult } from './exclusion-pass.js'
 
 // ------------------------------------------------------------------------------------------
-// Couches de score — implémentation partielle P1b-1/P1b-2/P1b-3 (7 des 11 couches du registre :
-// `nutri`, `preference`, `craving`, `season`, `variety`, `habit`, `speed`). `pantry`, `occasion`,
-// `topic`, `cost` restent NON implémentées (P2) — voir LAYER_DESCRIPTORS ci-dessus. Réexportées
+// Couches de score — implémentation partielle (8 des 11 couches du registre : `nutri`,
+// `preference`, `craving`, `season`, `variety`, `habit`, `speed`, `pantry`). `occasion`, `topic` et
+// `cost` restent NON implémentées (P2) — voir LAYER_DESCRIPTORS ci-dessus.
+// ⚠️ `pantry` a été AJOUTÉE depuis (scoring/pantry.ts) : ce commentaire la disait absente jusqu'au
+// 2026-07-30, et ETAT.md disait l'inverse. Corrigé du côté qui mentait. Réexportées
 // ici pour la même surface unique `engine/selection` que les couches d'exclusion.
 // ------------------------------------------------------------------------------------------
 

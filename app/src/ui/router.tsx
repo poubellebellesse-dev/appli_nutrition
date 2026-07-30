@@ -7,22 +7,35 @@
 // ce soit, et un rechargement sur `/semaine` rendrait un 404. Le fragment ne quitte jamais le
 // navigateur, donc le problème n'existe pas.
 //
-// ⚠️ PAS DE BIBLIOTHÈQUE. Cinq écrans sans paramètre d'URL ni route imbriquée ne justifient pas une
-// dépendance ; le jour où il faudra `/recette/:id`, ce fichier aura atteint sa limite et il faudra
-// en discuter — pas l'étendre en douce.
+// ⚠️ TOUJOURS PAS DE BIBLIOTHÈQUE — décision reprise le 2026-07-30, à l'arrivée de la fiche recette.
+// L'en-tête annonçait « le jour où il faudra /recette/:id, ce fichier aura atteint sa limite et il
+// faudra en discuter ». Le jour est venu : UNE route a besoin d'un paramètre. L'ajouter coûte les
+// quelques lignes ci-dessous ; `react-router-dom` coûterait une dépendance et son écosystème pour
+// un seul cas. À rediscuter si une deuxième route paramétrée, ou une route imbriquée, apparaît.
 //
-// ⚠️ LES CINQ ROUTES EXISTENT TOUTES, y compris celles dont l'écran n'est pas codé. Le bloc commun
-// des maquettes impose une barre à cinq onglets « présente sur TOUS les écrans », avec les mêmes
-// libellés dans le même ordre. Faire apparaître les onglets au fur et à mesure ferait changer la
-// navigation de forme sous les doigts de l'utilisateur — exactement ce que la contrainte
-// « navigation permanente et visible » interdit. Un onglet qui annonce « pas encore disponible »
-// est honnête ; une barre qui grandit à chaque version ne l'est pas.
+// ⚠️ LES CINQ ONGLETS EXISTENT TOUS, y compris ceux dont l'écran n'est pas codé. Le bloc commun des
+// maquettes impose une barre à cinq onglets « présente sur TOUS les écrans », avec les mêmes
+// libellés dans le même ordre. Une barre qui grandit de version en version changerait de forme sous
+// les doigts de l'utilisateur — exactement ce que la contrainte « navigation permanente et visible »
+// interdit.
 
 import { useSyncExternalStore } from 'react'
 
-export type Route = 'aujourdhui' | 'semaine' | 'courses' | 'recettes' | 'savoir'
+export type Onglet = 'aujourdhui' | 'semaine' | 'courses' | 'recettes' | 'savoir'
 
-const HASH_PAR_ROUTE: Readonly<Record<Route, string>> = {
+/**
+ * Où l'on est.
+ *
+ * `recetteId` non nul = fiche recette. Elle appartient à l'onglet `recettes` MÊME quand on y arrive
+ * depuis la semaine ou les courses : la barre doit désigner une section stable, pas le chemin
+ * parcouru pour arriver là.
+ */
+export interface Route {
+  readonly onglet: Onglet
+  readonly recetteId: string | null
+}
+
+const HASH_PAR_ONGLET: Readonly<Record<Onglet, string>> = {
   aujourdhui: '#/',
   semaine: '#/semaine',
   courses: '#/courses',
@@ -30,7 +43,7 @@ const HASH_PAR_ROUTE: Readonly<Record<Route, string>> = {
   savoir: '#/savoir',
 }
 
-const ROUTE_PAR_HASH: ReadonlyMap<string, Route> = new Map([
+const ONGLET_PAR_HASH: ReadonlyMap<string, Onglet> = new Map([
   ['', 'aujourdhui'],
   ['#', 'aujourdhui'],
   ['#/', 'aujourdhui'],
@@ -39,6 +52,8 @@ const ROUTE_PAR_HASH: ReadonlyMap<string, Route> = new Map([
   ['#/recettes', 'recettes'],
   ['#/savoir', 'savoir'],
 ])
+
+const PREFIXE_RECETTE = '#/recette/'
 
 function souscrire(auChangement: () => void): () => void {
   window.addEventListener('hashchange', auChangement)
@@ -53,23 +68,56 @@ function souscrire(auChangement: () => void): () => void {
  * `useSyncExternalStore` demanderait un DOM (donc `jsdom`, donc une dépendance de plus).
  */
 export function routeDepuisHash(hash: string): Route {
-  return ROUTE_PAR_HASH.get(hash) ?? 'aujourdhui'
+  if (hash.startsWith(PREFIXE_RECETTE)) {
+    // `decodeURIComponent` peut lever sur un `%` isolé, qu'un signet tronqué produit facilement.
+    // Une URL malformée doit ramener à la liste, jamais faire planter l'application.
+    try {
+      const id = decodeURIComponent(hash.slice(PREFIXE_RECETTE.length))
+      if (id !== '') return { onglet: 'recettes', recetteId: id }
+    } catch {
+      /* fragment illisible → liste des recettes */
+    }
+    return { onglet: 'recettes', recetteId: null }
+  }
+  return { onglet: ONGLET_PAR_HASH.get(hash) ?? 'aujourdhui', recetteId: null }
 }
 
 function lireRoute(): Route {
   return routeDepuisHash(window.location.hash)
 }
 
+/**
+ * ⚠️ La valeur rendue doit être STABLE entre deux lectures inchangées : `useSyncExternalStore`
+ * compare par identité et boucle à l'infini si on lui rend un objet neuf à chaque appel. On mémorise
+ * donc le dernier résultat tant que le fragment n'a pas bougé.
+ */
+let dernierHash: string | undefined
+let derniereRoute: Route = { onglet: 'aujourdhui', recetteId: null }
+
+function lireRouteStable(): Route {
+  const hash = window.location.hash
+  if (hash !== dernierHash) {
+    dernierHash = hash
+    derniereRoute = lireRoute()
+  }
+  return derniereRoute
+}
+
+const ROUTE_PAR_DEFAUT: Route = { onglet: 'aujourdhui', recetteId: null }
+
 export function useRoute(): Route {
-  // Le 3ᵉ argument est le rendu côté serveur : l'application n'en fait pas, mais React l'exige et
-  // « aujourd'hui » est le bon défaut.
-  return useSyncExternalStore(souscrire, lireRoute, () => 'aujourdhui')
+  // Le 3ᵉ argument est le rendu côté serveur : l'application n'en fait pas, mais React l'exige.
+  return useSyncExternalStore(souscrire, lireRouteStable, () => ROUTE_PAR_DEFAUT)
 }
 
-export function naviguer(route: Route): void {
-  window.location.hash = HASH_PAR_ROUTE[route]
+export function hashDe(onglet: Onglet): string {
+  return HASH_PAR_ONGLET[onglet]
 }
 
-export function hashDe(route: Route): string {
-  return HASH_PAR_ROUTE[route]
+export function hashDeRecette(id: string): string {
+  return `${PREFIXE_RECETTE}${encodeURIComponent(id)}`
+}
+
+export function naviguer(onglet: Onglet): void {
+  window.location.hash = hashDe(onglet)
 }

@@ -15,13 +15,14 @@ import { Aujourdhui } from './screens/aujourdhui.js'
 import { Semaine } from './screens/semaine.js'
 import { Courses } from './screens/courses.js'
 import { Recettes } from './screens/recettes.js'
+import { DetailRecette } from './screens/detail-recette.js'
 import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
 import { Bientot } from './screens/bientot.js'
 import { Navigation } from './navigation.js'
 import { chargerSocle } from './socle.js'
 import { aConsenti } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
-import { useRoute, type Route } from './router.js'
+import { useRoute, type Onglet } from './router.js'
 import { enregistrerServiceWorker } from './sw-register.js'
 import './index.css'
 
@@ -42,7 +43,7 @@ const MESSAGE: Readonly<Record<Exclude<Alerte, 'aucune'>, string>> = {
     "Vos réglages sont enregistrés sur cet appareil, mais le navigateur ne garantit pas de les conserver. Ajoutez l'application à votre écran d'accueil pour ne rien perdre.",
 }
 
-const TITRE: Readonly<Record<Route, string>> = {
+const TITRE: Readonly<Record<Onglet, string>> = {
   aujourdhui: "Aujourd'hui",
   semaine: 'Semaine',
   courses: 'Courses',
@@ -50,12 +51,15 @@ const TITRE: Readonly<Record<Route, string>> = {
   savoir: 'Savoir',
 }
 
-function Ecran({ route }: { readonly route: Route }) {
-  if (route === 'aujourdhui') return <Aujourdhui />
-  if (route === 'semaine') return <Semaine />
-  if (route === 'courses') return <Courses />
-  if (route === 'recettes') return <Recettes />
-  return <Bientot route={route} titre={TITRE[route]} />
+function Ecran({ onglet, recetteId }: { readonly onglet: Onglet; readonly recetteId: string | null }) {
+  // La fiche recette prime sur l'onglet : elle appartient à `recettes`, mais on y arrive aussi
+  // depuis la semaine ou les courses.
+  if (recetteId !== null) return <DetailRecette recetteId={recetteId} />
+  if (onglet === 'aujourdhui') return <Aujourdhui />
+  if (onglet === 'semaine') return <Semaine />
+  if (onglet === 'courses') return <Courses />
+  if (onglet === 'recettes') return <Recettes />
+  return <Bientot route={onglet} titre={TITRE[onglet]} />
 }
 
 function Coquille() {
@@ -108,7 +112,7 @@ function Coquille() {
 
   return (
     <>
-      <Navigation courante={route} />
+      <Navigation courante={route.onglet} />
       {/* `pb-28` réserve la hauteur de la barre du bas sur mobile ; sur bureau la barre passe à
           gauche (`lg:pl-56`) et la réserve disparaît. Marges en rem, jamais de hauteur figée. */}
       <div className="mx-auto max-w-3xl px-5 pb-28 pt-6 lg:pb-10 lg:pl-64 lg:pr-8">
@@ -121,7 +125,7 @@ function Coquille() {
           </p>
         )}
         <main>
-          <Ecran route={route} />
+          <Ecran onglet={route.onglet} recetteId={route.recetteId} />
         </main>
       </div>
     </>
