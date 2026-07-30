@@ -1,11 +1,11 @@
 // ui/main.tsx — coquille de la PWA : navigation, bandeau de persistance, montage React.
 //
 // Les écrans vivent dans `ui/screens/`, le socle partagé (catalogue, moteur, `user.db`, profil)
-// dans `ui/socle.ts`. Ce fichier ne contient plus aucune logique métier — il en portait toute
-// quand il n'y avait qu'un écran.
+// dans `ui/socle.ts`, les jetons de design dans `ui/theme.css`. Ce fichier ne contient aucune
+// logique métier — il en portait toute quand il n'y avait qu'un écran.
 //
-// ⚠️ `ui/screens/` et non `features/` comme l'écrit §9 ARCHITECTURE. §9 décrit une arborescence
-// qui ne correspond déjà plus au moteur (`engine/types.ts`, `engine/filters.ts`… n'existent pas,
+// ⚠️ `ui/screens/` et non `features/` comme l'écrit §9 ARCHITECTURE. §9 décrit une arborescence qui
+// ne correspond déjà plus au moteur (`engine/types.ts`, `engine/filters.ts`… n'existent pas,
 // remplacés par domain/ selection/ planning/). Rouvrir ce chantier pour deux écrans n'apporterait
 // rien ; à signaler le jour où les huit existeront.
 
@@ -13,15 +13,12 @@ import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Aujourdhui } from './screens/aujourdhui.js'
 import { Semaine } from './screens/semaine.js'
+import { Bientot } from './screens/bientot.js'
+import { Navigation } from './navigation.js'
 import { chargerSocle } from './socle.js'
 import { surErreurDePersistance } from './user-source.js'
-import { hashDe, useRoute, type Route } from './router.js'
+import { useRoute, type Route } from './router.js'
 import './index.css'
-
-const ONGLETS: readonly { readonly route: Route; readonly libelle: string }[] = [
-  { route: 'aujourdhui', libelle: "Aujourd'hui" },
-  { route: 'semaine', libelle: 'Ma semaine' },
-]
 
 /**
  * Ce que la coquille doit dire sur le sort des données — §7 ARCHITECTURE, mesure 6.
@@ -38,6 +35,20 @@ const MESSAGE: Readonly<Record<Exclude<Alerte, 'aucune'>, string>> = {
     "Une modification n'a pas pu être enregistrée. L'espace de stockage est peut-être saturé.",
   non_persistant:
     "Vos réglages sont enregistrés sur cet appareil, mais le navigateur ne garantit pas de les conserver. Ajoutez l'application à votre écran d'accueil pour ne rien perdre.",
+}
+
+const TITRE: Readonly<Record<Route, string>> = {
+  aujourdhui: "Aujourd'hui",
+  semaine: 'Semaine',
+  courses: 'Courses',
+  recettes: 'Recettes',
+  savoir: 'Savoir',
+}
+
+function Ecran({ route }: { readonly route: Route }) {
+  if (route === 'aujourdhui') return <Aujourdhui />
+  if (route === 'semaine') return <Semaine />
+  return <Bientot route={route} titre={TITRE[route]} />
 }
 
 function Coquille() {
@@ -68,32 +79,24 @@ function Coquille() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      {alerte !== 'aucune' && (
-        <p className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-          {MESSAGE[alerte]}
-        </p>
-      )}
-
-      <nav className="mb-6 flex gap-1 border-b border-stone-200">
-        {ONGLETS.map((onglet) => (
-          <a
-            key={onglet.route}
-            href={hashDe(onglet.route)}
-            aria-current={route === onglet.route ? 'page' : undefined}
-            className={`-mb-px border-b-2 px-3 py-2 text-sm ${
-              route === onglet.route
-                ? 'border-stone-800 font-medium text-stone-900'
-                : 'border-transparent text-stone-500 hover:text-stone-800'
-            }`}
+    <>
+      <Navigation courante={route} />
+      {/* `pb-28` réserve la hauteur de la barre du bas sur mobile ; sur bureau la barre passe à
+          gauche (`lg:pl-56`) et la réserve disparaît. Marges en rem, jamais de hauteur figée. */}
+      <div className="mx-auto max-w-3xl px-5 pb-28 pt-6 lg:pb-10 lg:pl-64 lg:pr-8">
+        {alerte !== 'aucune' && (
+          <p
+            role="status"
+            className="mb-5 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-[0.95rem] leading-relaxed text-alerte-texte"
           >
-            {onglet.libelle}
-          </a>
-        ))}
-      </nav>
-
-      <main>{route === 'semaine' ? <Semaine /> : <Aujourdhui />}</main>
-    </div>
+            {MESSAGE[alerte]}
+          </p>
+        )}
+        <main>
+          <Ecran route={route} />
+        </main>
+      </div>
+    </>
   )
 }
 

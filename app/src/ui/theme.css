@@ -1,0 +1,146 @@
+/* ui/theme.css — jetons de design, tirés des maquettes (« Trois directions pour aujourd'hui »).
+ *
+ * Source : maquete claude design/…-handoff.zip, bloc commun `project/CLAUDE.md`. Direction
+ * visuelle : « chaleureux et sobre, éditorial plutôt que clinique. Neutres chauds, une seule
+ * couleur d'accent. Beaucoup d'air. Mode clair et mode sombre. »
+ *
+ * ⚠️ TROIS ÉCARTS ASSUMÉS PAR RAPPORT AUX VALEURS EXACTES DES MAQUETTES. Ils ne sont pas des
+ * libertés de goût : les maquettes contredisent leur propre bloc commun, qui exige « contraste
+ * élevé, viser 7:1 sur le texte courant » pour une application dont la contrainte centrale est
+ * d'être « utilisable par toutes les tranches d'âge, y compris des personnes peu à l'aise avec le
+ * numérique ». Rapports mesurés (WCAG 2.1, sur le fond crème #faf6ef) :
+ *
+ *   #8a8077  gris atténué, utilisé pour les LIBELLÉS DE NAVIGATION ......  3,59:1  échoue même AA
+ *   #bd6a48  accent en TEXTE ..............................................  3,66:1  échoue même AA
+ *   #ffffff  blanc sur l'accent — le BOUTON PRINCIPAL .....................  3,95:1  échoue même AA
+ *
+ *   1. `--color-attenue` passe de #8a8077 à #5a534d — mesuré 7,01:1. Le gris des maquettes est
+ *      employé pour les libellés d'onglets : le pire cas possible, du texte petit ET peu contrasté,
+ *      sur la barre que tout le monde doit pouvoir lire.
+ *   2. `--color-accent-texte` (#7b452f, 7,13:1) est distinct de `--color-accent` (#bd6a48), qui
+ *      reste la teinte des maquettes mais n'est plus JAMAIS employée pour du texte — seulement pour
+ *      des aplats, des bordures et des états.
+ *   3. Le bouton principal prend #a3542f : blanc dessus = 5,43:1. C'est AA franc, pas AAA. Le 7:1
+ *      du bloc commun vise le « texte courant » ; un bouton d'action large n'en est pas, et
+ *      descendre à #824932 (7,12:1) aurait viré au brun et perdu la chaleur de la direction. Écart
+ *      mesuré et borné, pas subi.
+ *
+ * ⚠️ AUCUNE DIMENSION EN PIXELS pour ce qui touche au texte ou aux cibles tactiles. Le bloc commun
+ * impose que « l'interface tienne si la police système est agrandie de 150 % » : une hauteur en px
+ * ne suit pas l'agrandissement, une hauteur en rem si. 48 px = 3rem à la taille de base.
+ */
+
+@font-face {
+  font-family: 'Newsreader';
+  /* Police VARIABLE : un seul fichier couvre 400 à 600. Sous-ensemble `latin` seulement — il
+   * contient les accents français et la ligature œ (U+0152-0153). Auto-hébergée : §6.6
+   * ARCHITECTURE promet zéro requête réseau après chargement, un lien vers Google Fonts la
+   * casserait et l'application perdrait sa typographie hors ligne. SIL Open Font License. */
+  src: url('/fonts/newsreader-latin.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/fonts/instrument-sans-latin.woff2') format('woff2');
+  font-weight: 400 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  /* --- Neutres chauds ------------------------------------------------------------------ */
+  --color-fond: #faf6ef;
+  --color-surface: #fffdfa;
+  --color-texte: #2b2621; /* 13,90:1 */
+  --color-texte-doux: #4a433c; /* 9,03:1 */
+  --color-attenue: #5a534d; /* 7,01:1 — voir écart 1 */
+  --color-bordure: #efe6da;
+  --color-bordure-forte: #e6dbca;
+
+  /* --- Accent unique (terracotta) ------------------------------------------------------ */
+  --color-accent: #bd6a48; /* aplats et bordures UNIQUEMENT, jamais du texte */
+  --color-accent-texte: #7b452f; /* 7,13:1 — voir écart 2 */
+  --color-accent-plein: #a3542f; /* fond de bouton, blanc dessus 5,43:1 — voir écart 3 */
+  --color-accent-doux: #f2e2d9;
+
+  /* --- Avertissement (§6.5 : prévient, ne juge pas — ambre, jamais rouge/vert) ---------- */
+  --color-alerte-fond: #fdf3e3;
+  --color-alerte-bordure: #e3c9a0;
+  --color-alerte-texte: #6b4a17;
+
+  /* --- Typographie --------------------------------------------------------------------- */
+  --font-titre: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-texte: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+
+  /* --- Cibles tactiles, en rem pour suivre l'agrandissement système --------------------- */
+  --spacing-tactile: 3rem; /* 48 px — plancher imposé par le bloc commun */
+  --spacing-cta: 3.25rem; /* 52 px — bouton d'action dominant */
+
+  /* §1 DESIGN : « 12-14 px composants ». 0,875rem = 14 px à la taille de base, et suit
+   * l'agrandissement système comme le reste. */
+  --radius-carte: 0.875rem;
+  --radius-cta: 0.875rem;
+}
+
+/* Mode sombre par SUBSTITUTION DES JETONS, et non par des variantes `dark:` semées dans le JSX.
+ * Les utilitaires Tailwind référencent `var(--color-*)` : redéfinir les variables ici suffit à
+ * basculer toute l'interface. Un écran qui oublierait ses `dark:` resterait sinon en clair, et
+ * l'oubli ne se verrait que sur un appareil en thème sombre. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-fond: #1b1815;
+    --color-surface: #241f1b;
+    --color-texte: #f4ede2; /* 14,2:1 sur le fond sombre */
+    --color-texte-doux: #d8cfc2;
+    --color-attenue: #a99f93; /* 7,3:1 — même exigence qu'en clair */
+    --color-bordure: #3a332d;
+    --color-bordure-forte: #4a423a;
+
+    /* L'accent s'ÉCLAIRCIT en sombre : la même terracotta sur fond noir tombe sous 3:1. */
+    --color-accent: #d98963;
+    --color-accent-texte: #e9a583; /* 7,6:1 sur #1b1815 */
+    --color-accent-plein: #b35f38;
+    --color-accent-doux: #3a2820;
+
+    --color-alerte-fond: #332616;
+    --color-alerte-bordure: #6b552f;
+    --color-alerte-texte: #f0dcb4;
+  }
+}
+
+@layer base {
+  html {
+    background-color: var(--color-fond);
+    color: var(--color-texte);
+    font-family: var(--font-texte);
+    /* Pas de `font-size` en px : la taille de base reste celle choisie par l'utilisateur dans son
+     * navigateur ou son système. C'est la condition pour que tout le reste, exprimé en rem, suive. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-titre);
+    font-weight: 500;
+    line-height: 1.12;
+  }
+
+  /* Toute cible interactive respecte le plancher tactile, sans avoir à y penser écran par écran. */
+  button,
+  a[role='button'],
+  select,
+  input {
+    min-height: var(--spacing-tactile);
+  }
+
+  /* Le focus doit rester visible : la navigation au clavier est le seul recours de certains
+   * utilisateurs, et l'anneau par défaut disparaît sous les fonds chauds. */
+  :focus-visible {
+    outline: 3px solid var(--color-accent-texte);
+    outline-offset: 2px;
+  }
+}

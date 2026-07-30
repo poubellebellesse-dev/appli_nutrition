@@ -1,6 +1,6 @@
 # ⭐ Fiche de reprise — appli_nutrition
 
-> **Mise à jour : 2026-07-29.** Une page, jamais plus. Tout le reste est dans
+> **Mise à jour : 2026-07-30.** Une page, jamais plus. Tout le reste est dans
 > [ETAT.md](./ETAT.md) — avancement, décisions, dette. Index : [README.md](./README.md).
 > Font foi : [ENGINE.md](./ENGINE.md) (moteur), [ARCHITECTURE.md](./ARCHITECTURE.md) (le reste).
 
@@ -16,7 +16,7 @@ P0 ✅ ─ P1a ✅ ─ P1b ✅ ─ P1c ✅ ─ CONTENU ✅ ─ alternatives ✅ 
                                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-07-30** : `npm test` → **630 verts (46 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-07-30** : `npm test` → **631 verts (46 fichiers)** · `npm run typecheck` propre ·
 `npx vite build` OK.
 **Vérifié le 2026-07-29, inchangé depuis** : `npm run engine:plan-stress` → **20/20 configurations
 saines** · `npm run build` → **199 aliments, 241 recettes, 62 gestes** (valeurs CIQUAL 2025 réelles).
@@ -28,22 +28,22 @@ et `suggestSubstitutions` (§9 ETAT).
 
 ## ▶ La prochaine étape
 
-**Les écrans** — **2 sur 8** sont livrés (Aujourd'hui, Semaine), le préalable `user.db` est levé et
-l'appli a un routeur. Tableau complet écran par écran : [ETAT.md](./ETAT.md) §6.
+**Les écrans** — **2 sur 8** sont livrés (Aujourd'hui, Semaine), le préalable `user.db` est levé,
+l'appli a un routeur à 5 routes et **le système de design des maquettes est posé** (jetons, polices
+auto-hébergées, barre à 5 onglets, mode sombre, cibles 48 px). Tableau complet écran par écran : [ETAT.md](./ETAT.md) §6.
 
-> ✅ **`user.db` existe.** Schéma complet de §4.3 ARCHITECTURE en v1, migrations versionnées sur
-> `app_meta.schema_version`, OPFS via le VFS `opfs-sahpool`. `requeteDemo()` a disparu : l'écran lit
-> un profil, des contraintes, des goûts et un historique **persistés**. Écrans Semaine (4.2) et
-> Courses (4.3) toujours les plus prêts à coder ; l'onboarding (4.8) n'a plus de blocage.
+> ✅ **`user.db` existe.** Schéma complet de §4.3 ARCHITECTURE (v2), migrations versionnées sur
+> `app_meta.schema_version`. Base **en mémoire**, persistée en **fichier OPFS** — aucun VFS OPFS de
+> SQLite ne tourne hors Worker, voir les pièges. `requeteDemo()` a disparu : profil, contraintes,
+> goûts, historique et **plan de semaine** sont persistés.
 >
-> ⚠️ **Le chemin OPFS n'a pas été exécuté dans un vrai navigateur** — typecheck + `vite build` +
-> 32 tests sous Node sur le mapping, mais personne n'a encore ouvert la page. Premier geste de la
-> prochaine session : `npm run dev`, cliquer « J'ai choisi ce plat », recharger, vérifier que le
-> compteur tient.
+> ⚠️ **Ce qui reste non vérifié en navigateur** : le premier essai a fait tomber le VFS OPFS
+> (corrigé). Depuis la correction, **personne n'a rouvert la page**. Premier geste de la prochaine
+> session : `npm run dev`, « J'ai choisi ce plat », recharger, vérifier que le compteur tient.
 
-La PWA tourne : `npm run dev`. **Une seule tranche est livrée, volontairement** — le but était de
-prouver la chaîne complète dans un navigateur (`catalog.db` → SQLite WASM → mapping partagé →
-moteur → écran) avant d'investir dans huit écrans construits sur une chaîne non vérifiée.
+La PWA tourne : `npm run dev`. Écrans **Courses (4.3)** et **Premier lancement (4.8)** sont les plus
+prêts : le moteur et les données les attendent, et les maquettes existent pour les huit écrans
+(`maquete claude design/`, à lire AVANT de coder un écran — je ne l'avais pas fait pour Semaine).
 
 ## Les cinq acquis à ne pas défaire
 
@@ -61,7 +61,7 @@ moteur → écran) avant d'investir dans huit écrans construits sur une chaîne
    connaît la chaîne `vegetalien ⊂ vegetarien ⊂ pescetarien ⊂ omnivore`. **L'origine animale est un
    fait, pas un régime** : `Food.origineAnimale` + `deriveDe`, propagés en cascade.
 
-## Cinq pièges qui ne se voient pas
+## Sept pièges qui ne se voient pas
 
 - ⚠️ **`catalog-loader.ts` ne doit importer AUCUN module Node.** L'import est **hoisté** : un
   `import 'node:sqlite'` casse le bundle navigateur même si la fonction qui l'utilise n'est jamais
@@ -79,6 +79,10 @@ moteur → écran) avant d'investir dans huit écrans construits sur une chaîne
 - ⚠️ **Une PRIMARY KEY contenant une colonne NULL ne dédoublonne pas** dans SQLite : deux `NULL`
   n'y sont jamais égaux. `meal_plan_entry` aurait accepté deux plats sur le même créneau en mode
   recette (`service IS NULL`). → index UNIQUE sur `COALESCE(service, '')`, verrouillé par test.
+- ⚠️ **Les maquettes ne respectent pas leur propre exigence de contraste.** Le blanc sur l'accent
+  `#bd6a48` — **le bouton principal** — donne 3,95:1, sous le seuil AA. Idem pour le gris des
+  libellés d'onglets (3,59:1). Reproduire une maquette « au pixel » peut donc violer le cahier des
+  charges qui l'accompagne. Écarts mesurés et documentés en §1 DESIGN.
 - ⚠️ **Aucun VFS OPFS de SQLite ne tourne sur le thread principal.** Les deux (`opfs` et
   `opfs-sahpool`) testent `createSyncAccessHandle`, déclaré `[Exposed=DedicatedWorker]` : la méthode
   n'existe pas hors d'un Worker, et **aucune en-tête COOP/COEP n'y change rien**. Erreur affichée :

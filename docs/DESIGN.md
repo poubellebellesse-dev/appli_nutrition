@@ -12,16 +12,49 @@
 
 ## 1. Jetons visuels (extraits des maquettes)
 
+**Codés le 2026-07-30** dans `app/src/ui/theme.css`, en variables CSS Tailwind v4. Les valeurs
+ci-dessous font foi ; le tableau a été corrigé au passage à l'implémentation.
+
 | Jeton | Valeur | Usage |
 |---|---|---|
-| Fond application | `#e9e2d6` (sable) / `#faf6ef` (surface) | Neutres chauds, jamais de blanc clinique |
-| Encre | `#2b2621` | Texte principal |
-| Encre atténuée | `#6f665e` · `#8a8077` | Texte secondaire, libellés |
-| Accent | `#bd6a48` (terracotta), survol `#a3542f` | **Couleur d'accent unique** |
-| Police titres | Newsreader (serif) | Registre éditorial |
-| Police texte | Instrument Sans | Lisibilité |
-| Cible tactile | 44-48 px minimum | Toutes tranches d'âge |
-| Rayon | 12-14 px composants, 44 px cadre téléphone | — |
+| Fond application | `#faf6ef` | Neutres chauds, jamais de blanc clinique |
+| Surface (cartes, barre) | `#fffdfa` | Élévation légère sur le fond |
+| Encre | `#2b2621` (13,9:1) | Texte principal |
+| Encre douce | `#4a433c` (9,0:1) | Texte secondaire |
+| Encre atténuée | `#5a534d` (7,0:1) | Libellés, mentions — **voir écart ci-dessous** |
+| Accent | `#bd6a48` (terracotta) | Aplats, bordures, états — **jamais du texte** |
+| Accent texte | `#7b452f` (7,1:1) | Texte et icônes en accent |
+| Accent plein | `#a3542f` (blanc dessus 5,4:1) | Fond du bouton dominant |
+| Police titres | Newsreader (serif, variable 400-600) | Registre éditorial |
+| Police texte | Instrument Sans (variable 400-600) | Lisibilité |
+| Cible tactile | `3rem` (48 px), CTA `3.25rem` | Toutes tranches d'âge |
+| Rayon | `0.875rem` (14 px) | — |
+
+> ⚠️ **`#e9e2d6` (sable) n'est PAS le fond de l'application.** C'est le `body` du visualiseur de
+> maquettes — la zone autour du cadre téléphone. Le fond de l'appli, dans le cadre, est `#faf6ef`.
+> L'erreur venait de ce tableau ; elle n'a été vue qu'en lisant le HTML des maquettes.
+
+> ⚠️ **Trois écarts mesurés aux valeurs des maquettes**, parce que les maquettes contredisent leur
+> propre exigence de contraste (« viser 7:1 sur le texte courant », bloc commun du bundle). Rapports
+> WCAG calculés sur `#faf6ef` : `#8a8077` en libellé d'onglet = **3,59:1**, l'accent `#bd6a48` en
+> texte = **3,66:1**, et le blanc sur l'accent — **le bouton principal** — = **3,95:1**. Les trois
+> échouent même au niveau AA. D'où : l'encre atténuée descend à `#5a534d`, un `accent-texte` distinct
+> apparaît, et le bouton prend `#a3542f`. Détail et calculs dans l'en-tête de `theme.css`.
+
+> ⚠️ **Libellés d'onglets à `0.8125rem`, pas `0.66rem`** comme les maquettes. ~10,5 px de texte sur
+> la barre que tout le monde doit lire contredit la contrainte d'âge du même bloc commun.
+
+**Toutes les dimensions liées au texte et aux cibles sont en `rem`, jamais en `px`** : le bloc commun
+exige que l'interface tienne « si la police système est agrandie de 150 % », ce qu'une hauteur en
+pixels ne suit pas.
+
+**Mode sombre** : implémenté par **substitution des jetons** dans `@media (prefers-color-scheme:
+dark)`, et non par des variantes `dark:` semées dans le JSX — un écran qui oublierait ses variantes
+resterait en clair, et l'oubli ne se verrait que sur un appareil en thème sombre.
+
+**Thèmes d'accent curatés : PAS ENCORE FAITS.** La structure les rend possibles sans rien réécrire
+(quatre jetons d'accent isolés, `accent` / `accent-texte` / `accent-plein` / `accent-doux`), mais un
+seul jeu de teintes existe. Toute teinte ajoutée devra passer le même contrôle de contraste.
 
 Mode clair et mode sombre prévus dès la maquette. **Une seule couleur d'accent** — la photographie
 culinaire porte l'ambiance, pas la couleur.

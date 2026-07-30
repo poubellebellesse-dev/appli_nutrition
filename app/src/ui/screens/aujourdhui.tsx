@@ -121,12 +121,14 @@ export function Aujourdhui() {
     [rafraichir]
   )
 
-  if (etat.phase === 'chargement') return <p className="text-stone-500">Chargement…</p>
+  if (etat.phase === 'chargement') return <p className="text-attenue">Chargement…</p>
   if (etat.phase === 'erreur') {
     return (
-      <div>
-        <p className="font-medium text-red-700">Les suggestions n'ont pas pu être calculées.</p>
-        <p className="mt-2 text-sm text-stone-600">{etat.message}</p>
+      <div role="alert">
+        <p className="text-[1.05rem] font-semibold text-texte">
+          Les suggestions n'ont pas pu être calculées.
+        </p>
+        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -134,8 +136,8 @@ export function Aujourdhui() {
   const { vue } = etat
   return (
     <section>
-      <h1 className="text-2xl font-semibold text-stone-900">Ce soir</h1>
-      <p className="mt-1 text-sm text-stone-500">
+      <h1 className="text-[2.1rem] text-texte">Ce soir</h1>
+      <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
         {vue.suggestions.length} suggestions, classées et diversifiées.
         {vue.nbRetenus > 0 &&
           ` ${vue.nbRetenus} plat${vue.nbRetenus > 1 ? 's' : ''} retenu${vue.nbRetenus > 1 ? 's' : ''} ces ${FENETRE_HISTORIQUE_JOURS} derniers jours.`}
@@ -143,22 +145,27 @@ export function Aujourdhui() {
 
       <ul className="mt-6 space-y-3">
         {vue.suggestions.map((suggestion) => (
-          <li key={suggestion.recipeId} className="rounded-lg border border-stone-200 p-4">
+          <li
+            key={suggestion.recipeId}
+            className="rounded-[--radius-carte] border border-bordure bg-surface p-4"
+          >
             <div className="flex items-baseline justify-between gap-4">
-              <h2 className="font-medium text-stone-900">{vue.nomDe(suggestion.recipeId)}</h2>
-              <span className="shrink-0 text-sm tabular-nums text-stone-500">
+              <h2 className="font-titre text-[1.35rem] text-texte">{vue.nomDe(suggestion.recipeId)}</h2>
+              <span className="shrink-0 text-[0.85rem] tabular-nums text-attenue">
                 {Math.round(suggestion.score)}/100
               </span>
             </div>
             {/* ⚠️ Les explications viennent du moteur (§6.7) et passent `assertNoTherapeuticClaim`.
                 Ne JAMAIS composer une phrase d'explication ici : la garde ne verrait rien. */}
-            <p className="mt-2 text-sm text-stone-600">
+            <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">
               {suggestion.explanations.map((e) => e.label).join(' · ')}
             </p>
+            {/* Cible tactile : `min-h-tactile` (3rem) et non un padding en px — la cible doit
+                grandir avec la police système, pas rester figée. */}
             <button
               type="button"
               onClick={() => retenir(suggestion.recipeId)}
-              className="mt-3 rounded-md border border-stone-300 px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50"
+              className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux hover:bg-accent-doux"
             >
               J'ai choisi ce plat
             </button>

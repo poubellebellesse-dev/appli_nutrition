@@ -248,12 +248,12 @@ export function Semaine() {
     [etat, refus, echouer]
   )
 
-  if (etat.phase === 'chargement') return <p className="text-stone-500">Construction de la semaine…</p>
+  if (etat.phase === 'chargement') return <p className="text-attenue">Construction de la semaine…</p>
   if (etat.phase === 'erreur') {
     return (
-      <div>
-        <p className="font-medium text-red-700">La semaine n'a pas pu être construite.</p>
-        <p className="mt-2 text-sm text-stone-600">{etat.message}</p>
+      <div role="alert">
+        <p className="text-[1.05rem] font-semibold text-texte">La semaine n'a pas pu être construite.</p>
+        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -266,20 +266,21 @@ export function Semaine() {
     <section>
       <header className="flex flex-wrap items-baseline justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-stone-900">Ma semaine</h1>
-          <p className="mt-1 text-sm text-stone-500">
+          <h1 className="text-[2.1rem] text-texte">Ma semaine</h1>
+          <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
             {formaterPlage(dates)} · {plan.entries.filter((e) => e.recipeId !== null).length} repas prévus
           </p>
         </div>
+        {/* Action dominante de l'écran (§4.2) : hauteur de CTA, accent plein, blanc dessus. */}
         <button
           type="button"
           onClick={() => replanifier({ ...reglages, graine: reglages.graine + 1 })}
-          className="rounded-md border border-stone-300 px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50"
+          className="flex min-h-cta items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white"
         >
           Proposer une autre semaine
         </button>
       </header>
-      <p className="mt-1 text-xs text-stone-500">Vos repas gardés ne changeront pas.</p>
+      <p className="mt-2 text-[0.9rem] text-attenue">Vos repas gardés ne changeront pas.</p>
 
       <Reglage
         reglages={reglages}
@@ -289,12 +290,15 @@ export function Semaine() {
       {/* §6.5 ARCHITECTURE — l'avertissement PRÉVIENT, il n'interdit pas : le plan reste utilisable.
           Formulation factuelle, sans jugement ni injonction (§6.2). */}
       {plan.warnings.length > 0 && (
-        <div className="mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-          <p className="font-medium">
+        <div
+          role="status"
+          className="mt-5 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-[0.95rem] leading-relaxed text-alerte-texte"
+        >
+          <p className="font-semibold">
             {plan.warnings.length === 1 ? 'Une journée apporte' : `${plan.warnings.length} journées apportent`} moins
             d'énergie que la référence habituelle.
           </p>
-          <ul className="mt-1 list-inside list-disc">
+          <ul className="mt-2 list-inside list-disc">
             {plan.warnings.map((w) => (
               <li key={w.date}>
                 {formaterJour(w.date)} — {Math.round(w.kcal)} kcal pour une référence de {w.seuil} kcal
@@ -308,8 +312,8 @@ export function Semaine() {
 
       <div className="mt-4 space-y-4">
         {dates.map((date) => (
-          <article key={date} className="rounded-lg border border-stone-200 p-3">
-            <h2 className="text-sm font-medium text-stone-900">{formaterJour(date)}</h2>
+          <article key={date} className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
+            <h2 className="font-titre text-[1.25rem] text-texte">{formaterJour(date)}</h2>
             <div className="mt-2 grid gap-2 sm:grid-cols-3">
               {creneaux.map((creneau) => {
                 const entry = plan.entries.find((e) => memeCreneau(e, { date, creneau }))
@@ -339,9 +343,9 @@ function Reglage({
   readonly onChange: (suivants: Reglages) => void
 }) {
   return (
-    <div className="mt-4 flex flex-wrap gap-4 rounded-md bg-stone-50 p-3 text-sm">
+    <div className="mt-5 flex flex-wrap gap-4 rounded-[--radius-carte] border border-bordure bg-surface p-4 text-[0.95rem]">
       <label className="flex items-center gap-2">
-        <span className="text-stone-600">Jours</span>
+        <span className="text-texte-doux">Jours</span>
         <input
           type="number"
           min={MIN_PLAN_DAYS}
@@ -353,15 +357,15 @@ function Reglage({
             // transformer une saisie intermédiaire en écran d'erreur.
             if (jours >= MIN_PLAN_DAYS && jours <= MAX_PLAN_DAYS) onChange({ ...reglages, jours })
           }}
-          className="w-16 rounded border border-stone-300 px-2 py-1 tabular-nums"
+          className="min-h-tactile w-20 rounded-[0.6rem] border border-bordure-forte bg-fond px-3 tabular-nums text-texte"
         />
       </label>
       <label className="flex items-center gap-2">
-        <span className="text-stone-600">Repas par jour</span>
+        <span className="text-texte-doux">Repas par jour</span>
         <select
           value={reglages.repasParJour}
           onChange={(e) => onChange({ ...reglages, repasParJour: Number(e.target.value) })}
-          className="rounded border border-stone-300 px-2 py-1"
+          className="min-h-tactile rounded-[0.6rem] border border-bordure-forte bg-fond px-3 text-texte"
         >
           {[1, 2, 3].map((n) => (
             <option key={n} value={n}>
@@ -371,11 +375,11 @@ function Reglage({
         </select>
       </label>
       <label className="flex items-center gap-2">
-        <span className="text-stone-600">Convives</span>
+        <span className="text-texte-doux">Convives</span>
         <select
           value={reglages.convives}
           onChange={(e) => onChange({ ...reglages, convives: Number(e.target.value) })}
-          className="rounded border border-stone-300 px-2 py-1"
+          className="min-h-tactile rounded-[0.6rem] border border-bordure-forte bg-fond px-3 text-texte"
         >
           {[1, 2, 3, 4, 5, 6].map((n) => (
             <option key={n} value={n}>
@@ -396,15 +400,39 @@ function Reglage({
  */
 function Legende() {
   return (
-    <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-500">
-      <li>Proposé — bordure simple</li>
-      <li>Gardé — bordure appuyée 🔒</li>
-      <li>Reste — mention « Reste »</li>
-      <li>Vide — bordure pointillée</li>
+    <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[0.85rem] text-attenue">
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-4 w-4 rounded-[0.3rem] border border-bordure-forte bg-surface" />
+        Proposé
+      </li>
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-4 w-4 rounded-[0.3rem] border-2 border-accent bg-accent-doux" />
+        Gardé
+      </li>
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-4 w-4 rounded-[0.3rem] border border-bordure-forte bg-accent-doux" />
+        Reste
+      </li>
+      <li className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-4 w-4 rounded-[0.3rem] border border-dashed border-bordure-forte" />
+        Vide
+      </li>
     </ul>
   )
 }
 
+/**
+ * Un créneau, dans l'un des QUATRE ÉTATS que §4.2 exige « immédiatement distinguables ».
+ *
+ * ⚠️ AUCUN ÉTAT N'EST PORTÉ PAR LA SEULE COULEUR. Bordure, épaisseur, trait plein ou pointillé et
+ * mention écrite se cumulent : un daltonien, un écran en plein soleil ou un mode sombre mal calibré
+ * ne doivent pas faire disparaître l'information. C'est aussi pourquoi la légende affiche une
+ * pastille ET son nom.
+ *
+ * ⚠️ AUCUNE COULEUR DE JUGEMENT (§5 DESIGN, principe 6 ARCHITECTURE) : pas de vert pour « bien »,
+ * pas de rouge pour « à changer ». Un plat n'est ni bon ni mauvais — l'accent signale ce que
+ * l'utilisateur a décidé, pas ce que l'application en pense.
+ */
 function Creneau({
   entry,
   nom,
@@ -417,27 +445,38 @@ function Creneau({
   readonly onChanger: () => void
 }) {
   const vide = entry.recipeId === null
-  const bordure = entry.locked
-    ? 'border-stone-800 border-2'
+  const apparence = entry.locked
+    ? 'border-2 border-accent bg-accent-doux'
     : vide
-      ? 'border-stone-300 border-dashed'
-      : 'border-stone-200'
+      ? 'border border-dashed border-bordure-forte bg-transparent'
+      : entry.isLeftover
+        ? 'border border-bordure-forte bg-accent-doux'
+        : 'border border-bordure-forte bg-surface'
 
   return (
-    <div className={`rounded-md border p-2 ${bordure}`}>
-      <p className="text-xs uppercase tracking-wide text-stone-400">{LIBELLE_CRENEAU[entry.slot.creneau]}</p>
-      <p className="mt-1 text-sm text-stone-900">
-        {nom ?? <span className="text-stone-400">Aucun plat</span>}
-        {entry.locked && <span title="Gardé"> 🔒</span>}
+    <div className={`flex flex-col rounded-[--radius-carte] p-3 ${apparence}`}>
+      <p className="text-[0.8rem] font-semibold uppercase tracking-wide text-attenue">
+        {LIBELLE_CRENEAU[entry.slot.creneau]}
       </p>
-      {entry.isLeftover && <p className="text-xs text-stone-500">Reste</p>}
 
-      <div className="mt-2 flex gap-2 text-xs">
+      <p className="mt-1 font-titre text-[1.1rem] leading-snug text-texte">
+        {nom ?? <span className="text-attenue">Aucun plat</span>}
+      </p>
+
+      {/* Les états se disent AUSSI en toutes lettres — l'emoji seul serait invisible à un lecteur
+          d'écran, et le cadenas de la maquette ne suffit pas à expliquer ce qu'il signifie. */}
+      {(entry.locked || entry.isLeftover) && (
+        <p className="mt-1 text-[0.85rem] font-medium text-accent-texte">
+          {entry.locked ? 'Gardé' : 'Reste du plat de la veille'}
+        </p>
+      )}
+
+      <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onChanger}
           disabled={entry.locked}
-          className="rounded border border-stone-300 px-2 py-1 text-stone-700 hover:bg-stone-50 disabled:opacity-40"
+          className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[0.9rem] font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
         >
           {vide ? 'Choisir' : 'Changer'}
         </button>
@@ -445,7 +484,13 @@ function Creneau({
           type="button"
           onClick={onGarder}
           disabled={vide && !entry.locked}
-          className="rounded border border-stone-300 px-2 py-1 text-stone-700 hover:bg-stone-50 disabled:opacity-40"
+          aria-pressed={entry.locked}
+          className={
+            'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-3 text-[0.9rem] font-semibold disabled:opacity-45 ' +
+            (entry.locked
+              ? 'border-2 border-accent bg-surface text-accent-texte'
+              : 'border border-bordure-forte bg-fond text-texte-doux hover:bg-accent-doux')
+          }
         >
           {entry.locked ? 'Relâcher' : 'Garder'}
         </button>

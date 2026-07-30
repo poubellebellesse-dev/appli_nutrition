@@ -564,6 +564,16 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   intervalle perd le dernier geste. Le délai se compte en millisecondes, mais il n'est pas nul.
 - ⚠️ **Aucun export / import** (§7 ARCHITECTURE mesures 3 à 5). `user.db` ne se re-télécharge pas :
   tant que la sauvegarde manuelle n'existe pas, un effacement de stockage est une perte sèche.
+- ✅ **Système de design posé** (2026-07-30) — jetons dans `app/src/ui/theme.css`, polices
+  Newsreader + Instrument Sans auto-hébergées (162 Ko, sous-ensemble latin, SIL OFL, créditées dans
+  `catalog/CREDITS.md`), barre à 5 onglets, mode sombre, cibles 48 px en `rem`.
+- ⚠️ **Le contraste des maquettes échouait à trois endroits**, dont le bouton principal (blanc sur
+  `#bd6a48` = 3,95:1, sous le seuil AA). Corrigé par des jetons distincts, mesuré, documenté en §1
+  DESIGN. **Aucun test ne le garde** : le jour où quelqu'un ajoute une teinte, rien ne l'arrêtera.
+- ⚠️ **Thèmes d'accent curatés non faits** (§1 DESIGN, « option retenue ») — un seul jeu de teintes.
+- ⚠️ **Trois onglets sur cinq n'ont pas d'écran** (Courses, Recettes, Savoir) : ils affichent un
+  état « pas encore construit ». La barre porte les 5 dès maintenant, exprès — une navigation qui
+  grandit de version en version change de forme sous les doigts de l'utilisateur.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.

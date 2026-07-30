@@ -7,21 +7,27 @@
 // ce soit, et un rechargement sur `/semaine` rendrait un 404. Le fragment ne quitte jamais le
 // navigateur, donc le problème n'existe pas.
 //
-// ⚠️ PAS DE BIBLIOTHÈQUE. Huit écrans sans paramètre d'URL ni route imbriquée ne justifient pas une
-// dépendance ; le jour où il faudra des paramètres (`/recette/:id`), ce fichier aura atteint sa
-// limite et il faudra en discuter — pas l'étendre en douce.
+// ⚠️ PAS DE BIBLIOTHÈQUE. Cinq écrans sans paramètre d'URL ni route imbriquée ne justifient pas une
+// dépendance ; le jour où il faudra `/recette/:id`, ce fichier aura atteint sa limite et il faudra
+// en discuter — pas l'étendre en douce.
 //
-// `useSyncExternalStore` plutôt qu'un `useState` + `useEffect` : c'est l'API prévue pour lire une
-// source hors React (ici `window.location`), et elle évite l'état transitoire où le composant a
-// rendu l'ancienne route alors que le hash a déjà changé.
+// ⚠️ LES CINQ ROUTES EXISTENT TOUTES, y compris celles dont l'écran n'est pas codé. Le bloc commun
+// des maquettes impose une barre à cinq onglets « présente sur TOUS les écrans », avec les mêmes
+// libellés dans le même ordre. Faire apparaître les onglets au fur et à mesure ferait changer la
+// navigation de forme sous les doigts de l'utilisateur — exactement ce que la contrainte
+// « navigation permanente et visible » interdit. Un onglet qui annonce « pas encore disponible »
+// est honnête ; une barre qui grandit à chaque version ne l'est pas.
 
 import { useSyncExternalStore } from 'react'
 
-export type Route = 'aujourdhui' | 'semaine'
+export type Route = 'aujourdhui' | 'semaine' | 'courses' | 'recettes' | 'savoir'
 
 const HASH_PAR_ROUTE: Readonly<Record<Route, string>> = {
   aujourdhui: '#/',
   semaine: '#/semaine',
+  courses: '#/courses',
+  recettes: '#/recettes',
+  savoir: '#/savoir',
 }
 
 const ROUTE_PAR_HASH: ReadonlyMap<string, Route> = new Map([
@@ -29,6 +35,9 @@ const ROUTE_PAR_HASH: ReadonlyMap<string, Route> = new Map([
   ['#', 'aujourdhui'],
   ['#/', 'aujourdhui'],
   ['#/semaine', 'semaine'],
+  ['#/courses', 'courses'],
+  ['#/recettes', 'recettes'],
+  ['#/savoir', 'savoir'],
 ])
 
 function souscrire(auChangement: () => void): () => void {
