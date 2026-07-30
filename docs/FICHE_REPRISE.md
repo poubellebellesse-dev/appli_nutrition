@@ -79,6 +79,11 @@ moteur → écran) avant d'investir dans huit écrans construits sur une chaîne
 - ⚠️ **Une PRIMARY KEY contenant une colonne NULL ne dédoublonne pas** dans SQLite : deux `NULL`
   n'y sont jamais égaux. `meal_plan_entry` aurait accepté deux plats sur le même créneau en mode
   recette (`service IS NULL`). → index UNIQUE sur `COALESCE(service, '')`, verrouillé par test.
+- ⚠️ **Aucun VFS OPFS de SQLite ne tourne sur le thread principal.** Les deux (`opfs` et
+  `opfs-sahpool`) testent `createSyncAccessHandle`, déclaré `[Exposed=DedicatedWorker]` : la méthode
+  n'existe pas hors d'un Worker, et **aucune en-tête COOP/COEP n'y change rien**. Erreur affichée :
+  « Missing required OPFS APIs ». → base en mémoire + fichier OPFS réécrit (`user-source.ts`).
+  Typecheck et `vite build` passaient parfaitement ; seul le navigateur l'a dit.
 - ⚠️ **Un plan relu depuis `user.db` arrive SANS ses avertissements.** `readPlan` rend
   `warnings: []` exprès — un avertissement de plancher calorique dépend du profil, le figer en base
   le ferait mentir. Tout plan restauré DOIT repasser par `moteur.checkPlan`, sinon l'alerte de §6.5

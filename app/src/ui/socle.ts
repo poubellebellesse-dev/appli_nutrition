@@ -1,16 +1,16 @@
 // ui/socle.ts — ce dont TOUT écran a besoin : le catalogue, le moteur, `user.db`, le profil.
 //
 // Extrait de `main.tsx` quand un deuxième écran est arrivé. Le moteur et la base sont des
-// singletons coûteux ; les rouvrir par écran referait les index dérivés à chaque navigation, et
-// surtout deux ouvertures concurrentes de `user.db` se disputeraient les descripteurs exclusifs du
-// VFS OPFS (voir `user-source.ts`).
+// singletons coûteux : les rouvrir par écran referait tous les index dérivés à chaque navigation,
+// et surtout deux instances de `user.db` en mémoire divergeraient, la dernière écrite sur OPFS
+// écrasant l'autre (voir `user-source.ts`).
 
 import type { Catalog, MealSlot, UserProfile } from '../engine/domain/index.js'
 import { createEngine, type Engine } from '../engine/api/index.js'
 import type { UserDb } from '../data/user-db.js'
 import { readProfile, writeProfile } from '../data/user-store.js'
 import { chargerCatalogue } from './catalog-source.js'
-import { ouvrirUserDb } from './user-source.js'
+import { ouvrirUserDb, type Stockage } from './user-source.js'
 
 /**
  * Profil semé au tout premier lancement, quand `user.db` est vide.
@@ -43,6 +43,8 @@ export interface Socle {
   readonly catalogue: Catalog
   readonly moteur: Engine
   readonly db: UserDb
+  /** `'memoire'` = OPFS indisponible : tout est perdu au rechargement. À dire clairement. */
+  readonly stockage: Stockage
   /** §7 mesure 6 — `false` impose un bandeau permanent, la base est effaçable par le navigateur. */
   readonly persistant: boolean
 }
@@ -61,7 +63,13 @@ export function chargerSocle(): Promise<Socle> {
 async function chargerVraiment(): Promise<Socle> {
   const [catalogue, session] = await Promise.all([chargerCatalogue(), ouvrirUserDb()])
   // `createEngine` calcule tous les index dérivés (§6.5 précision 8) — une seule fois, ici.
-  return { catalogue, moteur: createEngine(catalogue), db: session.db, persistant: session.persistant }
+  return {
+    catalogue,
+    moteur: createEngine(catalogue),
+    db: session.db,
+    stockage: session.stockage,
+    persistant: session.persistant,
+  }
 }
 
 /** Aujourd'hui en ISO. L'horloge est fournie par l'UI et INJECTÉE — jamais lue dans engine/ (§3). */

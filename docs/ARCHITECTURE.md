@@ -307,11 +307,25 @@ une migration interrompue laisse la base à sa version précédente, jamais à m
 complet de ce tableau est créé dès la **v1**, y compris les tables sans consommateur — une
 migration est gratuite tant que la base est vide, et coûteuse ensuite.
 
-**VFS `opfs-sahpool`, pas le VFS `opfs` classique.** Ce dernier exige `SharedArrayBuffer`, donc les
-en-têtes COOP/COEP — que `vite.config.ts` ne pose que sur le serveur de développement. `npm run
-preview` et tout hébergement statique nu en sont dépourvus, et le VFS classique refuserait de
-démarrer là où l'application est réellement servie. Contrepartie assumée : le pool prend des
-descripteurs d'accès **exclusifs**, donc **un seul onglet à la fois**.
+**Base en mémoire, fichier sur OPFS — et non un VFS OPFS de SQLite.** Corrigé le 2026-07-30 après
+échec en navigateur (« Missing required OPFS APIs »). Les **deux** VFS OPFS de sqlite-wasm
+(`opfs` et `opfs-sahpool`) testent `FileSystemFileHandle.prototype.createSyncAccessHandle`, déclaré
+`[Exposed=DedicatedWorker]` : la méthode **n'existe pas** hors d'un Worker dédié, quelles que soient
+les en-têtes COOP/COEP. Déplacer SQLite dans un Worker rendrait tous les accès asynchrones, alors
+que `data/user-store.ts`, ses tests et les écrans reposent sur des lectures **synchrones**.
+
+`user.db` est donc chargé en mémoire au démarrage (`sqlite3_deserialize`, comme `catalog.db`) et
+réécrit en entier sur OPFS après chaque modification, via `createWritable()` — disponible, elle, sur
+le thread principal. Trois contreparties, à connaître :
+
+- la base entière est réécrite à chaque écriture (sans conséquence à cette taille) ;
+- l'écriture est différée d'un tour de boucle d'événements, indispensable pour ne pas exporter au
+  milieu d'une transaction — une fermeture d'onglet dans cet intervalle perd la dernière modification ;
+- deux onglets ont chacun leur copie et le dernier qui écrit gagne, **sans erreur**. À traiter par
+  `navigator.locks` avant tout usage réel.
+
+Un échec d'écriture est remonté à l'interface (`surErreurDePersistance`) : asynchrone et détaché du
+geste de l'utilisateur, il serait sinon totalement muet.
 
 **Pas de chiffrement applicatif.** Aucune donnée de santé n'étant collectée, `user.db` ne contient
 que des préférences alimentaires et un gabarit corporel. Le chiffrement du système d'exploitation

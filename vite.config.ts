@@ -17,8 +17,13 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   optimizeDeps: { exclude: ['@sqlite.org/sqlite-wasm'] },
   server: {
-    // Requis par SQLite WASM sur OPFS : sans isolation cross-origin, `SharedArrayBuffer` est
-    // indisponible et le VFS OPFS refuse de démarrer.
+    // ⚠️ CES EN-TÊTES NE SONT PLUS REQUISES (2026-07-30). Elles avaient été posées pour le VFS OPFS
+    // de SQLite, qui exige `SharedArrayBuffer`. Ce VFS s'est révélé inutilisable ici : les deux VFS
+    // OPFS de sqlite-wasm ne fonctionnent QUE dans un Worker dédié, et `ui/user-source.ts` persiste
+    // désormais `user.db` comme un simple fichier OPFS — aucune isolation cross-origin nécessaire.
+    // Conservées telles quelles pour ne pas toucher à la configuration de build en passant ; à
+    // retirer, parce que `require-corp` bloquera toute ressource cross-origin sans en-tête CORP le
+    // jour où l'application en chargera une.
     headers: {
       'Cross-Origin-Opener-Policy': 'same-origin',
       'Cross-Origin-Embedder-Policy': 'require-corp',

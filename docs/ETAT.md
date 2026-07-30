@@ -555,9 +555,13 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   `npx vite build` (seule garde contre l'import Node hoisté), et 32 tests sous Node sur le mapping
   exact que le navigateur utilise. **Non vérifié** : `installOpfsSAHPoolVfs`, la survie au
   rechargement, `navigator.storage.persist()`. À faire avant toute nouvelle tranche UI.
-- ⚠️ **Un seul onglet à la fois.** Le VFS `opfs-sahpool` prend des descripteurs d'accès exclusifs :
-  un second onglet échoue à l'ouverture. L'erreur doit être présentée comme « déjà ouvert
-  ailleurs », jamais comme une base corrompue — ce message n'est pas encore écrit.
+- ⚠️ **Deux onglets se écrasent SILENCIEUSEMENT.** Chacun tient sa copie de `user.db` en mémoire et
+  réécrit le fichier entier ; le dernier qui écrit gagne, sans erreur. À traiter par
+  `navigator.locks` avant tout usage réel — c'est plus sournois que l'échec d'ouverture qu'aurait
+  produit un VFS à descripteurs exclusifs.
+- ⚠️ **La dernière modification peut être perdue.** L'écriture sur OPFS est différée d'un tour de
+  boucle (indispensable pour ne pas exporter au milieu d'une transaction). Fermer l'onglet dans cet
+  intervalle perd le dernier geste. Le délai se compte en millisecondes, mais il n'est pas nul.
 - ⚠️ **Aucun export / import** (§7 ARCHITECTURE mesures 3 à 5). `user.db` ne se re-télécharge pas :
   tant que la sauvegarde manuelle n'existe pas, un effacement de stockage est une perte sèche.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
