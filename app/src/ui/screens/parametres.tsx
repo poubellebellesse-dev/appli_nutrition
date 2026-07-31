@@ -15,39 +15,27 @@
 // de l'en-tête, présent sur tous les écrans. Voir `router.tsx`.
 
 import { useCallback, useEffect, useState } from 'react'
-import type { AllergenId, Catalog, DietCode } from '../../engine/domain/index.js'
+import type { AllergenId, Catalog } from '../../engine/domain/index.js'
 import {
-  readAllergies,
-  readDiet,
   readDisplay,
-  readRythme,
   writeAllergies,
   writeDiet,
   writeDisplay,
   writeRythme,
   type StoredDisplay,
-  type StoredRythme,
 } from '../../data/user-store.js'
 import { chargerSocle } from '../socle.js'
 import { Case, ChoixAllergenes, ChoixRegime, ChoixRythme } from '../champs-profil.js'
+import { lireChoixProfil, type ChoixProfil } from '../profil-enregistre.js'
 
 /**
- * Rythme par défaut quand l'accueil a été sauté — `readRythme` rend alors `null`.
- *
- * Mêmes valeurs que `CHOIX_INITIAL` de l'accueil : deux défauts différents feraient qu'ouvrir
- * Paramètres sans rien toucher CHANGERAIT les suggestions.
+ * ⚠️ LA VUE RÉUTILISE `ChoixProfil`, elle n'en redéclare pas une variante. Cet écran portait sa
+ * propre constante de rythme par défaut, dupliquée de l'accueil : deux valeurs différentes auraient
+ * fait qu'ouvrir Paramètres sans rien toucher CHANGE les suggestions. Une seule définition, dans
+ * `ui/profil-enregistre.ts`, avec la lecture et l'écriture qui vont avec.
  */
-const RYTHME_PAR_DEFAUT: StoredRythme = {
-  repasParJour: 2,
-  tempsSemaineMin: 30,
-  tempsWeekendMin: null,
-}
-
-interface Vue {
+interface Vue extends ChoixProfil {
   readonly catalogue: Catalog
-  readonly allergenes: ReadonlySet<string>
-  readonly regime: DietCode | null
-  readonly rythme: StoredRythme
   readonly affichage: StoredDisplay
 }
 
@@ -59,10 +47,8 @@ type Etat =
 async function lireVue(): Promise<Vue> {
   const socle = await chargerSocle()
   return {
+    ...lireChoixProfil(socle.db),
     catalogue: socle.catalogue,
-    allergenes: new Set(readAllergies(socle.db).map((a) => a.allergenId)),
-    regime: readDiet(socle.db),
-    rythme: readRythme(socle.db) ?? RYTHME_PAR_DEFAUT,
     affichage: readDisplay(socle.db),
   }
 }

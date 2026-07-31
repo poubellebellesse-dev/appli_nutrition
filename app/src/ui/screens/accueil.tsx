@@ -22,23 +22,26 @@
 //      que cet écran existe justement pour bien résoudre.
 
 import { useCallback, useEffect, useState } from 'react'
-import type { AllergenId, Catalog, DietCode } from '../../engine/domain/index.js'
+import type { Catalog } from '../../engine/domain/index.js'
+import { recordConsent } from '../../data/user-store.js'
 import {
-  recordConsent,
-  writeAllergies,
-  writeDiet,
-  writeRythme,
-  type StoredRythme,
-} from '../../data/user-store.js'
+  POINTS_CONSENTEMENT,
+  VERSION_CONSENTEMENT as VERSION,
+  type PointConsentement,
+} from '../texte-consentement.js'
 import { aujourdhuiIso, chargerSocle } from '../socle.js'
 import { ChoixAllergenes, ChoixRegime, ChoixRythme } from '../champs-profil.js'
+import {
+  RYTHME_PAR_DEFAUT,
+  ecrireChoixProfil,
+  lireChoixProfil,
+  type ChoixProfil,
+} from '../profil-enregistre.js'
 
-/**
- * Version du texte de consentement. À INCRÉMENTER dès que les trois points ci-dessous changent :
- * `consent` garde une ligne par version (§6.4), et le parcours se rouvre sur une version non
- * acceptée. Un texte modifié sans changement de version serait accepté rétroactivement.
- */
-export const VERSION_CONSENTEMENT = 'accueil-2026-07-30'
+// Le texte de consentement et sa version vivent dans `ui/texte-consentement.ts` — côte à côte, pour
+// qu'on ne modifie jamais l'un sans voir l'autre. Réexporté ici parce que `main.tsx` l'attend de cet
+// écran depuis toujours.
+export { VERSION_CONSENTEMENT } from '../texte-consentement.js'
 
 // Les allergènes fréquents, les libellés, les paliers de temps et la dérivation des régimes vivent
 // désormais dans `ui/champs-profil.tsx` — l'écran Paramètres règle les mêmes champs, et deux copies
@@ -46,21 +49,15 @@ export const VERSION_CONSENTEMENT = 'accueil-2026-07-30'
 
 type Etape = 1 | 2 | 3 | 5
 
-interface Choix {
-  readonly allergenes: ReadonlySet<string>
-  readonly regime: DietCode | null
-  readonly rythme: StoredRythme
-}
-
-const CHOIX_INITIAL: Choix = {
+const CHOIX_INITIAL: ChoixProfil = {
   allergenes: new Set(),
   regime: null,
-  rythme: { repasParJour: 2, tempsSemaineMin: 30, tempsWeekendMin: null },
+  rythme: RYTHME_PAR_DEFAUT,
 }
 
 export function Accueil({ onTermine }: { readonly onTermine: () => void }) {
   const [etape, setEtape] = useState<Etape>(1)
-  const [choix, setChoix] = useState<Choix>(CHOIX_INITIAL)
+  const [choix, setChoix] = useState<ChoixProfil>(CHOIX_INITIAL)
   const [catalogue, setCatalogue] = useState<Catalog | null>(null)
   /** Case « J'ai lu et compris » — ici et non dans `Engagement`, voir l'en-tête de ce composant. */
   const [compris, setCompris] = useState(false)
@@ -69,7 +66,12 @@ export function Accueil({ onTermine }: { readonly onTermine: () => void }) {
     let annule = false
     chargerSocle().then(
       (socle) => {
-        if (!annule) setCatalogue(socle.catalogue)
+        if (annule) return
+        setCatalogue(socle.catalogue)
+        // ⚠️ ON PART DE CE QUI EXISTE DÉJÀ. Base neuve → les défauts ; parcours rouvert par un
+        // nouveau texte de consentement → les allergies déjà déclarées, cochées. Sans cette ligne,
+        // « Continuer, Continuer, C'est parti » sans rien toucher les effacerait toutes.
+        setChoix(lireChoixProfil(socle.db))
       },
       () => undefined
     )
@@ -83,16 +85,11 @@ export function Accueil({ onTermine }: { readonly onTermine: () => void }) {
     chargerSocle()
       .then((socle) => {
         const date = aujourdhuiIso()
-        writeAllergies(
-          socle.db,
-          [...choix.allergenes].map((id) => ({ allergenId: id as AllergenId, severite: null }))
-        )
-        writeDiet(socle.db, choix.regime)
-        writeRythme(socle.db, choix.rythme)
+        ecrireChoixProfil(socle.db, choix)
         // Le consentement EN DERNIER : c'est lui qui referme le parcours. L'écrire d'abord ferait
         // qu'une fermeture d'onglet en cours de route donnerait une application « configurée »
         // sans allergies, c'est-à-dire le défaut qu'on est en train de corriger.
-        recordConsent(socle.db, VERSION_CONSENTEMENT, date)
+        recordConsent(socle.db, VERSION, date)
         onTermine()
       })
       .catch(() => onTermine())
@@ -139,6 +136,39 @@ export function Accueil({ onTermine }: { readonly onTermine: () => void }) {
 // --- Écran 1 — engagement -----------------------------------------------------------------------
 
 /**
+ * Un point du consentement : résumé toujours visible, détail d'un tap.
+ *
+ * La ligne entière est le bouton — pas un petit chevron : « cibles tactiles de 48 px minimum », et
+ * viser une flèche de 12 px n'est pas la même chose que viser une carte.
+ */
+function PointDepliable({ point }: { readonly point: PointConsentement }) {
+  const [ouvert, setOuvert] = useState(false)
+
+  return (
+    <div className="rounded-[--radius-carte] border border-bordure bg-surface">
+      <button
+        type="button"
+        onClick={() => setOuvert((o) => !o)}
+        aria-expanded={ouvert}
+        className="flex min-h-tactile w-full items-center gap-3 p-4 text-left text-[1rem] leading-relaxed text-texte"
+      >
+        <span className="flex-1 font-medium">{point.resume}</span>
+        <span aria-hidden="true" className="shrink-0 text-[0.85rem] font-semibold text-attenue">
+          {ouvert ? 'Replier' : 'Lire'}
+        </span>
+      </button>
+      {ouvert && (
+        <div className="space-y-2 px-4 pb-4 text-[0.95rem] leading-relaxed text-texte-doux">
+          {point.detail.map((paragraphe) => (
+            <p key={paragraphe}>{paragraphe}</p>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
  * ⚠️ `compris` VIENT DU PARENT, il n'est pas un état local. Il l'a été, et « Revenir en arrière »
  * l'a immédiatement montré : React démonte l'étape qu'on quitte, si bien que revenir sur cet écran
  * décochait la case et redésactivait le bouton. On se retrouvait bloqué à l'étape 1, à devoir
@@ -162,21 +192,14 @@ function Engagement({
       <p className="mt-2 text-[1.15rem] leading-relaxed text-texte-doux">
         Cuisinez au fil des jours, tranquillement.
       </p>
-      <p className="mt-6 text-[1rem] text-texte-doux">Avant de commencer, trois choses à savoir.</p>
+      <p className="mt-6 text-[1rem] text-texte-doux">
+        Avant de commencer, quatre choses à savoir. Touchez un point pour tout lire.
+      </p>
 
-      {/* ⚠️ Ces trois phrases sont le TEXTE DE CONSENTEMENT. Les modifier oblige à incrémenter
-          VERSION_CONSENTEMENT, sinon une acceptation ancienne vaudrait pour un texte jamais lu. */}
       <ul className="mt-4 space-y-3">
-        {[
-          'Vos données restent sur cet appareil. Aucun compte, rien n’est envoyé.',
-          'L’application ne remplace pas un professionnel de santé.',
-          'En cas de doute, vérifiez les sources : elles sont toujours citées.',
-        ].map((point) => (
-          <li
-            key={point}
-            className="rounded-[--radius-carte] border border-bordure bg-surface p-4 text-[1rem] leading-relaxed text-texte"
-          >
-            {point}
+        {POINTS_CONSENTEMENT.map((point) => (
+          <li key={point.resume}>
+            <PointDepliable point={point} />
           </li>
         ))}
       </ul>
@@ -289,8 +312,8 @@ function Allergies({
   onSuivant,
 }: {
   readonly catalogue: Catalog | null
-  readonly choix: Choix
-  readonly onChange: (choix: Choix) => void
+  readonly choix: ChoixProfil
+  readonly onChange: (choix: ChoixProfil) => void
   readonly onSuivant: () => void
 }) {
   if (catalogue === null) return <p className="text-attenue">Chargement…</p>
@@ -338,8 +361,8 @@ function Rythme({
   onChange,
   onTerminer,
 }: {
-  readonly choix: Choix
-  readonly onChange: (choix: Choix) => void
+  readonly choix: ChoixProfil
+  readonly onChange: (choix: ChoixProfil) => void
   readonly onTerminer: () => void
 }) {
   return (
