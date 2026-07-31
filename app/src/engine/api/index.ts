@@ -90,6 +90,26 @@ export interface Engine {
     recipeId: RecipeId,
     dislikedFoodId: FoodId
   ): AlternativeSuggestion
+  /**
+   * « Des plats qui ressemblent à celui-ci » — le bandeau de bas d'écran de §4.1 DESIGN.
+   *
+   * ⚠️ À NE PAS CONFONDRE AVEC `suggestAlternatives`, qui répond à « je n'aime pas CET ingrédient »
+   * et exige donc un `dislikedFoodId`. Ici on ne reproche rien au plat : on en veut d'autres du
+   * même genre.
+   *
+   * ⚠️ À NE PAS CONFONDRE NON PLUS avec les autres résultats de `suggestMeals`. Ceux-là sont passés
+   * par `diversify` (MMR), dont le travail est justement de les rendre DIFFÉRENTS les uns des
+   * autres : les afficher sous « plats similaires » afficherait l'exact contraire de la promesse.
+   * On classe donc ici par similarité DÉCROISSANTE, avec la même mesure (`recipeSignature`, §6.6).
+   *
+   * ⚠️ PREND UN `SuggestionRequest` ENTIER, et c'est la même raison que pour `suggestAlternatives` :
+   * sans la passe d'exclusion, ce bandeau proposerait tranquillement un plat contenant un allergène
+   * déclaré. Un rayon « et aussi… » n'est pas une zone où les garde-fous s'arrêtent.
+   *
+   * Le créneau du contexte n'entre PAS en compte : on cherche des plats proches, pas des plats du
+   * soir. `limit` borne le résultat ; l'identifiant demandé n'y figure jamais.
+   */
+  similarRecipes(req: SuggestionRequest, recipeId: RecipeId, limit: number): readonly RecipeId[]
   planWeek(req: WeekPlanRequest): WeekPlan
   /**
    * Repropose UN créneau, en excluant le plat refusé et tout ce qui est déjà au plan (§7.2).
@@ -282,6 +302,36 @@ function describeNoViableRecipe(rejected: RejectionSummary): string {
 function buildSimilarityAccessor(catalog: Catalog): (a: RecipeId, b: RecipeId) => number {
   const profiles = buildSimilarityProfiles(catalog)
   return (a, b) => similarity(profiles.get(a)!, profiles.get(b)!)
+}
+
+/**
+ * Les plats les plus proches de `recipeId`, parmi ceux qui SURVIVENT à la passe d'exclusion.
+ *
+ * L'ordre des opérations n'est pas négociable : on exclut d'abord, on classe ensuite. Classer puis
+ * filtrer donnerait le même résultat ici, mais poserait le mauvais précédent — et le garde-fou
+ * `assertNoDeclaredAllergen` doit voir l'ensemble conservé, comme dans `runSuggestMeals`.
+ *
+ * Départage par identifiant à similarité égale : sans lui l'ordre dépendrait de l'itération d'un
+ * `Set`, et le bandeau changerait d'ordre entre deux affichages identiques.
+ */
+function runSimilarRecipes(
+  catalog: Catalog,
+  req: SuggestionRequest,
+  recipeId: RecipeId,
+  limit: number,
+  similaire: (a: RecipeId, b: RecipeId) => number
+): readonly RecipeId[] {
+  if (limit <= 0 || !catalog.recipes.has(recipeId)) return []
+
+  const exclusionResult = runExclusionPass(catalog, req)
+  assertNoDeclaredAllergen(exclusionResult.candidates, catalog, req.constraints)
+
+  return [...exclusionResult.candidates]
+    .filter((id) => id !== recipeId)
+    .map((id) => ({ id, proximite: similaire(recipeId, id) }))
+    .sort((a, b) => b.proximite - a.proximite || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+    .slice(0, limit)
+    .map((entree) => entree.id)
 }
 
 /**
@@ -524,6 +574,9 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
   // leurs ingrédients à chaque frappe serait refaire le même travail des dizaines de fois par
   // seconde, sur le fil principal, pendant que l'utilisateur écrit.
   const indexRecherche = construireIndex(enrichedCatalog)
+  // Même raison que l'index de recherche : construire les profils de similarité des 241 recettes à
+  // chaque affichage referait le même calcul en boucle, sur le fil principal.
+  const similaire = buildSimilarityAccessor(enrichedCatalog)
   const { now } = opts
 
   return {
@@ -533,6 +586,8 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
     suggestMeals: (req) => runSuggestMeals(enrichedCatalog, req, now),
     suggestAlternatives: (req, recipeId, dislikedFoodId) =>
       runSuggestAlternatives(enrichedCatalog, req, recipeId, dislikedFoodId),
+    similarRecipes: (req, recipeId, limit) =>
+      runSimilarRecipes(enrichedCatalog, req, recipeId, limit, similaire),
     // La suggestion est INJECTÉE dans le planning (§7.1, `P->>S: suggest`) : planning/ ne peut pas
     // importer api/, et une copie du pipeline finirait par perdre les garde-fous. Le plan passe
     // ensuite `assertCalorieFloor`, cinquième et dernier garde-fou (§5.2).
