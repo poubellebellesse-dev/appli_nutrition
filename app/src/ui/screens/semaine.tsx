@@ -36,7 +36,9 @@ import {
 } from '../socle.js'
 import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { REPAS_PAR_DEFAUT, creneauxDuRythme } from '../creneau.js'
-import { readDisplay } from '../../data/user-store.js'
+import { readDisplay, readMealTimes } from '../../data/user-store.js'
+import { rappelsDuPlan } from '../rappel.js'
+import { reprogrammer, toutAnnuler } from '../notifications.js'
 
 // Le mapping « nombre de repas → créneaux » a été remonté dans `ui/creneau.ts` quand l'écran
 // Aujourd'hui en a eu besoin à son tour : deux copies auraient donné une semaine et un écran du jour
@@ -123,7 +125,33 @@ function planifier(socle: Socle, reglages: Reglages, verrous: readonly MealPlanE
   // et recalcule les avertissements, les totaux du jour ayant changé.
   const plan = socle.moteur.planLeftovers(brut, profil, reglages.convives)
   savePlan(socle.db, plan)
+  reprogrammerLesRappels(socle, plan)
   return { plan, profil, nomDe: (id) => socle.catalogue.recipes.get(id)?.nom ?? id }
+}
+
+/**
+ * Repose les rappels de préparation sur l'appareil après un changement de plan.
+ *
+ * ⚠️ APPELÉ À CHAQUE ÉCRITURE DE PLAN, et sans être attendu. Les rappels sont un CONFORT : si la
+ * plateforme refuse, si la permission a été révoquée, ou s'il n'y a pas de conteneur natif, la
+ * semaine s'affiche exactement pareil. Attendre la programmation ferait dépendre l'affichage d'un
+ * service optionnel.
+ *
+ * ⚠️ IL FAUT REPROGRAMMER À CHAQUE FOIS. « Proposer une autre semaine » réécrit tout le plan ;
+ * laisser les anciens rappels ferait sonner l'appareil pour des plats qui n'y sont plus.
+ */
+function reprogrammerLesRappels(socle: Socle, plan: WeekPlan): void {
+  if (!readDisplay(socle.db).rappelsActifs) {
+    void toutAnnuler()
+    return
+  }
+  const rappels = rappelsDuPlan(
+    plan,
+    socle.catalogue.recipes,
+    readMealTimes(socle.db),
+    Date.now()
+  )
+  void reprogrammer(rappels)
 }
 
 /**

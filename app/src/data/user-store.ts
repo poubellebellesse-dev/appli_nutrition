@@ -683,6 +683,8 @@ export interface StoredDisplay {
   readonly alertesDiscretes: boolean
   /** Bandeau « le navigateur ne garantit pas de conserver » écarté. Lui SEUL est masquable (v5). */
   readonly bandeauStockageMasque: boolean
+  /** Rappels de préparation. FAUX par défaut : une notification non demandée est une intrusion. */
+  readonly rappelsActifs: boolean
 }
 
 export function readDisplay(db: UserDb): StoredDisplay {
@@ -691,8 +693,10 @@ export function readDisplay(db: UserDb): StoredDisplay {
     readonly gestes_balayage: number
     readonly alertes_discretes: number
     readonly bandeau_stockage_masque: number
+    readonly rappels_actifs: number
   }>(
-    `SELECT afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque
+    `SELECT afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque,
+            rappels_actifs
      FROM user_display WHERE id = 1`
   )[0]
   // Absent = jamais réglé = le défaut du schéma. Rendre `null` obligerait chaque appelant à traiter
@@ -702,6 +706,7 @@ export function readDisplay(db: UserDb): StoredDisplay {
     gestesBalayage: row?.gestes_balayage === 1,
     alertesDiscretes: row?.alertes_discretes === 1,
     bandeauStockageMasque: row?.bandeau_stockage_masque === 1,
+    rappelsActifs: row?.rappels_actifs === 1,
   }
 }
 
@@ -713,13 +718,15 @@ export function readDisplay(db: UserDb): StoredDisplay {
 export function writeDisplay(db: UserDb, display: StoredDisplay): void {
   db.run(
     `INSERT OR REPLACE INTO user_display
-       (id, afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque)
-     VALUES (1, ?, ?, ?, ?)`,
+       (id, afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque,
+        rappels_actifs)
+     VALUES (1, ?, ?, ?, ?, ?)`,
     [
       display.afficherMacros ? 1 : 0,
       display.gestesBalayage ? 1 : 0,
       display.alertesDiscretes ? 1 : 0,
       display.bandeauStockageMasque ? 1 : 0,
+      display.rappelsActifs ? 1 : 0,
     ]
   )
 }
@@ -742,4 +749,37 @@ export function readUserState(db: UserDb, window: HistoryWindow): StoredUserStat
     activeTopics: readActiveTopics(db),
     pantryFoodIds: readPantryFoodIds(db),
   }
+}
+
+// --- Heures de repas (v6) -------------------------------------------------------------------------
+
+/**
+ * À quelle heure l'utilisateur mange, par créneau. Minutes depuis minuit.
+ *
+ * ⚠️ FACULTATIF, CRÉNEAU PAR CRÉNEAU. Un créneau absent de la table n'a pas d'heure déclarée — et
+ * n'aura donc aucun rappel. C'est volontaire : personne ne doit avoir à déclarer l'heure de ses
+ * quatre repas pour être prévenu de lancer son dîner.
+ */
+export type HeuresDeRepas = ReadonlyMap<MealSlot, number>
+
+export function readMealTimes(db: UserDb): HeuresDeRepas {
+  const heures = new Map<MealSlot, number>()
+  for (const row of db.all<{ readonly creneau: string; readonly heure_min: number }>(
+    'SELECT creneau, heure_min FROM user_meal_time'
+  )) {
+    heures.set(row.creneau as MealSlot, row.heure_min)
+  }
+  return heures
+}
+
+/**
+ * Fixe ou efface l'heure d'un créneau. `null` efface — « je ne veux plus de rappel pour ce repas »
+ * doit être exprimable, pas seulement « je change l'heure ».
+ */
+export function writeMealTime(db: UserDb, creneau: MealSlot, heureMin: number | null): void {
+  if (heureMin === null) {
+    db.run('DELETE FROM user_meal_time WHERE creneau = ?', [creneau])
+    return
+  }
+  db.run('INSERT OR REPLACE INTO user_meal_time (creneau, heure_min) VALUES (?, ?)', [creneau, heureMin])
 }

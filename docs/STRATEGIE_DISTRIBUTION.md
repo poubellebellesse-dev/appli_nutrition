@@ -99,9 +99,33 @@ icônes 192/512/maskable générées par `npm run icons:build`, balises iOS, ser
 pré-cache, et le test automatisé « zéro requête réseau » de §6.6. Il servait au TWA ; il sert autant
 à Capacitor, qui empaquette le même `dist/`.
 
-**Reste à faire pour être sur Play** : ajouter Capacitor et son projet Android, brancher
-`LocalNotifications`, générer l'APK, créer le compte développeur (25 $). Rien n'est engagé côté
-argent. ~~Choisir l'hébergeur, déposer `assetlinks.json`~~ — sans objet depuis le 2026-07-31.
+**Fait le 2026-07-31 — Capacitor est installé et branché côté application** : `capacitor.config.ts`,
+`@capacitor/core`, `@capacitor/android`, `@capacitor/local-notifications`, l'adaptateur
+`ui/notifications.ts` et les rappels calculés par `ui/rappel.ts`. Dans un navigateur tout est inerte
+et l'écran Paramètres le DIT, plutôt que d'offrir un interrupteur qui ne ferait rien.
+
+**Reste à faire pour être sur Play**, dans cet ordre :
+
+```bash
+npx cap add android          # génère android/ — À FAIRE AVEC LE SDK INSTALLÉ
+npm run build && npx vite build
+npx cap sync android
+npx cap open android         # ouvre Android Studio, puis Build > Generate Signed Bundle
+```
+
+⚠️ **`npx cap add android` n'a PAS été lancé, volontairement.** Il génère ~200 fichiers Gradle qui
+ne compilent qu'avec le SDK Android — absent de la machine où le reste a été écrit. Du code généré
+qu'on ne peut pas compiler n'a rien à faire dans le dépôt : la commande est rejouable en une fois.
+
+⚠️ **Deux valeurs à remplacer avant publication**, laissées en évidence dans le code :
+`capacitor.config.ts` → `appId` (`org.example.nutrition` — **définitif une fois publié sur Play**),
+et `ui/screens/parametres.tsx` → `CONTACT`.
+
+⚠️ **La JDK de la machine était en 25** ; le plugin Gradle Android n'a longtemps supporté que
+jusqu'à la 21. À vérifier au premier build, ce n'est pas forcément le JDK à utiliser.
+
+Créer le compte développeur (25 $) reste à faire. Rien n'est engagé côté argent.
+~~Choisir l'hébergeur, déposer `assetlinks.json`~~ — sans objet depuis le 2026-07-31.
 
 ⚠️ **La boucle de développement ne change pas.** Capacitor n'a pas de moteur de rendu à lui : il
 embarque le `dist/` produit par `vite build`. On continue de coder et de tester dans le navigateur ;

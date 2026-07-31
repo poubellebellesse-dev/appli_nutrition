@@ -15,18 +15,25 @@
 // de l'en-tête, présent sur tous les écrans. Voir `router.tsx`.
 
 import { useCallback, useEffect, useState } from 'react'
-import type { AllergenId, Catalog } from '../../engine/domain/index.js'
+import type { AllergenId, Catalog, MealSlot } from '../../engine/domain/index.js'
 import {
   readDisplay,
+  readMealTimes,
   writeAllergies,
   writeDiet,
   writeDisplay,
+  writeMealTime,
   writeRythme,
+  type HeuresDeRepas,
   type StoredDisplay,
 } from '../../data/user-store.js'
 import { chargerSocle } from '../socle.js'
 import { Case, ChoixAllergenes, ChoixRegime, ChoixRythme } from '../champs-profil.js'
 import { lireChoixProfil, type ChoixProfil } from '../profil-enregistre.js'
+import { LIBELLE_CRENEAU } from '../socle.js'
+import { creneauxDuRythme } from '../creneau.js'
+import { demanderAutorisation, etatNotifications, type EtatNotifications } from '../notifications.js'
+import type { StoredRythme } from '../../data/user-store.js'
 
 /**
  * ⚠️ LA VUE RÉUTILISE `ChoixProfil`, elle n'en redéclare pas une variante. Cet écran portait sa
@@ -37,6 +44,7 @@ import { lireChoixProfil, type ChoixProfil } from '../profil-enregistre.js'
 interface Vue extends ChoixProfil {
   readonly catalogue: Catalog
   readonly affichage: StoredDisplay
+  readonly heures: HeuresDeRepas
 }
 
 type Etat =
@@ -50,6 +58,7 @@ async function lireVue(): Promise<Vue> {
     ...lireChoixProfil(socle.db),
     catalogue: socle.catalogue,
     affichage: readDisplay(socle.db),
+    heures: readMealTimes(socle.db),
   }
 }
 
@@ -188,9 +197,130 @@ export function Parametres() {
         </div>
       </Section>
 
+      <Rappels
+        rythme={vue.rythme}
+        actifs={vue.affichage.rappelsActifs}
+        heures={vue.heures}
+        onActifs={(rappelsActifs) => {
+          const affichage = { ...vue.affichage, rappelsActifs }
+          appliquer({ ...vue, affichage }, (db) => writeDisplay(db, affichage))
+        }}
+        onHeure={(creneau, heureMin) => {
+          const heures = new Map(vue.heures)
+          if (heureMin === null) heures.delete(creneau)
+          else heures.set(creneau, heureMin)
+          appliquer({ ...vue, heures }, (db) => writeMealTime(db, creneau, heureMin))
+        }}
+      />
+
       <APropos />
     </section>
   )
+}
+
+/**
+ * Les rappels de préparation.
+ *
+ * ⚠️ CE BLOC DIT LA VÉRITÉ SUR CE QUI EST POSSIBLE. Dans un navigateur — y compris une PWA
+ * installée — aucune notification programmée n'existe : l'API qui l'aurait permis a été abandonnée,
+ * et le push exigerait un serveur. Plutôt qu'un interrupteur qui ne ferait rien, on explique. Une
+ * promesse non tenue coûte plus cher qu'une fonctionnalité absente.
+ *
+ * ⚠️ LES HEURES RESTENT RÉGLABLES même sans conteneur natif : elles décrivent l'utilisateur, pas la
+ * plateforme, et elles seront là le jour de l'installation depuis le store.
+ */
+function Rappels({
+  rythme,
+  actifs,
+  heures,
+  onActifs,
+  onHeure,
+}: {
+  readonly rythme: StoredRythme
+  readonly actifs: boolean
+  readonly heures: HeuresDeRepas
+  readonly onActifs: (actifs: boolean) => void
+  readonly onHeure: (creneau: MealSlot, heureMin: number | null) => void
+}) {
+  const [etat, setEtat] = useState<EtatNotifications | null>(null)
+
+  useEffect(() => {
+    let annule = false
+    etatNotifications().then(
+      (e) => {
+        if (!annule) setEtat(e)
+      },
+      () => undefined
+    )
+    return () => {
+      annule = true
+    }
+  }, [])
+
+  const basculer = () => {
+    if (actifs) {
+      onActifs(false)
+      return
+    }
+    // ⚠️ LA PERMISSION EST DEMANDÉE SUR CE GESTE, jamais au démarrage : une invite qui surgit avant
+    // qu'on ait rien demandé se solde par un refus, et un refus ne se redemande pas.
+    void demanderAutorisation().then((accorde) => {
+      setEtat((e) => (e === null ? e : { ...e, autorise: accorde }))
+      onActifs(accorde)
+    })
+  }
+
+  return (
+    <Section titre="Rappels de préparation">
+      {etat?.disponible === false && (
+        <p className="mb-3 rounded-[--radius-carte] border border-bordure bg-surface p-3 text-[0.9rem] leading-relaxed text-texte-doux">
+          Les rappels demandent l'application installée depuis le store. Dans un navigateur, aucune
+          notification ne peut être programmée à l'avance — vos heures sont tout de même enregistrées.
+        </p>
+      )}
+
+      <Case
+        libelle="Me prévenir quand il est temps de commencer"
+        description="Calculé depuis l'heure du repas et le temps de la recette prévue."
+        cochee={actifs}
+        onBasculer={basculer}
+      />
+
+      <p className="mt-4 text-[0.9rem] text-texte-doux">À quelle heure mangez-vous ?</p>
+      <div className="mt-2 space-y-2">
+        {creneauxDuRythme(rythme.repasParJour).map((creneau) => (
+          <label
+            key={creneau}
+            className="flex min-h-tactile items-center justify-between gap-3 rounded-[--radius-carte] border border-bordure bg-surface px-4"
+          >
+            <span className="text-[1rem] text-texte">{LIBELLE_CRENEAU[creneau]}</span>
+            <input
+              type="time"
+              value={enTexte(heures.get(creneau))}
+              onChange={(e) => onHeure(creneau, enMinutes(e.target.value))}
+              className="min-h-tactile rounded-[0.6rem] border border-bordure-forte bg-fond px-2 text-[1rem] text-texte"
+            />
+          </label>
+        ))}
+      </div>
+      <p className="mt-2 text-[0.85rem] leading-relaxed text-attenue">
+        Un repas sans heure n'est jamais rappelé. Rien n'est obligatoire.
+      </p>
+    </Section>
+  )
+}
+
+/** Minutes depuis minuit → « HH:MM » pour `<input type="time">`. Vide si non déclaré. */
+function enTexte(heureMin: number | undefined): string {
+  if (heureMin === undefined) return ''
+  return `${String(Math.floor(heureMin / 60)).padStart(2, '0')}:${String(heureMin % 60).padStart(2, '0')}`
+}
+
+/** « HH:MM » → minutes depuis minuit. Champ vidé → `null`, ce qui EFFACE l'heure. */
+function enMinutes(texte: string): number | null {
+  const trouve = /^(\d{2}):(\d{2})$/.exec(texte)
+  if (trouve === null) return null
+  return Number(trouve[1]) * 60 + Number(trouve[2])
 }
 
 function Section({ titre, children }: { readonly titre: string; readonly children: React.ReactNode }) {

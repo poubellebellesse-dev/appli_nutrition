@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 5
+export const USER_SCHEMA_VERSION = 6
 
 export interface Migration {
   readonly version: number
@@ -401,12 +401,42 @@ const V5_STATEMENTS: readonly string[] = [
      CHECK (bandeau_stockage_masque IN (0,1))`,
 ]
 
+/**
+ * v6 — l'heure des repas, et l'interrupteur des rappels de préparation.
+ *
+ * ⚠️ AUCUNE HEURE N'ÉTAIT STOCKÉE NULLE PART. `user_rythme` sait combien de repas par jour et
+ * combien de temps on a pour cuisiner, jamais À QUELLE HEURE on mange. Un rappel « il est temps de
+ * lancer la cuisson » ne peut pas se calculer sans elle.
+ *
+ * Table fille plutôt que quatre colonnes sur `user_rythme` : le créneau est une clé, et une table
+ * reste interrogeable en SQL là où quatre colonnes obligeraient à les nommer une par une à chaque
+ * lecture. Même raison que `user_display_occasion`.
+ *
+ * `heure_min` = minutes depuis minuit (19 h 30 → 1170). Pas un `TEXT` « 19:30 » : une chaîne
+ * demanderait d'être analysée à chaque lecture, et une chaîne malformée passerait le CHECK.
+ *
+ * ⚠️ `rappels_actifs` À 0 PAR DÉFAUT. Une notification qu'on n'a pas demandée est une intrusion —
+ * et sur une application dont l'argument est « elle ne vous harcèle pas », le défaut ne peut pas
+ * être autre chose. Le réglage vit dans `user_display` avec les autres opt-in d'interface : comme
+ * eux, il ne change AUCUNE suggestion.
+ */
+const V6_STATEMENTS: readonly string[] = [
+  `CREATE TABLE user_meal_time (
+     creneau TEXT PRIMARY KEY
+       CHECK (creneau IN ('petit_dejeuner','dejeuner','gouter','diner')),
+     heure_min INTEGER NOT NULL CHECK (heure_min BETWEEN 0 AND 1439)
+   )`,
+  `ALTER TABLE user_display
+     ADD COLUMN rappels_actifs INTEGER NOT NULL DEFAULT 0 CHECK (rappels_actifs IN (0,1))`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
   { version: 3, statements: V3_STATEMENTS },
   { version: 4, statements: V4_STATEMENTS },
   { version: 5, statements: V5_STATEMENTS },
+  { version: 6, statements: V6_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

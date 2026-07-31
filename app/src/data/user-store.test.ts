@@ -746,6 +746,7 @@ describe('user-store — réglages d’affichage (v4)', () => {
       gestesBalayage: false,
       alertesDiscretes: false,
       bandeauStockageMasque: false,
+      rappelsActifs: false,
     })
   })
 
@@ -755,6 +756,7 @@ describe('user-store — réglages d’affichage (v4)', () => {
       gestesBalayage: true,
       alertesDiscretes: true,
       bandeauStockageMasque: true,
+      rappelsActifs: true,
     }
     writeDisplay(db, tout)
     expect(readDisplay(db)).toEqual(tout)
@@ -776,6 +778,7 @@ describe('user-store — réglages d’affichage (v4)', () => {
       gestesBalayage: false,
       alertesDiscretes: false,
       bandeauStockageMasque: true,
+      rappelsActifs: false,
     })
     writeDisplay(db, { ...readDisplay(db), gestesBalayage: true })
     expect(readDisplay(db).afficherMacros).toBe(true)
