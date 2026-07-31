@@ -20,6 +20,7 @@ import { Frigo } from './screens/frigo.js'
 import { Savoir } from './screens/savoir.js'
 import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
 import { Parametres } from './screens/parametres.js'
+import { EditeurRecette } from './screens/editeur-recette.js'
 import { Navigation } from './navigation.js'
 import { chargerSocle } from './socle.js'
 import { aConsenti, readDisplay, writeDisplay } from '../data/user-store.js'
@@ -68,6 +69,7 @@ function Ecran({ onglet, sousVue }: { readonly onglet: Onglet; readonly sousVue:
   if (sousVue.type === 'recette') return <DetailRecette recetteId={sousVue.id} />
   if (sousVue.type === 'frigo') return <Frigo />
   if (sousVue.type === 'parametres') return <Parametres />
+  if (sousVue.type === 'editeur') return <EditeurRecette baseId={sousVue.baseId} />
   if (onglet === 'aujourdhui') return <Aujourdhui />
   if (onglet === 'semaine') return <Semaine />
   if (onglet === 'courses') return <Courses />

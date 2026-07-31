@@ -25,41 +25,21 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Catalog, DietCode, Food, FoodId, Recipe } from '../app/src/engine/domain/index.js'
 import { resolveAnimalOrigin } from '../app/src/engine/domain/index.js'
-import { DIET_CHAIN } from '../app/src/engine/selection/index.js'
+import { DIET_CHAIN, regimeExigePar } from '../app/src/engine/selection/index.js'
 import { loadCatalog } from '../app/src/data/catalog-loader-node.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..')
 const BUILD_SCRIPT = path.join(REPO_ROOT, 'catalog', 'build.mjs')
 
-/**
- * Le régime le plus RESTRICTIF qu'un aliment autorise encore, déduit de son ORIGINE ANIMALE.
- *
- * ⚠️ NE PLUS DEVINER DEPUIS `Food.groupe`. La première version de cette règle le faisait et se
- * trompait : le beurre vit en « matières grasses » et le miel en « produits sucrés » — aucun groupe
- * animal. Elle déclarait « Radis au beurre » végétalienne et rapportait 20 faux positifs.
- * `resolveAnimalOrigin` remonte la chaîne `deriveDe` (beurre → lait entier → mammifère), donc un
- * dérivé ne peut plus passer à travers, quel que soit son rayon.
- *
- * La correspondance origine → régime est faite ICI et pas dans le domaine : `AnimalOrigin` est un
- * FAIT, `DietCode` une règle. Un futur filtre halal lira la même origine pour en tirer autre chose.
- */
-function exigenceDe(food: Food, foods: ReadonlyMap<FoodId, Food>): DietCode {
-  switch (resolveAnimalOrigin(food, foods)) {
-    case 'mammifere':
-    case 'volaille':
-      // La CHAIR impose omnivore ; le lait et l'œuf s'arrêtent à végétarien. Le groupe tranche, il
-      // est fiable pour ça : ce qui vient d'un mammifère sans être en « viandes » est un produit.
-      return food.groupe === 'viandes' ? 'omnivore' : 'vegetarien'
-    case 'poisson':
-    case 'fruit_de_mer':
-      return 'pescetarien'
-    case 'insecte':
-      return 'vegetarien' // le miel
-    case null:
-      return 'vegetalien'
-  }
-}
+// ⚠️ LA RÈGLE ORIGINE → RÉGIME A ÉTÉ PROMUE EN CODE DE PRODUCTION (, dans
+// engine/selection/regime.ts). Elle ne vivait ici que comme oracle de test — ce qui suffisait tant
+// que seul le catalogue, étiqueté à la main, existait. Les recettes composées par l'utilisateur
+// n'ont personne pour les étiqueter : sans dérivation en production, un plat au poisson serait
+// proposé à un végétarien.
+//
+// Ce fichier garde tout son sens : il confronte les étiquettes ÉCRITES À LA MAIN dans les sources
+// du catalogue à la règle. Il ne teste pas la règle contre elle-même.
 
 const rang = (diet: string) => DIET_CHAIN.indexOf(diet as DietCode)
 
@@ -70,7 +50,7 @@ function exigenceRecette(recipe: Recipe, catalog: Catalog): { diet: DietCode; co
   for (const ingredient of recipe.ingredients) {
     const food = catalog.foods.get(ingredient.foodId)
     if (food === undefined) continue
-    const exigence = exigenceDe(food, catalog.foods)
+    const exigence = regimeExigePar(food, catalog.foods)
     if (rang(exigence) > rang(diet)) {
       diet = exigence
       coupable = food.nom

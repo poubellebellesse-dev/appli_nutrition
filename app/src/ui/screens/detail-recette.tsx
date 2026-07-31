@@ -27,7 +27,8 @@ import type {
 } from '../../engine/domain/index.js'
 import { readDisplay, readUserState, setFavorite, writeDisplay } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
-import { hashDe } from '../router.js'
+import { hashDe, hashDeLEditeur } from '../router.js'
+import { estRecettePerso } from '../../data/user-recipe.js'
 import { quantiteAffichee } from '../quantites.js'
 import { origineDeCuisine } from '../drapeaux.js'
 
@@ -187,6 +188,17 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
         ← Toutes les recettes
       </a>
 
+      {/* ⚠️ §4.3 ARCHITECTURE l'impose : une recette utilisateur est « contenu AUTONOME, hors
+          garanties du catalogue source : toujours affiché non vérifié ». Les valeurs nutritionnelles
+          sont bien calculées depuis CIQUAL — mais les quantités, les temps et les étapes viennent de
+          l'utilisateur, et rien ne les a relus. Le dire est la condition pour les afficher. */}
+      {estRecettePerso(recetteId) && (
+        <p className="mt-2 rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 py-3 text-[0.9rem] leading-relaxed text-texte-doux">
+          Votre recette. Les apports sont calculés depuis vos ingrédients ; le reste n'a pas été
+          vérifié.
+        </p>
+      )}
+
       <header className="mt-2 flex items-start justify-between gap-4">
         <h1 className="text-[2.2rem] leading-tight text-texte">{recette.nom}</h1>
         <button
@@ -202,6 +214,18 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
           {vue.favori ? '★' : '☆'}
         </button>
       </header>
+
+      {/* « On change 2-3 ingrédients, à peu près comme celui de base ». Absent sur une recette déjà
+          personnelle : adapter une adaptation empilerait des héritages dont plus rien ne suit la
+          trace, et l'éditeur cherche sa base dans le catalogue SOURCE. */}
+      {!estRecettePerso(recetteId) && (
+        <a
+          href={hashDeLEditeur(recetteId)}
+          className="mt-4 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+        >
+          Adapter cette recette à ma façon
+        </a>
+      )}
 
       <p className="mt-2 text-[1.05rem] leading-relaxed text-texte-doux">{recette.description}</p>
       <p className="mt-3 text-[1rem] text-attenue">

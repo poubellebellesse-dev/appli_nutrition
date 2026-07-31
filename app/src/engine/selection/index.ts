@@ -147,7 +147,7 @@ export const LAYER_DESCRIPTORS: readonly LayerDescriptor[] = [
 
 export { allergenLayer } from './allergenes.js'
 export type { AllergenLayerConfig } from './allergenes.js'
-export { DIET_CHAIN, dietLayer } from './regime.js'
+export { DIET_CHAIN, dietLayer, regimeExigePar, regimeExigeParIngredients } from './regime.js'
 export type { DietLayerConfig } from './regime.js'
 export { personalExclusionLayer } from './exclusions.js'
 export type { FoodExclusionLayerConfig } from './exclusions.js'

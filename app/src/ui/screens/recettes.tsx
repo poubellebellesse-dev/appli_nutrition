@@ -38,7 +38,7 @@ import {
 } from '../filtres-recettes.js'
 import { readUserState, setFavorite } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
-import { hashDeRecette, hashDuFrigo } from '../router.js'
+import { hashDeLEditeur, hashDeRecette, hashDuFrigo } from '../router.js'
 import { origineDeCuisine } from '../drapeaux.js'
 
 const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
@@ -187,6 +187,15 @@ export function Recettes() {
         className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte no-underline"
       >
         Vider le frigo — partir de ce que j'ai
+      </a>
+
+      {/* Composer sa propre recette. Bloc d'entrée distinct, comme le frigo : c'est un autre
+          chemin — on n'y cherche pas une recette, on en fabrique une. */}
+      <a
+        href={hashDeLEditeur(null)}
+        className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte no-underline"
+      >
+        Composer ma propre recette
       </a>
 
       {/* « Mes favoris » en tête, à UN TAP (§4.4). */}

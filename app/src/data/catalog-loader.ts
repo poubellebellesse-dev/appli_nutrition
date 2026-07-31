@@ -38,6 +38,15 @@ import type {
   Catalog,
   CatalogIndexes,
   DietCode,
+  EvidenceCategorie,
+  EvidenceCibleType,
+  EvidenceLink,
+  EvidencePosition,
+  EvidenceSheet,
+  EvidenceSheetId,
+  EvidenceSource,
+  NiveauPreuve,
+  TypeEtude,
   FacetteKind,
   Food,
   FoodAllergen,
@@ -160,6 +169,53 @@ interface LexiconRow {
   readonly code: string
   readonly terme: string
   readonly definition: string
+}
+
+interface EvidenceSheetRow {
+  readonly id: string
+  readonly code: string
+  readonly titre: string
+  readonly categorie: string
+  readonly niveau_preuve: string
+  readonly date_revue: string
+  readonly resume_vulgarise: string
+}
+
+interface EvidenceSourceRow {
+  readonly sheet_id: string
+  readonly code: string
+  readonly titre_etude: string
+  readonly auteurs: string | null
+  readonly annee: number
+  readonly revue: string
+  readonly doi: string | null
+  readonly url: string
+  readonly type_etude: string
+  readonly effectif: string | null
+  readonly financement: string | null
+  readonly consulte_le: string
+}
+
+interface EvidencePositionRow {
+  readonly sheet_id: string
+  readonly ordre: number
+  readonly code: string
+  readonly niveau_preuve: string
+  readonly porte_par: string
+  readonly affirmation: string
+  readonly detail: string
+}
+
+interface EvidencePositionSourceRow {
+  readonly sheet_id: string
+  readonly position_ordre: number
+  readonly source_code: string
+}
+
+interface EvidenceLinkRow {
+  readonly sheet_id: string
+  readonly cible_type: string
+  readonly cible_id: string
 }
 
 // --- Utilitaires de mapping -------------------------------------------------------------------
@@ -299,6 +355,84 @@ function loadLexicon(db: SqlSource): Map<LexiconEntryId, LexiconEntry> {
   return map
 }
 
+/**
+ * Fiches scientifiques de « Comprendre » (§8.2 ARCHITECTURE, §4.7 DESIGN).
+ *
+ * Cinq tables recomposées en un objet par fiche. Les positions sont rendues DANS L'ORDRE de la
+ * colonne `ordre` : cet ordre est un choix éditorial (le socle de consensus d'abord, la lecture
+ * croisée en dernier), pas une commodité d'affichage — le trier autrement casserait l'argumentation.
+ *
+ * ⚠️ Une position sans source ne peut pas exister : le build échoue avant d'en écrire une (voir
+ * `validateEvidence` dans catalog/build.mjs). Ce loader ne re-vérifie donc pas la contrainte, il
+ * s'appuie dessus.
+ */
+function loadEvidence(db: SqlSource): Map<EvidenceSheetId, EvidenceSheet> {
+  const sheetRows = queryAll<EvidenceSheetRow>(db, 'SELECT * FROM evidence_sheet ORDER BY code')
+  const sourcesBySheet = groupByKey(
+    queryAll<EvidenceSourceRow>(db, 'SELECT * FROM evidence_source'),
+    (r) => r.sheet_id
+  )
+  const positionsBySheet = groupByKey(
+    queryAll<EvidencePositionRow>(db, 'SELECT * FROM evidence_position ORDER BY sheet_id, ordre'),
+    (r) => r.sheet_id
+  )
+  const linksBySheet = groupByKey(queryAll<EvidenceLinkRow>(db, 'SELECT * FROM evidence_link'), (r) => r.sheet_id)
+  // La jonction porte une clé COMPOSITE (fiche + ordre de position) : on l'aplatit en une seule
+  // chaîne pour réutiliser `groupByKey`, qui indexe par string.
+  const refsByPosition = groupByKey(
+    queryAll<EvidencePositionSourceRow>(db, 'SELECT * FROM evidence_position_source'),
+    (r) => `${r.sheet_id}#${r.position_ordre}`
+  )
+
+  const map = new Map<EvidenceSheetId, EvidenceSheet>()
+  for (const row of sheetRows) {
+    const id = row.id as EvidenceSheetId
+
+    const sources: EvidenceSource[] = (sourcesBySheet.get(row.id) ?? []).map((s) => ({
+      code: s.code,
+      titreEtude: s.titre_etude,
+      auteurs: s.auteurs,
+      annee: s.annee,
+      revue: s.revue,
+      doi: s.doi,
+      url: s.url,
+      // Sûr : la colonne porte un CHECK qui n'admet que les six types du vocabulaire.
+      typeEtude: s.type_etude as TypeEtude,
+      effectif: s.effectif,
+      financement: s.financement,
+      consulteLe: s.consulte_le,
+    }))
+
+    const positions: EvidencePosition[] = (positionsBySheet.get(row.id) ?? []).map((p) => ({
+      code: p.code,
+      niveauPreuve: p.niveau_preuve as NiveauPreuve,
+      portePar: p.porte_par,
+      affirmation: p.affirmation,
+      detail: p.detail,
+      sources: (refsByPosition.get(`${p.sheet_id}#${p.ordre}`) ?? []).map((r) => r.source_code),
+    }))
+
+    const liens: EvidenceLink[] = (linksBySheet.get(row.id) ?? []).map((l) => ({
+      cibleType: l.cible_type as EvidenceCibleType,
+      cibleId: l.cible_id,
+    }))
+
+    map.set(id, {
+      id,
+      code: row.code,
+      titre: row.titre,
+      categorie: row.categorie as EvidenceCategorie,
+      niveauPreuve: row.niveau_preuve as NiveauPreuve,
+      dateRevue: row.date_revue,
+      resumeVulgarise: row.resume_vulgarise,
+      positions,
+      sources,
+      liens,
+    })
+  }
+  return map
+}
+
 function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
   const recipeRows = queryAll<RecipeRow>(db, 'SELECT * FROM recipe')
   const ingredientsByRecipe = groupByKey(queryAll<RecipeIngredientRow>(db, 'SELECT * FROM recipe_ingredient'), (r) => r.recipe_id)
@@ -363,6 +497,35 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
 
 // --- Index (§9.1 ENGINE.md) ---------------------------------------------------------------------
 
+/**
+ * Ajoute des recettes au catalogue et RECONSTRUIT ses index.
+ *
+ * ⚠️ LA RECONSTRUCTION N'EST PAS UNE PRÉCAUTION, C'EST LA CONDITION DE SÛRETÉ. `attachDerivedIndexes`
+ * (appelé par `createEngine`) ne recalcule QUE la famille nutriments/signatures : il recopie
+ * `recipesBySlot`, `recipesByDiet` et `recipesByAllergen` tels quels. Se contenter d'ajouter une
+ * recette à la map produirait donc deux défauts silencieux :
+ *   1. absente de `recipesBySlot`, elle ne serait JAMAIS candidate — `runSuggestMeals` part de cet
+ *      index. La recette existerait, sans jamais être proposée, sans message ;
+ *   2. absente de `recipesByAllergen`, elle échapperait à l'index sur lequel s'appuie l'exclusion
+ *      des allergènes. Une recette contenant un allergène déclaré pourrait passer.
+ *
+ * Le second est le vrai danger : le garde-fou le plus critique du moteur, contourné par une recette
+ * que l'utilisateur a lui-même composée. D'où cette fonction, et le test qui l'accompagne.
+ *
+ * Rend le catalogue INCHANGÉ si la liste est vide — le cas courant, et il ne coûte rien.
+ */
+export function avecRecettesSupplementaires(
+  source: Catalog,
+  supplementaires: readonly Recipe[]
+): Catalog {
+  if (supplementaires.length === 0) return source
+  const recipes = new Map(source.recipes)
+  // Une recette utilisateur portant l'identifiant d'une recette du catalogue l'emporterait. Le
+  // préfixe `perso:` rend le cas impossible en pratique ; l'ordre est explicite au cas où.
+  for (const recette of supplementaires) recipes.set(recette.id, recette)
+  return { ...source, recipes, indexes: buildIndexes(recipes, source.foods) }
+}
+
 function buildIndexes(recipes: ReadonlyMap<RecipeId, Recipe>, foods: ReadonlyMap<FoodId, Food>): CatalogIndexes {
   const recipesBySlot = new Map<MealSlot, Set<RecipeId>>()
   const recipesByDiet = new Map<DietCode, Set<RecipeId>>()
@@ -421,6 +584,7 @@ export function loadCatalogFrom(db: SqlSource): Catalog {
     allergens: loadAllergens(db),
     lexicon: loadLexicon(db),
     tips: loadTips(db),
+    evidence: loadEvidence(db),
     topics: new Map(),
     substitutions: new Map(),
     indexes: buildIndexes(recipes, foods),

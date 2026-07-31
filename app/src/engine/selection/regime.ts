@@ -26,7 +26,8 @@
 //
 // Dépendances autorisées : domain/, ./index.js (contrat local) — §2/§3 ENGINE.
 
-import type { DietCode, Recipe, RecipeId, RejectionEntry } from '../domain/index.js'
+import type { DietCode, Food, FoodId, Recipe, RecipeId, RejectionEntry } from '../domain/index.js'
+import { resolveAnimalOrigin } from '../domain/index.js'
 import type { ExclusionLayerResult, SelectionLayer } from './index.js'
 
 /**
@@ -50,6 +51,74 @@ import type { ExclusionLayerResult, SelectionLayer } from './index.js'
  * inconnu n'est pas une erreur, il est simplement traité en égalité stricte.
  */
 export const DIET_CHAIN: readonly DietCode[] = ['vegetalien', 'vegetarien', 'pescetarien', 'omnivore']
+
+/** Position dans la chaîne. `-1` pour un régime hors chaîne (`halal`, `sans_gluten`…). */
+function rangDansChaine(diet: DietCode): number {
+  return DIET_CHAIN.indexOf(diet)
+}
+
+/**
+ * Le régime le plus RESTRICTIF qu'un aliment autorise encore, déduit de son ORIGINE ANIMALE.
+ *
+ * ⚠️ NE PAS DEVINER DEPUIS `Food.groupe`. Une première version de cette règle le faisait et se
+ * trompait : le beurre vit en « matières grasses » et le miel en « produits sucrés » — aucun groupe
+ * animal. Elle déclarait « Radis au beurre » végétalienne, sur 20 recettes.
+ * `resolveAnimalOrigin` remonte la chaîne `deriveDe` (beurre → lait entier → mammifère), donc un
+ * dérivé ne peut plus passer à travers, quel que soit son rayon.
+ *
+ * La correspondance origine → régime est faite ICI et pas dans le domaine : `AnimalOrigin` est un
+ * FAIT, `DietCode` une règle. Un futur filtre halal lira la même origine pour en tirer autre chose.
+ */
+export function regimeExigePar(food: Food, foods: ReadonlyMap<FoodId, Food>): DietCode {
+  switch (resolveAnimalOrigin(food, foods)) {
+    case 'mammifere':
+    case 'volaille':
+      // La CHAIR impose omnivore ; le lait et l'œuf s'arrêtent à végétarien. Le groupe tranche, il
+      // est fiable pour ça : ce qui vient d'un mammifère sans être en « viandes » est un produit.
+      return food.groupe === 'viandes' ? 'omnivore' : 'vegetarien'
+    case 'poisson':
+    case 'fruit_de_mer':
+      return 'pescetarien'
+    case 'insecte':
+      return 'vegetarien' // le miel
+    case null:
+      return 'vegetalien'
+  }
+}
+
+/**
+ * Le régime qu'une liste d'ingrédients impose — le plus restrictif exigé par l'un d'eux.
+ *
+ * ⚠️ CETTE RÈGLE VIVAIT UNIQUEMENT DANS UN TEST (`tests/regime-coherence.test.ts`), comme oracle
+ * comparé aux étiquettes écrites à la main dans les fichiers sources du catalogue. Elle devient du
+ * code de production parce qu'une recette composée PAR L'UTILISATEUR n'a personne pour l'étiqueter :
+ * sans dérivation, un plat qu'il compose avec du poisson serait proposé à un végétarien. Le test
+ * garde tout son sens — il confronte désormais les étiquettes rédigées à la main à CETTE fonction.
+ *
+ * Un `foodId` inconnu du catalogue est IGNORÉ, jamais une erreur : un catalogue mis à jour peut
+ * avoir retiré un aliment auquel une recette utilisateur fait encore référence (même raison que
+ * l'absence de clé étrangère entre `user.db` et `catalog.db`, voir `user-schema.ts`).
+ *
+ * ⚠️ SANS INGRÉDIENT CONNU, rend `omnivore` — le plus PERMISSIF, donc le plus restrictif à l'usage :
+ * la recette n'apparaîtra pour aucun régime déclaré. Rendre `vegetalien` (le neutre arithmétique de
+ * la boucle) l'aurait au contraire proposée à tout le monde, y compris à un végétalien, sur la foi
+ * d'une liste qu'on n'a pas su lire. En cas d'ignorance, on n'affirme rien.
+ */
+export function regimeExigeParIngredients(
+  foodIds: readonly FoodId[],
+  foods: ReadonlyMap<FoodId, Food>
+): DietCode {
+  let exige: DietCode = 'vegetalien'
+  let connu = false
+  for (const foodId of foodIds) {
+    const food = foods.get(foodId)
+    if (food === undefined) continue
+    connu = true
+    const candidat = regimeExigePar(food, foods)
+    if (rangDansChaine(candidat) > rangDansChaine(exige)) exige = candidat
+  }
+  return connu ? exige : 'omnivore'
+}
 
 /**
  * Une recette étiquetée `recipeDiet` convient-elle à qui demande `requested` ?

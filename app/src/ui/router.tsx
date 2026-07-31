@@ -37,6 +37,8 @@ export type SousVue =
   | { readonly type: 'recette'; readonly id: string }
   | { readonly type: 'frigo' }
   | { readonly type: 'parametres' }
+  /** Éditeur de recette. `baseId` non nul = on adapte une recette existante. */
+  | { readonly type: 'editeur'; readonly baseId: string | null }
 
 /**
  * Où l'on est.
@@ -73,6 +75,17 @@ const ONGLET_PAR_HASH: ReadonlyMap<string, Onglet> = new Map([
 const PREFIXE_RECETTE = '#/recette/'
 
 /**
+ * L'éditeur de recette. Deux formes : `#/composer` (partir de zéro) et `#/composer/<id>` (adapter).
+ *
+ * ⚠️ SECONDE ROUTE PARAMÉTRÉE DU PROJET. L'en-tête de ce fichier annonçait qu'une deuxième route à
+ * paramètre — ou une route imbriquée — rouvrirait la question d'une bibliothèque de routage. Elle
+ * est là. La réponse reste NON pour l'instant : le motif est identique à celui de la fiche recette,
+ * il coûte les six lignes ci-dessous, et `react-router-dom` apporterait son écosystème pour deux
+ * cas. À rouvrir vraiment au troisième, ou dès qu'une route en imbriquera une autre.
+ */
+const PREFIXE_EDITEUR = '#/composer'
+
+/**
  * « Vider le frigo » N'EST PAS UN ONGLET. §4.5 DESIGN et la maquette le disent accessible « depuis
  * Aujourd'hui et Recettes » ; la barre reste à cinq onglets stables v1 → v2 (§2 DESIGN). Une barre
  * qui gagnerait un sixième onglet changerait de forme sous les doigts de l'utilisateur.
@@ -105,6 +118,19 @@ function souscrire(auChangement: () => void): () => void {
 export function routeDepuisHash(hash: string): Route {
   if (hash === HASH_FRIGO) return { onglet: 'recettes', sousVue: { type: 'frigo' } }
   if (hash === HASH_PARAMETRES) return { onglet: 'aujourdhui', sousVue: { type: 'parametres' } }
+
+  if (hash === PREFIXE_EDITEUR || hash.startsWith(`${PREFIXE_EDITEUR}/`)) {
+    const brut = hash.slice(PREFIXE_EDITEUR.length + 1)
+    // Même précaution que pour la fiche : `decodeURIComponent` lève sur un `%` isolé, qu'un signet
+    // tronqué produit facilement. Un identifiant illisible ouvre une création vide, jamais un plantage.
+    let baseId: string | null = null
+    try {
+      baseId = brut === '' ? null : decodeURIComponent(brut)
+    } catch {
+      baseId = null
+    }
+    return { onglet: 'recettes', sousVue: { type: 'editeur', baseId } }
+  }
 
   if (hash.startsWith(PREFIXE_RECETTE)) {
     // `decodeURIComponent` peut lever sur un `%` isolé, qu'un signet tronqué produit facilement.
@@ -162,6 +188,11 @@ export function hashDuFrigo(): string {
 
 export function hashDesParametres(): string {
   return HASH_PARAMETRES
+}
+
+/** `null` = créer de zéro ; un identifiant = adapter cette recette. */
+export function hashDeLEditeur(baseId: string | null): string {
+  return baseId === null ? PREFIXE_EDITEUR : `${PREFIXE_EDITEUR}/${encodeURIComponent(baseId)}`
 }
 
 export function naviguer(onglet: Onglet): void {

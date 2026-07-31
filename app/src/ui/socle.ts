@@ -9,6 +9,8 @@ import type { Catalog, MealSlot, UserProfile } from '../engine/domain/index.js'
 import { createEngine, type Engine } from '../engine/api/index.js'
 import type { UserDb } from '../data/user-db.js'
 import { readProfile, writeProfile } from '../data/user-store.js'
+import { avecRecettesSupplementaires } from '../data/catalog-loader.js'
+import { readUserRecipes, versRecette } from '../data/user-recipe.js'
 import { chargerCatalogue } from './catalog-source.js'
 import { ouvrirUserDb, type Stockage } from './user-source.js'
 
@@ -40,7 +42,15 @@ export const LIBELLE_CRENEAU: Readonly<Record<MealSlot, string>> = {
 }
 
 export interface Socle {
+  /** Catalogue livré + recettes de l'utilisateur. C'est CELUI-CI que le moteur consomme. */
   readonly catalogue: Catalog
+  /**
+   * Le catalogue livré, SANS les recettes de l'utilisateur.
+   *
+   * Conservé pour pouvoir refusionner après une écriture sans relire `catalog.db` — et pour que
+   * « les recettes du catalogue » et « les miennes » restent distinguables partout où ça compte.
+   */
+  readonly catalogueSource: Catalog
   readonly moteur: Engine
   readonly db: UserDb
   /** `'memoire'` = OPFS indisponible : tout est perdu au rechargement. À dire clairement. */
@@ -61,15 +71,47 @@ export function chargerSocle(): Promise<Socle> {
 }
 
 async function chargerVraiment(): Promise<Socle> {
-  const [catalogue, session] = await Promise.all([chargerCatalogue(), ouvrirUserDb()])
+  const [catalogueSource, session] = await Promise.all([chargerCatalogue(), ouvrirUserDb()])
+  return assembler(catalogueSource, session.db, session.stockage, session.persistant)
+}
+
+/**
+ * Fusionne les recettes de l'utilisateur dans le catalogue, puis construit le moteur dessus.
+ *
+ * ⚠️ LA FUSION SE FAIT ICI, AU NIVEAU DU CATALOGUE, et c'est la décision qui rend la fonctionnalité
+ * tenable. Le moteur ne connaît qu'un `Catalog` : une recette qui y figure entre d'elle-même dans
+ * les suggestions, la semaine, les courses, le frigo et la recherche. L'alternative — traiter les
+ * recettes personnelles écran par écran — aurait demandé un cas particulier par fonctionnalité, et
+ * on en aurait oublié un. Le premier oublié aurait été un garde-fou.
+ */
+function assembler(
+  catalogueSource: Catalog,
+  db: UserDb,
+  stockage: Stockage,
+  persistant: boolean
+): Socle {
+  const perso = readUserRecipes(db).map((stockee) => versRecette(stockee, catalogueSource.foods))
+  const catalogue = avecRecettesSupplementaires(catalogueSource, perso)
   // `createEngine` calcule tous les index dérivés (§6.5 précision 8) — une seule fois, ici.
-  return {
-    catalogue,
-    moteur: createEngine(catalogue),
-    db: session.db,
-    stockage: session.stockage,
-    persistant: session.persistant,
-  }
+  return { catalogue, catalogueSource, moteur: createEngine(catalogue), db, stockage, persistant }
+}
+
+/**
+ * Reconstruit catalogue et moteur après une écriture dans `user_recipe`.
+ *
+ * ⚠️ NE ROUVRE PAS `user.db`, et ce n'est pas un détail : deux instances de la base en mémoire
+ * divergeraient, la dernière écrite sur OPFS écrasant l'autre (voir l'en-tête de ce fichier et
+ * `user-source.ts`). On repart du catalogue SOURCE conservé et de la session déjà ouverte.
+ *
+ * Reconstruire tout le moteur pour une recette est volontaire : les index dérivés et les profils de
+ * similarité se calculent en bloc, et l'ajout d'une recette est un geste rare. Un cache incrémental
+ * serait une source de divergence pour un gain invisible.
+ */
+export async function rebatirCatalogue(): Promise<Socle> {
+  const actuel = await chargerSocle()
+  const suivant = assembler(actuel.catalogueSource, actuel.db, actuel.stockage, actuel.persistant)
+  cache = Promise.resolve(suivant)
+  return suivant
 }
 
 /** Aujourd'hui en ISO. L'horloge est fournie par l'UI et INJECTÉE — jamais lue dans engine/ (§3). */
