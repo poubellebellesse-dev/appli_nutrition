@@ -246,8 +246,24 @@ export function Courses() {
   return (
     <section>
       <h1 className="text-[2.1rem] text-texte">Mes courses</h1>
-      <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
-        {plageDuPlan(vue.liste)} · {faits} sur {total} cochés
+      {/* La semaine d'abord, le compteur EN DESSOUS et sur sa propre ligne : accolés par un point
+          médian, on lisait « du 3 au 9 août · 12 sur 40 » comme une seule information. */}
+      <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">{plageDuPlan(vue.liste)}</p>
+      <p className="mt-1 text-[0.95rem] leading-relaxed text-attenue">
+        {faits} sur {total} cochés
+      </p>
+
+      {/* ⚠️ LES RESTES N'ÉTAIENT NOMMÉS NULLE PART ICI, alors que cette liste est calculée pour en
+          produire : les quantités ne sont PAS divisées par le nombre de convives, exprès (voir
+          l'en-tête du fichier), et c'est `planLeftovers` qui place ensuite le surplus sur un repas
+          de la semaine. On achetait donc pour des restes que rien n'annonçait. */}
+      <p className="mt-3 rounded-[--radius-carte] border border-bordure bg-surface p-3 text-[0.9rem] leading-relaxed text-texte-doux">
+        Les quantités sont celles des recettes entières. Ce qui dépasse d'un repas est replacé sur un
+        autre jour —{' '}
+        <a href={hashDe('semaine')} className="text-accent-texte">
+          visible dans votre semaine
+        </a>{' '}
+        sous « Reste du plat de la veille ».
       </p>
 
       <fieldset className="mt-5">

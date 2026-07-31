@@ -14,10 +14,8 @@ import {
   chargerSocle,
   profilCourant,
 } from '../socle.js'
-import { hashDeRecette } from '../router.js'
-
-/** L'écran ne couvre que le dîner — « Ce soir ». */
-const CRENEAU: MealSlot = 'diner'
+import { hashDeRecette, hashDuFrigo } from '../router.js'
+import { REPAS_PAR_DEFAUT, TITRE_CRENEAU, creneauDuMoment, creneauxDuRythme } from '../creneau.js'
 
 /**
  * Assemble la requête moteur à partir de l'état persisté et du contexte d'écran.
@@ -40,6 +38,7 @@ function construireRequete(
   etat: StoredUserState,
   profile: UserProfile,
   date: string,
+  creneau: MealSlot,
   tempsDisponibleMin: Minutes | null
 ): SuggestionRequest {
   return {
@@ -47,7 +46,7 @@ function construireRequete(
     constraints: etat.constraints,
     context: {
       date,
-      creneau: CRENEAU,
+      creneau,
       envie: null,
       tempsDisponibleMin,
       // Exigence ponctuelle « je veux ça » : par construction jamais persistée (§6.5 ter ENGINE).
@@ -67,6 +66,8 @@ interface Vue {
   readonly suggestions: readonly ScoredSuggestion[]
   readonly nomDe: (id: string) => string
   readonly nbRetenus: number
+  /** Le repas regardé, déduit de l'heure locale et du rythme déclaré. */
+  readonly creneau: MealSlot
 }
 
 type Etat =
@@ -85,14 +86,29 @@ async function calculerVue(): Promise<Vue> {
   // la remplit enfin. Absent (parcours sauté) → `null`, soit « pas de limite ».
   const rythme = readRythme(socle.db)
   const minutes = estWeekend(date) ? rythme?.tempsWeekendMin : rythme?.tempsSemaineMin
+
+  // ⚠️ HEURE LOCALE, contrairement aux dates du plan qui sont en UTC — voir l'en-tête de `creneau.ts`.
+  // Le rythme absent (parcours sauté) retombe sur le défaut, jamais sur une liste vide.
+  const creneau = creneauDuMoment(
+    new Date().getHours(),
+    creneauxDuRythme(rythme?.repasParJour ?? REPAS_PAR_DEFAUT)
+  )
+
   const resultat = socle.moteur.suggestMeals(
-    construireRequete(etat, profil, date, minutes === undefined || minutes === null ? null : min(minutes))
+    construireRequete(
+      etat,
+      profil,
+      date,
+      creneau,
+      minutes === undefined || minutes === null ? null : min(minutes)
+    )
   )
 
   return {
     suggestions: resultat.suggestions,
     nomDe: (id) => socle.catalogue.recipes.get(id as never)?.nom ?? id,
     nbRetenus: etat.history.entries.length,
+    creneau,
   }
 }
 
@@ -125,13 +141,15 @@ export function Aujourdhui() {
    * été retenu », pas « voici ce que j'ai mangé ».
    */
   const retenir = useCallback(
-    (recipeId: string) => {
+    (recipeId: string, creneau: MealSlot) => {
       chargerSocle()
         .then((socle) => {
+          // ⚠️ LE CRÉNEAU VIENT DE LA VUE, pas d'une relecture de l'horloge. Un plat retenu à 13 h 59
+          // doit s'enregistrer sur le déjeuner qu'on regardait, même si l'écriture aboutit à 14 h 01.
           recordMeal(socle.db, {
             recipeId: recipeId as never,
             date: aujourdhuiIso(),
-            creneau: CRENEAU,
+            creneau,
             origine: 'choisi',
           })
           rafraichir()
@@ -158,12 +176,21 @@ export function Aujourdhui() {
   const { vue } = etat
   return (
     <section>
-      <h1 className="text-[2.1rem] text-texte">Ce soir</h1>
+      <h1 className="text-[2.1rem] text-texte">{TITRE_CRENEAU[vue.creneau]}</h1>
       <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
         {vue.suggestions.length} suggestions, classées et diversifiées.
         {vue.nbRetenus > 0 &&
           ` ${vue.nbRetenus} plat${vue.nbRetenus > 1 ? 's' : ''} retenu${vue.nbRetenus > 1 ? 's' : ''} ces ${FENETRE_HISTORIQUE_JOURS} derniers jours.`}
       </p>
+
+      {/* §4.5 DESIGN veut « Vider le frigo » accessible « depuis Aujourd'hui et Recettes ». Le
+          routeur le documentait déjà ; seule l'entrée depuis Recettes existait. */}
+      <a
+        href={hashDuFrigo()}
+        className="mt-4 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+      >
+        Vider le frigo — partir de ce que j'ai
+      </a>
 
       <ul className="mt-6 space-y-3">
         {vue.suggestions.map((suggestion) => (
@@ -190,7 +217,7 @@ export function Aujourdhui() {
                 grandir avec la police système, pas rester figée. */}
             <button
               type="button"
-              onClick={() => retenir(suggestion.recipeId)}
+              onClick={() => retenir(suggestion.recipeId, vue.creneau)}
               className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux hover:bg-accent-doux"
             >
               J'ai choisi ce plat

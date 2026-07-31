@@ -5,7 +5,14 @@
 // de plomberie React. La logique qui peut réellement se tromper est ici.
 
 import { describe, expect, it } from 'vitest'
-import { hashDe, hashDeRecette, hashDuFrigo, routeDepuisHash, type Onglet } from './router.js'
+import {
+  hashDe,
+  hashDeRecette,
+  hashDesParametres,
+  hashDuFrigo,
+  routeDepuisHash,
+  type Onglet,
+} from './router.js'
 
 const TOUS: readonly Onglet[] = ['aujourdhui', 'semaine', 'courses', 'recettes', 'savoir']
 
@@ -84,5 +91,27 @@ describe('ui/router — vider le frigo', () => {
     const fragments = [hashDe('recettes'), hashDeRecette('x'), hashDuFrigo()]
     expect(new Set(fragments).size).toBe(3)
     expect(new Set(fragments.map((f) => routeDepuisHash(f).sousVue.type)).size).toBe(3)
+  })
+})
+
+describe('ui/router — paramètres', () => {
+  it('n’est pas un sixième onglet non plus', () => {
+    // Même contrainte que le frigo : cinq onglets stables (§2 DESIGN). On y accède par l'engrenage
+    // de l'en-tête, pas par la barre.
+    expect(routeDepuisHash(hashDesParametres())).toEqual({
+      onglet: 'aujourdhui',
+      sousVue: { type: 'parametres' },
+    })
+  })
+
+  it('garde un onglet courant — la barre ne doit pas changer d’aspect sur cet écran', () => {
+    // Sans onglet désigné, la barre n'aurait plus d'élément actif sur Paramètres : elle changerait
+    // de forme d'un écran à l'autre, ce que « navigation permanente et visible » interdit.
+    expect(TOUS).toContain(routeDepuisHash(hashDesParametres()).onglet)
+  })
+
+  it('a un fragment distinct de toutes les autres destinations', () => {
+    const fragments = [...TOUS.map(hashDe), hashDuFrigo(), hashDeRecette('x'), hashDesParametres()]
+    expect(new Set(fragments).size).toBe(fragments.length)
   })
 })

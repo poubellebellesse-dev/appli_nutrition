@@ -34,20 +34,15 @@ import {
   profilCourant,
   type Socle,
 } from '../socle.js'
-import { hashDeRecette } from '../router.js'
+import { hashDeRecette, hashDuFrigo } from '../router.js'
+import { REPAS_PAR_DEFAUT, creneauxDuRythme } from '../creneau.js'
+import { readDisplay } from '../../data/user-store.js'
 
-/**
- * « Nombre de repas/jour réglable (1-3) » (§4.2). Le mapping est ici et nulle part ailleurs : quels
- * créneaux se cachent derrière « 2 repas » est une décision produit, pas un détail de rendu.
- */
-const CRENEAUX_PAR_NOMBRE: Readonly<Record<number, readonly MealSlot[]>> = {
-  1: ['diner'],
-  2: ['dejeuner', 'diner'],
-  3: ['petit_dejeuner', 'dejeuner', 'diner'],
-}
+// Le mapping « nombre de repas → créneaux » a été remonté dans `ui/creneau.ts` quand l'écran
+// Aujourd'hui en a eu besoin à son tour : deux copies auraient donné une semaine et un écran du jour
+// qui ne parlent pas des mêmes repas.
 
 const JOURS_PAR_DEFAUT = 7
-const REPAS_PAR_DEFAUT = 2
 
 interface Reglages {
   readonly jours: number
@@ -72,6 +67,15 @@ interface Vue {
 
 type Etat =
   | { readonly phase: 'chargement' }
+  /**
+   * Aucune semaine composée. C'EST L'ÉTAT DE DÉPART, et c'en est un à part entière.
+   *
+   * ⚠️ L'ÉCRAN GÉNÉRAIT ET ENREGISTRAIT une semaine complète à la première visite. On atterrissait
+   * donc sur sept jours de repas qu'on n'avait pas demandés — et `savePlan` les gravait aussitôt en
+   * base, si bien que « je n'ai rien planifié » devenait inexprimable. Une application qui décide à
+   * la place de l'utilisateur avant qu'il ait rien dit n'est pas ce que ce projet veut être.
+   */
+  | { readonly phase: 'vide' }
   | { readonly phase: 'pret'; readonly vue: Vue }
   | { readonly phase: 'erreur'; readonly message: string }
 
@@ -104,7 +108,7 @@ function planifier(socle: Socle, reglages: Reglages, verrous: readonly MealPlanE
     constraints: etat.constraints,
     startDate: date,
     days: reglages.jours,
-    slots: CRENEAUX_PAR_NOMBRE[reglages.repasParJour] ?? CRENEAUX_PAR_NOMBRE[REPAS_PAR_DEFAUT]!,
+    slots: creneauxDuRythme(reglages.repasParJour),
     history: etat.history,
     activeTopics: etat.activeTopics,
     convives: reglages.convives,
@@ -122,8 +126,18 @@ function planifier(socle: Socle, reglages: Reglages, verrous: readonly MealPlanE
   return { plan, profil, nomDe: (id) => socle.catalogue.recipes.get(id)?.nom ?? id }
 }
 
-/** Reprend le dernier plan enregistré, ou en construit un. */
-function reprendreOuPlanifier(socle: Socle, reglages: Reglages): { readonly vue: Vue; readonly reglages: Reglages } {
+/**
+ * Reprend le dernier plan enregistré — et RIEN d'autre s'il n'y en a pas.
+ *
+ * ⚠️ NE PLANIFIE PLUS À LA PLACE DE L'UTILISATEUR. Cette fonction terminait par
+ * `planifier(socle, defauts, [])` : une première visite produisait sept jours de repas et les
+ * ENREGISTRAIT. Composer une semaine est désormais un geste, jamais un effet de bord de la
+ * navigation.
+ */
+function reprendre(
+  socle: Socle,
+  reglages: Reglages
+): { readonly vue: Vue | null; readonly reglages: Reglages } {
   const date = aujourdhuiIso()
   const profil = profilCourant(socle.db, date)
   const enregistre = readLatestPlan(socle.db)
@@ -133,19 +147,18 @@ function reprendreOuPlanifier(socle: Socle, reglages: Reglages): { readonly vue:
   const defauts: Reglages =
     rythme === null ? reglages : { ...reglages, repasParJour: rythme.repasParJour }
 
-  if (enregistre !== null) {
-    return {
-      // `warnings` est vide à la lecture — on le reconstitue ici, sinon l'alerte de §6.5
-      // disparaîtrait silencieusement d'un rechargement à l'autre.
-      vue: {
-        plan: { ...enregistre, warnings: socle.moteur.checkPlan(enregistre, profil) },
-        profil,
-        nomDe: (id) => socle.catalogue.recipes.get(id)?.nom ?? id,
-      },
-      reglages: { ...defauts, jours: enregistre.days, repasParJour: nombreDeRepas(enregistre), graine: enregistre.seed },
-    }
+  if (enregistre === null) return { vue: null, reglages: defauts }
+
+  return {
+    // `warnings` est vide à la lecture — on le reconstitue ici, sinon l'alerte de §6.5
+    // disparaîtrait silencieusement d'un rechargement à l'autre.
+    vue: {
+      plan: { ...enregistre, warnings: socle.moteur.checkPlan(enregistre, profil) },
+      profil,
+      nomDe: (id) => socle.catalogue.recipes.get(id)?.nom ?? id,
+    },
+    reglages: { ...defauts, jours: enregistre.days, repasParJour: nombreDeRepas(enregistre), graine: enregistre.seed },
   }
-  return { vue: planifier(socle, defauts, []), reglages: defauts }
 }
 
 export function Semaine() {
@@ -159,21 +172,24 @@ export function Semaine() {
   /** Plats refusés créneau par créneau — §7.2 : c'est ce qui rend le refus RÉPÉTÉ possible. */
   const [refus, setRefus] = useState<ReadonlyMap<string, readonly RecipeId[]>>(new Map())
   const [premierRendu, setPremierRendu] = useState(true)
+  /** Réglage « alertes en version courte » (Paramètres). Le marqueur reste, le détail se replie. */
+  const [alertesDiscretes, setAlertesDiscretes] = useState(false)
 
   const echouer = useCallback((erreur: unknown) => {
     setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
   }, [])
 
-  // Premier montage : on reprend le plan enregistré s'il existe, et les réglages qui vont avec.
+  // Premier montage : on reprend le plan enregistré s'il existe. Sinon on reste VIDE et on attend.
   useEffect(() => {
     if (!premierRendu) return
     let annule = false
     chargerSocle()
       .then((socle) => {
         if (annule) return
-        const repris = reprendreOuPlanifier(socle, reglages)
+        const repris = reprendre(socle, reglages)
         setReglages(repris.reglages)
-        setEtat({ phase: 'pret', vue: repris.vue })
+        setAlertesDiscretes(readDisplay(socle.db).alertesDiscretes)
+        setEtat(repris.vue === null ? { phase: 'vide' } : { phase: 'pret', vue: repris.vue })
         setPremierRendu(false)
       })
       .catch((erreur: unknown) => {
@@ -263,6 +279,15 @@ export function Semaine() {
       </div>
     )
   }
+  if (etat.phase === 'vide') {
+    return (
+      <SemaineVide
+        reglages={reglages}
+        onChange={setReglages}
+        onComposer={() => replanifier(reglages)}
+      />
+    )
+  }
 
   const { plan, nomDe } = etat.vue
   const creneaux = creneauxDuPlan(plan)
@@ -270,49 +295,26 @@ export function Semaine() {
 
   return (
     <section>
-      <header className="flex flex-wrap items-baseline justify-between gap-3">
-        <div>
-          <h1 className="text-[2.1rem] text-texte">Ma semaine</h1>
-          <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
-            {formaterPlage(dates)} · {plan.entries.filter((e) => e.recipeId !== null).length} repas prévus
-          </p>
-        </div>
-        {/* Action dominante de l'écran (§4.2) : hauteur de CTA, accent plein, blanc dessus. */}
-        <button
-          type="button"
-          onClick={() => replanifier({ ...reglages, graine: reglages.graine + 1 })}
-          className="flex min-h-cta items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white"
-        >
-          Proposer une autre semaine
-        </button>
-      </header>
+      <h1 className="text-[2.1rem] text-texte">Ma semaine</h1>
+      <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
+        {formaterPlage(dates)} · {plan.entries.filter((e) => e.recipeId !== null).length} repas prévus
+      </p>
+
+      <Reglage reglages={reglages} onChange={(suivants) => replanifier(suivants)} />
+
+      {/* ⚠️ APRÈS les réglages, et c'est un changement voulu. Le bouton vivait dans l'en-tête, donc
+          AVANT les jours / repas / convives qu'il consomme : on relançait un tirage puis on
+          découvrait les réglages qu'on aurait voulu changer d'abord. On règle, puis on relance. */}
+      <button
+        type="button"
+        onClick={() => replanifier({ ...reglages, graine: reglages.graine + 1 })}
+        className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white"
+      >
+        Proposer une autre semaine
+      </button>
       <p className="mt-2 text-[0.9rem] text-attenue">Vos repas gardés ne changeront pas.</p>
 
-      <Reglage
-        reglages={reglages}
-        onChange={(suivants) => replanifier(suivants)}
-      />
-
-      {/* §6.5 ARCHITECTURE — l'avertissement PRÉVIENT, il n'interdit pas : le plan reste utilisable.
-          Formulation factuelle, sans jugement ni injonction (§6.2). */}
-      {plan.warnings.length > 0 && (
-        <div
-          role="status"
-          className="mt-5 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-[0.95rem] leading-relaxed text-alerte-texte"
-        >
-          <p className="font-semibold">
-            {plan.warnings.length === 1 ? 'Une journée apporte' : `${plan.warnings.length} journées apportent`} moins
-            d'énergie que la référence habituelle.
-          </p>
-          <ul className="mt-2 list-inside list-disc">
-            {plan.warnings.map((w) => (
-              <li key={w.date}>
-                {formaterJour(w.date)} — {Math.round(w.kcal)} kcal pour une référence de {w.seuil} kcal
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      <AlerteEnergie warnings={plan.warnings} discrete={alertesDiscretes} />
 
       <Legende />
 
@@ -338,6 +340,118 @@ export function Semaine() {
         ))}
       </div>
     </section>
+  )
+}
+
+/**
+ * L'écran tant qu'aucune semaine n'a été composée.
+ *
+ * Les réglages sont là AVANT le bouton, pour la même raison qu'ils passent avant « Proposer une
+ * autre semaine » : on choisit combien de jours et pour combien de personnes, puis on lance.
+ */
+function SemaineVide({
+  reglages,
+  onChange,
+  onComposer,
+}: {
+  readonly reglages: Reglages
+  readonly onChange: (suivants: Reglages) => void
+  readonly onComposer: () => void
+}) {
+  return (
+    <section>
+      <h1 className="text-[2.1rem] text-texte">Ma semaine</h1>
+      <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+        Rien de prévu pour l'instant. Composez une semaine quand vous voulez — vous pourrez changer
+        chaque repas ensuite.
+      </p>
+
+      {/* Réglage local : on n'écrit RIEN en base tant que la semaine n'est pas composée. */}
+      <Reglage reglages={reglages} onChange={onChange} />
+
+      <button
+        type="button"
+        onClick={onComposer}
+        className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white"
+      >
+        Composer ma semaine
+      </button>
+
+      <a
+        href={hashDuFrigo()}
+        className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+      >
+        Ou partir de ce que j'ai dans le frigo
+      </a>
+    </section>
+  )
+}
+
+/**
+ * L'avertissement de plancher calorique — §6.5 ARCHITECTURE.
+ *
+ * ⚠️ REPLIÉ PAR DÉFAUT, JAMAIS ABSENT. Le bloc listait chaque journée en clair, en permanence : sur
+ * une semaine un peu légère, sept lignes rouges accueillaient l'utilisateur à chaque visite. Il est
+ * désormais réduit à un marqueur et une phrase, le détail s'ouvre d'un tap. Ce que le réglage
+ * « version courte » raccourcit encore — mais NI L'UN NI L'AUTRE ne fait disparaître le marqueur :
+ * l'avertissement prévient sans interdire, encore faut-il qu'il prévienne.
+ */
+function AlerteEnergie({
+  warnings,
+  discrete,
+}: {
+  readonly warnings: WeekPlan['warnings']
+  readonly discrete: boolean
+}) {
+  const [ouverte, setOuverte] = useState(false)
+  if (warnings.length === 0) return null
+
+  const resume = discrete
+    ? `${warnings.length} journée${warnings.length > 1 ? 's' : ''} à surveiller`
+    : `${warnings.length === 1 ? 'Une journée apporte' : `${warnings.length} journées apportent`} moins d'énergie que la référence habituelle.`
+
+  return (
+    <div
+      role="status"
+      className="mt-5 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond text-[0.95rem] leading-relaxed text-alerte-texte"
+    >
+      <button
+        type="button"
+        onClick={() => setOuverte((o) => !o)}
+        aria-expanded={ouverte}
+        className="flex min-h-tactile w-full items-center gap-3 px-4 py-2 text-left"
+      >
+        {/* Le marqueur. `aria-hidden` : le texte qui suit dit déjà tout, l'annoncer deux fois
+            alourdirait la lecture d'écran sans rien ajouter. */}
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          aria-hidden="true"
+          className="h-5 w-5 shrink-0"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <line x1="12" y1="7.5" x2="12" y2="13" />
+          <line x1="12" y1="16.3" x2="12" y2="16.4" />
+        </svg>
+        <span className="flex-1 font-semibold">{resume}</span>
+        <span aria-hidden="true" className="shrink-0 text-[0.85rem] font-semibold">
+          {ouverte ? 'Masquer' : 'Détail'}
+        </span>
+      </button>
+
+      {ouverte && (
+        <ul className="list-inside list-disc px-4 pb-3">
+          {warnings.map((w) => (
+            <li key={w.date}>
+              {formaterJour(w.date)} — {Math.round(w.kcal)} kcal pour une référence de {w.seuil} kcal
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   )
 }
 

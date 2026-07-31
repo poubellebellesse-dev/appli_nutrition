@@ -677,21 +677,51 @@ export function recordConsent(db: UserDb, versionTexte: string, accepteLe: strin
  */
 export interface StoredDisplay {
   readonly afficherMacros: boolean
+  /** Balayage gauche/droite en plus des flèches (§3 DESIGN). Faux = flèches seules. */
+  readonly gestesBalayage: boolean
+  /** Alerte de semaine réduite à son marqueur. Ne la fait JAMAIS taire — voir la migration v4. */
+  readonly alertesDiscretes: boolean
+  /** Bandeau « le navigateur ne garantit pas de conserver » écarté. Lui SEUL est masquable (v5). */
+  readonly bandeauStockageMasque: boolean
 }
 
 export function readDisplay(db: UserDb): StoredDisplay {
-  const row = db.all<{ readonly afficher_macros: number }>(
-    'SELECT afficher_macros FROM user_display WHERE id = 1'
+  const row = db.all<{
+    readonly afficher_macros: number
+    readonly gestes_balayage: number
+    readonly alertes_discretes: number
+    readonly bandeau_stockage_masque: number
+  }>(
+    `SELECT afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque
+     FROM user_display WHERE id = 1`
   )[0]
   // Absent = jamais réglé = le défaut du schéma. Rendre `null` obligerait chaque appelant à traiter
   // le cas, et un oubli afficherait les macros à quelqu'un qui ne les a jamais demandées.
-  return { afficherMacros: row?.afficher_macros === 1 }
+  return {
+    afficherMacros: row?.afficher_macros === 1,
+    gestesBalayage: row?.gestes_balayage === 1,
+    alertesDiscretes: row?.alertes_discretes === 1,
+    bandeauStockageMasque: row?.bandeau_stockage_masque === 1,
+  }
 }
 
+/**
+ * ⚠️ TOUTES LES COLONNES SONT ÉCRITES, y compris celles que l'appelant ne change pas. `INSERT OR
+ * REPLACE` SUPPRIME la ligne avant de la réinsérer : une colonne omise ne « garde » pas sa valeur,
+ * elle repart au DEFAULT du schéma. Régler le balayage aurait silencieusement rétabli les macros.
+ */
 export function writeDisplay(db: UserDb, display: StoredDisplay): void {
-  db.run('INSERT OR REPLACE INTO user_display (id, afficher_macros) VALUES (1, ?)', [
-    display.afficherMacros ? 1 : 0,
-  ])
+  db.run(
+    `INSERT OR REPLACE INTO user_display
+       (id, afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque)
+     VALUES (1, ?, ?, ?, ?)`,
+    [
+      display.afficherMacros ? 1 : 0,
+      display.gestesBalayage ? 1 : 0,
+      display.alertesDiscretes ? 1 : 0,
+      display.bandeauStockageMasque ? 1 : 0,
+    ]
+  )
 }
 
 // --- Lecture composée -------------------------------------------------------------------------

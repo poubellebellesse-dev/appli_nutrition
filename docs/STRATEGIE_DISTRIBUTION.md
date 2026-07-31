@@ -43,14 +43,42 @@
 > elle n'apparaît dans aucun store. C'est ce chemin d'entrée qui est refusé, pas le mode
 > d'exécution.
 >
-> **Décision : Play d'abord via TWA, iOS plus tard.** La PWA reste le socle technique (un TWA
-> l'exige : sans manifest valide et service worker, Bubblewrap refuse d'empaqueter et la barre
-> d'URL ne se masque pas). Sur iPhone, on reste provisoirement sur l'installation manuelle.
-> **iOS via Capacitor reste ouvert**, à décider selon la traction.
+> ~~**Décision : Play d'abord via TWA, iOS plus tard.**~~ **Remplacée le 2026-07-31 — voir ci-dessous.**
+> La PWA reste le socle technique dans les deux cas.
+
+> ✅ **TRANCHÉ le 2026-07-31 — Capacitor remplace le TWA.** Ce qui a fait basculer la décision :
+> l'utilisateur veut des **notifications de rappel de préparation**, et un TWA ne peut pas en
+> produire. Un TWA est une page web dans un conteneur Chrome ; il n'a accès qu'aux API du web, et
+> l'API qui aurait convenu — *Notification Triggers* — **a été abandonnée par Google**, qui écrit ne
+> pas pouvoir en garantir un comportement cohérent entre plateformes
+> ([Chrome for Developers](https://developer.chrome.com/docs/web-platform/notification-triggers)).
+> Les seules voies restantes sont le **push serveur** (qui exige un serveur et un abonnement, donc
+> contredit « 100 % local, sans compte », §2) et un **conteneur natif**. Capacitor donne
+> `LocalNotifications` : programmées sur l'appareil, hors ligne, sans serveur — le principe de §2
+> est intact.
 >
-> ⚠️ **Le TWA exige un hébergement HTTPS réel**, avec `/.well-known/assetlinks.json` liant le
-> domaine à la signature de l'APK — c'est ce fichier qui fait disparaître la barre d'URL. Choix de
-> l'hébergeur (Cloudflare Pages / GitHub Pages, gratuits) et du nom de domaine : **encore ouvert**.
+> **Ce que ça change, au-delà des notifications :**
+>
+> | | TWA *(écarté)* | **Capacitor** *(retenu)* |
+> |---|---|---|
+> | Notifications programmées | Non | **Oui**, sur l'appareil |
+> | Hébergement HTTPS + domaine | **Bloquant** — pas d'appli sans origine | **Facultatif** : les fichiers sont dans l'APK |
+> | `assetlinks.json` | Obligatoire | Sans objet |
+> | Mise à jour | Déploiement du site, instantané | **Revue du store à chaque correctif** |
+> | iOS | Impossible | Ouvert plus tard (Mac requis) |
+>
+> ⚠️ **L'hébergement sort du chemin critique.** C'était le préalable n°1 du TWA ; il redevient un
+> chemin parallèle, utile pour la version web consultable en navigateur, plus jamais bloquant pour
+> publier. Cloudflare Pages / GitHub Pages restent le choix par défaut le jour où on le fera.
+>
+> ⚠️ **Le prix : un projet natif à maintenir** (dossier Android dans le dépôt, chaîne de build
+> supplémentaire) et **la fin des correctifs instantanés** — toute rustine attend Google.
+>
+> ⚠️ **Piste à mesurer, pas encore un acquis** : Capacitor donnerait accès à un vrai système de
+> fichiers pour `user.db`, là où les deux VFS OPFS de SQLite ne tournent que dans un Worker dédié
+> (d'où la base en mémoire recopiée dans un fichier OPFS, `ui/user-source.ts`). Cela simplifierait
+> peut-être cette couche — mais créerait deux chemins de persistance selon la plateforme. À ne pas
+> compter comme un gain avant de l'avoir vérifié.
 
 Une **PWA seule n'est PAS dans les stores** → invisible là où les gens cherchent une appli.
 Deux niveaux, à activer si on veut la découvrabilité :
@@ -66,12 +94,18 @@ Deux niveaux, à activer si on veut la découvrabilité :
 
 → **Décidé** : commencer par **Play seul**, ajouter iOS plus tard si la traction le justifie.
 
-**Fait le 2026-07-30 — le socle PWA exigé par le TWA est en place** : `manifest.webmanifest`
-(`display: standalone`), icônes 192/512/maskable générées par `npm run icons:build`, balises iOS,
-service worker de pré-cache, et le test automatisé « zéro requête réseau » de §6.6.
+**Fait le 2026-07-30 — le socle PWA est en place** : `manifest.webmanifest` (`display: standalone`),
+icônes 192/512/maskable générées par `npm run icons:build`, balises iOS, service worker de
+pré-cache, et le test automatisé « zéro requête réseau » de §6.6. Il servait au TWA ; il sert autant
+à Capacitor, qui empaquette le même `dist/`.
 
-**Reste à faire pour être sur Play** : choisir l'hébergeur, publier, générer l'APK avec Bubblewrap,
-déposer `assetlinks.json`, créer le compte développeur (25 $). Rien n'est engagé côté argent.
+**Reste à faire pour être sur Play** : ajouter Capacitor et son projet Android, brancher
+`LocalNotifications`, générer l'APK, créer le compte développeur (25 $). Rien n'est engagé côté
+argent. ~~Choisir l'hébergeur, déposer `assetlinks.json`~~ — sans objet depuis le 2026-07-31.
+
+⚠️ **La boucle de développement ne change pas.** Capacitor n'a pas de moteur de rendu à lui : il
+embarque le `dist/` produit par `vite build`. On continue de coder et de tester dans le navigateur ;
+l'empaquetage n'intervient qu'à la publication.
 
 ---
 
@@ -124,7 +158,7 @@ justifier d'encombrer l'écran avec une demande.
 |---|---|
 | Objectif | Perso + partage gratuit ; argent = bonus |
 | Modèle | 100 % gratuit, sans pub, sans tracking, local — **gardé, c'est le différenciateur** |
-| Stores | **Proposition (à confirmer)** — PWA + empaquetage ; Play (25 $ une fois) d'abord, iOS optionnel |
+| Stores | **Play d'abord via Capacitor** (tranché 2026-07-31, 25 $ une fois) ; iOS plus tard. TWA écarté : pas de notifications programmées |
 | Catalogue | 150-200 en v1, enrichi après |
 | Marketing | Anti-régime + privacy + anti-gaspi + Show HN + Product Hunt, **FR d'abord** |
 | Don | **Aucun.** Seulement un lien « À propos » discret, sans sollicitation |

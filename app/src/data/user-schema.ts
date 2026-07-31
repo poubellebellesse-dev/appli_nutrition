@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 3
+export const USER_SCHEMA_VERSION = 5
 
 export interface Migration {
   readonly version: number
@@ -359,10 +359,54 @@ const V3_STATEMENTS: readonly string[] = [
    )`,
 ]
 
+/**
+ * v4 — les deux réglages qu'exige l'écran Paramètres.
+ *
+ * Colonnes de `user_display` et non une table à part : ce sont bien des réglages d'AFFICHAGE, ils ne
+ * changent aucune suggestion. C'est la frontière déjà posée par la v3, qui a mis `user_rythme` à
+ * part précisément parce que le rythme, lui, change les suggestions.
+ *
+ * `gestes_balayage` à 0 PAR DÉFAUT. §3 DESIGN — « aucune action uniquement gestuelle », chaque geste
+ * est doublé d'un contrôle visible. Les flèches sont donc le mode normal et le balayage un
+ * raccourci qu'on active ; l'inverse imposerait un geste invisible à qui ne le devine pas.
+ *
+ * `alertes_discretes` à 0 PAR DÉFAUT, et ce réglage NE FAIT PAS TAIRE l'alerte. §6.5 ARCHITECTURE :
+ * l'avertissement prévient sans interdire — mais il doit prévenir. À 1, le bloc se réduit à son
+ * marqueur et à une ligne ; il ne disparaît jamais, sinon un plan qui sous-alimente ne le dirait
+ * plus à personne.
+ */
+const V4_STATEMENTS: readonly string[] = [
+  `ALTER TABLE user_display
+     ADD COLUMN gestes_balayage INTEGER NOT NULL DEFAULT 0 CHECK (gestes_balayage IN (0,1))`,
+  `ALTER TABLE user_display
+     ADD COLUMN alertes_discretes INTEGER NOT NULL DEFAULT 0 CHECK (alertes_discretes IN (0,1))`,
+]
+
+/**
+ * v5 — le bandeau de persistance, une fois écarté, doit le rester.
+ *
+ * ⚠️ UNE v5 PLUTÔT QUE D'ÉTENDRE LA v4, alors que la v4 date de la même journée. La règle posée en
+ * v2 ne fait pas d'exception d'ancienneté : une base de test a déjà pu rapporter `schema_version =
+ * 4`, et elle ne rejouerait pas une v4 modifiée. L'écart ne se verrait qu'à la première requête sur
+ * une colonne absente.
+ *
+ * ⚠️ NE VAUT QUE POUR L'ALERTE `non_persistant` — voir `main.tsx`. « Le navigateur ne garantit pas de
+ * conserver vos données » est un état permanent qu'on peut avoir lu et accepté. « Cet appareil
+ * n'enregistre rien » et « une modification n'a pas pu être enregistrée » décrivent une perte en
+ * train de se produire : ceux-là ne se referment pas.
+ */
+const V5_STATEMENTS: readonly string[] = [
+  `ALTER TABLE user_display
+     ADD COLUMN bandeau_stockage_masque INTEGER NOT NULL DEFAULT 0
+     CHECK (bandeau_stockage_masque IN (0,1))`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
   { version: 3, statements: V3_STATEMENTS },
+  { version: 4, statements: V4_STATEMENTS },
+  { version: 5, statements: V5_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

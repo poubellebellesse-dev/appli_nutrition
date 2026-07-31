@@ -110,26 +110,28 @@ export function FiltresRecettes({
         onBasculer={(v) => onChange({ ...filtres, styles: basculer(filtres.styles, v) })}
       />
 
-      {deplie && (
-        <fieldset className="mt-4">
-          <legend className="text-[0.9rem] text-texte-doux">Temps maximum</legend>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {PALIERS_TEMPS.map((palier) => (
-              <Pastille
-                key={palier.libelle}
-                libelle={palier.libelle}
-                active={filtres.tempsMaxMin === palier.minutes}
-                onBasculer={() =>
-                  onChange({
-                    ...filtres,
-                    tempsMaxMin: filtres.tempsMaxMin === palier.minutes ? null : palier.minutes,
-                  })
-                }
-              />
-            ))}
-          </div>
-        </fieldset>
-      )}
+      {/* ⚠️ TOUJOURS VISIBLE, plus derrière « Plus de filtres ». §4.4 range « le reste » dans le
+          dépliant, mais le temps disponible n'est pas un raffinement : c'est le premier critère de
+          quelqu'un qui cherche quoi faire à manger ce soir. Le laisser replié le rendait
+          introuvable pour qui ne pense pas à déplier — et il pilote la couche `temps` du moteur. */}
+      <fieldset className="mt-4">
+        <legend className="text-[0.9rem] text-texte-doux">Temps maximum</legend>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {PALIERS_TEMPS.map((palier) => (
+            <Pastille
+              key={palier.libelle}
+              libelle={palier.libelle}
+              active={filtres.tempsMaxMin === palier.minutes}
+              onBasculer={() =>
+                onChange({
+                  ...filtres,
+                  tempsMaxMin: filtres.tempsMaxMin === palier.minutes ? null : palier.minutes,
+                })
+              }
+            />
+          ))}
+        </div>
+      </fieldset>
 
       <button
         type="button"

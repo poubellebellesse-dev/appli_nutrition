@@ -137,7 +137,10 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
     const suivant = !etat.vue.afficherMacros
     chargerSocle()
       .then((socle) => {
-        writeDisplay(socle.db, { afficherMacros: suivant })
+        // ⚠️ RELIRE PUIS ÉTALER, jamais écrire le seul champ qu'on change : `writeDisplay` remplace
+        // la ligne entière, et les réglages omis repartiraient au DEFAULT du schéma. Basculer les
+        // macros aurait alors désactivé le balayage, en silence.
+        writeDisplay(socle.db, { ...readDisplay(socle.db), afficherMacros: suivant })
         charger()
       })
       .catch(() => undefined)

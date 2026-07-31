@@ -90,11 +90,19 @@ export function Navigation({ courante }: { readonly courante: Onglet }) {
       aria-label="Navigation principale"
       className={
         // Mobile : barre fixée en bas, sous le pouce. Bureau (≥64rem) : colonne à gauche, même
-        // ordre. `pb-[env(safe-area-inset-bottom)]` évite la barre système des téléphones récents.
+        // ordre.
+        //
+        // ⚠️ `max(env(...), 0.75rem)` ET NON `env(...)` SEUL. Le défaut réel remonté par l'usage :
+        // sur plusieurs téléphones, la barre système — pilule gestuelle, bandeau micro/assistant —
+        // se dessine PAR-DESSUS le bas de l'écran, et les libellés disparaissaient sous elle. La
+        // cause n'est pas la hauteur de la barre (48 px de cible tactile, soit ~1,3 cm, déjà
+        // au-dessus du plancher accessibilité) : c'est que `env(safe-area-inset-bottom)` renvoie
+        // **0** sur beaucoup d'Android en navigation gestuelle. Rien n'était alors réservé.
+        // Augmenter la cible tactile n'y aurait rien changé ; il fallait un PLANCHER de réserve.
         'fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-bordure bg-surface ' +
-        'pb-[env(safe-area-inset-bottom)] ' +
+        'pb-[max(env(safe-area-inset-bottom),0.75rem)] ' +
         'lg:inset-y-0 lg:right-auto lg:w-56 lg:grid-cols-1 lg:content-start lg:gap-1 ' +
-        'lg:border-t-0 lg:border-r lg:p-3 lg:pt-8'
+        'lg:border-t-0 lg:border-r lg:p-3 lg:pt-8 lg:pb-3'
       }
     >
       {ONGLETS.map((onglet) => {

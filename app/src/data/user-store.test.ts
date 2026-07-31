@@ -32,6 +32,7 @@ import {
   readAllergies,
   readConstraints,
   readDiet,
+  readDisplay,
   readExcludedFoodIds,
   readFavorites,
   readHistory,
@@ -57,6 +58,7 @@ import {
   writeActiveTopics,
   writeAllergies,
   writeDiet,
+  writeDisplay,
   writeExcludedFoodIds,
   writePantry,
   writePreference,
@@ -731,5 +733,98 @@ describe('user-store — rythme et consentement', () => {
     recordConsent(db, 'accueil-v1', '2026-07-30')
     recordConsent(db, 'accueil-v2', '2026-09-01')
     expect(readConsents(db)[0]?.versionTexte).toBe('accueil-v2')
+  })
+})
+
+describe('user-store — réglages d’affichage (v4)', () => {
+  it('part des défauts du schéma sur une base neuve — rien d’activé sans geste explicite', () => {
+    // Les trois défauts portent chacun une décision : macros opt-in (§6.5 ARCHITECTURE), balayage
+    // opt-in (§3 DESIGN), alerte NON discrète. Ils vivent dans le schéma, pas dans le code de
+    // lecture — une base où la ligne existe sans valeur ne peut pas les activer par accident.
+    expect(readDisplay(db)).toEqual({
+      afficherMacros: false,
+      gestesBalayage: false,
+      alertesDiscretes: false,
+      bandeauStockageMasque: false,
+    })
+  })
+
+  it('fait l’aller-retour sur tous les réglages', () => {
+    const tout = {
+      afficherMacros: true,
+      gestesBalayage: true,
+      alertesDiscretes: true,
+      bandeauStockageMasque: true,
+    }
+    writeDisplay(db, tout)
+    expect(readDisplay(db)).toEqual(tout)
+  })
+
+  it('garde le bandeau de stockage écarté — c’est tout l’intérêt de la croix', () => {
+    // ⚠️ Ce réglage ne vaut QUE pour l'alerte `non_persistant` (voir `ECARTABLE` dans main.tsx) :
+    // « cet appareil n'enregistre rien » et « une écriture a échoué » ne se referment pas.
+    writeDisplay(db, { ...readDisplay(db), bandeauStockageMasque: true })
+    expect(readDisplay(db).bandeauStockageMasque).toBe(true)
+  })
+
+  it('n’efface PAS les autres réglages en en changeant un seul', () => {
+    // ⚠️ LE DÉFAUT QUE CE TEST EXISTE POUR ATTRAPER. `INSERT OR REPLACE` supprime la ligne avant de
+    // la réinsérer : si `writeDisplay` omettait une colonne, elle repartirait au DEFAULT du schéma.
+    // Activer le balayage aurait alors éteint les macros, sans erreur et sans trace.
+    writeDisplay(db, {
+      afficherMacros: true,
+      gestesBalayage: false,
+      alertesDiscretes: false,
+      bandeauStockageMasque: true,
+    })
+    writeDisplay(db, { ...readDisplay(db), gestesBalayage: true })
+    expect(readDisplay(db).afficherMacros).toBe(true)
+    expect(readDisplay(db).gestesBalayage).toBe(true)
+    expect(readDisplay(db).bandeauStockageMasque).toBe(true)
+  })
+})
+
+describe('user-store — modifier ses allergies après le premier lancement', () => {
+  // ⚠️ CHEMIN CRITIQUE. §5.2 ARCHITECTURE classe le filtre allergènes comme « le seul garde-fou
+  // CRITIQUE et incontournable » du moteur. Jusqu'à l'écran Paramètres, `writeAllergies` n'était
+  // appelé QUE par l'onboarding : une faute de frappe était définitive et une allergie découverte
+  // plus tard n'était pas déclarable, alors que l'écran promet « Vous pourrez modifier plus tard ».
+  // Ces tests tiennent la promesse côté données ; l'écran ne fait que les appeler.
+
+  it('remplace la liste au lieu d’y ajouter — décocher doit RETIRER du filtre', () => {
+    writeAllergies(db, [
+      { allergenId: 'gluten' as AllergenId, severite: null },
+      { allergenId: 'lait' as AllergenId, severite: null },
+    ])
+    writeAllergies(db, [{ allergenId: 'lait' as AllergenId, severite: null }])
+
+    expect(readAllergies(db).map((a) => a.allergenId)).toEqual(['lait'])
+    // C'est `constraints` que le moteur lit — vérifier `user_allergy` seule ne prouverait rien.
+    expect(readConstraints(db).allergies).toEqual(['lait'])
+  })
+
+  it('sait revenir à AUCUNE allergie — « je m’étais trompé » doit être exprimable', () => {
+    writeAllergies(db, [{ allergenId: 'arachides' as AllergenId, severite: null }])
+    writeAllergies(db, [])
+    expect(readConstraints(db).allergies).toEqual([])
+  })
+
+  it('propage un ajout tardif jusqu’à readUserState, la source des suggestions', () => {
+    // L'onboarding passé, une allergie qui apparaît doit atteindre le moteur sans réinstallation.
+    expect(readUserState(db, { windowDays: 21, today: AUJOURDHUI }).constraints.allergies).toEqual([])
+    writeAllergies(db, [{ allergenId: 'crustaces' as AllergenId, severite: null }])
+    expect(readUserState(db, { windowDays: 21, today: AUJOURDHUI }).constraints.allergies).toEqual([
+      'crustaces',
+    ])
+  })
+
+  it('laisse changer de régime et l’effacer, sans toucher aux allergies', () => {
+    writeAllergies(db, [{ allergenId: 'gluten' as AllergenId, severite: null }])
+    writeDiet(db, 'vegetarien')
+    writeDiet(db, 'vegetalien')
+    expect(readDiet(db)).toBe('vegetalien')
+    writeDiet(db, null)
+    expect(readDiet(db)).toBeNull()
+    expect(readConstraints(db).allergies).toEqual(['gluten'])
   })
 })

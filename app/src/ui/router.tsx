@@ -36,6 +36,7 @@ export type SousVue =
   | { readonly type: 'liste' }
   | { readonly type: 'recette'; readonly id: string }
   | { readonly type: 'frigo' }
+  | { readonly type: 'parametres' }
 
 /**
  * Où l'on est.
@@ -78,6 +79,17 @@ const PREFIXE_RECETTE = '#/recette/'
  */
 const HASH_FRIGO = '#/frigo'
 
+/**
+ * « Paramètres » N'EST PAS UN ONGLET NON PLUS, et pour la même raison que le frigo : la barre reste
+ * à cinq onglets stables (§2 DESIGN). On y accède par l'engrenage de l'en-tête, présent partout.
+ *
+ * ⚠️ RATTACHÉ À `aujourdhui`, faute de mieux, et c'est un choix par défaut assumé. Les réglages
+ * n'appartiennent à aucune des cinq sections ; il faut pourtant qu'un onglet soit désigné, sinon la
+ * barre n'aurait plus d'onglet courant et changerait d'aspect sur cet écran — exactement ce que
+ * « navigation permanente et visible » interdit. L'onglet d'accueil est le repli le moins surprenant.
+ */
+const HASH_PARAMETRES = '#/parametres'
+
 function souscrire(auChangement: () => void): () => void {
   window.addEventListener('hashchange', auChangement)
   return () => window.removeEventListener('hashchange', auChangement)
@@ -92,6 +104,7 @@ function souscrire(auChangement: () => void): () => void {
  */
 export function routeDepuisHash(hash: string): Route {
   if (hash === HASH_FRIGO) return { onglet: 'recettes', sousVue: { type: 'frigo' } }
+  if (hash === HASH_PARAMETRES) return { onglet: 'aujourdhui', sousVue: { type: 'parametres' } }
 
   if (hash.startsWith(PREFIXE_RECETTE)) {
     // `decodeURIComponent` peut lever sur un `%` isolé, qu'un signet tronqué produit facilement.
@@ -145,6 +158,10 @@ export function hashDeRecette(id: string): string {
 
 export function hashDuFrigo(): string {
   return HASH_FRIGO
+}
+
+export function hashDesParametres(): string {
+  return HASH_PARAMETRES
 }
 
 export function naviguer(onglet: Onglet): void {
