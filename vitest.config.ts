@@ -14,6 +14,6 @@ export default defineConfig({
   test: {
     // Racine = dépôt. `tests/` (frontières, catalogue réel) et `catalog/` (build) vivent hors de app/.
     root: '.',
-    include: ['app/**/*.test.ts', 'tests/**/*.test.{ts,mjs}', 'catalog/**/*.test.{ts,mjs}'],
+    include: ['app/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,mjs}', 'catalog/**/*.test.{ts,mjs}'],
   },
 })

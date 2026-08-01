@@ -1,0 +1,148 @@
+// @vitest-environment jsdom
+//
+// ui/screens/aujourdhui.test.tsx — la carte plein écran, ses flèches et son encart d'aide.
+//
+// ⚠️ CE FICHIER GARDE UN DÉFAUT TROUVÉ EN PILOTANT UN NAVIGATEUR, pas en relisant. L'encart
+// « Dites-moi ce que vous cherchez » s'affichait tant que `changements >= SEUIL` ; choisir une
+// pastille remettait ce compteur à zéro — pour ne pas re-proposer de l'aide juste après en avoir
+// donné — et l'encart DISPARAISSAIT sous le doigt, entre la première pastille et la deuxième.
+//
+// Le test qui suit clique une pastille et vérifie que l'encart est toujours là. C'est exactement ce
+// qu'aucun test unitaire ne pouvait voir.
+
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { writeRythme } from '../../data/user-store.js'
+import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
+
+vi.mock('../catalog-source.js', () => ({
+  chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
+}))
+vi.mock('../user-source.js', () => ({
+  ouvrirUserDb: () => Promise.resolve(sessionDeTest()),
+  surErreurDePersistance: () => undefined,
+}))
+
+beforeEach(() => {
+  vi.resetModules()
+  reinitialiserBase()
+  // Deux repas par jour : déjeuner + dîner, comme le défaut du premier lancement.
+  writeRythme(baseCourante(), { repasParJour: 2, tempsSemaineMin: null, tempsWeekendMin: null })
+})
+afterEach(cleanup)
+
+/** Monte l'écran et attend la première carte. */
+async function monter() {
+  const { Aujourdhui } = await import('./aujourdhui.js')
+  render(<Aujourdhui />)
+  await screen.findByText(/sur \d+$/)
+}
+
+const platAffiche = (): string => document.querySelector('article h2')!.textContent!
+const compteur = (): string => screen.getByText(/^\d+ sur \d+$/).textContent!
+const bouton = (texte: string | RegExp) => screen.getByText(texte).closest('button') as HTMLButtonElement
+
+describe('aujourdhui — la carte', () => {
+  it('titre l’écran d’après l’heure et le rythme, jamais « Ce soir » en dur', async () => {
+    await monter()
+    // Le titre vient de `TITRE_CRENEAU` ; à deux repas, c'est « Ce midi » ou « Ce soir » selon
+    // l'heure de la machine. Ce qui compte est qu'il appartienne au vocabulaire, pas qu'il soit figé.
+    const titre = screen.getByRole('heading', { level: 1 }).textContent
+    expect(['Ce matin', 'Ce midi', 'Ce soir', 'Pour le goûter']).toContain(titre)
+  })
+
+  it('affiche un aplat de couleur et l’annonce comme un bouche-trou', async () => {
+    await monter()
+    const aplat = document.querySelector('article div[aria-hidden]') as HTMLElement
+    expect(aplat).not.toBeNull()
+    expect(aplat.style.backgroundColor).not.toBe('')
+    expect(screen.getByText('Photo à venir')).toBeDefined()
+  })
+
+  it('désactive « Précédent » sur la première carte, jamais « Suivant »', async () => {
+    await monter()
+    expect(bouton(/Précédent/).disabled).toBe(true)
+    expect(bouton(/Suivant/).disabled).toBe(false)
+  })
+})
+
+describe('aujourdhui — les flèches', () => {
+  it('change de plat et fait avancer le compteur', async () => {
+    await monter()
+    const premier = platAffiche()
+    expect(compteur()).toMatch(/^1 sur /)
+
+    fireEvent.click(bouton(/Suivant/))
+    await waitFor(() => expect(compteur()).toMatch(/^2 sur /))
+    expect(platAffiche()).not.toBe(premier)
+
+    fireEvent.click(bouton(/Précédent/))
+    await waitFor(() => expect(compteur()).toMatch(/^1 sur /))
+    expect(platAffiche()).toBe(premier)
+  })
+})
+
+describe('aujourdhui — l’encart d’aide', () => {
+  it('reste fermé au départ — « détecter l’indécision PUIS proposer »', async () => {
+    await monter()
+    expect(screen.queryByText(/Rien n'est obligatoire/)).toBeNull()
+  })
+
+  it('s’ouvre après sept changements sans choix', async () => {
+    await monter()
+    for (let i = 0; i < 7; i++) fireEvent.click(bouton(/Suivant/))
+    await screen.findByText(/Rien n'est obligatoire/)
+    expect(screen.getByText('Plutôt léger ou consistant ?')).toBeDefined()
+  })
+
+  it('⛔ NE SE REFERME PAS quand on choisit une pastille', async () => {
+    // LE DÉFAUT QUE CE TEST GARDE. Régler une envie remettait le compteur d'indécision à zéro, ce
+    // qui rendait la condition d'affichage de l'encart fausse : il disparaissait entre la première
+    // pastille et la deuxième.
+    await monter()
+    for (let i = 0; i < 7; i++) fireEvent.click(bouton(/Suivant/))
+    await screen.findByText(/Rien n'est obligatoire/)
+
+    fireEvent.click(screen.getByText('Léger'))
+    await waitFor(() => expect(screen.getByText('Léger').getAttribute('aria-pressed')).toBe('true'))
+
+    // L'encart est toujours là…
+    expect(screen.queryByText(/Rien n'est obligatoire/)).not.toBeNull()
+    // …et on peut en choisir une seconde, ce qui était impossible.
+    fireEvent.click(screen.getByText('20 min'))
+    await waitFor(() => expect(screen.getByText('20 min').getAttribute('aria-pressed')).toBe('true'))
+    expect(screen.getByText('Léger').getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('ne propose QUE des axes que le moteur sait lire', async () => {
+    // Une pastille qui ne piloterait aucune couche donnerait le sentiment d'avoir été écouté sans
+    // l'être. Les trois axes sont exactement ceux de `CravingAxes`.
+    await monter()
+    fireEvent.click(screen.getByText('Dites-moi ce que vous cherchez'))
+    await screen.findByText(/Rien n'est obligatoire/)
+    const questions = [...document.querySelectorAll('legend')].map((l) => l.textContent)
+    expect(questions).toEqual([
+      'Combien de temps devant vous ?',
+      'Plutôt léger ou consistant ?',
+      'Chaud ou froid ?',
+      'Salé ou sucré ?',
+    ])
+  })
+})
+
+describe('aujourdhui — les plats proches', () => {
+  it('propose d’autres plats, tous différents de celui qu’on regarde', async () => {
+    await monter()
+    await screen.findByText('Dans le même esprit')
+    const proches = [...document.querySelectorAll('section ul li a')].map((a) => a.textContent ?? '')
+    expect(proches.length).toBeGreaterThan(0)
+    for (const proche of proches) expect(proche).not.toContain(platAffiche())
+  })
+})
+
+describe('aujourdhui — le frigo', () => {
+  it('offre l’entrée « Vider le frigo », que §4.5 réclamait depuis le début', async () => {
+    await monter()
+    expect(document.querySelector('a[href="#/frigo"]')).not.toBeNull()
+  })
+})
