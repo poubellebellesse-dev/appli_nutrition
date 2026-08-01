@@ -108,13 +108,26 @@ async function calculerVue(): Promise<Etat> {
   }
 }
 
-/** Sections d'affichage, selon le rangement choisi. Un article peut apparaître dans plusieurs. */
+/**
+ * Sections d'affichage, selon le rangement choisi. Un article peut apparaître dans PLUSIEURS
+ * sections — mais jamais DEUX FOIS dans la même.
+ *
+ * ⚠️ LA DÉDUPLICATION PAR SECTION CORRIGE UN DÉFAUT RÉEL. En rangement « jour », la boucle parcourt
+ * `pourSlots` et le titre de section ne retient que la DATE : un ingrédient présent au déjeuner et
+ * au dîner du même jour était ajouté deux fois à la même section. `Ligne` étant clé par
+ * `item.foodId`, React levait « two children with the same key » — ligne visiblement dupliquée, et
+ * surtout deux nœuds de même clé, un cas que React documente comme non supporté et dont il ne
+ * garantit pas la mise à jour fidèle (cocher l'une aurait pu ne pas se répercuter sur l'autre).
+ *
+ * `Map` plutôt qu'un `Set` de contrôle : `set` sur une clé existante conserve la position
+ * d'insertion d'origine, donc l'ordre des articles ne dépend pas du nombre de créneaux traversés.
+ */
 function grouper(vue: Vue, rangement: Rangement): { titre: string; items: readonly ShoppingListItem[] }[] {
-  const sections = new Map<string, ShoppingListItem[]>()
+  const sections = new Map<string, Map<FoodId, ShoppingListItem>>()
   const ajouter = (titre: string, item: ShoppingListItem) => {
     const existante = sections.get(titre)
-    if (existante === undefined) sections.set(titre, [item])
-    else existante.push(item)
+    if (existante === undefined) sections.set(titre, new Map([[item.foodId, item]]))
+    else existante.set(item.foodId, item)
   }
 
   for (const item of vue.liste.items) {
@@ -135,7 +148,7 @@ function grouper(vue: Vue, rangement: Rangement): { titre: string; items: readon
     }
   }
 
-  return [...sections.entries()].map(([titre, items]) => ({ titre, items }))
+  return [...sections.entries()].map(([titre, items]) => ({ titre, items: [...items.values()] }))
 }
 
 export function Courses() {

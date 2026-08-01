@@ -117,6 +117,7 @@ function makeCatalog(): Catalog {
     allergens: new Map(),
     lexicon: new Map(),
     tips: [],
+    evidence: new Map(),
     topics: new Map(),
     substitutions: new Map(),
     indexes: EMPTY_INDEXES,
@@ -332,6 +333,7 @@ function makeFerFixture(): FerFixture {
     allergens: new Map(),
     lexicon: new Map(),
     tips: [],
+    evidence: new Map(),
     topics: new Map(),
     substitutions: new Map(),
     indexes,
@@ -434,8 +436,11 @@ describe("engine/api — suggestMeals bout-en-bout (§6.4, §8 ENGINE)", () => {
     for (const suggestion of result.suggestions) {
       // nutri est la SEULE couche active (poids normalisé = 1) : sa contribution = le score final.
       expect(suggestion.breakdown.nutri).toBeCloseTo(suggestion.score / 100, 9);
-      expect(suggestion.explanations.length).toBeGreaterThan(0);
-      expect(suggestion.explanations[0]?.criterion).toBe("nutri");
+      // ⚠️ AUCUNE EXPLICATION, ET C'EST LE COMPORTEMENT ATTENDU. `nutri` est la seule couche active
+      // ici (ISOLATE_NUTRI_WEIGHTS) et sa phrase a été retirée de l'affichage
+      // (EXPLANATION_LABELS, selection/explain.ts : `nutri: null`). Une couche muette est écartée
+      // SANS LEVER — c'est exactement le plantage qui frappait `pantry`.
+      expect(suggestion.explanations).toEqual([]);
       expect(suggestion.portions).toBe(2); // recipe.portionsBase, jamais mis à l'échelle ici
       expect(suggestion.nutrition.perPortion).toHaveLength(1);
     }
@@ -701,6 +706,7 @@ function makeEnergyFixture(): Catalog {
     allergens: new Map(),
     lexicon: new Map(),
     tips: [],
+    evidence: new Map(),
     topics: new Map(),
     substitutions: new Map(),
     indexes: EMPTY_INDEXES,

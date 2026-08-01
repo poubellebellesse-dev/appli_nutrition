@@ -94,28 +94,42 @@ export function discriminatingScoringLayers(
   return discriminating
 }
 
-/** Gabarits de phrase, un par couche de score IMPLÉMENTÉE (SCORING_LAYERS, scoring-pass.ts) — ton
- * neutre et descriptif (§6.2 ARCHITECTURE : l'application décrit, elle ne juge ni ne félicite). Les
- * 4 couches non implémentées (`pantry`, `occasion`, `topic`, `cost`) n'apparaissent jamais dans un
- * breakdown réel et n'ont donc pas de gabarit — `labelFor` lève si on les rencontre malgré tout. */
-const EXPLANATION_LABELS: Readonly<Partial<Record<ScoringLayerId, string>>> = {
-  nutri: 'apports équilibrés pour ce repas',
+/**
+ * Gabarits de phrase, ton neutre et descriptif (§6.2 ARCHITECTURE : l'application décrit, elle ne
+ * juge ni ne félicite). `null` = couche jamais citée à l'écran, délibérément.
+ *
+ * ⚠️ TABLE TOTALE, ET C'EST LA CORRECTION D'UN PLANTAGE EN PRODUCTION. Cette table était
+ * `Partial<Record<…>>` et `labelFor` LEVAIT sur une couche absente, au motif que les couches non
+ * implémentées « n'apparaissent jamais dans un breakdown réel ». `pantry` a été implémentée
+ * ensuite (selection/index.ts, poids 0,05 ; scoring/pantry.ts) sans que personne n'ajoute sa
+ * phrase — et le commentaire qui la déclarait non implémentée a survécu au changement. Résultat :
+ * dès qu'un garde-manger non vide départageait deux plats, l'exception traversait `suggestMeals`
+ * et l'écran « Aujourd'hui » n'affichait plus RIEN d'autre que le texte de l'erreur.
+ *
+ * En rendant la table totale, TypeScript exige une entrée par couche : ajouter une couche de score
+ * sans décider de sa formulation est désormais une erreur de COMPILATION, pas un plantage chez
+ * l'utilisateur. C'est la seule forme de garantie qui tienne — le commentaire, lui, n'a pas tenu.
+ */
+export const EXPLANATION_LABELS: Readonly<Record<ScoringLayerId, string | null>> = {
+  // `nutri` pèse toujours dans le classement ; seule sa formulation est retirée de l'affichage.
+  nutri: null,
   preference: 'proche de vos goûts',
   craving: "correspond à l'envie exprimée",
   season: 'ingrédients de saison',
   variety: 'change de vos derniers repas',
   habit: 'dans vos habitudes',
   speed: 'rapide à préparer',
+  pantry: 'utilise ce que vous avez déjà',
+  // Couches non implémentées (selection/index.ts) : aucun breakdown ne les porte aujourd'hui, et
+  // le jour où l'une d'elles arrivera, c'est ici qu'il faudra choisir ses mots.
+  occasion: null,
+  topic: null,
+  cost: null,
 }
 
-function labelFor(id: ScoringLayerId): string {
-  const label = EXPLANATION_LABELS[id]
-  if (label === undefined) {
-    throw new Error(
-      `explain.ts : aucun gabarit de phrase pour la couche '${id}' — couche non implémentée ou hors périmètre de ce lot`
-    )
-  }
-  return label
+/** `null` : couche volontairement muette — l'appelant la retire, il ne la remplace pas. */
+function labelFor(id: ScoringLayerId): string | null {
+  return EXPLANATION_LABELS[id]
 }
 
 /**
@@ -139,17 +153,19 @@ export function explainSuggestion(
 
   const discriminating = discriminatingScoringLayers(breakdowns)
 
-  const entries = (Object.entries(breakdown) as Array<[ScoringLayerId, number]>)
-    .filter(([id]) => discriminating.has(id))
+  // ⚠️ LES COUCHES MUETTES SONT ÉCARTÉES AVANT LE `slice`, jamais après : les retirer ensuite les
+  // laisserait consommer l'un des trois emplacements, et l'écran afficherait moins d'explications
+  // qu'il n'y en avait à dire — un manque silencieux, impossible à distinguer d'un vrai « rien à
+  // signaler ».
+  return (Object.entries(breakdown) as Array<[ScoringLayerId, number]>)
+    .flatMap(([id, contribution]) => {
+      if (!discriminating.has(id)) return []
+      const label = labelFor(id)
+      return label === null ? [] : [{ criterion: id, contribution, label }]
+    })
     .sort((a, b) => {
-      if (a[1] !== b[1]) return b[1] - a[1]
-      return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0
+      if (a.contribution !== b.contribution) return b.contribution - a.contribution
+      return a.criterion < b.criterion ? -1 : a.criterion > b.criterion ? 1 : 0
     })
     .slice(0, MAX_EXPLANATIONS)
-
-  return entries.map(([id, contribution]) => ({
-    criterion: id,
-    contribution,
-    label: labelFor(id),
-  }))
 }

@@ -423,18 +423,26 @@ function CarteRepas({
       </div>
 
       <div className="p-4">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="font-titre text-[1.6rem] leading-tight text-texte">{nom}</h2>
-          <span className="shrink-0 text-[0.85rem] tabular-nums text-attenue">
-            {Math.round(suggestion.score)}/100
-          </span>
-        </div>
+        {/* ⚠️ AUCUNE NOTE CHIFFRÉE ICI, PLUS JAMAIS. Cet emplacement affichait
+            `Math.round(suggestion.score)/100` — le score de CLASSEMENT interne du moteur
+            (api/index.ts : un flottant de [0, 1] ramené sur 100), qui n'a de sens que RELATIF aux
+            autres candidats de la même passe : il dépend des réglages, de l'historique et du reste
+            de la liste, si bien que le même plat peut valoir 62 aujourd'hui et 78 demain.
+            Au-delà de l'obscurité, un nombre sur 100 posé à côté d'un nom de plat se lit comme une
+            note de qualité nutritionnelle — Nutri-Score, Yuka — c'est-à-dire exactement le jugement
+            que §6.2 ARCHITECTURE interdit à cette application de porter. */}
+        <h2 className="font-titre text-[1.6rem] leading-tight text-texte">{nom}</h2>
 
         {/* ⚠️ Les explications viennent du moteur (§6.7) et passent `assertNoTherapeuticClaim`. Ne
-            JAMAIS composer une phrase d'explication ici : la garde ne verrait rien. */}
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">
-          {suggestion.explanations.map((e) => e.label).join(' · ')}
-        </p>
+            JAMAIS composer une phrase d'explication ici : la garde ne verrait rien.
+            Rendu CONDITIONNEL : une couche peut être délibérément muette (`EXPLANATION_LABELS`,
+            selection/explain.ts) et la liste revenir vide — un `<p>` vide laisserait une marge
+            inexpliquée sous le titre. */}
+        {suggestion.explanations.length > 0 && (
+          <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">
+            {suggestion.explanations.map((e) => e.label).join(' · ')}
+          </p>
+        )}
 
         <p className="mt-3 text-[0.85rem] text-attenue">Photo à venir</p>
 
