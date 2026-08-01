@@ -25,7 +25,7 @@ import { Navigation } from './navigation.js'
 import { chargerSocle } from './socle.js'
 import { aConsenti, readDisplay, writeDisplay } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
-import { hashDesParametres, useRoute, type Onglet, type SousVue } from './router.js'
+import { hashDe, hashDesParametres, useRoute, type Onglet, type SousVue } from './router.js'
 import { enregistrerServiceWorker } from './sw-register.js'
 import './index.css'
 
@@ -169,7 +169,19 @@ function Coquille() {
   if (!consenti) {
     return (
       <div className="mx-auto max-w-3xl px-5 pb-10 pt-8">
-        <Accueil onTermine={() => setConsenti(true)} />
+        {/* ⚠️ ON ATTERRIT EXPLICITEMENT SUR « Aujourd'hui », on ne laisse pas l'adresse décider.
+            L'accueil ne touchait pas au fragment d'URL : en sortant, la coquille rendait l'onglet
+            que le fragment désignait encore. Sur une première installation il est vide, donc le
+            défaut tombait juste par accident — mais un parcours ROUVERT par un nouveau texte de
+            consentement (§6.4) part de l'écran où la personne se trouvait, et elle se retrouvait
+            devant « Semaine » ou « Courses » au sortir de l'introduction, sans la suggestion que
+            tout le parcours vient de préparer. */}
+        <Accueil
+          onTermine={() => {
+            window.location.hash = hashDe('aujourdhui')
+            setConsenti(true)
+          }}
+        />
       </div>
     )
   }

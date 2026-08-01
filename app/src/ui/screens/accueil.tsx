@@ -49,6 +49,32 @@ export { VERSION_CONSENTEMENT } from '../texte-consentement.js'
 
 type Etape = 1 | 2 | 3 | 5
 
+/**
+ * L'étape « Installez l'application sur votre écran d'accueil » est DÉSACTIVÉE, pas supprimée
+ * (demande du 2026-08-01 : « désactive juste pour l'instant »).
+ *
+ * ⚠️ LE COMPOSANT `Installation` RESTE RÉFÉRENCÉ CI-DESSOUS, exprès. Le sortir du rendu en aurait
+ * fait du code mort que le prochain nettoyage aurait supprimé pour de bon — alors que la question
+ * est ouverte, pas tranchée. À savoir avant de rouvrir le dossier : l'installation reste NÉCESSAIRE
+ * aux rappels de préparation (hors application installée, aucune notification programmée n'existe,
+ * voir `ui/notifications.ts`), et c'est le seul endroit du produit qui l'explique aujourd'hui.
+ *
+ * Repasser à `true` suffit à la rétablir, à sa place d'origine, avec son retour arrière.
+ */
+const ETAPE_INSTALLATION = false
+
+/**
+ * Les étapes réellement traversées, dans l'ordre.
+ *
+ * ⚠️ REMPLACE UNE ARITHMÉTIQUE QUI NE TENAIT QUE PAR CHANCE : le retour arrière faisait
+ * `etape === 5 ? 3 : etape - 1`, ce qui supposait à la fois que 5 suit 3 et qu'aucun trou n'existe
+ * ailleurs dans la numérotation. Une liste explicite dit la même chose sans rien supposer, et
+ * désactiver une étape devient une ligne au lieu d'une relecture de tous les décalages.
+ */
+const ETAPES: readonly Etape[] = ETAPE_INSTALLATION ? [1, 2, 3, 5] : [1, 3, 5]
+
+const voisine = (etape: Etape, pas: 1 | -1): Etape => ETAPES[ETAPES.indexOf(etape) + pas] ?? etape
+
 const CHOIX_INITIAL: ChoixProfil = {
   allergenes: new Set(),
   regime: null,
@@ -98,15 +124,19 @@ export function Accueil({ onTermine }: { readonly onTermine: () => void }) {
   return (
     <section className="mx-auto max-w-prose">
       {etape === 1 && (
-        <Engagement compris={compris} onCompris={setCompris} onSuivant={() => setEtape(2)} />
+        <Engagement
+          compris={compris}
+          onCompris={setCompris}
+          onSuivant={() => setEtape(voisine(1, 1))}
+        />
       )}
-      {etape === 2 && <Installation onSuivant={() => setEtape(3)} />}
+      {etape === 2 && <Installation onSuivant={() => setEtape(voisine(2, 1))} />}
       {etape === 3 && (
         <Allergies
           catalogue={catalogue}
           choix={choix}
           onChange={setChoix}
-          onSuivant={() => setEtape(5)}
+          onSuivant={() => setEtape(voisine(3, 1))}
         />
       )}
       {etape === 5 && (
@@ -123,7 +153,7 @@ export function Accueil({ onTermine }: { readonly onTermine: () => void }) {
       {etape > 1 && (
         <button
           type="button"
-          onClick={() => setEtape(etape === 5 ? 3 : ((etape - 1) as Etape))}
+          onClick={() => setEtape(voisine(etape, -1))}
           className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-[0.98rem] font-semibold text-texte-doux"
         >
           ← Revenir en arrière

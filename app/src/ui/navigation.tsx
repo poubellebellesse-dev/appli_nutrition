@@ -99,8 +99,14 @@ export function Navigation({ courante }: { readonly courante: Onglet }) {
         // au-dessus du plancher accessibilité) : c'est que `env(safe-area-inset-bottom)` renvoie
         // **0** sur beaucoup d'Android en navigation gestuelle. Rien n'était alors réservé.
         // Augmenter la cible tactile n'y aurait rien changé ; il fallait un PLANCHER de réserve.
+        //
+        // ⚠️ `px-[0.3cm]` : les cinq onglets sont RESSERRÉS VERS LE CENTRE, 3 mm de marge de chaque
+        // bord. Sur un écran incurvé ou à coins très arrondis, les onglets d'extrémité tombaient
+        // dans la courbure — atteignables en théorie, désagréables à viser en pratique. La marge ne
+        // rétrécit pas les cibles : la grille répartit simplement les cinq colonnes sur une largeur
+        // un peu moindre, chacune reste très au-dessus du plancher tactile.
         'fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-bordure bg-surface ' +
-        'pb-[max(env(safe-area-inset-bottom),0.75rem)] ' +
+        'px-[0.3cm] pb-[max(env(safe-area-inset-bottom),0.75rem)] ' +
         'lg:inset-y-0 lg:right-auto lg:w-56 lg:grid-cols-1 lg:content-start lg:gap-1 ' +
         'lg:border-t-0 lg:border-r lg:p-3 lg:pt-8 lg:pb-3'
       }
@@ -113,10 +119,18 @@ export function Navigation({ courante }: { readonly courante: Onglet }) {
             href={hashDe(onglet.route)}
             aria-current={actif ? 'page' : undefined}
             className={
-              // `min-h-tactile` = 3rem : en rem et non en px, pour que la cible GRANDISSE avec la
-              // police système agrandie au lieu de rester figée.
-              'flex min-h-tactile flex-col items-center justify-center gap-1 px-1 py-2 ' +
-              'text-center no-underline lg:flex-row lg:justify-start lg:gap-3 lg:px-3 ' +
+              // ⚠️ 5 mm DE PLUS QUE LE PLANCHER TACTILE, et c'est la hauteur de la BARRE qu'on
+              // vise, pas le confort de visée. Le plancher (`--spacing-tactile` = 3rem ≈ 1,3 cm)
+              // était déjà respecté quand les libellés disparaissaient quand même : sur plusieurs
+              // téléphones la barre système se dessine par-dessus le bas de l'écran. La réserve du
+              // `pb-` ci-dessus règle le cas où le système annonce sa zone ; ces 5 mm donnent la
+              // marge quand il ne l'annonce pas.
+              //
+              // `calc(var(...) + 0.5cm)` plutôt qu'une valeur en dur : la cible continue de
+              // GRANDIR avec la police système, elle ne se fige pas à une taille choisie ici.
+              'flex min-h-[calc(var(--spacing-tactile)+0.5cm)] flex-col items-center ' +
+              'justify-center gap-1 px-1 py-2 ' +
+              'text-center no-underline lg:min-h-tactile lg:flex-row lg:justify-start lg:gap-3 lg:px-3 ' +
               'lg:rounded-[--radius-carte] ' +
               (actif
                 ? 'text-accent-texte lg:bg-accent-doux '
