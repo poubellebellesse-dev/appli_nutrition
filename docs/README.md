@@ -3,7 +3,7 @@
 **Sept documents vivants**, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel
 lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
 
-> Les instantanés datés — récits des sessions 1 à 5 et audit du 2026-07-27 — sont dans
+> Les instantanés datés — récits des sessions 1 à 7 et audit du 2026-07-27 — sont dans
 > [archive/](./archive/) : ils ne décrivent plus l'état du projet. Ils ne sont ni faux ni
 > supprimables, voir [archive/README.md](./archive/README.md).
 
@@ -49,7 +49,9 @@ détail. Deux repères :
 | Document | Ce qu'il consigne |
 |---|---|
 | [archive/AUDIT_2026-07-27.md](./archive/AUDIT_2026-07-27.md) | Regard **extérieur** sur le dépôt au commit `e2625d3` (112 recettes). Chiffres dépassés ; **deux constats restent VIVANTS** : zéro photo, revue juridique |
-| [archive/RECAP_SESSION_5.md](./archive/RECAP_SESSION_5.md) | La session la plus récente — 8 écrans, `user.db`, installabilité. **§2 consigne ce que le navigateur et l'usage ont démenti** |
+| [archive/RECAP_SESSION_6.md](./archive/RECAP_SESSION_6.md) | Le contenu de Savoir. **§2 consigne les trois tips que la vérification a démentis**, et les sujets écartés faute de source lisible |
+| [archive/RECAP_SESSION_7.md](./archive/RECAP_SESSION_7.md) | **Même période que la 6, piste parallèle** — tests des 9 écrans, plantage sur garde-manger non vide, menus déroulants remplacés par des fenêtres. **§2 liste trois défauts trouvés et non corrigés**, **§5 ce qui reste branché à moitié** |
+| [archive/RECAP_SESSION_5.md](./archive/RECAP_SESSION_5.md) | 8 écrans, `user.db`, installabilité. **§2 consigne ce que le navigateur et l'usage ont démenti** ; **§7 le journal des lots** |
 
 Ils décrivent un état **vrai à leur date**. Les corriger après coup falsifierait l'historique : une
 affirmation devenue fausse se corrige dans les documents de référence, pas dans le récit qui l'a
