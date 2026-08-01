@@ -35,6 +35,7 @@ import {
   type Socle,
 } from '../socle.js'
 import { hashDeRecette, hashDuFrigo } from '../router.js'
+import { Panneau } from '../panneau.js'
 import { REPAS_PAR_DEFAUT, creneauxDuRythme } from '../creneau.js'
 import { readDisplay, readMealTimes } from '../../data/user-store.js'
 import { rappelsDuPlan } from '../rappel.js'
@@ -418,11 +419,15 @@ function SemaineVide({
 /**
  * L'avertissement de plancher calorique — §6.5 ARCHITECTURE.
  *
- * ⚠️ REPLIÉ PAR DÉFAUT, JAMAIS ABSENT. Le bloc listait chaque journée en clair, en permanence : sur
- * une semaine un peu légère, sept lignes rouges accueillaient l'utilisateur à chaque visite. Il est
- * désormais réduit à un marqueur et une phrase, le détail s'ouvre d'un tap. Ce que le réglage
- * « version courte » raccourcit encore — mais NI L'UN NI L'AUTRE ne fait disparaître le marqueur :
- * l'avertissement prévient sans interdire, encore faut-il qu'il prévienne.
+ * ⚠️ LE MARQUEUR RESTE TOUJOURS VISIBLE, LE DÉTAIL PART EN FENÊTRE. Le bloc listait autrefois
+ * chaque journée en clair, en permanence : sur une semaine un peu légère, sept lignes rouges
+ * accueillaient l'utilisateur à chaque visite. Une version dépliante EN PLACE a suivi, mais un
+ * dépliant pousse tout ce qui suit vers le bas au tap — précisément ce que `Panneau` existe pour
+ * éviter (voir son en-tête). Le marqueur (icône + résumé) reste dans le flux de l'écran ; le détail
+ * (une ligne par jour) s'ouvre désormais dans une fenêtre en superposition, et la semaine en
+ * dessous ne bouge plus. Ce que le réglage « version courte » raccourcit encore — mais NI L'UN NI
+ * L'AUTRE ne fait disparaître le marqueur : l'avertissement prévient sans interdire, encore faut-il
+ * qu'il prévienne.
  */
 function AlerteEnergie({
   warnings,
@@ -431,7 +436,7 @@ function AlerteEnergie({
   readonly warnings: WeekPlan['warnings']
   readonly discrete: boolean
 }) {
-  const [ouverte, setOuverte] = useState(false)
+  const [panneauOuvert, setPanneauOuvert] = useState(false)
   if (warnings.length === 0) return null
 
   const resume = discrete
@@ -445,8 +450,12 @@ function AlerteEnergie({
     >
       <button
         type="button"
-        onClick={() => setOuverte((o) => !o)}
-        aria-expanded={ouverte}
+        onClick={() => setPanneauOuvert(true)}
+        // ⚠️ `aria-haspopup="dialog"` ET NON `aria-expanded` — même raisonnement que dans
+        // `filtres-recettes.tsx` (voir son en-tête) : ce bouton n'agrandit plus rien EN PLACE, il
+        // ouvre une fenêtre. Annoncer « replié / déplié » laisserait attendre un texte qui s'allonge
+        // sous lui, alors que le focus part ailleurs.
+        aria-haspopup="dialog"
         className="flex min-h-tactile w-full items-center gap-3 px-4 py-2 text-left"
       >
         {/* Le marqueur. `aria-hidden` : le texte qui suit dit déjà tout, l'annoncer deux fois
@@ -466,18 +475,20 @@ function AlerteEnergie({
         </svg>
         <span className="flex-1 font-semibold">{resume}</span>
         <span aria-hidden="true" className="shrink-0 text-[0.85rem] font-semibold">
-          {ouverte ? 'Masquer' : 'Détail'}
+          Détail
         </span>
       </button>
 
-      {ouverte && (
-        <ul className="list-inside list-disc px-4 pb-3">
-          {warnings.map((w) => (
-            <li key={w.date}>
-              {formaterJour(w.date)} — {Math.round(w.kcal)} kcal pour une référence de {w.seuil} kcal
-            </li>
-          ))}
-        </ul>
+      {panneauOuvert && (
+        <Panneau titre="Journées à surveiller" onFermer={() => setPanneauOuvert(false)}>
+          <ul className="list-inside list-disc">
+            {warnings.map((w) => (
+              <li key={w.date}>
+                {formaterJour(w.date)} — {Math.round(w.kcal)} kcal pour une référence de {w.seuil} kcal
+              </li>
+            ))}
+          </ul>
+        </Panneau>
       )}
     </div>
   )

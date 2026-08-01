@@ -33,7 +33,7 @@
 //      14 après régénération.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { RecipeId, WeekPlan } from '../../engine/domain/index.js'
 import { readLatestPlan, savePlan, writeDisplay } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
@@ -225,22 +225,51 @@ describe('semaine — les alertes d’énergie', () => {
     }
   }
 
-  it('reste repliée par défaut, et se déplie au tap', async () => {
-    // §6.5 ARCHITECTURE : le marqueur ne doit JAMAIS être absent, mais le détail (une ligne par
-    // jour) ne doit plus s'afficher en bloc — c'est le sujet de la correction documentée en tête de
+  it('le marqueur reste visible en permanence, le détail s’ouvre en fenêtre au tap', async () => {
+    // §6.5 ARCHITECTURE : le marqueur ne doit JAMAIS être absent. Le détail (une ligne par jour) ne
+    // s'affiche plus en bloc sous le marqueur — il s'ouvre désormais dans une fenêtre en
+    // superposition (`Panneau`), c'est le sujet de la correction documentée en tête de
     // `AlerteEnergie` dans `semaine.tsx`.
     savePlan(baseCourante(), planAvecAlerte())
     await monter()
     await screen.findByText('Proposer une autre semaine')
 
+    // Le détail n'est nulle part dans le DOM tant que la fenêtre n'a pas été ouverte — ni en bloc
+    // sous le marqueur (l'ancien comportement), ni déjà présent dans un panneau caché.
     expect(screen.queryByText(/kcal pour une référence de/)).toBeNull()
+    expect(screen.queryByRole('dialog')).toBeNull()
+
     const marqueur = screen.getByText(/Une journée apporte moins d.énergie/)
     const boutonDetail = marqueur.closest('button')!
-    expect(boutonDetail.getAttribute('aria-expanded')).toBe('false')
+    // `aria-haspopup="dialog"`, PAS `aria-expanded` : ce bouton ouvre une fenêtre, il n'allonge
+    // rien en place (voir filtres-recettes.tsx pour le même patron).
+    expect(boutonDetail.getAttribute('aria-haspopup')).toBe('dialog')
+    expect(boutonDetail.hasAttribute('aria-expanded')).toBe(false)
 
     fireEvent.click(boutonDetail)
-    await waitFor(() => expect(boutonDetail.getAttribute('aria-expanded')).toBe('true'))
-    expect(screen.getByText(/kcal pour une référence de 1500 kcal/)).toBeDefined()
+    const dialogue = await screen.findByRole('dialog')
+    expect(within(dialogue).getByText(/kcal pour une référence de 1500 kcal/)).toBeDefined()
+
+    // « ← Retour » referme la fenêtre — ciblé par regex : le libellé réel porte la flèche.
+    fireEvent.click(within(dialogue).getByText(/Retour/))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    // Le marqueur, lui, n'a jamais bougé.
+    expect(screen.getByText(/Une journée apporte moins d.énergie/)).toBeDefined()
+  })
+
+  it('n’allonge pas la semaine en dessous : la fenêtre de détail est un enfant direct de document.body', async () => {
+    // Le point de fond de la conversion en superposition (voir panneau.tsx) : le `dialog` doit être
+    // un enfant du PORTAIL (document.body), jamais un nœud inséré dans le flux des journées — sinon
+    // ouvrir le détail repousserait la liste des repas vers le bas exactement comme avant.
+    savePlan(baseCourante(), planAvecAlerte())
+    await monter()
+    await screen.findByText('Proposer une autre semaine')
+
+    const marqueur = screen.getByText(/Une journée apporte moins d.énergie/)
+    fireEvent.click(marqueur.closest('button')!)
+
+    const dialogue = await screen.findByRole('dialog')
+    expect(dialogue.parentElement).toBe(document.body)
   })
 
   it('le réglage « alertes discrètes » raccourcit le résumé, sans faire disparaître le marqueur', async () => {
@@ -261,6 +290,8 @@ describe('semaine — les alertes d’énergie', () => {
     expect(screen.queryByText(/Une journée apporte moins d.énergie/)).toBeNull()
     const resume = screen.getByText(/1 journée à surveiller/)
     fireEvent.click(resume.closest('button')!)
-    await waitFor(() => expect(screen.getByText(/kcal pour une référence de/)).toBeDefined())
+
+    const dialogue = await screen.findByRole('dialog')
+    expect(within(dialogue).getByText(/kcal pour une référence de/)).toBeDefined()
   })
 })

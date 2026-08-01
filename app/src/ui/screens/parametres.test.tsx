@@ -9,9 +9,20 @@
 //
 // Le test qui compte va jusqu'au bout de la chaîne : décocher à l'écran doit CHANGER CE QUE LE
 // MOTEUR PROPOSE. Vérifier que la case bascule ne prouverait rien.
+//
+// ⚠️ DEPUIS QUE LES SOUS-MENUS SONT DES PANNEAUX EN SUPERPOSITION (`ui/panneau.tsx`), chaque champ
+// est caché derrière une ligne ouvrante (« Mes allergies », « Réglages d'affichage », « Rappels »…)
+// et n'existe dans le DOM qu'une fois le panneau ouvert. `ouvrir(libelle)` fait ce clic avant toute
+// interaction avec un champ, ET REND UN OBJET DE REQUÊTES SCOPÉ AU PANNEAU (`within`) : la ligne
+// ouvrante reste montée EN DESSOUS pendant que le panneau est ouvert, et son résumé peut porter
+// exactement le même texte que le champ qu'on veut toucher — un seul allergène déclaré fait que
+// « Mes allergies » se résume à « Gluten », strictement le même texte que la case à cocher du même
+// nom À L'INTÉRIEUR du panneau. `screen.getByText('Gluten')` y trouverait alors DEUX éléments et
+// échouerait — d'où l'usage systématique du scope retourné par `ouvrir` pour tout ce qui se trouve
+// dans un panneau.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { AllergenId, RecipeId } from '../../engine/domain/index.js'
 import { readAllergies, readDisplay, readMealTimes, writeAllergies } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
@@ -36,8 +47,30 @@ async function monter() {
   await screen.findByRole('heading', { name: 'Paramètres' })
 }
 
-const presse = (texte: string): string | null =>
-  screen.getByText(texte).closest('button')!.getAttribute('aria-pressed')
+/** État `aria-pressed` d'un bouton, cherché DANS le scope donné (voir `ouvrir`). */
+const presseDans = (scope: ReturnType<typeof within>, texte: string): string | null =>
+  scope.getByText(texte).closest('button')!.getAttribute('aria-pressed')
+
+/**
+ * Ouvre le panneau d'un réglage depuis sa ligne ouvrante, par son libellé exact (ex. « Mes
+ * allergies », « Rappels »). Rend les requêtes SCOPÉES à ce panneau — voir la note en tête de
+ * fichier sur la collision entre le résumé de la ligne et le libellé d'un champ.
+ */
+function ouvrir(libelleLigne: string): ReturnType<typeof within> {
+  fireEvent.click(screen.getByText(libelleLigne))
+  return within(screen.getByRole('dialog'))
+}
+
+/**
+ * Referme le panneau ouvert via son bouton « ← Retour ».
+ *
+ * ⚠️ REGEX, PAS DE TEXTE EXACT : le bouton porte une flèche dans un `<span aria-hidden>` séparé du
+ * texte « Retour » — un piège classique pour `queryByText` en assertion d'absence ailleurs dans ce
+ * fichier, donc la même prudence ici même si le clic n'a pas ce problème.
+ */
+function retour() {
+  fireEvent.click(screen.getByText(/Retour/))
+}
 
 /** Les recettes que le moteur propose, à travers un socle reconstruit depuis la base courante. */
 async function suggestions(): Promise<readonly RecipeId[]> {
@@ -71,17 +104,22 @@ describe('parametres — les allergies sont modifiables, et ça compte', () => {
   it('affiche cochées celles qui sont déjà déclarées', async () => {
     writeAllergies(baseCourante(), [{ allergenId: 'gluten' as AllergenId, severite: null }])
     await monter()
-    expect(presse('Gluten')).toBe('true')
-    expect(presse('Lait')).toBe('false')
+    const panneau = ouvrir('Mes allergies')
+    expect(presseDans(panneau, 'Gluten')).toBe('true')
+    expect(presseDans(panneau, 'Lait')).toBe('false')
   })
 
   it('écrit IMMÉDIATEMENT, sans bouton « Enregistrer »', async () => {
     // Un formulaire qu'on peut quitter à moitié rempli laisse croire qu'une allergie est déclarée
-    // alors que rien n'est parti en base — sur ce filtre, c'est une protection imaginaire.
+    // alors que rien n'est parti en base — sur ce filtre, c'est une protection imaginaire. Vrai
+    // aussi bien avant qu'après l'ouverture du panneau : ce n'est pas un formulaire non plus.
     await monter()
     expect(screen.queryByText(/Enregistrer/)).toBeNull()
 
-    fireEvent.click(screen.getByText('Gluten'))
+    const panneau = ouvrir('Mes allergies')
+    expect(screen.queryByText(/Enregistrer/)).toBeNull()
+
+    fireEvent.click(panneau.getByText('Gluten'))
     await waitFor(() =>
       expect(readAllergies(baseCourante()).map((a) => a.allergenId)).toEqual(['gluten'])
     )
@@ -92,7 +130,8 @@ describe('parametres — les allergies sont modifiables, et ça compte', () => {
     const avec = await suggestions()
 
     await monter()
-    fireEvent.click(screen.getByText('Gluten'))
+    const panneau = ouvrir('Mes allergies')
+    fireEvent.click(panneau.getByText('Gluten'))
     await waitFor(() => expect(readAllergies(baseCourante())).toEqual([]))
 
     const sans = await suggestions()
@@ -103,14 +142,16 @@ describe('parametres — les allergies sont modifiables, et ça compte', () => {
   it('sait revenir à AUCUNE allergie — « je m’étais trompé » doit être exprimable', async () => {
     writeAllergies(baseCourante(), [{ allergenId: 'arachides' as AllergenId, severite: null }])
     await monter()
-    fireEvent.click(screen.getByText('Arachides'))
+    const panneau = ouvrir('Mes allergies')
+    fireEvent.click(panneau.getByText('Arachides'))
     await waitFor(() => expect(readAllergies(baseCourante())).toEqual([]))
   })
 
   it('donne accès aux 14 allergènes réglementaires — aucun caché', async () => {
     await monter()
-    fireEvent.click(screen.getByText(/Voir les \d+ allergènes réglementaires/))
-    expect(screen.getByText('Sésame')).toBeDefined()
+    const panneau = ouvrir('Mes allergies')
+    fireEvent.click(panneau.getByText(/Voir les \d+ allergènes réglementaires/))
+    expect(panneau.getByText('Sésame')).toBeDefined()
   })
 })
 
@@ -119,18 +160,20 @@ describe('parametres — les réglages d’affichage', () => {
     // `writeDisplay` remplace la ligne entière : un champ omis repartirait au défaut du schéma.
     // Le défaut a existé — `detail-recette` écrivait `{ afficherMacros }` seul.
     await monter()
-    fireEvent.click(screen.getByText('Afficher les valeurs nutritionnelles détaillées'))
+    const panneau = ouvrir("Réglages d'affichage")
+    fireEvent.click(panneau.getByText('Afficher les valeurs nutritionnelles détaillées'))
     await waitFor(() => expect(readDisplay(baseCourante()).afficherMacros).toBe(true))
 
-    fireEvent.click(screen.getByText("Changer de plat en balayant l'écran"))
+    fireEvent.click(panneau.getByText("Changer de plat en balayant l'écran"))
     await waitFor(() => expect(readDisplay(baseCourante()).gestesBalayage).toBe(true))
     expect(readDisplay(baseCourante()).afficherMacros).toBe(true)
   })
 
   it('part de rien d’activé — chaque réglage est un opt-in', async () => {
     await monter()
-    expect(presse("Changer de plat en balayant l'écran")).toBe('false')
-    expect(presse('Afficher les valeurs nutritionnelles détaillées')).toBe('false')
+    const panneau = ouvrir("Réglages d'affichage")
+    expect(presseDans(panneau, "Changer de plat en balayant l'écran")).toBe('false')
+    expect(presseDans(panneau, 'Afficher les valeurs nutritionnelles détaillées')).toBe('false')
   })
 })
 
@@ -139,17 +182,20 @@ describe('parametres — les rappels', () => {
     // Hors conteneur natif, aucune notification programmée n'existe. Plutôt qu'un interrupteur qui
     // ne ferait rien, on explique — une promesse non tenue coûte plus cher qu'une absence.
     await monter()
-    await screen.findByText(/demandent l'application installée/)
+    const panneau = ouvrir('Rappels')
+    await panneau.findByText(/demandent l'application installée/)
   })
 
   it('n’active PAS les rappels quand la permission ne peut pas être accordée', async () => {
     await monter()
-    fireEvent.click(screen.getByText('Me prévenir quand il est temps de commencer'))
+    const panneau = ouvrir('Rappels')
+    fireEvent.click(panneau.getByText('Me prévenir quand il est temps de commencer'))
     await waitFor(() => expect(readDisplay(baseCourante()).rappelsActifs).toBe(false))
   })
 
   it('enregistre quand même l’heure des repas — elle décrit l’utilisateur, pas la plateforme', async () => {
     await monter()
+    ouvrir('Rappels')
     const heures = document.querySelectorAll('input[type="time"]')
     expect(heures.length).toBeGreaterThan(0)
     fireEvent.change(heures[heures.length - 1]!, { target: { value: '19:30' } })
@@ -160,8 +206,45 @@ describe('parametres — les rappels', () => {
 describe('parametres — à propos', () => {
   it('énonce les engagements du produit et donne un contact', async () => {
     await monter()
-    expect(screen.getByText(/sans publicité, sans compte et sans mesure/)).toBeDefined()
-    expect(screen.getByText(/développeur indépendant/)).toBeDefined()
+    const panneau = ouvrir('À propos')
+    expect(panneau.getByText(/sans publicité, sans compte et sans mesure/)).toBeDefined()
+    expect(panneau.getByText(/développeur indépendant/)).toBeDefined()
     expect(document.querySelector('a[href^="mailto:"]')).not.toBeNull()
+  })
+})
+
+describe('parametres — les sous-menus sont des fenêtres en superposition, pas des dépliants', () => {
+  it('« ← Retour » referme le panneau SANS annuler la modification — déjà écrite en base', async () => {
+    await monter()
+    const panneau = ouvrir('Mes allergies')
+    expect(screen.getByRole('dialog', { name: 'Mes allergies' })).toBeDefined()
+
+    fireEvent.click(panneau.getByText('Gluten'))
+    await waitFor(() =>
+      expect(readAllergies(baseCourante()).map((a) => a.allergenId)).toEqual(['gluten'])
+    )
+
+    retour()
+    // Le panneau est refermé…
+    expect(screen.queryByRole('dialog')).toBeNull()
+    // … mais fermer n'annule rien : l'écriture était déjà faite pendant que le panneau était ouvert.
+    expect(readAllergies(baseCourante()).map((a) => a.allergenId)).toEqual(['gluten'])
+  })
+
+  it('la ligne ouvrante affiche la valeur courante, et elle change après modification', async () => {
+    await monter()
+    // Rien de déclaré au départ : la ligne le dit sans qu'on ait besoin d'ouvrir le panneau.
+    expect(screen.getByText('Aucune')).toBeDefined()
+
+    const panneau = ouvrir('Mes allergies')
+    fireEvent.click(panneau.getByText('Gluten'))
+    await waitFor(() =>
+      expect(readAllergies(baseCourante()).map((a) => a.allergenId)).toEqual(['gluten'])
+    )
+    retour()
+
+    // La ligne reflète maintenant ce qui a été déclaré, sans qu'on rouvre le panneau.
+    expect(screen.getByText('Gluten')).toBeDefined()
+    expect(screen.queryByText('Aucune')).toBeNull()
   })
 })

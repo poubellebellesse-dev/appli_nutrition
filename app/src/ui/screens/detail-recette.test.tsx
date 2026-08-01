@@ -21,7 +21,7 @@
 // valeur inventée — pas la donnée elle-même.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { RecipeId } from '../../engine/domain/index.js'
 import { readDisplay, readFavorites, writeDisplay } from '../../data/user-store.js'
 import { AXES_PAR_DEFAUT, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
@@ -41,8 +41,9 @@ afterEach(cleanup)
 
 async function monter(recetteId: string) {
   const { DetailRecette } = await import('./detail-recette.js')
-  render(<DetailRecette recetteId={recetteId} />)
+  const resultat = render(<DetailRecette recetteId={recetteId} />)
   await screen.findByRole('heading', { level: 1 })
+  return resultat
 }
 
 /**
@@ -57,6 +58,14 @@ function recetteDeReference() {
 }
 
 describe('detail-recette — la bascule des macros', () => {
+  // ⚠️ Depuis la conversion en fenêtre superposée (voir l'en-tête de detail-recette.tsx et de
+  // ui/panneau.tsx), la ligne « Valeurs nutritionnelles » n'est plus le bouton qui bascule le
+  // réglage : elle OUVRE une fenêtre (`Panneau`), et c'est un bouton À L'INTÉRIEUR de cette fenêtre
+  // (« Afficher ces valeurs » / « Masquer ces valeurs ») qui appelle `onBasculer`. Les trois tests
+  // ci-dessous ouvrent donc la fenêtre avant d'agir, et ciblent son contenu via
+  // `within(screen.getByRole('dialog'))` — un même libellé (« Valeurs nutritionnelles ») existe à
+  // la fois dans la ligne d'ouverture ET dans le titre de la fenêtre une fois ouverte.
+
   it('⛔ ne remet PAS les autres réglages d’affichage au défaut', async () => {
     // LE DÉFAUT VERROUILLÉ (voir l'en-tête). Un autre réglage est allumé AVANT d'ouvrir la fiche ;
     // s'il retombe à faux après avoir juste basculé les macros, c'est que `writeDisplay` a de
@@ -65,6 +74,8 @@ describe('detail-recette — la bascule des macros', () => {
 
     await monter(recetteDeReference().id)
     fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
+    const dialogue = screen.getByRole('dialog')
+    fireEvent.click(within(dialogue).getByText(/Afficher ces valeurs/))
 
     await waitFor(() => expect(readDisplay(baseCourante()).afficherMacros).toBe(true))
     expect(readDisplay(baseCourante()).gestesBalayage).toBe(true)
@@ -73,15 +84,20 @@ describe('detail-recette — la bascule des macros', () => {
   it('persiste en base : un écran remonté de zéro retrouve l’état, pas seulement React', async () => {
     await monter(recetteDeReference().id)
     fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
+    fireEvent.click(within(screen.getByRole('dialog')).getByText(/Afficher ces valeurs/))
     await waitFor(() => expect(readDisplay(baseCourante()).afficherMacros).toBe(true))
 
-    // Démonte tout — aucun état React ne survit à ça — puis remonte un DetailRecette flambant neuf
-    // sur la même recette.
+    // Démonte tout — aucun état React ne survit à ça, et la fenêtre elle-même repart fermée —
+    // puis remonte un DetailRecette flambant neuf sur la même recette.
     cleanup()
     await monter(recetteDeReference().id)
 
-    const bouton = screen.getByText('Valeurs nutritionnelles').closest('button') as HTMLButtonElement
-    expect(bouton.getAttribute('aria-expanded')).toBe('true')
+    // La ligne d'ouverture affiche la valeur COURANTE (voir ui/panneau.tsx#LigneOuvrante) : si le
+    // réglage relu en base est bien à `true`, elle ne dit plus « Non affichées » mais reflète la
+    // donnée réelle — ici `null` sur le catalogue de test (voir l'en-tête du fichier), donc « Non
+    // renseignées pour cette recette. » directement sur la ligne, sans même rouvrir la fenêtre.
+    expect(screen.queryByText('Non affichées')).toBeNull()
+    await screen.findByText('Non renseignées pour cette recette.')
   })
 
   it('⛔ n’invente AUCUNE valeur : dit que ce n’est pas renseigné plutôt qu’un 0 kcal muet', async () => {
@@ -91,9 +107,28 @@ describe('detail-recette — la bascule des macros', () => {
     // s'affiche honnêtement plutôt que comme un zéro ou un tiret.
     await monter(recetteDeReference().id)
     fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
+    const dialogue = screen.getByRole('dialog')
+    fireEvent.click(within(dialogue).getByText(/Afficher ces valeurs/))
 
-    await screen.findByText('Non renseignées pour cette recette.')
+    await within(dialogue).findByText('Non renseignées pour cette recette.')
     expect(document.body.textContent).not.toMatch(/\d+\s*kcal/)
+  })
+
+  it('la fenêtre est un vrai portail : l’ouvrir n’allonge pas la fiche en dessous', async () => {
+    // ⚠️ C'EST LA RAISON D'ÊTRE DE `Panneau` (voir son en-tête) : un dépliant inline aurait fait
+    // grandir `container` — l'arbre DOM de la fiche elle-même — pour y loger son contenu. Un
+    // portail vers `document.body` ne touche pas à cet arbre : la fenêtre est un ENFANT DIRECT de
+    // `document.body`, pas de la fiche.
+    const { container } = await monter(recetteDeReference().id)
+    const nombreNoeudsAvant = container.querySelectorAll('*').length
+
+    fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
+    const dialogue = screen.getByRole('dialog')
+
+    expect(dialogue.getAttribute('aria-modal')).toBe('true')
+    expect(dialogue.parentElement).toBe(document.body)
+    expect(container.contains(dialogue)).toBe(false)
+    expect(container.querySelectorAll('*').length).toBe(nombreNoeudsAvant)
   })
 })
 

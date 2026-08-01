@@ -18,6 +18,7 @@
 
 import type { Catalog, FacetteKind, RecipeId } from '../engine/domain/index.js'
 import { valeursDeFacette } from '../engine/search/index.js'
+import { Panneau } from './panneau.js'
 
 /** Combien de valeurs montrer avant de replier (§4.4 : « deux rangées »). */
 const PASTILLES_VISIBLES = 5
@@ -77,37 +78,41 @@ export function FiltresRecettes({
   catalogue,
   filtres,
   comptes,
-  deplie,
+  panneauOuvert,
   onChange,
-  onDeplier,
+  onBasculerPanneau,
 }: {
   readonly catalogue: Catalog
   readonly filtres: FiltresRecette
   readonly comptes: Comptes
-  readonly deplie: boolean
+  readonly panneauOuvert: boolean
   readonly onChange: (filtres: FiltresRecette) => void
-  readonly onDeplier: () => void
+  readonly onBasculerPanneau: () => void
 }) {
   const basculer = (liste: readonly string[], valeur: string): readonly string[] =>
     liste.includes(valeur) ? liste.filter((v) => v !== valeur) : [...liste, valeur]
+
+  const cuisines = valeursDeFacette(catalogue, 'cuisine' as FacetteKind)
+  const styles = valeursDeFacette(catalogue, 'style' as FacetteKind)
+  const onBasculerCuisine = (v: string) =>
+    onChange({ ...filtres, cuisines: basculer(filtres.cuisines, v) })
+  const onBasculerStyle = (v: string) => onChange({ ...filtres, styles: basculer(filtres.styles, v) })
 
   return (
     <>
       <Pastilles
         titre="Cuisine"
-        valeurs={valeursDeFacette(catalogue, 'cuisine' as FacetteKind)}
+        valeurs={cuisines}
         comptes={comptes.get('cuisine' as FacetteKind)}
         choisies={filtres.cuisines}
-        deplie={deplie}
-        onBasculer={(v) => onChange({ ...filtres, cuisines: basculer(filtres.cuisines, v) })}
+        onBasculer={onBasculerCuisine}
       />
       <Pastilles
         titre="Style"
-        valeurs={valeursDeFacette(catalogue, 'style' as FacetteKind)}
+        valeurs={styles}
         comptes={comptes.get('style' as FacetteKind)}
         choisies={filtres.styles}
-        deplie={deplie}
-        onBasculer={(v) => onChange({ ...filtres, styles: basculer(filtres.styles, v) })}
+        onBasculer={onBasculerStyle}
       />
 
       {/* ⚠️ TOUJOURS VISIBLE, plus derrière « Plus de filtres ». §4.4 range « le reste » dans le
@@ -133,14 +138,44 @@ export function FiltresRecettes({
         </div>
       </fieldset>
 
+      {/* ⚠️ `aria-haspopup="dialog"` ET NON `aria-expanded`. L'attribut a d'abord été gardé pour ne
+          pas réécrire un test — mauvais sens de la dépendance. `aria-expanded` décrit un contenu
+          qui se déplie EN PLACE, ce que ce bouton ne fait précisément plus : il ouvre une fenêtre
+          modale. Annoncer « replié / déplié » à un lecteur d'écran laisserait attendre que le texte
+          suivant se soit allongé, alors que le focus vient de partir ailleurs. */}
       <button
         type="button"
-        onClick={onDeplier}
-        aria-expanded={deplie}
+        onClick={onBasculerPanneau}
+        aria-haspopup="dialog"
         className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux"
       >
-        {deplie ? 'Moins de filtres' : 'Plus de filtres'}
+        Plus de filtres
       </button>
+
+      {/* ⚠️ FENÊTRE, PAS UN DÉPLIANT. Un dépliant inline pousse la liste de recettes vers le bas ;
+          `Panneau` recouvre l'écran sans en bouger le contenu — voir l'en-tête de panneau.tsx. Les
+          DEUX facettes y sont regroupées par catégorie (un `fieldset` par facette, comme à l'écran
+          principal), avec cette fois TOUTES leurs valeurs. */}
+      {panneauOuvert && (
+        <Panneau titre="Filtres" onFermer={onBasculerPanneau}>
+          <Pastilles
+            titre="Cuisine"
+            valeurs={cuisines}
+            comptes={comptes.get('cuisine' as FacetteKind)}
+            choisies={filtres.cuisines}
+            toutesLesValeurs
+            onBasculer={onBasculerCuisine}
+          />
+          <Pastilles
+            titre="Style"
+            valeurs={styles}
+            comptes={comptes.get('style' as FacetteKind)}
+            choisies={filtres.styles}
+            toutesLesValeurs
+            onBasculer={onBasculerStyle}
+          />
+        </Panneau>
+      )}
     </>
   )
 }
@@ -150,20 +185,20 @@ function Pastilles({
   valeurs,
   comptes,
   choisies,
-  deplie,
+  toutesLesValeurs = false,
   onBasculer,
 }: {
   readonly titre: string
   readonly valeurs: readonly { readonly valeur: string; readonly nombre: number }[]
   readonly comptes: ReadonlyMap<string, number> | undefined
   readonly choisies: readonly string[]
-  readonly deplie: boolean
+  readonly toutesLesValeurs?: boolean
   readonly onBasculer: (valeur: string) => void
 }) {
   // ⚠️ ORDRE STABLE, issu de la fréquence GLOBALE, et non de la fréquence du moment. Réordonner les
   // pastilles à chaque frappe les ferait danser sous le doigt : on ne saurait plus où viser. Seuls
   // les COMPTES bougent.
-  const visibles = deplie
+  const visibles = toutesLesValeurs
     ? valeurs
     : valeurs.filter((v, i) => i < PASTILLES_VISIBLES || choisies.includes(v.valeur))
 

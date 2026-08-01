@@ -31,6 +31,7 @@ import { hashDe, hashDeLEditeur } from '../router.js'
 import { estRecettePerso } from '../../data/user-recipe.js'
 import { quantiteAffichee } from '../quantites.js'
 import { origineDeCuisine } from '../drapeaux.js'
+import { LigneOuvrante, Panneau } from '../panneau.js'
 
 interface Vue {
   readonly recette: Recipe
@@ -439,13 +440,19 @@ function Etape({
 }
 
 /**
- * « Valeurs nutritionnelles », repliée et opt-in (§4.6, §6.5 ARCHITECTURE).
+ * « Valeurs nutritionnelles », dans une fenêtre en superposition, opt-in (§4.6, §6.5 ARCHITECTURE).
  *
  * ⚠️ CE QUI EST INTERDIT ICI, ET QUI NE DOIT JAMAIS Y REVENIR : un compteur de reste quotidien
  * (« il te reste 340 kcal »), un objectif journalier présenté comme cible, un code couleur
  * rouge/vert, un cumul de la journée mis en avant. §6.5 est explicite : c'est le MÉCANISME de
  * restriction qui est proscrit, pas le chiffre. Une valeur par portion, brute et neutre, est
  * autorisée — et l'apport de référence ne peut être cité qu'EN NOTE, jamais comme un but.
+ *
+ * ⚠️ PLUS DE DÉPLIANT INLINE. Un dépliant poussait la fiche entière vers le bas (voir l'en-tête de
+ * ui/panneau.tsx). `afficherMacros` reste le réglage persisté et partagé avec Paramètres — ce n'est
+ * pas ici un simple état d'ouverture de fenêtre : tant qu'il est à `false`, la ligne d'ouverture
+ * elle-même ne révèle rien (« Non affichées »), exactement comme le dépliant fermé ne révélait rien
+ * avant. La fenêtre héberge à la fois la valeur et le bouton qui bascule ce réglage.
  */
 function ValeursNutritionnelles({
   affiche,
@@ -456,33 +463,46 @@ function ValeursNutritionnelles({
   readonly energiePortion: number | null
   readonly onBasculer: () => void
 }) {
+  const [ouvert, setOuvert] = useState(false)
+
+  const valeur = !affiche
+    ? 'Non affichées'
+    : energiePortion === null
+      ? 'Non renseignées pour cette recette.'
+      : `${Math.round(energiePortion)} kcal par portion`
+
   return (
     <section className="mt-10 border-t border-bordure pt-5">
-      <button
-        type="button"
-        onClick={onBasculer}
-        aria-expanded={affiche}
-        className="flex min-h-tactile w-full items-center justify-between rounded-[0.7rem] px-1 text-left text-[1.05rem] font-semibold text-texte-doux"
-      >
-        Valeurs nutritionnelles
-        <span aria-hidden="true" className="text-attenue">
-          {affiche ? '−' : '+'}
-        </span>
-      </button>
+      <LigneOuvrante libelle="Valeurs nutritionnelles" valeur={valeur} onOuvrir={() => setOuvert(true)} />
 
-      {affiche && (
-        <div className="mt-2 px-1">
-          {energiePortion === null ? (
-            <p className="text-[1rem] text-attenue">Non renseignées pour cette recette.</p>
+      {ouvert && (
+        <Panneau titre="Valeurs nutritionnelles" onFermer={() => setOuvert(false)}>
+          {affiche ? (
+            <>
+              {energiePortion === null ? (
+                <p className="text-[1rem] text-attenue">Non renseignées pour cette recette.</p>
+              ) : (
+                <p className="text-[1.1rem] text-texte">
+                  Cette portion : <span className="tabular-nums">{Math.round(energiePortion)}</span> kcal
+                </p>
+              )}
+              <p className="mt-2 text-[0.9rem] leading-relaxed text-attenue">
+                Une information, pas un objectif. Ce réglage se désactive à tout moment.
+              </p>
+            </>
           ) : (
-            <p className="text-[1.1rem] text-texte">
-              Cette portion : <span className="tabular-nums">{Math.round(energiePortion)}</span> kcal
+            <p className="text-[1rem] leading-relaxed text-texte-doux">
+              Masquées par choix. Ce réglage se retrouve aussi dans Paramètres.
             </p>
           )}
-          <p className="mt-2 text-[0.9rem] leading-relaxed text-attenue">
-            Une information, pas un objectif. Ce réglage se désactive à tout moment.
-          </p>
-        </div>
+          <button
+            type="button"
+            onClick={onBasculer}
+            className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux"
+          >
+            {affiche ? 'Masquer ces valeurs' : 'Afficher ces valeurs'}
+          </button>
+        </Panneau>
       )}
     </section>
   )

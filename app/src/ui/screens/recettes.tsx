@@ -82,7 +82,7 @@ type Etat =
 export function Recettes() {
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [filtres, setFiltres] = useState<Filtres>(FILTRES_ECRAN)
-  const [deplie, setDeplie] = useState(false)
+  const [panneauFiltresOuvert, setPanneauFiltresOuvert] = useState(false)
 
   const rafraichir = useCallback(() => {
     chargerSocle()
@@ -217,9 +217,9 @@ export function Recettes() {
         catalogue={socle.catalogue}
         filtres={filtres.commun}
         comptes={comptes}
-        deplie={deplie}
+        panneauOuvert={panneauFiltresOuvert}
         onChange={(commun) => setFiltres({ ...filtres, commun })}
-        onDeplier={() => setDeplie((d) => !d)}
+        onBasculerPanneau={() => setPanneauFiltresOuvert((v) => !v)}
       />
 
       {!aucunFiltreEcran(filtres) && (

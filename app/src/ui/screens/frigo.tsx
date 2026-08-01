@@ -108,7 +108,7 @@ export function Frigo() {
   const [saisie, setSaisie] = useState('')
   const [realisablesSeules, setRealisablesSeules] = useState(false)
   const [filtres, setFiltres] = useState<FiltresRecette>(FILTRES_VIDES)
-  const [deplie, setDeplie] = useState(false)
+  const [panneauFiltresOuvert, setPanneauFiltresOuvert] = useState(false)
 
   useEffect(() => {
     let annule = false
@@ -278,9 +278,9 @@ export function Frigo() {
             catalogue={socle.catalogue}
             filtres={filtres}
             comptes={comptes}
-            deplie={deplie}
+            panneauOuvert={panneauFiltresOuvert}
             onChange={setFiltres}
-            onDeplier={() => setDeplie((d) => !d)}
+            onBasculerPanneau={() => setPanneauFiltresOuvert((v) => !v)}
           />
 
           {!aucunFiltre(filtres) && (

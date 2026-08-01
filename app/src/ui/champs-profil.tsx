@@ -34,8 +34,17 @@ export const ALLERGENES_FREQUENTS: readonly string[] = [
   'soja',
 ]
 
-/** Libellés courts — ceux du catalogue sont réglementaires et trop longs pour une case tactile. */
-const LIBELLE_COURT: Readonly<Record<string, string>> = {
+/**
+ * Libellés courts — ceux du catalogue sont réglementaires et trop longs pour une case tactile
+ * (« Céréales contenant du gluten », « Anhydride sulfureux et sulfites »).
+ *
+ * ⚠️ EXPORTÉS, et pas seulement par commodité. L'écran Paramètres en a besoin pour résumer la
+ * valeur courante sur ses lignes (« Mes allergies — Gluten, Lait »), et il en avait d'abord tenu
+ * une COPIE. Or ce fichier existe précisément parce que Paramètres et l'accueil règlent les mêmes
+ * champs : deux tables séparées auraient divergé au premier libellé retouché, et l'application
+ * aurait nommé le même allergène de deux façons selon l'écran.
+ */
+export const LIBELLE_COURT: Readonly<Record<string, string>> = {
   gluten: 'Gluten',
   oeufs: 'Œuf',
   poissons: 'Poisson',
@@ -43,7 +52,8 @@ const LIBELLE_COURT: Readonly<Record<string, string>> = {
   sulfites: 'Sulfites',
 }
 
-const LIBELLE_REGIME: Readonly<Record<string, string>> = {
+/** Même raison d'être exportée que `LIBELLE_COURT` ci-dessus. */
+export const LIBELLE_REGIME: Readonly<Record<string, string>> = {
   pescetarien: 'Pescétarien',
   vegetarien: 'Végétarien',
   vegetalien: 'Végétalien',
