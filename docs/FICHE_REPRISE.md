@@ -1,6 +1,6 @@
 # ⭐ Fiche de reprise — appli_nutrition
 
-> **Mise à jour : 2026-08-01.** Une page, jamais plus. Tout le reste est dans
+> **Mise à jour : 2026-08-02.** Une page, jamais plus. Tout le reste est dans
 > [ETAT.md](./ETAT.md) — avancement, décisions, dette. Index : [README.md](./README.md).
 > Font foi : [ENGINE.md](./ENGINE.md) (moteur), [ARCHITECTURE.md](./ARCHITECTURE.md) (le reste).
 
@@ -16,7 +16,7 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-08-01** : `npm test` → **950 verts (69 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-08-02** : `npm test` → **982 verts (72 fichiers)** · `npm run typecheck` propre ·
 `npm run build` → **199 aliments, 241 recettes, 62 gestes, 73 tips, 8 fiches (33 positions)** ·
 `npx vite build` OK.
 
@@ -24,16 +24,18 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
 suggestion → planifier sa semaine → sortir sa liste de courses → cuisiner. Plus « partir de ce
 qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
 
-⚠️ **Dépôt à jour avec `origin/main` au 2026-08-01** (tout est poussé jusqu'à `5942f2f`), mais
-**~96 fichiers modifiés ou nouveaux restent non committés** : c'est le chantier `evidence` de la
+⚠️ **3 commits en avance sur `origin/main` au 2026-08-02**, et
+**~92 fichiers modifiés ou nouveaux restent non committés** : c'est le chantier `evidence` de la
 piste parallèle, encore en cours. Ne pas le commiter sans son auteur.
 **Claude committe, l'utilisateur pousse** — le shell agent ne peut pas s'authentifier auprès de
 GitHub.
 
-⚠️ **Deux pistes ont travaillé en parallèle sur la période 2026-07-31 → 2026-08-01**, dans deux
-conversations séparées. Pour comprendre ce qui s'est passé, il faut lire les DEUX récits :
-[archive/RECAP_SESSION_6.md](./archive/RECAP_SESSION_6.md) (contenu de Savoir) et
-[archive/RECAP_SESSION_7.md](./archive/RECAP_SESSION_7.md) (tests d'écran, correctifs d'usage).
+⚠️ **Trois pistes ont travaillé en parallèle sur la période 2026-07-31 → 2026-08-01**, dans trois
+conversations séparées. Pour comprendre ce qui s'est passé, il faut lire les TROIS récits :
+[archive/RECAP_SESSION_6.md](./archive/RECAP_SESSION_6.md) (contenu de Savoir),
+[archive/RECAP_SESSION_7.md](./archive/RECAP_SESSION_7.md) (tests d'écran, correctifs d'usage) et
+[archive/RECAP_SESSION_8.md](./archive/RECAP_SESSION_8.md) (revue design & accessibilité, décisions
+photo obligatoire et Capacitor).
 
 ## ▶ La prochaine étape
 
@@ -45,37 +47,43 @@ conversations séparées. Pour comprendre ce qui s'est passé, il faut lire les 
 2. **Vérifier sur un vrai téléphone.** `npx vite build && npx vite preview --host`, puis installer.
    Le service worker et l'installation **ne s'activent qu'en build de production** — `npm run dev`
    ne les monte pas.
-3. **Hébergement, puis Play.** Origine HTTPS + `/.well-known/assetlinks.json` : sans ce fichier, la
-   barre d'URL ne se masque pas et Bubblewrap ne peut rien empaqueter. Hébergeur et domaine non
-   choisis (STRATEGIE_DISTRIBUTION §3).
+3. **Empaquetage Capacitor, puis Play.** ⚠️ **La cible n'est plus TWA/Bubblewrap** — décision du
+   2026-08-01, `archive/RECAP_SESSION_8.md` §3. `capacitor.config.ts` et `@capacitor/*` sont en
+   place ; `npx cap add android` n'a jamais été lancé (pas de SDK sur la machine). **Ni origine
+   HTTPS ni `/.well-known/assetlinks.json` ne sont requis** pour cette cible. Une version web reste
+   utile — c'est le seul chemin vers un iPhone tant qu'il n'y a pas de Mac (§4 décision 9).
 
-**Contenu qui reste** : photos (**0 sur 241 recettes**), lexique illustré, 27 tips pour la centaine
-visée, 8 fiches sur les 60-100 de §8.2. Rien de tout cela n'est un problème de code.
+**Contenu qui reste** : **photos (0 sur 241 recettes — désormais OBLIGATOIRES, production en cours
+côté utilisateur)**, lexique illustré, 27 tips pour la centaine visée, 8 fiches sur les 60-100 de
+§8.2. Rien de tout cela n'est un problème de code.
 
-## ⛔ Quatre choses laissées en plan le 2026-08-01
+⚠️ **Trois conséquences de la décision Capacitor ne sont PAS traitées** (`RECAP_SESSION_8.md` §3) :
+le message `non_persistant` de `main.tsx` dit encore « Ajoutez l'application à votre écran d'accueil »
+— il s'afficherait **dans une appli native** ; le pari « `rem` → l'interface suit la police système à
+150 % » **n'est pas vérifié en WebView** et c'est le risque n°1 du projet ; `env(safe-area-inset-bottom)`
+et la barre d'état sont à revérifier sur appareil.
 
-Trouvées en écrivant les tests d'écran, **non corrigées** faute d'être dans le périmètre demandé.
-Récit complet : [archive/RECAP_SESSION_7.md](./archive/RECAP_SESSION_7.md) §2 et §5.
+## ✅ Les quatre défauts du 2026-08-01 sont corrigés (2026-08-02)
 
-1. **`seed` n'est lu par aucune couche** (`semaine.tsx` → `plan-week.ts:243` → `api/index.ts:435`).
-   Le champ est transporté de bout en bout et jamais consommé : **« Proposer une autre semaine » sans
-   verrou peut rendre exactement le même plan** — mesuré, 0 créneau différent sur 14. C'est un bouton
-   qui ne fait rien, et c'est le plus visible des quatre.
-2. **`readLatestPlan` trie les id en texte** (`user-store.ts:434`). L'id est
-   `plan-${startDate}-${days}` ; changer le nombre de jours sans changer de date crée une **seconde
-   ligne** au lieu de remplacer la première, et `"…-7" > "…-3"` en comparaison textuelle. Un
-   rechargement peut rouvrir l'ancien plan.
-3. **`energieParPortion` rend `null` pour les 241 recettes** (`detail-recette.tsx:56`). Les index
-   dérivés (`recipeNutrients`) ne sont construits que dans la fermeture de `createEngine` et ne sont
-   jamais réexposés sur `socle.catalogue`. La fiche affiche donc **toujours** « Non renseignées »
-   alors que la donnée CIQUAL existe (288,6 kcal vérifiés sur `artichauts_vinaigrette`).
-4. **La visite guidée n'est pas branchée.** `ui/visite.tsx` + test existent et passent, rien ne la
-   déclenche. Manquent : la **migration `user.db` 6 → 7**
-   (`ALTER TABLE user_display ADD COLUMN visite_proposee INTEGER NOT NULL DEFAULT 0`, **non écrite** —
-   §4 de `CLAUDE.md` exige un accord explicite), l'invitation en fin d'intro, le branchement dans
-   `main.tsx`. ⚠️ Sa 3ᵉ étape cible les flèches par des **classes Tailwind**
-   (`article div.flex.gap-2`) : poser un `data-visite="fleches"` dans `aujourdhui.tsx` **avant** de
-   brancher, sinon l'étape disparaîtra un jour en silence.
+1. **`seed` est consommé.** PRNG seedé (`engine/selection/prng.ts`) qui tire dans une bande de 3 %
+   sous le meilleur score, et `plan-week.ts` dérive un flux **par créneau** (`derive(seed, slotKey)`)
+   — sinon les 14 créneaux partageaient la même suite. Mesuré : **20 créneaux différents sur 21**
+   entre deux graines, plan strictement identique à graine égale.
+2. **`readLatestPlan` trie sur une horloge.** Migration **v7** : `meal_plan.mis_a_jour_le`, renseignée
+   par `savePlan`, qui prend l'horodatage **en paramètre** — le moteur ne lit jamais l'heure.
+3. **`energieParPortion` rend la vraie valeur.** `Engine` expose `catalogue` (l'enrichi) et
+   `socle.catalogue` lit CELUI-LÀ. 288,6 kcal sur `artichauts_vinaigrette`.
+4. **La visite guidée est branchée.** Migration v7 : `user_display.visite_proposee`, posé dans les
+   **deux** branches (accepter et refuser). Cibles d'étapes passées aux `data-visite` — l'étape 2
+   était aussi fragile que la 3ᵉ signalée : elle visait `article` nu, réutilisé dans 4 écrans.
+
+**Deux suites laissées de côté, sciemment :**
+
+- ⚠️ **L'écran « Aujourd'hui » ne gagne PAS en variété.** Il passe par `diversify()`, dont le glouton
+  argmax réordonne après le tirage seedé et le neutralise. Le correctif porte sur `planWeek`, qui
+  saute la diversification (`skipDiversification: true`) — c'était le bug signalé, pas celui-ci.
+- `savePlan` ne purge pas les plans obsolètes. La **lecture** est juste même si de vieilles lignes
+  traînent ; une purge toucherait des `ON DELETE CASCADE`, donc à décider à part.
 
 ## Les cinq acquis à ne pas défaire
 
@@ -134,6 +142,14 @@ piment/matière grasse — voir [archive/RECAP_SESSION_6.md](./archive/RECAP_SES
 
 **Moteur et données**
 
+- ⚠️ **Le classement n'est plus « déterministe », il est « reproductible à graine égale ».** Deux
+  garanties différentes : `rankScoredCandidates` sans `alea` rend toujours le même ordre, avec `alea`
+  il rend le même ordre POUR LA MÊME GRAINE. Ne pas réécrire l'en-tête dans l'autre sens.
+- ⚠️ **Un tirage qui ÉCHANGE au lieu de RETIRER casse son propre invariant.** L'échange renvoie
+  l'élément de la position courante — de score supérieur — plus loin dans le tableau, ce qui détruit
+  le tri de la queue : au tour suivant le pivot n'est plus le meilleur restant, la bande est calculée
+  trop bas et un candidat HORS bande passe devant le meilleur. Le `splice` préserve l'ordre, lui.
+  Le test qui prétendait verrouiller ça ne portait que sur DEUX candidats et ne pouvait rien voir.
 - ⚠️ **Un garde-fou sans source de données ne garde rien.** Le filtre allergènes a tourné sur une
   liste VIDE jusqu'à ce que l'onboarding existe. Vérifier qu'un champ déclaré est bien REMPLI.
 - ⚠️ **`MealHistory.windowDays` n'est lu par AUCUNE couche.** La fenêtre de 21 jours n'existe que
@@ -186,7 +202,7 @@ piment/matière grasse — voir [archive/RECAP_SESSION_6.md](./archive/RECAP_SES
 
 ## Avant de coder
 
-- ⚠️ `git status -sb` — des commits peuvent ne pas être poussés (3 en avance au 2026-08-01).
+- ⚠️ `git status -sb` — des commits peuvent ne pas être poussés (3 en avance au 2026-08-02).
 - ⚠️ **Lire la maquette de l'écran AVANT de le coder** (`maquete claude design/`).
 - Les valeurs nutritionnelles **ne s'écrivent JAMAIS à la main** : `foods.yaml` + `ciqual-mapping.yaml`,
   puis `npm run catalog:ciqual -- --write`.
