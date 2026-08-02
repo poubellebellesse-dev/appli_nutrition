@@ -41,9 +41,9 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-async function monter() {
+async function monter(onLancerVisite: () => void = () => undefined) {
   const { Parametres } = await import('./parametres.js')
-  render(<Parametres />)
+  render(<Parametres onLancerVisite={onLancerVisite} />)
   await screen.findByRole('heading', { name: 'Paramètres' })
 }
 
@@ -200,6 +200,17 @@ describe('parametres — les rappels', () => {
     expect(heures.length).toBeGreaterThan(0)
     fireEvent.change(heures[heures.length - 1]!, { target: { value: '19:30' } })
     await waitFor(() => expect([...readMealTimes(baseCourante()).values()]).toContain(19 * 60 + 30))
+  })
+})
+
+describe('parametres — revoir le tutoriel', () => {
+  it('« Revoir le tutoriel » relance la visite, même si elle a déjà été proposée', async () => {
+    // Cette ligne ne dépend PAS de `visite_proposee` (voir `ui/visite.tsx`) : la déclarer déjà
+    // proposée ne doit rien changer à sa disponibilité ici.
+    const onLancerVisite = vi.fn()
+    await monter(onLancerVisite)
+    fireEvent.click(screen.getByText('Revoir le tutoriel'))
+    expect(onLancerVisite).toHaveBeenCalledTimes(1)
   })
 })
 

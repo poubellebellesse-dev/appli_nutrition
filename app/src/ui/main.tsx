@@ -23,7 +23,7 @@ import { Parametres } from './screens/parametres.js'
 import { EditeurRecette } from './screens/editeur-recette.js'
 import { Navigation } from './navigation.js'
 import { Panneau } from './panneau.js'
-import { Visite } from './visite.js'
+import { etapesDuParcours, Visite } from './visite.js'
 import { chargerSocle } from './socle.js'
 import { aConsenti, readDisplay, writeDisplay } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
@@ -65,12 +65,20 @@ const ECARTABLE: Readonly<Record<Exclude<Alerte, 'aucune'>, boolean>> = {
   non_persistant: true,
 }
 
-function Ecran({ onglet, sousVue }: { readonly onglet: Onglet; readonly sousVue: SousVue }) {
+function Ecran({
+  onglet,
+  sousVue,
+  onLancerVisite,
+}: {
+  readonly onglet: Onglet
+  readonly sousVue: SousVue
+  readonly onLancerVisite: () => void
+}) {
   // La sous-vue prime sur l'onglet : fiche et frigo appartiennent à `recettes`, mais on y arrive
   // aussi depuis la semaine, les courses ou Aujourd'hui.
   if (sousVue.type === 'recette') return <DetailRecette recetteId={sousVue.id} origine={sousVue.origine} />
   if (sousVue.type === 'frigo') return <Frigo />
-  if (sousVue.type === 'parametres') return <Parametres />
+  if (sousVue.type === 'parametres') return <Parametres onLancerVisite={onLancerVisite} />
   if (sousVue.type === 'editeur') return <EditeurRecette baseId={sousVue.baseId} />
   if (onglet === 'aujourdhui') return <Aujourdhui />
   if (onglet === 'semaine') return <Semaine />
@@ -248,7 +256,13 @@ function Coquille() {
           </div>
         )}
         <main>
-          <Ecran onglet={route.onglet} sousVue={route.sousVue} />
+          <Ecran
+            onglet={route.onglet}
+            sousVue={route.sousVue}
+            // Rejouable depuis Paramètres, indépendamment de `visite_proposee` (§ « on a déjà
+            // proposé » ≠ « déjà terminé », voir la brief) : on relance le même état `'active'`.
+            onLancerVisite={() => setEtapeVisite('active')}
+          />
         </main>
       </div>
 
@@ -258,8 +272,8 @@ function Coquille() {
       {etapeVisite === 'invitation' && (
         <Panneau titre="Une visite guidée ?" onFermer={() => repondreInvitation(false)}>
           <p className="text-[0.95rem] leading-relaxed text-texte-doux">
-            Quatre bulles vous montrent où trouver les onglets, le plat du jour, les flèches pour
-            changer de plat et vos réglages. Trente secondes, et vous pouvez la passer à tout moment.
+            On vous montre les onglets un par un, et vous les touchez vous-même pour avancer. Deux à
+            trois minutes, et vous pouvez la passer à tout moment.
           </p>
           <div className="mt-5 flex gap-2">
             <button
@@ -279,7 +293,9 @@ function Coquille() {
           </div>
         </Panneau>
       )}
-      {etapeVisite === 'active' && <Visite onTerminer={() => setEtapeVisite('aucune')} />}
+      {etapeVisite === 'active' && (
+        <Visite etapes={etapesDuParcours('menus')} onTerminer={() => setEtapeVisite('aucune')} />
+      )}
     </>
   )
 }

@@ -1,76 +1,135 @@
-// ui/visite.tsx — visite guidée au premier lancement : des bulles qui désignent successivement
-// quatre éléments réels de l'écran, avec « Passer » et « Suivant » toujours visibles.
+// ui/visite.tsx — tutoriels guidés, interactifs : des bulles qui désignent un élément réel de
+// l'écran et, pour la plupart des étapes, EXIGENT un geste avant d'avancer.
+//
+// ⚠️ CE N'EST PLUS UNE VISITE PUREMENT INFORMATIVE. La version précédente affichait quatre bulles
+// qu'on lisait puis qu'on passait avec « Suivant » — l'utilisateur ne touchait jamais l'application
+// pendant qu'on la lui présentait. Le retour d'essai est explicite : « on lui dit les menus → il
+// clique sur les menus pour changer », « ne doit pas que informer mais inciter l'utilisateur à
+// utiliser l'appli ». D'où `EtapeAttendu` : une étape peut exiger un CLIC sur la vraie cible ou une
+// ARRIVÉE sur une vraie route, et dans ces deux cas le bouton « Suivant » disparaît — on ne peut pas
+// passer l'étape sans avoir fait le geste.
 //
 // ⚠️ INSPIRÉ DE `panneau.tsx` (portail vers `document.body`, Échap, focus rendu, défilement bloqué),
-// SANS LE RÉUTILISER : un panneau est plein écran et REMPLACE le contenu ; une visite doit laisser
-// voir ce qu'elle désigne, avec un fond simplement assombri autour d'un contour. Les deux composants
-// partagent une préoccupation, pas une implémentation.
+// SANS LE RÉUTILISER — voir l'historique de ce fichier : un panneau est plein écran et REMPLACE le
+// contenu, une visite doit laisser voir ce qu'elle désigne.
 //
-// ⚠️ CIBLE INTROUVABLE = ÉTAPE SAUTÉE, JAMAIS DE PLANTAGE. L'écran peut encore charger, ou un
-// sélecteur peut ne plus correspondre à rien d'une version à l'autre. `premierIndexValide` est
-// l'unique point qui décide « cette étape existe-t-elle », et il ne s'appuie que sur
-// `document.querySelector(...) !== null` — jamais sur une dimension mesurée (`getBoundingClientRect`
-// rend des zéros sous jsdom, et une cible réelle peut légitimement avoir une largeur nulle avant sa
-// première peinture). Si plus aucune étape n'est valide, la visite se termine d'elle-même : elle ne
-// doit jamais rester bloquée à désigner du vide, ni faire planter l'écran qu'elle présente.
+// ⚠️ LE FOND NE CAPTE LES CLICS QUE POUR UNE ÉTAPE « lecture ». Le fond assombri interceptait avant
+// TOUT clic, sur toute étape — cohérent tant qu'aucune étape n'attendait d'action réelle sur
+// l'application. Une étape « clic » ou « route » a l'effet inverse : il FAUT que le clic sur la vraie
+// cible (un onglet, un bouton) atteigne l'application en dessous, sinon l'exigence de geste ne peut
+// jamais être remplie. `pointer-events-none` sur tout le calque (fond + éventuel contour) résout ça —
+// `pointer-events` est une propriété HÉRITÉE, la bulle elle-même reprend explicitement
+// `pointer-events-auto` pour que « Passer » reste cliquable.
 //
-// ⚠️ LE FOND CAPTE LES CLICS. Rien de spécial à coder : le calque assombri est un `div` plein écran,
-// rendu par-dessus l'application via le portail, sans `pointer-events: none` — il intercepte donc
-// nativement tout clic qui viserait l'écran en dessous. Interdire l'interaction pendant la visite
-// évite d'atterrir, bulle affichée, sur un autre écran dont les cibles ont disparu.
+// ⚠️ CIBLE INTROUVABLE = ÉTAPE SAUTÉE, JAMAIS DE PLANTAGE — décision reprise telle quelle de la
+// version précédente. `premierIndexValide` reste l'unique point qui décide « cette étape existe-t-
+// elle », sur `document.querySelector(...) !== null` uniquement (jamais une dimension mesurée, nulle
+// sous jsdom et avant la première peinture). Si plus aucune étape n'est valide, la visite se termine
+// d'elle-même.
 //
-// Les quatre textes ont été vérifiés à la main contre `engine/guards/banned-terms.ts` (aucun terme
-// banni, y compris en sous-chaîne — « traitement » contiendrait « traite »).
+// ⚠️ LE TUTORIEL VIT AU-DESSUS DU ROUTEUR — c'est le point structurant d'une étape « route » : une
+// étape « touchez l'onglet Recettes » fait CHANGER D'ÉCRAN, et un tutoriel monté DANS un écran serait
+// démonté au moment même où il réussit. `Visite` est donc monté par `main.tsx` en dehors de l'arbre
+// qui dépend de la route (voir `Coquille`), et il observe la route courante avec `useRoute()` —
+// EXACTEMENT le hook que `router.tsx` expose déjà pour ça, pas un second écouteur `hashchange`.
+//
+// ⚠️ « Passer » EST TOUJOURS LÀ, sur CHAQUE étape, y compris les étapes qui attendent un geste — un
+// tutoriel qui exige une action et dont on ne peut pas sortir est un piège, pas un guide, en
+// particulier sur la contrainte d'âge de ce produit (§4 CLAUDE.md).
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type JSX } from 'react'
 import { createPortal } from 'react-dom'
+import { hashDe, useRoute } from './router.js'
+
+/**
+ * Ce qu'il faut faire pour quitter l'étape.
+ *
+ * `lecture` : on lit, on appuie sur « Suivant » — seul mode qui existait avant. `clic` : il faut
+ * cliquer la cible RÉELLE dans l'application (pas un bouton de la bulle) ; `route` : il faut ARRIVER
+ * sur cet écran (utile quand le geste attendu est un lien natif, pas un clic intercepté ici — voir
+ * l'en-tête). Dans les deux derniers cas, il n'y a pas de « Suivant » : c'est tout l'intérêt.
+ */
+export type EtapeAttendu =
+  | { readonly type: 'lecture' }
+  | { readonly type: 'clic'; readonly cible: string }
+  | { readonly type: 'route'; readonly hash: string }
 
 export interface EtapeVisite {
   readonly cible: string
   readonly titre: string
   readonly texte: string
+  readonly attendu: EtapeAttendu
+}
+
+/** Un parcours nommé : un thème, une suite d'étapes. Voir `PARCOURS` ci-dessous. */
+export interface Parcours {
+  readonly id: string
+  readonly titre: string
+  readonly etapes: readonly EtapeVisite[]
 }
 
 /**
- * Sélecteurs RÉELS, lus dans `navigation.tsx`, `main.tsx` et `screens/aujourdhui.tsx` — pas de
- * `data-*` inventé pour l'occasion : le projet ne s'appuie déjà que sur la structure et les
- * attributs existants pour ses tests (voir `aujourdhui.test.tsx`).
+ * Le parcours « Découvrir les menus », décrit tel quel par l'utilisateur : on nomme un onglet, il le
+ * touche, on passe au suivant. `[data-visite]` est délibérément absent ici — CES cibles sont les
+ * liens RÉELS de la barre (`Navigation`, dans `navigation.tsx`), déjà stables par leur `href` (voir
+ * `router.tsx`, `hashDe`) : un `data-visite` de plus dupliquerait une identité qui existe déjà.
+ *
+ * ⚠️ « Aujourd'hui » N'A PAS SA PROPRE ÉTAPE : c'est l'écran de départ le plus courant, le désigner
+ * n'apprendrait rien de plus que la première bulle (« La navigation ») ne dit déjà.
  */
-export const ETAPES_VISITE: readonly EtapeVisite[] = [
+const ETAPES_MENUS: readonly EtapeVisite[] = [
   {
     cible: 'nav[aria-label="Navigation principale"]',
     titre: 'La navigation',
-    texte: "Ces cinq onglets sont toujours là, en bas de l'écran. Un onglet, une destination.",
-  },
-  {
-    // La `CarteRepas` de `screens/aujourdhui.tsx`. `[data-visite="carte-plat"]` et non `article` nu
-    // : ce tag réapparaît dans `courses.tsx`, `detail-recette.tsx` et `semaine.tsx` — un sélecteur
-    // sur la seule balise dépendrait d'être le premier `<article>` du document, par accident.
-    cible: '[data-visite="carte-plat"]',
-    titre: 'Le plat du jour',
-    texte: "Un plat à la fois, en grand. Rien d'autre ne vient encombrer l'écran.",
-  },
-  {
-    // Le conteneur des deux `BoutonNavigation` (Précédent / Suivant), à l'intérieur de la carte.
-    // `[data-visite="fleches"]` et non des classes Tailwind : `flex gap-2` casserait en silence dès
-    // qu'on retouche la mise en page (voir `aujourdhui.tsx`).
-    cible: '[data-visite="fleches"]',
-    titre: 'Précédent et Suivant',
     texte:
-      "Ces flèches changent de plat sans rien valider. Rien n'est enregistré tant que vous ne choisissez pas.",
+      "Ces cinq onglets sont toujours là, en bas de l'écran. On va les découvrir ensemble : à chaque étape, touchez l'onglet nommé.",
+    attendu: { type: 'lecture' },
   },
   {
-    // Le lien vers `#/parametres`, posé par `LienParametres` dans `main.tsx`.
-    cible: 'a[href="#/parametres"]',
-    titre: 'Vos réglages',
-    texte: 'Vos allergies, votre régime et vos rappels se règlent ici, à tout moment.',
+    cible: `a[href="${hashDe('semaine')}"]`,
+    titre: 'Cette semaine',
+    texte: 'Touchez « Semaine » pour voir le planning des prochains jours.',
+    attendu: { type: 'route', hash: hashDe('semaine') },
+  },
+  {
+    cible: `a[href="${hashDe('courses')}"]`,
+    titre: 'Vos courses',
+    texte: 'Touchez « Courses » pour voir la liste à acheter.',
+    attendu: { type: 'route', hash: hashDe('courses') },
+  },
+  {
+    cible: `a[href="${hashDe('recettes')}"]`,
+    titre: 'Toutes les recettes',
+    texte: 'Touchez « Recettes » pour parcourir le catalogue complet.',
+    attendu: { type: 'route', hash: hashDe('recettes') },
+  },
+  {
+    cible: `a[href="${hashDe('savoir')}"]`,
+    titre: 'Le coin Savoir',
+    texte: 'Touchez « Savoir » pour les explications et les conseils.',
+    attendu: { type: 'route', hash: hashDe('savoir') },
   },
 ]
 
+/**
+ * La table des parcours. UN SEUL AUJOURD'HUI (« menus ») : les huit autres, annoncés par
+ * l'utilisateur (« je veux des tutos sur tous les menus »), restent à écrire — ajouter l'un d'eux est
+ * une ENTRÉE DE DONNÉES dans ce tableau, jamais une modification de `Visite` ci-dessous.
+ */
+export const PARCOURS: readonly Parcours[] = [
+  { id: 'menus', titre: 'Découvrir les menus', etapes: ETAPES_MENUS },
+]
+
+/** Les étapes d'un parcours par son identifiant, ou un tableau vide s'il n'existe pas — un identifiant
+ * périmé termine la visite immédiatement (voir `premierIndexValide`), jamais un plantage. */
+export function etapesDuParcours(id: string): readonly EtapeVisite[] {
+  return PARCOURS.find((p) => p.id === id)?.etapes ?? []
+}
+
 /** Premier index ≥ `depart` dont la cible existe dans le DOM, ou `null` s'il n'en reste aucune. */
-function premierIndexValide(depart: number): number | null {
-  for (let i = depart; i < ETAPES_VISITE.length; i++) {
-    const etape = ETAPES_VISITE[i]
+function premierIndexValide(etapes: readonly EtapeVisite[], depart: number): number | null {
+  for (let i = depart; i < etapes.length; i++) {
+    const etape = etapes[i]
     if (etape !== undefined && document.querySelector(etape.cible) !== null) return i
   }
   return null
@@ -93,10 +152,19 @@ function stylePositionBulle(rect: DOMRect | null): CSSProperties {
     : { top: Math.max(rect.bottom + MARGE_PX, MARGE_PX), left: MARGE_PX, right: MARGE_PX }
 }
 
-export function Visite({ onTerminer }: { readonly onTerminer: () => void }): JSX.Element | null {
-  const [etapeIndex, setEtapeIndex] = useState<number | null>(() => premierIndexValide(0))
+export function Visite({
+  etapes,
+  onTerminer,
+}: {
+  readonly etapes: readonly EtapeVisite[]
+  readonly onTerminer: () => void
+}): JSX.Element | null {
+  const [etapeIndex, setEtapeIndex] = useState<number | null>(() => premierIndexValide(etapes, 0))
   const [rect, setRect] = useState<DOMRect | null>(null)
   const bulle = useRef<HTMLDivElement>(null)
+  // La route courante, pour les étapes « route » — même hook que `main.tsx` : pas de second
+  // écouteur `hashchange` (voir l'en-tête).
+  const route = useRoute()
 
   // Plus aucune étape valide — au montage comme après un « Suivant » qui vide la liste : on prévient
   // l'appelant plutôt que de rester affiché sur rien.
@@ -107,7 +175,7 @@ export function Visite({ onTerminer }: { readonly onTerminer: () => void }): JSX
   // Mesure la cible courante, recalcule sur `resize` et à chaque changement d'étape.
   useEffect(() => {
     if (etapeIndex === null) return
-    const etape = ETAPES_VISITE[etapeIndex]
+    const etape = etapes[etapeIndex]
     if (etape === undefined) return
     const recalculer = () => {
       const cible = document.querySelector(etape.cible)
@@ -116,9 +184,10 @@ export function Visite({ onTerminer }: { readonly onTerminer: () => void }): JSX
     recalculer()
     window.addEventListener('resize', recalculer)
     return () => window.removeEventListener('resize', recalculer)
-  }, [etapeIndex])
+  }, [etapeIndex, etapes])
 
-  // Le focus entre dans la bulle à chaque étape.
+  // Le focus entre dans la bulle à chaque étape — c'est aussi ce qui annonce le changement d'étape
+  // aux lecteurs d'écran (dialogue nommé par `aria-label`, focus déplacé dedans).
   useEffect(() => {
     bulle.current?.focus()
   }, [etapeIndex])
@@ -149,16 +218,40 @@ export function Visite({ onTerminer }: { readonly onTerminer: () => void }): JSX
   }, [onTerminer])
 
   const surSuivant = useCallback(() => {
-    setEtapeIndex((i) => (i === null ? null : premierIndexValide(i + 1)))
-  }, [])
+    setEtapeIndex((i) => (i === null ? null : premierIndexValide(etapes, i + 1)))
+  }, [etapes])
 
-  if (etapeIndex === null) return null
-  const etape = ETAPES_VISITE[etapeIndex]
-  if (etape === undefined) return null
+  const etape = etapeIndex === null ? undefined : etapes[etapeIndex]
+
+  // Étape « clic » : avance quand la VRAIE cible est cliquée à travers le calque (voir l'en-tête —
+  // le calque ne capte plus les clics pour ce type d'étape). Capture, pas bulle : on veut réagir
+  // même si la cible arrête elle-même la propagation dans son propre gestionnaire.
+  useEffect(() => {
+    if (etape === undefined || etape.attendu.type !== 'clic') return
+    const { cible } = etape.attendu
+    const surClic = (evenement: MouseEvent) => {
+      if (evenement.target instanceof Element && evenement.target.closest(cible) !== null) surSuivant()
+    }
+    document.addEventListener('click', surClic, true)
+    return () => document.removeEventListener('click', surClic, true)
+  }, [etape, surSuivant])
+
+  // Étape « route » : avance dès que la route RÉELLE correspond à celle attendue — jamais avant.
+  useEffect(() => {
+    if (etape === undefined || etape.attendu.type !== 'route') return
+    if (hashDe(route.onglet) === etape.attendu.hash) surSuivant()
+  }, [etape, route, surSuivant])
+
+  if (etapeIndex === null || etape === undefined) return null
+
+  // Une étape qui attend un geste (clic ou route) n'a pas de « Suivant » : le geste EST le seul
+  // moyen d'avancer, hors « Passer ». C'est aussi elle qui décide si le calque bloque les clics.
+  const attendGeste = etape.attendu.type !== 'lecture'
 
   return createPortal(
-    <div className="fixed inset-0 z-50">
-      {/* Assombrit ET capte les clics — voir l'en-tête. */}
+    <div className={'fixed inset-0 z-50 ' + (attendGeste ? 'pointer-events-none' : '')}>
+      {/* Assombrit. Capte les clics seulement pour une étape « lecture » — voir l'en-tête : une
+          étape qui attend un geste doit laisser le clic atteindre la vraie cible en dessous. */}
       <div aria-hidden="true" className="absolute inset-0 bg-black/60" />
 
       {rect !== null && (
@@ -178,23 +271,26 @@ export function Visite({ onTerminer }: { readonly onTerminer: () => void }): JSX
 
       <div
         role="dialog"
-        aria-modal="true"
+        aria-modal={attendGeste ? undefined : 'true'}
         aria-label={etape.titre}
         ref={bulle}
         tabIndex={-1}
-        className="absolute max-w-prose rounded-[--radius-carte] border border-bordure bg-surface p-4 shadow-lg outline-none"
+        // `pointer-events-auto` EXPLICITE : le calque parent passe à `pointer-events-none` pour les
+        // étapes « clic »/« route », une propriété HÉRITÉE — sans ce contre-ordre, « Passer »
+        // deviendrait lui aussi incliquable.
+        className="pointer-events-auto absolute max-w-prose rounded-[--radius-carte] border border-bordure bg-surface p-4 shadow-lg outline-none"
         style={stylePositionBulle(rect)}
       >
-        {/* Lisible en texte, pas seulement en pastilles : un lecteur d'écran n'annonce rien de
-            points colorés. */}
-        <p className="text-[0.85rem] font-medium text-attenue">
-          Étape {etapeIndex + 1} sur {ETAPES_VISITE.length}
+        {/* Lisible en texte, pas seulement en pastilles, et ANNONCÉ (`role="status"`) à chaque
+            changement d'étape — même mécanisme que le bandeau de persistance dans `main.tsx`. */}
+        <p role="status" className="text-[0.85rem] font-medium text-attenue">
+          Étape {etapeIndex + 1} sur {etapes.length}
         </p>
         <h2 className="mt-1 font-titre text-[1.25rem] text-texte">{etape.titre}</h2>
         <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etape.texte}</p>
 
         <div aria-hidden="true" className="mt-3 flex gap-1.5">
-          {ETAPES_VISITE.map((e, i) => (
+          {etapes.map((e, i) => (
             <span
               key={e.cible}
               className={'h-2 w-2 rounded-full ' + (i === etapeIndex ? 'bg-accent-plein' : 'bg-bordure-forte')}
@@ -212,14 +308,18 @@ export function Visite({ onTerminer }: { readonly onTerminer: () => void }): JSX
           >
             Passer
           </button>
-          <button
-            type="button"
-            onClick={surSuivant}
-            className="flex min-h-tactile flex-1 items-center justify-center gap-2 rounded-[0.7rem] bg-accent-plein px-4 text-[0.95rem] font-semibold text-white"
-          >
-            Suivant
-            <span aria-hidden="true">›</span>
-          </button>
+          {/* Absent pour une étape « clic »/« route » : voir `attendGeste` ci-dessus, c'est tout
+              l'intérêt de ces deux types. */}
+          {!attendGeste && (
+            <button
+              type="button"
+              onClick={surSuivant}
+              className="flex min-h-tactile flex-1 items-center justify-center gap-2 rounded-[0.7rem] bg-accent-plein px-4 text-[0.95rem] font-semibold text-white"
+            >
+              Suivant
+              <span aria-hidden="true">›</span>
+            </button>
+          )}
         </div>
       </div>
     </div>,

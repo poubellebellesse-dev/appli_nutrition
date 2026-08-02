@@ -83,6 +83,21 @@
     mais **0 recette** le porte, donc il n'est jamais proposé. Trois tests le vérifient depuis les
     données, aucun depuis une liste écrite à la main.
 
+12. **Le tutoriel informait, il fait maintenant AGIR.** Une étape peut exiger un geste —
+    `clic` sur une cible, ou `route` atteinte — et dans ce cas **le bouton « Suivant » disparaît** :
+    on ne passe plus sans avoir fait. Le parcours « découvrir les menus » nomme un onglet,
+    l'utilisateur le touche, on avance.
+    ⚠️ **Le point structurant** : un tutoriel qui dit « touchez l'onglet Recettes » fait CHANGER
+    d'écran. Monté dans un écran, il serait démonté à l'instant même où l'utilisateur réussit
+    l'étape. Il vit donc **au-dessus du routeur** et lit la route par le hook existant.
+    ⚠️ Détail non anticipé, trouvé à l'implémentation : le calque doit passer en
+    `pointer-events-none` quand une étape attend un geste, sinon le clic n'atteint jamais
+    l'application — la bulle reprend `pointer-events-auto` pour que « Passer » reste atteignable.
+    « Passer » est présent à **chaque** étape : un tutoriel qui exige un geste et dont on ne peut
+    pas sortir est un piège, pas un guide. Et une cible introuvable n'interrompt rien, elle est
+    sautée. Accès **« Revoir le tutoriel »** dans Paramètres, indépendant de `visite_proposee` —
+    un tutoriel qu'on ne peut faire qu'une fois ne sert qu'une fois.
+
 Et l'étape « Installez l'application », désactivée le 2026-08-01, a été rétablie : elle est le seul
 endroit du produit qui explique l'installation, et c'est l'installation qui fait accorder le stockage
 persistant.
@@ -157,6 +172,10 @@ commune, déjà réemployée partout. Aucun composant de champ de recherche n'es
 l'éditeur et les courses, filtre direct sur Savoir). À unifier si un quatrième arrive.
 
 ### C. Les tutoriels
+
+✅ **Le mécanisme est fait** (§1, point 12). **Ce qui reste est du contenu** : huit parcours à
+écrire, un par écran. Ajouter un parcours est désormais **une entrée dans une table de données**,
+pas du code — c'est ce que ce lot achète.
 
 Verbatim : « tuto de 2-3 mins pour guider l'utilisateur aux différents menus », « l'utilisateur teste
 en même temps », « ne doit pas que informer mais inciter l'utilisateur à utiliser aussi l'appli — si

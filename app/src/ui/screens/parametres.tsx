@@ -116,7 +116,7 @@ function resumeRappels(actifs: boolean): string {
   return actifs ? 'Activés' : 'Désactivés'
 }
 
-export function Parametres() {
+export function Parametres({ onLancerVisite }: { readonly onLancerVisite: () => void }) {
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [panneauOuvert, setPanneauOuvert] = useState<PanneauId | null>(null)
 
@@ -219,6 +219,19 @@ export function Parametres() {
             libelle="Rappels"
             valeur={resumeRappels(vue.affichage.rappelsActifs)}
             onOuvrir={() => setPanneauOuvert('rappels')}
+          />
+        </div>
+      </Section>
+
+      <Section titre="Aide">
+        <div className="space-y-2">
+          {/* Rejouable : `visite_proposee` ne dit que « on l'a déjà proposée une fois », jamais
+              « déjà terminée » (voir `ui/visite.tsx`) — cette ligne relance le même tutoriel sans
+              condition, à tout moment. */}
+          <LigneOuvrante
+            libelle="Revoir le tutoriel"
+            valeur="Redécouvrez les onglets, pas à pas."
+            onOuvrir={onLancerVisite}
           />
         </div>
       </Section>
