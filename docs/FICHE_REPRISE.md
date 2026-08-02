@@ -16,7 +16,7 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-08-02** : `npm test` → **982 verts (72 fichiers)** · `npm run typecheck` propre ·
+**Vérifié le 2026-08-02** : `npm test` → **1007 verts (72 fichiers)** · `npm run typecheck` propre ·
 `npm run build` → **199 aliments, 241 recettes, 62 gestes, 73 tips, 8 fiches (33 positions)** ·
 `npx vite build` OK.
 
@@ -24,7 +24,7 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
 suggestion → planifier sa semaine → sortir sa liste de courses → cuisiner. Plus « partir de ce
 qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
 
-⚠️ **3 commits en avance sur `origin/main` au 2026-08-02**, et
+⚠️ **5 commits en avance sur `origin/main` au 2026-08-02**, et
 **~92 fichiers modifiés ou nouveaux restent non committés** : c'est le chantier `evidence` de la
 piste parallèle, encore en cours. Ne pas le commiter sans son auteur.
 **Claude committe, l'utilisateur pousse** — le shell agent ne peut pas s'authentifier auprès de
@@ -77,13 +77,27 @@ et la barre d'état sont à revérifier sur appareil.
    **deux** branches (accepter et refuser). Cibles d'étapes passées aux `data-visite` — l'étape 2
    était aussi fragile que la 3ᵉ signalée : elle visait `article` nu, réutilisé dans 4 écrans.
 
-**Deux suites laissées de côté, sciemment :**
+**Une suite laissée de côté, sciemment** : `savePlan` ne purge pas les plans obsolètes. La
+**lecture** est juste même si de vieilles lignes traînent ; une purge toucherait des
+`ON DELETE CASCADE`, donc à décider à part.
 
-- ⚠️ **L'écran « Aujourd'hui » ne gagne PAS en variété.** Il passe par `diversify()`, dont le glouton
-  argmax réordonne après le tirage seedé et le neutralise. Le correctif porte sur `planWeek`, qui
-  saute la diversification (`skipDiversification: true`) — c'était le bug signalé, pas celui-ci.
-- `savePlan` ne purge pas les plans obsolètes. La **lecture** est juste même si de vieilles lignes
-  traînent ; une purge toucherait des `ON DELETE CASCADE`, donc à décider à part.
+## 📱 Premier essai sur téléphone (2026-08-02)
+
+Fait en preview LAN. **Cinq défauts corrigés le jour même** (`3dbaf48`) : les 12 suggestions qui ne
+changeaient jamais (`diversify` ignorait la graine), le retour de fiche recette qui ramenait toujours
+sur Recettes, les recettes sans rapport dans le frigo, le libellé « Réalisables maintenant », et
+l'encart d'aide qui comptait les clics au lieu des plats vus. L'étape « Installez l'application »,
+désactivée le 2026-08-01, est rétablie — c'est elle qui fait accorder le stockage persistant.
+
+- ⚠️ **Le risque n°1 n'est TOUJOURS pas tranché.** Un essai en preview passe par Chrome, pas par la
+  WebView Capacitor : le pari `rem` → police système à 150 % reste à vérifier là où il compte.
+- ⚠️ **Une alerte « cet appareil ne permet pas d'enregistrer » en preview LAN est un ARTEFACT** :
+  OPFS n'existe qu'en contexte sécurisé (`https://` ou `localhost`), pas sur `http://192.168.x.x`.
+  Pour tester vraiment : `adb reverse tcp:4173 tcp:4173`, puis `http://localhost:4173` sur l'appareil.
+- ⚠️ **Le reste du retour d'essai — une quarantaine de demandes produit — n'est écrit NULLE PART.**
+  Filtres par service et par aliment sur trois écrans, complétion à la saisie, tutoriels par écran,
+  choix manuel des plats de la semaine, ajout manuel d'article aux courses, export des recettes.
+  À consigner avant de le perdre.
 
 ## Les cinq acquis à ne pas défaire
 
@@ -202,7 +216,7 @@ piment/matière grasse — voir [archive/RECAP_SESSION_6.md](./archive/RECAP_SES
 
 ## Avant de coder
 
-- ⚠️ `git status -sb` — des commits peuvent ne pas être poussés (3 en avance au 2026-08-02).
+- ⚠️ `git status -sb` — des commits peuvent ne pas être poussés (5 en avance au 2026-08-02).
 - ⚠️ **Lire la maquette de l'écran AVANT de le coder** (`maquete claude design/`).
 - Les valeurs nutritionnelles **ne s'écrivent JAMAIS à la main** : `foods.yaml` + `ciqual-mapping.yaml`,
   puis `npm run catalog:ciqual -- --write`.
