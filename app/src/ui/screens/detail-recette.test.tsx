@@ -226,6 +226,49 @@ describe('detail-recette — les origines', () => {
   })
 })
 
+describe('detail-recette — les sources', () => {
+  // Recette du lot pilote : deux références sanitaires ouvertes et vérifiées le 2026-08-02, et une
+  // étape de cuisson corrigée en conséquence (docs/SOURCES_RECETTES.md).
+  const RECETTE_SOURCEE = 'poulet_roti_citron_thym' as RecipeId
+
+  it('liste les références consultées, en liens cliquables, avec leur date de lecture', async () => {
+    const recette = catalogueDeTest().recipes.get(RECETTE_SOURCEE)
+    if (recette === undefined) throw new Error('recette sourcée absente du catalogue réel')
+    expect(recette.sources.length).toBeGreaterThan(0)
+
+    await monter(RECETTE_SOURCEE)
+
+    const titres = recette.sources.map((s) => s.titre)
+    for (const titre of titres) {
+      const lien = screen.getByText(titre)
+      expect(lien.getAttribute('href')).toMatch(/^https?:\/\//)
+    }
+    expect(screen.getAllByText(/lu le 2026-08-02/).length).toBe(titres.length)
+  })
+
+  it('⛔ n’écrit JAMAIS « d’après » sur une simple référence — ce serait lui prêter une origine', async () => {
+    // La distinction provenance/référence n'existe que pour ça. Une recette écrite pour ce projet
+    // qui afficherait « D'après le guide du ministère » revendiquerait une origine qu'elle n'a pas,
+    // et la source consultée dirait le contraire de ce qu'on lui fait dire.
+    await monter(RECETTE_SOURCEE)
+
+    expect(screen.queryByText(/D'après/)).toBeNull()
+    expect(screen.getByText(/Consulté pour vérifier cette recette/)).toBeTruthy()
+  })
+
+  it('dit qu’une recette sans source n’a pas été testée, plutôt que de se taire', async () => {
+    // Le silence laisserait SUPPOSER une provenance sourcée que le catalogue n'a pas. La mention
+    // disparaît d'elle-même dès qu'une source ou une date de test existe — d'où le contrôle
+    // inverse sur la recette du lot pilote.
+    await monter(recetteDeReference().id)
+    expect(screen.getByText('Recette maison, non encore testée.')).toBeTruthy()
+
+    cleanup()
+    await monter(RECETTE_SOURCEE)
+    expect(screen.queryByText('Recette maison, non encore testée.')).toBeNull()
+  })
+})
+
 describe('detail-recette — le retour contextuel', () => {
   it('depuis Aujourd’hui : ramène sur Aujourd’hui, libellé et hash cohérents', async () => {
     await monter(recetteDeReference().id, 'aujourdhui')
@@ -318,6 +361,39 @@ describe('detail-recette — recette personnelle', () => {
     await monter(recettePerso.id)
     const lien = screen.getByText('Modifier ma recette').closest('a') as HTMLAnchorElement
     expect(lien.getAttribute('href')).toBe(`#/composer/${encodeURIComponent(recettePerso.id)}`)
+  })
+})
+
+describe('detail-recette — recette importée (§8.7)', () => {
+  it('affiche « Recette importée », pas « Votre recette », et garde l’avertissement non vérifié', async () => {
+    const recetteImportee: StoredUserRecipe = {
+      schemaVersion: 1,
+      id: 'perso:test-fiche-importee',
+      source: 'importe',
+      baseRecipeId: null,
+      nom: 'Un plat venu d’ailleurs',
+      tempsPrepMin: 10,
+      tempsCuissonMin: 20,
+      portionsBase: 2,
+      difficulte: 1,
+      typesRepas: ['diner'],
+      envergure: 'quotidien',
+      conservationJours: 2,
+      axes: AXES_PAR_DEFAUT,
+      ingredients: [{ foodId: 'artichaut', quantiteG: 200, uniteAffichage: '2 artichauts', optionnel: false }],
+      etapes: ['Préparer.'],
+      facettesHeritees: [],
+      service: null,
+      piquant: null,
+    }
+    saveUserRecipe(baseCourante(), recetteImportee, '2026-08-02')
+    const { rebatirCatalogue } = await import('../socle.js')
+    await rebatirCatalogue()
+
+    await monter(recetteImportee.id)
+    expect(screen.getByText(/Recette importée/)).toBeDefined()
+    // Assertion d'absence en regex ancrée — un `getByText` exact aurait laissé passer un fragment.
+    expect(screen.queryByText(/^Votre recette\./)).toBeNull()
   })
 })
 

@@ -11,11 +11,21 @@
 // `Engine.browseRecipes`, et le test `tests/recherche-catalogue-reel.test.ts` qui vérifie la
 // propriété sur TOUTES les recettes rendues, y compris quand on cherche explicitement le plat exclu.
 //
-// ⚠️ LE CHAMP S'ANNONCE « RECHERCHER UN PLAT », alors que l'index couvre aussi les ingrédients
-// (§4.4 écrivait « plats, ingrédients, cuisines »). Ce n'est pas une omission : chercher par
-// ALIMENT, c'est « Vider le frigo », qui le fait mieux — il classe par couverture et dit ce qui
-// manque. Annoncer les deux ici ferait deux fonctions qui se marchent dessus. Taper « poulet »
-// continue de trouver des plats au poulet ; c'est bien ce que la promesse dit.
+// ⚠️ LE CHAMP S'ANNONCE « RECHERCHER UN PLAT OU UN INGRÉDIENT » — DÉCISION RENVERSÉE LE 2026-08-02.
+// Il s'annonçait « Rechercher un plat », et ce fichier soutenait que c'était volontaire : chercher
+// par aliment, c'était « Vider le frigo », qui le fait mieux (il classe par couverture et dit ce qui
+// manque), et annoncer les deux ici ferait deux fonctions qui se marchent dessus.
+//
+// Ce que l'essai sur téléphone a démenti : un filtre « aliments voulus » a été RÉCLAMÉ alors que la
+// capacité existait déjà ici. L'argument d'origine confond deux intentions distinctes — « j'AI du
+// poulet » est un inventaire, que le frigo classe par couverture ; « je VEUX du poulet » est une
+// envie, et la traiter comme un garde-manger d'un seul aliment n'a pas de sens. Ce ne sont pas deux
+// fonctions qui se marchent dessus, ce sont deux besoins.
+//
+// Le vrai défaut était pire qu'une omission : le libellé disait « un plat » et donnait « blanquette,
+// tajine, gratin » en exemple — trois noms de plats. L'affordance ne TAISAIT pas la capacité, elle
+// la CONTREDISAIT. Un test verrouille désormais le libellé (`recettes.test.tsx`), sans quoi une
+// reformulation la recacherait en silence.
 //
 // PÉRIMÈTRE — ce que §4.4 décrit et qui n'est PAS ici : l'état « Pourquoi pas ce plat ? »
 // (`entonnoir.entries` porte déjà la matière), et la catégorie « Loufoque », qui n'a AUCUNE recette
@@ -48,12 +58,13 @@ import {
   type FiltresRecette,
 } from '../filtres-recettes.js'
 import { readUserState, setFavorite } from '../../data/user-store.js'
-import { readUserRecipes, type StoredUserRecipe } from '../../data/user-recipe.js'
-import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
+import { nouvelIdRecette, readUserRecipes, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
+import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle, rebatirCatalogue } from '../socle.js'
 import { hashDeLEditeur, hashDeRecette, hashDuFrigo } from '../router.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { Panneau } from '../panneau.js'
 import { exporterRecette } from '../export-recette.js'
+import { importerRecette } from '../import-recette.js'
 
 const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
   allergenes: 'allergènes',
@@ -244,6 +255,7 @@ export function Recettes() {
 
       {panneauMesRecettesOuvert && (
         <Panneau titre="Mes recettes" onFermer={() => setPanneauMesRecettesOuvert(false)}>
+          <ImporterRecette catalogue={socle.catalogue} onImportee={rafraichir} />
           <PanneauMesRecettes catalogue={socle.catalogue} recettesPerso={socle.recettesPerso} />
         </Panneau>
       )}
@@ -411,6 +423,83 @@ function BoutonExporter({ recette }: { readonly recette: StoredUserRecipe }) {
     >
       <span aria-hidden="true">⬇</span>
     </button>
+  )
+}
+
+/**
+ * Import d'un fichier `.nutri-recipe` (§8.7 : « un autre l'importe → rendu comme dans l'appli »),
+ * à côté de l'export dans la même fenêtre.
+ *
+ * ⚠️ AUCUNE REQUÊTE RÉSEAU : `<input type="file">` + lecture locale (`File.text()`), rien d'autre —
+ * c'est la promesse n°2 du produit (§2 ARCHITECTURE, « zéro donnée qui sort »).
+ *
+ * ⚠️ REFUS EXPLIQUÉ, PAS UN CODE D'ERREUR. `importerRecette` rend une raison en français ; ce
+ * composant se contente de l'afficher — la traduire une seconde fois ici la ferait diverger.
+ */
+function ImporterRecette({
+  catalogue,
+  onImportee,
+}: {
+  readonly catalogue: Catalog
+  readonly onImportee: () => void
+}) {
+  const [etat, setEtat] = useState<{ readonly type: 'erreur' | 'succes'; readonly message: string } | null>(null)
+
+  const surFichier = useCallback(
+    (fichier: File) => {
+      fichier
+        .text()
+        .then((contenu) => {
+          const id = nouvelIdRecette(Date.now(), Math.random())
+          const resultat = importerRecette(contenu, catalogue, id)
+          if (!resultat.ok) {
+            setEtat({ type: 'erreur', message: resultat.raison })
+            return
+          }
+          chargerSocle()
+            .then((s) => {
+              saveUserRecipe(s.db, resultat.recette, aujourdhuiIso())
+              return rebatirCatalogue()
+            })
+            .then(() => {
+              setEtat({ type: 'succes', message: `« ${resultat.recette.nom} » a été importée.` })
+              onImportee()
+            })
+            .catch(() => setEtat({ type: 'erreur', message: "La recette n'a pas pu être enregistrée." }))
+        })
+        .catch(() => setEtat({ type: 'erreur', message: 'Ce fichier n’a pas pu être lu.' }))
+    },
+    [catalogue, onImportee]
+  )
+
+  return (
+    <div className="mb-4">
+      <label className="flex min-h-tactile w-full cursor-pointer items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte">
+        Importer une recette (.nutri-recipe)
+        <input
+          type="file"
+          accept=".nutri-recipe,application/json"
+          aria-label="Importer une recette (.nutri-recipe)"
+          className="sr-only"
+          onChange={(e) => {
+            const fichier = e.target.files?.[0]
+            e.target.value = ''
+            if (fichier !== undefined) surFichier(fichier)
+          }}
+        />
+      </label>
+      {etat !== null && (
+        <p
+          role={etat.type === 'erreur' ? 'alert' : undefined}
+          className={
+            'mt-2 text-[0.9rem] leading-relaxed ' +
+            (etat.type === 'erreur' ? 'text-texte' : 'text-texte-doux')
+          }
+        >
+          {etat.message}
+        </p>
+      )}
+    </div>
   )
 }
 

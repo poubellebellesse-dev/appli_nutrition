@@ -23,13 +23,14 @@ import type {
   LexiconEntry,
   Recipe,
   RecipeId,
+  RecipeSource,
   RecipeStep,
 } from '../../engine/domain/index.js'
 import { readDisplay, readUserState, setFavorite, writeDisplay } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import type { OrigineRecette } from '../router.js'
 import { hashDe, hashDeLEditeur, hashDuFrigo } from '../router.js'
-import { estRecettePerso } from '../../data/user-recipe.js'
+import { estRecettePerso, readUserRecipe } from '../../data/user-recipe.js'
 import { quantiteAffichee } from '../quantites.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
@@ -59,6 +60,9 @@ interface Vue {
   readonly gardeManger: boolean
   readonly afficherMacros: boolean
   readonly energiePortion: number | null
+  /** `null` pour une recette du catalogue. Distingue le libellé de l'avertissement « non vérifié »
+   *  (§8.7 ARCHITECTURE) : « Votre recette » mentirait sur un fichier reçu d'ailleurs. */
+  readonly sourcePerso: 'perso' | 'variante' | 'importe' | null
 }
 
 type Etat =
@@ -130,6 +134,7 @@ export function DetailRecette({
             gardeManger: utilisateur.pantryFoodIds.length > 0,
             afficherMacros: readDisplay(socle.db).afficherMacros,
             energiePortion: energieParPortion(socle.catalogue, id),
+            sourcePerso: estRecettePerso(recetteId) ? (readUserRecipe(socle.db, recetteId)?.source ?? 'perso') : null,
           },
         })
         // ⚠️ RÉINITIALISÉ À CHAQUE RECETTE, et non conservé. Garder la valeur précédente faisait
@@ -213,11 +218,32 @@ export function DetailRecette({
       {/* ⚠️ §4.3 ARCHITECTURE l'impose : une recette utilisateur est « contenu AUTONOME, hors
           garanties du catalogue source : toujours affiché non vérifié ». Les valeurs nutritionnelles
           sont bien calculées depuis CIQUAL — mais les quantités, les temps et les étapes viennent de
-          l'utilisateur, et rien ne les a relus. Le dire est la condition pour les afficher. */}
-      {estRecettePerso(recetteId) && (
-        <p className="mt-2 rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 py-3 text-[0.9rem] leading-relaxed text-texte-doux">
-          Votre recette. Les apports sont calculés depuis vos ingrédients ; le reste n'a pas été
-          vérifié.
+          l'utilisateur, et rien ne les a relus. Le dire est la condition pour les afficher.
+          ⚠️ LE LIBELLÉ SUIT `sourcePerso`, PAS SEULEMENT LE PRÉFIXE `perso:` DE L'ID (§8.7) : une
+          recette IMPORTÉE porte aussi ce préfixe (voir `nouvelIdRecette`) mais « Votre recette » y
+          mentirait — elle vient d'ailleurs, personne ici ne l'a écrite ni relue. */}
+      {estRecettePerso(recetteId) &&
+        (vue.sourcePerso === 'importe' ? (
+          <p className="mt-2 rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 py-3 text-[0.9rem] leading-relaxed text-texte-doux">
+            Recette importée. Les apports sont calculés depuis ses ingrédients ; le reste — étapes,
+            temps, portions — vient de la personne qui l'a partagée et n'a pas été vérifié.
+          </p>
+        ) : (
+          <p className="mt-2 rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 py-3 text-[0.9rem] leading-relaxed text-texte-doux">
+            Votre recette. Les apports sont calculés depuis vos ingrédients ; le reste n'a pas été
+            vérifié.
+          </p>
+        ))}
+
+      {/* ⚠️ LA MENTION REMPLACE LE SILENCE, elle ne s'y ajoute pas. Une recette du catalogue sans
+          source ni test n'a rien qui le dise, et le silence laisse SUPPOSER une provenance sourcée
+          que le dépôt n'a pas — sur un produit dont l'argument est la traçabilité, c'est le pire des
+          deux. Formulation courte et volontairement sans drame : elle disparaît d'elle-même dès que
+          `teste_le` est renseignée. Voir docs/SOURCES_RECETTES.md §5.
+          PAS pour les recettes perso : leur bandeau ci-dessus dit déjà la même chose, en mieux. */}
+      {!estRecettePerso(recetteId) && recette.sources.length === 0 && recette.testeLe === null && (
+        <p className="mt-2 text-[0.9rem] leading-relaxed text-attenue">
+          Recette maison, non encore testée.
         </p>
       )}
 
@@ -310,7 +336,76 @@ export function DetailRecette({
         energiePortion={vue.energiePortion}
         onBasculer={basculerMacros}
       />
+
+      <Sources sources={recette.sources} testeLe={recette.testeLe} />
     </article>
+  )
+}
+
+/**
+ * Sources de la recette — EN BAS DE FICHE, comme une bibliographie.
+ *
+ * ⚠️ Pas en tête, malgré la tentation. Cet écran se lit debout, mains occupées : deux liens avant
+ * le titre repousseraient les ingrédients hors de l'écran au moment où on en a besoin. La réserve
+ * courte (« non encore testée ») reste en haut parce qu'elle tient sur une ligne ; les références,
+ * qu'on consulte avant ou après avoir cuisiné, jamais pendant, descendent ici.
+ *
+ * ⚠️ LES DEUX TYPES NE SE FORMULENT PAS PAREIL, et c'est tout l'intérêt de les avoir séparés :
+ * `provenance` crédite quelqu'un (auteur et licence obligatoires), `reference` ne fait qu'indiquer
+ * ce qui a été consulté. Écrire « d'après X » sur une simple référence prêterait à la recette une
+ * origine qu'elle n'a pas.
+ */
+function Sources({
+  sources,
+  testeLe,
+}: {
+  readonly sources: readonly RecipeSource[]
+  readonly testeLe: string | null
+}) {
+  if (sources.length === 0 && testeLe === null) return null
+
+  const provenances = sources.filter((s) => s.type === 'provenance')
+  const references = sources.filter((s) => s.type === 'reference')
+
+  return (
+    <section className="mt-10 border-t border-bordure pt-5">
+      <h2 className="text-[1.5rem] text-texte">Sources</h2>
+
+      {testeLe !== null && (
+        <p className="mt-3 text-[1rem] text-texte-doux">Recette cuisinée et jugée le {testeLe}.</p>
+      )}
+
+      {provenances.length > 0 && (
+        <ul className="mt-3 space-y-2">
+          {provenances.map((source) => (
+            <li key={source.url} className="text-[1rem] leading-relaxed text-texte-doux">
+              D'après{' '}
+              <a href={source.url} target="_blank" rel="noreferrer" className="text-accent-texte">
+                {source.titre}
+              </a>
+              {source.auteur === null ? null : <> — {source.auteur}</>}
+              {source.licence === null ? null : <> · {source.licence}</>}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {references.length > 0 && (
+        <>
+          <p className="mt-4 text-[0.9rem] text-attenue">Consulté pour vérifier cette recette :</p>
+          <ul className="mt-2 space-y-2">
+            {references.map((source) => (
+              <li key={source.url} className="text-[1rem] leading-relaxed text-texte-doux">
+                <a href={source.url} target="_blank" rel="noreferrer" className="text-accent-texte">
+                  {source.titre}
+                </a>{' '}
+                <span className="text-attenue">(lu le {source.consulteLe})</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
   )
 }
 

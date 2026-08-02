@@ -65,7 +65,10 @@ export interface IngredientSaisi {
 export interface StoredUserRecipe {
   readonly schemaVersion: 1
   readonly id: string
-  readonly source: 'perso' | 'variante'
+  /** `'importe'` : reçue par fichier `.nutri-recipe` (§8.7 ARCHITECTURE) — ni écrite par
+   *  l'utilisateur (`perso`), ni dérivée d'une recette du catalogue (`variante`). La contrainte SQL
+   *  `user-schema.ts` accepte déjà cette valeur ; voir `ui/import-recette.ts`. */
+  readonly source: 'perso' | 'variante' | 'importe'
   /** Recette du catalogue dont celle-ci dérive. `null` pour une création de zéro. */
   readonly baseRecipeId: string | null
   readonly nom: string
@@ -178,6 +181,13 @@ export function versRecette(stockee: StoredUserRecipe, foods: ReadonlyMap<FoodId
     // les lit aujourd'hui ; `null` dit « non renseigné », ce qui est la vérité.
     service: stockee.service ?? null,
     piquant: stockee.piquant ?? null,
+    // ⚠️ TOUJOURS VIDES pour une recette utilisateur, et l'héritage serait ici une FAUTE : une
+    // variante peut hériter du service ou du piquant de sa base, jamais de ses sources — une fois
+    // les quantités et les étapes modifiées, la référence consultée ne dit plus ce que la recette
+    // fait. §4.3 ARCHITECTURE la déclare « hors garanties du catalogue source », et l'écran la
+    // marque déjà « non vérifié » : c'est cette mention-là qui parle, pas une source empruntée.
+    sources: [],
+    testeLe: null,
   }
 }
 
@@ -217,17 +227,48 @@ export function readUserRecipe(db: UserDb, id: string): StoredUserRecipe | null 
 
 /** `null` si le contenu est illisible ou d'une version inconnue — jamais une exception. */
 function analyser(json: string): StoredUserRecipe | null {
+  const lu = analyserAvecMotif(json)
+  return lu.ok ? lu.recette : null
+}
+
+/** Résultat de `analyserAvecMotif` : soit une recette lisible, soit la raison exacte du refus. */
+export type LectureRecette =
+  | { readonly ok: true; readonly recette: StoredUserRecipe }
+  | { readonly ok: false; readonly raison: string }
+
+/**
+ * Même validation que `analyser`, mais MOTIVÉE — nécessaire à l'import d'un fichier `.nutri-recipe`
+ * (§8.7 ARCHITECTURE, voir `ui/import-recette.ts`), où un `null` muet ne dirait pas à l'utilisateur
+ * ce qui cloche. `readUserRecipes` reste volontairement silencieuse : une entrée illisible en base y
+ * est un cas normal (voir plus haut), un fichier importé ne l'est pas.
+ */
+export function analyserAvecMotif(json: string): LectureRecette {
+  let brut: unknown
   try {
-    const brut: unknown = JSON.parse(json)
-    if (typeof brut !== 'object' || brut === null) return null
-    const candidate = brut as Partial<StoredUserRecipe>
-    if (candidate.schemaVersion !== VERSION_CONTENU_RECETTE) return null
-    if (typeof candidate.id !== 'string' || typeof candidate.nom !== 'string') return null
-    if (!Array.isArray(candidate.ingredients)) return null
-    return candidate as StoredUserRecipe
+    brut = JSON.parse(json)
   } catch {
-    return null
+    return { ok: false, raison: 'Ce fichier n’est pas lisible : ce n’est pas un .nutri-recipe valide.' }
   }
+  if (typeof brut !== 'object' || brut === null) {
+    return { ok: false, raison: 'Ce fichier n’est pas un .nutri-recipe valide.' }
+  }
+  const candidate = brut as Partial<StoredUserRecipe>
+  if (candidate.schemaVersion === undefined) {
+    return { ok: false, raison: 'Ce fichier ne porte aucune version : ce n’est pas un .nutri-recipe.' }
+  }
+  if (candidate.schemaVersion !== VERSION_CONTENU_RECETTE) {
+    return {
+      ok: false,
+      raison: `Ce fichier vient d’une version de l’appli que celle-ci ne reconnaît pas (version ${String(candidate.schemaVersion)}).`,
+    }
+  }
+  if (typeof candidate.id !== 'string' || typeof candidate.nom !== 'string' || candidate.nom.trim() === '') {
+    return { ok: false, raison: 'Ce fichier .nutri-recipe est incomplet.' }
+  }
+  if (!Array.isArray(candidate.ingredients) || candidate.ingredients.length === 0) {
+    return { ok: false, raison: 'Cette recette n’a aucun ingrédient.' }
+  }
+  return { ok: true, recette: candidate as StoredUserRecipe }
 }
 
 export function saveUserRecipe(db: UserDb, recette: StoredUserRecipe, importeLe: string): void {

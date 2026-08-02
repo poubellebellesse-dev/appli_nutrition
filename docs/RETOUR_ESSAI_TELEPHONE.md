@@ -113,6 +113,18 @@
     d'allergène — ils viennent de `planWeek`/`suggestMeals`, qui passent par la couche d'exclusion
     avant toute retenue. L'ajout manuel était bien le seul trou.
 
+14. **L'import de recettes — la moitié manquante de §8.7.** Un fichier `.nutri-recipe` se relit
+    désormais, et un test fait l'**aller-retour complet** export → import.
+    ⚠️ **Le danger central était la garantie allergène.** Un `foodId` absent du catalogue local
+    n'apporte AUCUN allergène : la recette traverserait `runExclusionPass` en paraissant sûre.
+    Faux négatif silencieux sur la promesse centrale du produit. → **L'import REFUSE** dès qu'un
+    seul `foodId` est inconnu, et nomme le coupable. Jamais de rapprochement par nom.
+    ⚠️ **L'identifiant du fichier n'est jamais repris** : `saveUserRecipe` fait
+    `ON CONFLICT DO UPDATE`, donc un fichier portant l'id d'une de vos recettes l'aurait ÉCRASÉE.
+    Un id neuf est attribué à chaque import, et un test vérifie qu'une recette existante survit.
+    `source: 'importe'` était déjà autorisé par la contrainte SQL, absent du seul type TypeScript.
+    Le libellé « **Votre** recette » devenait faux pour une recette venue d'ailleurs — corrigé.
+
 Et l'étape « Installez l'application », désactivée le 2026-08-01, a été rétablie : elle est le seul
 endroit du produit qui explique l'installation, et c'est l'installation qui fait accorder le stockage
 persistant.
@@ -334,12 +346,10 @@ faite en le traitant :
 ### Divers
 
 - **Des sauces à faire seules** et des **accompagnements** — contenu à écrire.
-- ✅ **Exporter ses recettes** — fait (§1, point 10).
-  ⚠️ **Mais c'est une sauvegarde, pas un partage.** `ARCHITECTURE.md §8.7` décrit un aller-retour :
-  on exporte un `.nutri-recipe`, quelqu'un d'autre l'**importe**. **L'import n'existe pas.** Le
-  fichier est bien formé et versionné, personne ne sait le relire. Utile pour ne pas perdre ses
-  recettes — ce qui compte sur une appli sans compte ni synchronisation — mais la moitié de §8.7
-  manque. L'import est le prochain morceau si le partage est voulu.
+- ✅ **Exporter ses recettes** — fait (§1, point 10), **et l'import aussi** (§1, point 14). Les deux
+  moitiés de §8.7 se parlent : un test fait l'aller-retour complet.
+  ⚠️ Reste hors périmètre : l'**import depuis une URL** par analyse du JSON-LD schema.org, l'autre
+  moitié de §8.7. Et la **photo embarquée** qu'il décrit — il n'y a aucune photo au catalogue.
 
 ---
 

@@ -176,6 +176,8 @@ function recetteDeBase(): Recipe {
     ],
     service: null,
     piquant: null,
+    sources: [],
+    testeLe: null,
   }
 }
 

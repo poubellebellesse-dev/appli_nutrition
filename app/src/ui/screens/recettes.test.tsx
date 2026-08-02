@@ -423,6 +423,100 @@ describe('recettes — le régime déclaré', () => {
   })
 })
 
+describe('recettes — importer une recette (.nutri-recipe, §8.7)', () => {
+  function nutriRecipe(foodId: string, id = 'perso:fichier-externe'): string {
+    return JSON.stringify({
+      schemaVersion: 1,
+      id,
+      source: 'perso',
+      baseRecipeId: null,
+      nom: 'Un plat venu d’ailleurs',
+      tempsPrepMin: 10,
+      tempsCuissonMin: 20,
+      portionsBase: 2,
+      difficulte: 1,
+      typesRepas: ['diner'],
+      envergure: 'quotidien',
+      conservationJours: 2,
+      axes: AXES_PAR_DEFAUT,
+      ingredients: [{ foodId, quantiteG: 200, uniteAffichage: '2 pièces', optionnel: false }],
+      etapes: ['Préparer.'],
+      facettesHeritees: [],
+      service: null,
+      piquant: null,
+    })
+  }
+
+  async function ouvrirMesRecettes(): Promise<HTMLElement> {
+    fireEvent.click(screen.getByRole('button', { name: /Mes recettes/ }))
+    return screen.findByRole('dialog', { name: 'Mes recettes' })
+  }
+
+  function deposer(panneau: HTMLElement, contenu: string): void {
+    const champ = within(panneau).getByLabelText(/Importer une recette/) as HTMLInputElement
+    const fichier = new File([contenu], 'recette.nutri-recipe', { type: 'application/json' })
+    fireEvent.change(champ, { target: { files: [fichier] } })
+  }
+
+  it('un fichier valide s’importe, se retrouve listé, sous un id différent de celui du fichier', async () => {
+    await monter()
+    const catalogue = catalogueDeTest()
+    const unAliment = [...catalogue.foods.keys()][0]!
+    const panneau = await ouvrirMesRecettes()
+
+    deposer(panneau, nutriRecipe(unAliment))
+
+    await within(panneau).findByText(/a été importée/)
+    await within(panneau).findByText('Un plat venu d’ailleurs')
+
+    const lien = within(panneau).getByRole('link', { name: /Un plat venu d’ailleurs/ })
+    const idImporte = decodeURIComponent(
+      lien.getAttribute('href')!.slice(hashDeRecette('').length)
+    )
+    expect(idImporte).not.toBe('perso:fichier-externe')
+  })
+
+  it('n’écrase pas une recette existante qui porterait le même id que le fichier importé', async () => {
+    const catalogue = catalogueDeTest()
+    const unAliment = [...catalogue.foods.keys()][0]!
+    const existante: SaisieRecette = {
+      nom: 'Ma recette déjà là, bien vivante',
+      tempsPrepMin: 5,
+      tempsCuissonMin: 5,
+      portionsBase: 1,
+      difficulte: 1,
+      typesRepas: ['diner'],
+      envergure: 'quotidien',
+      conservationJours: 1,
+      axes: AXES_PAR_DEFAUT,
+      ingredients: [{ foodId: unAliment, quantiteG: 100, uniteAffichage: '100 g', optionnel: false }],
+      etapes: ['Servir.'],
+    }
+    const idExistant = 'perso:fichier-externe'
+    saveUserRecipe(baseCourante(), construireRecette(idExistant, existante, null), '2026-08-01')
+
+    await monter()
+    const panneau = await ouvrirMesRecettes()
+    // Le fichier porte VOLONTAIREMENT l'id de la recette déjà enregistrée.
+    deposer(panneau, nutriRecipe(unAliment, idExistant))
+
+    await within(panneau).findByText(/a été importée/)
+    expect(within(panneau).getByText('Ma recette déjà là, bien vivante')).toBeDefined()
+    expect(within(panneau).getByText('Un plat venu d’ailleurs')).toBeDefined()
+  })
+
+  it('un foodId inconnu est refusé, avec son nom dans le message — jamais importé en silence', async () => {
+    await monter()
+    const panneau = await ouvrirMesRecettes()
+
+    deposer(panneau, nutriRecipe('aliment-totalement-inconnu-9284'))
+
+    const erreur = await within(panneau).findByRole('alert')
+    expect(erreur.textContent).toContain('aliment-totalement-inconnu-9284')
+    expect(within(panneau).queryByText('Un plat venu d’ailleurs')).toBeNull()
+  })
+})
+
 describe('recettes — les favoris', () => {
   // Deux allers-retours en base enchaînés (`setFavorite` puis `rafraichir`) : exactement le genre
   // d'état à deux sauts que test-socle.ts documente comme source de bugs déjà trouvés en pilotant
