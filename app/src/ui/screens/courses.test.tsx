@@ -13,7 +13,7 @@
 // donc jusqu'à la base, pas seulement jusqu'à `aria-pressed`.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { readShoppingList, savePlan } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 import { hashDe } from '../router.js'
@@ -87,6 +87,84 @@ async function ajouterArticle(libelle: string): Promise<void> {
 function lignesAffichees(): string[] {
   return [...document.querySelectorAll('article button[aria-pressed]')].map((b) => b.textContent ?? '')
 }
+
+/** Le formulaire d'ajout, pour scoper les requêtes : un nom d'aliment proposé en complétion (ex.
+ * « Courgette, crue ») peut aussi apparaître comme article de la liste de courses réelle. */
+function formulaire(): HTMLElement {
+  return screen.getByPlaceholderText('Lessive, pain, croquettes…').closest('form') as HTMLElement
+}
+
+describe('courses — la complétion sur les aliments du catalogue', () => {
+  it('taper « courg » propose Courgette ; la choisir range l’article en fruits et légumes', async () => {
+    await avecUnPlan()
+    await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: 'courg' },
+    })
+    fireEvent.click(await within(formulaire()).findByText('Courgette, crue'))
+    fireEvent.click(screen.getByText('Ajouter'))
+
+    await waitFor(() => {
+      const extras = readShoppingList(baseCourante())!.extras
+      expect(extras).toEqual([expect.objectContaining({ libelle: 'Courgette, crue', rayon: 'fruits et légumes' })])
+    })
+  })
+
+  it('le rayon déduit reste modifiable, et c’est la valeur choisie à la main qui est enregistrée', async () => {
+    await avecUnPlan()
+    await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: 'courg' },
+    })
+    fireEvent.click(await within(formulaire()).findByText('Courgette, crue'))
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'épicerie' } })
+    fireEvent.click(screen.getByText('Ajouter'))
+
+    await waitFor(() => {
+      const extras = readShoppingList(baseCourante())!.extras
+      expect(extras).toEqual([expect.objectContaining({ libelle: 'Courgette, crue', rayon: 'épicerie' })])
+    })
+  })
+
+  it('un libellé libre sans proposition choisie s’ajoute toujours, avec son rayon manuel', async () => {
+    await avecUnPlan()
+    await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: 'lessive' },
+    })
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'lessive & linge' } })
+    fireEvent.click(screen.getByText('Ajouter'))
+
+    await waitFor(() => {
+      const extras = readShoppingList(baseCourante())!.extras
+      expect(extras).toEqual([expect.objectContaining({ libelle: 'lessive', rayon: 'lessive & linge' })])
+    })
+  })
+
+  it('la quantité saisie est enregistrée et réaffichée', async () => {
+    await avecUnPlan()
+    await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: 'croquettes' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('2 boîtes, un paquet…'), { target: { value: '2 paquets' } })
+    fireEvent.click(screen.getByText('Ajouter'))
+
+    await waitFor(() => {
+      const extras = readShoppingList(baseCourante())!.extras
+      expect(extras).toEqual([expect.objectContaining({ libelle: 'croquettes', quantite: '2 paquets' })])
+    })
+    expect(await screen.findByText('2 paquets')).toBeDefined()
+  })
+})
 
 describe('courses — sans plan', () => {
   it("dit pourquoi la liste est vide et propose de composer sa semaine, pas un cadre muet", async () => {

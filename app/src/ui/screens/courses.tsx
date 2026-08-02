@@ -19,7 +19,9 @@
 // menu discret, et le découpage en deux virées de courses (`joursDeCourses`, §7.4).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { FoodId, ShoppingList, ShoppingListItem, SlotRef } from '../../engine/domain/index.js'
+import type { Food, FoodId, ShoppingList, ShoppingListItem, SlotRef } from '../../engine/domain/index.js'
+import { rayonDe, RAYONS_ALIMENTAIRES } from '../../engine/planning/shopping-list.js'
+import { normaliser } from '../../engine/search/index.js'
 import {
   addExtraItem,
   readLatestPlan,
@@ -61,6 +63,8 @@ interface Vue {
   readonly enregistree: StoredShoppingList
   readonly nomAliment: (id: FoodId) => string
   readonly platDuCreneau: (slot: SlotRef) => string | null
+  /** Le catalogue des aliments, pour la complétion de `FormulaireAjout` et le rayon qu'elle en déduit. */
+  readonly foods: ReadonlyMap<FoodId, Food>
 }
 
 type Etat =
@@ -104,6 +108,7 @@ async function calculerVue(): Promise<Etat> {
       enregistree,
       nomAliment: (id) => socle.catalogue.foods.get(id)?.nom ?? id,
       platDuCreneau: (slot) => platParCreneau.get(cleCreneau(slot.date, slot.creneau)) ?? null,
+      foods: socle.catalogue.foods,
     },
   }
 }
@@ -205,12 +210,12 @@ export function Courses() {
   )
 
   const ajouter = useCallback(
-    (libelle: string, rayon: string | null) => {
+    (libelle: string, rayon: string | null, quantite: string | null) => {
       if (etat.phase !== 'pret') return
       const listId = etat.vue.enregistree.id
       chargerSocle()
         .then((socle) => {
-          addExtraItem(socle.db, listId, { libelle, rayon })
+          addExtraItem(socle.db, listId, { libelle, rayon, quantite })
           setAjoutOuvert(false)
           rafraichir()
         })
@@ -312,7 +317,9 @@ export function Courses() {
         <BoutonPartager vue={vue} coches={coches} />
       </div>
 
-      {ajoutOuvert && <FormulaireAjout onAjouter={ajouter} onAnnuler={() => setAjoutOuvert(false)} />}
+      {ajoutOuvert && (
+        <FormulaireAjout foods={vue.foods} onAjouter={ajouter} onAnnuler={() => setAjoutOuvert(false)} />
+      )}
 
       {/* « Chemin inverse » (§4.3) : après des ajouts manuels, proposer d'en faire quelque chose.
           Invite DISCRÈTE et tardive — §4.3 la déclenche à partir de deux ajouts, pour ne pas
@@ -474,21 +481,38 @@ function ArticlesAjoutes({
 }
 
 function FormulaireAjout({
+  foods,
   onAjouter,
   onAnnuler,
 }: {
-  readonly onAjouter: (libelle: string, rayon: string | null) => void
+  readonly foods: ReadonlyMap<FoodId, Food>
+  readonly onAjouter: (libelle: string, rayon: string | null, quantite: string | null) => void
   readonly onAnnuler: () => void
 }) {
   const [libelle, setLibelle] = useState('')
   const [rayon, setRayon] = useState('')
+  const [quantite, setQuantite] = useState('')
+  const [propositionsVisibles, setPropositionsVisibles] = useState(false)
+
+  // Même motif que `editeur-recette.tsx` (« Ajouter un ingrédient ») : une liste maison, pas un
+  // `<datalist>`, parce qu'il faut récupérer l'ALIMENT choisi (pour en déduire le rayon), pas
+  // seulement le texte de son nom.
+  const propositions = useMemo(() => {
+    if (!propositionsVisibles) return []
+    const cherche = normaliser(libelle.trim())
+    if (cherche.length < 2) return []
+    return [...foods.values()].filter((f) => normaliser(f.nom).includes(cherche)).slice(0, 6)
+  }, [foods, libelle, propositionsVisibles])
 
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault()
         const propre = libelle.trim()
-        if (propre.length > 0) onAjouter(propre, rayon === '' ? null : rayon)
+        const quantitePropre = quantite.trim()
+        if (propre.length > 0) {
+          onAjouter(propre, rayon === '' ? null : rayon, quantitePropre === '' ? null : quantitePropre)
+        }
       }}
       className="mt-4 rounded-[--radius-carte] border border-bordure bg-surface p-4"
     >
@@ -497,12 +521,46 @@ function FormulaireAjout({
         <input
           type="text"
           value={libelle}
-          onChange={(e) => setLibelle(e.target.value)}
+          onChange={(e) => {
+            setLibelle(e.target.value)
+            setPropositionsVisibles(true)
+          }}
           placeholder="Lessive, pain, croquettes…"
           className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[1rem] text-texte"
         />
       </label>
+      {propositions.length > 0 && (
+        <ul className="mt-1 divide-y divide-bordure rounded-[--radius-carte] border border-bordure bg-fond">
+          {propositions.map((aliment) => (
+            <li key={aliment.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  setLibelle(aliment.nom)
+                  setRayon(rayonDe(aliment, foods))
+                  setPropositionsVisibles(false)
+                }}
+                className="flex min-h-tactile w-full items-center px-3 text-left text-[1rem] text-texte"
+              >
+                {aliment.nom}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <label className="mt-3 block">
+        <span className="text-[0.95rem] text-texte-doux">Quantité (facultatif)</span>
+        <input
+          type="text"
+          value={quantite}
+          onChange={(e) => setQuantite(e.target.value)}
+          placeholder="2 boîtes, un paquet…"
+          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[1rem] text-texte"
+        />
+      </label>
+      <label className="mt-3 block">
+        {/* Présélectionné par le choix d'un aliment ci-dessus, mais toujours modifiable : « calculé
+            par l'appli sauf si l'utilisateur veut rentrer dans un rayon précis ». */}
         <span className="text-[0.95rem] text-texte-doux">Rayon (facultatif)</span>
         <select
           value={rayon}
@@ -510,6 +568,11 @@ function FormulaireAjout({
           className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[1rem] text-texte"
         >
           <option value="">Autres</option>
+          {RAYONS_ALIMENTAIRES.map((r) => (
+            <option key={r} value={r}>
+              {r}
+            </option>
+          ))}
           {RAYONS_EXTRA.map((r) => (
             <option key={r} value={r}>
               {r}

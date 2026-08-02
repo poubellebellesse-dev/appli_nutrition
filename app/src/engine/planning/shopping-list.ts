@@ -61,6 +61,15 @@ const RAYON_PAR_GROUPE: Readonly<Record<string, string>> = {
 const RAYON_PAR_DEFAUT = 'épicerie'
 
 /**
+ * Les six rayons alimentaires, DÉRIVÉS de `RAYON_PAR_GROUPE` plutôt que recopiés à la main : une
+ * liste écrite séparément (par ex. dans un formulaire d'ajout manuel) divergerait silencieusement
+ * le jour où un groupe change de rayon ici.
+ */
+export const RAYONS_ALIMENTAIRES: readonly string[] = [
+  ...new Set([...Object.values(RAYON_PAR_GROUPE), RAYON_PAR_DEFAUT]),
+]
+
+/**
  * Le rayon d'un aliment.
  *
  * « matières grasses » n'a pas d'entrée dans la table exprès : le groupe ne suffit pas à trancher.

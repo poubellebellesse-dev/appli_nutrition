@@ -40,6 +40,13 @@ Et l'étape « Installez l'application », désactivée le 2026-08-01, a été r
 endroit du produit qui explique l'installation, et c'est l'installation qui fait accorder le stockage
 persistant.
 
+6. **L'ajout manuel aux Courses ne savait ajouter que du non-alimentaire** — ses 10 rayons étaient
+   hygiène, lessive, animaux… et un aliment du catalogue ne pouvait pas être rangé en « fruits et
+   légumes ». Le formulaire a désormais une **complétion sur le catalogue**, en **déduit le rayon**
+   via `rayonDe()` tout en le laissant modifiable, et expose le **champ quantité** — dont la colonne
+   dormait en base, inutilisée, et qu'`addExtraItem` acceptait déjà. La saisie libre continue de
+   fonctionner pour le non-alimentaire. Aucune migration : tout existait, rien n'était branché.
+
 ---
 
 ## §2. Trois chantiers transverses
@@ -71,12 +78,27 @@ Demandé sur **Aujourd'hui**, **Recettes** et **Courses**.
 
 ### B. La complétion à la saisie
 
-Un seul composant, trois branchements.
+⚠️ **« Un composant, trois branchements » était faux** — annoncé ainsi le 2026-08-02, démenti par la
+lecture du code le jour même. La réalité est plus dispersée :
 
-- **Composer une recette** : complétion sur les **aliments**, les **ustensiles**, les **gestes de
-  cuisine**.
-- **Courses** : complétion dans la recherche.
-- **Savoir** : une barre de recherche pour les études (n'existe pas du tout aujourd'hui).
+- **Composer une recette, aliments** : ✅ **la complétion existait déjà** (`editeur-recette.tsx:398`)
+  — champ de recherche, liste maison, `normaliser()`, 6 résultats à partir de 2 caractères.
+  **Reste à savoir pourquoi elle n'a pas été trouvée pendant l'essai** : si elle marche, le problème
+  est sa visibilité, et le correctif n'est pas une complétion mais un travail d'affordance.
+- **Composer une recette, ustensiles et gestes** : voir chantier C — **il n'y a rien à compléter**,
+  les champs n'existent pas.
+- **Courses** : ✅ fait (§1).
+- **Savoir, recherche sur les études** : les **gestes** ont déjà leur recherche ; les fiches
+  « Comprendre » n'ont qu'une case « preuve forte seulement », aucune recherche textuelle. Manque
+  réel. Champs cherchables disponibles : `titre`, `resumeVulgarise`, et sur chaque position
+  `affirmation` et `detail`.
+  ⛔ **BLOQUÉ** : `app/src/ui/screens/savoir.tsx` fait partie des fichiers **non committés** du
+  chantier `evidence`. Y toucher écraserait du travail en cours. À reprendre une fois poussé.
+
+**Ce qui reste vrai** : `normaliser()` (`engine/search/index.ts:32`) est la fonction de comparaison
+commune, déjà réemployée partout. Aucun composant de champ de recherche n'est mutualisé — chaque
+écran réinvente le sien, en trois motifs différents (`<datalist>` sur Recettes, liste maison sur
+l'éditeur et les courses, filtre direct sur Savoir). À unifier si un quatrième arrive.
 
 ### C. Les tutoriels
 
@@ -148,9 +170,21 @@ Les trois remarques sont traitées (§1). Reste ouvert :
 
 ### Courses
 
-- **Ajouter un article manuellement, avec sa quantité.**
-- **Le rayon est calculé par l'appli**, sauf si l'utilisateur veut en imposer un.
-- Complétion dans la recherche : voir chantier B.
+✅ **Fait** (§1, point 6). Reste ouvert, et ce n'est pas une demande de l'essai mais une trouvaille
+faite en le traitant :
+
+- ⛔ **`shopping_extra_item.note_allergene` est une colonne MORTE.** Elle existe au schéma
+  (`user-schema.ts:242`), `readExtraItems` la lit — et **personne ne l'écrit, rien ne l'affiche**.
+  Concrètement : **un utilisateur qui ajoute à la main un aliment figurant parmi ses allergènes
+  déclarés n'est averti nulle part.**
+  ⚠️ C'est la **deuxième fois** que ce projet rencontre exactement ce motif. La fiche de reprise le
+  formule déjà : « *un garde-fou sans source de données ne garde rien — le filtre allergènes a
+  tourné sur une liste VIDE jusqu'à ce que l'onboarding existe. Vérifier qu'un champ déclaré est
+  bien REMPLI.* » Un champ déclaré et jamais rempli ressemble à une protection sans en être une, et
+  c'est plus dangereux qu'une absence franche.
+  **Décision produit à trancher** : avertir seulement quand l'article vient de la complétion (on a
+  alors le `FoodId`), ou tenter aussi une correspondance sur le texte libre — au risque d'un faux
+  négatif silencieux, qui est précisément le mode de défaillance que ce projet combat.
 
 ### Savoir
 
