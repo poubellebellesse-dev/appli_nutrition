@@ -744,6 +744,20 @@ describe('user-store — liste de courses', () => {
     expect(relue?.extras).toHaveLength(1)
   })
 
+  it('écrit et relit la note d’allergène d’un article ajouté par complétion', () => {
+    saveShoppingList(db, liste('farine_ble'))
+    const id = readShoppingList(db)!.id
+    addExtraItem(db, id, {
+      libelle: 'Farine de blé',
+      rayon: 'épicerie',
+      noteAllergene: 'Contient un allergène que vous avez déclaré : Gluten',
+    })
+
+    expect(readExtraItems(db, id)[0]?.noteAllergene).toBe(
+      'Contient un allergène que vous avez déclaré : Gluten'
+    )
+  })
+
   it('n’expose AUCUN allergène structuré sur les articles non alimentaires', () => {
     // §4.3 : le système des 14 allergènes UE reste réservé à ce qu'on MANGE. Ici, seulement une
     // note en texte libre, informative, jamais filtrante.

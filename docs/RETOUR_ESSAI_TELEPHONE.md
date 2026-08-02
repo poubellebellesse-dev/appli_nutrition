@@ -98,6 +98,21 @@
     sautée. Accès **« Revoir le tutoriel »** dans Paramètres, indépendant de `visite_proposee` —
     un tutoriel qu'on ne peut faire qu'une fois ne sert qu'une fois.
 
+13. **`note_allergene` était une colonne morte, sur la promesse centrale du produit.** Au schéma,
+    lue par `readExtraItems`, écrite par personne : un utilisateur qui ajoutait à la main un aliment
+    figurant dans ses allergènes déclarés **n'était averti nulle part**. La note est désormais
+    écrite à l'insertion et affichée dans la liste.
+    ⚠️ **Périmètre volontairement étroit** : on n'avertit que sur un aliment **choisi dans la
+    complétion**, là où l'on tient un `FoodId` fiable. **Rien n'est promis sur le texte libre.**
+    Tenter une correspondance textuelle sur « creme fraiche » tapé à la main produirait des **faux
+    négatifs silencieux** — l'appli paraîtrait vérifier alors qu'elle devine, et ferait baisser la
+    vigilance de qui compte dessus. Un périmètre étroit et honnête vaut mieux qu'un large et faux.
+    ⚠️ On **avertit sans interdire** : l'utilisateur achète peut-être pour quelqu'un d'autre. Même
+    principe que `checkCalorieFloor`, qui avertit au lieu d'annuler.
+    ✅ **Vérifié au passage** : les articles calculés depuis le plan ne peuvent PAS porter
+    d'allergène — ils viennent de `planWeek`/`suggestMeals`, qui passent par la couche d'exclusion
+    avant toute retenue. L'ajout manuel était bien le seul trou.
+
 Et l'étape « Installez l'application », désactivée le 2026-08-01, a été rétablie : elle est le seul
 endroit du produit qui explique l'installation, et c'est l'installation qui fait accorder le stockage
 persistant.
@@ -218,11 +233,22 @@ s'applique — ne laisse deviner qu'il existe**. Corriger demande de décider *o
 propose : à froid dans Paramètres, ou au moment où il servirait. C'est une question de conception,
 pas une chaîne à changer.
 
-**3. La complétion de l'éditeur de recette — NON DIAGNOSTIQUÉ.** Le champ porte un `type="search"`
-et le placeholder « courgette, œufs, riz… », ce qui est correct. Je ne sais pas si l'écran
-« Composer ma propre recette » a seulement été atteint pendant l'essai. **Question ouverte à
-l'utilisateur** : la complétion a-t-elle été essayée et n'a pas marché, ou l'écran n'a-t-il pas été
-trouvé ? Les deux réponses mènent à des correctifs opposés.
+**3. La complétion de l'éditeur de recette — CAUSE INCONNUE, à reproduire.**
+Réponse de l'utilisateur : « **trouvé mais pas de complétion** ». L'écran a donc bien été atteint et
+la liste n'est pas apparue. Ce qui a été vérifié depuis, et qui n'explique rien :
+
+- Le champ est le **3ᵉ élément de la page** (titre, « Nom du plat », puis les ingrédients) : il est
+  visible sans défiler. **L'hypothèse « la liste est cachée derrière le clavier virtuel » est donc
+  faible** — c'était la première piste, elle ne tient pas.
+- Le code est en place : `type="search"`, placeholder « courgette, œufs, riz… », liste maison
+  rendue dès `propositions.length > 0`.
+- **Seuil de 2 caractères** (`if (cherche.length < 2) return []`) — une seule lettre ne propose rien.
+- **Aucun `onFocus`, aucun `scrollIntoView`** sur ce champ.
+
+⚠️ **Reproduire avant de corriger.** L'essai datait d'avant une douzaine de lots, et l'utilisateur
+n'a pas retesté depuis. Un correctif écrit maintenant viserait une cause supposée. Ce qu'il faut :
+rouvrir « Composer ma propre recette » sur l'appareil, taper **au moins deux lettres** d'un aliment
+courant (« cour », « poul »), et dire ce qui s'affiche.
 
 ---
 
@@ -287,7 +313,8 @@ Les trois remarques sont traitées (§1). Reste ouvert :
 ✅ **Fait** (§1, point 6). Reste ouvert, et ce n'est pas une demande de l'essai mais une trouvaille
 faite en le traitant :
 
-- ⛔ **`shopping_extra_item.note_allergene` est une colonne MORTE.** Elle existe au schéma
+- ✅ **`note_allergene` n'est plus une colonne morte** — fait (§1, point 13).
+- ~~⛔ **`shopping_extra_item.note_allergene` est une colonne MORTE.**~~ Elle existe au schéma
   (`user-schema.ts:242`), `readExtraItems` la lit — et **personne ne l'écrit, rien ne l'affiche**.
   Concrètement : **un utilisateur qui ajoute à la main un aliment figurant parmi ses allergènes
   déclarés n'est averti nulle part.**

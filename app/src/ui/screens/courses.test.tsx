@@ -14,7 +14,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { readShoppingList, savePlan } from '../../data/user-store.js'
+import type { AllergenId } from '../../engine/domain/index.js'
+import { readShoppingList, savePlan, writeAllergies } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 import { hashDe } from '../router.js'
 
@@ -322,5 +323,95 @@ describe('courses — les restes de la veille', () => {
     const lien = screen.getByText('visible dans votre semaine').closest('a') as HTMLAnchorElement
     expect(lien.getAttribute('href')).toBe(hashDe('semaine'))
     expect(screen.getByText(/Reste du plat de la veille/)).toBeDefined()
+  })
+})
+
+describe('courses — la note d’allergène sur un article choisi par complétion', () => {
+  /** Un aliment RÉEL du catalogue de test qui porte l'allergène gluten, pris tel quel. */
+  function alimentAuGluten() {
+    const aliment = [...catalogueDeTest().foods.values()].find((f) =>
+      f.allergenes.some((a) => a.allergenId === ('gluten' as AllergenId))
+    )
+    if (aliment === undefined) throw new Error('aucun aliment du catalogue de test ne porte le gluten')
+    return aliment
+  }
+
+  it('choisir en complétion un aliment qui porte un allergène déclaré écrit et affiche la note', async () => {
+    const aliment = alimentAuGluten()
+    writeAllergies(baseCourante(), [{ allergenId: 'gluten' as AllergenId, severite: null }])
+    await avecUnPlan()
+    await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: aliment.nom.slice(0, 5) },
+    })
+    fireEvent.click(await within(formulaire()).findByText(aliment.nom))
+    fireEvent.click(screen.getByText('Ajouter'))
+
+    await waitFor(() => {
+      const extras = readShoppingList(baseCourante())!.extras
+      expect(extras[0]?.noteAllergene).toMatch(/Gluten/)
+    })
+    expect(await screen.findByText(/Contient un allergène que vous avez déclaré : Gluten/)).toBeDefined()
+  })
+
+  it('le même aliment sans allergie déclarée n’écrit aucune note', async () => {
+    const aliment = alimentAuGluten()
+    await avecUnPlan()
+    await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: aliment.nom.slice(0, 5) },
+    })
+    fireEvent.click(await within(formulaire()).findByText(aliment.nom))
+    fireEvent.click(screen.getByText('Ajouter'))
+
+    await waitFor(() => {
+      const extras = readShoppingList(baseCourante())!.extras
+      expect(extras[0]?.noteAllergene).toBeNull()
+    })
+    expect(screen.queryByText(/Contient un allergène/)).toBeNull()
+  })
+
+  it('un libellé libre, non choisi en complétion, ne promet jamais rien même s’il nomme un allergène', async () => {
+    const aliment = alimentAuGluten()
+    writeAllergies(baseCourante(), [{ allergenId: 'gluten' as AllergenId, severite: null }])
+    await avecUnPlan()
+    await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: aliment.nom },
+    })
+    // Aucune proposition cliquée : `aliment.nom` est tapé au clavier, pas choisi en complétion.
+    fireEvent.click(screen.getByText('Ajouter'))
+
+    await waitFor(() => {
+      const extras = readShoppingList(baseCourante())!.extras
+      expect(extras[0]?.noteAllergene).toBeNull()
+    })
+    expect(screen.queryByText(/Contient un allergène/)).toBeNull()
+  })
+
+  it('la note survit à un remontage de l’écran — elle vient de la base, pas de l’état React', async () => {
+    const aliment = alimentAuGluten()
+    writeAllergies(baseCourante(), [{ allergenId: 'gluten' as AllergenId, severite: null }])
+    await avecUnPlan()
+    const Courses = await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: aliment.nom.slice(0, 5) },
+    })
+    fireEvent.click(await within(formulaire()).findByText(aliment.nom))
+    fireEvent.click(screen.getByText('Ajouter'))
+    await screen.findByText(/Contient un allergène que vous avez déclaré : Gluten/)
+
+    cleanup()
+    render(<Courses />)
+    await screen.findByRole('heading', { name: 'Mes courses' })
+    expect(await screen.findByText(/Contient un allergène que vous avez déclaré : Gluten/)).toBeDefined()
   })
 })

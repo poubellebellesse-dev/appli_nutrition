@@ -19,11 +19,20 @@
 // menu discret, et le découpage en deux virées de courses (`joursDeCourses`, §7.4).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { Food, FoodId, ShoppingList, ShoppingListItem, SlotRef } from '../../engine/domain/index.js'
+import type {
+  AllergenId,
+  Catalog,
+  Food,
+  FoodId,
+  ShoppingList,
+  ShoppingListItem,
+  SlotRef,
+} from '../../engine/domain/index.js'
 import { rayonDe, RAYONS_ALIMENTAIRES } from '../../engine/planning/shopping-list.js'
 import { normaliser } from '../../engine/search/index.js'
 import {
   addExtraItem,
+  readAllergies,
   readLatestPlan,
   readShoppingList,
   removeExtraItem,
@@ -33,6 +42,7 @@ import {
   type StoredExtraItem,
   type StoredShoppingList,
 } from '../../data/user-store.js'
+import { LIBELLE_COURT } from '../champs-profil.js'
 import { LIBELLE_CRENEAU, aujourdhuiIso, chargerSocle, cleCreneau, profilCourant } from '../socle.js'
 import { hashDe, hashDuFrigo } from '../router.js'
 
@@ -65,6 +75,12 @@ interface Vue {
   readonly platDuCreneau: (slot: SlotRef) => string | null
   /** Le catalogue des aliments, pour la complétion de `FormulaireAjout` et le rayon qu'elle en déduit. */
   readonly foods: ReadonlyMap<FoodId, Food>
+  /**
+   * La note d'allergène à écrire pour un aliment choisi en complétion (ou `null` s'il n'en porte
+   * aucun de déclaré). C'EST LE SEUL CAS COUVERT — voir l'en-tête du fichier : sur un `FoodId` fiable
+   * on connaît la liste exacte des allergènes, et un texte libre ne l'offre pas.
+   */
+  readonly noteAllergeneDe: (food: Food) => string | null
 }
 
 type Etat =
@@ -101,6 +117,10 @@ async function calculerVue(): Promise<Etat> {
     if (nom !== undefined) platParCreneau.set(cleCreneau(entree.slot.date, entree.slot.creneau), nom)
   }
 
+  // Mêmes allergies déclarées que le reste de l'appli (`readAllergies`, table `user_allergy`) —
+  // aucun chemin dédié : un allergène décoché ailleurs doit l'être ici aussi.
+  const allergiesDeclarees = new Set<AllergenId>(readAllergies(socle.db).map((a) => a.allergenId))
+
   return {
     phase: 'pret',
     vue: {
@@ -109,8 +129,26 @@ async function calculerVue(): Promise<Etat> {
       nomAliment: (id) => socle.catalogue.foods.get(id)?.nom ?? id,
       platDuCreneau: (slot) => platParCreneau.get(cleCreneau(slot.date, slot.creneau)) ?? null,
       foods: socle.catalogue.foods,
+      noteAllergeneDe: (food) => noteAllergene(food, allergiesDeclarees, socle.catalogue.allergens),
     },
   }
+}
+
+/**
+ * Le texte informatif écrit en base pour un article manuel choisi par complétion (voir l'en-tête du
+ * fichier). `null` si l'aliment ne porte aucun allergène parmi ceux déclarés — ni traces ni certain
+ * ne sont distingués ici, même choix que le garde-fou du moteur (§5.2 ARCHITECTURE, `allergenes.ts`).
+ */
+function noteAllergene(
+  food: Food,
+  allergiesDeclarees: ReadonlySet<AllergenId>,
+  allergens: Catalog['allergens']
+): string | null {
+  const touches = food.allergenes
+    .filter((a) => allergiesDeclarees.has(a.allergenId))
+    .map((a) => LIBELLE_COURT[a.allergenId] ?? allergens.get(a.allergenId)?.nom ?? a.allergenId)
+  if (touches.length === 0) return null
+  return `Contient un allergène que vous avez déclaré : ${touches.join(', ')}`
 }
 
 /**
@@ -210,12 +248,12 @@ export function Courses() {
   )
 
   const ajouter = useCallback(
-    (libelle: string, rayon: string | null, quantite: string | null) => {
+    (libelle: string, rayon: string | null, quantite: string | null, noteAllergene: string | null) => {
       if (etat.phase !== 'pret') return
       const listId = etat.vue.enregistree.id
       chargerSocle()
         .then((socle) => {
-          addExtraItem(socle.db, listId, { libelle, rayon, quantite })
+          addExtraItem(socle.db, listId, { libelle, rayon, quantite, noteAllergene })
           setAjoutOuvert(false)
           rafraichir()
         })
@@ -318,7 +356,12 @@ export function Courses() {
       </div>
 
       {ajoutOuvert && (
-        <FormulaireAjout foods={vue.foods} onAjouter={ajouter} onAnnuler={() => setAjoutOuvert(false)} />
+        <FormulaireAjout
+          foods={vue.foods}
+          noteAllergeneDe={vue.noteAllergeneDe}
+          onAjouter={ajouter}
+          onAnnuler={() => setAjoutOuvert(false)}
+        />
       )}
 
       {/* « Chemin inverse » (§4.3) : après des ajouts manuels, proposer d'en faire quelque chose.
@@ -381,6 +424,7 @@ function Ligne({
   onBasculer,
   onSupprimer,
   marqueur,
+  noteAllergene,
 }: {
   readonly libelle: string
   readonly quantite: string | null
@@ -388,6 +432,7 @@ function Ligne({
   readonly onBasculer: () => void
   readonly onSupprimer?: () => void
   readonly marqueur?: boolean
+  readonly noteAllergene?: string | null
 }) {
   return (
     <li className="flex items-stretch">
@@ -406,11 +451,19 @@ function Ligne({
         >
           {coche ? '✓' : ''}
         </span>
-        <span className={`flex-1 text-[1rem] ${coche ? 'text-attenue line-through' : 'text-texte'}`}>
-          {/* Marqueur TYPOGRAPHIQUE et non une seconde couleur (§4.3) : la couleur est déjà prise
-              par l'accent, et en ajouter une ferait un code couleur là où il n'y a pas de jugement. */}
-          {marqueur && <span className="text-attenue">+ </span>}
-          {libelle}
+        <span className="flex flex-1 flex-col">
+          <span className={`text-[1rem] ${coche ? 'text-attenue line-through' : 'text-texte'}`}>
+            {/* Marqueur TYPOGRAPHIQUE et non une seconde couleur (§4.3) : la couleur est déjà prise
+                par l'accent, et en ajouter une ferait un code couleur là où il n'y a pas de jugement. */}
+            {marqueur && <span className="text-attenue">+ </span>}
+            {libelle}
+          </span>
+          {/* ⚠️ Écrite seulement pour les articles choisis en complétion (voir l'en-tête du fichier) —
+              texte factuel, pas une alerte : la couleur n'est pas le seul porteur de l'information,
+              c'est une ligne de texte à part entière. */}
+          {noteAllergene != null && (
+            <span className="text-[0.85rem] text-texte-doux">{noteAllergene}</span>
+          )}
         </span>
         {quantite !== null && (
           <span className="shrink-0 text-[0.9rem] tabular-nums text-attenue">{quantite}</span>
@@ -469,6 +522,7 @@ function ArticlesAjoutes({
                 quantite={article.quantite}
                 coche={article.coche}
                 marqueur
+                noteAllergene={article.noteAllergene}
                 onBasculer={() => onBasculer(article.id, !article.coche)}
                 onSupprimer={() => onSupprimer(article.id)}
               />
@@ -482,17 +536,29 @@ function ArticlesAjoutes({
 
 function FormulaireAjout({
   foods,
+  noteAllergeneDe,
   onAjouter,
   onAnnuler,
 }: {
   readonly foods: ReadonlyMap<FoodId, Food>
-  readonly onAjouter: (libelle: string, rayon: string | null, quantite: string | null) => void
+  readonly noteAllergeneDe: (food: Food) => string | null
+  readonly onAjouter: (
+    libelle: string,
+    rayon: string | null,
+    quantite: string | null,
+    noteAllergene: string | null
+  ) => void
   readonly onAnnuler: () => void
 }) {
   const [libelle, setLibelle] = useState('')
   const [rayon, setRayon] = useState('')
   const [quantite, setQuantite] = useState('')
   const [propositionsVisibles, setPropositionsVisibles] = useState(false)
+  // ⚠️ L'ALIMENT CHOISI, PAS SEULEMENT SON NOM. C'est lui qui porte le `FoodId` fiable dont
+  // `noteAllergeneDe` a besoin — retenir juste le libellé rouvrirait la porte à une correspondance
+  // textuelle sur du texte libre, exactement ce que l'en-tête du fichier écarte. Remis à `null` dès
+  // que le texte est retouché : un libellé modifié n'est plus garanti correspondre à l'aliment choisi.
+  const [alimentChoisi, setAlimentChoisi] = useState<Food | null>(null)
 
   // Même motif que `editeur-recette.tsx` (« Ajouter un ingrédient ») : une liste maison, pas un
   // `<datalist>`, parce qu'il faut récupérer l'ALIMENT choisi (pour en déduire le rayon), pas
@@ -511,7 +577,8 @@ function FormulaireAjout({
         const propre = libelle.trim()
         const quantitePropre = quantite.trim()
         if (propre.length > 0) {
-          onAjouter(propre, rayon === '' ? null : rayon, quantitePropre === '' ? null : quantitePropre)
+          const noteAllergene = alimentChoisi !== null ? noteAllergeneDe(alimentChoisi) : null
+          onAjouter(propre, rayon === '' ? null : rayon, quantitePropre === '' ? null : quantitePropre, noteAllergene)
         }
       }}
       className="mt-4 rounded-[--radius-carte] border border-bordure bg-surface p-4"
@@ -524,6 +591,7 @@ function FormulaireAjout({
           onChange={(e) => {
             setLibelle(e.target.value)
             setPropositionsVisibles(true)
+            setAlimentChoisi(null)
           }}
           placeholder="Lessive, pain, croquettes…"
           className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[1rem] text-texte"
@@ -538,6 +606,7 @@ function FormulaireAjout({
                 onClick={() => {
                   setLibelle(aliment.nom)
                   setRayon(rayonDe(aliment, foods))
+                  setAlimentChoisi(aliment)
                   setPropositionsVisibles(false)
                 }}
                 className="flex min-h-tactile w-full items-center px-3 text-left text-[1rem] text-texte"

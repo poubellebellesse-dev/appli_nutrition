@@ -588,14 +588,17 @@ export function readExtraItems(db: UserDb, listId: string): readonly StoredExtra
 export function addExtraItem(
   db: UserDb,
   listId: string,
-  article: { readonly libelle: string; readonly rayon?: string | null; readonly quantite?: string | null }
+  article: {
+    readonly libelle: string
+    readonly rayon?: string | null
+    readonly quantite?: string | null
+    readonly noteAllergene?: string | null
+  }
 ): void {
-  db.run('INSERT INTO shopping_extra_item (list_id, libelle, rayon, quantite) VALUES (?, ?, ?, ?)', [
-    listId,
-    article.libelle,
-    article.rayon ?? null,
-    article.quantite ?? null,
-  ])
+  db.run(
+    'INSERT INTO shopping_extra_item (list_id, libelle, rayon, quantite, note_allergene) VALUES (?, ?, ?, ?, ?)',
+    [listId, article.libelle, article.rayon ?? null, article.quantite ?? null, article.noteAllergene ?? null]
+  )
 }
 
 export function setExtraCoche(db: UserDb, id: number, coche: boolean): void {
