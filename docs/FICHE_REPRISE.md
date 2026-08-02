@@ -24,7 +24,8 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
 suggestion → planifier sa semaine → sortir sa liste de courses → cuisiner. Plus « partir de ce
 qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
 
-⚠️ **5 commits en avance sur `origin/main` au 2026-08-02**, et
+⚠️ **Des commits attendent d'être poussés** — `git status -sb` donne le compte, jamais cette page :
+un nombre écrit ici est faux dès le commit suivant, et faux dans l'autre sens dès le `push`. Et
 **~92 fichiers modifiés ou nouveaux restent non committés** : c'est le chantier `evidence` de la
 piste parallèle, encore en cours. Ne pas le commiter sans son auteur.
 **Claude committe, l'utilisateur pousse** — le shell agent ne peut pas s'authentifier auprès de
@@ -94,10 +95,11 @@ désactivée le 2026-08-01, est rétablie — c'est elle qui fait accorder le st
 - ⚠️ **Une alerte « cet appareil ne permet pas d'enregistrer » en preview LAN est un ARTEFACT** :
   OPFS n'existe qu'en contexte sécurisé (`https://` ou `localhost`), pas sur `http://192.168.x.x`.
   Pour tester vraiment : `adb reverse tcp:4173 tcp:4173`, puis `http://localhost:4173` sur l'appareil.
-- ⚠️ **Le reste du retour d'essai — une quarantaine de demandes produit — n'est écrit NULLE PART.**
-  Filtres par service et par aliment sur trois écrans, complétion à la saisie, tutoriels par écran,
-  choix manuel des plats de la semaine, ajout manuel d'article aux courses, export des recettes.
-  À consigner avant de le perdre.
+- ⚠️ **Le reste du retour d'essai — une trentaine de demandes produit — est dans
+  [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md)**, avec trois chantiers transverses
+  (filtres, complétion à la saisie, tutoriels participatifs) et **deux amendements qui attendent
+  votre arbitrage** : l'alerte calorique masquée par défaut, et les facettes dépliables contre la
+  règle « plus aucun menu déroulant hors de l'accueil ».
 
 ## Les cinq acquis à ne pas défaire
 
@@ -216,7 +218,8 @@ piment/matière grasse — voir [archive/RECAP_SESSION_6.md](./archive/RECAP_SES
 
 ## Avant de coder
 
-- ⚠️ `git status -sb` — des commits peuvent ne pas être poussés (5 en avance au 2026-08-02).
+- ⚠️ `git status -sb` — des commits peuvent ne pas être poussés. **Le compte vit là, pas dans ce
+  document** : `git push` étant manuel, tout nombre recopié ici se périme en un geste.
 - ⚠️ **Lire la maquette de l'écran AVANT de le coder** (`maquete claude design/`).
 - Les valeurs nutritionnelles **ne s'écrivent JAMAIS à la main** : `foods.yaml` + `ciqual-mapping.yaml`,
   puis `npm run catalog:ciqual -- --write`.

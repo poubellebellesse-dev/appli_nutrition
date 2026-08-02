@@ -1,6 +1,6 @@
 # Index de la documentation
 
-**Sept documents vivants**, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel
+**Huit documents vivants**, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel
 lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
 
 > Les instantanés datés — récits des sessions 1 à 7 et audit du 2026-07-27 — sont dans
@@ -37,7 +37,7 @@ corrige dans le document, elle ne se contourne pas dans le code.
 | [ETAT.md](./ETAT.md) | État complet, avancement, décisions figées et ouvertes. |
 
 > **Règle d'unicité** : chaque fait vit à UN SEUL endroit. La fiche donne l'état vérifié et la
-> prochaine étape ; tout le reste — avancement détaillé, décisions, **dette connue** (`ETAT.md` §9)
+> prochaine étape ; tout le reste — avancement détaillé, décisions, **dette connue** (`ETAT.md` §8)
 > — est dans `ETAT.md`, et la fiche ne fait qu'y renvoyer. Si la fiche dépasse une page, c'est
 > qu'elle a repris quelque chose qui appartient à `ETAT.md`.
 
@@ -69,6 +69,11 @@ une piste a été écartée vaut souvent l'énoncé de celle qui a été retenue
 |---|---|---|
 | [CONCEPTION_B_VIN_REPAS.md](./CONCEPTION_B_VIN_REPAS.md) | Conseils vin (métadonnée éditoriale, loi Évin) et modes recette/repas | 8 décisions tranchées, rang 0 codé, le reste en file |
 | [STRATEGIE_DISTRIBUTION.md](./STRATEGIE_DISTRIBUTION.md) | Positionnement, stores, modèle économique, marketing organique | Cadre posé, points « à confirmer » ouverts jusqu'à la publication |
+| [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) | Backlog issu du premier essai sur un vrai appareil (2026-08-02) | 5 défauts corrigés, 3 chantiers transverses ouverts, 2 amendements à acter |
+
+> ⚠️ `RETOUR_ESSAI_TELEPHONE.md` est **un backlog, pas un état** — seule exception à la règle
+> d'unicité ci-dessus, et elle est temporaire. Ce qui s'y tranche part dans `ETAT.md` §3 ou §4 ; ce
+> qui s'y fait en sort. Quand il sera vide, il rejoindra `archive/`.
 
 ## Deux conventions à respecter
 
