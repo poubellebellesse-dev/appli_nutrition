@@ -21,7 +21,7 @@
 
 ---
 
-## §1. Corrigé le jour même — commit `3dbaf48`
+## §1. Corrigé le jour même — commits `3dbaf48`, `1f095bc` et suivants
 
 1. **Les 12 suggestions ne changeaient jamais.** Deux causes : `seed: 1` codé en dur sur l'écran
    Aujourd'hui, et surtout `diversify` qui ignorait la graine — son glouton prend l'`argmax` de
@@ -35,21 +35,35 @@
 4. **« Réalisables maintenant »** → **« Sans rien acheter »**.
 5. **L'encart d'aide après 7 plats** ne s'ouvrait jamais : il comptait les clics « Suivant », jamais
    « Précédent ». Il compte désormais les recettes **distinctes** vues depuis le dernier choix.
-
-Et l'étape « Installez l'application », désactivée le 2026-08-01, a été rétablie : elle est le seul
-endroit du produit qui explique l'installation, et c'est l'installation qui fait accorder le stockage
-persistant.
-
 6. **L'ajout manuel aux Courses ne savait ajouter que du non-alimentaire** — ses 10 rayons étaient
    hygiène, lessive, animaux… et un aliment du catalogue ne pouvait pas être rangé en « fruits et
    légumes ». Le formulaire a désormais une **complétion sur le catalogue**, en **déduit le rayon**
    via `rayonDe()` tout en le laissant modifiable, et expose le **champ quantité** — dont la colonne
    dormait en base, inutilisée, et qu'`addExtraItem` acceptait déjà. La saisie libre continue de
    fonctionner pour le non-alimentaire. Aucune migration : tout existait, rien n'était branché.
+7. **Le rythme peut aller à QUATRE repas** (petit-déjeuner, déjeuner, goûter, dîner). Le créneau
+   `gouter` était déjà pleinement supporté — `FIN_DE_CRENEAU`, `TITRE_CRENEAU`, `MealSlot` — seule
+   la table `CRENEAUX_PAR_NOMBRE` l'excluait. ⚠️ L'ordre de la liste est **chronologique** et non
+   celui de la demande (« petit déjeuner, goûter, déjeuner, dîner ») : `creneauDuMoment` prend le
+   premier créneau dont la fenêtre n'est pas close, un goûter placé avant le déjeuner aurait mangé
+   sa fenêtre de midi. ⚠️ **`DESIGN.md` §4.2 a été amendé** (1-3 → 1-4) avec sa conséquence écrite :
+   la maquette « tient dense à 3 », un 4ᵉ créneau la densifie encore et **rien n'a été réaménagé**.
+8. **Le libellé du temps de cuisine levait mal l'ambiguïté** : « Temps pour cuisiner, en semaine »
+   devient « Temps pour cuisiner **un repas**, en semaine ». Vérifié dans le code avant de
+   reformuler — cette valeur alimente le `tempsDisponibleMin` d'une seule requête de suggestion,
+   comparé au temps total d'une recette candidate. C'est bien par repas, pas un total hebdomadaire.
+9. **Le créneau était déduit de l'horloge, sans recours.** Un sélecteur en pastilles (motif
+   `Segment`, pas de déroulant) propose les créneaux **du rythme déclaré** — rien si le rythme n'en
+   a qu'un, puisqu'il n'y a alors rien à choisir. « Vider le frigo » remonte dans l'en-tête, sans
+   être dupliqué en bas.
+
+Et l'étape « Installez l'application », désactivée le 2026-08-01, a été rétablie : elle est le seul
+endroit du produit qui explique l'installation, et c'est l'installation qui fait accorder le stockage
+persistant.
 
 ---
 
-## §2. Trois chantiers transverses
+## §2. Quatre chantiers transverses
 
 Les mêmes manques reviennent sur plusieurs écrans. Les traiter écran par écran produirait trois
 implémentations divergentes.
@@ -111,6 +125,24 @@ bulles qui désignent des éléments. Ce qui est demandé est **participatif** �
 de cliquer sur un menu, il clique ; on lui dit de changer l'image sur Aujourd'hui, il le fait. C'est
 un autre objet, à concevoir avant de coder.
 
+### D. La découvrabilité — le chantier que l'essai a révélé sans qu'on le demande
+
+**Deux des demandes de l'essai portaient sur des fonctions qui EXISTENT DÉJÀ.**
+
+| Demandé | Réalité |
+|---|---|
+| « geste vs flèches → filtre dans les paramètres » | Case à cocher dans Paramètres (`parametres.tsx:277`), lue par `aujourdhui.tsx:189` |
+| « ajouter une complétion quand on tape pour les aliments » | Complétion en place dans l'éditeur de recette (`editeur-recette.tsx:398`) |
+
+⚠️ **C'est un signal, pas une anecdote.** Deux fonctions sur une session d'essai, non trouvées par
+quelqu'un qui connaît le produit mieux que personne. Un utilisateur ordinaire, sur un produit qui
+vise une contrainte d'âge, en trouvera moins. Le réflexe naturel — « il suffit de le dire dans le
+tutoriel » — est le mauvais : une fonction qu'il faut enseigner est une fonction mal placée.
+
+À instruire : où ces deux fonctions sont-elles réellement, combien de gestes pour les atteindre, et
+qu'est-ce qui, à l'écran, laisse deviner qu'elles existent. **Rien à coder tant que ce n'est pas
+répondu.**
+
 ---
 
 ## §3. Écran par écran
@@ -123,13 +155,11 @@ un autre objet, à concevoir avant de coder.
 
 ### Votre rythme (intro)
 
-- **Proposer les quatre repas** : petit-déjeuner, déjeuner, goûter, dîner.
-  ⚠️ Le moteur connaît déjà les quatre (`MealSlot`) — c'est l'écran qui ne les offre pas tous.
-- **La description du temps de cuisine n'est pas parlante.** Verbatim : « que change le temps de
-  cuisiner par semaine ? le week-end ? temps par jour dans la semaine ? ».
-- **Exposer les préférences d'expérience dans les Paramètres**, à commencer par **gestes de balayage
-  vs flèches**.
-  ⚠️ `user_display.gestesBalayage` **existe déjà en base** et n'est branché à aucun réglage.
+✅ **Fait** (§1, points 7 et 8).
+
+- ~~**Exposer le réglage gestes de balayage vs flèches**~~ — ⚠️ **DEMANDE SANS OBJET, et j'avais
+  écrit ici le contraire.** Ce réglage **existe déjà**, case à cocher dans Paramètres
+  (`parametres.tsx:277`), lue par `aujourdhui.tsx:189`. Voir chantier D.
 
 ### Aujourd'hui
 
@@ -140,9 +170,7 @@ un autre objet, à concevoir avant de coder.
   (`ETAT.md` §8). Sa mesure date de 212 recettes, le catalogue en compte 241, et le banc n'affiche
   plus la similarité par recette — **à rétablir AVANT de calibrer**, sinon la mesure est aveugle.
 - **Un menu pour les choix extravagants.**
-- **Pouvoir changer de créneau** (« ce soir », « ce matin »…).
-  ⚠️ Aujourd'hui le créneau est déduit de l'horloge système et n'est pas modifiable.
-- **« Vider le frigo » accessible depuis le haut** de l'écran (il est aujourd'hui sous la carte).
+- ✅ **Changer de créneau** et **« Vider le frigo » en haut** — fait (§1, point 9).
 
 ### Vider le frigo
 

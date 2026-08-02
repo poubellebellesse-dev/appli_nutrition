@@ -17,17 +17,22 @@
 import type { MealSlot } from '../engine/domain/index.js'
 
 /**
- * « Nombre de repas/jour réglable (1-3) » (§4.2 DESIGN).
+ * « Nombre de repas/jour réglable (1-4) » (§4.2 DESIGN).
  *
  * ⚠️ SOURCE UNIQUE — ce mapping vivait dans `semaine.tsx`, dont l'en-tête disait déjà « ici et nulle
  * part ailleurs : quels créneaux se cachent derrière deux repas est une décision produit ». Il est
  * remonté ici quand « Aujourd'hui » en a eu besoin à son tour ; deux copies auraient donné une
  * semaine et un écran du jour qui ne parlent pas des mêmes repas.
+ *
+ * ⚠️ ORDRE CHRONOLOGIQUE, PAS ORDRE DE SAISIE — `creneauDuMoment` prend le PREMIER créneau dont la
+ * fenêtre (`FIN_DE_CRENEAU`) n'est pas close. Le goûter (17 h) doit donc venir APRÈS le déjeuner
+ * (14 h), sans quoi il mangerait la fenêtre du déjeuner.
  */
 const CRENEAUX_PAR_NOMBRE: Readonly<Record<number, readonly MealSlot[]>> = {
   1: ['diner'],
   2: ['dejeuner', 'diner'],
   3: ['petit_dejeuner', 'dejeuner', 'diner'],
+  4: ['petit_dejeuner', 'dejeuner', 'gouter', 'diner'],
 }
 
 export const REPAS_PAR_DEFAUT = 2

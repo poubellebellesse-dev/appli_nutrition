@@ -159,7 +159,11 @@ stateDiagram-v2
   qu'on garde, « en voir d'autres » (reroll, exclut les déjà-vus), écarter les autres. **Écarter =
   exclusion éphémère de session** ; seul un pouce-bas explicite écrit `user_signal`. Aujourd'hui
   reste en 1-up plein écran (§4.1)
-- Nombre de repas/jour réglable (1-3) : la maquette tient dense à 3, aérée à 1
+- Nombre de repas/jour réglable (1-4) : la maquette tient dense à 3, aérée à 1. **Mise à jour
+  2026-08-02** (demande utilisateur après essai sur téléphone) : un 4e créneau (goûter) a été
+  ajouté sous la contrainte « le rythme doit pouvoir aller à quatre repas ». Ce n'est pas sans
+  conséquence sur la densité — à 4, l'écran Semaine est PLUS dense que le palier « dense à 3 »
+  déjà noté ci-dessus ; aucun réaménagement de la maquette n'a été fait pour l'absorber.
 - Bas d'écran : bouton dominant « Créer ma liste de courses »
 - Bureau : grille jours × créneaux
 

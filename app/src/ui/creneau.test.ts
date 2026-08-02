@@ -12,12 +12,14 @@ import { TITRE_CRENEAU, creneauDuMoment, creneauxDuRythme } from './creneau.js'
 const UN: readonly MealSlot[] = ['diner']
 const DEUX: readonly MealSlot[] = ['dejeuner', 'diner']
 const TROIS: readonly MealSlot[] = ['petit_dejeuner', 'dejeuner', 'diner']
+const QUATRE: readonly MealSlot[] = ['petit_dejeuner', 'dejeuner', 'gouter', 'diner']
 
 describe('ui/creneau — créneaux d’un rythme', () => {
   it('dérive les créneaux du nombre de repas déclaré au premier lancement', () => {
     expect(creneauxDuRythme(1)).toEqual(UN)
     expect(creneauxDuRythme(2)).toEqual(DEUX)
     expect(creneauxDuRythme(3)).toEqual(TROIS)
+    expect(creneauxDuRythme(4)).toEqual(QUATRE)
   })
 
   it('retombe sur deux repas pour un nombre hors bornes, jamais sur une liste vide', () => {
@@ -60,11 +62,27 @@ describe('ui/creneau — le repas du moment', () => {
   })
 
   it('rend toujours un créneau APPARTENANT au rythme', () => {
-    for (const creneaux of [UN, DEUX, TROIS]) {
+    for (const creneaux of [UN, DEUX, TROIS, QUATRE]) {
       for (let heure = 0; heure < 24; heure++) {
         expect(creneaux).toContain(creneauDuMoment(heure, creneaux))
       }
     }
+  })
+
+  it('à quatre repas, insère le goûter entre déjeuner et dîner sans manger la fenêtre du déjeuner', () => {
+    // FIN_DE_CRENEAU : dejeuner=14, gouter=17, diner=24. 12 h doit encore donner le déjeuner ;
+    // 15 h et 16 h doivent donner le goûter, pas le déjeuner (fenêtre close) ni le dîner (trop tôt).
+    expect(creneauDuMoment(7, QUATRE)).toBe('petit_dejeuner')
+    expect(creneauDuMoment(9, QUATRE)).toBe('petit_dejeuner')
+    expect(creneauDuMoment(10, QUATRE)).toBe('dejeuner')
+    expect(creneauDuMoment(12, QUATRE)).toBe('dejeuner')
+    expect(creneauDuMoment(13, QUATRE)).toBe('dejeuner')
+    expect(creneauDuMoment(14, QUATRE)).toBe('gouter')
+    expect(creneauDuMoment(15, QUATRE)).toBe('gouter')
+    expect(creneauDuMoment(16, QUATRE)).toBe('gouter')
+    expect(creneauDuMoment(17, QUATRE)).toBe('diner')
+    expect(creneauDuMoment(20, QUATRE)).toBe('diner')
+    expect(creneauDuMoment(23, QUATRE)).toBe('diner')
   })
 })
 

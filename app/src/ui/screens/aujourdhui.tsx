@@ -40,6 +40,7 @@ import {
 } from '../socle.js'
 import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { REPAS_PAR_DEFAUT, TITRE_CRENEAU, creneauDuMoment, creneauxDuRythme } from '../creneau.js'
+import { Segment } from '../champs-profil.js'
 import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
 
 /**
@@ -138,6 +139,9 @@ interface Vue {
   readonly nomDe: (id: string) => string
   readonly nbRetenus: number
   readonly creneau: MealSlot
+  /** Les créneaux du rythme DÉCLARÉ (`creneauxDuRythme`) — jamais les quatre en dur : c'est ce qui
+   *  distingue le sélecteur de repas de `TITRE_CRENEAU`, qui couvre le vocabulaire complet. */
+  readonly creneaux: readonly MealSlot[]
   readonly balayageActif: boolean
   /** Les plats proches, par identifiant de plat regardé — calculés à la demande, mémorisés. */
   readonly prochesDe: (id: RecipeId) => readonly RecipeId[]
@@ -148,7 +152,11 @@ type Etat =
   | { readonly phase: 'pret'; readonly vue: Vue }
   | { readonly phase: 'erreur'; readonly message: string }
 
-async function calculerVue(reglages: Reglages, graine: number): Promise<Vue> {
+async function calculerVue(
+  reglages: Reglages,
+  graine: number,
+  creneauChoisi: MealSlot | null
+): Promise<Vue> {
   const socle = await chargerSocle()
   const date = aujourdhuiIso()
   const profil = profilCourant(socle.db, date)
@@ -160,11 +168,11 @@ async function calculerVue(reglages: Reglages, graine: number): Promise<Vue> {
   const duRythme = estWeekend(date) ? rythme?.tempsWeekendMin : rythme?.tempsSemaineMin
   const minutes = reglages.tempsMaxMin ?? duRythme ?? null
 
-  // ⚠️ Heure LOCALE, contrairement aux dates du plan qui sont en UTC — voir `creneau.ts`.
-  const creneau = creneauDuMoment(
-    new Date().getHours(),
-    creneauxDuRythme(rythme?.repasParJour ?? REPAS_PAR_DEFAUT)
-  )
+  const creneaux = creneauxDuRythme(rythme?.repasParJour ?? REPAS_PAR_DEFAUT)
+  // ⚠️ Heure LOCALE, contrairement aux dates du plan qui sont en UTC — voir `creneau.ts`. Un
+  // créneau choisi À L'ÉCRAN prime sur l'heure, mais reste borné aux créneaux du rythme déclaré :
+  // `creneauChoisi` ne peut venir que d'un bouton généré depuis `creneaux` lui-même.
+  const creneau = creneauChoisi ?? creneauDuMoment(new Date().getHours(), creneaux)
 
   const requete = construireRequete(
     etat,
@@ -186,6 +194,7 @@ async function calculerVue(reglages: Reglages, graine: number): Promise<Vue> {
     nomDe: (id) => socle.catalogue.recipes.get(id as never)?.nom ?? id,
     nbRetenus: etat.history.entries.length,
     creneau,
+    creneaux,
     balayageActif: readDisplay(socle.db).gestesBalayage,
     prochesDe: (id) => {
       const connu = cache.get(id)
@@ -202,6 +211,11 @@ export function Aujourdhui() {
   const [reglages, setReglages] = useState<Reglages>(REGLAGES_VIDES)
   /** Graine du tirage seedé (§6.5 précision 7, §6.6 ENGINE) — « Proposer autre chose » l'incrémente. */
   const [graine, setGraine] = useState(1)
+  /**
+   * Le créneau choisi À L'ÉCRAN, qui prime sur celui déduit de l'heure — `null` tant que
+   * l'utilisateur n'a rien changé : la valeur déduite de l'horloge reste le point de départ.
+   */
+  const [creneauChoisi, setCreneauChoisi] = useState<MealSlot | null>(null)
   const [position, setPosition] = useState(0)
   /**
    * Recettes DISTINCTES vues depuis le dernier choix/fermeture — c'est l'indécision qu'on mesure,
@@ -214,25 +228,31 @@ export function Aujourdhui() {
   const [vues, setVues] = useState<ReadonlySet<RecipeId>>(new Set())
   const [aideOuverte, setAideOuverte] = useState(false)
 
-  const rafraichir = useCallback((suivants: Reglages, grainesSuivante: number) => {
-    let annule = false
-    calculerVue(suivants, grainesSuivante)
-      .then((vue) => {
-        if (annule) return
-        setEtat({ phase: 'pret', vue })
-        setPosition(0)
-      })
-      .catch((erreur: unknown) => {
-        if (!annule) {
-          setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
-        }
-      })
-    return () => {
-      annule = true
-    }
-  }, [])
+  const rafraichir = useCallback(
+    (suivants: Reglages, grainesSuivante: number, creneauSuivant: MealSlot | null) => {
+      let annule = false
+      calculerVue(suivants, grainesSuivante, creneauSuivant)
+        .then((vue) => {
+          if (annule) return
+          setEtat({ phase: 'pret', vue })
+          setPosition(0)
+        })
+        .catch((erreur: unknown) => {
+          if (!annule) {
+            setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
+          }
+        })
+      return () => {
+        annule = true
+      }
+    },
+    []
+  )
 
-  useEffect(() => rafraichir(reglages, graine), [rafraichir, reglages, graine])
+  useEffect(
+    () => rafraichir(reglages, graine, creneauChoisi),
+    [rafraichir, reglages, graine, creneauChoisi]
+  )
 
   // Le plat actuellement affiché — calculé avant les retours anticipés ci-dessous, pour que le
   // `useEffect` qui alimente `vues` reste inconditionnel (règle des Hooks).
@@ -277,13 +297,13 @@ export function Aujourdhui() {
           // Choisir MET FIN à l'indécision : le compteur repart, l'encart se referme.
           setVues(new Set())
           setAideOuverte(false)
-          rafraichir(reglages, graine)
+          rafraichir(reglages, graine, creneauChoisi)
         })
         .catch((erreur: unknown) => {
           setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
         })
     },
-    [rafraichir, reglages, graine]
+    [rafraichir, reglages, graine, creneauChoisi]
   )
 
   const deplacer = useCallback((pas: number, total: number) => {
@@ -298,6 +318,17 @@ export function Aujourdhui() {
    */
   const proposerAutreChose = useCallback(() => {
     setGraine((g) => g + 1)
+    setVues(new Set())
+    setAideOuverte(false)
+  }, [])
+
+  /**
+   * Changer de créneau depuis l'écran — « avoir la possibilité de changer ce soir, ce matin etc. ».
+   * Mêmes remises à zéro que « Proposer autre chose » : ce sont d'autres plats, l'indécision sur
+   * les précédents n'a plus de sens (`rafraichir` remet déjà `position` à 0).
+   */
+  const changerCreneau = useCallback((creneau: MealSlot) => {
+    setCreneauChoisi(creneau)
     setVues(new Set())
     setAideOuverte(false)
   }, [])
@@ -341,11 +372,39 @@ export function Aujourdhui() {
 
   return (
     <section>
-      <header className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-[2.1rem] text-texte">{TITRE_CRENEAU[vue.creneau]}</h1>
-        <p className="text-[0.9rem] tabular-nums text-attenue">
-          {position + 1} sur {total}
-        </p>
+      <header>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h1 className="text-[2.1rem] text-texte">{TITRE_CRENEAU[vue.creneau]}</h1>
+          <p className="text-[0.9rem] tabular-nums text-attenue">
+            {position + 1} sur {total}
+          </p>
+        </div>
+
+        {/* Un seul créneau au rythme déclaré → rien à choisir, un sélecteur inerte serait pire
+            qu'absent. Pastilles côte à côte (`Segment`, comme `ChoixRythme`) : jamais de menu
+            déroulant hors de l'accueil. */}
+        {vue.creneaux.length > 1 && (
+          <div className="mt-3 flex gap-2">
+            {vue.creneaux.map((creneau) => (
+              <Segment
+                key={creneau}
+                libelle={TITRE_CRENEAU[creneau]}
+                actif={creneau === vue.creneau}
+                onChoisir={() => changerCreneau(creneau)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* §4.5 DESIGN veut « Vider le frigo » accessible depuis Aujourd'hui et Recettes. Remonté en
+            haut de l'écran (sous le titre et le sélecteur, jamais avant) pour être atteignable sans
+            défiler ; un seul exemplaire, retiré du bas de l'écran. */}
+        <a
+          href={hashDuFrigo()}
+          className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+        >
+          Vider le frigo — partir de ce que j'ai
+        </a>
       </header>
 
       <CarteRepas
@@ -386,14 +445,6 @@ export function Aujourdhui() {
         ids={vue.prochesDe(courante.recipeId as RecipeId)}
         nomDe={vue.nomDe}
       />
-
-      {/* §4.5 DESIGN veut « Vider le frigo » accessible depuis Aujourd'hui et Recettes. */}
-      <a
-        href={hashDuFrigo()}
-        className="mt-4 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
-      >
-        Vider le frigo — partir de ce que j'ai
-      </a>
 
       {vue.nbRetenus > 0 && (
         <p className="mt-4 text-[0.9rem] leading-relaxed text-attenue">

@@ -199,8 +199,44 @@ describe('aujourdhui — les plats proches', () => {
 })
 
 describe('aujourdhui — le frigo', () => {
-  it('offre l’entrée « Vider le frigo », que §4.5 réclamait depuis le début', async () => {
+  it('offre l’entrée « Vider le frigo », que §4.5 réclamait depuis le début, une seule fois', async () => {
     await monter()
+    // ⚠️ « une seule fois » : deux liens identiques feraient douter qu'ils fassent la même chose.
+    expect(screen.getAllByText(/Vider le frigo/)).toHaveLength(1)
     expect(document.querySelector('a[href="#/frigo"]')).not.toBeNull()
+  })
+})
+
+describe('aujourdhui — changer de créneau', () => {
+  it('propose exactement les créneaux du rythme déclaré, deux repas', async () => {
+    // `beforeEach` règle déjà 2 repas/jour : déjeuner + dîner.
+    await monter()
+    expect(screen.getByRole('button', { name: 'Ce midi' })).toBeDefined()
+    expect(screen.getByRole('button', { name: 'Ce soir' })).toBeDefined()
+    expect(screen.queryByRole('button', { name: 'Ce matin' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Pour le goûter' })).toBeNull()
+  })
+
+  it('n’affiche aucun sélecteur à un seul repas par jour', async () => {
+    writeRythme(baseCourante(), { repasParJour: 1, tempsSemaineMin: null, tempsWeekendMin: null })
+    await monter()
+    // Un seul créneau ('diner') → rien à choisir : ni « Ce soir » ni aucun autre bouton de créneau.
+    expect(screen.queryByRole('button', { name: /^Ce (matin|midi)$|^Pour le goûter$|^Ce soir$/ })).toBeNull()
+  })
+
+  it('choisir un autre créneau change les suggestions et remet la position à 1 sur N', async () => {
+    await monter()
+    fireEvent.click(bouton(/Suivant/))
+    await waitFor(() => expect(compteur()).toMatch(/^2 sur /))
+
+    const titreDepart = screen.getByRole('heading', { level: 1 }).textContent
+    const autre = titreDepart === 'Ce midi' ? 'Ce soir' : 'Ce midi'
+    const platAvant = platAffiche()
+
+    fireEvent.click(screen.getByRole('button', { name: autre }))
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(autre))
+    expect(compteur()).toMatch(/^1 sur /)
+    expect(platAffiche()).not.toBe(platAvant)
+    expect(screen.getByRole('button', { name: autre }).getAttribute('aria-pressed')).toBe('true')
   })
 })

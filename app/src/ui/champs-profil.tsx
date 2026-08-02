@@ -303,7 +303,7 @@ export function ChoixRythme({
     <>
       <p className="text-[0.95rem] text-attenue">Combien de repas par jour ?</p>
       <div className="mt-2 flex gap-2">
-        {[1, 2, 3].map((n) => (
+        {[1, 2, 3, 4].map((n) => (
           <Segment
             key={n}
             libelle={String(n)}
@@ -313,7 +313,7 @@ export function ChoixRythme({
         ))}
       </div>
 
-      <p className="mt-4 text-[0.95rem] text-attenue">Temps pour cuisiner, en semaine</p>
+      <p className="mt-4 text-[0.95rem] text-attenue">Temps pour cuisiner un repas, en semaine</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {PALIERS_TEMPS.map((palier) => (
           <Segment
