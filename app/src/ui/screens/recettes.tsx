@@ -470,13 +470,18 @@ function Recherche({
 
   return (
     <label className="mt-4 block">
-      <span className="text-[0.9rem] text-texte-doux">Rechercher un plat</span>
+      {/* ⚠️ « ou un ingrédient » n'est PAS un ornement : `texteIndexe` cherche depuis toujours dans
+          le nom des ingrédients, et le libellé disait « un plat » avec trois noms de plats en
+          exemple. L'affordance ne taisait pas la capacité, elle la CONTREDISAIT — personne n'avait
+          de raison d'y taper « poulet ». Repéré à l'essai du 2026-08-02, où le filtre « aliments
+          voulus » a été demandé alors qu'il existait déjà sous cette forme. */}
+      <span className="text-[0.9rem] text-texte-doux">Rechercher un plat ou un ingrédient</span>
       <input
         type="search"
         list="suggestions-recettes"
         value={valeur}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="blanquette, tajine, gratin…"
+        placeholder="blanquette, poulet, gratin…"
         className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[1.05rem] text-texte"
       />
       <datalist id="suggestions-recettes">

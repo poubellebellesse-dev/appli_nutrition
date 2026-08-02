@@ -290,6 +290,29 @@ describe('recettes — la recherche textuelle', () => {
     await waitFor(() => expect(idsAffiches()).toContain(cible.id))
   })
 
+  it('⛔ ANNONCE qu’on peut chercher un ingrédient, pas seulement un plat', async () => {
+    // ⚠️ Ce test verrouille une AFFORDANCE, pas une capacité. La recherche indexe le nom des
+    // ingrédients depuis toujours (`tests/recherche-catalogue-reel.test.ts`), mais le champ
+    // s'intitulait « Rechercher un plat » avec « blanquette, tajine, gratin » en exemple : trois
+    // noms de plats. À l'essai du 2026-08-02, un filtre « aliments voulus » a été demandé alors
+    // qu'il existait déjà sous cette forme — l'affordance ne taisait pas la capacité, elle la
+    // contredisait. Reformuler le libellé sans ce test la recacherait en silence.
+    await monter()
+    // Par le LIBELLÉ du champ, pas par le mot n'importe où sur l'écran : c'est l'étiquette de la
+    // recherche qui doit le dire, et l'association label/champ est vérifiée du même coup.
+    const champ = screen.getByLabelText(/chercher.*ingr[ée]dient/i) as HTMLInputElement
+    expect(champ.getAttribute('type')).toBe('search')
+
+    // Et la capacité annoncée est bien là : un ingrédient trouve un plat qui ne le nomme pas.
+    fireEvent.change(champ, { target: { value: 'poulet' } })
+    await waitFor(() => expect(idsAffiches().length).toBeGreaterThan(0))
+    const catalogue = catalogueDeTest()
+    const sansLeMotDansLeNom = idsAffiches().filter(
+      (id) => !(catalogue.recipes.get(id as RecipeId)?.nom ?? '').toLowerCase().includes('poulet')
+    )
+    expect(sansLeMotDansLeNom.length).toBeGreaterThan(0)
+  })
+
   it('dit qu’il n’y a rien plutôt que de laisser la liste rétrécir en silence', async () => {
     // `Entonnoir` ne compte que les exclusions dures (allergènes, régime…) — voir l'en-tête de
     // recettes.tsx : une recherche sans résultat n'y figure pas. C'est la phrase de compte, juste en

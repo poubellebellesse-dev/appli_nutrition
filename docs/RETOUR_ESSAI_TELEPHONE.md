@@ -201,9 +201,28 @@ trouvées par quelqu'un qui connaît le produit mieux que personne. Un utilisate
 vise une contrainte d'âge, en trouvera moins. Le réflexe naturel — « il suffit de le dire dans le
 tutoriel » — est le mauvais : une fonction qu'il faut enseigner est une fonction mal placée.
 
-À instruire : où ces deux fonctions sont-elles réellement, combien de gestes pour les atteindre, et
-qu'est-ce qui, à l'écran, laisse deviner qu'elles existent. **Rien à coder tant que ce n'est pas
-répondu.**
+**Investigation menée le 2026-08-02.** Résultat cas par cas :
+
+**1. La recherche par ingrédient — ✅ DIAGNOSTIQUÉ ET CORRIGÉ.** Le champ s'intitulait
+« Rechercher **un plat** » avec pour exemples « blanquette, tajine, gratin » : **trois noms de
+plats**. L'affordance ne taisait pas la capacité, elle la **contredisait** — personne n'avait de
+raison d'y taper « poulet ». Devenu « Rechercher un plat **ou un ingrédient** », exemples
+« blanquette, **poulet**, gratin ». Un test verrouille le libellé, parce qu'une reformulation
+future recacherait la capacité en silence — exactement le défaut qu'on vient de corriger.
+
+**2. Le réglage de balayage — DIAGNOSTIQUÉ, non corrigé.** Le libellé est bon
+(« Changer de plat en balayant l'écran », avec « Les flèches restent là dans tous les cas. »). Le
+problème est **l'emplacement** : Paramètres → fenêtre « **Réglages d'affichage** » → case. Deux
+gestes derrière un intitulé générique, et **rien sur l'écran Aujourd'hui — là où le geste
+s'applique — ne laisse deviner qu'il existe**. Corriger demande de décider *où* un réglage se
+propose : à froid dans Paramètres, ou au moment où il servirait. C'est une question de conception,
+pas une chaîne à changer.
+
+**3. La complétion de l'éditeur de recette — NON DIAGNOSTIQUÉ.** Le champ porte un `type="search"`
+et le placeholder « courgette, œufs, riz… », ce qui est correct. Je ne sais pas si l'écran
+« Composer ma propre recette » a seulement été atteint pendant l'essai. **Question ouverte à
+l'utilisateur** : la complétion a-t-elle été essayée et n'a pas marché, ou l'écran n'a-t-il pas été
+trouvé ? Les deux réponses mènent à des correctifs opposés.
 
 ---
 
