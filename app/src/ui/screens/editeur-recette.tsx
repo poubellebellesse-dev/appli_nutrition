@@ -22,12 +22,17 @@ import { normaliser } from '../../engine/search/index.js'
 import {
   AXES_PAR_DEFAUT,
   construireRecette,
+  estRecettePerso,
+  mettreAJourRecette,
   nouvelIdRecette,
   problemes,
+  readUserRecipe,
+  saisieDepuisStockee,
   saveUserRecipe,
   variantePartantDe,
   type IngredientSaisi,
   type SaisieRecette,
+  type StoredUserRecipe,
 } from '../../data/user-recipe.js'
 import { LIBELLE_CRENEAU, aujourdhuiIso, chargerSocle, rebatirCatalogue } from '../socle.js'
 import { hashDe, hashDeRecette } from '../router.js'
@@ -80,7 +85,13 @@ const AXES: readonly {
 
 type Etat =
   | { readonly phase: 'chargement' }
-  | { readonly phase: 'pret'; readonly catalogue: Catalog; readonly variante: boolean }
+  | {
+      readonly phase: 'pret'
+      readonly catalogue: Catalog
+      readonly variante: boolean
+      /** Recette perso rouverte pour MODIFICATION — non nulle ⇒ on réenregistre sous ce même id. */
+      readonly edition: StoredUserRecipe | null
+    }
   | { readonly phase: 'erreur'; readonly message: string }
 
 export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
@@ -94,11 +105,25 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
     chargerSocle()
       .then((socle) => {
         if (annule) return
+        // ⚠️ `baseId` a DEUX SENS, distingués par son préfixe (voir l'en-tête) : un id `perso:…`
+        // désigne une recette à MODIFIER — on la relit en base, jamais dans le catalogue, où une
+        // recette perso n'existe jamais. Un id du catalogue désigne une recette à ADAPTER.
+        if (baseId !== null && estRecettePerso(baseId)) {
+          const stockee = readUserRecipe(socle.db, baseId)
+          setSaisie(stockee === null ? SAISIE_VIDE : saisieDepuisStockee(stockee))
+          setEtat({
+            phase: 'pret',
+            catalogue: socle.catalogue,
+            variante: stockee?.source === 'variante',
+            edition: stockee,
+          })
+          return
+        }
         // ⚠️ La base est cherchée dans le catalogue SOURCE : on adapte une recette livrée, et
         // adapter une adaptation empilerait des héritages dont plus personne ne suit la trace.
         const base = baseId === null ? undefined : socle.catalogueSource.recipes.get(baseId as never)
         setSaisie(base === undefined ? SAISIE_VIDE : variantePartantDe(base))
-        setEtat({ phase: 'pret', catalogue: socle.catalogue, variante: base !== undefined })
+        setEtat({ phase: 'pret', catalogue: socle.catalogue, variante: base !== undefined, edition: null })
       })
       .catch((erreur: unknown) => {
         if (!annule) {
@@ -117,18 +142,28 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
   const enregistrer = useCallback(() => {
     chargerSocle()
       .then(async (socle) => {
-        const base = baseId === null ? null : (socle.catalogueSource.recipes.get(baseId as never) ?? null)
-        const id = nouvelIdRecette(Date.now(), Math.random())
-        saveUserRecipe(socle.db, construireRecette(id, saisie, base), aujourdhuiIso())
+        // ⚠️ L'ID SE CHOISIT ICI, et c'est lui qui distingue « modifier » d'« adapter » (voir
+        // l'en-tête) : `edition` non nulle ⇒ on réenregistre SOUS LE MÊME ID, source et
+        // `baseRecipeId` d'origine préservés par `mettreAJourRecette`. Sinon, nouvel id.
+        const edition = etat.phase === 'pret' ? etat.edition : null
+        const recette =
+          edition !== null
+            ? mettreAJourRecette(edition, saisie)
+            : construireRecette(
+                nouvelIdRecette(Date.now(), Math.random()),
+                saisie,
+                baseId === null ? null : (socle.catalogueSource.recipes.get(baseId as never) ?? null)
+              )
+        saveUserRecipe(socle.db, recette, aujourdhuiIso())
         // ⚠️ RECONSTRUIRE LE SOCLE, sinon la recette existe en base et le moteur l'ignore : ses
         // index sont calculés à la construction du catalogue (voir `avecRecettesSupplementaires`).
         await rebatirCatalogue()
-        setEnregistre(id)
+        setEnregistre(recette.id)
       })
       .catch((erreur: unknown) => {
         setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
       })
-  }, [baseId, saisie])
+  }, [baseId, saisie, etat])
 
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement…</p>
   if (etat.phase === 'erreur') {
@@ -164,12 +199,14 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
     )
   }
 
-  const { catalogue, variante } = etat
+  const { catalogue, variante, edition } = etat
   const bloquants = problemes(saisie)
 
   return (
     <section>
-      <h1 className="text-[2.1rem] text-texte">{variante ? 'Adapter la recette' : 'Ma recette'}</h1>
+      <h1 className="text-[2.1rem] text-texte">
+        {edition !== null ? 'Modifier ma recette' : variante ? 'Adapter la recette' : 'Ma recette'}
+      </h1>
       <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
         {variante
           ? 'Changez ce que vous voulez. Le reste — texture, conservation, moment du repas — est repris de la recette d’origine.'

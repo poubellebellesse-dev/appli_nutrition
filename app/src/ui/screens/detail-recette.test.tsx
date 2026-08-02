@@ -309,6 +309,16 @@ describe('detail-recette — recette personnelle', () => {
     // SOURCE, une recette perso n'en a pas à offrir.
     expect(screen.queryByText(/Adapter cette recette/)).toBeNull()
   })
+
+  it('propose « Modifier ma recette » vers l’éditeur, sur son propre id', async () => {
+    saveUserRecipe(baseCourante(), recettePerso, '2026-08-01')
+    const { rebatirCatalogue } = await import('../socle.js')
+    await rebatirCatalogue()
+
+    await monter(recettePerso.id)
+    const lien = screen.getByText('Modifier ma recette').closest('a') as HTMLAnchorElement
+    expect(lien.getAttribute('href')).toBe(`#/composer/${encodeURIComponent(recettePerso.id)}`)
+  })
 })
 
 describe('detail-recette — le favori', () => {

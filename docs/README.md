@@ -69,7 +69,7 @@ une piste a été écartée vaut souvent l'énoncé de celle qui a été retenue
 |---|---|---|
 | [CONCEPTION_B_VIN_REPAS.md](./CONCEPTION_B_VIN_REPAS.md) | Conseils vin (métadonnée éditoriale, loi Évin) et modes recette/repas | 8 décisions tranchées, rang 0 codé, le reste en file |
 | [STRATEGIE_DISTRIBUTION.md](./STRATEGIE_DISTRIBUTION.md) | Positionnement, stores, modèle économique, marketing organique | Cadre posé, points « à confirmer » ouverts jusqu'à la publication |
-| [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) | Backlog issu du premier essai sur un vrai appareil (2026-08-02) | 9 défauts corrigés, 4 chantiers transverses ouverts, 2 amendements à acter |
+| [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) | Backlog issu du premier essai sur un vrai appareil (2026-08-02) | 10 lots livrés, 4 chantiers transverses ouverts, 2 amendements à acter |
 
 > ⚠️ `RETOUR_ESSAI_TELEPHONE.md` est **un backlog, pas un état** — seule exception à la règle
 > d'unicité ci-dessus, et elle est temporaire. Ce qui s'y tranche part dans `ETAT.md` §3 ou §4 ; ce

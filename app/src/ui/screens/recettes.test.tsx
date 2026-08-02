@@ -26,7 +26,7 @@ import {
   saveUserRecipe,
   type SaisieRecette,
 } from '../../data/user-recipe.js'
-import { hashDeRecette } from '../router.js'
+import { hashDeLEditeur, hashDeRecette } from '../router.js'
 
 vi.mock('../catalog-source.js', () => ({ chargerCatalogue: () => Promise.resolve(catalogueDeTest()) }))
 vi.mock('../user-source.js', () => ({
@@ -240,6 +240,53 @@ describe('recettes — les recettes personnelles', () => {
     await monter()
     expect(idsAffiches()).toContain(id)
     expect(screen.getByText('Ma composition test unique 9284')).toBeDefined()
+  })
+})
+
+describe('recettes — la fenêtre « Mes recettes »', () => {
+  const SAISIE_TEST: SaisieRecette = {
+    nom: 'Ma composition test unique 7731',
+    tempsPrepMin: 10,
+    tempsCuissonMin: 0,
+    portionsBase: 2,
+    difficulte: 1,
+    typesRepas: ['diner'],
+    envergure: 'quotidien',
+    conservationJours: 1,
+    axes: AXES_PAR_DEFAUT,
+    ingredients: [],
+    etapes: ['Mélanger et servir.'],
+  }
+
+  it('liste uniquement les recettes perso — une recette du catalogue n’y figure pas', async () => {
+    const catalogue = catalogueDeTest()
+    const unAliment = [...catalogue.foods.keys()][0]!
+    const id = nouvelIdRecette(2, 0.13)
+    const saisie: SaisieRecette = {
+      ...SAISIE_TEST,
+      ingredients: [{ foodId: unAliment, quantiteG: 100, uniteAffichage: '100 g', optionnel: false }],
+    }
+    saveUserRecipe(baseCourante(), construireRecette(id, saisie, null), '2026-08-01')
+    const recetteDuCatalogue = [...catalogue.recipes.values()].find((r) => !r.id.startsWith('perso:'))!
+
+    await monter()
+    fireEvent.click(screen.getByRole('button', { name: /Mes recettes/ }))
+    const panneau = await screen.findByRole('dialog', { name: 'Mes recettes' })
+
+    expect(within(panneau).getByText(saisie.nom)).toBeDefined()
+    expect(within(panneau).getByRole('link', { name: new RegExp(saisie.nom) })).toBeDefined()
+    expect(within(panneau).queryByText(new RegExp(recetteDuCatalogue.nom))).toBeNull()
+  })
+
+  it('aucune recette perso : le message et le lien vers #/composer, pas une liste vide', async () => {
+    await monter()
+    fireEvent.click(screen.getByRole('button', { name: /Mes recettes/ }))
+    const panneau = await screen.findByRole('dialog', { name: 'Mes recettes' })
+
+    expect(within(panneau).queryByRole('list')).toBeNull()
+    expect(within(panneau).getByText(/vous n.avez pas encore composé de recette/i)).toBeDefined()
+    const lien = within(panneau).getByRole('link', { name: /Composer/ })
+    expect(lien.getAttribute('href')).toBe(hashDeLEditeur(null))
   })
 })
 

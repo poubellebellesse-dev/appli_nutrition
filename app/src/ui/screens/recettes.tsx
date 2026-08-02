@@ -22,7 +22,13 @@
 // au catalogue — six styles seulement, du contenu à écrire, pas du code à ajouter.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { Catalog, ExclusionLayerId, FacetteKind, RecipeId } from '../../engine/domain/index.js'
+import type {
+  Catalog,
+  ExclusionLayerId,
+  FacetteKind,
+  Recipe,
+  RecipeId,
+} from '../../engine/domain/index.js'
 import { normaliser, valeursDeFacette } from '../../engine/search/index.js'
 import type { BrowseResult, Engine } from '../../engine/api/index.js'
 import {
@@ -37,9 +43,12 @@ import {
   type FiltresRecette,
 } from '../filtres-recettes.js'
 import { readUserState, setFavorite } from '../../data/user-store.js'
+import { readUserRecipes, type StoredUserRecipe } from '../../data/user-recipe.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import { hashDeLEditeur, hashDeRecette, hashDuFrigo } from '../router.js'
 import { origineDeCuisine } from '../drapeaux.js'
+import { Panneau } from '../panneau.js'
+import { exporterRecette } from '../export-recette.js'
 
 const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
   allergenes: 'allergènes',
@@ -72,6 +81,9 @@ interface Socle {
   readonly moteur: Engine
   readonly favoris: ReadonlySet<RecipeId>
   readonly contraintes: ReturnType<typeof readUserState>['constraints']
+  /** Les recettes composées par l'utilisateur, forme stockée — nécessaire pour l'export (§8.7), que
+   *  le `Recipe` fusionné dans `catalogue` ne porte plus (voir `versRecette`). */
+  readonly recettesPerso: readonly StoredUserRecipe[]
 }
 
 type Etat =
@@ -83,6 +95,7 @@ export function Recettes() {
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [filtres, setFiltres] = useState<Filtres>(FILTRES_ECRAN)
   const [panneauFiltresOuvert, setPanneauFiltresOuvert] = useState(false)
+  const [panneauMesRecettesOuvert, setPanneauMesRecettesOuvert] = useState(false)
 
   const rafraichir = useCallback(() => {
     chargerSocle()
@@ -98,6 +111,7 @@ export function Recettes() {
             moteur: s.moteur,
             favoris: utilisateur.favoriteRecipeIds,
             contraintes: utilisateur.constraints,
+            recettesPerso: readUserRecipes(s.db),
           },
         })
       })
@@ -198,6 +212,23 @@ export function Recettes() {
         Composer ma propre recette
       </a>
 
+      {/* Retrouver ce qu'on a composé soi-même — pas un dépliant (§4.4/panneau.tsx) : garder la
+          liste, potentiellement longue, hors du flux de l'écran. */}
+      <button
+        type="button"
+        onClick={() => setPanneauMesRecettesOuvert(true)}
+        aria-haspopup="dialog"
+        className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte"
+      >
+        Mes recettes ({socle.recettesPerso.length})
+      </button>
+
+      {panneauMesRecettesOuvert && (
+        <Panneau titre="Mes recettes" onFermer={() => setPanneauMesRecettesOuvert(false)}>
+          <PanneauMesRecettes catalogue={socle.catalogue} recettesPerso={socle.recettesPerso} />
+        </Panneau>
+      )}
+
       {/* « Mes favoris » en tête, à UN TAP (§4.4). */}
       <button
         type="button"
@@ -261,14 +292,7 @@ export function Recettes() {
                   hors de portée d'une main tremblante. L'étoile reste hors du lien pour rester
                   actionnable seule. */}
               <a href={hashDeRecette(id)} className="flex-1 p-3 no-underline">
-                <h2 className="font-titre text-[1.2rem] leading-snug text-texte">
-                  {drapeauDe(recette)}
-                  {recette.nom}
-                </h2>
-                <p className="mt-1 text-[0.92rem] leading-relaxed text-texte-doux">{recette.description}</p>
-                <p className="mt-1 text-[0.85rem] text-attenue">
-                  {recette.tempsPrepMin + recette.tempsCuissonMin} min · {recette.portionsBase} portions
-                </p>
+                <ContenuCarteRecette recette={recette} />
               </a>
               <button
                 type="button"
@@ -287,6 +311,89 @@ export function Recettes() {
         })}
       </ul>
     </section>
+  )
+}
+
+/**
+ * Le rendu d'une ligne de recette — nom, description, temps, portions — partagé entre la liste
+ * principale et la fenêtre « Mes recettes ». Deux implémentations divergeraient au premier ajout de
+ * champ, exactement le raisonnement qui vaut pour `filtres-recettes.tsx` (voir son en-tête).
+ */
+function ContenuCarteRecette({ recette }: { readonly recette: Recipe }) {
+  return (
+    <>
+      <h2 className="font-titre text-[1.2rem] leading-snug text-texte">
+        {drapeauDe(recette)}
+        {recette.nom}
+      </h2>
+      <p className="mt-1 text-[0.92rem] leading-relaxed text-texte-doux">{recette.description}</p>
+      <p className="mt-1 text-[0.85rem] text-attenue">
+        {recette.tempsPrepMin + recette.tempsCuissonMin} min · {recette.portionsBase} portions
+      </p>
+    </>
+  )
+}
+
+/**
+ * Contenu de la fenêtre « Mes recettes ».
+ *
+ * ⚠️ SANS RECETTE PERSO, PAS DE LISTE VIDE MUETTE : le message dit ce qui manque et propose le
+ * chemin pour le combler (`#/composer`), même raisonnement que « 0 recette — essayez de retirer un
+ * filtre » plus haut dans cet écran.
+ */
+function PanneauMesRecettes({
+  catalogue,
+  recettesPerso,
+}: {
+  readonly catalogue: Catalog
+  readonly recettesPerso: readonly StoredUserRecipe[]
+}) {
+  if (recettesPerso.length === 0) {
+    return (
+      <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+        Vous n'avez pas encore composé de recette.{' '}
+        <a href={hashDeLEditeur(null)} className="font-semibold text-accent-texte underline">
+          Composer ma première recette
+        </a>
+      </p>
+    )
+  }
+
+  return (
+    <ul className="space-y-2">
+      {recettesPerso.map((stockee) => {
+        const recette = catalogue.recipes.get(stockee.id as RecipeId)
+        if (recette === undefined) return null
+        return (
+          <li
+            key={stockee.id}
+            className="flex items-stretch rounded-[--radius-carte] border border-bordure bg-surface"
+          >
+            <a href={hashDeRecette(stockee.id)} className="flex-1 p-3 no-underline">
+              <ContenuCarteRecette recette={recette} />
+            </a>
+            <BoutonExporter recette={stockee} />
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
+/**
+ * Export d'UNE recette perso à la fois (§8.7 : « Une recette à la fois »). Voir `export-recette.ts`
+ * pour le partage/repli — ce bouton ne fait que déclencher, silencieusement, dans les deux cas.
+ */
+function BoutonExporter({ recette }: { readonly recette: StoredUserRecipe }) {
+  return (
+    <button
+      type="button"
+      onClick={() => void exporterRecette(recette)}
+      aria-label={`Exporter ${recette.nom}`}
+      className="flex min-h-tactile w-14 items-center justify-center text-[1.2rem] text-attenue"
+    >
+      <span aria-hidden="true">⬇</span>
+    </button>
   )
 }
 

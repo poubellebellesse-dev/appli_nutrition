@@ -237,17 +237,16 @@ export function DetailRecette({
         </button>
       </header>
 
-      {/* « On change 2-3 ingrédients, à peu près comme celui de base ». Absent sur une recette déjà
-          personnelle : adapter une adaptation empilerait des héritages dont plus rien ne suit la
-          trace, et l'éditeur cherche sa base dans le catalogue SOURCE. */}
-      {!estRecettePerso(recetteId) && (
-        <a
-          href={hashDeLEditeur(recetteId)}
-          className="mt-4 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
-        >
-          Adapter cette recette à ma façon
-        </a>
-      )}
+      {/* « On change 2-3 ingrédients, à peu près comme celui de base » sur une recette DU CATALOGUE ;
+          « Modifier ma recette » sur une recette déjà personnelle — l'éditeur reconnaît les deux
+          cas au préfixe de `recetteId` (voir data/user-recipe.js#estRecettePerso et l'en-tête de
+          editeur-recette.tsx) : jamais les deux liens à la fois. */}
+      <a
+        href={hashDeLEditeur(recetteId)}
+        className="mt-4 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+      >
+        {estRecettePerso(recetteId) ? 'Modifier ma recette' : 'Adapter cette recette à ma façon'}
+      </a>
 
       <p className="mt-2 text-[1.05rem] leading-relaxed text-texte-doux">{recette.description}</p>
       <p className="mt-3 text-[1rem] text-attenue">

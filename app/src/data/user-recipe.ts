@@ -203,6 +203,18 @@ export function readUserRecipes(db: UserDb): readonly StoredUserRecipe[] {
   return recettes
 }
 
+/**
+ * Une recette utilisateur par son id — pour PRÉ-REMPLIR l'éditeur en mode « modifier ». Même
+ * tolérance que `readUserRecipes` : `null` si absente ou illisible, jamais une exception.
+ */
+export function readUserRecipe(db: UserDb, id: string): StoredUserRecipe | null {
+  const ligne = db.all<{ readonly contenu_json: string }>(
+    'SELECT contenu_json FROM user_recipe WHERE id = ?',
+    [id]
+  )[0]
+  return ligne === undefined ? null : analyser(ligne.contenu_json)
+}
+
 /** `null` si le contenu est illisible ou d'une version inconnue — jamais une exception. */
 function analyser(json: string): StoredUserRecipe | null {
   try {
@@ -282,6 +294,60 @@ export function variantePartantDe(base: Recipe): SaisieRecette {
       optionnel: i.optionnel,
     })),
     etapes: base.etapes.map((e) => e.texte),
+  }
+}
+
+/**
+ * Ce que l'écran doit pré-remplir pour MODIFIER une recette perso déjà stockée.
+ *
+ * ⚠️ EXHAUSTIF PAR CONSTRUCTION : tous les champs de `SaisieRecette` sont listés, et le typage
+ * échouerait si l'un manquait. `schemaVersion`, `id`, `source`, `baseRecipeId`, `facettesHeritees`,
+ * `service` et `piquant` ne passent PAS par le formulaire — ils sont repris directement de
+ * `stockee` par `mettreAJourRecette`, jamais redemandés.
+ */
+export function saisieDepuisStockee(stockee: StoredUserRecipe): SaisieRecette {
+  return {
+    nom: stockee.nom,
+    tempsPrepMin: stockee.tempsPrepMin,
+    tempsCuissonMin: stockee.tempsCuissonMin,
+    portionsBase: stockee.portionsBase,
+    difficulte: stockee.difficulte,
+    typesRepas: stockee.typesRepas,
+    envergure: stockee.envergure,
+    conservationJours: stockee.conservationJours,
+    axes: stockee.axes,
+    ingredients: stockee.ingredients,
+    // Une ligne vide au minimum, pour que le bloc « Étapes » ait toujours un champ à éditer —
+    // même règle que `SAISIE_VIDE` côté écran.
+    etapes: stockee.etapes.length > 0 ? stockee.etapes : [''],
+  }
+}
+
+/**
+ * Réenregistre une recette perso SOUS LE MÊME ID, avec le même `source`/`baseRecipeId` et les
+ * mêmes champs hérités (`facettesHeritees`, `service`, `piquant`) que `precedente` — modifier une
+ * variante doit la laisser variante, avec sa base. Seul ce que `saisie` collecte change.
+ */
+export function mettreAJourRecette(precedente: StoredUserRecipe, saisie: SaisieRecette): StoredUserRecipe {
+  return {
+    schemaVersion: VERSION_CONTENU_RECETTE,
+    id: precedente.id,
+    source: precedente.source,
+    baseRecipeId: precedente.baseRecipeId,
+    nom: saisie.nom.trim(),
+    tempsPrepMin: saisie.tempsPrepMin,
+    tempsCuissonMin: saisie.tempsCuissonMin,
+    portionsBase: saisie.portionsBase,
+    difficulte: saisie.difficulte,
+    typesRepas: saisie.typesRepas,
+    envergure: saisie.envergure,
+    conservationJours: saisie.conservationJours,
+    axes: saisie.axes,
+    ingredients: saisie.ingredients,
+    etapes: saisie.etapes.map((e) => e.trim()).filter((e) => e !== ''),
+    facettesHeritees: precedente.facettesHeritees,
+    service: precedente.service,
+    piquant: precedente.piquant,
   }
 }
 

@@ -13,7 +13,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { readUserRecipes } from '../../data/user-recipe.js'
+import { readUserRecipes, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 
 vi.mock('../catalog-source.js', () => ({
@@ -157,5 +157,94 @@ describe('éditeur — adapter une recette existante', () => {
     // Un signet périmé ou une recette retirée du catalogue arrivent facilement.
     await monter('recette-qui-nexiste-pas')
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ma recette')
+  })
+})
+
+describe('éditeur — modifier une recette perso', () => {
+  /** Un ingrédient réel du catalogue de test, pour que la recette perso se convertisse sans trou. */
+  const foodId = () => [...catalogueDeTest().foods.values()][0]!.id
+
+  const recettePerso = (): StoredUserRecipe => ({
+    schemaVersion: 1,
+    id: 'perso:existe',
+    source: 'perso',
+    baseRecipeId: null,
+    nom: 'Ma recette perso',
+    tempsPrepMin: 10,
+    tempsCuissonMin: 20,
+    portionsBase: 3,
+    difficulte: 2,
+    typesRepas: ['dejeuner'],
+    envergure: 'convivial',
+    conservationJours: 3,
+    axes: { sucreSale: 1, legerConsistant: -1, chaudFroid: -1, texture: 'croquant' },
+    ingredients: [{ foodId: foodId(), quantiteG: 150, uniteAffichage: '150 g', optionnel: false }],
+    etapes: ['Étape unique.'],
+    facettesHeritees: [],
+    service: 'plat',
+    piquant: 2,
+  })
+
+  it('rouvre l’éditeur sur « Modifier ma recette », pré-remplie', async () => {
+    saveUserRecipe(baseCourante(), recettePerso(), '2026-07-31')
+    await monter('perso:existe')
+    await screen.findByRole('heading', { name: 'Modifier ma recette' })
+    expect(champ('input[type="text"]').value).toBe('Ma recette perso')
+  })
+
+  it('changer le nom et enregistrer réécrit SOUS LE MÊME ID — un seul enregistrement en base', async () => {
+    saveUserRecipe(baseCourante(), recettePerso(), '2026-07-31')
+    await monter('perso:existe')
+    await screen.findByRole('heading', { name: 'Modifier ma recette' })
+
+    saisir('input[type="text"]', 'Ma recette perso, renommée')
+    await waitFor(() => expect(enregistrer().disabled).toBe(false))
+    fireEvent.click(enregistrer())
+    await screen.findByRole('heading', { name: /C'est enregistré/ })
+
+    const enregistrees = readUserRecipes(baseCourante())
+    expect(enregistrees).toHaveLength(1)
+    expect(enregistrees[0]?.id).toBe('perso:existe')
+    expect(enregistrees[0]?.nom).toBe('Ma recette perso, renommée')
+  })
+
+  it('⛔ modifier SEULEMENT le nom n’altère AUCUN autre champ — la perte silencieuse à traquer', async () => {
+    const originale = recettePerso()
+    saveUserRecipe(baseCourante(), originale, '2026-07-31')
+    await monter('perso:existe')
+    await screen.findByRole('heading', { name: 'Modifier ma recette' })
+
+    saisir('input[type="text"]', 'Ma recette perso, renommée')
+    await waitFor(() => expect(enregistrer().disabled).toBe(false))
+    fireEvent.click(enregistrer())
+    await screen.findByRole('heading', { name: /C'est enregistré/ })
+
+    const [relue] = readUserRecipes(baseCourante())
+    expect(relue).toEqual({ ...originale, nom: 'Ma recette perso, renommée' })
+  })
+
+  it('une variante modifiée reste `variante`, avec son `baseRecipeId`, `service` et `piquant`', async () => {
+    const variante: StoredUserRecipe = {
+      ...recettePerso(),
+      id: 'perso:variante-existe',
+      source: 'variante',
+      baseRecipeId: 'blanquette',
+    }
+    saveUserRecipe(baseCourante(), variante, '2026-07-31')
+    await monter('perso:variante-existe')
+    await screen.findByRole('heading', { name: 'Modifier ma recette' })
+    // Champs hérités : toujours masqués en modifiant une variante, comme à sa création.
+    expect(document.body.textContent).not.toContain('Salé ou sucré ?')
+
+    saisir('input[type="text"]', 'Blanquette, renommée')
+    await waitFor(() => expect(enregistrer().disabled).toBe(false))
+    fireEvent.click(enregistrer())
+    await screen.findByRole('heading', { name: /C'est enregistré/ })
+
+    const [relue] = readUserRecipes(baseCourante())
+    expect(relue?.source).toBe('variante')
+    expect(relue?.baseRecipeId).toBe('blanquette')
+    expect(relue?.service).toBe('plat')
+    expect(relue?.piquant).toBe(2)
   })
 })

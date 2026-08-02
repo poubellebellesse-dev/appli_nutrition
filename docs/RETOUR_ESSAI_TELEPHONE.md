@@ -57,6 +57,19 @@
    a qu'un, puisqu'il n'y a alors rien à choisir. « Vider le frigo » remonte dans l'en-tête, sans
    être dupliqué en bas.
 
+10. **« Mes recettes » : fenêtre dédiée, modification, export.** Modifier sa propre recette était
+    **impossible** — `detail-recette.tsx` masquait le seul chemin vers l'éditeur dès qu'une recette
+    était perso. `#/composer/<id>` a maintenant deux sens selon l'id : un id du catalogue **décalque**
+    (nouvel id, comportement d'avant), un id `perso:` **modifie sur place**. Pas de seconde route :
+    « ouvrir l'éditeur sur X » est une seule intention, deux préfixes de hash auraient divergé.
+    ⚠️ Le risque de ce lot était la **perte silencieuse** — un champ oublié au pré-remplissage
+    disparaît au réenregistrement sans que personne le voie. Les champs non demandés par le
+    formulaire (`source`, `baseRecipeId`, `facettesHeritees`, `service`, `piquant`) sont repris de
+    la version précédente, et un test compare l'objet stocké entier avant/après en ne changeant que
+    le nom.
+    Export : `.nutri-recipe` JSON conforme à §8.7, Web Share API avec repli téléchargement quand
+    `canShare` refuse les fichiers. Voir la réserve en §3.
+
 Et l'étape « Installez l'application », désactivée le 2026-08-01, a été rétablie : elle est le seul
 endroit du produit qui explique l'installation, et c'est l'installation qui fait accorder le stockage
 persistant.
@@ -181,8 +194,13 @@ Les trois remarques sont traitées (§1). Reste ouvert :
 
 ### Recettes
 
-- **Une fenêtre « mes recettes »** — celles que l'utilisateur a composées.
-- **Pouvoir modifier ses propres recettes.**
+✅ Fenêtre « Mes recettes », modification et export — fait (§1, point 10).
+
+- ⚠️ **Supprimer une recette perso reste IMPOSSIBLE, volontairement.** `deleteUserRecipe` existe
+  (`user-recipe.ts:233`) mais **`meal_plan_entry.recipe_id` n'a aucune clé étrangère** et
+  `user_recipe_note` aucun `ON DELETE CASCADE` : supprimer laisserait des créneaux de plan pointant
+  vers une recette disparue, et des notes orphelines. Brancher un bouton « Supprimer » sans traiter
+  ça produirait un plan cassé au prochain rechargement. À faire proprement ou pas du tout.
 - Les filtres : voir chantier A.
 
 ### Composer une recette
@@ -221,7 +239,12 @@ faite en le traitant :
 ### Divers
 
 - **Des sauces à faire seules** et des **accompagnements** — contenu à écrire.
-- **Exporter ses recettes.**
+- ✅ **Exporter ses recettes** — fait (§1, point 10).
+  ⚠️ **Mais c'est une sauvegarde, pas un partage.** `ARCHITECTURE.md §8.7` décrit un aller-retour :
+  on exporte un `.nutri-recipe`, quelqu'un d'autre l'**importe**. **L'import n'existe pas.** Le
+  fichier est bien formé et versionné, personne ne sait le relire. Utile pour ne pas perdre ses
+  recettes — ce qui compte sur une appli sans compte ni synchronisation — mais la moitié de §8.7
+  manque. L'import est le prochain morceau si le partage est voulu.
 
 ---
 
