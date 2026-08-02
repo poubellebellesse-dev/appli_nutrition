@@ -124,6 +124,82 @@ function makeCatalog(): Catalog {
   };
 }
 
+/** Une recette à plusieurs ingrédients, pour `searchByPantry` — `recipeWithOneIngredient` n'y suffit pas. */
+function recipeWithIngredients(
+  id: string,
+  ingredients: readonly { readonly foodId: string; readonly quantiteG: number; readonly optionnel?: boolean }[],
+): Recipe {
+  return {
+    ...recipeWithOneIngredient(id, ingredients[0]!.foodId),
+    ingredients: ingredients.map((i) => ({
+      foodId: i.foodId as FoodId,
+      quantiteG: g(i.quantiteG),
+      uniteAffichage: "g",
+      optionnel: i.optionnel ?? false,
+    })),
+  };
+}
+
+describe("engine/api — searchByPantry, condiments seuls ne proposent plus rien (retour utilisateur)", () => {
+  // §10.2 : la couverture reste un SCORE, pas un filtre — mais depuis ce retour, `searchByPantry`
+  // écarte en plus les recettes qui ne partagent AUCUN ingrédient non optionnel avec le
+  // garde-manger, sauf garde-manger vide.
+  const boeuf = food("boeuf", 250);
+  const carotte = food("carotte", 40);
+  const sel = food("sel", 0);
+  const poivre = food("poivre", 0);
+  const riz = food("riz", 130);
+
+  const bourguignon = recipeWithIngredients("bourguignon", [
+    { foodId: "boeuf", quantiteG: 500 },
+    { foodId: "carotte", quantiteG: 100 },
+    { foodId: "sel", quantiteG: 5 },
+  ]);
+  const soupe = recipeWithIngredients("soupe", [
+    { foodId: "carotte", quantiteG: 50 },
+    { foodId: "sel", quantiteG: 3 },
+  ]);
+  const salade = recipeWithIngredients("salade", [
+    { foodId: "riz", quantiteG: 200 },
+    { foodId: "poivre", quantiteG: 2, optionnel: true },
+  ]);
+
+  function catalogueTest(): Catalog {
+    const base = makeCatalog();
+    return {
+      ...base,
+      foods: new Map([boeuf, carotte, sel, poivre, riz].map((f) => [f.id, f])),
+      recipes: new Map([bourguignon, soupe, salade].map((r) => [r.id, r])),
+    };
+  }
+
+  const constraints = { allergies: [], diet: null, excludedFoodIds: [] };
+
+  it("garde-manger de condiments seuls, sans rapport → aucune recette", () => {
+    // Le poivre n'est présent QU'EN OPTIONNEL dans tout le catalogue de test : aucune recette ne
+    // doit remonter, exactement le symptôme rapporté (« ajouter seulement des condiments n'affiche
+    // aucune recette [utile] »).
+    const engine = createEngine(catalogueTest());
+    const resultat = engine.searchByPantry({ constraints, pantryFoodIds: ["poivre" as FoodId] });
+    expect(resultat.matches).toEqual([]);
+  });
+
+  it("un vrai ingrédient partagé → seules les recettes qui le contiennent apparaissent, classées par couverture", () => {
+    const engine = createEngine(catalogueTest());
+    const resultat = engine.searchByPantry({ constraints, pantryFoodIds: ["boeuf" as FoodId] });
+    const ids = resultat.matches.map((m) => m.recipeId);
+    expect(ids).toEqual(["bourguignon" as RecipeId]);
+  });
+
+  it("garde-manger VIDE → aucun filtrage, les trois recettes restent proposées", () => {
+    const engine = createEngine(catalogueTest());
+    const resultat = engine.searchByPantry({ constraints, pantryFoodIds: [] });
+    expect(resultat.matches.map((m) => m.recipeId).sort()).toEqual(
+      ["bourguignon", "salade", "soupe"].sort(),
+    );
+  });
+});
+
 describe("engine/api — createEngine (§8 ENGINE)", () => {
   it("expose version (moteur) et catalogVersion (celle du catalogue reçu)", () => {
     const catalog = makeCatalog();

@@ -106,7 +106,8 @@ function construireRequete(
   date: string,
   creneau: MealSlot,
   tempsDisponibleMin: Minutes | null,
-  envie: CravingAxes | null
+  envie: CravingAxes | null,
+  graine: number
 ): SuggestionRequest {
   return {
     profile,
@@ -124,7 +125,10 @@ function construireRequete(
     preferences: etat.preferences,
     favoriteRecipeIds: etat.favoriteRecipeIds,
     activeTopics: etat.activeTopics,
-    seed: 1,
+    // ⚠️ `graine` d'état, PAS une constante figée — « Proposer autre chose » l'incrémente pour
+    // faire varier `rankScoredCandidates`/`diversify` (§6.5 précision 7, §6.6 ENGINE). Une graine
+    // codée en dur donnait TOUJOURS les mêmes 12 suggestions, quel que soit le nombre de rechargements.
+    seed: graine,
     limit: PROFONDEUR,
   }
 }
@@ -144,7 +148,7 @@ type Etat =
   | { readonly phase: 'pret'; readonly vue: Vue }
   | { readonly phase: 'erreur'; readonly message: string }
 
-async function calculerVue(reglages: Reglages): Promise<Vue> {
+async function calculerVue(reglages: Reglages, graine: number): Promise<Vue> {
   const socle = await chargerSocle()
   const date = aujourdhuiIso()
   const profil = profilCourant(socle.db, date)
@@ -168,7 +172,8 @@ async function calculerVue(reglages: Reglages): Promise<Vue> {
     date,
     creneau,
     minutes === null ? null : min(minutes),
-    reglages.envie
+    reglages.envie,
+    graine
   )
   const resultat = socle.moteur.suggestMeals(requete)
 
@@ -195,14 +200,23 @@ async function calculerVue(reglages: Reglages): Promise<Vue> {
 export function Aujourdhui() {
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [reglages, setReglages] = useState<Reglages>(REGLAGES_VIDES)
+  /** Graine du tirage seedé (§6.5 précision 7, §6.6 ENGINE) — « Proposer autre chose » l'incrémente. */
+  const [graine, setGraine] = useState(1)
   const [position, setPosition] = useState(0)
-  /** Changements de plat SANS choix — c'est l'indécision qu'on mesure, pas l'activité. */
-  const [changements, setChangements] = useState(0)
+  /**
+   * Recettes DISTINCTES vues depuis le dernier choix/fermeture — c'est l'indécision qu'on mesure,
+   * pas l'activité de navigation. Un `Set` plutôt qu'un compteur de clics : l'ancien comptage
+   * n'incrémentait que sur « Suivant », si bien qu'un aller-retour de comparaison entre deux plats
+   * pouvait à tort accumuler du « changement » (chaque nouveau passage en avant recomptait), et
+   * qu'un parcours linéaire bloqué en butée de liste (fin des suggestions) pouvait ne jamais
+   * atteindre le seuil. Ici, revoir un plat déjà vu n'ajoute rien au `Set`.
+   */
+  const [vues, setVues] = useState<ReadonlySet<RecipeId>>(new Set())
   const [aideOuverte, setAideOuverte] = useState(false)
 
-  const rafraichir = useCallback((suivants: Reglages) => {
+  const rafraichir = useCallback((suivants: Reglages, grainesSuivante: number) => {
     let annule = false
-    calculerVue(suivants)
+    calculerVue(suivants, grainesSuivante)
       .then((vue) => {
         if (annule) return
         setEtat({ phase: 'pret', vue })
@@ -218,7 +232,22 @@ export function Aujourdhui() {
     }
   }, [])
 
-  useEffect(() => rafraichir(reglages), [rafraichir, reglages])
+  useEffect(() => rafraichir(reglages, graine), [rafraichir, reglages, graine])
+
+  // Le plat actuellement affiché — calculé avant les retours anticipés ci-dessous, pour que le
+  // `useEffect` qui alimente `vues` reste inconditionnel (règle des Hooks).
+  const idCourant =
+    etat.phase === 'pret'
+      ? etat.vue.suggestions[Math.min(position, etat.vue.suggestions.length - 1)]?.recipeId
+      : undefined
+
+  useEffect(() => {
+    if (idCourant === undefined) return
+    setVues((prec) => (prec.has(idCourant) ? prec : new Set(prec).add(idCourant)))
+  }, [idCourant])
+
+  /** Le seul plat de départ ne compte pas comme un « changement » : d'où le `- 1`. */
+  const changements = Math.max(vues.size - 1, 0)
 
   /**
    * L'indécision OUVRE l'encart, elle ne le maintient pas ouvert.
@@ -246,24 +275,32 @@ export function Aujourdhui() {
           // s'enregistre sur le déjeuner qu'on regardait, même si l'écriture aboutit à 14 h 01.
           recordMeal(socle.db, { recipeId: recipeId as never, date: aujourdhuiIso(), creneau, origine: 'choisi' })
           // Choisir MET FIN à l'indécision : le compteur repart, l'encart se referme.
-          setChangements(0)
+          setVues(new Set())
           setAideOuverte(false)
-          rafraichir(reglages)
+          rafraichir(reglages, graine)
         })
         .catch((erreur: unknown) => {
           setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
         })
     },
-    [rafraichir, reglages]
+    [rafraichir, reglages, graine]
   )
 
-  const deplacer = useCallback(
-    (pas: number, total: number) => {
-      setPosition((p) => Math.min(Math.max(p + pas, 0), total - 1))
-      if (pas > 0) setChangements((c) => c + 1)
-    },
-    []
-  )
+  const deplacer = useCallback((pas: number, total: number) => {
+    setPosition((p) => Math.min(Math.max(p + pas, 0), total - 1))
+  }, [])
+
+  /**
+   * « Proposer autre chose » — change la graine du tirage seedé pour renouveler les 12 suggestions
+   * SANS toucher `PROFONDEUR` (§6.5 précision 7 ENGINE : le tirage seedé influence désormais
+   * réellement `rankScoredCandidates`/`diversify`, voir leur en-tête). Même traitement qu'un choix
+   * de plat pour l'indécision : ce geste EST une réponse, pas un signe de plus qu'on cherche.
+   */
+  const proposerAutreChose = useCallback(() => {
+    setGraine((g) => g + 1)
+    setVues(new Set())
+    setAideOuverte(false)
+  }, [])
 
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement…</p>
   if (etat.phase === 'erreur') {
@@ -318,6 +355,7 @@ export function Aujourdhui() {
         surPrecedent={position > 0 ? () => deplacer(-1, total) : null}
         surSuivant={position < total - 1 ? () => deplacer(1, total) : null}
         surRetenir={() => retenir(courante.recipeId, vue.creneau)}
+        surProposerAutreChose={proposerAutreChose}
       />
 
       {/* §4.1 — « détecter l'indécision PUIS proposer, plutôt qu'interroger d'emblée ». */}
@@ -329,7 +367,7 @@ export function Aujourdhui() {
           onChange={setReglages}
           onFermer={() => {
             setAideOuverte(false)
-            setChangements(0)
+            setVues(new Set())
           }}
         />
       )}
@@ -383,6 +421,7 @@ function CarteRepas({
   surPrecedent,
   surSuivant,
   surRetenir,
+  surProposerAutreChose,
 }: {
   readonly suggestion: ScoredSuggestion
   readonly nom: string
@@ -390,6 +429,7 @@ function CarteRepas({
   readonly surPrecedent: (() => void) | null
   readonly surSuivant: (() => void) | null
   readonly surRetenir: () => void
+  readonly surProposerAutreChose: () => void
 }) {
   const [departX, setDepartX] = useState<number | null>(null)
 
@@ -458,8 +498,18 @@ function CarteRepas({
           <BoutonNavigation libelle="Suivant" fleche="→" onClic={surSuivant} apresTexte />
         </div>
 
+        {/* Renouvelle les 12 suggestions (nouvelle graine du tirage seedé) sans changer `PROFONDEUR`
+            — même famille de bouton secondaire que « Dites-moi ce que vous cherchez » ci-dessous. */}
+        <button
+          type="button"
+          onClick={surProposerAutreChose}
+          className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-texte-doux"
+        >
+          Proposer autre chose
+        </button>
+
         <a
-          href={hashDeRecette(suggestion.recipeId)}
+          href={hashDeRecette(suggestion.recipeId, 'aujourdhui')}
           className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[1rem] font-semibold text-texte no-underline"
         >
           Voir la recette
@@ -632,7 +682,7 @@ function PlatsProches({
         {ids.map((id) => (
           <li key={id}>
             <a
-              href={hashDeRecette(id)}
+              href={hashDeRecette(id, 'aujourdhui')}
               className="flex min-h-tactile items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface p-2 text-[0.95rem] text-texte no-underline"
             >
               <span

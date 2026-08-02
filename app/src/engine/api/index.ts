@@ -44,7 +44,11 @@ import type {
   WeekPlanRequest,
 } from '../domain/index.js'
 import { construireIndex, filtrerRecettes, type FiltresFacettes } from '../search/index.js'
-import { ingredientsManquants, scorePantry } from '../selection/scoring/pantry.js'
+import {
+  ingredientsManquants,
+  partageIngredientNonOptionnel,
+  scorePantry,
+} from '../selection/scoring/pantry.js'
 import { suggestAlternatives as runSuggestAlternatives } from '../selection/alternatives.js'
 import { planWeek as runPlanWeek } from '../planning/plan-week.js'
 import { planLeftovers as runPlanLeftovers } from '../planning/plan-leftovers.js'
@@ -56,6 +60,7 @@ import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
 import {
+  DEFAULT_DIVERSIFY_TOLERANCE,
   DEFAULT_MMR_LAMBDA,
   DEFAULT_VARIETY_TOLERANCE,
   EXCLUSION_LAYERS,
@@ -403,12 +408,16 @@ function runSuggestMeals(catalog: Catalog, req: SuggestionRequest, now: (() => n
   // rien de la sélection. `mulberry32` est créé ICI, à chaque appel — jamais partagé entre deux
   // suggestions, sinon deux créneaux consécutifs consommeraient le même flux et biaiseraient l'un
   // l'autre (voir plan-week.ts pour la dérivation par créneau côté planification).
-  const ranked = rankScoredCandidates(scoringResult.scores, mulberry32(req.seed), DEFAULT_VARIETY_TOLERANCE)
+  // ⚠️ UN SEUL générateur `alea`, partagé entre le classement et la diversification : en créer un
+  // second à partir de `req.seed` reproduirait la même suite de tirages aux deux étapes,
+  // corrélant classement et diversification au lieu de les décorréler.
+  const alea = mulberry32(req.seed)
+  const ranked = rankScoredCandidates(scoringResult.scores, alea, DEFAULT_VARIETY_TOLERANCE)
   const limit = req.limit ?? 5
 
   const selected: readonly { readonly recipeId: RecipeId; readonly score: number }[] = req.skipDiversification
     ? ranked.slice(0, limit)
-    : diversify(ranked, limit, req.mmrLambda ?? DEFAULT_MMR_LAMBDA, buildSimilarityAccessor(catalog))
+    : diversify(ranked, limit, req.mmrLambda ?? DEFAULT_MMR_LAMBDA, buildSimilarityAccessor(catalog), alea, DEFAULT_DIVERSIFY_TOLERANCE)
 
   // (g)
   const suggestions: ScoredSuggestion[] = selected.map(({ recipeId, score }) => {
@@ -708,6 +717,10 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
 
       const matches: PantryMatch[] = []
       for (const recipeId of retenues) {
+        // ⚠️ Garde-manger VIDE → aucun filtrage : voir l'avertissement en tête de fichier, on ne
+        // casse pas le parcours de découverte avant toute saisie. Non vide → on écarte les recettes
+        // sans le moindre ingrédient non optionnel en commun (compte, pas masse — voir `pantry.ts`).
+        if (garde.size > 0 && !partageIngredientNonOptionnel(recipeId, enrichedCatalog, garde)) continue
         const manquants = ingredientsManquants(recipeId, enrichedCatalog, garde)
         if (req.seulementRealisables === true && manquants.length > 0) continue
         matches.push({ recipeId, couverture: scorePantry(recipeId, enrichedCatalog, garde), manquants })

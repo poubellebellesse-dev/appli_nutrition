@@ -68,7 +68,7 @@ const ECARTABLE: Readonly<Record<Exclude<Alerte, 'aucune'>, boolean>> = {
 function Ecran({ onglet, sousVue }: { readonly onglet: Onglet; readonly sousVue: SousVue }) {
   // La sous-vue prime sur l'onglet : fiche et frigo appartiennent à `recettes`, mais on y arrive
   // aussi depuis la semaine, les courses ou Aujourd'hui.
-  if (sousVue.type === 'recette') return <DetailRecette recetteId={sousVue.id} />
+  if (sousVue.type === 'recette') return <DetailRecette recetteId={sousVue.id} origine={sousVue.origine} />
   if (sousVue.type === 'frigo') return <Frigo />
   if (sousVue.type === 'parametres') return <Parametres />
   if (sousVue.type === 'editeur') return <EditeurRecette baseId={sousVue.baseId} />

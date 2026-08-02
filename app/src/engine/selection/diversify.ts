@@ -53,6 +53,15 @@ import type { RankedCandidate } from './scoring-pass.js'
  * catalogue de test (10 recettes) — insuffisant pour trancher la calibration définitivement. */
 export const DEFAULT_MMR_LAMBDA = 0.4
 
+/** Largeur de la bande de tolérance de `diversify` (tirage seedé, même correctif « variété »
+ * que `DEFAULT_VARIETY_TOLERANCE` de scoring-pass.ts). ⚠️ Valeur ABSOLUE, PAS relative comme
+ * l'autre constante — voir le commentaire du bloc de tirage ci-dessous pour le pourquoi (la
+ * valeur ajustée ici peut être négative, une bande relative y perdrait tout son sens). 0.05
+ * choisi du même ordre de grandeur que `DEFAULT_VARIETY_TOLERANCE` (0.03) mais légèrement plus
+ * large : la valeur ajustée cumule deux sources de bruit (score ET similarité), une bande trop
+ * étroite laisserait rarement plus d'un candidat éligible au tirage. */
+export const DEFAULT_DIVERSIFY_TOLERANCE = 0.05
+
 export interface DiversifiedCandidate {
   readonly recipeId: RecipeId
   readonly score: number
@@ -64,21 +73,43 @@ export interface DiversifiedCandidate {
 /**
  * Diversifie `scored` (déjà classé, typiquement `rankScoredCandidates`) par pertinence marginale
  * maximale (§6.6 ENGINE). Moins de candidats que `limit` → retourne tout, sans erreur.
+ *
+ * `alea`/`tolerance` optionnels — même correctif « variété » que `rankScoredCandidates`
+ * (scoring-pass.ts), deux régimes :
+ *   - SANS `alea` (ou `tolerance` ≤ 0) : comportement INCHANGÉ, argmax strict, départage par plus
+ *     petit id à égalité EXACTE. C'est ce qui protège tous les tests existants ci-dessous.
+ *   - AVEC `alea` ET `tolerance` > 0 : à chaque tour, au lieu de retenir l'argmax, on constitue la
+ *     RÉSERVE des candidats dont la valeur ajustée est à au plus `tolerance` SOUS la meilleure
+ *     valeur ajustée du tour, puis on tire un élément de cette réserve avec `alea()`.
+ *
+ * ⚠️ BANDE ABSOLUE ICI, PAS RELATIVE — diverge délibérément de `rankScoredCandidates`, qui utilise
+ * une bande relative (`meilleur * (1 - tolerance)`) parce que ses scores sortent de `clamp01`
+ * (toujours dans [0, 1]). Ici la valeur ajustée vaut `score − λ·similarité` : avec λ = 0.4 elle
+ * peut descendre jusqu'à −0.4. Sur une valeur ajustée NÉGATIVE, multiplier par `(1 - tolerance)`
+ * AUGMENTE le seuil au lieu de l'abaisser (ex. −0.4 * 0.97 = −0.388, un seuil PLUS HAUT que le
+ * meilleur lui-même) — la bande deviendrait vide ou exclurait le meilleur lui-même. D'où le calcul
+ * en soustraction (`meilleur - tolerance`), qui reste correct quel que soit le signe. Ne PAS
+ * uniformiser les deux fonctions sur ce point sans revoir ce raisonnement.
+ *
+ * Complexité : deux passes par tour au lieu d'une (a. trouver la meilleure valeur ajustée du tour,
+ * b. collecter la réserve dans la bande, c. tirer) quand `alea` est fourni — reste
+ * O(limite × |scored|²) au pire, le facteur constant supplémentaire ne change pas l'ordre.
  */
 export function diversify(
   scored: readonly RankedCandidate[],
   limit: number,
   lambda: number,
-  similarityOf: (a: RecipeId, b: RecipeId) => number
+  similarityOf: (a: RecipeId, b: RecipeId) => number,
+  alea?: () => number,
+  tolerance?: number
 ): readonly DiversifiedCandidate[] {
   const remaining = [...scored]
   const retained: DiversifiedCandidate[] = []
+  const useTirage = alea !== undefined && tolerance !== undefined && tolerance > 0
 
   while (retained.length < limit && remaining.length > 0) {
-    let bestIndex = -1
-    let bestAdjustedValue = -Infinity
-    let bestMaxSimilarity = 0
-
+    // Valeur ajustée + similarité max de chaque candidat restant contre les retenues actuelles.
+    const adjusted: Array<{ readonly index: number; readonly value: number; readonly maxSimilarity: number }> = []
     for (let i = 0; i < remaining.length; i++) {
       const candidate = remaining[i]!
 
@@ -88,22 +119,48 @@ export function diversify(
         if (sim > maxSimilarity) maxSimilarity = sim
       }
 
-      const adjustedValue = candidate.score - lambda * maxSimilarity
-
-      const isBetter =
-        bestIndex === -1 ||
-        adjustedValue > bestAdjustedValue ||
-        (adjustedValue === bestAdjustedValue && candidate.recipeId < remaining[bestIndex]!.recipeId)
-
-      if (isBetter) {
-        bestIndex = i
-        bestAdjustedValue = adjustedValue
-        bestMaxSimilarity = maxSimilarity
-      }
+      adjusted.push({ index: i, value: candidate.score - lambda * maxSimilarity, maxSimilarity })
     }
 
-    const [winner] = remaining.splice(bestIndex, 1)
-    retained.push({ recipeId: winner!.recipeId, score: winner!.score, maxSimilarityToRetained: bestMaxSimilarity })
+    let winnerIndex: number
+    let winnerMaxSimilarity: number
+
+    if (!useTirage) {
+      // Régime déterministe INCHANGÉ : argmax strict, départage par plus petit id à égalité exacte.
+      let bestIndex = -1
+      let bestAdjustedValue = -Infinity
+      let bestMaxSimilarity = 0
+      for (const { index, value, maxSimilarity } of adjusted) {
+        const isBetter =
+          bestIndex === -1 ||
+          value > bestAdjustedValue ||
+          (value === bestAdjustedValue && remaining[index]!.recipeId < remaining[bestIndex]!.recipeId)
+        if (isBetter) {
+          bestIndex = index
+          bestAdjustedValue = value
+          bestMaxSimilarity = maxSimilarity
+        }
+      }
+      winnerIndex = bestIndex
+      winnerMaxSimilarity = bestMaxSimilarity
+    } else {
+      // (a) meilleure valeur ajustée du tour.
+      let bestAdjustedValue = -Infinity
+      for (const { value } of adjusted) {
+        if (value > bestAdjustedValue) bestAdjustedValue = value
+      }
+      // (b) réserve : bande ABSOLUE sous la meilleure valeur — voir en-tête pour le pourquoi.
+      const seuil = bestAdjustedValue - tolerance!
+      const reserve = adjusted.filter(({ value }) => value >= seuil)
+      // (c) tirage.
+      const choisi = Math.min(Math.floor(alea!() * reserve.length), reserve.length - 1)
+      const gagnant = reserve[choisi]!
+      winnerIndex = gagnant.index
+      winnerMaxSimilarity = gagnant.maxSimilarity
+    }
+
+    const [winner] = remaining.splice(winnerIndex, 1)
+    retained.push({ recipeId: winner!.recipeId, score: winner!.score, maxSimilarityToRetained: winnerMaxSimilarity })
   }
 
   return retained

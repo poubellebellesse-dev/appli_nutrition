@@ -47,6 +47,10 @@ async function monterEtTerminerIntro() {
   await waitFor(() => expect(desactive('J’ai compris')).toBe(false))
   clic('J’ai compris')
 
+  // ⚠️ jsdom n'émet jamais `beforeinstallprompt` : seul « Plus tard » permet d'avancer.
+  await screen.findByRole('heading', { name: 'Installez l’application sur votre écran d’accueil' })
+  clic('Plus tard')
+
   await screen.findByRole('heading', { name: 'Des allergies ?' })
   clic('Continuer')
 

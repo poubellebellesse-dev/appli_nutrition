@@ -7,9 +7,10 @@
 
 import { describe, expect, it } from 'vitest'
 import type { RecipeId } from '../domain/index.js'
+import { mulberry32 } from './prng.js'
 import type { RankedCandidate } from './scoring-pass.js'
 import { rankScoredCandidates } from './scoring-pass.js'
-import { DEFAULT_MMR_LAMBDA, diversify } from './diversify.js'
+import { DEFAULT_DIVERSIFY_TOLERANCE, DEFAULT_MMR_LAMBDA, diversify } from './diversify.js'
 
 function ranked(entries: ReadonlyArray<readonly [string, number]>): readonly RankedCandidate[] {
   return rankScoredCandidates(new Map(entries.map(([id, score]) => [id as RecipeId, score])))
@@ -144,5 +145,139 @@ describe('selection/diversify — diversify (§6.6 ENGINE)', () => {
     const candidat = result.find((r) => r.recipeId === 'candidat')!
 
     expect(candidat.maxSimilarityToRetained).toBeCloseTo(0.9, 10)
+  })
+
+  it('sans `alea` : comportement identique à avant, même sur un jeu où plusieurs candidats sont proches', () => {
+    const scored = ranked([
+      ['a', 0.9],
+      ['b', 0.88],
+      ['c', 0.86],
+      ['d', 0.5],
+    ])
+    const similarityOf = makeSimilarityOf([
+      ['a', 'b', 0.3],
+      ['a', 'c', 0.3],
+    ])
+
+    const sansAlea1 = diversify(scored, 3, 0.4, similarityOf)
+    const sansAlea2 = diversify(scored, 3, 0.4, similarityOf, undefined, DEFAULT_DIVERSIFY_TOLERANCE)
+    const argmaxAttendu = diversify(scored, 3, 0.4, similarityOf)
+
+    expect(sansAlea1).toEqual(argmaxAttendu)
+    // `tolerance` fourni mais `alea` absent → régime déterministe inchangé quand même.
+    expect(sansAlea2).toEqual(argmaxAttendu)
+  })
+
+  it('avec `alea` : deux graines différentes produisent des sélections différentes (candidats équivalents)', () => {
+    const scored = ranked([
+      ['a', 0.9],
+      ['b', 0.89],
+      ['c', 0.88],
+      ['d', 0.87],
+      ['e', 0.1],
+    ])
+    const similarityOf = makeSimilarityOf([])
+
+    const resultats = new Set<string>()
+    for (let graine = 1; graine <= 20; graine++) {
+      const result = diversify(scored, 3, 0.4, similarityOf, mulberry32(graine), DEFAULT_DIVERSIFY_TOLERANCE)
+      resultats.add(result.map((r) => r.recipeId).join(','))
+    }
+
+    expect(resultats.size).toBeGreaterThan(1)
+  })
+
+  it('avec `alea` : à graine égale, le résultat est identique (reproductible)', () => {
+    const scored = ranked([
+      ['a', 0.9],
+      ['b', 0.89],
+      ['c', 0.88],
+      ['d', 0.5],
+    ])
+    const similarityOf = makeSimilarityOf([])
+
+    const premier = diversify(scored, 3, 0.4, similarityOf, mulberry32(42), DEFAULT_DIVERSIFY_TOLERANCE)
+    const second = diversify(scored, 3, 0.4, similarityOf, mulberry32(42), DEFAULT_DIVERSIFY_TOLERANCE)
+
+    expect(premier).toEqual(second)
+  })
+
+  it('invariant : aucun candidat retenu hors de la bande ABSOLUE, sur plusieurs jeux et 20+ graines', () => {
+    const jeux: ReadonlyArray<{
+      readonly scored: readonly RankedCandidate[]
+      readonly similarityOf: (a: RecipeId, b: RecipeId) => number
+      readonly lambda: number
+      readonly limit: number
+    }> = [
+      {
+        scored: ranked([
+          ['a', 1.0],
+          ['b', 0.98],
+          ['c', 0.7],
+          ['d', 0.3],
+        ]),
+        similarityOf: makeSimilarityOf([]),
+        lambda: 0.4,
+        limit: 3,
+      },
+      {
+        scored: ranked([
+          ['a', 0.9],
+          ['b', 0.6],
+          ['c', 0.58],
+          ['d', 0.1],
+        ]),
+        similarityOf: makeSimilarityOf([
+          ['a', 'b', 1],
+          ['a', 'c', 1],
+        ]),
+        lambda: 0.4,
+        limit: 3,
+      },
+      {
+        scored: ranked([
+          ['a', 0.5],
+          ['b', 0.49],
+          ['c', 0.48],
+        ]),
+        similarityOf: makeSimilarityOf([]),
+        lambda: 0.4,
+        limit: 2,
+      },
+    ]
+
+    for (const { scored, similarityOf, lambda, limit } of jeux) {
+      for (let graine = 1; graine <= 25; graine++) {
+        const result = diversify(scored, limit, lambda, similarityOf, mulberry32(graine), DEFAULT_DIVERSIFY_TOLERANCE)
+
+        // Rejoue la sélection en calculant la valeur ajustée réelle de chaque retenue au
+        // moment de son choix, pour vérifier qu'elle n'a jamais pu dépasser la bande absolue.
+        const retainedSoFar: RecipeId[] = []
+        for (const r of result) {
+          const remainingAtStep = scored.filter((c) => !retainedSoFar.includes(c.recipeId))
+          let bestAdjusted = -Infinity
+          for (const c of remainingAtStep) {
+            let maxSim = 0
+            for (const kept of retainedSoFar) {
+              const sim = similarityOf(c.recipeId, kept)
+              if (sim > maxSim) maxSim = sim
+            }
+            const adjusted = c.score - lambda * maxSim
+            if (adjusted > bestAdjusted) bestAdjusted = adjusted
+          }
+          let maxSimWinner = 0
+          for (const kept of retainedSoFar) {
+            const sim = similarityOf(r.recipeId, kept)
+            if (sim > maxSimWinner) maxSimWinner = sim
+          }
+          const scoreCandidat = scored.find((c) => c.recipeId === r.recipeId)!.score
+          const adjustedWinner = scoreCandidat - lambda * maxSimWinner
+
+          expect(adjustedWinner).toBeGreaterThanOrEqual(bestAdjusted - DEFAULT_DIVERSIFY_TOLERANCE)
+
+          retainedSoFar.push(r.recipeId)
+        }
+      }
+    }
   })
 })

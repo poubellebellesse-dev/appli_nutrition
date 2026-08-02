@@ -42,11 +42,13 @@ function lignesResultats(): readonly Element[] {
   return [...document.querySelectorAll('ul.mt-3.space-y-3 > li')]
 }
 
-/** Le `RecipeId` de chaque résultat affiché, tiré du lien réel de la fiche recette. */
+/** Le `RecipeId` de chaque résultat affiché, tiré du lien réel de la fiche recette.
+ * ⚠️ Le lien porte désormais aussi l'origine du retour contextuel (`?de=frigo`, voir
+ * `hashDeRecette`/router.tsx) — retirée ici avant décodage, comme le fait `routeDepuisHash`. */
 function recipeIdsAffiches(): readonly RecipeId[] {
   return lignesResultats().map((li) => {
     const href = li.querySelector('h3 a')?.getAttribute('href') ?? ''
-    return decodeURIComponent(href.replace('#/recette/', '')) as RecipeId
+    return decodeURIComponent(href.replace('#/recette/', '').split('?')[0] ?? '') as RecipeId
   })
 }
 
@@ -222,7 +224,7 @@ describe('frigo — le classement suit la couverture en masse, pas le compte d�
   })
 })
 
-describe('frigo — « Réalisables maintenant » restreint vraiment, jamais par défaut', () => {
+describe('frigo — « Sans rien acheter » restreint vraiment, jamais par défaut', () => {
   it('démarre sur « Tout montrer », et le bascule ne garde que les recettes sans manquant', async () => {
     // §4.5 : le classement par couverture reste la vue par défaut — filtrer rendrait souvent la
     // page vide avec seulement quatre ingrédients déclarés. Avec ce garde-manger précis, une
@@ -236,11 +238,52 @@ describe('frigo — « Réalisables maintenant » restreint vraiment, jamais par
       'true'
     )
     expect(
-      screen.getByRole('button', { name: 'Réalisables maintenant' }).getAttribute('aria-pressed')
+      screen.getByRole('button', { name: 'Sans rien acheter' }).getAttribute('aria-pressed')
     ).toBe('false')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Réalisables maintenant' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Sans rien acheter' }))
 
     await waitFor(() => expect(recipeIdsAffiches()).toEqual(['dattes_noix' as RecipeId]))
+  })
+
+  it('le nouveau libellé ne laisse plus place à l’ancien', async () => {
+    seedPantry(['datte', 'noix', 'sel_fin', 'huile_olive'])
+    await monter()
+    await waitFor(() => expect(lignesResultats().length).toBeGreaterThan(1))
+
+    expect(screen.queryByText(/^Réalisables maintenant$/)).toBeNull()
+  })
+})
+
+describe('frigo — un garde-manger sans rapport ne propose plus rien', () => {
+  it('condiments seuls → aucune recette partageant un ingrédient non optionnel n’est proposée', async () => {
+    // C'est le retour utilisateur qui a déclenché ce filtre : « ajouter seulement des condiments
+    // n'affiche aucune recette [utile] ». Sel, poivre et huile d'olive figurent dans la quasi-
+    // totalité du catalogue comme OPTIONNELS ou en quantité dérisoire ; ils ne doivent plus, seuls,
+    // faire remonter une recette entière.
+    seedPantry(['sel_fin', 'poivre_noir'])
+    await monter()
+
+    const catalogue = catalogueDeTest()
+    for (const id of recipeIdsAffiches()) {
+      const recette = catalogue.recipes.get(id)
+      expect(recette).toBeDefined()
+      const partage = recette!.ingredients.some(
+        (i) => !i.optionnel && (i.foodId === 'sel_fin' || i.foodId === 'poivre_noir')
+      )
+      expect(partage).toBe(true)
+    }
+    // Message utile plutôt qu'une liste vide muette, si vraiment plus rien ne correspond.
+    if (lignesResultats().length === 0) {
+      expect(screen.getByText(/aucune recette ne correspond.*Ajoutez un autre aliment/)).toBeDefined()
+    }
+  })
+
+  it('garde-manger VIDE : aucun filtrage, l’écran reste peuplé une fois un aliment ajouté', async () => {
+    await monter()
+    fireEvent.change(screen.getByLabelText('Ajouter un aliment'), { target: { value: 'riz' } })
+    fireEvent.click(await screen.findByText('Riz blanc, cru'))
+
+    await waitFor(() => expect(lignesResultats().length).toBeGreaterThan(0))
   })
 })

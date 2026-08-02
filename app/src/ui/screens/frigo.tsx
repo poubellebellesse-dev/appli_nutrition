@@ -1,10 +1,12 @@
 // ui/screens/frigo.tsx — « Vider le frigo » (§4.5 DESIGN, §10.2 ① ENGINE).
 //
-// ⚠️ ON CLASSE, ON NE FILTRE PAS, et c'est la décision qui structure tout l'écran. Avec quatre
-// ingrédients déclarés, AUCUNE recette n'est intégralement couverte : filtrer rendrait une page
-// vide, et l'utilisateur conclurait que la fonction ne marche pas. Les mieux couvertes remontent,
-// les autres restent atteignables, et on écrit EN CLAIR ce qu'il manque. Le réglage « Réalisables
-// maintenant » existe pour ceux qui veulent l'inverse — jamais par défaut.
+// ⚠️ ON CLASSE PAR COUVERTURE, ON NE FILTRE PAS SUR ELLE — nuance depuis le retour utilisateur qui
+// a fait ajouter un filtre minimal (voir `searchByPantry`, §10.2). Avec quatre ingrédients
+// déclarés, AUCUNE recette n'est intégralement couverte : filtrer sur la couverture rendrait une
+// page vide. Mais un garde-manger de condiments seuls, lui, ne doit proposer AUCUNE recette sans
+// rapport — `searchByPantry` écarte donc celles sans le moindre ingrédient non optionnel en
+// commun ; parmi les autres, les mieux couvertes remontent et on écrit EN CLAIR ce qu'il manque.
+// Le réglage « Sans rien acheter » existe pour ceux qui veulent l'inverse — jamais par défaut.
 //
 // ⚠️ LA COUVERTURE EST PONDÉRÉE PAR LA MASSE, ET L'ÉCRAN DOIT LE DIRE. Avoir le sel et le poivre
 // d'un bœuf bourguignon ne couvre rien ; avoir le bœuf couvre l'essentiel. La jauge affiche donc
@@ -267,7 +269,7 @@ export function Frigo() {
                 onChoisir={() => setRealisablesSeules(false)}
               />
               <Bascule
-                libelle="Réalisables maintenant"
+                libelle="Sans rien acheter"
                 actif={realisablesSeules}
                 onChoisir={() => setRealisablesSeules(true)}
               />
@@ -300,8 +302,17 @@ export function Frigo() {
             {resultats.matches.length > RESULTATS_AFFICHES && (
               <> — les {RESULTATS_AFFICHES} mieux couvertes sont affichées</>
             )}
-            {realisablesSeules && resultats.matches.length === 0 && (
-              <> — rien n'est réalisable en l'état. Essayez « Tout montrer ».</>
+            {/* ⚠️ « Aucune recette » PEUT ARRIVER MAINTENANT même en « Tout montrer », depuis que
+                `searchByPantry` écarte les recettes sans ingrédient commun (§10.2) — un
+                garde-manger de condiments seuls n'a plus rien à proposer. Une liste vide muette
+                laisserait croire à un bug ; le message dit quoi faire. */}
+            {resultats.matches.length === 0 && (
+              <>
+                {' — '}
+                {realisablesSeules
+                  ? <>rien n'est réalisable en l'état. Essayez « Tout montrer ».</>
+                  : <>aucune recette ne correspond à ce que vous avez. Ajoutez un autre aliment.</>}
+              </>
             )}
           </p>
 
@@ -496,7 +507,7 @@ function Resultat({
   return (
     <li className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
       <h3 className="font-titre text-[1.2rem] leading-snug">
-        <a href={hashDeRecette(match.recipeId)} className="text-texte no-underline">
+        <a href={hashDeRecette(match.recipeId, 'frigo')} className="text-texte no-underline">
           {recette.nom}
         </a>
       </h3>

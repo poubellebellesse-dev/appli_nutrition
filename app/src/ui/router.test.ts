@@ -47,7 +47,7 @@ describe('ui/router — fiche recette', () => {
   it('fait l’aller-retour sur un identifiant simple', () => {
     expect(routeDepuisHash(hashDeRecette('blanquette-veau'))).toEqual({
       onglet: 'recettes',
-      sousVue: { type: 'recette', id: 'blanquette-veau' },
+      sousVue: { type: 'recette', id: 'blanquette-veau', origine: 'recettes' },
     })
   })
 
@@ -61,7 +61,7 @@ describe('ui/router — fiche recette', () => {
     const id = 'plat/étrange & co'
     const hash = hashDeRecette(id)
     expect(hash).not.toContain(' ')
-    expect(routeDepuisHash(hash).sousVue).toEqual({ type: 'recette', id })
+    expect(routeDepuisHash(hash).sousVue).toEqual({ type: 'recette', id, origine: 'recettes' })
   })
 
   it('ramène à la LISTE plutôt que de planter sur un fragment malformé', () => {
@@ -73,7 +73,29 @@ describe('ui/router — fiche recette', () => {
 
   it('ne confond pas la liste et une fiche', () => {
     expect(routeDepuisHash('#/recettes').sousVue).toEqual({ type: 'liste' })
-    expect(routeDepuisHash('#/recette/x').sousVue).toEqual({ type: 'recette', id: 'x' })
+    expect(routeDepuisHash('#/recette/x').sousVue).toEqual({ type: 'recette', id: 'x', origine: 'recettes' })
+  })
+})
+
+describe('ui/router — retour contextuel depuis la fiche recette', () => {
+  it('encode l’origine dans le hash — survit à un rechargement (pas un état React)', () => {
+    for (const origine of ['aujourdhui', 'recettes', 'semaine', 'frigo'] as const) {
+      const hash = hashDeRecette('x', origine)
+      expect(routeDepuisHash(hash).sousVue).toEqual({ type: 'recette', id: 'x', origine })
+    }
+  })
+
+  it('hash SANS origine → repli sûr sur Recettes (lien collé, favori, rechargement d’un ancien hash)', () => {
+    expect(routeDepuisHash(hashDeRecette('x')).sousVue).toEqual({
+      type: 'recette',
+      id: 'x',
+      origine: 'recettes',
+    })
+    expect(routeDepuisHash('#/recette/x?de=un-onglet-qui-nexiste-pas').sousVue).toEqual({
+      type: 'recette',
+      id: 'x',
+      origine: 'recettes',
+    })
   })
 })
 

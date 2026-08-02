@@ -34,11 +34,21 @@ export type Onglet = 'aujourdhui' | 'semaine' | 'courses' | 'recettes' | 'savoir
  */
 export type SousVue =
   | { readonly type: 'liste' }
-  | { readonly type: 'recette'; readonly id: string }
+  | { readonly type: 'recette'; readonly id: string; readonly origine: OrigineRecette }
   | { readonly type: 'frigo' }
   | { readonly type: 'parametres' }
   /** Éditeur de recette. `baseId` non nul = on adapte une recette existante. */
   | { readonly type: 'editeur'; readonly baseId: string | null }
+
+/**
+ * D'où l'on arrive sur une fiche recette — porte le retour contextuel (« ← Aujourd'hui »,
+ * « ← Cette semaine »…). Voir `hashDeRecette` : encodée dans le HASH, pas dans un état React, pour
+ * survivre à un rechargement (le service worker sert `index.html` sur toute navigation, §7
+ * ARCHITECTURE — un état React serait perdu).
+ */
+export type OrigineRecette = 'aujourdhui' | 'recettes' | 'semaine' | 'frigo'
+
+const ORIGINE_PAR_DEFAUT: OrigineRecette = 'recettes'
 
 /**
  * Où l'on est.
@@ -136,14 +146,26 @@ export function routeDepuisHash(hash: string): Route {
     // `decodeURIComponent` peut lever sur un `%` isolé, qu'un signet tronqué produit facilement.
     // Une URL malformée doit ramener à la liste, jamais faire planter l'application.
     try {
-      const id = decodeURIComponent(hash.slice(PREFIXE_RECETTE.length))
-      if (id !== '') return { onglet: 'recettes', sousVue: { type: 'recette', id } }
+      // L'origine voyage APRÈS l'id, en `?de=<origine>` — voir `hashDeRecette`. Un id peut légitimement
+      // contenir un `?` encodé (`%3F`), d'où le split sur le fragment BRUT, avant décodage de l'id.
+      const [idBrut, requete] = hash.slice(PREFIXE_RECETTE.length).split('?')
+      const id = decodeURIComponent(idBrut ?? '')
+      if (id !== '') return { onglet: 'recettes', sousVue: { type: 'recette', id, origine: origineDepuisRequete(requete) } }
     } catch {
       /* fragment illisible → liste des recettes */
     }
     return { onglet: 'recettes', sousVue: LISTE }
   }
   return { onglet: ONGLET_PAR_HASH.get(hash) ?? 'aujourdhui', sousVue: LISTE }
+}
+
+const ORIGINES_CONNUES: ReadonlySet<string> = new Set(['aujourdhui', 'recettes', 'semaine', 'frigo'])
+
+/** Origine inconnue ou absente → repli sur `ORIGINE_PAR_DEFAUT` (lien collé, favori, rechargement
+ * d'un hash antérieur à cette fonctionnalité) — comportement actuel, jamais un plantage. */
+function origineDepuisRequete(requete: string | undefined): OrigineRecette {
+  const de = new URLSearchParams(requete ?? '').get('de')
+  return de !== null && ORIGINES_CONNUES.has(de) ? (de as OrigineRecette) : ORIGINE_PAR_DEFAUT
 }
 
 function lireRoute(): Route {
@@ -178,8 +200,10 @@ export function hashDe(onglet: Onglet): string {
   return HASH_PAR_ONGLET[onglet]
 }
 
-export function hashDeRecette(id: string): string {
-  return `${PREFIXE_RECETTE}${encodeURIComponent(id)}`
+/** `origine` omise ou `'recettes'` (le repli par défaut) → hash inchangé, sans suffixe. */
+export function hashDeRecette(id: string, origine?: OrigineRecette): string {
+  const base = `${PREFIXE_RECETTE}${encodeURIComponent(id)}`
+  return origine === undefined || origine === ORIGINE_PAR_DEFAUT ? base : `${base}?de=${origine}`
 }
 
 export function hashDuFrigo(): string {

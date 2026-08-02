@@ -149,7 +149,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
           planifiée dans votre semaine et entrer dans vos courses, comme les autres.
         </p>
         <a
-          href={hashDeRecette(enregistre)}
+          href={hashDeRecette(enregistre, 'recettes')}
           className="mt-5 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white no-underline"
         >
           Voir ma recette

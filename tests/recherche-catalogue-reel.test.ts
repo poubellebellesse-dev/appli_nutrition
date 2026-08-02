@@ -215,14 +215,39 @@ describe('searchByPantry — « vider le frigo » sur le catalogue réel', () =>
       .map(([id]) => id)
   }
 
-  it('CLASSE sans filtrer — un garde-manger maigre ne vide pas la page', () => {
-    // La décision qui structure l'écran : avec quelques ingrédients, aucune recette n'est
-    // intégralement couverte. Filtrer rendrait zéro résultat et ferait croire à une panne.
+  it('ÉCARTE ce qui n’a aucun rapport, sans pour autant vider la page', () => {
+    // ⚠️ Ce test disait l'inverse jusqu'au 2026-08-02 : « CLASSE sans filtrer », par crainte qu'un
+    // filtre rende zéro résultat et fasse croire à une panne. Un essai sur téléphone a tranché
+    // autrement — afficher des plats qui ne partagent RIEN avec le garde-manger est du bruit, et
+    // c'est ce que l'utilisateur a vu en premier. La crainte d'origine ne se réalise pas : deux
+    // ingrédients courants suffisent à garder des dizaines de plats.
     const resultat = moteur.searchByPantry({
       constraints: SANS_CONTRAINTE,
       pantryFoodIds: gardeManger(2),
     })
+    expect(resultat.matches.length).toBeGreaterThan(20)
+    expect(resultat.matches.length).toBeLessThan(catalogue.recipes.size)
+    // Chaque résultat justifie sa présence : partager un ingrédient non optionnel implique une
+    // masse commune, donc une couverture strictement positive. Aucun zéro ne doit passer.
+    for (const match of resultat.matches) expect(match.couverture).toBeGreaterThan(0)
+  })
+
+  it('un garde-manger vide ne filtre RIEN — l’écran reste explorable avant toute saisie', () => {
+    const resultat = moteur.searchByPantry({ constraints: SANS_CONTRAINTE, pantryFoodIds: [] })
     expect(resultat.matches.length).toBe(catalogue.recipes.size)
+  })
+
+  it('un garde-manger réduit aux fonds de placard ne « correspond » à rien', () => {
+    // Sel, poivre et épices sèches sont des ingrédients non optionnels d'une grande part du
+    // catalogue : les compter ferait correspondre 175 recettes sur 241 à un garde-manger vide de
+    // tout vrai aliment — mesuré. Partager du sel n'est pas partager un ingrédient.
+    const placard = [...catalogue.foods.values()].filter((f) => f.fondDePlacard).map((f) => f.id)
+    expect(placard.length).toBeGreaterThan(0)
+    const resultat = moteur.searchByPantry({
+      constraints: SANS_CONTRAINTE,
+      pantryFoodIds: placard,
+    })
+    expect(resultat.matches).toHaveLength(0)
   })
 
   it('trie par couverture décroissante', () => {

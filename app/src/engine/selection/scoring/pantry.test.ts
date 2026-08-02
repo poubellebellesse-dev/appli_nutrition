@@ -1,7 +1,7 @@
 // engine/selection/scoring/pantry.test.ts — couche `pantry`, « vider le frigo » (§10.2 ① ENGINE).
 
 import { describe, expect, it } from 'vitest'
-import { ingredientsManquants, pantryLayer, scorePantry } from './pantry.js'
+import { ingredientsManquants, pantryLayer, partageIngredientNonOptionnel, scorePantry } from './pantry.js'
 import { NEUTRAL_SCORE } from './index.js'
 import { asScoringResult, makeCatalog, makeIngredient, makeRecipe, makeRequest } from '../test-fixtures.js'
 import type { Catalog, FoodId, RecipeId } from '../../domain/index.js'
@@ -69,6 +69,24 @@ describe('scoring/pantry — ingredientsManquants', () => {
 
   it('recette inconnue → liste vide', () => {
     expect(ingredientsManquants('inexistante' as RecipeId, CATALOG, frigo())).toEqual([])
+  })
+})
+
+describe('scoring/pantry — partageIngredientNonOptionnel', () => {
+  it('un ingrédient non optionnel commun suffit', () => {
+    expect(partageIngredientNonOptionnel(BOURGUIGNON.id, CATALOG, frigo('sel'))).toBe(true)
+  })
+
+  it('un ingrédient optionnel seul ne compte pas — c’est le critère du compte, pas de la masse', () => {
+    expect(partageIngredientNonOptionnel(BOURGUIGNON.id, CATALOG, frigo('persil'))).toBe(false)
+  })
+
+  it('rien de commun → false', () => {
+    expect(partageIngredientNonOptionnel(BOURGUIGNON.id, CATALOG, frigo('banane'))).toBe(false)
+  })
+
+  it('recette inconnue → false, pas de plantage', () => {
+    expect(partageIngredientNonOptionnel('inexistante' as RecipeId, CATALOG, frigo('sel'))).toBe(false)
   })
 })
 

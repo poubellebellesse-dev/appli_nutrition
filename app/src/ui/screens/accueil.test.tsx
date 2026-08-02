@@ -64,11 +64,19 @@ const desactive = (texte: string): boolean =>
 const presse = (texte: string): string | null =>
   screen.getByText(texte).closest('button')!.getAttribute('aria-pressed')
 
-/** Traverse l'étape 1 : cocher, puis valider. */
+/** Traverse l'étape 1 : cocher, puis valider. Atterrit sur l'étape d'installation. */
 async function passerLEngagement() {
   clic('J’ai lu et compris')
   await waitFor(() => expect(desactive('J’ai compris')).toBe(false))
   clic('J’ai compris')
+  await screen.findByRole('heading', { name: 'Installez l’application sur votre écran d’accueil' })
+}
+
+/** Traverse l'engagement puis l'installation (« Plus tard », jsdom n'émet jamais `beforeinstallprompt`). */
+async function allerAuxAllergies() {
+  await passerLEngagement()
+  clic('Plus tard')
+  await screen.findByRole('heading', { name: 'Des allergies ?' })
 }
 
 describe('accueil — les quatre engagements', () => {
@@ -108,9 +116,11 @@ describe('accueil — revenir en arrière', () => {
     // LE DÉFAUT QUE CE TEST GARDE. `compris` était un état local d'`Engagement` ; revenir le
     // remettait à faux, le bouton se redésactivait, et le parcours était bloqué.
     await monterAccueil()
-    await passerLEngagement()
-    await screen.findByRole('heading', { name: 'Des allergies ?' })
+    await allerAuxAllergies()
 
+    clic(RETOUR)
+    // Le retour traverse l'installation avant l'engagement — c'est le pas ajouté.
+    await screen.findByRole('heading', { name: 'Installez l’application sur votre écran d’accueil' })
     clic(RETOUR)
     await screen.findByRole('heading', { name: 'Bienvenue' })
 
@@ -120,8 +130,7 @@ describe('accueil — revenir en arrière', () => {
 
   it('conserve les allergies cochées quand on revient depuis le rythme', async () => {
     await monterAccueil()
-    await passerLEngagement()
-    await screen.findByRole('heading', { name: 'Des allergies ?' })
+    await allerAuxAllergies()
     clic('Gluten')
     clic('Continuer')
 
@@ -138,21 +147,20 @@ describe('accueil — revenir en arrière', () => {
   })
 })
 
-describe('accueil — l’étape d’installation est désactivée', () => {
-  it('l’engagement mène DIRECTEMENT aux allergies, sans passer par « Installez l’application »', async () => {
-    // Désactivée le 2026-08-01, à la demande de l'utilisateur, par `ETAPE_INSTALLATION` dans
-    // accueil.tsx. Le composant `Installation` reste dans le fichier et reste référencé : ce test
-    // garde le CHEMIN, pas la disparition du code.
+describe('accueil — l’étape d’installation est activée', () => {
+  it('l’engagement mène à « Installez l’application », et « Plus tard » aux allergies', async () => {
+    // Réactivée le 2026-08-02, à la demande de l'utilisateur, par `ETAPE_INSTALLATION` dans
+    // accueil.tsx.
     //
-    // ⚠️ Le jour où l'étape est rétablie, c'est ce test qui doit tomber — et c'est voulu. Un
-    // parcours d'introduction qui change de longueur sans que rien ne le signale est exactement le
-    // genre de modification qu'on découvre en production.
+    // ⚠️ Le jour où l'étape est de nouveau désactivée, c'est ce test qui doit tomber — et c'est
+    // voulu. Un parcours d'introduction qui change de longueur sans que rien ne le signale est
+    // exactement le genre de modification qu'on découvre en production.
     await monterAccueil()
     await passerLEngagement()
 
+    expect(screen.getByText(/Installez l’application/)).toBeDefined()
+    clic('Plus tard')
     await screen.findByRole('heading', { name: 'Des allergies ?' })
-    expect(screen.queryByText(/Installez l’application/)).toBeNull()
-    expect(screen.queryByText(/Plus tard/)).toBeNull()
   })
 })
 
@@ -162,8 +170,7 @@ describe('accueil — ce qui part réellement en base', () => {
     await monterAccueil(() => {
       termine = true
     })
-    await passerLEngagement()
-    await screen.findByRole('heading', { name: 'Des allergies ?' })
+    await allerAuxAllergies()
     clic('Gluten')
     clic('Végétarien')
     // ⚠️ RIEN N'EST ÉCRIT À MI-PARCOURS : un parcours abandonné ne doit pas laisser une application
@@ -189,8 +196,7 @@ describe('accueil — ce qui part réellement en base', () => {
     await monterAccueil(() => {
       termine = true
     })
-    await passerLEngagement()
-    await screen.findByRole('heading', { name: 'Des allergies ?' })
+    await allerAuxAllergies()
     // Pré-coché : c'est ce qui prouve que l'écran est parti de l'existant.
     expect(presse('Arachides')).toBe('true')
 

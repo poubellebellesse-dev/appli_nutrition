@@ -212,7 +212,7 @@ export { ARCHETYPE_WEIGHT_OVERRIDES, DEFAULT_ARCHETYPE, archetypeWeightOverride 
 
 export { SIMILARITY_WEIGHT_INGREDIENTS, SIMILARITY_WEIGHT_SENSORY, SIMILARITY_WEIGHT_CUISINE, similarity, buildSimilarityProfiles } from './similarity.js'
 export type { RecipeSimilarityProfile } from './similarity.js'
-export { DEFAULT_MMR_LAMBDA, diversify } from './diversify.js'
+export { DEFAULT_DIVERSIFY_TOLERANCE, DEFAULT_MMR_LAMBDA, diversify } from './diversify.js'
 export type { DiversifiedCandidate } from './diversify.js'
 
 // ------------------------------------------------------------------------------------------

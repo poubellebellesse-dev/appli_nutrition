@@ -27,11 +27,25 @@ import type {
 } from '../../engine/domain/index.js'
 import { readDisplay, readUserState, setFavorite, writeDisplay } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
-import { hashDe, hashDeLEditeur } from '../router.js'
+import type { OrigineRecette } from '../router.js'
+import { hashDe, hashDeLEditeur, hashDuFrigo } from '../router.js'
 import { estRecettePerso } from '../../data/user-recipe.js'
 import { quantiteAffichee } from '../quantites.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
+
+/**
+ * Retour contextuel (§ « Retour contextuel depuis la fiche recette ») : le lien du haut ramène là
+ * d'où l'on vient, avec un libellé qui suit la destination — un libellé qui mentirait serait pire
+ * qu'absent. `origine` vient du hash (`OrigineRecette`, router.tsx), jamais d'un état React : un
+ * rechargement sur `#/recette/xxx?de=aujourdhui` doit continuer de retourner au bon endroit.
+ */
+const RETOUR_PAR_ORIGINE: Readonly<Record<OrigineRecette, { readonly hash: string; readonly libelle: string }>> = {
+  aujourdhui: { hash: hashDe('aujourdhui'), libelle: "← Aujourd'hui" },
+  recettes: { hash: hashDe('recettes'), libelle: '← Toutes les recettes' },
+  semaine: { hash: hashDe('semaine'), libelle: '← Cette semaine' },
+  frigo: { hash: hashDuFrigo(), libelle: '← Vider le frigo' },
+}
 
 interface Vue {
   readonly recette: Recipe
@@ -62,7 +76,14 @@ function energieParPortion(catalogue: Catalog, id: RecipeId): number | null {
   return catalogue.indexes.recipeNutrients.get(id)?.[index] ?? null
 }
 
-export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
+export function DetailRecette({
+  recetteId,
+  origine,
+}: {
+  readonly recetteId: string
+  readonly origine: OrigineRecette
+}) {
+  const retour = RETOUR_PAR_ORIGINE[origine]
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [portions, setPortions] = useState<number | null>(null)
 
@@ -183,10 +204,10 @@ export function DetailRecette({ recetteId }: { readonly recetteId: string }) {
   return (
     <article>
       <a
-        href={hashDe('recettes')}
+        href={retour.hash}
         className="inline-flex min-h-tactile items-center text-[0.95rem] font-semibold text-accent-texte no-underline"
       >
-        ← Toutes les recettes
+        {retour.libelle}
       </a>
 
       {/* ⚠️ §4.3 ARCHITECTURE l'impose : une recette utilisateur est « contenu AUTONOME, hors

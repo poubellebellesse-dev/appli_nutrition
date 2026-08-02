@@ -25,6 +25,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import type { RecipeId } from '../../engine/domain/index.js'
 import { readDisplay, readFavorites, writeDisplay } from '../../data/user-store.js'
 import { AXES_PAR_DEFAUT, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
+import type { OrigineRecette } from '../router.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 
 /**
@@ -47,9 +48,9 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-async function monter(recetteId: string) {
+async function monter(recetteId: string, origine: OrigineRecette = 'recettes') {
   const { DetailRecette } = await import('./detail-recette.js')
-  const resultat = render(<DetailRecette recetteId={recetteId} />)
+  const resultat = render(<DetailRecette recetteId={recetteId} origine={origine} />)
   await screen.findByRole('heading', { level: 1 })
   return resultat
 }
@@ -222,6 +223,34 @@ describe('detail-recette — les origines', () => {
 
     const badge = screen.getByText('francaise')
     expect(badge.querySelector('span[aria-hidden="true"]')?.textContent).toBe('🇫🇷')
+  })
+})
+
+describe('detail-recette — le retour contextuel', () => {
+  it('depuis Aujourd’hui : ramène sur Aujourd’hui, libellé et hash cohérents', async () => {
+    await monter(recetteDeReference().id, 'aujourdhui')
+    // Regex obligatoire : `queryByText('Aujourd'hui')` rend `null` si le libellé réel est
+    // « ← Aujourd'hui » (préfixe), l'assertion passerait pour la mauvaise raison.
+    const lien = screen.getByText(/Aujourd.hui/).closest('a') as HTMLAnchorElement
+    expect(lien.getAttribute('href')).toBe('#/')
+  })
+
+  it('depuis Recettes : ramène sur Recettes', async () => {
+    await monter(recetteDeReference().id, 'recettes')
+    const lien = screen.getByText(/Toutes les recettes/).closest('a') as HTMLAnchorElement
+    expect(lien.getAttribute('href')).toBe('#/recettes')
+  })
+
+  it('depuis la Semaine : ramène sur la Semaine', async () => {
+    await monter(recetteDeReference().id, 'semaine')
+    const lien = screen.getByText(/Cette semaine/).closest('a') as HTMLAnchorElement
+    expect(lien.getAttribute('href')).toBe('#/semaine')
+  })
+
+  it('depuis le Frigo : ramène sur le Frigo', async () => {
+    await monter(recetteDeReference().id, 'frigo')
+    const lien = screen.getByText(/Vider le frigo/).closest('a') as HTMLAnchorElement
+    expect(lien.getAttribute('href')).toBe('#/frigo')
   })
 })
 

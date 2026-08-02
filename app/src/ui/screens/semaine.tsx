@@ -665,7 +665,7 @@ function Creneau({
         {nom === null || recipeId === null ? (
           <span className="text-attenue">Aucun plat</span>
         ) : (
-          <a href={hashDeRecette(recipeId)} className="text-texte no-underline">
+          <a href={hashDeRecette(recipeId, 'semaine')} className="text-texte no-underline">
             {nom}
           </a>
         )}

@@ -50,18 +50,20 @@ export { VERSION_CONSENTEMENT } from '../texte-consentement.js'
 type Etape = 1 | 2 | 3 | 5
 
 /**
- * L'étape « Installez l'application sur votre écran d'accueil » est DÉSACTIVÉE, pas supprimée
- * (demande du 2026-08-01 : « désactive juste pour l'instant »).
+ * L'étape « Installez l'application sur votre écran d'accueil ».
  *
- * ⚠️ LE COMPOSANT `Installation` RESTE RÉFÉRENCÉ CI-DESSOUS, exprès. Le sortir du rendu en aurait
- * fait du code mort que le prochain nettoyage aurait supprimé pour de bon — alors que la question
- * est ouverte, pas tranchée. À savoir avant de rouvrir le dossier : l'installation reste NÉCESSAIRE
- * aux rappels de préparation (hors application installée, aucune notification programmée n'existe,
- * voir `ui/notifications.ts`), et c'est le seul endroit du produit qui l'explique aujourd'hui.
+ * Désactivée le 2026-08-01 (« désactive juste pour l'instant »), RÉTABLIE le 2026-08-02 après un
+ * essai sur téléphone : elle est le SEUL endroit du produit qui explique l'installation, et sans
+ * elle personne ne l'atteint. Or c'est l'installation qui fait accorder le stockage persistant —
+ * sans elle, le navigateur peut effacer la base, et l'appli n'a plus qu'un bandeau à opposer.
+ * Elle reste aussi NÉCESSAIRE aux rappels de préparation : hors application installée, aucune
+ * notification programmée n'existe (voir `ui/notifications.ts`).
  *
- * Repasser à `true` suffit à la rétablir, à sa place d'origine, avec son retour arrière.
+ * ⚠️ Ne pas la supprimer si elle est un jour redésactivée : la laisser référencée ci-dessous est ce
+ * qui l'a gardée réactivable en une ligne. Le composant `Installation` gère deux chemins — le
+ * bouton réel sous Chromium, les instructions manuelles sous Safari, qui n'a aucune API.
  */
-const ETAPE_INSTALLATION = false
+const ETAPE_INSTALLATION = true
 
 /**
  * Les étapes réellement traversées, dans l'ordre.

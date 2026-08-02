@@ -114,6 +114,34 @@ describe('aujourdhui — l’encart d’aide', () => {
     expect(screen.getByText('Léger').getAttribute('aria-pressed')).toBe('true')
   })
 
+  it('ne s’ouvre PAS après un aller-retour répété entre les deux mêmes plats', async () => {
+    // C'est quelqu'un qui compare deux plats, pas quelqu'un de perdu : `vues` ne grossit pas au-delà
+    // des deux recettes distinctes visitées, même après beaucoup de gestes.
+    await monter()
+    for (let i = 0; i < 10; i++) {
+      fireEvent.click(bouton(/Suivant/))
+      await waitFor(() => expect(compteur()).toMatch(/^2 sur /))
+      fireEvent.click(bouton(/Précédent/))
+      await waitFor(() => expect(compteur()).toMatch(/^1 sur /))
+    }
+    expect(screen.queryByText(/^Dites-moi ce que vous cherchez$/)).not.toBeNull()
+    expect(screen.queryByText(/Rien n'est obligatoire/)).toBeNull()
+  })
+
+  it('choisir un plat remet le compteur d’indécision à zéro', async () => {
+    await monter()
+    for (let i = 0; i < 7; i++) fireEvent.click(bouton(/Suivant/))
+    await screen.findByText(/Rien n'est obligatoire/)
+
+    fireEvent.click(bouton(/J'ai choisi ce plat/))
+    await waitFor(() => expect(screen.queryByText(/Rien n'est obligatoire/)).toBeNull())
+
+    // Sept nouveaux plats distincts après le choix redéclenchent l'encart : la remise à zéro n'est
+    // pas définitive.
+    for (let i = 0; i < 7; i++) fireEvent.click(bouton(/Suivant/))
+    await screen.findByText(/Rien n'est obligatoire/)
+  })
+
   it('ne propose QUE des axes que le moteur sait lire', async () => {
     // Une pastille qui ne piloterait aucune couche donnerait le sentiment d'avoir été écouté sans
     // l'être. Les trois axes sont exactement ceux de `CravingAxes`.
@@ -127,6 +155,36 @@ describe('aujourdhui — l’encart d’aide', () => {
       'Chaud ou froid ?',
       'Salé ou sucré ?',
     ])
+  })
+})
+
+describe('aujourdhui — proposer autre chose', () => {
+  it('change effectivement la liste et remet la position à 0', async () => {
+    await monter()
+
+    // Toutes les recettes de la 1ère liste (pas seulement le 1er plat) : on avance jusqu'au bout.
+    const premiereListe: string[] = [platAffiche()]
+    let position = 1
+    while (!bouton(/Suivant/).disabled) {
+      fireEvent.click(bouton(/Suivant/))
+      position++
+      await waitFor(() => expect(compteur()).toMatch(new RegExp(`^${position} sur `)))
+      premiereListe.push(platAffiche())
+    }
+
+    fireEvent.click(bouton(/Proposer autre chose/))
+    await waitFor(() => expect(compteur()).toMatch(/^1 sur /))
+
+    const secondeListe: string[] = [platAffiche()]
+    position = 1
+    while (!bouton(/Suivant/).disabled) {
+      fireEvent.click(bouton(/Suivant/))
+      position++
+      await waitFor(() => expect(compteur()).toMatch(new RegExp(`^${position} sur `)))
+      secondeListe.push(platAffiche())
+    }
+
+    expect(secondeListe).not.toEqual(premiereListe)
   })
 })
 

@@ -70,6 +70,35 @@ export function ingredientsManquants(
     .map((i) => i.foodId)
 }
 
+/**
+ * Recette et garde-manger partagent-ils au moins un ingrédient NON optionnel qui ne soit pas un
+ * fond de placard ?
+ *
+ * ⚠️ CRITÈRE DE COMPTE, PAS DE MASSE — contrairement à `scorePantry`. Une recette qui ne partage
+ * qu'un ingrédient léger aurait une couverture non nulle mais quasi invisible en flottant : elle
+ * resterait affichée sans qu'on puisse s'en apercevoir. Le compte est aussi ce que l'écran montre
+ * (« x ingrédients sur y »), donc le critère qui filtre est celui qui s'explique.
+ *
+ * ⚠️ LES FONDS DE PLACARD NE COMPTENT PAS, et c'est ce qui fait tenir le filtre. `sel_fin` est un
+ * ingrédient non optionnel d'une grande part du catalogue : le compter ferait « correspondre » 175
+ * recettes sur 241 à un garde-manger réduit au sel et au poivre — mesuré. Or partager du sel avec
+ * quelqu'un n'est pas partager un ingrédient : c'est précisément ce que `Food.fondDePlacard`
+ * signifie, « tout le monde en a déjà » (§4 décision 41, qui l'écarte aussi de la liste de courses).
+ * Un garde-manger qui n'en contient que rend donc zéro résultat — et l'écran invite à ajouter un
+ * vrai aliment, ce qui est la réponse juste.
+ */
+export function partageIngredientNonOptionnel(
+  recipeId: RecipeId,
+  catalog: Catalog,
+  pantry: ReadonlySet<FoodId>
+): boolean {
+  const recette = catalog.recipes.get(recipeId)
+  if (recette === undefined) return false
+  return recette.ingredients.some(
+    (i) => !i.optionnel && pantry.has(i.foodId) && catalog.foods.get(i.foodId)?.fondDePlacard !== true
+  )
+}
+
 // ------------------------------------------------------------------------------------------
 // Couche `pantry` (§6.2 ENGINE) — `defaultWeight: 0.05`, un bonus MODÉRÉ en mode normal.
 //
