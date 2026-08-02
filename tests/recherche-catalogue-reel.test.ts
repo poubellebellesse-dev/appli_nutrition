@@ -17,8 +17,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadCatalog } from '../app/src/data/catalog-loader-node.js'
 import { createEngine, type Engine } from '../app/src/engine/api/index.js'
-import { normaliser, valeursDeFacette } from '../app/src/engine/search/index.js'
-import type { AllergenId, Catalog, FacetteKind, FoodId, RecipeId } from '../app/src/engine/domain/index.js'
+import { normaliser, valeursDeEnvergure, valeursDeFacette, valeursDeService } from '../app/src/engine/search/index.js'
+import type { AllergenId, Catalog, CourseKind, FacetteKind, FoodId, RecipeId } from '../app/src/engine/domain/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..')
@@ -135,6 +135,73 @@ describe('browseRecipes — filtres de facettes', () => {
     for (let i = 1; i < styles.length; i++) {
       expect(styles[i - 1]!.nombre).toBeGreaterThanOrEqual(styles[i]!.nombre)
     }
+  })
+})
+
+describe('browseRecipes — filtres de service et d’envergure, hors facette', () => {
+  it('filtre par service, valeurs réellement présentes au catalogue', () => {
+    const services = valeursDeService(catalogue)
+    // ⚠️ Garde contre `it.each([])` : si `services` était vide, la boucle ci-dessous ne
+    // vérifierait rien et laisserait la suite verte sans avoir prouvé quoi que ce soit.
+    expect(services.length).toBeGreaterThan(0)
+
+    for (const { valeur, nombre } of services) {
+      const resultat = moteur.browseRecipes({
+        constraints: SANS_CONTRAINTE,
+        services: [valeur],
+      })
+      expect(resultat.recipeIds.length).toBe(nombre)
+      for (const id of resultat.recipeIds) {
+        expect(catalogue.recipes.get(id)?.service).toBe(valeur)
+      }
+    }
+  })
+
+  it('« plat » rend ~144 recettes et AUCUNE dont le service diffère', () => {
+    const resultat = moteur.browseRecipes({ constraints: SANS_CONTRAINTE, services: ['plat' as CourseKind] })
+    expect(resultat.recipeIds.length).toBeGreaterThan(100)
+    for (const id of resultat.recipeIds) {
+      expect(catalogue.recipes.get(id)?.service).toBe('plat')
+    }
+  })
+
+  it('⛔ « fromage » — 0 recette au catalogue — n’est PAS une valeur proposée', () => {
+    // Leçon documentée du projet : une liste recopiée ne détecte pas ce qui manque à l'original.
+    // `valeursDeService` est dérivée du catalogue ; `fromage` ne doit donc apparaître nulle part.
+    const services = valeursDeService(catalogue)
+    expect(services.some((s) => s.valeur === 'fromage')).toBe(false)
+  })
+
+  it('combine deux services en OU', () => {
+    const services = valeursDeService(catalogue)
+    const [a, b] = [services[0]!, services[1]!]
+    const resultat = moteur.browseRecipes({ constraints: SANS_CONTRAINTE, services: [a.valeur, b.valeur] })
+    expect(resultat.recipeIds.length).toBe(a.nombre + b.nombre)
+  })
+
+  it('filtre par envergure, valeurs réellement présentes au catalogue', () => {
+    const envergures = valeursDeEnvergure(catalogue)
+    expect(envergures.length).toBeGreaterThan(0)
+    const premiere = envergures[0]!
+    const resultat = moteur.browseRecipes({
+      constraints: SANS_CONTRAINTE,
+      envergures: [premiere.valeur],
+    })
+    expect(resultat.recipeIds.length).toBe(premiere.nombre)
+  })
+
+  it('combine service ET envergure en ET — plus restrictif que chacun seul', () => {
+    const services = valeursDeService(catalogue)
+    const envergures = valeursDeEnvergure(catalogue)
+    const service = services[0]!
+    const envergure = envergures[0]!
+    const combine = moteur.browseRecipes({
+      constraints: SANS_CONTRAINTE,
+      services: [service.valeur],
+      envergures: [envergure.valeur],
+    })
+    expect(combine.recipeIds.length).toBeLessThanOrEqual(service.nombre)
+    expect(combine.recipeIds.length).toBeLessThanOrEqual(envergure.nombre)
   })
 })
 

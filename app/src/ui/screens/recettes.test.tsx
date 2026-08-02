@@ -17,7 +17,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 import type { AllergenId, FacetteKind, RecipeId } from '../../engine/domain/index.js'
-import { valeursDeFacette } from '../../engine/search/index.js'
+import { valeursDeEnvergure, valeursDeFacette, valeursDeService } from '../../engine/search/index.js'
 import { writeAllergies, writeDiet } from '../../data/user-store.js'
 import {
   AXES_PAR_DEFAUT,
@@ -124,46 +124,46 @@ describe('recettes — le filtre temps', () => {
   })
 })
 
-describe('recettes — le panneau « Filtres »', () => {
-  // ⚠️ Le libellé « Cuisine » existe potentiellement DEUX FOIS dans le DOM quand le panneau est
-  // ouvert : une fois dans les pastilles capées de l'écran, une fois dans celles, complètes, du
-  // panneau (portail vers `document.body`). `within(racine)` cible explicitement l'un ou l'autre —
-  // sans ça, `screen.getByText` lèverait pour ambiguïté.
-  function pastillesDe(racine: HTMLElement, titre: string): HTMLButtonElement[] {
-    const fieldset = within(racine).getByText(titre).closest('fieldset') as HTMLElement
-    return [...fieldset.querySelectorAll('button')]
-  }
-
-  it('ouvre une fenêtre avec toutes les valeurs de la facette, « Retour » revient à l’écran avec 5 pastilles', async () => {
-    const ecran = await monter()
-    const totalCuisines = valeursDeFacette(catalogueDeTest(), 'cuisine' as FacetteKind).length
-    expect(totalCuisines).toBeGreaterThan(5) // sinon panneau et écran principal montrent la même liste
-
-    expect(pastillesDe(ecran, 'Cuisine').length).toBeLessThanOrEqual(5)
-    expect(screen.queryByRole('dialog')).toBeNull()
-
-    // ⚠️ `aria-haspopup="dialog"`, PAS `aria-expanded` : ce bouton n'agrandit rien en place, il
-    // ouvre une fenêtre. L'état « ouvert » se lit donc sur la PRÉSENCE du dialogue, jamais sur un
-    // attribut du déclencheur — un attribut qui resterait juste sans que la fenêtre s'ouvre serait
-    // un test vert pour rien.
-    const boutonPlus = screen.getByRole('button', { name: 'Plus de filtres' })
-    expect(boutonPlus.getAttribute('aria-haspopup')).toBe('dialog')
-    fireEvent.click(boutonPlus)
-
-    const panneau = await screen.findByRole('dialog', { name: 'Filtres' })
-    expect(pastillesDe(panneau, 'Cuisine').length).toBe(totalCuisines)
-
-    // Le bouton de retour porte « ← Retour » : une regex évite qu'une correspondance exacte sur
-    // « Retour » échoue à cause du chevron accolé (piège déjà rencontré sur ce projet).
-    fireEvent.click(within(panneau).getByRole('button', { name: /Retour/ }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect(pastillesDe(ecran, 'Cuisine').length).toBeLessThanOrEqual(5)
+describe('recettes — chaque axe filtrable ouvre SA propre fenêtre', () => {
+  // Retour d'essai explicite : « la cuisine est à deux gestes ». Cuisine, Régime et Service sont
+  // maintenant en ACCÈS DIRECT sur l'écran — un bouton, une fenêtre, un geste.
+  const AXES_DIRECTS: readonly { readonly titre: string; readonly total: () => number }[] = [
+    { titre: 'Cuisine', total: () => valeursDeFacette(catalogueDeTest(), 'cuisine' as FacetteKind).length },
+    { titre: 'Régime', total: () => valeursDeFacette(catalogueDeTest(), 'regime' as FacetteKind).length },
+    { titre: 'Service', total: () => valeursDeService(catalogueDeTest()).length },
+  ]
+  it('⛔ garde contre un `it.each([])` qui laisserait la suite verte sans avoir rien exercé', () => {
+    expect(AXES_DIRECTS.length).toBe(3)
   })
 
-  it('est un portail : ouvrir le panneau n’allonge pas la liste de recettes en dessous', async () => {
+  it.each(AXES_DIRECTS)(
+    '« $titre » ouvre un dialogue à son nom, listant TOUTES ses valeurs',
+    async ({ titre, total }) => {
+      await monter()
+      expect(total()).toBeGreaterThan(0)
+      expect(screen.queryByRole('dialog')).toBeNull()
+
+      // ⚠️ `aria-haspopup="dialog"`, PAS `aria-expanded` : ce bouton n'agrandit rien en place.
+      const bouton = screen.getByRole('button', { name: new RegExp(`^${titre}`) })
+      expect(bouton.getAttribute('aria-haspopup')).toBe('dialog')
+      fireEvent.click(bouton)
+
+      const panneau = await screen.findByRole('dialog', { name: titre })
+      // ⚠️ PAS `within(panneau).getByText(titre)` : le TITRE de la fenêtre (son `<h2>`) porte le
+      // même texte que la légende du fieldset qu'elle contient — deux axes, un seul fieldset dans
+      // ce panneau, donc `querySelector` suffit sans ambiguïté.
+      const fieldset = panneau.querySelector('fieldset') as HTMLElement
+      expect(fieldset.querySelectorAll('button').length).toBe(total())
+
+      fireEvent.click(within(panneau).getByRole('button', { name: /Retour/ }))
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    }
+  )
+
+  it('est un portail : ouvrir une fenêtre n’allonge pas la liste de recettes en dessous', async () => {
     await monter()
-    fireEvent.click(screen.getByRole('button', { name: 'Plus de filtres' }))
-    const panneau = await screen.findByRole('dialog', { name: 'Filtres' })
+    fireEvent.click(screen.getByRole('button', { name: /^Cuisine/ }))
+    const panneau = await screen.findByRole('dialog', { name: 'Cuisine' })
 
     // Un `fixed` posé dans le flux normal se serait retrouvé sous un ancêtre de la page ; le
     // portail le place en enfant DIRECT de `document.body`, hors de la `<ul>` des recettes.
@@ -172,25 +172,112 @@ describe('recettes — le panneau « Filtres »', () => {
   })
 })
 
+describe('recettes — « Plus de filtres » = D’AUTRES filtres, jamais les mêmes', () => {
+  // ⛔ Le défaut rapporté explicitement : « Plus de filtres » affichait les DEUX MÊMES facettes que
+  // l'écran, seulement complètes. Ici il doit contenir Style, Occasion et Envergure — jamais
+  // Cuisine, Régime ni Service, déjà en accès direct.
+  it('contient Style, Occasion, Envergure — et AUCUN des axes en accès direct', async () => {
+    await monter()
+    fireEvent.click(screen.getByRole('button', { name: 'Plus de filtres' }))
+    const panneau = await screen.findByRole('dialog', { name: 'Plus de filtres' })
+
+    expect(within(panneau).getByText('Style')).toBeDefined()
+    expect(within(panneau).getByText('Occasion')).toBeDefined()
+    expect(within(panneau).getByText('Envergure')).toBeDefined()
+
+    // Assertions d'ABSENCE en regex ancrée : un `getByText` exact aurait laissé passer un libellé
+    // partiel (« Cuisine régionale ») sans rien prouver de l'absence réelle du fieldset « Cuisine ».
+    expect(within(panneau).queryByText(/^Cuisine$/)).toBeNull()
+    expect(within(panneau).queryByText(/^Régime$/)).toBeNull()
+    expect(within(panneau).queryByText(/^Service$/)).toBeNull()
+  })
+
+  it('⛔ « Fromage » — 0 recette au catalogue — n’apparaît dans aucune fenêtre', async () => {
+    // Dérivé des données, pas d'une liste écrite à la main — la leçon documentée du projet.
+    const services = valeursDeService(catalogueDeTest())
+    expect(services.length).toBeGreaterThan(0)
+    expect(services.some((s) => s.valeur === 'fromage')).toBe(false)
+
+    await monter()
+    fireEvent.click(screen.getByRole('button', { name: /^Service/ }))
+    const panneau = await screen.findByRole('dialog', { name: 'Service' })
+    expect(within(panneau).queryByText(/Fromage/)).toBeNull()
+  })
+})
+
 describe('recettes — filtrer par cuisine réduit vraiment la liste', () => {
-  it('une pastille choisie restreint le résultat, la retirer le restaure', async () => {
+  it('une pastille choisie dans la fenêtre Cuisine restreint le résultat, la retirer le restaure', async () => {
     await monter()
     const avant = idsAffiches().length
 
-    const fieldset = screen.getByText('Cuisine').closest('fieldset') as HTMLElement
-    // Les cinq pastilles visibles au départ sont les plus fréquentes (comptes triés) : aucune n'est
-    // à zéro, donc aucune n'est désactivée — la première suffit.
-    const pastille = fieldset.querySelector('button') as HTMLButtonElement
+    fireEvent.click(screen.getByRole('button', { name: /^Cuisine/ }))
+    const panneau = await screen.findByRole('dialog', { name: 'Cuisine' })
+    // Un seul fieldset dans ce panneau — voir la note du bloc précédent sur l'ambiguïté du texte.
+    const fieldset = panneau.querySelector('fieldset') as HTMLElement
+    // Au moins une pastille du catalogue réel n'est pas à zéro (241 recettes) — la première suffit.
+    const pastille = fieldset.querySelector('button:not([disabled])') as HTMLButtonElement
     expect(pastille.getAttribute('aria-pressed')).toBe('false')
 
     fireEvent.click(pastille)
     await waitFor(() => expect(pastille.getAttribute('aria-pressed')).toBe('true'))
+
+    fireEvent.click(within(panneau).getByRole('button', { name: /Retour/ }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
     const apres = idsAffiches().length
     expect(apres).toBeGreaterThan(0)
     expect(apres).toBeLessThan(avant)
 
-    fireEvent.click(pastille)
+    // ⚠️ Le bouton annonce désormais son propre compte — sans lui, savoir qu'un filtre est actif
+    // demanderait de rouvrir la fenêtre.
+    expect(screen.getByRole('button', { name: /^Cuisine · 1$/ })).toBeDefined()
+
+    fireEvent.click(screen.getByRole('button', { name: /^Cuisine/ }))
+    const panneau2 = await screen.findByRole('dialog', { name: 'Cuisine' })
+    const fieldset2 = panneau2.querySelector('fieldset') as HTMLElement
+    fireEvent.click(fieldset2.querySelector('button[aria-pressed="true"]') as HTMLButtonElement)
     await waitFor(() => expect(idsAffiches().length).toBe(avant))
+  })
+})
+
+describe('recettes — filtrer par service (entrée/plat/dessert…)', () => {
+  it('choisir « Plat » ne laisse à l’écran que des recettes dont le service est PLAT', async () => {
+    await monter()
+    fireEvent.click(screen.getByRole('button', { name: /^Service/ }))
+    const panneau = await screen.findByRole('dialog', { name: 'Service' })
+    fireEvent.click(within(panneau).getByRole('button', { name: /^Plat \(\d+\)$/ }))
+    fireEvent.click(within(panneau).getByRole('button', { name: /Retour/ }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
+    const catalogue = catalogueDeTest()
+    const ids = idsAffiches()
+    expect(ids.length).toBeGreaterThan(0)
+    for (const id of ids) {
+      expect(catalogue.recipes.get(id as RecipeId)?.service).toBe('plat')
+    }
+  })
+})
+
+describe('recettes — filtrer par envergure, derrière « Plus de filtres »', () => {
+  it('choisir une envergure ne laisse que les recettes de cette envergure', async () => {
+    await monter()
+    const envergures = valeursDeEnvergure(catalogueDeTest())
+    expect(envergures.length).toBeGreaterThan(0)
+    const cible = envergures[0]!
+
+    fireEvent.click(screen.getByRole('button', { name: 'Plus de filtres' }))
+    const panneau = await screen.findByRole('dialog', { name: 'Plus de filtres' })
+    const fieldset = within(panneau).getByText('Envergure').closest('fieldset') as HTMLElement
+    fireEvent.click(within(fieldset).getByRole('button', { name: new RegExp(`\\(${cible.nombre}\\)$`) }))
+    fireEvent.click(within(panneau).getByRole('button', { name: /Retour/ }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
+    const catalogue = catalogueDeTest()
+    const ids = idsAffiches()
+    expect(ids.length).toBe(cible.nombre)
+    for (const id of ids) {
+      expect(catalogue.recipes.get(id as RecipeId)?.envergure).toBe(cible.valeur)
+    }
   })
 })
 

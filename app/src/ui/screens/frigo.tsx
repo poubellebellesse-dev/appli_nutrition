@@ -28,13 +28,18 @@ import { readUserState, writePantry } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import { hashDe, hashDeRecette } from '../router.js'
 import {
+  COMPTES_VIDES,
   FILTRES_VIDES,
   FiltresActifs,
   FiltresRecettes,
   aucunFiltre,
+  compterEnvergure,
+  compterService,
   compterValeurs,
   facettesDe,
+  sansEnvergure,
   sansFacette,
+  sansService,
   type Comptes,
   type FiltresRecette,
 } from '../filtres-recettes.js'
@@ -42,8 +47,14 @@ import {
 /** Combien de raccourcis par famille. Au-delà, la grille devient une liste et ne rend plus service. */
 const RACCOURCIS_PAR_FAMILLE = 8
 
-/** Facettes filtrables — les mêmes que l'écran Recettes (§4.4). */
-const FACETTES: readonly FacetteKind[] = ['cuisine' as FacetteKind, 'style' as FacetteKind]
+/** Facettes filtrables — les mêmes que l'écran Recettes (§4.4). Service et envergure ne sont pas
+ *  des facettes, voir l'en-tête de `filtres-recettes.tsx`. */
+const FACETTES: readonly FacetteKind[] = [
+  'cuisine' as FacetteKind,
+  'regime' as FacetteKind,
+  'style' as FacetteKind,
+  'occasion' as FacetteKind,
+]
 
 /** Combien de résultats afficher. La liste est classée : au-delà, la couverture devient dérisoire. */
 const RESULTATS_AFFICHES = 30
@@ -110,7 +121,6 @@ export function Frigo() {
   const [saisie, setSaisie] = useState('')
   const [realisablesSeules, setRealisablesSeules] = useState(false)
   const [filtres, setFiltres] = useState<FiltresRecette>(FILTRES_VIDES)
-  const [panneauFiltresOuvert, setPanneauFiltresOuvert] = useState(false)
 
   useEffect(() => {
     let annule = false
@@ -168,6 +178,8 @@ export function Frigo() {
         seulementRealisables: realisablesSeules,
         facettes: facettesDe(actifs),
         tempsMaxMin: actifs.tempsMaxMin,
+        services: actifs.services,
+        envergures: actifs.envergures,
       }),
     [garde, realisablesSeules]
   )
@@ -179,7 +191,7 @@ export function Frigo() {
 
   /** Comptes dynamiques, chaque facette calculée SANS sa propre sélection — voir l'écran Recettes. */
   const comptes: Comptes = useMemo(() => {
-    if (etat.phase !== 'pret' || garde.length === 0) return new Map()
+    if (etat.phase !== 'pret' || garde.length === 0) return COMPTES_VIDES
     const parFacette = new Map<FacetteKind, ReadonlyMap<string, number>>()
     for (const facette of FACETTES) {
       const sansElle = interroger(etat.socle, sansFacette(filtres, facette))
@@ -192,7 +204,13 @@ export function Frigo() {
         )
       )
     }
-    return parFacette
+    const sansServiceR = interroger(etat.socle, sansService(filtres))
+    const sansEnvergureR = interroger(etat.socle, sansEnvergure(filtres))
+    return {
+      facettes: parFacette,
+      services: compterService(etat.socle.catalogue, sansServiceR.matches.map((m) => m.recipeId)),
+      envergures: compterEnvergure(etat.socle.catalogue, sansEnvergureR.matches.map((m) => m.recipeId)),
+    }
   }, [etat, garde, filtres, interroger])
 
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement…</p>
@@ -280,9 +298,7 @@ export function Frigo() {
             catalogue={socle.catalogue}
             filtres={filtres}
             comptes={comptes}
-            panneauOuvert={panneauFiltresOuvert}
             onChange={setFiltres}
-            onBasculerPanneau={() => setPanneauFiltresOuvert((v) => !v)}
           />
 
           {!aucunFiltre(filtres) && (

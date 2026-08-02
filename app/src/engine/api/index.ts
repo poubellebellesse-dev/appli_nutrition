@@ -20,12 +20,14 @@
 import type {
   AlternativeSuggestion,
   Catalog,
+  CourseKind,
   EngineDiagnostics,
   ExclusionLayerId,
   FoodId,
   HardConstraints,
   PipelineTrace,
   PlanWarning,
+  RecipeEnvergure,
   RecipeId,
   RejectionSummary,
   RerollOptions,
@@ -471,6 +473,9 @@ export interface BrowseRequest {
   readonly texte?: string
   readonly facettes?: FiltresFacettes
   readonly tempsMaxMin?: number | null
+  /** Rôle dans le repas et registre du plat — mêmes axes que `CritereRecherche`, hors facettes. */
+  readonly services?: readonly CourseKind[]
+  readonly envergures?: readonly RecipeEnvergure[]
   /** Section « Mes favoris » de §4.4 : restreint aux seuls favoris quand `onlyFavorites` est vrai. */
   readonly favoriteRecipeIds?: ReadonlySet<RecipeId>
   readonly onlyFavorites?: boolean
@@ -505,6 +510,9 @@ export interface PantryRequest {
    */
   readonly facettes?: FiltresFacettes
   readonly tempsMaxMin?: number | null
+  /** Mêmes axes que `BrowseRequest` — « les mêmes filtres que Recettes » (§4.5). */
+  readonly services?: readonly CourseKind[]
+  readonly envergures?: readonly RecipeEnvergure[]
 }
 
 export interface PantryMatch {
@@ -670,6 +678,8 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
         ...(req.texte === undefined ? {} : { texte: req.texte }),
         ...(req.facettes === undefined ? {} : { facettes: req.facettes }),
         ...(req.tempsMaxMin === undefined ? {} : { tempsMaxMin: req.tempsMaxMin }),
+        ...(req.services === undefined ? {} : { services: req.services }),
+        ...(req.envergures === undefined ? {} : { envergures: req.envergures }),
       })
 
       return {
@@ -713,6 +723,8 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       const retenues = filtrerRecettes(enrichedCatalog, indexRecherche, exclusion.candidates, {
         ...(req.facettes === undefined ? {} : { facettes: req.facettes }),
         ...(req.tempsMaxMin === undefined ? {} : { tempsMaxMin: req.tempsMaxMin }),
+        ...(req.services === undefined ? {} : { services: req.services }),
+        ...(req.envergures === undefined ? {} : { envergures: req.envergures }),
       })
 
       const matches: PantryMatch[] = []

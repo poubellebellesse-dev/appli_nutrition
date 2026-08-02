@@ -32,13 +32,18 @@ import type {
 import { normaliser, valeursDeFacette } from '../../engine/search/index.js'
 import type { BrowseResult, Engine } from '../../engine/api/index.js'
 import {
+  COMPTES_VIDES,
   FILTRES_VIDES,
   FiltresActifs,
   FiltresRecettes,
   aucunFiltre,
+  compterEnvergure,
+  compterService,
   compterValeurs,
   facettesDe,
+  sansEnvergure,
   sansFacette,
+  sansService,
   type Comptes,
   type FiltresRecette,
 } from '../filtres-recettes.js'
@@ -60,8 +65,15 @@ const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
   favoris: 'favoris',
 }
 
-/** Facettes dont l'écran affiche des pastilles — celles qu'il faut compter dynamiquement. */
-const FACETTES: readonly FacetteKind[] = ['cuisine' as FacetteKind, 'style' as FacetteKind]
+/** Les quatre facettes filtrables — celles qu'il faut compter dynamiquement. Service et envergure
+ *  ne sont PAS des facettes (`recette.service`/`recette.envergure`, champs directs) : ils ont leur
+ *  propre comptage, voir `compterService`/`compterEnvergure`. */
+const FACETTES: readonly FacetteKind[] = [
+  'cuisine' as FacetteKind,
+  'regime' as FacetteKind,
+  'style' as FacetteKind,
+  'occasion' as FacetteKind,
+]
 
 /** Ce que cet écran ajoute aux filtres communs à « Recettes » et « Vider le frigo ». */
 interface Filtres {
@@ -94,7 +106,6 @@ type Etat =
 export function Recettes() {
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [filtres, setFiltres] = useState<Filtres>(FILTRES_ECRAN)
-  const [panneauFiltresOuvert, setPanneauFiltresOuvert] = useState(false)
   const [panneauMesRecettesOuvert, setPanneauMesRecettesOuvert] = useState(false)
 
   const rafraichir = useCallback(() => {
@@ -142,6 +153,8 @@ export function Recettes() {
         texte: filtres.texte,
         facettes: facettesDe(commun),
         tempsMaxMin: commun.tempsMaxMin,
+        services: commun.services,
+        envergures: commun.envergures,
         favoriteRecipeIds: socle.favoris,
         onlyFavorites: filtres.favorisSeuls,
       }),
@@ -162,13 +175,19 @@ export function Recettes() {
    * celle qu'on compte — deux requêtes de plus sur 241 recettes, sans conséquence perceptible.
    */
   const comptes: Comptes = useMemo(() => {
-    if (etat.phase !== 'pret') return new Map()
+    if (etat.phase !== 'pret') return COMPTES_VIDES
     const parFacette = new Map<FacetteKind, ReadonlyMap<string, number>>()
     for (const facette of FACETTES) {
       const sansElle = interroger(etat.socle, sansFacette(filtres.commun, facette))
       parFacette.set(facette, compterValeurs(etat.socle.catalogue, sansElle.recipeIds, facette))
     }
-    return parFacette
+    const sansServiceR = interroger(etat.socle, sansService(filtres.commun))
+    const sansEnvergureR = interroger(etat.socle, sansEnvergure(filtres.commun))
+    return {
+      facettes: parFacette,
+      services: compterService(etat.socle.catalogue, sansServiceR.recipeIds),
+      envergures: compterEnvergure(etat.socle.catalogue, sansEnvergureR.recipeIds),
+    }
   }, [etat, filtres.commun, interroger])
 
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement du catalogue…</p>
@@ -248,9 +267,7 @@ export function Recettes() {
         catalogue={socle.catalogue}
         filtres={filtres.commun}
         comptes={comptes}
-        panneauOuvert={panneauFiltresOuvert}
         onChange={(commun) => setFiltres({ ...filtres, commun })}
-        onBasculerPanneau={() => setPanneauFiltresOuvert((v) => !v)}
       />
 
       {!aucunFiltreEcran(filtres) && (

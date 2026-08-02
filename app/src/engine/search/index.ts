@@ -13,7 +13,8 @@
 //
 // Dépendances autorisées : domain/ uniquement — §2/§3 ENGINE.
 
-import type { Catalog, FacetteKind, Recipe, RecipeId } from '../domain/index.js'
+import type { Catalog, CourseKind, FacetteKind, Recipe, RecipeEnvergure, RecipeId } from '../domain/index.js'
+import { COURSE_ORDER } from '../domain/index.js'
 
 /** Marques diacritiques combinantes (U+0300–U+036F), retirées après normalisation NFD. */
 const DIACRITIQUES = /[̀-ͯ]/g
@@ -47,6 +48,14 @@ export interface CritereRecherche {
   readonly facettes?: FiltresFacettes
   /** Durée totale maximale (préparation + cuisson), en minutes. */
   readonly tempsMaxMin?: number | null
+  /**
+   * Rôle dans le repas (`CourseKind`) — axe SÉPARÉ des facettes : `recette.service` n'est pas une
+   * `RecipeFacet`. Absent ou vide = aucun filtrage, même sémantique que `facettes` (OU dedans, non
+   * pertinent entre les deux vu qu'il n'y a qu'un axe ici).
+   */
+  readonly services?: readonly CourseKind[]
+  /** Registre du plat (quotidien/convivial/fête) — même axe séparé, même sémantique OU/vide. */
+  readonly envergures?: readonly RecipeEnvergure[]
 }
 
 /**
@@ -103,6 +112,18 @@ function correspondAuxFacettes(recette: Recipe, facettes: FiltresFacettes): bool
   return true
 }
 
+/** `recette.service` peut être `null` (non renseigné) : il ne correspond alors à AUCUN filtre actif,
+ *  même raisonnement que partout ailleurs (§5.1 bis) — l'absence d'information n'est pas une valeur. */
+function correspondAuService(recette: Recipe, services: readonly CourseKind[]): boolean {
+  if (services.length === 0) return true
+  return recette.service !== null && services.includes(recette.service)
+}
+
+function correspondAEnvergure(recette: Recipe, envergures: readonly RecipeEnvergure[]): boolean {
+  if (envergures.length === 0) return true
+  return envergures.includes(recette.envergure)
+}
+
 /**
  * Filtre `candidats` selon le critère. L'ordre d'entrée est CONSERVÉ — c'est à l'appelant de
  * décider du classement, ce module ne juge pas.
@@ -118,6 +139,8 @@ export function filtrerRecettes(
     .filter((mot) => mot.length > 0)
   const facettes = critere.facettes ?? new Map()
   const tempsMax = critere.tempsMaxMin ?? null
+  const services = critere.services ?? []
+  const envergures = critere.envergures ?? []
 
   const retenues: RecipeId[] = []
   for (const id of candidats) {
@@ -125,6 +148,8 @@ export function filtrerRecettes(
     if (recette === undefined) continue
     if (!correspondAuTexte(index, id, mots)) continue
     if (!correspondAuxFacettes(recette, facettes)) continue
+    if (!correspondAuService(recette, services)) continue
+    if (!correspondAEnvergure(recette, envergures)) continue
     if (tempsMax !== null && dureeTotale(recette) > tempsMax) continue
     retenues.push(id)
   }
@@ -152,4 +177,45 @@ export function valeursDeFacette(
   return [...compte.entries()]
     .map(([valeur, nombre]) => ({ valeur, nombre }))
     .sort((a, b) => b.nombre - a.nombre || a.valeur.localeCompare(b.valeur))
+}
+
+/** Ordre de fête décroissant — le même que celui du type `RecipeEnvergure`, littéral pour ne pas
+ *  dépendre d'un tri de chaînes qui n'a aucun sens sémantique ici. */
+const ORDRE_ENVERGURE: readonly RecipeEnvergure[] = ['quotidien', 'convivial', 'fete']
+
+/**
+ * Valeurs de `service` (`CourseKind`) et `envergure` (`RecipeEnvergure`) réellement présentes au
+ * catalogue, avec leur compte — même garantie que `valeursDeFacette` : ni l'une ni l'autre n'écrit
+ * de liste à la main, donc `fromage` (0 recette au catalogue réel) n'apparaît dans aucune des deux.
+ *
+ * ⚠️ ORDONNÉ PAR L'ORDRE DE SERVICE / DE FÊTE (`COURSE_ORDER`, `ORDRE_ENVERGURE`), PAS PAR
+ * FRÉQUENCE : contrairement à une facette ouverte (cuisine, style…), ces deux axes sont des enums
+ * fermées dont l'ordre naturel — entrée avant plat avant dessert, quotidien avant fête — est plus
+ * lisible qu'un tri par popularité qui les mélangerait.
+ */
+export function valeursDeService(
+  catalog: Catalog
+): readonly { readonly valeur: CourseKind; readonly nombre: number }[] {
+  const compte = new Map<CourseKind, number>()
+  for (const recette of catalog.recipes.values()) {
+    if (recette.service === null) continue
+    compte.set(recette.service, (compte.get(recette.service) ?? 0) + 1)
+  }
+  return COURSE_ORDER.filter((service) => (compte.get(service) ?? 0) > 0).map((valeur) => ({
+    valeur,
+    nombre: compte.get(valeur)!,
+  }))
+}
+
+export function valeursDeEnvergure(
+  catalog: Catalog
+): readonly { readonly valeur: RecipeEnvergure; readonly nombre: number }[] {
+  const compte = new Map<RecipeEnvergure, number>()
+  for (const recette of catalog.recipes.values()) {
+    compte.set(recette.envergure, (compte.get(recette.envergure) ?? 0) + 1)
+  }
+  return ORDRE_ENVERGURE.filter((envergure) => (compte.get(envergure) ?? 0) > 0).map((valeur) => ({
+    valeur,
+    nombre: compte.get(valeur)!,
+  }))
 }

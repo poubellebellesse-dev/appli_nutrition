@@ -16,11 +16,13 @@ import type {
   AllergenId,
   Catalog,
   CatalogIndexes,
+  CourseKind,
   DietCode,
   Food,
   FoodAllergen,
   FoodId,
   Recipe,
+  RecipeEnvergure,
   RecipeFacet,
   RecipeId,
   RecipeIngredient,
@@ -94,6 +96,8 @@ export function makeRecipe(
     readonly tempsCuissonMin?: number
     readonly typesRepas?: Recipe['typesRepas']
     readonly axes?: Recipe['axes']
+    readonly service?: CourseKind | null
+    readonly envergure?: RecipeEnvergure
   } = {}
 ): Recipe {
   return {
@@ -107,13 +111,13 @@ export function makeRecipe(
     imagePath: null,
     typesRepas: overrides.typesRepas ?? ['diner'],
     saisonMois: [],
-    envergure: 'quotidien',
+    envergure: overrides.envergure ?? 'quotidien',
     conservationJours: 1,
     axes: overrides.axes ?? { sucreSale: 0, legerConsistant: 0, chaudFroid: 0, texture: 'test' },
     ingredients: overrides.ingredients ?? [],
     etapes: [],
     facettes: overrides.facettes ?? [],
-    service: null,
+    service: overrides.service ?? null,
     piquant: null,
   }
 }

@@ -70,6 +70,19 @@
     Export : `.nutri-recipe` JSON conforme à §8.7, Web Share API avec repli téléchargement quand
     `canShare` refuse les fichiers. Voir la réserve en §3.
 
+11. **« Plus de filtres » contenait les mêmes filtres que l'écran.** Le reproche était exact et
+    mesurable : le panneau affichait les deux mêmes facettes, seulement complètes. Trois axes
+    filtrables ont été ajoutés au moteur (**service**, **envergure**, et le **régime** qui était déjà
+    indexé mais jamais affiché), et l'écran a été réorganisé : **Cuisine, Régime, Service et Temps en
+    accès direct**, chacun ouvrant sa fenêtre en UN geste ; **Style, Occasion, Envergure** dans
+    « Plus de filtres », qui ne contient donc plus jamais un axe déjà présent à l'écran.
+    ⚠️ **Décision : on n'a rien déplié.** La règle « plus aucun menu déroulant hors de l'accueil »
+    vient de la contrainte d'âge, pas d'un goût. Le vrai reproche — « la cuisine est à deux gestes » —
+    se traite en **retirant un geste**, pas en dépliant.
+    ⚠️ Les valeurs offertes sont **dérivées du catalogue** : `fromage` existe au type `CourseKind`
+    mais **0 recette** le porte, donc il n'est jamais proposé. Trois tests le vérifient depuis les
+    données, aucun depuis une liste écrite à la main.
+
 Et l'étape « Installez l'application », désactivée le 2026-08-01, a été rétablie : elle est le seul
 endroit du produit qui explique l'installation, et c'est l'installation qui fait accorder le stockage
 persistant.
@@ -83,7 +96,23 @@ implémentations divergentes.
 
 ### A. Le système de filtres
 
-Demandé sur **Aujourd'hui**, **Recettes** et **Courses**.
+✅ **L'essentiel est fait** (§1, point 11). Ce qui reste ci-dessous est **bloqué par l'absence de
+donnée**, pas par du travail d'interface.
+
+- ⛔ **Filtrer par `sauce` et `apéro` est IMPOSSIBLE.** `CourseKind` vaut
+  `entree | plat | accompagnement | fromage | dessert` — ni sauce ni apéro, et **aucune recette n'en
+  porte**. Ce filtre suppose d'étendre le type du domaine **et** d'écrire le contenu. Les deux vous
+  appartiennent, et dans cet ordre : un filtre ajouté avant le contenu s'afficherait vide.
+  ⚠️ `fromage` est là pour l'illustrer : la valeur existe au type, **0 recette** la porte, et c'est
+  pourquoi elle n'est pas proposée à l'écran — les valeurs offertes sont dérivées du catalogue.
+- ⛔ **Filtrer par « viande », « gras », « avec ou sans légumes » est IMPOSSIBLE.** Les axes du
+  catalogue sont sucré-salé, léger-consistant, chaud-froid, texture. « Léger » est donc filtrable,
+  « gras » n'a aucune dimension qui le porte. Le dériver des ingrédients (groupe `viandes`,
+  `légumes`) est faisable mais c'est un index nouveau, à décider.
+- **L'écran Aujourd'hui n'est pas touché** : il passe par `suggestMeals` et ses axes d'envie, un
+  autre mécanisme que la recherche à facettes. À unifier ou non — décision ouverte.
+
+Demandé à l'origine sur **Aujourd'hui**, **Recettes** et **Courses** :
 
 - **Filtrer par service** : entrée · plat · dessert · sauce · accompagnement · apéro — et
   « pour **tous** les filtres de l'appli », pas seulement un écran.
@@ -146,9 +175,10 @@ un autre objet, à concevoir avant de coder.
 |---|---|
 | « geste vs flèches → filtre dans les paramètres » | Case à cocher dans Paramètres (`parametres.tsx:277`), lue par `aujourdhui.tsx:189` |
 | « ajouter une complétion quand on tape pour les aliments » | Complétion en place dans l'éditeur de recette (`editeur-recette.tsx:398`) |
+| « il manque les aliments voulus » dans les filtres | **La recherche indexe DÉJÀ les ingrédients** : taper « poulet » trouve les plats qui en contiennent sans le nommer. Testé sur le catalogue réel depuis avant l'essai (`tests/recherche-catalogue-reel.test.ts:72`) |
 
-⚠️ **C'est un signal, pas une anecdote.** Deux fonctions sur une session d'essai, non trouvées par
-quelqu'un qui connaît le produit mieux que personne. Un utilisateur ordinaire, sur un produit qui
+⚠️ **C'est un signal, pas une anecdote.** **Trois** fonctions sur une seule session d'essai, non
+trouvées par quelqu'un qui connaît le produit mieux que personne. Un utilisateur ordinaire, sur un produit qui
 vise une contrainte d'âge, en trouvera moins. Le réflexe naturel — « il suffit de le dire dans le
 tutoriel » — est le mauvais : une fonction qu'il faut enseigner est une fonction mal placée.
 
