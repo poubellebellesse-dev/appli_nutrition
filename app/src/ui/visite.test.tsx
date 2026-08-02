@@ -17,7 +17,7 @@ import { ETAPES_VISITE, Visite } from './visite.js'
 /** Les quatre cibles réelles, à l'identique de ce que `visite.tsx` cible dans l'application. */
 const MARKUP_COMPLET = `
   <nav aria-label="Navigation principale"></nav>
-  <article><div class="flex gap-2"></div></article>
+  <article data-visite="carte-plat"><div data-visite="fleches"></div></article>
   <a href="#/parametres">Paramètres</a>
 `
 
@@ -99,7 +99,7 @@ describe('visite — accessibilité', () => {
 describe('visite — cible introuvable', () => {
   it('⛔ une cible absente du DOM saute l’étape au lieu de planter', () => {
     // L'étape 3 (les flèches) n'existe plus : elle doit être sautée, pas provoquer d'erreur.
-    document.querySelector('article div.flex.gap-2')?.remove()
+    document.querySelector('[data-visite="fleches"]')?.remove()
     const onTerminer = vi.fn()
     expect(() => render(<Visite onTerminer={onTerminer} />)).not.toThrow()
 
@@ -127,4 +127,24 @@ describe('visite — cible introuvable', () => {
     expect(screen.getByText('Étape 2 sur 4')).toBeDefined()
     expect(onTerminer).not.toHaveBeenCalled()
   })
+})
+
+describe('visite — chaque cible existe vraiment dans le markup de référence', () => {
+  // ⚠️ DÉRIVÉ DE `ETAPES_VISITE`, PAS RECOPIÉ À LA MAIN. Une liste recopiée ne détecte pas ce qui
+  // manque à l'original : si une étape est ajoutée à `visite.tsx` sans sa cible dans
+  // `MARKUP_COMPLET`, elle serait absente des deux listes et le test resterait vert pour de mauvaises
+  // raisons. `it.each` sur la table elle-même garantit qu'une étape non couverte échoue.
+  //
+  // ⚠️ GARDE CONTRE `it.each([])` : une table vide ne produit AUCUN test, et la suite resterait
+  // verte sans avoir rien vérifié — c'est le piège que ce test existe pour fermer.
+  it('la table des étapes n’est pas vide', () => {
+    expect(ETAPES_VISITE.length).toBeGreaterThan(0)
+  })
+
+  it.each(ETAPES_VISITE.map((etape) => [etape.titre, etape.cible] as const))(
+    '« %s » (%s) correspond à un élément du markup de référence',
+    (_titre, cible) => {
+      expect(document.querySelector(cible)).not.toBeNull()
+    }
+  )
 })

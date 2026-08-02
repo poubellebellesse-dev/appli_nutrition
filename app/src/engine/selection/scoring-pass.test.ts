@@ -18,6 +18,7 @@ import { EngineSafetyError } from '../domain/index.js'
 import type { ArchetypeId, RecipeId, ScoringLayerId } from '../domain/index.js'
 import type { CandidateSet, ScoringLayerResult, SelectionLayer } from './index.js'
 import { NEUTRAL_SCORE } from './scoring/index.js'
+import { mulberry32 } from './prng.js'
 import { SCORING_LAYERS, rankScoredCandidates, runScoringPass } from './scoring-pass.js'
 import { makeCatalog, makeRecipe, makeRequest } from './test-fixtures.js'
 
@@ -205,6 +206,182 @@ describe('selection/scoring-pass — classement déterministe (§6.5 précision 
     ])
 
     expect(rankScoredCandidates(scores).map((r) => r.recipeId)).toEqual(['y', 'z', 'a', 'b'])
+  })
+})
+
+describe('selection/scoring-pass — tirage seedé dans la bande de tolérance (correctif variété)', () => {
+  function scoresOf(entries: readonly [string, number][]): ReadonlyMap<RecipeId, number> {
+    return new Map(entries.map(([id, score]) => [id as RecipeId, score]))
+  }
+
+  it('non-régression : sans `alea`, EXACTEMENT le même résultat qu’avant (score puis id)', () => {
+    const scores = scoresOf([
+      ['z', 0.9],
+      ['b', 0.5],
+      ['a', 0.5],
+      ['y', 0.9],
+    ])
+
+    expect(rankScoredCandidates(scores).map((r) => r.recipeId)).toEqual(['y', 'z', 'a', 'b'])
+  })
+
+  it('non-régression : `tolerance` à 0 (avec `alea` fourni) rend aussi le classement inchangé', () => {
+    const scores = scoresOf([
+      ['a', 0.3],
+      ['b', 0.9],
+      ['c', 0.5],
+    ])
+    const aleaQuiNeDoitJamaisEtreAppele = () => {
+      throw new Error('alea() appelé alors que tolerance <= 0 — le régime déterministe ne doit rien tirer')
+    }
+
+    expect(rankScoredCandidates(scores, aleaQuiNeDoitJamaisEtreAppele, 0).map((r) => r.recipeId)).toEqual([
+      'b',
+      'c',
+      'a',
+    ])
+  })
+
+  it('reproductibilité : même `alea` (même graine) → même résultat à chaque appel', () => {
+    const scores = scoresOf([
+      ['a', 0.80],
+      ['b', 0.79],
+      ['c', 0.78],
+      ['d', 0.50],
+    ])
+    // Générateur déterministe simple, indépendant de `mulberry32` — ce fichier teste
+    // `rankScoredCandidates`, pas le PRNG (voir prng.test.ts pour mulberry32 lui-même).
+    const suite = [0.9, 0.1, 0.5, 0.3]
+    const nextFrom = (valeurs: readonly number[]) => {
+      let i = 0
+      return () => valeurs[i++ % valeurs.length]!
+    }
+
+    const premier = rankScoredCandidates(scores, nextFrom(suite), 0.03)
+    const second = rankScoredCandidates(scores, nextFrom(suite), 0.03)
+    expect(premier).toEqual(second)
+  })
+
+  it('qualité préservée : aucun candidat retenu n’a un score inférieur à meilleur × (1 − tolerance)', () => {
+    const scores = scoresOf([
+      ['a', 1.0],
+      ['b', 0.99],
+      ['c', 0.5], // hors bande à 3 % : ne doit JAMAIS passer devant a/b
+      ['d', 0.4],
+    ])
+    const tolerance = 0.03
+    const meilleur = 1.0
+
+    // Balaie plusieurs tirages possibles (`alea` constant à chaque valeur de [0,1)) : quel que soit
+    // le tirage, le premier retenu reste dans la bande des 3 % du meilleur.
+    for (const valeurAlea of [0, 0.25, 0.5, 0.75, 0.999]) {
+      const ranked = rankScoredCandidates(scores, () => valeurAlea, tolerance)
+      expect(ranked[0]!.score).toBeGreaterThanOrEqual(meilleur * (1 - tolerance))
+    }
+  })
+
+  it('le tirage ne peut PAS faire remonter un candidat hors de la bande devant un meilleur', () => {
+    // `alea` renvoie toujours 0.999 (proche de 1, donc le DERNIER élément de chaque réserve) — le
+    // cas le plus agressif pour faire sortir un mauvais candidat de sa réserve.
+    const scores = scoresOf([
+      ['a', 1.0],
+      ['b', 0.5], // largement hors bande
+    ])
+    const ranked = rankScoredCandidates(scores, () => 0.999, 0.03)
+    expect(ranked.map((r) => r.recipeId)).toEqual(['a', 'b']) // réserve du 1er tour = {a} seul
+  })
+
+  it('même ensemble de candidats en sortie qu’en entrée — le tirage réordonne, ne filtre ni ne duplique', () => {
+    const scores = scoresOf([
+      ['a', 0.9],
+      ['b', 0.895],
+      ['c', 0.89],
+      ['d', 0.3],
+    ])
+    const ranked = rankScoredCandidates(scores, () => 0.5, 0.03)
+    expect(new Set(ranked.map((r) => r.recipeId))).toEqual(new Set(['a', 'b', 'c', 'd']))
+    expect(ranked).toHaveLength(4)
+  })
+
+  it("scénario vérifié à la main : le retrait (au lieu de l'échange) garde le vrai maximum en tête à chaque tour, C ne passe jamais devant A/B", () => {
+    // A=1.00, B=0.985, E=0.975, C=0.965, D=0.50, tolerance=0.03.
+    // Avec l'ANCIEN code (échange) : i=1, pivot = B = 0.985 (A enterré en index 2 par l'échange
+    // précédent) → seuil 0.95545 → C=0.965 entre indûment dans la réserve → C se retrouvait
+    // devant A, alors que la bande de A commence à 0.97 (C est hors bande).
+    // Avec le retrait, `restants[0]` reste TOUJOURS le vrai maximum : la réserve du 1er tour est
+    // exactement {A,B,E} (seuil 0.97, C=0.965 exclu), puis {A,B} (C=0.965 toujours exclu, seuil
+    // recalculé sur A=1.00), puis {A} seul, C n'entre dans aucune réserve avant D.
+    const scores = scoresOf([
+      ['a', 1.0],
+      ['b', 0.985],
+      ['e', 0.975],
+      ['c', 0.965],
+      ['d', 0.5],
+    ])
+    const suite = [0.7, 0.9, 0, 0, 0]
+    let i = 0
+    const alea = () => suite[i++]!
+
+    const ranked = rankScoredCandidates(scores, alea, 0.03)
+
+    expect(ranked.map((r) => r.recipeId)).toEqual(['e', 'b', 'a', 'c', 'd'])
+  })
+
+  it('invariant général : pour tout i < j du résultat, score[i] >= score[j] * (1 - tolerance) — sur plusieurs jeux de scores et 20+ graines mulberry32', () => {
+    const jeuxDeScores: ReadonlyArray<ReadonlyArray<[string, number]>> = [
+      [
+        ['a', 1.0],
+        ['b', 0.985],
+        ['e', 0.975],
+        ['c', 0.965],
+        ['d', 0.5],
+      ],
+      [
+        ['a', 0.9],
+        ['b', 0.895],
+        ['c', 0.89],
+        ['d', 0.3],
+      ],
+      [
+        ['a', 1.0],
+        ['b', 0.99],
+        ['c', 0.98],
+        ['d', 0.97],
+        ['e', 0.96],
+        ['f', 0.95],
+        ['g', 0.5],
+      ],
+    ]
+    const tolerance = 0.03
+
+    for (const jeu of jeuxDeScores) {
+      const scores = scoresOf(jeu)
+      for (let graine = 1; graine <= 20; graine++) {
+        const ranked = rankScoredCandidates(scores, mulberry32(graine), tolerance)
+        for (let i = 0; i < ranked.length; i++) {
+          for (let j = i + 1; j < ranked.length; j++) {
+            expect(ranked[i]!.score).toBeGreaterThanOrEqual(ranked[j]!.score * (1 - tolerance))
+          }
+        }
+      }
+    }
+  })
+
+  it('conservation de l’ensemble : mêmes recipeId qu’en entrée, sans perte ni doublon, sur plusieurs graines', () => {
+    const scores = scoresOf([
+      ['a', 1.0],
+      ['b', 0.985],
+      ['e', 0.975],
+      ['c', 0.965],
+      ['d', 0.5],
+    ])
+    const attendu = new Set(['a', 'b', 'e', 'c', 'd'])
+
+    for (let graine = 1; graine <= 20; graine++) {
+      const ranked = rankScoredCandidates(scores, mulberry32(graine), 0.03)
+      expect(ranked).toHaveLength(5)
+      expect(new Set(ranked.map((r) => r.recipeId))).toEqual(attendu)
+    }
   })
 })
 

@@ -22,6 +22,8 @@ import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
 import { Parametres } from './screens/parametres.js'
 import { EditeurRecette } from './screens/editeur-recette.js'
 import { Navigation } from './navigation.js'
+import { Panneau } from './panneau.js'
+import { Visite } from './visite.js'
 import { chargerSocle } from './socle.js'
 import { aConsenti, readDisplay, writeDisplay } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
@@ -132,6 +134,21 @@ function Coquille() {
    * application déjà configurée.
    */
   const [consenti, setConsenti] = useState<boolean | null>(null)
+  /**
+   * La visite guidée (`ui/visite.tsx`) n'est proposée qu'UNE fois, à la fin de l'intro —
+   * `visite_proposee` (`user_display`, v7) mémorise qu'on l'a déjà fait, accepter ou refuser comptent
+   * pareil. `'aucune'` : rien à montrer. `'invitation'` : la fenêtre qui demande. `'active'` : la
+   * visite tourne.
+   */
+  const [etapeVisite, setEtapeVisite] = useState<'aucune' | 'invitation' | 'active'>('aucune')
+
+  /** Écrit `visite_proposee = 1` puis, selon la réponse, lance la visite ou referme l'invitation. */
+  const repondreInvitation = (accepte: boolean) => {
+    chargerSocle()
+      .then((socle) => writeDisplay(socle.db, { ...readDisplay(socle.db), visiteProposee: true }))
+      .catch(() => undefined)
+    setEtapeVisite(accepte ? 'active' : 'aucune')
+  }
 
   useEffect(() => {
     let annule = false
@@ -180,6 +197,13 @@ function Coquille() {
           onTermine={() => {
             window.location.hash = hashDe('aujourdhui')
             setConsenti(true)
+            // La visite ne se propose qu'une fois (voir `etapeVisite` ci-dessus) : on relit le
+            // drapeau plutôt que de supposer qu'il vaut encore 0.
+            chargerSocle()
+              .then((socle) => {
+                if (!readDisplay(socle.db).visiteProposee) setEtapeVisite('invitation')
+              })
+              .catch(() => undefined)
           }}
         />
       </div>
@@ -227,6 +251,35 @@ function Coquille() {
           <Ecran onglet={route.onglet} sousVue={route.sousVue} />
         </main>
       </div>
+
+      {/* L'invitation à la visite guidée — jamais un dépliant (voir l'en-tête de `panneau.tsx`) : une
+          fenêtre plein écran, comme tout ce qui s'ouvre hors de l'accueil. Pas de déclencheur ici, donc
+          pas d'`aria-haspopup` : elle s'affiche d'elle-même, une fois, à la fin de l'intro. */}
+      {etapeVisite === 'invitation' && (
+        <Panneau titre="Une visite guidée ?" onFermer={() => repondreInvitation(false)}>
+          <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+            Quatre bulles vous montrent où trouver les onglets, le plat du jour, les flèches pour
+            changer de plat et vos réglages. Trente secondes, et vous pouvez la passer à tout moment.
+          </p>
+          <div className="mt-5 flex gap-2">
+            <button
+              type="button"
+              onClick={() => repondreInvitation(false)}
+              className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux"
+            >
+              Non merci
+            </button>
+            <button
+              type="button"
+              onClick={() => repondreInvitation(true)}
+              className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] bg-accent-plein px-4 text-[0.95rem] font-semibold text-white"
+            >
+              Oui, je découvre
+            </button>
+          </div>
+        </Panneau>
+      )}
+      {etapeVisite === 'active' && <Visite onTerminer={() => setEtapeVisite('aucune')} />}
     </>
   )
 }

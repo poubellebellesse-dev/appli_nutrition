@@ -12,25 +12,19 @@
 // plancher calorique. Les tests ci-dessous vérifient ces trois points sur le vrai DOM, plus la
 // chaîne des verrous (§7.2 ENGINE) et le reroll d'un seul créneau (`rerollSlot`), jamais testés.
 //
-// ⚠️ DEUX DÉFAUTS RÉELS TROUVÉS EN ÉCRIVANT CE FICHIER, NON CORRIGÉS (hors périmètre de ce
-// fichier) — signalés au lieu d'être masqués par un test affaibli :
+// ⚠️ DÉFAUT CORRIGÉ (documenté ici jusqu'à sa correction, pour la trace) — le champ `seed`/`graine`
+// était transporté de bout en bout (ui/screens/semaine.tsx → engine/planning/plan-week.ts →
+// engine/api/index.ts) mais n'était LU NULLE PART dans la sélection : aucune trace au-delà d'une
+// recopie en métadonnée. « Proposer une autre semaine » sans aucun verrou pouvait rendre EXACTEMENT
+// le même plan qu'avant. Corrigé par le tirage seedé dans la bande de tolérance de
+// `rankScoredCandidates` (engine/selection/scoring-pass.ts, `DEFAULT_VARIETY_TOLERANCE`) et la
+// dérivation d'un flux par créneau (`derive`, engine/selection/prng.ts, appelée depuis
+// `slotRequest`, plan-week.ts) — voir le test de variété ci-dessous, mesuré sur le catalogue réel.
 //
-//   1. `readLatestPlan` (data/user-store.ts:434-439) trie par `date_debut DESC, id DESC`, et
-//      `planWeek` construit l'id en `plan-${startDate}-${days}` (engine/planning/plan-week.ts:240).
-//      Changer le nombre de jours SANS changer de date (le cas courant : `startDate` est toujours
-//      « aujourd'hui ») crée une DEUXIÈME ligne dans `meal_plan` au lieu de remplacer la première —
-//      les deux partagent `date_debut`, et le tri retombe sur l'id, comparé comme du texte :
-//      « plan-2026-08-01-7 » > « plan-2026-08-01-3 » lexicographiquement. `readLatestPlan` peut
-//      donc rendre l'ANCIEN plan après un changement de jours. L'écran affiche correctement l'état
-//      courant (React ne repasse pas par la base), mais un rechargement de page rouvrirait le
-//      mauvais plan.
-//   2. Le champ `seed`/`graine` est transporté de bout en bout (ui/screens/semaine.tsx →
-//      engine/planning/plan-week.ts:243 → engine/api/index.ts:435) mais n'est LU NULLE PART dans la
-//      sélection (`engine/selection/*`) : aucune trace au-delà d'une recopie en métadonnée.
-//      Conséquence : « Proposer une autre semaine » sans aucun verrou peut rendre EXACTEMENT le
-//      même plan qu'avant, la sélection étant par ailleurs déterministe (profil, historique,
-//      contraintes inchangés). Constaté avec le catalogue réel du dépôt : 0 créneau différent sur
-//      14 après régénération.
+// (L'AUTRE défaut signalé ici jusqu'à v7 — `readLatestPlan` triait sur `date_debut DESC, id DESC`
+// et pouvait rouvrir un ancien plan après un changement de jours à date de début inchangée — est
+// CORRIGÉ : `savePlan` écrit désormais `meal_plan.mis_a_jour_le`, et `readLatestPlan` trie dessus
+// en premier. Voir data/user-store.ts et user-schema.ts, migration v7.)
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
@@ -159,10 +153,12 @@ describe('semaine — les verrous', () => {
     // `lockedEntries` est effectivement reposé APRÈS coup — voir l'avertissement de `planifier` dans
     // `semaine.tsx`. Verrouiller une case sans vérifier la regénération ne prouverait rien.
     //
-    // ⚠️ NE VÉRIFIE PAS QUE LES AUTRES CRÉNEAUX CHANGENT — voir le défaut n°2 en tête de fichier :
-    // la sélection est déterministe et `seed` n'influence rien, donc une régénération sans verrou
-    // peut rendre un plan identique. Ce test se limite à ce qui est vrai : l'entrée gardée traverse
-    // la régénération intacte, et « Changer » lui reste interdit.
+    // ⚠️ NE VÉRIFIE PAS QUE LES AUTRES CRÉNEAUX CHANGENT — voir l'en-tête de fichier : `seed`
+    // influence désormais la sélection (tirage dans la bande de tolérance), mais RIEN ne garantit
+    // qu'un incrément de graine change TEL créneau précis avec un seul catalogue de test réduit —
+    // la variété mesurée à l'échelle vit dans plan-week.test.ts, sur le catalogue réel. Ce test se
+    // limite à ce qui est garanti à coup sûr : l'entrée gardée traverse la régénération intacte, et
+    // « Changer » lui reste interdit.
     await composerSemaine()
 
     const boutonGarder = screen.getAllByText('Garder')[0]!.closest('button') as HTMLButtonElement
@@ -230,7 +226,7 @@ describe('semaine — les alertes d’énergie', () => {
     // s'affiche plus en bloc sous le marqueur — il s'ouvre désormais dans une fenêtre en
     // superposition (`Panneau`), c'est le sujet de la correction documentée en tête de
     // `AlerteEnergie` dans `semaine.tsx`.
-    savePlan(baseCourante(), planAvecAlerte())
+    savePlan(baseCourante(), planAvecAlerte(), '2026-08-01T00:00:00.000Z')
     await monter()
     await screen.findByText('Proposer une autre semaine')
 
@@ -261,7 +257,7 @@ describe('semaine — les alertes d’énergie', () => {
     // Le point de fond de la conversion en superposition (voir panneau.tsx) : le `dialog` doit être
     // un enfant du PORTAIL (document.body), jamais un nœud inséré dans le flux des journées — sinon
     // ouvrir le détail repousserait la liste des repas vers le bas exactement comme avant.
-    savePlan(baseCourante(), planAvecAlerte())
+    savePlan(baseCourante(), planAvecAlerte(), '2026-08-01T00:00:00.000Z')
     await monter()
     await screen.findByText('Proposer une autre semaine')
 
@@ -282,8 +278,9 @@ describe('semaine — les alertes d’énergie', () => {
       alertesDiscretes: true,
       bandeauStockageMasque: false,
       rappelsActifs: false,
+      visiteProposee: false,
     })
-    savePlan(baseCourante(), planAvecAlerte())
+    savePlan(baseCourante(), planAvecAlerte(), '2026-08-01T00:00:00.000Z')
     await monter()
     await screen.findByText('Proposer une autre semaine')
 

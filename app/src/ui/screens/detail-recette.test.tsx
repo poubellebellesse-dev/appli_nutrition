@@ -9,16 +9,16 @@
 // Le premier test ci-dessous re-régresserait immédiatement si quelqu'un revenait à l'écriture
 // partielle.
 //
-// ⚠️ DÉFAUT NON CORRIGÉ, TROUVÉ EN ÉCRIVANT CE FICHIER (voir le rapport de session) : `vue.catalogue`
-// (passé à `energieParPortion` et à `Etape`) est `socle.catalogue` — le catalogue BRUT que rend
-// `ui/socle.ts#assembler()`. Les index dérivés (`indexes.recipeNutrients`, calculés par
-// `attachDerivedIndexes`) ne sont construits QUE dans la fermeture de `createEngine`, jamais
-// réexposés sur ce catalogue-là (voir `data/catalog-loader.ts` lignes 9-15 : « Map vides ici »).
-// Résultat vérifié sur les 241 recettes réelles : `energieParPortion` rend TOUJOURS `null`, alors
-// que la donnée CIQUAL existe bel et bien (confirmé en calculant `attachDerivedIndexes` à la main :
-// 288,6 kcal pour la première recette du catalogue, contre `null` vu par cet écran). Le test qui
-// suit verrouille uniquement le comportement d'AFFICHAGE du cas `null` — qui est correct, aucune
-// valeur inventée — pas la donnée elle-même.
+// ⚠️ DÉFAUT CORRIGÉ : `socle.ts#assembler()` retournait le catalogue BRUT (`avecRecettesSupplementaires`),
+// jamais celui enrichi par `attachDerivedIndexes` — cet enrichissement ne vivait que dans la
+// fermeture de `createEngine` (`engine/api/index.ts`). `vue.catalogue` (passé à `energieParPortion`
+// et à `Etape`) lisait donc un `indexes.recipeNutrients` toujours vide. Corrigé en exposant le
+// catalogue enrichi SUR `Engine` (`moteur.catalogue`) et en le lisant depuis `socle.ts` plutôt que de
+// reconstruire le catalogue brut à côté. Le premier test ci-dessous verrouille la valeur RÉELLE
+// (288,6 kcal pour `artichauts_vinaigrette`, donnée CIQUAL) ; le second garde le repli honnête
+// `null` → « Non renseignées » couvert, pour le cas où le catalogue ne suivrait pas l'énergie du
+// tout (`catalogue.nutrients` sans l'entrée `energie` — pas un cas qui se produit sur les 241
+// recettes réelles, mais le garde-fou du code doit rester exercé).
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
@@ -27,7 +27,14 @@ import { readDisplay, readFavorites, writeDisplay } from '../../data/user-store.
 import { AXES_PAR_DEFAUT, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 
-vi.mock('../catalog-source.js', () => ({ chargerCatalogue: () => Promise.resolve(catalogueDeTest()) }))
+/**
+ * Catalogue servi par le mock de `catalog-source.js`. `undefined` = le catalogue réel de test
+ * (le cas courant) ; un seul test (le repli « Non renseignées ») le remplace pour amputer
+ * `nutrients` de l'entrée `energie` — voir ce test pour le pourquoi.
+ */
+let catalogueActif: import('../../engine/domain/index.js').Catalog | undefined
+
+vi.mock('../catalog-source.js', () => ({ chargerCatalogue: () => Promise.resolve(catalogueActif ?? catalogueDeTest()) }))
 vi.mock('../user-source.js', () => ({
   ouvrirUserDb: () => Promise.resolve(sessionDeTest()),
   surErreurDePersistance: () => undefined,
@@ -36,6 +43,7 @@ vi.mock('../user-source.js', () => ({
 beforeEach(() => {
   vi.resetModules()
   reinitialiserBase()
+  catalogueActif = undefined
 })
 afterEach(cleanup)
 
@@ -94,17 +102,38 @@ describe('detail-recette — la bascule des macros', () => {
 
     // La ligne d'ouverture affiche la valeur COURANTE (voir ui/panneau.tsx#LigneOuvrante) : si le
     // réglage relu en base est bien à `true`, elle ne dit plus « Non affichées » mais reflète la
-    // donnée réelle — ici `null` sur le catalogue de test (voir l'en-tête du fichier), donc « Non
-    // renseignées pour cette recette. » directement sur la ligne, sans même rouvrir la fenêtre.
+    // donnée réelle — ici 289 kcal par portion pour `artichauts_vinaigrette` — directement sur la
+    // ligne, sans même rouvrir la fenêtre.
     expect(screen.queryByText('Non affichées')).toBeNull()
-    await screen.findByText('Non renseignées pour cette recette.')
+    await screen.findByText('289 kcal par portion')
+  })
+
+  it('affiche l’énergie RÉELLE de la recette, calculée depuis CIQUAL', async () => {
+    // Verrouille le correctif (voir l'en-tête) : 288,6 kcal pour `artichauts_vinaigrette`, vérifiés
+    // à la main via `attachDerivedIndexes`. Un retour au catalogue brut (`socle.catalogue` non
+    // enrichi) ferait retomber cette assertion à `null`.
+    await monter(recetteDeReference().id)
+    fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
+    const dialogue = screen.getByRole('dialog')
+    fireEvent.click(within(dialogue).getByText(/Afficher ces valeurs/))
+
+    // Le texte est fractionné en trois nœuds (« Cette portion : », `<span>289</span>`, « kcal »,
+    // voir detail-recette.tsx) : `getByText` sur la chaîne exacte ne matcherait aucun nœud unique.
+    await waitFor(() => expect(dialogue.textContent).toContain('Cette portion : 289 kcal'))
+    expect(within(dialogue).queryByText('Non renseignées pour cette recette.')).toBeNull()
   })
 
   it('⛔ n’invente AUCUNE valeur : dit que ce n’est pas renseigné plutôt qu’un 0 kcal muet', async () => {
-    // Sur le catalogue réel, `energieParPortion` rend `null` pour cette recette (voir l'en-tête du
-    // fichier — c'est vrai des 241, à cause d'un défaut de câblage non corrigé ici). Ce test ne
-    // porte pas sur CE défaut : il verrouille que le cas `null`, quelle qu'en soit la cause,
-    // s'affiche honnêtement plutôt que comme un zéro ou un tiret.
+    // Le repli `null` ne se produit plus pour aucune des 241 recettes réelles (voir le test
+    // précédent) : `energieParPortion` ne rend `null` que si `catalogue.nutrients` ne suit PAS
+    // l'énergie du tout (`findIndex(...) < 0`, voir detail-recette.tsx). On force ce cas ici via
+    // `catalogueActif` (voir l'en-tête du fichier) — un catalogue identique au catalogue réel mais
+    // amputé de l'entrée `energie` — remis à `undefined` par `beforeEach` pour les autres tests.
+    catalogueActif = {
+      ...catalogueDeTest(),
+      nutrients: catalogueDeTest().nutrients.filter((n) => n.code !== 'energie'),
+    }
+
     await monter(recetteDeReference().id)
     fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
     const dialogue = screen.getByRole('dialog')

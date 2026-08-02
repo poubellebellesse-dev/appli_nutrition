@@ -404,6 +404,10 @@ function CarteRepas({
 
   return (
     <article
+      // `data-visite` : `<article>` seul est repris dans `courses.tsx`, `detail-recette.tsx` et
+      // `semaine.tsx` — la visite guidée (`ui/visite.tsx`) a besoin d'une cible qui ne dépende pas
+      // d'être le premier `<article>` de tout le document.
+      data-visite="carte-plat"
       className="mt-4 overflow-hidden rounded-[--radius-carte] border border-bordure bg-surface"
       // ⚠️ Les gestes ne sont posés QUE si le réglage est actif, et ils ne font jamais rien que les
       // flèches ci-dessous ne fassent — §3 DESIGN, « chaque geste doublé d'un contrôle visible ».
@@ -446,8 +450,10 @@ function CarteRepas({
 
         <p className="mt-3 text-[0.85rem] text-attenue">Photo à venir</p>
 
-        {/* Les flèches. Toujours présentes, jamais réduites à une icône nue. */}
-        <div className="mt-4 flex gap-2">
+        {/* Les flèches. Toujours présentes, jamais réduites à une icône nue.
+            `data-visite` : cible stable pour `ui/visite.tsx`, indépendante des classes Tailwind
+            (`flex gap-2` change sans préavis à la moindre retouche de mise en page). */}
+        <div data-visite="fleches" className="mt-4 flex gap-2">
           <BoutonNavigation libelle="Précédent" fleche="←" onClic={surPrecedent} />
           <BoutonNavigation libelle="Suivant" fleche="→" onClic={surSuivant} apresTexte />
         </div>

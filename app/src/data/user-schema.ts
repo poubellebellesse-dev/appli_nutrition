@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 6
+export const USER_SCHEMA_VERSION = 7
 
 export interface Migration {
   readonly version: number
@@ -430,6 +430,31 @@ const V6_STATEMENTS: readonly string[] = [
      ADD COLUMN rappels_actifs INTEGER NOT NULL DEFAULT 0 CHECK (rappels_actifs IN (0,1))`,
 ]
 
+/**
+ * v7 — `readLatestPlan` ne pouvait pas distinguer deux plans de MÊME `date_debut`.
+ *
+ * ⚠️ BUG CORRIGÉ. `meal_plan.id` vaut `plan-${startDate}-${days}` (`engine/planning/plan-week.ts`).
+ * Replanifier la même date avec un nombre de jours différent crée donc une SECONDE ligne au lieu de
+ * remplacer la première, et `readLatestPlan` triait sur `date_debut DESC, id DESC` — un id plus
+ * grand au sens du TEXTE (« …-7 » > « …-3 ») pouvait rouvrir l'ancien plan après un rechargement,
+ * alors que l'écran affichait correctement le nouveau tant que React ne repassait pas par la base.
+ * `mis_a_jour_le` est la seule façon de savoir laquelle des deux lignes est réellement la dernière
+ * écrite — la table n'avait jusqu'ici aucune notion de date de modification.
+ *
+ * `DEFAULT ''` sur `mis_a_jour_le` : les lignes d'avant cette migration n'ont pas d'horodatage, et
+ * une chaîne vide trie AVANT toute date ISO réelle en ordre décroissant — elles restent départagées
+ * par `date_debut` puis `id`, exactement le tri d'avant v7, jamais promues devant un plan récent.
+ *
+ * `visite_proposee` — réglage de `user_display` consommé par un écran hors périmètre de cette
+ * migration (voir la tâche qui l'a demandée). Ajoutée ici seulement parce que les deux colonnes
+ * partagent la même version de schéma.
+ */
+const V7_STATEMENTS: readonly string[] = [
+  `ALTER TABLE meal_plan ADD COLUMN mis_a_jour_le TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE user_display
+     ADD COLUMN visite_proposee INTEGER NOT NULL DEFAULT 0 CHECK (visite_proposee IN (0,1))`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -437,6 +462,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 4, statements: V4_STATEMENTS },
   { version: 5, statements: V5_STATEMENTS },
   { version: 6, statements: V6_STATEMENTS },
+  { version: 7, statements: V7_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

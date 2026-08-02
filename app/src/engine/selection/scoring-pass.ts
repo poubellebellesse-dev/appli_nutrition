@@ -251,12 +251,24 @@ function emptyTrace(scoringCandidateCount: number): PipelineTrace {
 }
 
 // ------------------------------------------------------------------------------------------
-// Classement déterministe (§6.5 précision 7 ENGINE) : tri par score DÉCROISSANT, tie-break par id
-// de recette CROISSANT à score strictement égal. Le tie-break rend le comparateur un ORDRE TOTAL
-// (jamais deux entrées distinctes à égalité de comparateur) : le résultat est donc déterministe
-// par construction, indépendamment de l'ordre d'insertion des candidats dans la Map d'entrée et de
-// la stabilité de `Array.prototype.sort` — aucun `Math.random`, aucune dépendance à un ordre
-// d'itération.
+// Classement (§6.5 précision 7 ENGINE) : tri par score DÉCROISSANT, tie-break par id de recette
+// CROISSANT à score strictement égal. Le tie-break rend le comparateur un ORDRE TOTAL (jamais deux
+// entrées distinctes à égalité de comparateur) — base commune aux deux régimes ci-dessous.
+//
+// ⚠️ CORRECTIF « bande de tolérance » (variété inter-semaine, le tirage seedé n'affectait RIEN avant
+// ce lot — `seed` n'était que recopié dans `EngineDiagnostics`). Deux régimes, un seul et même
+// comparateur en base :
+//   - SANS `alea` (ou `tolerance` ≤ 0) : comportement INCHANGÉ, exactement celui d'avant — tri par
+//     score puis id, TOUJOURS identique pour un même `scores` en entrée. C'est le régime que
+//     `runSuggestMeals` utilisait seul jusqu'ici et que ~950 tests supposent.
+//   - AVEC `alea` ET `tolerance` > 0 : le tri déterministe sert de base, puis on parcourt la liste de
+//     gauche à droite ; à chaque position, la RÉSERVE = le préfixe contigu des candidats restants à
+//     au plus `tolerance` du meilleur restant (`score >= meilleur * (1 - tolerance)`), et on tire un
+//     élément de cette réserve avec `alea()` pour l'échanger en position courante. Le résultat n'est
+//     alors PLUS toujours identique — mais il reste REPRODUCTIBLE À GRAINE ÉGALE (même `alea`, même
+//     séquence de tirages, même sortie). C'est une garantie différente de « toujours identique », pas
+//     une absence de garantie : à graine égale, le classement ne varie jamais ; à graine différente,
+//     il varie SEULEMENT parmi des candidats de qualité équivalente (jamais hors de la bande).
 // ------------------------------------------------------------------------------------------
 
 export interface RankedCandidate {
@@ -264,9 +276,48 @@ export interface RankedCandidate {
   readonly score: number
 }
 
-export function rankScoredCandidates(scores: ReadonlyMap<RecipeId, number>): readonly RankedCandidate[] {
-  return Array.from(scores, ([recipeId, score]) => ({ recipeId, score })).sort((a, b) => {
+/**
+ * Largeur de la bande de tolérance (§6.5 précision 7, correctif variété) — un candidat à moins de
+ * 3 % du meilleur score restant est considéré équivalent et entre dans le tirage seedé. Valeur de
+ * référence choisie pour rester sous le bruit habituel entre deux recettes proches sans jamais faire
+ * entrer un candidat nettement moins bon dans la réserve.
+ */
+export const DEFAULT_VARIETY_TOLERANCE = 0.03
+
+export function rankScoredCandidates(
+  scores: ReadonlyMap<RecipeId, number>,
+  alea?: () => number,
+  tolerance?: number
+): readonly RankedCandidate[] {
+  const ranked = Array.from(scores, ([recipeId, score]) => ({ recipeId, score })).sort((a, b) => {
     if (a.score !== b.score) return b.score - a.score
     return a.recipeId < b.recipeId ? -1 : a.recipeId > b.recipeId ? 1 : 0
   })
+
+  if (alea === undefined || tolerance === undefined || tolerance <= 0) return ranked
+
+  // Tirage dans la bande de tolérance — voir l'en-tête ci-dessus pour le régime de garantie.
+  //
+  // RETRAIT (splice), jamais échange : un échange renverrait l'élément de tête — de score
+  // SUPÉRIEUR — plus loin dans `restants`, détruisant l'ordre décroissant du reste ; au tour
+  // suivant, `restants[0]` ne serait alors plus garanti être le maximum des restants, et la bande
+  // se calculerait sur un pivot trop bas (laissant entrer un candidat hors bande — bug vérifié à
+  // la main, voir scoring-pass.test.ts). Un retrait préserve l'ordre du reste : `restants[0]` est
+  // TOUJOURS le vrai maximum des restants, à chaque itération.
+  //
+  // Complexité O(n²) au pire (`splice` décale) — n = nombre de candidats scorés (quelques
+  // centaines), conforme au budget du moteur en millisecondes à cette échelle (§5.6 ARCHITECTURE).
+  const restants = [...ranked]
+  const result: RankedCandidate[] = []
+  while (restants.length > 0) {
+    // `restants` est trié décroissant et les scores sortent de `clamp01` (dans [0, 1]) : un pivot
+    // nul implique que TOUS les restants valent 0 (égalité réelle) — le tirage uniforme sur toute
+    // la réserve est alors correct sans traitement particulier, aucun garde-fou nécessaire ici.
+    const seuil = restants[0]!.score * (1 - tolerance)
+    let fin = 1
+    while (fin < restants.length && restants[fin]!.score >= seuil) fin++
+    const choisi = Math.min(Math.floor(alea() * fin), fin - 1)
+    result.push(restants.splice(choisi, 1)[0]!)
+  }
+  return result
 }

@@ -31,6 +31,7 @@ import {
   aujourdhuiIso,
   chargerSocle,
   cleCreneau,
+  maintenantIso,
   profilCourant,
   type Socle,
 } from '../socle.js'
@@ -125,7 +126,7 @@ function planifier(socle: Socle, reglages: Reglages, verrous: readonly MealPlanE
   // Les restes REMPLACENT un plat prévu (§7.3) ; `planLeftovers` ne touche pas aux créneaux gardés
   // et recalcule les avertissements, les totaux du jour ayant changé.
   const plan = socle.moteur.planLeftovers(brut, profil, reglages.convives)
-  savePlan(socle.db, plan)
+  savePlan(socle.db, plan, maintenantIso())
   reprogrammerLesRappels(socle, plan)
   return { plan, profil, nomDe: (id) => socle.catalogue.recipes.get(id)?.nom ?? id }
 }
@@ -255,7 +256,7 @@ export function Semaine() {
       }
       chargerSocle()
         .then((socle) => {
-          savePlan(socle.db, suivant)
+          savePlan(socle.db, suivant, maintenantIso())
           setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
         })
         .catch(echouer)
@@ -290,7 +291,7 @@ export function Semaine() {
             },
             { excludeRecipeIds: dejaRefuses }
           )
-          savePlan(socle.db, suivant)
+          savePlan(socle.db, suivant, maintenantIso())
           setRefus(new Map(refus).set(cle, dejaRefuses))
           setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
         })

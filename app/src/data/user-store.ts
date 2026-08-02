@@ -343,8 +343,15 @@ export function recordMeal(db: UserDb, entry: MealHistoryEntry): void {
 const ORDRE_CRENEAU = `CASE creneau
     WHEN 'petit_dejeuner' THEN 0 WHEN 'dejeuner' THEN 1 WHEN 'gouter' THEN 2 ELSE 3 END`
 
-/** Écrit un plan et TOUS ses créneaux, en remplaçant intégralement la version précédente. */
-export function savePlan(db: UserDb, plan: WeekPlan): void {
+/**
+ * Écrit un plan et TOUS ses créneaux, en remplaçant intégralement la version précédente.
+ *
+ * `misAJourLe` est un horodatage ISO complet (pas seulement une date) INJECTÉ par l'appelant —
+ * jamais lu ici via `Date.now()`. C'est lui, et lui seul, que `readLatestPlan` utilise pour
+ * départager deux plans de MÊME `date_debut` (v7, voir `user-schema.ts`) : deux replanifications
+ * le même jour doivent rester ordonnables.
+ */
+export function savePlan(db: UserDb, plan: WeekPlan, misAJourLe: string): void {
   withTransaction(db, () => {
     // ⚠️ UPSERT, PAS `INSERT OR REPLACE`, et la différence est destructrice. REPLACE SUPPRIME la
     // ligne existante avant de réinsérer — ce qui déclenche les `ON DELETE CASCADE` qui pointent
@@ -352,10 +359,11 @@ export function savePlan(db: UserDb, plan: WeekPlan): void {
     // `savePlan` est appelé à chaque verrouillage de créneau : garder un plan aurait effacé la
     // liste de courses en silence. Trouvé par le test des articles « extra ».
     db.run(
-      `INSERT INTO meal_plan (id, date_debut, jours, seed) VALUES (?, ?, ?, ?)
+      `INSERT INTO meal_plan (id, date_debut, jours, seed, mis_a_jour_le) VALUES (?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
-         date_debut = excluded.date_debut, jours = excluded.jours, seed = excluded.seed`,
-      [plan.id, plan.startDate, plan.days, plan.seed]
+         date_debut = excluded.date_debut, jours = excluded.jours, seed = excluded.seed,
+         mis_a_jour_le = excluded.mis_a_jour_le`,
+      [plan.id, plan.startDate, plan.days, plan.seed, misAJourLe]
     )
     // Redondant avec le CASCADE que déclenche le REPLACE ci-dessus, mais seulement SI
     // `PRAGMA foreign_keys` est ON — ce que ce fichier ne peut pas garantir, l'ouverture
@@ -430,10 +438,18 @@ export function readPlan(db: UserDb, planId: string): WeekPlan | null {
   return { id: row.id, startDate: row.date_debut, days: row.jours, seed: row.seed, entries, warnings: [] }
 }
 
-/** Le plan le plus récent par date de début, ou `null`. Même réserve sur `warnings` que `readPlan`. */
+/**
+ * Le plan le plus récemment ÉCRIT, ou `null`. Même réserve sur `warnings` que `readPlan`.
+ *
+ * ⚠️ TRIE D'ABORD SUR `mis_a_jour_le`, PAS SUR `date_debut` (v7). `meal_plan.id` vaut
+ * `plan-${startDate}-${days}` : replanifier la même date avec un nombre de jours différent crée
+ * une SECONDE ligne de même `date_debut`, et l'id, comparé comme du texte, n'a aucun rapport avec
+ * l'ordre d'écriture (« …-7 » > « …-3 »). `date_debut DESC` puis `id DESC` restent des
+ * départages de repli, pour les lignes d'avant la migration dont `mis_a_jour_le` vaut `''`.
+ */
 export function readLatestPlan(db: UserDb): WeekPlan | null {
   const row = db.all<{ readonly id: string }>(
-    'SELECT id FROM meal_plan ORDER BY date_debut DESC, id DESC LIMIT 1'
+    'SELECT id FROM meal_plan ORDER BY mis_a_jour_le DESC, date_debut DESC, id DESC LIMIT 1'
   )[0]
   return row ? readPlan(db, row.id) : null
 }
@@ -685,6 +701,8 @@ export interface StoredDisplay {
   readonly bandeauStockageMasque: boolean
   /** Rappels de préparation. FAUX par défaut : une notification non demandée est une intrusion. */
   readonly rappelsActifs: boolean
+  /** La visite guidée a-t-elle déjà été PROPOSÉE (acceptée ou refusée) ? On ne la propose qu'une fois. */
+  readonly visiteProposee: boolean
 }
 
 export function readDisplay(db: UserDb): StoredDisplay {
@@ -694,9 +712,10 @@ export function readDisplay(db: UserDb): StoredDisplay {
     readonly alertes_discretes: number
     readonly bandeau_stockage_masque: number
     readonly rappels_actifs: number
+    readonly visite_proposee: number
   }>(
     `SELECT afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque,
-            rappels_actifs
+            rappels_actifs, visite_proposee
      FROM user_display WHERE id = 1`
   )[0]
   // Absent = jamais réglé = le défaut du schéma. Rendre `null` obligerait chaque appelant à traiter
@@ -707,6 +726,7 @@ export function readDisplay(db: UserDb): StoredDisplay {
     alertesDiscretes: row?.alertes_discretes === 1,
     bandeauStockageMasque: row?.bandeau_stockage_masque === 1,
     rappelsActifs: row?.rappels_actifs === 1,
+    visiteProposee: row?.visite_proposee === 1,
   }
 }
 
@@ -719,14 +739,15 @@ export function writeDisplay(db: UserDb, display: StoredDisplay): void {
   db.run(
     `INSERT OR REPLACE INTO user_display
        (id, afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque,
-        rappels_actifs)
-     VALUES (1, ?, ?, ?, ?, ?)`,
+        rappels_actifs, visite_proposee)
+     VALUES (1, ?, ?, ?, ?, ?, ?)`,
     [
       display.afficherMacros ? 1 : 0,
       display.gestesBalayage ? 1 : 0,
       display.alertesDiscretes ? 1 : 0,
       display.bandeauStockageMasque ? 1 : 0,
       display.rappelsActifs ? 1 : 0,
+      display.visiteProposee ? 1 : 0,
     ]
   )
 }

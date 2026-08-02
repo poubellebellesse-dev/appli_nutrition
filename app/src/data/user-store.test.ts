@@ -23,6 +23,7 @@ import type {
   MealSlot,
   ShoppingList,
 } from '../engine/domain/index.js'
+import { DatabaseSync } from 'node:sqlite'
 import { openUserDb, type OpenedUserDb } from './user-store-node.js'
 import type { UserDb } from './user-db.js'
 import { MIGRATIONS, USER_SCHEMA_VERSION, migrate, readSchemaVersion } from './user-schema.js'
@@ -149,6 +150,43 @@ describe('user-schema — migrations', () => {
         .map((c) => c.name)
       expect(colonnes.some((c) => /quantite|portion|calor|kcal/i.test(c))).toBe(false)
     }
+  })
+
+  it('v6 → v7 : préserve les données existantes et ajoute les colonnes avec leur défaut', () => {
+    // Base bloquée à v6, avec des données réelles — exactement ce qu'une machine de production
+    // rapporterait avant la mise à jour.
+    const sqlite = new DatabaseSync(':memory:')
+    const brute: UserDb = {
+      all: <T,>(sql: string, params: readonly (string | number | null)[] = []) =>
+        sqlite.prepare(sql).all(...params) as unknown as readonly T[],
+      run: (sql: string, params: readonly (string | number | null)[] = []) => {
+        sqlite.prepare(sql).run(...params)
+      },
+    }
+    for (const migration of MIGRATIONS.filter((m) => m.version <= 6)) {
+      readSchemaVersion(brute) // bootstrappe app_meta au premier appel
+      for (const sql of migration.statements) brute.run(sql)
+      brute.run('UPDATE app_meta SET schema_version = ? WHERE id = 1', [migration.version])
+    }
+    expect(readSchemaVersion(brute)).toBe(6)
+
+    brute.run(`INSERT INTO meal_plan (id, date_debut, jours, seed) VALUES ('p', '2026-08-03', 3, 1)`)
+    brute.run(`INSERT INTO user_display (id, afficher_macros) VALUES (1, 1)`)
+
+    expect(() => migrate(brute)).not.toThrow()
+    expect(readSchemaVersion(brute)).toBe(USER_SCHEMA_VERSION)
+
+    const plan = brute.all<{ readonly date_debut: string; readonly mis_a_jour_le: string }>(
+      "SELECT date_debut, mis_a_jour_le FROM meal_plan WHERE id = 'p'"
+    )[0]
+    expect(plan?.date_debut).toBe('2026-08-03')
+    expect(plan?.mis_a_jour_le).toBe('')
+
+    const display = brute.all<{ readonly afficher_macros: number; readonly visite_proposee: number }>(
+      'SELECT afficher_macros, visite_proposee FROM user_display WHERE id = 1'
+    )[0]
+    expect(display?.afficher_macros).toBe(1)
+    expect(display?.visite_proposee).toBe(0)
   })
 })
 
@@ -461,15 +499,15 @@ describe('user-store — planning', () => {
   })
 
   it('fait l’aller-retour complet — verrous, restes et créneaux vides compris', () => {
-    savePlan(db, plan)
+    savePlan(db, plan, AUJOURDHUI)
     expect(readPlan(db, plan.id)).toEqual(plan)
   })
 
   it('REMPLACE le plan précédent au lieu d’accumuler ses créneaux', () => {
     // Un plan raccourci de 3 à 2 jours garderait sinon le créneau du 3ᵉ jour, invisible à l'écran
     // mais bien présent dans la liste de courses.
-    savePlan(db, plan)
-    savePlan(db, { ...plan, days: 2, entries: plan.entries.slice(0, 2) })
+    savePlan(db, plan, AUJOURDHUI)
+    savePlan(db, { ...plan, days: 2, entries: plan.entries.slice(0, 2) }, AUJOURDHUI)
     expect(readPlan(db, plan.id)?.entries).toHaveLength(2)
   })
 
@@ -477,18 +515,22 @@ describe('user-store — planning', () => {
     // 'dejeuner' < 'petit_dejeuner' en alphabétique : trier sur la colonne mettrait le déjeuner
     // avant le petit-déjeuner.
     const creneaux: readonly MealSlot[] = ['diner', 'petit_dejeuner', 'gouter', 'dejeuner']
-    savePlan(db, {
-      ...plan,
-      days: 2,
-      entries: creneaux.map((creneau) => ({
-        slot: { date: '2026-08-03', creneau },
-        recipeId: `r-${creneau}` as RecipeId,
-        portions: 1,
-        locked: false,
-        isLeftover: false,
-        service: null,
-      })),
-    })
+    savePlan(
+      db,
+      {
+        ...plan,
+        days: 2,
+        entries: creneaux.map((creneau) => ({
+          slot: { date: '2026-08-03', creneau },
+          recipeId: `r-${creneau}` as RecipeId,
+          portions: 1,
+          locked: false,
+          isLeftover: false,
+          service: null,
+        })),
+      },
+      AUJOURDHUI
+    )
     expect(readPlan(db, plan.id)?.entries.map((e) => e.slot.creneau)).toEqual([
       'petit_dejeuner',
       'dejeuner',
@@ -500,14 +542,34 @@ describe('user-store — planning', () => {
   it('rend TOUJOURS des warnings vides — ils se recalculent, ils ne se stockent pas', () => {
     // Un avertissement de plancher calorique figé en base continuerait de s'afficher après un
     // changement de profil. L'appelant doit rappeler engine.checkPlan().
-    savePlan(db, { ...plan, warnings: [{ kind: 'plancher_calorique', date: '2026-08-03', kcal: 900, seuil: 1200 }] })
+    savePlan(
+      db,
+      { ...plan, warnings: [{ kind: 'plancher_calorique', date: '2026-08-03', kcal: 900, seuil: 1200 }] },
+      AUJOURDHUI
+    )
     expect(readPlan(db, plan.id)?.warnings).toEqual([])
   })
 
-  it('rend le plan le plus récent par date de début', () => {
-    savePlan(db, plan)
-    savePlan(db, { ...plan, id: 'plan-2026-09-01-3', startDate: '2026-09-01' })
-    expect(readLatestPlan(db)?.startDate).toBe('2026-09-01')
+  it('rend le plan le plus RÉCEMMENT ÉCRIT — pas seulement celui de plus grande date de début', () => {
+    // ⚠️ ANCIEN COMPORTEMENT (avant v7) : tri sur `date_debut DESC, id DESC` uniquement. Ce plan a un
+    // id textuellement PLUS PETIT et une `date_debut` ANTÉRIEURE, mais c'est le dernier ÉCRIT — c'est
+    // lui que `readLatestPlan` doit rendre.
+    savePlan(db, { ...plan, id: 'plan-2026-09-01-3', startDate: '2026-09-01' }, '2026-08-01T08:00:00.000Z')
+    savePlan(db, plan, '2026-08-01T09:00:00.000Z')
+    expect(readLatestPlan(db)?.id).toBe(plan.id)
+  })
+
+  it('le scénario exact du bug : même date_debut, 7 jours puis 3 — rend le plan à 3 jours', () => {
+    // `meal_plan.id` vaut `plan-${startDate}-${days}` (engine/planning/plan-week.ts). Replanifier la
+    // même date avec un nombre de jours différent crée une SECONDE ligne, de même `date_debut`, dont
+    // l'id est textuellement PLUS GRAND (« …-7 » > « …-3 ») — un tri sur l'id seul rouvrirait donc le
+    // plan à 7 jours après un rechargement, alors qu'il a été remplacé.
+    const plan7 = { ...plan, id: 'plan-2026-08-03-7', days: 7 }
+    const plan3 = { ...plan, id: 'plan-2026-08-03-3', days: 3 }
+    savePlan(db, plan7, '2026-08-03T10:00:00.000Z')
+    savePlan(db, plan3, '2026-08-03T10:05:00.000Z')
+    expect(readLatestPlan(db)?.id).toBe(plan3.id)
+    expect(readLatestPlan(db)?.days).toBe(3)
   })
 
   it('refuse un plan d’avant la migration v2 plutôt que d’afficher zéro jour', () => {
@@ -579,14 +641,18 @@ describe('user-store — liste de courses', () => {
 
   beforeEach(() => {
     // La liste référence un plan : sans lui, la clé étrangère refuse l'insertion.
-    savePlan(db, {
-      id: PLAN_ID,
-      startDate: '2026-08-03',
-      days: 3,
-      seed: 1,
-      entries: [],
-      warnings: [],
-    })
+    savePlan(
+      db,
+      {
+        id: PLAN_ID,
+        startDate: '2026-08-03',
+        days: 3,
+        seed: 1,
+        entries: [],
+        warnings: [],
+      },
+      AUJOURDHUI
+    )
   })
 
   it('rend null tant qu’aucune liste n’a été enregistrée', () => {
@@ -670,7 +736,7 @@ describe('user-store — liste de courses', () => {
     setCoche(db, id, 'farine_ble' as FoodId, true)
     addExtraItem(db, id, { libelle: 'Éponges' })
 
-    savePlan(db, { id: PLAN_ID, startDate: '2026-08-03', days: 3, seed: 42, entries: [], warnings: [] })
+    savePlan(db, { id: PLAN_ID, startDate: '2026-08-03', days: 3, seed: 42, entries: [], warnings: [] }, AUJOURDHUI)
 
     const relue = readShoppingList(db)
     expect(relue, 'la liste ne doit pas disparaître').not.toBeNull()
@@ -747,6 +813,7 @@ describe('user-store — réglages d’affichage (v4)', () => {
       alertesDiscretes: false,
       bandeauStockageMasque: false,
       rappelsActifs: false,
+      visiteProposee: false,
     })
   })
 
@@ -757,6 +824,7 @@ describe('user-store — réglages d’affichage (v4)', () => {
       alertesDiscretes: true,
       bandeauStockageMasque: true,
       rappelsActifs: true,
+      visiteProposee: true,
     }
     writeDisplay(db, tout)
     expect(readDisplay(db)).toEqual(tout)
@@ -779,11 +847,20 @@ describe('user-store — réglages d’affichage (v4)', () => {
       alertesDiscretes: false,
       bandeauStockageMasque: true,
       rappelsActifs: false,
+      visiteProposee: false,
     })
     writeDisplay(db, { ...readDisplay(db), gestesBalayage: true })
     expect(readDisplay(db).afficherMacros).toBe(true)
     expect(readDisplay(db).gestesBalayage).toBe(true)
     expect(readDisplay(db).bandeauStockageMasque).toBe(true)
+  })
+
+  it('« visite_proposee » démarre à faux et reste posé une fois écrit', () => {
+    // Même sémantique que `rappelsActifs` : « on l'a déjà proposée » ne doit jamais revenir à faux
+    // toute seule, sinon la visite guidée réapparaîtrait à chaque lancement.
+    expect(readDisplay(db).visiteProposee).toBe(false)
+    writeDisplay(db, { ...readDisplay(db), visiteProposee: true })
+    expect(readDisplay(db).visiteProposee).toBe(true)
   })
 })
 

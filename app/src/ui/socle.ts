@@ -91,9 +91,12 @@ function assembler(
   persistant: boolean
 ): Socle {
   const perso = readUserRecipes(db).map((stockee) => versRecette(stockee, catalogueSource.foods))
-  const catalogue = avecRecettesSupplementaires(catalogueSource, perso)
-  // `createEngine` calcule tous les index dérivés (§6.5 précision 8) — une seule fois, ici.
-  return { catalogue, catalogueSource, moteur: createEngine(catalogue), db, stockage, persistant }
+  const brut = avecRecettesSupplementaires(catalogueSource, perso)
+  const moteur = createEngine(brut)
+  // `moteur.catalogue` est le catalogue ENRICHI que `createEngine` a construit (§6.5 précision 8),
+  // pas `brut` : l'exposer via le moteur garantit par construction que `catalogue` porte les index
+  // dérivés — plus une histoire de convention qu'il faudrait se souvenir de respecter à chaque appel.
+  return { catalogue: moteur.catalogue, catalogueSource, moteur, db, stockage, persistant }
 }
 
 /**
@@ -117,6 +120,15 @@ export async function rebatirCatalogue(): Promise<Socle> {
 /** Aujourd'hui en ISO. L'horloge est fournie par l'UI et INJECTÉE — jamais lue dans engine/ (§3). */
 export function aujourdhuiIso(): string {
   return new Date().toISOString().slice(0, 10)
+}
+
+/**
+ * Horodatage ISO complet (secondes et millisecondes comprises), pour les colonnes qui doivent
+ * départager deux écritures survenues LE MÊME JOUR — `meal_plan.mis_a_jour_le` (v7). Même horloge
+ * injectée qu'`aujourdhuiIso`, jamais lue dans `engine/` ni `data/`.
+ */
+export function maintenantIso(): string {
+  return new Date().toISOString()
 }
 
 /**

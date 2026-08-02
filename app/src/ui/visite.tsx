@@ -43,14 +43,18 @@ export const ETAPES_VISITE: readonly EtapeVisite[] = [
     texte: "Ces cinq onglets sont toujours là, en bas de l'écran. Un onglet, une destination.",
   },
   {
-    // L'`<article>` de `CarteRepas`, dans `screens/aujourdhui.tsx`.
-    cible: 'article',
+    // La `CarteRepas` de `screens/aujourdhui.tsx`. `[data-visite="carte-plat"]` et non `article` nu
+    // : ce tag réapparaît dans `courses.tsx`, `detail-recette.tsx` et `semaine.tsx` — un sélecteur
+    // sur la seule balise dépendrait d'être le premier `<article>` du document, par accident.
+    cible: '[data-visite="carte-plat"]',
     titre: 'Le plat du jour',
     texte: "Un plat à la fois, en grand. Rien d'autre ne vient encombrer l'écran.",
   },
   {
     // Le conteneur des deux `BoutonNavigation` (Précédent / Suivant), à l'intérieur de la carte.
-    cible: 'article div.flex.gap-2',
+    // `[data-visite="fleches"]` et non des classes Tailwind : `flex gap-2` casserait en silence dès
+    // qu'on retouche la mise en page (voir `aujourdhui.tsx`).
+    cible: '[data-visite="fleches"]',
     titre: 'Précédent et Suivant',
     texte:
       "Ces flèches changent de plat sans rien valider. Rien n'est enregistré tant que vous ne choisissez pas.",

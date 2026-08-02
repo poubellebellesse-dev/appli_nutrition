@@ -45,7 +45,10 @@
 //     produirait un planning moins sûr que la suggestion unitaire, sans que rien ne le signale.
 // C'est exactement le `P->>S: suggest(...)` du diagramme de séquence de §7.1.
 //
-// Dépendances autorisées : domain/ uniquement — §2/§3 ENGINE.
+// Dépendances autorisées : domain/, ../selection/prng.js (§2 ENGINE : PLAN --> SEL est permis,
+// voir planning/index.ts ; seul `derive`, une fonction pure sans lien avec les couches de
+// sélection, est importé ici — aucun risque de faire dériver le pipeline, voir plus haut le
+// pourquoi de `suggest` injecté).
 
 import type {
   Catalog,
@@ -61,6 +64,7 @@ import type {
 import { NoViableRecipeError } from '../domain/index.js'
 import type { NutrientVector, SuggestionResult } from '../domain/index.js'
 import { resolveReferenceIntakes } from '../nutrition/index.js'
+import { derive } from '../selection/prng.js'
 
 /** Ce que `planWeek` demande au moteur de sélection — voir l'en-tête sur l'injection. */
 export type SuggestForSlot = (req: SuggestionRequest) => SuggestionResult
@@ -120,7 +124,12 @@ function slotRequest(
     skipDiversification: true,
     activeTopics: req.activeTopics,
     ...(req.weights === undefined ? {} : { weights: req.weights }),
-    seed: req.seed,
+    // Un flux DÉRIVÉ par créneau, pas `req.seed` recopié tel quel — sinon les 14 créneaux
+    // partageraient le même premier tirage de `rankScoredCandidates` (scoring-pass.ts) et la bande
+    // de tolérance ferait le même choix relatif partout. Dérivé depuis `slotKey`, PAS un compteur
+    // de boucle : la clé est stable quel que soit l'ordre d'itération des créneaux/jours, un
+    // compteur ne l'est pas.
+    seed: derive(req.seed, slotKey(date, creneau)),
   }
 }
 

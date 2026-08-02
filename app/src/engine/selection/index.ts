@@ -185,8 +185,15 @@ export { habitLayer } from './scoring/habit.js'
 export type { HabitLayerConfig } from './scoring/habit.js'
 export { scoreSpeed, speedLayer } from './scoring/speed.js'
 export type { SpeedLayerConfig } from './scoring/speed.js'
-export { SCORING_LAYERS, CRAVING_DYNAMIC_WEIGHT, rankScoredCandidates, runScoringPass } from './scoring-pass.js'
+export {
+  SCORING_LAYERS,
+  CRAVING_DYNAMIC_WEIGHT,
+  DEFAULT_VARIETY_TOLERANCE,
+  rankScoredCandidates,
+  runScoringPass,
+} from './scoring-pass.js'
 export type { RankedCandidate, ScoringPassResult } from './scoring-pass.js'
+export { mulberry32, derive } from './prng.js'
 
 // ------------------------------------------------------------------------------------------
 // Archétypes de pondération nommés (§6.3 bis ENGINE) — voir archetypes.ts pour la table et la

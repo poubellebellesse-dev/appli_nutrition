@@ -57,12 +57,14 @@ import { NoViableRecipeError } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
 import {
   DEFAULT_MMR_LAMBDA,
+  DEFAULT_VARIETY_TOLERANCE,
   EXCLUSION_LAYERS,
   LAYER_DESCRIPTORS,
   SCORING_LAYERS,
   buildSimilarityProfiles,
   diversify,
   explainSuggestion,
+  mulberry32,
   rankScoredCandidates,
   runExclusionPass,
   runScoringPass,
@@ -76,6 +78,12 @@ import {
 export interface Engine {
   readonly version: string
   readonly catalogVersion: string
+  /**
+   * Le catalogue ENRICHI (index dérivés attachés par `attachDerivedIndexes`), celui que le moteur
+   * consomme réellement pour ses propres calculs. L'exposer évite qu'un appelant retravaille sur un
+   * catalogue brut aux index vides (`recipeNutrients` notamment) sans même s'en rendre compte.
+   */
+  readonly catalogue: Catalog
 
   suggestMeals(req: SuggestionRequest): SuggestionResult
   /**
@@ -390,8 +398,12 @@ function runSuggestMeals(catalog: Catalog, req: SuggestionRequest, now: (() => n
   }
   assertCriticalLayersRan(trace)
 
-  // (f)
-  const ranked = rankScoredCandidates(scoringResult.scores)
+  // (f) — tirage seedé dans la bande de tolérance (§6.5 précision 7, correctif variété
+  // inter-semaine) : `req.seed` était jusqu'ici recopié dans `EngineDiagnostics` sans influencer
+  // rien de la sélection. `mulberry32` est créé ICI, à chaque appel — jamais partagé entre deux
+  // suggestions, sinon deux créneaux consécutifs consommeraient le même flux et biaiseraient l'un
+  // l'autre (voir plan-week.ts pour la dérivation par créneau côté planification).
+  const ranked = rankScoredCandidates(scoringResult.scores, mulberry32(req.seed), DEFAULT_VARIETY_TOLERANCE)
   const limit = req.limit ?? 5
 
   const selected: readonly { readonly recipeId: RecipeId; readonly score: number }[] = req.skipDiversification
@@ -582,6 +594,7 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
   return {
     version: ENGINE_VERSION,
     catalogVersion: enrichedCatalog.version,
+    catalogue: enrichedCatalog,
 
     suggestMeals: (req) => runSuggestMeals(enrichedCatalog, req, now),
     suggestAlternatives: (req, recipeId, dislikedFoodId) =>

@@ -52,7 +52,7 @@ async function avecUnPlan() {
     seed: 1,
   })
   const plan = socle.moteur.planLeftovers(brut, profil, 1)
-  savePlan(socle.db, plan)
+  savePlan(socle.db, plan, date)
   return { socle, plan }
 }
 
