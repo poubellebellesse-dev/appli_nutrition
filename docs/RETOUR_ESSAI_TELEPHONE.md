@@ -129,6 +129,23 @@ Et l'étape « Installez l'application », désactivée le 2026-08-01, a été r
 endroit du produit qui explique l'installation, et c'est l'installation qui fait accorder le stockage
 persistant.
 
+15. **Les deux amendements de §4, codés** (⚠️ **non committé à l'écriture de cette ligne**).
+    **(a) L'alerte d'énergie ne s'affiche plus qu'en mode avancé** — `semaine.tsx` ne monte
+    `AlerteEnergie` que si `afficher_macros`, et la case « version courte » a disparu de Paramètres
+    avec son objet. **Aucune migration** : le réglage existait. Le MOTEUR n'a pas bougé,
+    `checkCalorieFloor` tourne toujours et `WeekPlan.warnings` reste peuplé — seul l'affichage est
+    conditionnel.
+    **(b) Cuisine, Régime et Service sont en pastilles dans le flux** — `PASTILLES_EN_LIGNE = 4`
+    tranche seul : un axe assez court tient entier et **perd sa fenêtre**, un axe long montre sa tête
+    et renvoie sa traîne derrière « Tout voir (26) ». Sur le catalogue d'aujourd'hui, **régime et
+    service n'ont plus de fenêtre du tout**, cuisine en garde une pour ses 22 valeurs de traîne.
+    ⚠️ Rien de tout cela n'est écrit en dur : un cinquième régime ferait revenir sa fenêtre seule.
+    ⚠️ **Une valeur choisie hors des 4 premières reste visible en ligne**, sinon on ne pourrait plus
+    la retirer sans rouvrir la fenêtre.
+    ⚠️ **Le coût en hauteur d'écran n'est PAS mesuré** : `FiltresRecettes` est monté dans le flux de
+    Recettes et de Frigo, pas dans un panneau. Trois lignes de pastilles remplacent trois boutons.
+    **À juger sur l'appareil**, c'est le premier point à regarder au prochain essai.
+
 ---
 
 ## §2. Quatre chantiers transverses
@@ -167,11 +184,11 @@ Demandé à l'origine sur **Aujourd'hui**, **Recettes** et **Courses** :
   d'écran doit donc passer par le contexte, jamais par les contraintes.
 - **Filtrer par envie** : « j'ai envie de viande, légumes, léger, gras, sans légumes, avec légumes ».
 - **Filtrer par contexte** : « pour plusieurs, pour un événement, pour tout seul ».
-- **Les facettes doivent se déplier sur place.** Verbatim : « pour les filtres exemple cuisine → ils
-  doivent être dépliables pour mettre plus de, et non passer par plus de filtres ».
-  ⚠️ **Heurte une décision de fond** : « plus aucun menu déroulant hors de l'accueil », parce qu'un
-  dépliant pousse vers le bas tout ce qui le suit, et que c'est le mécanisme qui fait abandonner sur
-  la contrainte d'âge du produit. À concilier — une fenêtre par facette, ou une exception assumée.
+- ✅ **Les facettes doivent se déplier sur place → TRANCHÉ le 2026-08-02** (décision 46, voir §4).
+  Verbatim : « pour les filtres exemple cuisine → ils doivent être dépliables pour mettre plus de, et
+  non passer par plus de filtres ». Résolu **sans dépliant** : les valeurs fréquentes de chaque axe
+  passent en pastilles dans le flux, « Tout voir (k) › » ouvre la fenêtre pour le reste. La règle
+  « plus aucun menu déroulant hors de l'accueil » n'a pas eu à céder.
 - **« Plus de filtres » doit contenir d'AUTRES filtres**, pas les mêmes : aliment, type de repas.
 
 ### B. La complétion à la saisie
@@ -200,9 +217,47 @@ l'éditeur et les courses, filtre direct sur Savoir). À unifier si un quatrièm
 
 ### C. Les tutoriels
 
-✅ **Le mécanisme est fait** (§1, point 12). **Ce qui reste est du contenu** : huit parcours à
-écrire, un par écran. Ajouter un parcours est désormais **une entrée dans une table de données**,
-pas du code — c'est ce que ce lot achète.
+✅ **FAIT le 2026-08-02 — les NEUF parcours** (huit écrans, plus « Découvrir les menus » qui les
+traverse) et le lanceur. Le contenu vit dans
+`app/src/ui/parcours.ts` (séparé de `visite.tsx`, qui garde le mécanisme — même partage que
+`texte-consentement.ts` face à `accueil.tsx`). Chaque écran porte une entrée discrète
+« **Comment ça marche ?** » qui lance le sien, et Réglages liste les huit pour les revoir.
+
+⚠️ **« Ajouter un parcours est une entrée de données » ÉTAIT FAUX quand cette ligne a été écrite**,
+et le vérifier a doublé le lot. Deux raisons : (a) `main.tsx` appelait `etapesDuParcours('menus')`
+**en dur**, donc tout parcours ajouté à la table aurait été une donnée morte ; (b) il n'existait que
+**DEUX `data-visite`** dans toute l'application, tous deux sur Aujourd'hui — les cibles des sept
+autres écrans n'existaient pas. Il a fallu en poser une vingtaine.
+
+⚠️ **LE MODE DE DÉFAILLANCE DE CE CHANTIER EST INVISIBLE.** Une étape dont la cible ne résout pas est
+**silencieusement sautée**, et si aucune ne résout, la visite se termine sans rien afficher — sans
+erreur, sans test rouge. L'invariant verrouillé n'est donc PAS « toutes les étapes résolvent » (une
+étape conditionnelle sautée est correcte et voulue : Courses n'a rien à montrer sans plan) mais
+**« chaque parcours affiche au moins une bulle chez un utilisateur neuf »** — `parcours.test.tsx`
+monte l'écran réel, base vide, et exige un `role="dialog"`. Les cas sont **dérivés de `PARCOURS`**,
+avec garde contre le tableau vide, et un parcours dont l'écran n'est pas dans la table de montage
+fait **échouer** le test au lieu d'être ignoré.
+
+⚠️ **`ParcoursId` est une union littérale, pas `string`** : `LienTutoriel` reçoit un identifiant de
+chaque écran, et avec `string` une faute de frappe aurait rendu un bouton normal qui ne fait RIEN au
+toucher, qu'aucun test d'écran n'aurait vu.
+
+✅ **Le parcours « Savoir » est écrit** — il manquait, `savoir.tsx` appartenant à la piste parallèle.
+Repris une fois le fichier constaté inactif depuis huit heures, et **en ajouts seulement** : cinq
+attributs `data-visite`, une prop facultative sur `Bloc`, le lien de tutoriel. Aucune structure
+existante n'a été déplacée.
+
+⚠️ **UN TROU DE RELECTURE TROUVÉ EN L'ÉCRIVANT, ET COMBLÉ.** §6.2 ARCHITECTURE bannit deux familles
+de vocabulaire de **toute** chaîne affichée. Le build lint le catalogue, `texte-consentement.test.ts`
+lint la page de bienvenue — et **rien ne lisait les textes de tutoriel**, alors que le parcours
+« Savoir » décrit précisément le contenu que §6 encadre. `parcours.test.tsx` passe désormais chaque
+titre et chaque texte par `findBannedTerms`. ⚠️ Rappel de la mécanique : correspondance de
+**sous-chaîne après retrait des accents** — « traitement », « traité », « retraite » et
+« soigneusement » déclenchent tous le refus. Ce n'est pas un faux positif à contourner.
+
+⚠️ **Savoir n'avait AUCUN test d'écran** (pas de `savoir.test.tsx`). L'invariant de tutoriel, qui
+monte l'écran réel sur une base vide, est aujourd'hui sa seule couverture — c'est mieux que rien et
+beaucoup moins qu'assez.
 
 Verbatim : « tuto de 2-3 mins pour guider l'utilisateur aux différents menus », « l'utilisateur teste
 en même temps », « ne doit pas que informer mais inciter l'utilisateur à utiliser aussi l'appli — si
@@ -212,6 +267,20 @@ il interagit, plus de chance qu'il reste », « je veux des tutos sur tous les m
 bulles qui désignent des éléments. Ce qui est demandé est **participatif** — on dit à l'utilisateur
 de cliquer sur un menu, il clique ; on lui dit de changer l'image sur Aujourd'hui, il le fait. C'est
 un autre objet, à concevoir avant de coder.
+
+**Doses de geste retenues** (choix d'écriture, révisable — c'est du texte) : **une étape à geste par
+parcours au maximum**. La flèche sur Aujourd'hui, « Composer ma semaine » sur Semaine, l'ouverture du
+panneau d'affichage sur Réglages. Un tutoriel de quatre étapes qui exige quatre gestes devient une
+corvée, et « Passer » finit par être le vrai bouton.
+
+⚠️ **L'étape « ouvrir Réglages d'affichage » est OBLIGATOIRE et doit précéder** celle du réglage de
+balayage : la cible n'existe pas tant que la fenêtre est fermée, donc sans le clic préalable l'étape
+aurait été sautée **à chaque fois** — un tutoriel qui n'enseigne rien, sans que rien ne le signale.
+C'est exactement la fonction que §2.D désigne comme introuvable.
+
+⚠️ **Lancer un parcours depuis Réglages navigue D'ABORD vers son écran, puis attend que la route ait
+réellement changé** avant de monter la visite. Sans cette attente, la visite mesurerait le DOM de
+l'écran qu'on quitte et se terminerait en silence.
 
 ### D. La découvrabilité — le chantier que l'essai a révélé sans qu'on le demande
 
@@ -268,9 +337,18 @@ courant (« cour », « poul »), et dire ce qui s'affiche.
 
 ### Page de bienvenue
 
-- Reformuler le résumé des quatre engagements. Direction donnée : « vos données ne quittent pas cet
-  appareil, pas de pub, pas de données à un tiers, rien ».
-- **Une ligne d'explication pour chacun** — « petit mais complet ».
+✅ **Fait le 2026-08-02.** Chaque engagement porte désormais une **ligne d'explication toujours
+visible** (`PointConsentement.explication`), et le résumé n°3 passe de « Gratuite et indépendante » —
+abstrait — à « **Gratuite, sans publicité, sans rien à vendre** ».
+
+⚠️ **Le point de fond, pas cosmétique** : un résumé de six mots au-dessus d'un bouton « Lire »
+demandait de faire confiance pour savoir de quoi on parle. On cochait « J'ai lu et compris » après
+avoir lu **quatre titres**. La ligne doit suffire à comprendre l'engagement **sans déplier** ; le
+détail reste pour qui veut tout, il n'est plus la seule voie vers le sens. Bouton renommé « Tout lire ».
+⚠️ **`VERSION_CONSENTEMENT` est passée à `accueil-2026-08-02`** — la règle du fichier l'exige à
+chaque modification, et la conséquence est que **le parcours se rouvre pour tout le monde**. Coût nul
+aujourd'hui, l'application n'étant pas distribuée ; plus jamais nul après la publication. Le profil
+existant est relu au montage (`lireChoixProfil`), donc retraverser l'accueil n'efface aucune allergie.
 
 ### Votre rythme (intro)
 
@@ -282,7 +360,11 @@ courant (« cour », « poul »), et dire ce qui s'affiche.
 
 ### Aujourd'hui
 
-- **« Dites-moi ce que vous cherchez »** doit être **au-dessus** de la recette en grand.
+- ✅ **« Dites-moi ce que vous cherchez » est passé au-dessus de la recette en grand** (2026-08-02).
+  ⚠️ Seule la POSITION a bougé : `doitAider` est intact. §4.1 veut « détecter l'indécision PUIS
+  proposer, plutôt qu'interroger d'emblée » — ce qui doit rester conditionnel, c'est **l'encart**,
+  pas sa place dans la page. Le bouton, lui, est discret et peut vivre en haut. Un test compare
+  désormais les positions dans le document, pas les seules présences.
 - **« Dans le même esprit » ne tient pas ses promesses.** Verbatim : « pizza gratin tarte aux tomates
   sardine boulettes ??? le même esprit ??? ».
   ⚠️ **Ce n'est pas un bug, c'est un réglage jamais fait** : λ (diversification) n'est pas calibré
@@ -295,8 +377,23 @@ courant (« cour », « poul »), et dire ce qui s'affiche.
 
 Les trois remarques sont traitées (§1). Reste ouvert :
 
-- Le lien avec les Courses mérite d'être **visible** : le garde-manger est bien persisté
-  (`user_pantry`) et sert à retirer des articles de la liste, mais rien à l'écran ne le dit.
+- ✅ **Le lien avec les Courses existe enfin** (2026-08-02). ⚠️ **CETTE LIGNE DISAIT FAUX, et le
+  démenti vaut mieux que la correction** : « le garde-manger … **sert à retirer des articles de la
+  liste**, mais rien à l'écran ne le dit ». Il ne servait à rien du tout. `courses.tsx` appelait
+  `buildShoppingList(plan)` **sans options** — `ShoppingOptions.pantryFoodIds` était déclaré au
+  domaine, spécifié par la **décision 41 (c)**, et jamais transmis. Ce n'était pas un défaut
+  d'affichage, c'était **la troisième occurrence du même motif** : `note_allergene`, le filtre
+  allergènes sur liste vide, et celui-ci. **Chercher si un champ déclaré est REMPLI et LU avant de
+  conclure qu'il ne manque que de l'affichage.**
+  **Ce qui a été fait** : l'option est transmise, et les articles écartés vont dans une section
+  nommée « **Déjà chez vous (n)** », jamais supprimés en silence — une liste de courses à qui il
+  manque un article est un défaut bien pire que la ligne en trop qu'on raye. La section porte un lien
+  vers « Vider le frigo » : un garde-manger se périme dans la vraie vie, et nommer le retrait sans
+  offrir de le défaire laisserait l'utilisateur devant un manque qu'il comprend et ne peut pas
+  corriger.
+  ⚠️ `buildShoppingList` **RETIRE** les lignes, il ne les marque pas — la section est donc calculée à
+  l'écran par différence avec une liste construite sans l'option, et seulement quand le garde-manger
+  n'est pas vide.
 
 ### Recettes
 
@@ -353,21 +450,28 @@ faite en le traitant :
 
 ---
 
-## §4. Ce qui vous appartient — deux amendements à acter
+## §4. Ce qui vous appartenait — ✅ les deux amendements sont ACTÉS (2026-08-02)
 
-Ces deux points contredisent des décisions déjà prises. Ils ne sont pas bloqués techniquement ; ils
-attendent un arbitrage explicite, parce que les revenir en arrière sans le dire effacerait la raison
-qui les avait fait prendre.
+Ces deux points contredisaient des décisions déjà prises. **Ils sont tranchés ; le raisonnement
+complet vit désormais dans `ETAT.md` §4, décisions 45 et 46** — ici, seul le résultat.
 
-1. **Deux modes, et l'alerte calorique cachée par défaut.** La décision 34 (`ETAT.md` §4) a
-   précisément fait passer `checkCalorieFloor` d'un **refus** à un **avertissement**, après mesure.
-   Le masquer par défaut est cohérent avec un positionnement grand public, mais introduit une notion
-   de « mode professionnel » qui n'existe nulle part dans le produit aujourd'hui — et qui devra être
-   définie une fois pour toutes, pas écran par écran.
-2. **Les facettes dépliables sur place** (chantier A) contre la règle « plus aucun menu déroulant
-   hors de l'accueil ». Cette règle n'est pas cosmétique : elle vient de la contrainte d'âge du
-   produit, un dépliant poussant vers le bas tout ce qui le suit. Trois issues possibles — une
-   fenêtre par facette, une exception assumée et documentée, ou une autre forme d'affichage.
+1. ✅ **Deux modes, et l'alerte calorique cachée par défaut → ACCORDÉ** (décision 45). L'alerte
+   n'apparaît qu'en **mode avancé**, et « mode professionnel » n'est pas un objet nouveau : c'est le
+   MÊME réglage `afficher_macros`, déjà décrit en §6.5 ARCHITECTURE comme « le mode avancé, destiné
+   aux sportifs », déjà faux par défaut. **Un seul interrupteur** — deux drapeaux auraient produit
+   quatre états dont deux vides de sens. Aucune migration. `ARCHITECTURE.md` §6.5 est amendé, pas
+   contourné.
+   ⚠️ **Effet de bord acté** : `alertes_discretes` (v4) devient sans objet — si l'alerte ne se montre
+   qu'en mode avancé, « version courte » n'a plus rien à raccourcir. Case retirée, colonne conservée.
+   ⚠️ **La réserve a été posée avant la décision et écartée** : c'est le seul amendement du projet
+   qui retire une protection. Elle est écrite dans les deux documents plutôt que perdue.
+2. ✅ **Les facettes dépliables → NI L'UN NI L'AUTRE** (décision 46). Pas de dépliant, pas de statu
+   quo : **les valeurs fréquentes passent dans le flux**, en pastilles directement cliquables, avec
+   un « Tout voir (k) › » pour le reste. Zéro geste dans le cas courant, aucune page qui s'allonge,
+   la règle de `panneau.tsx` tient **sans exception à documenter**.
+   ⚠️ Le classement des pastilles est dérivé du **catalogue entier** et ne bouge jamais ; seuls les
+   **compteurs** restent ceux de l'écran. Un bouton qui change de place sous le doigt à chaque filtre
+   posé serait précisément ce que la contrainte d'âge interdit.
 
 ---
 

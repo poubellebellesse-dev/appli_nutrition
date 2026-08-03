@@ -214,6 +214,23 @@ tip(id, texte, categorie, source_url)             -- nutrition_humaine | nutriti
 > **`evidence_sheet_id NOT NULL` sur `topic_criterion` est une contrainte de sécurité, pas de
 > modélisation.** Il devient structurellement impossible d'introduire un critère santé non sourcé.
 
+> **`tip.source_url` suit la même logique, et est `NOT NULL` depuis le 2026-08-01.** La colonne
+> figurait ici dès l'origine mais n'avait jamais été implémentée ; les 8 premiers tips ont été
+> sourcés rétroactivement pour la rendre applicable. Le build refuse un tip sans lien http(s)
+> (`catalog/build.mjs`, `validateCatalog`). La contrainte ne dit rien de la QUALITÉ de la source —
+> le niveau d'exigence éditorial vit dans `catalog/tips/README.md`, et il est délibérément plus bas
+> que celui de `catalog/evidence/`.
+
+> **⚠️ SCHÉMA RÉEL DEPUIS 2026-07-31 — les tables `evidence_*` sont CODÉES, et étendues.** Exposer
+> plusieurs points de vue par fiche (décision du 2026-07-31 : une fiche = une question + N positions
+> sourcées) a imposé deux tables absentes ci-dessus, **`evidence_position`** (un niveau de preuve et
+> un `porte_par` par position) et **`evidence_position_source`** (jonction position → sources), plus
+> trois colonnes sur `evidence_source` : `consulte_le`, `effectif` et `financement`. Ce dernier
+> reproduit la déclaration de financement publiée — c'est ce qui permet de savoir qu'une
+> méta-analyse a été payée par le secteur qu'elle évalue. Le même raisonnement que ci-dessus s'y
+> applique : **une position sans source fait échouer le build**. `health_topic` et `topic_criterion`
+> n'existent toujours pas. Détail et règles d'écriture : `catalog/evidence/README.md`.
+
 ### 4.3 Tables utilisateur (lecture/écriture)
 
 ```sql
@@ -602,12 +619,13 @@ avec niveau de preuve → rappel de consultation médicale.
 
 Les applications de nutrition sont un vecteur documenté de TCA. Contraintes de conception :
 
-- **Plancher calorique** : aucune suggestion ne peut descendre sous 1 200 kcal/jour (femme) /
-  1 500 (homme) **sans écran d'avertissement explicite**. ⚠️ C'est un AVERTISSEMENT, pas un refus —
-  `checkCalorieFloor` (engine/guards/) rapporte les jours concernés dans `WeekPlan.warnings` et le
-  plan est rendu quand même. Une première implémentation levait une `EngineSafetyError` et faisait
-  perdre sept jours de planning pour une seule journée légère : plus strict que ce texte, et
-  hostile. Les quatre autres garde-fous, eux, annulent bien la sortie.
+- **Plancher calorique** : 1 200 kcal/jour (femme) / 1 500 (homme). ⚠️ C'est un AVERTISSEMENT, pas
+  un refus — `checkCalorieFloor` (engine/guards/) rapporte les jours concernés dans
+  `WeekPlan.warnings` et le plan est rendu quand même. Une première implémentation levait une
+  `EngineSafetyError` et faisait perdre sept jours de planning pour une seule journée légère : plus
+  strict que ce texte, et hostile. Les quatre autres garde-fous, eux, annulent bien la sortie.
+  ⚠️ **Ce point exigeait un « écran d'avertissement explicite ». Il a été AMENDÉ le 2026-08-02** —
+  voir « Affichage de l'avertissement de plancher » plus bas. Le calcul, lui, n'a pas changé.
 - **Pas d'IMC affiché** comme jugement de valeur ni de code couleur sur le poids
 - **Pas d'objectif de perte de poids** en v1 — l'appli équilibre, elle ne restreint pas
 - **Pas de série / streak** ni de culpabilisation en cas de repas non suivi
@@ -627,8 +645,22 @@ quotidien** qui est le vecteur de restriction, et lui seul doit être proscrit :
 `user_display.afficher_macros` vaut **false par défaut**. L'information est consultable sur une
 recette ; elle n'est jamais un budget à tenir.
 
-**Le « mode avancé »** (destiné aux sportifs) est le seul réglage qui active cet affichage. Il rend
-visibles calories et macros sur les recettes, le total du jour et le bilan de la semaine.
+**Le « mode avancé »** (destiné aux sportifs, dit aussi **« mode professionnel »** — c'est le MÊME
+réglage, `user_display.afficher_macros`) est le seul réglage qui active cet affichage. Il rend
+visibles calories et macros sur les recettes, le total du jour et le bilan de la semaine, **et
+depuis le 2026-08-02 l'avertissement de plancher calorique** (voir plus bas).
+
+> ⚠️ **UN SEUL INTERRUPTEUR, ET IL LE RESTE.** La tentation, à chaque nouveau réglage « pour les
+> pros », est d'en créer un second. Deux drapeaux produisent quatre états dont deux n'ont aucun
+> sens, et la question « ce détail est-il avancé ? » se retrouve tranchée écran par écran. Tout ce
+> qui relève du mode avancé passe par `afficher_macros`.
+
+⚠️ **À L'ÉCRAN, CE RÉGLAGE NE S'APPELLE NI « avancé » NI « professionnel ».** C'est la case
+**« Afficher plus de détails »** du panneau *Réglages d'affichage* (`ui/screens/parametres.tsx`), et
+c'est délibéré : l'amendement du 2026-07-28 exige que l'avancé soit **non mis en avant**, et la cible
+du produit — « utilisable par des personnes peu à l'aise avec le numérique » — ne gagne rien à lire
+« mode professionnel » dans ses réglages. **Ne cherchez pas un interrupteur portant ce nom : il n'y
+en a pas, et c'est voulu.**
 
 #### Objectifs caloriques personnels — AMENDEMENT du 2026-07-28
 
@@ -647,6 +679,40 @@ La version initiale de ce paragraphe interdisait tout objectif journalier, sans 
 > 340 kcal aujourd'hui »**. Un objectif peut être affiché *à côté* du total du jour ; il ne doit
 > jamais être présenté comme un solde qui se vide. La frontière descriptif / prescriptif reste la
 > ligne à ne pas franchir — l'amendement déplace ce qui est permis, pas cette ligne.
+
+#### Affichage de l'avertissement de plancher — AMENDEMENT du 2026-08-02
+
+La version initiale du premier point de cette section exigeait, sous le plancher calorique, un
+**« écran d'avertissement explicite »**, sans condition. **Décision utilisateur : l'avertissement
+n'est plus affiché par défaut ; il n'apparaît qu'en mode avancé.**
+
+| Ce qui change | Ce qui ne change PAS |
+|---|---|
+| L'affichage de `WeekPlan.warnings` sur l'écran Semaine | **Le calcul** — `checkCalorieFloor` tourne toujours, à chaque plan |
+| Visible seulement si `afficher_macros` est vrai | **`WeekPlan.warnings`** — toujours peuplé, toujours lisible par l'API |
+| `alertes_discretes` (v4) devient sans objet, sa case disparaît | Les **quatre autres garde-fous**, qui annulent toujours la sortie |
+
+> ⚠️ **C'est le seul amendement de ce document qui RETIRE une protection au lieu d'en déplacer une,
+> et il faut que ce soit écrit ici plutôt que découvert dans le code.** L'amendement du 2026-07-28
+> (objectifs personnels) élargissait ce qui est permis sans toucher à la ligne descriptif /
+> prescriptif ; celui-ci rend silencieux, pour l'utilisateur ordinaire, un signal que la version
+> initiale de §6.5 jugeait nécessaire. La réserve a été posée avant la décision et écartée
+> explicitement — `ETAT.md` décision 45.
+
+**Ce qui borne la portée de l'amendement**, et qui a pesé dans la décision :
+
+- La décision 34 a **mesuré** le cas nominal (7 jours × 3 créneaux) à **1 208 kcal minimum, ZÉRO
+  avertissement**. Ce qui devient invisible par défaut est un cas **rare**, pas l'ordinaire.
+- Les journées qui déclenchent encore l'alerte sont des **combinaisons extrêmes de régimes**
+  (« sans gluten NI lait NI œuf » : 16 créneaux remplis sur 21). ⚠️ **C'est une limite de CONTENU**,
+  et le masquage ne la traite pas — elle reste à combler, indépendamment de ce réglage.
+- Le plan a **toujours été rendu quand même** : l'avertissement n'a jamais bloqué personne. Le
+  masquer retire une information, pas une possibilité.
+
+⚠️ **Ce que cet amendement N'AUTORISE PAS** : masquer les quatre autres garde-fous, masquer un
+allergène déclaré, ou étendre le raisonnement « par défaut c'est plus sobre » à un signal de
+sécurité. Le plancher calorique est un repère nutritionnel ; un allergène est une promesse centrale
+du produit. Les deux ne se traitent pas pareil.
 
 #### Encouragements — ton chaleureux, jamais retour de performance
 

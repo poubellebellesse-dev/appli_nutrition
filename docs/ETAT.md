@@ -141,6 +141,18 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 - Palette : sable/terracotta, Newsreader + Instrument Sans.
 - **Thèmes d'accent curatés** (pré-validés contraste clair/sombre), pas de nuanceur libre ; le
   badge de preuve reste neutre quel que soit le thème.
+- **La photo de plat est OBLIGATOIRE** (2026-08-01, décision utilisateur —
+  `archive/RECAP_SESSION_8.md` §2). Elle porte l'ambiance, ce qui **valide rétroactivement l'accent
+  unique**. Trois conséquences non optionnelles : **(a)** `catalog/build.mjs` doit **échouer** si une
+  recette du catalogue n'a pas de photo — une règle non vérifiée au build n'est pas une règle ;
+  **(b)** la règle porte sur le **catalogue**, pas sur `user_recipe` ni sur les recettes importées,
+  dont §3 « Communauté » exclut déjà la photo ; **(c)** ⚠️ **jamais de texte SUR la photo** — le
+  contraste y est **non mesurable**, et une appli qui a documenté trois écarts au dixième ne peut pas
+  abandonner la garantie là. Nom, heure et tags sur fond plein **sous** la photo. Spec de prise de
+  vue (ratio, angle, lumière, fond) : `archive/RECAP_SESSION_8.md` §2.
+- ⚠️ **Aucune échelle typographique n'existe** — 29 tailles arbitraires mesurées le 2026-08-01, et
+  `theme.css` ne porte aucun jeton de texte. Échelle à 6 pas proposée et **non appliquée** :
+  `archive/RECAP_SESSION_8.md` §5. La cause est une spec incomplète, pas une dérive d'intégration.
 
 ### Média, stockage & modèle
 - **Gestes de cuisine** : boucle WebP 3 s pour les gestes simples ; **3 clips MP4 de 3 s**
@@ -150,6 +162,12 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 - **Cache à deux étages (option B)** : socle léger pré-caché (shell + `catalog.db` + boucles +
   photos d'ustensiles), médias lourds à la demande + bouton « tout télécharger ». **Aucun média
   en blob dans le `.db`.**
+  ⚠️ **AMENDÉ par la décision Capacitor (2026-08-01, §4 décision 9).** Ce modèle suppose un service
+  worker et un réseau ; en Capacitor les assets sont **dans le binaire**. La contrainte ne disparaît
+  pas, elle **change de nature** — et le budget « bundle < 15 Mo » du critère P6 était un budget de
+  **premier chargement web**, pas une limite d'APK (plafond AAB 150 Mo). Estimation à vérifier avant
+  de produire les photos : 241 × (hero ~120 Ko + vignette ~32 Ko) ≈ **36 Mo**, soit hors budget web
+  et confortable en binaire. **À trancher avant la prise de vue** — `archive/RECAP_SESSION_8.md` §2.
 - **Modèle : 100 % gratuit, sans pub.** Un simple lien « à propos » vers site perso / réseaux.
 
 ### Communauté sans serveur & contenu
@@ -192,7 +210,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 6 | Hébergement PWA | Cloudflare / Netlify / GitHub Pages (statique, indifférent) |
 | 7 | Chiffrement | Sans objet (aucune donnée de santé collectée) |
 | 8 | **Mode cuisine** (multi-recettes, timers par étape) en v1 ou v1.5 ? | Feature nouvelle, sizeable — après le socle P0 |
-| 9 | Cible iOS : PWA seule ou Capacitor + App Store ? | **PWA** par défaut (gratuit, pas de Mac) ; Capacitor si API native |
+| ~~9~~ | Cible iOS : PWA seule ou Capacitor + App Store ? | **FERMÉE le 2026-08-01 (décision utilisateur) — Capacitor** remplace TWA/Bubblewrap pour le produit final. Installé (`capacitor.config.ts`, `@capacitor/{core,cli,android,local-notifications}`) ; `npx cap add android` jamais lancé. **Gain réel** : le risque « éviction Safari à 7 jours », classé CRITIQUE en §7 ARCHITECTURE, tombe largement — le stockage d'une WebView applicative vit tant que l'appli est installée. ⚠️ **Capacitor ne lève PAS la contrainte « pas de Mac »** : signer un IPA exige macOS + Xcode + 99 €/an. Sans Mac, cette décision apporte un conteneur **Android**, pas l'iOS — **ne pas retirer la version web du plan**. ⚠️ **Risque n°1 introduit, NON VÉRIFIÉ** : tout le projet parie sur `rem` → l'interface suit la police système à 150 %. Chrome le fait ; **une WebView applicative, ce n'est pas garanti**, et l'échec serait SILENCIEUX. À tester sur appareil avant tout le reste. Conséquences complètes et régressions WebView connues : `archive/RECAP_SESSION_8.md` §3 |
 | ~~10~~ | Noms définitifs des **archétypes** (§ENGINE 6.3 bis) | **Fermé, tranché et CODÉ** (session du 2026-07-25) — `equilibre` (défaut) · `envie` · `decouverte` · `de_saison` · `mes_gouts` · `rapide` (`ArchetypeId`, `domain/archetype-ids.ts`) ; table des surcharges dans `selection/archetypes.ts` — §3 |
 | 11 | Token de push GitHub (pour que l'utilisateur pousse les commits Claude) | À fournir par l'utilisateur — voir `docs/archive/RECAP_SESSION.md` § Reprendre ici |
 | ~~12~~ | Rattachement de `speed` au pipeline | **Fermé, tranché et CODÉ** — `speed` EST une couche du registre à part entière (11ᵉ couche de score, poids nul par défaut, relevée par l'archétype « Rapide ») ; le registre est désormais à 17 (6 exclusion + 11 score) — §3 |
@@ -230,16 +248,27 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | ~~42~~ | **`pourSlots` — la liste devait être rangeable par repas et par jour** | **CORRIGÉE le 2026-07-28.** §2 ARCHITECTURE exige une liste « rangeable par rayon / repas / jour ». `ShoppingListItem` portait le rayon et la tranche, mais l'agrégation DÉTRUISAIT l'information de repas : ranger par repas était impossible. ⚠️ **Le manque ne se voyait pas** — la liste avait l'air complète. Trouvé en ÉNUMÉRANT les usages à la demande de l'utilisateur, pas en relisant le code. Ajouter la provenance après coup aurait obligé à refaire l'agrégation |
 | ~~43~~ | **Lexique de gestes — 4 fiches pour 93 étapes** | **COMPLÉTÉ le 2026-07-28, EN DEUX PASSES.** Dernier point de contenu de l'audit du 2026-07-27. **4 → 62 gestes**, **155 → 763 étapes annotées** sur 1 097 (70 %). ⚠️ **La première passe était incomplète, et cohérente** — aucune référence cassée, aucune fiche orpheline, 43 gestes… et « écosser les fèves », « éponger les calamars », « essorer la laitue », « étaler la pâte » annotées nulle part. Elle partait d'une liste écrite À LA MAIN. **La cohérence ne dit rien de la couverture** : il a fallu échantillonner les étapes non annotées pour voir le trou. Seconde passe : extraction des verbes des 1 097 étapes, puis TRI. « Ajouter », « verser », « mélanger », « servir » sont fréquents mais ne sont pas des gestes — les définir serait condescendant et gonflerait le lexique sans rien apprendre. 19 gestes techniques retenus, `zester` écarté (0 occurrence). Les 334 étapes restantes sont sans geste technique (« Mélanger farine et sucre », « Servir aussitôt ») — c'est normal, pas un trou. ⚠️ **RESTE : « illustré »**. §2 ARCHITECTURE promet un « lexique de gestes de cuisine ILLUSTRÉ » et les 62 fiches sont du texte seul. C'est du ressort des visuels, en cours côté utilisateur |
 | ~~44~~ | **Méthodes d'API restées non câblées** | **TROIS SUR QUATRE CODÉES le 2026-07-28.** `scaleRecipe` (§10.1), `rerollSlot` (§7.2) et la couche `pantry` (§10.2 ①, « vider le frigo ») — déclarée au registre depuis le début, jamais implémentée, alors que `MealContext.pantryFoodIds` existait déjà. ⚠️ **`pantry` est une couche de SCORE, jamais un filtre** : avec quatre ingrédients au frigo aucune recette n'est intégralement couverte, un filtre renverrait zéro résultat. Et la couverture est PONDÉRÉE PAR LA MASSE — avoir le sel d'un bœuf bourguignon ne couvre rien, avoir le bœuf couvre l'essentiel. ⚠️ **`scaleRecipe` applique une règle de trois, y compris au sel** — choix assumé : une courbe par ingrédient serait irrenseignable pour 199 aliments, et la règle de trois est PRÉVISIBLE. `uniteAffichage` reste figée : mettre « 2 carottes » à l'échelle demanderait de réécrire du français. ⚠️ **`rerollSlot` et `planLeftovers` ont dû ÉTENDRE leur signature** avec le profil : un `WeekPlan` garde le résultat, pas la demande qui l'a produit. Restent non câblées : `analyzeWeek` (pas de type `NutritionReport` défini) et `suggestSubstitutions` (table vide, décision 27) |
+| ~~45~~ | **L'alerte de plancher calorique et le « mode professionnel »** | **TRANCHÉE le 2026-08-02 (décision utilisateur), amendement à §6.5 ARCHITECTURE.** Demande d'origine : « on a dit deux modes → un par défaut pour tout le monde → 1 pour les professionnels ». **L'alerte est MASQUÉE par défaut** et n'apparaît qu'en mode professionnel. **Un seul interrupteur, pas deux** : `user_display.afficher_macros` — déjà décrit en §6.5 comme « le mode avancé, destiné aux sportifs », déjà `false` par défaut — devient ce mode et gouverne aussi l'alerte. **Aucune migration** : la colonne existe depuis la v1 du schéma d'affichage. Créer un second drapeau aurait installé deux axes de réglage et la dérive « écran par écran » que §6.5 dit précisément d'éviter. ⚠️ **CONSÉQUENCE NON DEMANDÉE, ACTÉE** : `alertes_discretes` (v4) devient sans objet — si l'alerte n'apparaît qu'en mode professionnel, « version courte » n'a plus rien à raccourcir. La case de `parametres.tsx` et la prop `discrete` d'`AlerteEnergie` sont retirées ; **la colonne reste en base**, les migrations de ce projet étant en ajout seul. ⚠️ **RÉSERVE ÉCRITE, MAINTENUE, ET ÉCARTÉE PAR L'UTILISATEUR** : c'est la seule des trois décisions du jour qui RETIRE une protection au lieu d'en déplacer une, et §6.5 est déclarée contraignante pour la publication (« ces règles conditionnent la légalité du produit »). Le texte d'origine exigeait un « écran d'avertissement explicite » sous 1 200 / 1 500 kcal ; il ne peut pas tenir tel quel et est réécrit, pas contourné — même mécanique que l'amendement de la décision 36. ⚠️ **Le fait qui relativise le risque** : décision 34 a mesuré le cas nominal (7 jours × 3 créneaux) à **1 208 kcal minimum, ZÉRO avertissement**. L'alerte ne se déclenche plus que sur les combinaisons extrêmes de régimes — « sans gluten NI lait NI œuf » remplit 16 créneaux sur 21. Ce qui est masqué par défaut est donc un cas rare, **pas** le comportement ordinaire ; et la cause de ce cas rare est un trou de CONTENU, qui reste à combler indépendamment |
+| ~~46~~ | **Facettes de filtre : dépliantes, ou autrement ?** | **TRANCHÉE le 2026-08-02 (décision utilisateur)** — ni le dépliant demandé, ni le statu quo : **les valeurs fréquentes passent dans le flux**. Chaque axe rend ses N valeurs les plus portées en pastilles directement cliquables, suivies d'un « Tout voir (k) › » qui ouvre la fenêtre existante. **Zéro geste pour le cas courant, aucun dépliant, et rien ne pousse vers le bas** — la règle de `panneau.tsx` tient sans exception à documenter. ⚠️ **Le grief d'origine était déjà traité** : le verbatim (« pour les filtres exemple cuisine → ils doivent être dépliables […] et non passer par plus de filtres ») avait pour cause mesurable « la cuisine est à deux gestes », corrigé au lot 11 du 2026-08-02 (Cuisine, Régime, Service à UN tap chacun). Ce qui restait était la forme littérale, pas le besoin. ⚠️ **LE CLASSEMENT DES PASTILLES EST GLOBAL, LES COMPTEURS RESTENT DYNAMIQUES.** Deux choses distinctes : *quelles* valeurs sortent en pastille se dérive du catalogue entier et ne bouge jamais ; *quel chiffre* s'affiche à côté reste celui de l'écran (règle en place, `filtres-recettes.tsx:8-16`). Dériver aussi le classement des résultats courants ferait changer les pastilles de place à chaque filtre posé — un bouton qui se déplace sous le doigt, exactement ce que la contrainte d'âge du produit interdit. Une valeur sélectionnée reste visible même hors du top N, sinon la retirer deviendrait impossible |
+| ~~47~~ | **Variantes par substitution : table `substitution` ou recette à part entière ?** | **TRANCHÉE le 2026-08-02 (décision utilisateur) — la table.** Ferme la décision 27, qui disait « avec le contenu, pas avant » : le contenu arrive. **Trois raisons** : (a) la sémantique était DÉJÀ tranchée par la décision 26 — variante = ingrédient principal INVARIANT, substitution d'un ingrédient SECONDAIRE ; faire d'une variante une recette à part entière l'aurait contredite ; (b) le mécanisme est **déjà codé et testé** (`buildVariants`, `alternatives.ts:54-90`), il ne rend rien uniquement parce que `catalog.substitutions` est une Map vide ; (c) 4 champs par couple contre 20 pour une recette, et deux recettes quasi identiques ont un `signatureOverlap` proche de 1 (`signature.ts:155`) — la diversification en supprimerait systématiquement une des deux, donc une variante n'apparaîtrait **jamais** à côté de son original. ⚠️ **UN COUPLE EST GLOBAL** : `catalog.substitutions` est indexée par ALIMENT (`ReadonlyMap<FoodId, Substitution[]>`), pas par recette. Écrire `beurre → huile d'olive` l'appliquerait à toutes les recettes contenant du beurre, pâte brisée comprise. **Règle retenue : on n'écrit que les couples vrais PARTOUT** — si le `contexte` doit dire « sauf », le couple n'a pas sa place. Une portée par recette (`Substitution.recipeIds`) a été envisagée puis écartée : modifier le type du domaine, le schéma, le build et `buildVariants` avant d'avoir écrit le moindre couple. Seul garde-fou déjà en place : `alternatives.ts:78` refuse la substitution sur l'ingrédient CARACTÉRISTIQUE. ⚠️ **`ratio` ET `contexte` ÉTAIENT DÉCLARÉS ET LUS PAR PERSONNE** (`catalog.ts:534-535` contre `alternatives.ts:84`, qui ne prend que `altFoodId`) — le motif exact déjà payé deux fois par ce projet (`note_allergene`, filtre allergènes sur liste vide). **Ils sont câblés en même temps que la table**, pas remplis à vide : `ratio` recalcule la quantité, `contexte` devient la phrase montrée. ⚠️ **LES COUPLES SONT SOURCÉS, comme les recettes** (décision utilisateur) : un ratio faux produit un plat raté, et la vérification du 2026-08-02 a trouvé 8 recettes à risque sur 10 sans aucun critère vérifiable. ⚠️ **RIEN NE SERA VISIBLE À L'ÉCRAN** : `suggestAlternatives` n'est câblée à aucun bouton (`detail-recette.tsx:16-18`, `frigo.tsx:21`). Remplir la table remplit le MOTEUR ; l'exposer est un chantier distinct, non décidé. **⚠️ AMENDÉE LE JOUR MÊME — voir décision 48** |
+| ~~48~~ | **La règle « couples universels » de la décision 47 rend une table VIDE** | **MESURÉ puis AMENDÉ le 2026-08-02, quelques heures après la décision 47.** Une passe de recherche sourcée sur les ~200 aliments du catalogue a rendu **ZÉRO couple** passant le double filtre « vrai dans toute préparation » + « source institutionnelle lue ». **Les rejets tiennent SUR CE CATALOGUE, pas en théorie** — vérifié en interrogeant `catalog.db` : `beurre_doux` est dans **60 recettes dont 11 desserts** (tarte aux pommes, tarte au citron, tarte aux abricots, deux crumbles : la pâte brisée n'est pas un cas d'école, elle est au catalogue) ; `sucre_blanc` dans **12 recettes dont 8 desserts** ; `lait_entier` dans **5 dont 4 desserts**, tous des appareils à prise. Seule piste à source institutionnelle solide — le ratio herbes fraîches → séchées, deux extensions universitaires concordantes — **inapplicable** : le catalogue n'a aucune paire du même végétal (thym séché sans thym frais, persil frais sans persil séché), et le ratio est en VOLUME quand la table indexe des grammes. ⚠️ **La cause est STRUCTURELLE, pas un manque d'effort** : `catalog.substitutions` est indexée par ALIMENT SEUL, et à peu près toute substitution culinaire dépend du contexte de préparation (cru/cuit, salé/pâtissier, monté/simple). **Un index par aliment ne peut pas exprimer « sauf ».** **DÉCISION (utilisateur) : on rouvre la portée par recette**, c'est-à-dire l'option que la décision 47 avait explicitement écartée — écartée sous l'hypothèse, désormais fausse, qu'une table universelle serait remplissable. ⚠️ La passe de recherche avait convergé **seule** sur cette même recommandation, sans connaître l'arbitrage. **Forme retenue : `Substitution.recipeIds`, liste d'INCLUSION** (`null` = partout, réservé au cas universel qu'on sait maintenant rare). Une liste d'EXCLUSION a été envisagée et écartée : elle est plus courte à écrire mais elle **échoue ouverte** — la recette 242, une tarte, hériterait en silence d'une substitution fausse. L'inclusion échoue fermée : une recette nouvelle ne reçoit rien tant que personne ne l'a ajoutée. C'est le même arbitrage que l'import de recettes, qui REFUSE sur un `foodId` inconnu plutôt que de laisser passer. ⚠️ **CONSÉQUENCE À ASSUMER : les couples s'écrivent ÉTROITS.** On n'écrit pas `beurre → huile` pour 49 recettes — une liste de 49 ids écrite à la main ne serait vérifiée par personne et pourrirait, exactement ce que ce projet reproche aux listes écrites à la main. Une table de substitution n'a pas à tout couvrir ; elle doit être JUSTE là où elle se déclenche. ⚠️ **Un test de build est exigé** : toute entrée de `recipeIds` doit désigner une recette qui existe ET qui contient réellement `foodId`, sinon c'est une entrée morte — la classe de bug que ce projet rencontre en boucle (`note_allergene`, filtre allergènes sur liste vide, `ratio`/`contexte` jamais lus). **⚠️ SECONDE MESURE, MÊME JOUR : la portée par recette RÉSOUT le périmètre et NE RÉSOUT PAS le contenu.** Une deuxième passe de recherche, menée avec la portée par recette, rend **encore zéro couple** — mais le blocage a changé de nature et c'est cela qu'il faut retenir : « `beurre_doux` → `huile_olive` dans ces plats salés-là, pas dans les 11 desserts » est **devenu exprimable**. Ce qui manque désormais, c'est **la source**. Les agences publient des COMPOSITIONS, pas des équivalences de cuisine : le CNIEL donne « le beurre standard contient 82 % de matière grasse » (lu), l'ANSES Ciqual et l'USDA FoodData Central sont des applications JS non lisibles automatiquement, et tout ce qui chiffre un ratio est un blog ou un calculateur. ⚠️ **Une part du blocage vient d'une consigne trop stricte, pas de la règle du projet** : la passe avait reçu « privilégie institutions publiques et agences » et en a conclu que les ouvrages culinaires étaient exclus. **Ils ne le sont pas** — le chantier de sourçage des recettes cite Escoffier 1903 et Anctil 1915. ⚠️ **Et `ratio: 1.0` n'est pas une affirmation à sourcer** : c'est « même poids », l'hypothèse nulle. Ce qui demande une source, c'est QUE l'échange fonctionne — un jugement culinaire — pas LE NOMBRE. Exiger une citation d'agence pour 1 = 1 bloque la table sur une exigence vide. **⏸️ CHANTIER MIS EN PAUSE (décision utilisateur, 2026-08-02)** : le contenu des recettes est travaillé **en parallèle** dans une autre piste, et écrire ici entrerait en collision. **Rien n'a été codé, rien n'a été écrit au catalogue.** À la reprise, deux pistes non creusées attendent, toutes deux à ratio 1,0 : **`gruyere` ↔ `comte_rape`** (les deux au catalogue, les deux utilisés en gratins) et les **légumineuses en conserve** |
 
 ---
 
-## 5. Les huit écrans
+## 5. Les écrans
 
 > Le journal des lots terminés (P0 → P1c, contenu lots 1-2) a été déplacé dans
 > [archive/RECAP_SESSION_5.md](./archive/RECAP_SESSION_5.md) §7 le 2026-07-31 : il décrivait du
 > travail achevé que git conserve déjà, et il noyait l'état courant.
 
-**Les huit écrans sont livrés** (2026-07-30). `npm run dev` pour le développement ;
+> ⚠️ **Le tableau ci-dessous suit la numérotation de `DESIGN.md` §4, qui s'arrête à huit.** Le code
+> en porte **dix** : s'y ajoutent **Paramètres** et **Éditeur de recette**, livrés le 2026-08-01 et
+> absents de `DESIGN.md` (`archive/RECAP_SESSION_7.md`). **Neuf sont couverts par des tests
+> d'écran** — `savoir.tsx` ne l'est pas, le chantier « Comprendre » y étant en cours au moment où
+> les tests ont été écrits. Les trois comptes — 8 spécifiés, 10 codés, 9 testés — sont justes ; ne
+> pas les uniformiser sans traiter la cause (`DESIGN.md` n'a pas suivi).
+
+**Les huit écrans de `DESIGN.md` §4 sont livrés** (2026-07-30). `npm run dev` pour le développement ;
 `npx vite build && npx vite preview --host` pour tester le service worker et l'installation,
 qui ne s'activent qu'en build de production.
 
@@ -252,7 +281,7 @@ qui ne s'activent qu'en build de production.
 | 4.4 | 📖 **Recettes** | `browseRecipes` + `engine/search/` ✅ · entonnoir ✅ | **Livré** (2026-07-30) — hors « Pourquoi pas ce plat ? » |
 | 4.5 | 💡 **Vider le frigo** | `searchByPantry` ✅ · couche `pantry` ✅ | **Livré** (2026-07-30) — hors substitution suggérée |
 | 4.6 | **Détail d'une recette** | `scaleRecipe` ✅ · lexique 62 gestes ✅ | **Livré** (2026-07-30) — hors photo, matériel, alternatives, notes |
-| 4.7 | 💡 **Savoir** | lexique ✅ · table `tip` ✅ (8 tips) · « Comprendre » = v2 | **Livré** (2026-07-30) — « Comprendre » annoncé, pas simulé |
+| 4.7 | 💡 **Savoir** | lexique ✅ · table `tip` ✅ (73 tips sourcés, 3 catégories) · « Comprendre » ✅ (8 fiches, 33 positions) | **Livré** (2026-07-31, tips étendus le 2026-08-01) — les 4 sections de §4.7 sont rendues ; contenu NON RELU |
 | 4.8 | **Premier lancement** | `user.db` ✅ · routeur ✅ · consentement ✅ | **Livré** (2026-07-30) — hors écran 4 « goûts » |
 
 > ✅ **`user.db` existe depuis le 2026-07-30** — c'était le vrai préalable, et il est levé.
@@ -369,6 +398,21 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   cette information). À rétablir **avant** de calibrer λ.
 - **`roquefort` porte l'allergène `lait` mais pas `sulfites`.** Les 9 nutriments sont un choix assumé
   (décision 25), pas une dette.
+- ⚠️ **Un échec de test intermittent subsiste, non caractérisé** (2026-08-01). Une course a été
+  trouvée et corrigée — `catalog/build.test.ts` écrivait `app/public/catalog/catalog.db` pendant que
+  les tests d'écran le lisaient via `ui/test-socle.ts` — mais **un échec isolé de plus (1 test sur
+  939) a été observé après le correctif**, sur une machine chargée, sans être capturé ni reproduit
+  en dix exécutions ultérieures. Hypothèse **non vérifiée** : un `waitFor` de test d'écran qui expire
+  sous contention CPU. À capturer avec `--reporter=json` la prochaine fois qu'il se manifeste plutôt
+  qu'à relancer jusqu'au vert.
+- ⚠️ **Le contenu de l'onglet Savoir n'est relu par personne** (§8.2 bis) : 73 tips et 8 fiches
+  « Comprendre », chaque source ouverte et vérifiée à l'écriture, **aucune relecture par un tiers**.
+  Bloquant avant publication. Trois réserves de sourçage subsistent sur les fiches : DOI Messerli
+  dérivé d'un PII vérifié, auteurs de `critique-zhao-2018` non vérifiés, URL française ANSES.
+- ⚠️ **Le build ne vérifie que la FORME d'une source** — présence et format http(s) pour
+  `tip.source_url`, présence pour les sources de fiches. Il ne saura jamais si la page dit ce que le
+  texte prétend. **Aucun automatisme ne remplace la relecture** ; la garantie tient à la règle
+  éditoriale de `catalog/tips/README.md` et `catalog/evidence/README.md`.
 
 ### Interface — ce qui manque AVANT de coder les écrans
 
@@ -395,17 +439,32 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   `#bd6a48` = 3,95:1, sous le seuil AA). Corrigé par des jetons distincts, mesuré, documenté en §1
   DESIGN. **Aucun test ne le garde** : le jour où quelqu'un ajoute une teinte, rien ne l'arrêtera.
 - ⚠️ **Thèmes d'accent curatés non faits** (§1 DESIGN, « option retenue ») — un seul jeu de teintes.
-- ⚠️ **Trois onglets sur cinq n'ont pas d'écran** (Courses, Recettes, Savoir) : ils affichent un
-  état « pas encore construit ». La barre porte les 5 dès maintenant, exprès — une navigation qui
-  grandit de version en version change de forme sous les doigts de l'utilisateur.
+- ✅ **Les cinq onglets ont leur écran** (Courses, Recettes et Savoir livrés depuis). La barre
+  portait les 5 avant qu'ils existent, exprès — une navigation qui grandit de version en version
+  change de forme sous les doigts de l'utilisateur.
+- ✅ **Les écrans sont testés** (commits `568144b`, `bdcd0d3`) : 9 fichiers `*.test.tsx`. La dette
+  « zéro test d'interface », n°1 de la fiche de reprise jusqu'au 2026-07-31, est close.
 - ✅ **L'appli est installable** (2026-07-30) — manifest `standalone`, icônes générées par
   `npm run icons:build` (PNG via `zlib`, aucune dépendance d'image), balises iOS, service worker de
   pré-cache écrit par un plugin Vite maison à partir des fichiers RÉELLEMENT émis. Test §6.6
   « zéro requête réseau » en place, détecteur éprouvé sur des extraits synthétiques.
 - ⚠️ **Rien de tout ça n'a été vérifié sur un vrai téléphone.** Le service worker ne tourne qu'en
   build de production (`npx vite build && npx vite preview`), jamais en `npm run dev`.
-- ⚠️ **Pour Play (TWA), il manque l'hébergement** : origine HTTPS + `/.well-known/assetlinks.json`.
-  Sans ce fichier, la barre d'URL ne se masque pas. Hébergeur et domaine non choisis.
+- ~~⚠️ **Pour Play (TWA), il manque l'hébergement** : origine HTTPS + `/.well-known/assetlinks.json`.~~
+  **CADUC depuis le 2026-08-01** (§4 décision 9) : la cible est **Capacitor**, les fichiers vivent
+  dans l'APK. Ni origine HTTPS ni `assetlinks.json` ne sont requis, et **l'hébergement sort du chemin
+  critique**. Une version web reste souhaitable — seul chemin vers iOS sans Mac — mais elle n'est
+  plus bloquante pour publier.
+- ⚠️ **Trois conséquences de Capacitor NON TRAITÉES** (`archive/RECAP_SESSION_8.md` §3) : le message
+  `non_persistant` de `main.tsx` dit encore « Ajoutez l'application à votre écran d'accueil » et
+  s'afficherait **dans une appli native** ; le pari « `rem` → l'interface suit la police système à
+  150 % » **n'est pas vérifié en WebView**, et son échec serait silencieux ;
+  `env(safe-area-inset-bottom)` (barre à 5 onglets) et la barre d'état native sont à revérifier sur
+  appareil.
+- ⚠️ **Accessibilité — socle non posé** (`archive/RECAP_SESSION_8.md` §4) : aucune gestion du focus
+  au changement de route (`<main>` sans `tabIndex`), aucun lien d'évitement, **0 occurrence de
+  `prefers-reduced-motion`** alors que §4.7 prévoit carrousels, boucles WebP et clips MP4. Lots A et
+  B chiffrés, sans dépendance, **non exécutés**.
 - **Écran Courses — reste à faire** (§4.3 DESIGN) : l'autocomplétion sur les aliments du catalogue
   (un ajout manuel est aujourd'hui du texte libre, sans `FoodId`), l'impression et l'export CSV/JSON
   du menu discret, « Que cuisiner avec ? » et « Vider le frigo » pré-rempli (l'écran 4.5 n'existe
@@ -448,14 +507,46 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   SANS sa propre sélection — sinon choisir `française` afficherait `italienne (0)` alors que la
   retirer ramènerait 19 recettes. Deux requêtes de plus par changement de filtre, sur 241 recettes :
   imperceptible aujourd'hui, à surveiller si le catalogue grossit d'un ordre de grandeur.
-- ⚠️ **Les 8 tips sont TOUS `biologie_aliment`** — aucune affirmation de santé. Le tuyau existe
-  (table `tip`, chargement YAML, lint de vocabulaire au build, écran) ; le contenu de
-  `nutrition_humaine` reste à écrire, et c'est une décision ÉDITORIALE, pas un lot de code : toute
-  affirmation sur l'alimentation humaine tombe sous §6.1 et §6.2. Règles dans `catalog/tips/README.md`.
-- ⛔ **« Comprendre » (§4.7) n'existe pas et ne doit pas être bricolé.** `HealthTopic` est un type
-  sans table. §4.7 exige un badge de niveau de preuve sur chaque affirmation et §5 DESIGN en fait
-  « l'élément le plus surveillé » : afficher des affirmations santé sans sources ni niveau de preuve
-  serait exactement ce que §6.1 cherche à empêcher. L'écran l'annonce comme à venir.
+- ✅ **73 tips, les 3 catégories de §8.4 ouvertes** (2026-08-01) : 51 `biologie_aliment`,
+  11 `nutrition_humaine`, 11 `nutrition_animale`. Cible §8.2 pour l'ordre de grandeur : une centaine.
+  - **`tip.source_url` est `NOT NULL`** — la colonne annoncée en §4.2 ARCHITECTURE n'avait jamais
+    été implémentée. Le build refuse désormais un tip sans lien http(s), et le carrousel affiche le
+    domaine de la source sur le tip lui-même. Décision utilisateur du 2026-08-01, sur le constat
+    qu'un fait court et affirmatif est ce qui se recopie le plus vite sans vérification.
+  - **Les 8 tips d'origine ont été sourcés rétroactivement, et 3 corrigés** : le miel perd
+    l'anecdote des tombes égyptiennes (invérifiable), l'oignon perd le remède du réfrigérateur (la
+    source le donne pour contesté), le piment perd « c'est le gras qui emporte la capsaïcine »
+    (l'essai retenu montre que le lait écrémé calme autant que l'entier).
+  - **Les tips `nutrition_humaine` sont strictement descriptifs** : « l'EFSA considère que… »,
+    jamais « il faut… ». C'est ce qui garde §6.1 intact ; le lint §6.2 attrape le reste.
+  - ⛔ **CONTENU NON RELU PAR UN TIERS** (§8.2 bis). Chaque source a été ouverte à l'écriture, mais
+    le niveau d'exigence est plus faible que `catalog/evidence/` : articles PMC, textes d'autorité
+    et manuels de référence, pas des méta-analyses. Assumé et écrit dans `catalog/tips/README.md`.
+- ✅ **« Comprendre » (§4.7) existe** (2026-07-31) : 8 fiches, 33 positions, 33 sources vérifiées une
+  à une. Sources éditables en `catalog/evidence/*.md` (Markdown à frontmatter), compilées en cinq
+  tables (`evidence_sheet`, `evidence_source`, `evidence_position`, `evidence_position_source`,
+  `evidence_link`). Règles d'écriture dans `catalog/evidence/README.md`.
+  - ⚠️ **Une fiche expose PLUSIEURS POSITIONS**, chacune avec son niveau de preuve, qui la porte
+    (« OMS », « revue Cochrane ») et ses sources cliquables. §4.2 ne prévoyait qu'un niveau par
+    fiche : `evidence_position` et sa jonction sont un écart assumé, documenté dans le README.
+  - ⚠️ **Pas de fausse symétrie.** Seules les divergences entre méta-analyses ou entre autorités
+    sont exposées, jamais une étude isolée contre un consensus ; une position contestée est citée
+    AVEC sa critique publiée. Trois fiches (fibres, lactose, cœliaque) écrivent explicitement qu'il
+    n'y a pas d'opposant à présenter — en fabriquer un donnerait une fausse image de l'état des
+    connaissances.
+  - ⚠️ **Le build refuse** une position sans source, une source inexistante, un titre non
+    interrogatif, un lien vers un aliment absent, ou le vocabulaire banni §6.2. 6 tests de rejet
+    dans `catalog/build.test.ts`, 6 tests de propriété dans `catalog-loader.test.ts`.
+  - ⚠️ **Le badge reste typographique et neutre** (§5 DESIGN) : jamais de couleur, jamais d'étoiles.
+    Le colorer est la modification la plus tentante et la plus interdite de cet écran.
+  - ⛔ **CONTENU NON RELU.** §8.2 bis exige une relecture par un tiers avant publication : ces
+    8 fiches portent des affirmations de santé et restent des **brouillons**. Trois réserves
+    signalées dans les fichiers : un DOI déduit (critique Messerli), une liste d'auteurs non
+    vérifiée (`critique-zhao-2018`, la page éditeur exige un compte), une URL ANSES en anglais.
+  - `HealthTopic` reste un type **sans table** : les chapitres de §6.3 (deux niveaux familles →
+    chapitres) sont rendus par les fiches elles-mêmes, groupées par `categorie`. Les critères
+    applicables aux suggestions (`topic_criterion`, bouton « Appliquer ces critères ») n'existent
+    pas — c'est du moteur, pas de l'affichage.
 - ⚠️ **Aucun test d'interface.** Vitest tourne sans DOM ; couvrir un composant React demanderait
   `jsdom`, donc une dépendance à valider. Seule la logique extractible est testée (`routeDepuisHash`).
   Les écrans ne sont couverts que par `typecheck` et `vite build`.
@@ -476,9 +567,13 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - **Écran Recettes — reste à faire** : l'état « Pourquoi pas ce plat ? » (nommer la raison
   d'exclusion d'une recette précise ; `entonnoir.entries` porte déjà la matière) et le bloc d'entrée
   « Vider le frigo » (écran 4.5 inexistant).
-- ⛔ **Aucune table de tips** pour le carrousel « Le saviez-vous ? » (§4.7 DESIGN).
-- **Pas de routage** : l'app est un composant unique. `react-router-dom` n'est pas installé —
-  installation à valider explicitement (CLAUDE.md §4).
+- ✅ **Routage par fragment d'URL** (`ui/router.tsx`), sans bibliothèque — décision reprise le
+  2026-07-30 à l'arrivée de la fiche recette. Par hash et NON par History API : l'appli vise un
+  hébergement statique nu et une PWA servie hors ligne par le service worker (§7 ARCHITECTURE), où
+  personne ne réécrit `/semaine` vers `index.html` — un rechargement rendrait un 404.
+  `react-router-dom` reste non installé : une seule route paramétrée ne justifie pas une dépendance
+  et son écosystème. **À rediscuter** si une deuxième route paramétrée ou une route imbriquée
+  apparaît. `routeDepuisHash` est testé (`ui/router.test.ts`).
 
 ### Contenu — constats de l'audit du 2026-07-27, remesurés le 2026-07-29
 

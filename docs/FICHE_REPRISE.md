@@ -16,18 +16,21 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
                                                                                           ⬅ ICI
 ```
 
-**Vérifié le 2026-08-02** : `npm test` → **1007 verts (72 fichiers)** · `npm run typecheck` propre ·
-`npm run build` → **199 aliments, 241 recettes, 62 gestes, 73 tips, 8 fiches (33 positions)** ·
-`npx vite build` OK.
+**Vérifié le 2026-08-03 (fin de session 12)** : `npm test` → **1249 verts (76 fichiers)** ·
+`npm run typecheck` propre · `node catalog/build.mjs` → **200 aliments, 241 recettes, 62 gestes,
+73 tips, 8 fiches (33 positions)**. ⚠️ **Deux pistes écrivaient dans ce dépôt en parallèle** ce
+soir-là : ce compte est celui de la session 12, mesuré, et il aura bougé.
 
 **L'application fait sa boucle complète** : s'installer → déclarer ses allergies → voir une
 suggestion → planifier sa semaine → sortir sa liste de courses → cuisiner. Plus « partir de ce
 qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
 
-⚠️ **Des commits attendent d'être poussés** — `git status -sb` donne le compte, jamais cette page :
-un nombre écrit ici est faux dès le commit suivant, et faux dans l'autre sens dès le `push`. Et
-**~92 fichiers modifiés ou nouveaux restent non committés** : c'est le chantier `evidence` de la
-piste parallèle, encore en cours. Ne pas le commiter sans son auteur.
+⚠️ **`git status -sb` donne l'état, jamais cette page** : un nombre écrit ici est faux dès le commit
+suivant, et faux dans l'autre sens dès le `push`. Au 2026-08-02, rien n'attendait d'être poussé — et
+c'est déjà peut-être faux. Restent **une centaine de fichiers modifiés ou nouveaux non committés** :
+le chantier `evidence` de la piste parallèle plus le sourcing des recettes. **Vert et cohérent** —
+`npm test`, `typecheck` et `build.mjs` passent avec —, mais encore en cours : ne pas le commiter
+sans son auteur.
 **Claude committe, l'utilisateur pousse** — le shell agent ne peut pas s'authentifier auprès de
 GitHub.
 
@@ -58,6 +61,32 @@ photo obligatoire et Capacitor).
 côté utilisateur)**, lexique illustré, 27 tips pour la centaine visée, 8 fiches sur les 60-100 de
 §8.2. Rien de tout cela n'est un problème de code.
 
+**Suite du chantier provenance** (par ordre d'utilité, [SOURCES_RECETTES.md](./SOURCES_RECETTES.md)
+§7) : étendre la vérification sanitaire aux **poissons, œufs et coquillages** (non examinés) ; écrire
+à **cuisine-libre.org** — désormais pour ses **~3 800 recettes**, plus seulement les 603 CC0/DP, le
+CC BY-SA ayant été accepté le 2026-08-02 ; écrire à **Santé publique France** pour les ~2 000 recettes
+de mangerbouger (droits réservés — sans autorisation, inutilisables) ; **cuisiner** et renseigner
+`teste_le`. ⏸️ **Les « alternatives par substitution » sont tranchées SUR LA FORME et EN PAUSE sur le
+fond** (décisions 47 puis **48**) — le contenu des recettes se travaille en parallèle, écrire ici
+entrerait en collision. **Rien n'a été codé, rien n'a été écrit au catalogue.** Forme retenue : table
+`substitution` avec **portée par recette** (`recipeIds`, liste d'INCLUSION). ⚠️ **Deux passes de
+recherche ont rendu ZÉRO couple, pour deux raisons différentes** — la première parce qu'un index par
+aliment seul **ne peut pas exprimer « sauf »** (`beurre_doux` est dans 60 recettes dont 11 desserts ;
+la pâte brisée est au catalogue, pas dans un manuel), la seconde parce que **les agences publient des
+compositions, pas des équivalences de cuisine**. ⚠️ **À la reprise, ne pas repartir sur la même
+consigne** : les ouvrages culinaires SONT des sources acceptées ici (le sourçage des recettes cite
+Escoffier 1903), et `ratio: 1.0` n'est pas une affirmation à sourcer. Pistes en attente, toutes deux
+à poids égal : `gruyere` ↔ `comte_rape`, et les légumineuses en conserve. ⚠️ **Rien n'en sera visible
+à l'écran** : `suggestAlternatives` n'est câblée à aucun bouton — remplir la table remplit le MOTEUR.
+
+⚠️ **Ne pas relancer une recherche de sources de recettes sans lire `SOURCES_RECETTES.md` §3.5.** Le
+balayage du 2026-08-02 a écarté, licence lue page par page : mangerbouger, agriculture.gouv.fr, MAPAQ,
+data.gouv.fr, NHS, Heart Foundation, FAO/OMS, USDA MyPlate (**site fermé le 2026-01-07**, le « miroir »
+n'est pas institutionnel), et les datasets Recipe1M+/RecipeNLG/Food.com (**scraping avéré, écrit dans
+leurs propres publications**). ⚠️ **L'hypothèse « les contenus publics français sont sous Licence
+Ouverte Etalab » est FAUSSE** — l'ouverture porte sur les *données*, pas sur le contenu éditorial, sur
+lequel les organismes gardent leur droit d'auteur. Refaire ce tour coûte cher et ne rend rien.
+
 ⚠️ **Trois conséquences de la décision Capacitor ne sont PAS traitées** (`RECAP_SESSION_8.md` §3) :
 le message `non_persistant` de `main.tsx` dit encore « Ajoutez l'application à votre écran d'accueil »
 — il s'afficherait **dans une appli native** ; le pari « `rem` → l'interface suit la police système à
@@ -84,11 +113,21 @@ et la barre d'état sont à revérifier sur appareil.
 
 ## 📱 Premier essai sur téléphone (2026-08-02)
 
-Fait en preview LAN. **Cinq défauts corrigés le jour même** (`3dbaf48`) : les 12 suggestions qui ne
-changeaient jamais (`diversify` ignorait la graine), le retour de fiche recette qui ramenait toujours
-sur Recettes, les recettes sans rapport dans le frigo, le libellé « Réalisables maintenant », et
-l'encart d'aide qui comptait les clics au lieu des plats vus. L'étape « Installez l'application »,
-désactivée le 2026-08-01, est rétablie — c'est elle qui fait accorder le stockage persistant.
+Fait en preview LAN. Une quarantaine de remarques, **14 lots livrés dans la foulée** — récit complet :
+[archive/RECAP_SESSION_10.md](./archive/RECAP_SESSION_10.md). L'essentiel : les 12 suggestions qui ne
+changeaient jamais (`diversify` ignorait la graine), le retour de fiche recette, les recettes sans
+rapport dans le frigo, l'encart d'aide qui comptait les clics au lieu des plats vus, le rythme à
+4 repas, le choix du créneau, « Mes recettes » avec modification / export / import, les filtres
+(Service, Régime, Envergure — et « Plus de filtres » qui contient enfin *d'autres* filtres), le
+tutoriel devenu participatif, et l'avertissement allergène sur les articles ajoutés à la main.
+L'étape « Installez l'application », désactivée le 2026-08-01, est rétablie — c'est elle qui fait
+accorder le stockage persistant.
+
+⚠️ **Deux leçons de cette session, à ne pas repayer** (§3 du récit) : **six capacités étaient déjà
+en place et jamais branchées** (`ON CONFLICT DO UPDATE` sur `saveUserRecipe`, `quantite`,
+`source: 'importe'`, le créneau `gouter`, `note_allergene`, la facette `regime`) — chercher ce qui
+existe avant d'écrire ; et **trois fonctions réclamées existaient déjà**, ce qui a ouvert un chantier
+« découvrabilité » que personne n'avait demandé.
 
 - ⚠️ **Le risque n°1 n'est TOUJOURS pas tranché.** Un essai en preview passe par Chrome, pas par la
   WebView Capacitor : le pari `rem` → police système à 150 % reste à vérifier là où il compte.
@@ -97,9 +136,12 @@ désactivée le 2026-08-01, est rétablie — c'est elle qui fait accorder le st
   Pour tester vraiment : `adb reverse tcp:4173 tcp:4173`, puis `http://localhost:4173` sur l'appareil.
 - ⚠️ **Le reste du retour d'essai — une trentaine de demandes produit — est dans
   [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md)**, avec trois chantiers transverses
-  (filtres, complétion à la saisie, tutoriels participatifs) et **deux amendements qui attendent
-  votre arbitrage** : l'alerte calorique masquée par défaut, et les facettes dépliables contre la
-  règle « plus aucun menu déroulant hors de l'accueil ».
+  (filtres, complétion à la saisie, tutoriels participatifs). ✅ **Les deux amendements qui
+  attendaient un arbitrage sont tranchés** (2026-08-02, décisions 45 et 46) : l'alerte calorique
+  **n'apparaît plus qu'en mode avancé** — `afficher_macros`, le réglage qui existait déjà, et **pas**
+  un second drapeau ; les facettes **ne se déplient pas**, leurs valeurs fréquentes passent en
+  pastilles dans le flux. ⚠️ La décision 45 est **la seule du projet qui retire une protection** :
+  `ARCHITECTURE.md` §6.5 est amendé, la réserve est écrite aux deux endroits.
 
 ## Les cinq acquis à ne pas défaire
 
@@ -114,6 +156,53 @@ désactivée le 2026-08-01, est rétablie — c'est elle qui fait accorder le st
    `recipeFamilySignature` (replié par sous-famille) sert la RÉCENCE, qui se moque du morceau.
 5. **Une recette déclare UN SEUL régime**, le plus restrictif qu'elle respecte. **L'origine animale
    est un fait, pas un régime** : `Food.origineAnimale` + `deriveDe`, propagés en cascade.
+
+## 🧾 Provenance des recettes (2026-08-02, session 9)
+
+**Les 241 recettes ont été écrites par un modèle de langage** — aucune source, aucun test. C'était
+le seul contenu du dépôt sans traçabilité, et **rien ne le disait**. Récit complet :
+[archive/RECAP_SESSION_9.md](./archive/RECAP_SESSION_9.md) · chantier :
+[SOURCES_RECETTES.md](./SOURCES_RECETTES.md).
+
+Ce qui existe désormais : table **`recipe_source`** (N sources par recette, types `provenance` ⇄
+`reference`), colonne **`recipe.teste_le`**, et le champ **`origine`, OBLIGATOIRE sur toute recette**
+(2026-08-02). **14 recettes sourcées sur 241, `teste_le` à 0 — mais 241 sur 241 ont une origine.**
+
+**`origine` répond à « d'où vient ce TEXTE », question que les sources ne posent pas.** Vocabulaire
+fermé : `maison` (écrite pour cette application — les 241), `domaine_public`, `libre`. Le build refuse
+une recette sans origine, refuse un `maison` portant une `provenance`, et refuse un
+`domaine_public`/`libre` sans `provenance`. **Il ne demande AUCUNE recherche de source** : c'est ce
+qui permet de couvrir 241/241 sans rien fabriquer.
+
+⚠️ **Défaut corrigé du même coup, et il valait la peine** : la mention d'origine ne s'affichait que
+si la recette n'avait AUCUNE source. **Vérifier une recette effaçait donc la phrase qui disait d'où
+venait son texte** — sur les 14 recettes sourcées, le lecteur voyait « Consulté pour vérifier : *Le
+Guide culinaire*, 1903 » et pouvait conclure que la blanquette en VENAIT. Elle s'affiche désormais
+toujours.
+
+⚠️ **`RecipeOrigine` couvre DEUX espaces de valeurs disjoints, à ne pas confondre.** `maison |
+domaine_public | libre` pour le catalogue — seules acceptées par `build.mjs` et par le `CHECK` SQL ;
+`utilisateur | partagee` pour les recettes de `user.db`, dérivées de `stockee.source` et **jamais
+écrivables dans un YAML**. Une recette reçue par `.nutri-recipe` a prétendu « écrite pour cette
+application » le temps d'une relecture : c'est exactement le mensonge que ce champ existe pour
+empêcher.
+
+⚠️ **Le refus des blogs culinaires est devenu MÉCANIQUE.** L'`url` d'une source doit être sur un
+domaine de `DOMAINES_SOURCE_AUTORISES` (`build.mjs`) — comparaison sur le nom d'hôte parsé, avec
+frontière de label, verrouillée par des tests de contournement. Ce n'était jusqu'ici qu'une phrase
+dans `SOURCES_RECETTES.md` §6, que rien n'appliquait.
+
+**Ce que la vérification a trouvé** : 8 recettes à risque sur 10 ne donnaient **aucun critère de
+cuisson vérifiable** (corrigées d'après le guide du ministère de l'Agriculture et la FSA) ; la
+blanquette n'avait **pas de liaison aux jaunes d'œufs** (Escoffier 1903 + Anctil 1915), le navarin
+et le Marengo pas d'ail. **Les quantités, elles, étaient justes** — roux à 100 g au gramme près,
+farine du navarin à 1 g/kg près. L'erreur n'était jamais dans les chiffres, toujours dans un geste.
+
+⚠️ **`teste_le` est à 0 sur 241 : personne n'a jamais cuisiné une recette du catalogue.** Sourcer,
+vérifier et tester sont trois choses différentes — voir RECAP_SESSION_9 §3.4.
+⚠️ **Ne JAMAIS sourcer une recette après coup** pour faire disparaître la mention : une source
+trouvée pour un texte qui n'en vient pas fabrique une provenance. C'est la règle des tips, en plus
+fort.
 
 ## Contenu : la règle qui tient tout l'onglet Savoir
 
@@ -166,8 +255,15 @@ piment/matière grasse — voir [archive/RECAP_SESSION_6.md](./archive/RECAP_SES
   le tri de la queue : au tour suivant le pivot n'est plus le meilleur restant, la bande est calculée
   trop bas et un candidat HORS bande passe devant le meilleur. Le `splice` préserve l'ordre, lui.
   Le test qui prétendait verrouiller ça ne portait que sur DEUX candidats et ne pouvait rien voir.
-- ⚠️ **Un garde-fou sans source de données ne garde rien.** Le filtre allergènes a tourné sur une
-  liste VIDE jusqu'à ce que l'onboarding existe. Vérifier qu'un champ déclaré est bien REMPLI.
+- ⚠️ **Un champ déclaré n'est pas un champ branché — TROIS occurrences, ne pas en payer une
+  quatrième.** Le filtre allergènes a tourné sur une liste VIDE jusqu'à ce que l'onboarding existe ;
+  `shopping_extra_item.note_allergene` était au schéma, lue, et écrite par personne ; et
+  `ShoppingOptions.pantryFoodIds` — spécifié par la décision 41 (c) — n'était **jamais transmis** par
+  `courses.tsx`, si bien que le garde-manger ne retirait rien de la liste de courses (corrigé le
+  2026-08-02). ⚠️ **La fiche de retour d'essai affirmait le contraire** et se trompait : « le
+  garde-manger sert à retirer des articles de la liste ». **Avant de conclure qu'il ne manque que de
+  l'affichage, vérifier que le champ est REMPLI et LU** — un appelant qui omet une option optionnelle
+  ne produit aucune erreur, ni au type, ni au test, ni à l'écran.
 - ⚠️ **`MealHistory.windowDays` n'est lu par AUCUNE couche.** La fenêtre de 21 jours n'existe que
   parce que `readHistory` la borne en SQL.
 - ⚠️ **Une PRIMARY KEY contenant une colonne NULL ne dédoublonne pas** dans SQLite. → index UNIQUE
