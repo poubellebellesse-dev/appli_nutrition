@@ -43,6 +43,7 @@ import {
   type Comptes,
   type FiltresRecette,
 } from '../filtres-recettes.js'
+import { LienTutoriel } from '../lien-tutoriel.js'
 
 /** Combien de raccourcis par famille. Au-delà, la grille devient une liste et ne rend plus service. */
 const RACCOURCIS_PAR_FAMILLE = 8
@@ -236,7 +237,10 @@ export function Frigo() {
         ← Recettes
       </a>
 
-      <h1 className="mt-2 text-[2rem] leading-tight text-texte">Qu'avez-vous sous la main ?</h1>
+      <h1 data-visite="titre-frigo" className="mt-2 text-[2rem] leading-tight text-texte">
+        Qu'avez-vous sous la main ?
+      </h1>
+      <LienTutoriel parcoursId="frigo" />
       <p className="mt-2 text-[1.05rem] leading-relaxed text-texte-doux">
         Ajoutez ce qu'il vous reste. On cherche des plats à faire avec.
       </p>
@@ -278,7 +282,7 @@ export function Frigo() {
         </p>
       ) : (
         <>
-          <fieldset className="mt-8">
+          <fieldset data-visite="sans-rien-acheter" className="mt-8">
             <legend className="sr-only">Étendue des résultats</legend>
             <div className="flex gap-2">
               <Bascule
@@ -383,6 +387,7 @@ function Recherche({
         <span className="text-[0.9rem] text-texte-doux">Ajouter un aliment</span>
         <input
           type="search"
+          data-visite="ajout-aliment"
           value={valeur}
           onChange={(e) => onSaisir(e.target.value)}
           placeholder="courgette, œufs, riz…"
@@ -434,7 +439,7 @@ function AjoutRapide({
   const proposes = famille.aliments.filter((id) => !deja.includes(id))
 
   return (
-    <div className="mt-5">
+    <div data-visite="ajout-rapide" className="mt-5">
       <h2 className="text-[0.95rem] text-texte-doux">Ajout rapide</h2>
 
       {/* Défilement horizontal : quatorze familles ne tiennent pas sur la largeur d'un téléphone,

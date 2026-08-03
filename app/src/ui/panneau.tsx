@@ -119,15 +119,20 @@ export function LigneOuvrante({
   libelle,
   valeur,
   onOuvrir,
+  dataVisite,
 }: {
   readonly libelle: string
   readonly valeur: string
   readonly onOuvrir: () => void
+  /** Cible optionnelle pour `ui/visite.tsx` — évite d'envelopper le bouton dans un `div` qui
+   *  décalerait le contour dessiné par la visite (voir `ui/parcours.ts`). */
+  readonly dataVisite?: string
 }) {
   return (
     <button
       type="button"
       onClick={onOuvrir}
+      data-visite={dataVisite}
       className="flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface px-4 py-3 text-left"
     >
       <span className="flex-1">

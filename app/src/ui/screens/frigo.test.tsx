@@ -31,9 +31,17 @@ beforeEach(() => {
 afterEach(cleanup)
 
 /** Monte l'écran et attend le titre — donc que la phase `chargement` soit passée. */
+// ⚠️ `ProvenanceLancerParcours` IMPORTÉ DYNAMIQUEMENT, PAS EN TÊTE DE FICHIER — voir
+// `courses.test.tsx` : `vi.resetModules()` en `beforeEach` figerait sinon un `Context` React
+// distinct de celui que `Frigo` utilise réellement dans `<LienTutoriel>`.
 async function monter() {
   const { Frigo } = await import('./frigo.js')
-  render(<Frigo />)
+  const { ProvenanceLancerParcours } = await import('../lancer-parcours.js')
+  render(
+    <ProvenanceLancerParcours value={() => undefined}>
+      <Frigo />
+    </ProvenanceLancerParcours>
+  )
   await screen.findByRole('heading', { level: 1, name: /avez-vous sous la main/ })
 }
 

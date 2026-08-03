@@ -97,17 +97,22 @@ export function Case({
   description,
   cochee,
   onBasculer,
+  dataVisite,
 }: {
   readonly libelle: string
   readonly description?: string
   readonly cochee: boolean
   readonly onBasculer: () => void
+  /** Cible optionnelle pour `ui/visite.tsx` — évite d'envelopper le bouton dans un `div` qui
+   *  décalerait le contour dessiné par la visite (voir `ui/parcours.ts`). */
+  readonly dataVisite?: string
 }) {
   return (
     <button
       type="button"
       onClick={onBasculer}
       aria-pressed={cochee}
+      data-visite={dataVisite}
       className={
         'flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border px-4 py-2 text-left text-[1.02rem] ' +
         (cochee ? 'border-accent bg-accent-doux text-texte' : 'border-bordure-forte bg-surface text-texte')

@@ -20,7 +20,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { hashDe } from './router.js'
-import { PARCOURS, Visite, etapesDuParcours, type EtapeVisite } from './visite.js'
+import { Visite, type EtapeVisite } from './visite.js'
+import { PARCOURS, etapesDuParcours } from './parcours.js'
 
 const ETAPES_MENUS = etapesDuParcours('menus')
 

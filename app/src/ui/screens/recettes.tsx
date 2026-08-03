@@ -65,6 +65,7 @@ import { origineDeCuisine } from '../drapeaux.js'
 import { Panneau } from '../panneau.js'
 import { exporterRecette } from '../export-recette.js'
 import { importerRecette } from '../import-recette.js'
+import { LienTutoriel } from '../lien-tutoriel.js'
 
 const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
   allergenes: 'allergènes',
@@ -216,7 +217,10 @@ export function Recettes() {
 
   return (
     <section>
-      <h1 className="text-[2.1rem] text-texte">Recettes</h1>
+      <h1 data-visite="titre-recettes" className="text-[2.1rem] text-texte">
+        Recettes
+      </h1>
+      <LienTutoriel parcoursId="recettes" />
 
       <Recherche
         catalogue={socle.catalogue}
@@ -263,6 +267,7 @@ export function Recettes() {
       {/* « Mes favoris » en tête, à UN TAP (§4.4). */}
       <button
         type="button"
+        data-visite="favoris"
         onClick={() => setFiltres({ ...filtres, favorisSeuls: !filtres.favorisSeuls })}
         aria-pressed={filtres.favorisSeuls}
         className={
@@ -567,6 +572,7 @@ function Recherche({
       <span className="text-[0.9rem] text-texte-doux">Rechercher un plat ou un ingrédient</span>
       <input
         type="search"
+        data-visite="recherche-recettes"
         list="suggestions-recettes"
         value={valeur}
         onChange={(e) => onChange(e.target.value)}

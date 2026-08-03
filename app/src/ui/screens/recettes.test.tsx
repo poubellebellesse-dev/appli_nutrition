@@ -43,9 +43,17 @@ afterEach(cleanup)
 /** Monte l'écran et attend le titre. Retourne le conteneur RTL — pas `document.body` — pour pouvoir
  *  distinguer l'écran principal du panneau « Filtres », qui passe par un portail vers `document.body`
  *  (voir panneau.tsx). `container.querySelector` ne voit jamais le portail ; `screen.getByText` si. */
+// ⚠️ `ProvenanceLancerParcours` IMPORTÉ DYNAMIQUEMENT, PAS EN TÊTE DE FICHIER — voir
+// `courses.test.tsx` : `vi.resetModules()` en `beforeEach` figerait sinon un `Context` React
+// distinct de celui que `Recettes` utilise réellement dans `<LienTutoriel>`.
 async function monter(): Promise<HTMLElement> {
   const { Recettes } = await import('./recettes.js')
-  const { container } = render(<Recettes />)
+  const { ProvenanceLancerParcours } = await import('../lancer-parcours.js')
+  const { container } = render(
+    <ProvenanceLancerParcours value={() => undefined}>
+      <Recettes />
+    </ProvenanceLancerParcours>
+  )
   await screen.findByRole('heading', { name: 'Recettes' })
   return container
 }
@@ -124,51 +132,108 @@ describe('recettes — le filtre temps', () => {
   })
 })
 
-describe('recettes — chaque axe filtrable ouvre SA propre fenêtre', () => {
-  // Retour d'essai explicite : « la cuisine est à deux gestes ». Cuisine, Régime et Service sont
-  // maintenant en ACCÈS DIRECT sur l'écran — un bouton, une fenêtre, un geste.
-  const AXES_DIRECTS: readonly { readonly titre: string; readonly total: () => number }[] = [
-    { titre: 'Cuisine', total: () => valeursDeFacette(catalogueDeTest(), 'cuisine' as FacetteKind).length },
-    { titre: 'Régime', total: () => valeursDeFacette(catalogueDeTest(), 'regime' as FacetteKind).length },
-    { titre: 'Service', total: () => valeursDeService(catalogueDeTest()).length },
+/** Échappe les métacaractères regex d'une valeur de catalogue avant de la mettre dans un `name`
+ *  de requête RTL — les libellés viennent des données, pas d'une liste écrite à la main. */
+function regexPourValeur(valeur: string): RegExp {
+  return new RegExp(`^${valeur.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} \\(`)
+}
+
+describe('recettes — axes en pastilles, dans le flux (décision 46)', () => {
+  // Décision 46 : un axe à ≤4 valeurs tient entier sur la ligne, sans fenêtre ; un axe plus long
+  // garde ses 4 premières en ligne et renvoie le reste derrière « Tout voir ». Dérivé du catalogue
+  // réel, jamais d'une liste écrite à la main.
+  const cuisines = valeursDeFacette(catalogueDeTest(), 'cuisine' as FacetteKind)
+  const regimes = valeursDeFacette(catalogueDeTest(), 'regime' as FacetteKind)
+  const services = valeursDeService(catalogueDeTest())
+  const axesCourts: readonly {
+    readonly titre: string
+    readonly valeurs: readonly { readonly valeur: string; readonly nombre: number }[]
+  }[] = [
+    { titre: 'Régime', valeurs: regimes },
+    { titre: 'Service', valeurs: services },
   ]
-  it('⛔ garde contre un `it.each([])` qui laisserait la suite verte sans avoir rien exercé', () => {
-    expect(AXES_DIRECTS.length).toBe(3)
+
+  it('⛔ garde contre un `it.each([])` : le catalogue réel a un axe court et un axe long à comparer', () => {
+    expect(axesCourts.length).toBe(2)
+    for (const axe of axesCourts) expect(axe.valeurs.length).toBeGreaterThan(0)
+    expect(cuisines.length).toBeGreaterThan(4)
   })
 
-  it.each(AXES_DIRECTS)(
-    '« $titre » ouvre un dialogue à son nom, listant TOUTES ses valeurs',
-    async ({ titre, total }) => {
+  it.each(axesCourts)(
+    '« $titre » (≤4 valeurs) : tout est déjà à l’écran, aucun « Tout voir », aucun dialogue',
+    async ({ titre, valeurs }) => {
       await monter()
-      expect(total()).toBeGreaterThan(0)
-      expect(screen.queryByRole('dialog')).toBeNull()
-
-      // ⚠️ `aria-haspopup="dialog"`, PAS `aria-expanded` : ce bouton n'agrandit rien en place.
-      const bouton = screen.getByRole('button', { name: new RegExp(`^${titre}`) })
-      expect(bouton.getAttribute('aria-haspopup')).toBe('dialog')
-      fireEvent.click(bouton)
-
-      const panneau = await screen.findByRole('dialog', { name: titre })
-      // ⚠️ PAS `within(panneau).getByText(titre)` : le TITRE de la fenêtre (son `<h2>`) porte le
-      // même texte que la légende du fieldset qu'elle contient — deux axes, un seul fieldset dans
-      // ce panneau, donc `querySelector` suffit sans ambiguïté.
-      const fieldset = panneau.querySelector('fieldset') as HTMLElement
-      expect(fieldset.querySelectorAll('button').length).toBe(total())
-
-      fireEvent.click(within(panneau).getByRole('button', { name: /Retour/ }))
-      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+      const fieldset = screen.getByText(titre).closest('fieldset') as HTMLElement
+      expect(within(fieldset).getAllByRole('button').length).toBe(valeurs.length)
+      expect(within(fieldset).queryByRole('button', { name: /^Tout voir/ })).toBeNull()
+      expect(screen.queryByRole('dialog', { name: titre })).toBeNull()
     }
   )
 
-  it('est un portail : ouvrir une fenêtre n’allonge pas la liste de recettes en dessous', async () => {
+  it('« Cuisine » (>4 valeurs) : les 4 premières sont à l’écran, la traîne pas encore — « Tout voir » l’y trouve', async () => {
     await monter()
-    fireEvent.click(screen.getByRole('button', { name: /^Cuisine/ }))
+    const fieldset = screen.getByText('Cuisine').closest('fieldset') as HTMLElement
+
+    for (const v of cuisines.slice(0, 4)) {
+      expect(within(fieldset).getByRole('button', { name: regexPourValeur(v.valeur) })).toBeDefined()
+    }
+    const traine = cuisines[cuisines.length - 1]!
+    expect(within(fieldset).queryByRole('button', { name: regexPourValeur(traine.valeur) })).toBeNull()
+
+    // ⚠️ `aria-haspopup="dialog"`, PAS `aria-expanded` : ce bouton ouvre une fenêtre, il ne déplie
+    // rien ici.
+    const toutVoir = within(fieldset).getByRole('button', {
+      name: new RegExp(`^Tout voir \\(${cuisines.length}\\)`),
+    })
+    expect(toutVoir.getAttribute('aria-haspopup')).toBe('dialog')
+    fireEvent.click(toutVoir)
+
+    const panneau = await screen.findByRole('dialog', { name: 'Cuisine' })
+    expect(within(panneau).getByRole('button', { name: regexPourValeur(traine.valeur) })).toBeDefined()
+
+    fireEvent.click(within(panneau).getByRole('button', { name: /Retour/ }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('choisir une valeur de la traîne dans la fenêtre la fait apparaître en ligne ; la retirer d’un tap ne rouvre pas la fenêtre', async () => {
+    await monter()
+    const fieldset = screen.getByText('Cuisine').closest('fieldset') as HTMLElement
+    const traine = cuisines[cuisines.length - 1]!
+
+    fireEvent.click(within(fieldset).getByRole('button', { name: /^Tout voir/ }))
+    const panneau = await screen.findByRole('dialog', { name: 'Cuisine' })
+    fireEvent.click(within(panneau).getByRole('button', { name: regexPourValeur(traine.valeur) }))
+    fireEvent.click(within(panneau).getByRole('button', { name: /Retour/ }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+
+    const pastilleEnLigne = within(fieldset).getByRole('button', { name: regexPourValeur(traine.valeur) })
+    expect(pastilleEnLigne.getAttribute('aria-pressed')).toBe('true')
+
+    fireEvent.click(pastilleEnLigne)
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(within(fieldset).queryByRole('button', { name: regexPourValeur(traine.valeur) })).toBeNull()
+  })
+
+  it('est un portail : ouvrir « Tout voir » n’allonge pas la liste de recettes en dessous', async () => {
+    await monter()
+    const fieldset = screen.getByText('Cuisine').closest('fieldset') as HTMLElement
+    fireEvent.click(within(fieldset).getByRole('button', { name: /^Tout voir/ }))
     const panneau = await screen.findByRole('dialog', { name: 'Cuisine' })
 
     // Un `fixed` posé dans le flux normal se serait retrouvé sous un ancêtre de la page ; le
     // portail le place en enfant DIRECT de `document.body`, hors de la `<ul>` des recettes.
     expect(panneau.parentElement).toBe(document.body)
     expect(panneau.closest('ul')).toBeNull()
+  })
+
+  it('⛔ « Fromage » — 0 recette au catalogue — n’apparaît ni en ligne ni dans une fenêtre', async () => {
+    // Dérivé des données, pas d'une liste écrite à la main — la leçon documentée du projet.
+    expect(services.length).toBeGreaterThan(0)
+    expect(services.some((s) => s.valeur === 'fromage')).toBe(false)
+
+    await monter()
+    const fieldset = screen.getByText('Service').closest('fieldset') as HTMLElement
+    expect(within(fieldset).queryByText(/Fromage/)).toBeNull()
   })
 })
 
@@ -191,18 +256,6 @@ describe('recettes — « Plus de filtres » = D’AUTRES filtres, jamais les m�
     expect(within(panneau).queryByText(/^Régime$/)).toBeNull()
     expect(within(panneau).queryByText(/^Service$/)).toBeNull()
   })
-
-  it('⛔ « Fromage » — 0 recette au catalogue — n’apparaît dans aucune fenêtre', async () => {
-    // Dérivé des données, pas d'une liste écrite à la main — la leçon documentée du projet.
-    const services = valeursDeService(catalogueDeTest())
-    expect(services.length).toBeGreaterThan(0)
-    expect(services.some((s) => s.valeur === 'fromage')).toBe(false)
-
-    await monter()
-    fireEvent.click(screen.getByRole('button', { name: /^Service/ }))
-    const panneau = await screen.findByRole('dialog', { name: 'Service' })
-    expect(within(panneau).queryByText(/Fromage/)).toBeNull()
-  })
 })
 
 describe('recettes — filtrer par cuisine réduit vraiment la liste', () => {
@@ -210,13 +263,15 @@ describe('recettes — filtrer par cuisine réduit vraiment la liste', () => {
     await monter()
     const avant = idsAffiches().length
 
-    fireEvent.click(screen.getByRole('button', { name: /^Cuisine/ }))
+    const fieldset = screen.getByText('Cuisine').closest('fieldset') as HTMLElement
+    fireEvent.click(within(fieldset).getByRole('button', { name: /^Tout voir/ }))
     const panneau = await screen.findByRole('dialog', { name: 'Cuisine' })
     // Un seul fieldset dans ce panneau — voir la note du bloc précédent sur l'ambiguïté du texte.
-    const fieldset = panneau.querySelector('fieldset') as HTMLElement
+    const fieldsetPanneau = panneau.querySelector('fieldset') as HTMLElement
     // Au moins une pastille du catalogue réel n'est pas à zéro (241 recettes) — la première suffit.
-    const pastille = fieldset.querySelector('button:not([disabled])') as HTMLButtonElement
+    const pastille = fieldsetPanneau.querySelector('button:not([disabled])') as HTMLButtonElement
     expect(pastille.getAttribute('aria-pressed')).toBe('false')
+    const libelleChoisi = pastille.textContent!
 
     fireEvent.click(pastille)
     await waitFor(() => expect(pastille.getAttribute('aria-pressed')).toBe('true'))
@@ -228,14 +283,12 @@ describe('recettes — filtrer par cuisine réduit vraiment la liste', () => {
     expect(apres).toBeGreaterThan(0)
     expect(apres).toBeLessThan(avant)
 
-    // ⚠️ Le bouton annonce désormais son propre compte — sans lui, savoir qu'un filtre est actif
-    // demanderait de rouvrir la fenêtre.
-    expect(screen.getByRole('button', { name: /^Cuisine · 1$/ })).toBeDefined()
+    // ⚠️ La pastille choisie reste visible EN LIGNE, active — plus besoin de rouvrir la fenêtre
+    // pour savoir qu'un filtre est posé.
+    const pastilleEnLigne = within(fieldset).getByRole('button', { name: libelleChoisi })
+    expect(pastilleEnLigne.getAttribute('aria-pressed')).toBe('true')
 
-    fireEvent.click(screen.getByRole('button', { name: /^Cuisine/ }))
-    const panneau2 = await screen.findByRole('dialog', { name: 'Cuisine' })
-    const fieldset2 = panneau2.querySelector('fieldset') as HTMLElement
-    fireEvent.click(fieldset2.querySelector('button[aria-pressed="true"]') as HTMLButtonElement)
+    fireEvent.click(pastilleEnLigne)
     await waitFor(() => expect(idsAffiches().length).toBe(avant))
   })
 })
@@ -243,15 +296,12 @@ describe('recettes — filtrer par cuisine réduit vraiment la liste', () => {
 describe('recettes — filtrer par service (entrée/plat/dessert…)', () => {
   it('choisir « Plat » ne laisse à l’écran que des recettes dont le service est PLAT', async () => {
     await monter()
-    fireEvent.click(screen.getByRole('button', { name: /^Service/ }))
-    const panneau = await screen.findByRole('dialog', { name: 'Service' })
-    fireEvent.click(within(panneau).getByRole('button', { name: /^Plat \(\d+\)$/ }))
-    fireEvent.click(within(panneau).getByRole('button', { name: /Retour/ }))
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    const fieldset = screen.getByText('Service').closest('fieldset') as HTMLElement
+    fireEvent.click(within(fieldset).getByRole('button', { name: /^Plat \(\d+\)$/ }))
 
     const catalogue = catalogueDeTest()
+    await waitFor(() => expect(idsAffiches().length).toBeGreaterThan(0))
     const ids = idsAffiches()
-    expect(ids.length).toBeGreaterThan(0)
     for (const id of ids) {
       expect(catalogue.recipes.get(id as RecipeId)?.service).toBe('plat')
     }

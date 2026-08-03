@@ -1,5 +1,10 @@
-// ui/visite.tsx — tutoriels guidés, interactifs : des bulles qui désignent un élément réel de
+// ui/visite.tsx — LE MÉCANISME des tutoriels guidés : des bulles qui désignent un élément réel de
 // l'écran et, pour la plupart des étapes, EXIGENT un geste avant d'avancer.
+//
+// ⚠️ CE FICHIER NE CONNAÎT AUCUN PARCOURS PAR SON NOM. La table des huit parcours (« menus »,
+// « aujourdhui »…), leurs étapes et leurs textes vivent dans `ui/parcours.ts` — voir son en-tête
+// pour pourquoi la séparation est délibérée. `Visite` reçoit un `readonly EtapeVisite[]`, rien de
+// plus, et n'a aucune raison de savoir à quel écran il appartient.
 //
 // ⚠️ CE N'EST PLUS UNE VISITE PUREMENT INFORMATIVE. La version précédente affichait quatre bulles
 // qu'on lisait puis qu'on passait avec « Suivant » — l'utilisateur ne touchait jamais l'application
@@ -40,6 +45,8 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type JSX } from 'react'
 import { createPortal } from 'react-dom'
 import { hashDe, useRoute } from './router.js'
+// Note : aucun import de `./parcours.js` ici — voir l'en-tête, ce fichier ignore délibérément ce
+// qu'est un parcours.
 
 /**
  * Ce qu'il faut faire pour quitter l'étape.
@@ -61,73 +68,8 @@ export interface EtapeVisite {
   readonly attendu: EtapeAttendu
 }
 
-/** Un parcours nommé : un thème, une suite d'étapes. Voir `PARCOURS` ci-dessous. */
-export interface Parcours {
-  readonly id: string
-  readonly titre: string
-  readonly etapes: readonly EtapeVisite[]
-}
-
-/**
- * Le parcours « Découvrir les menus », décrit tel quel par l'utilisateur : on nomme un onglet, il le
- * touche, on passe au suivant. `[data-visite]` est délibérément absent ici — CES cibles sont les
- * liens RÉELS de la barre (`Navigation`, dans `navigation.tsx`), déjà stables par leur `href` (voir
- * `router.tsx`, `hashDe`) : un `data-visite` de plus dupliquerait une identité qui existe déjà.
- *
- * ⚠️ « Aujourd'hui » N'A PAS SA PROPRE ÉTAPE : c'est l'écran de départ le plus courant, le désigner
- * n'apprendrait rien de plus que la première bulle (« La navigation ») ne dit déjà.
- */
-const ETAPES_MENUS: readonly EtapeVisite[] = [
-  {
-    cible: 'nav[aria-label="Navigation principale"]',
-    titre: 'La navigation',
-    texte:
-      "Ces cinq onglets sont toujours là, en bas de l'écran. On va les découvrir ensemble : à chaque étape, touchez l'onglet nommé.",
-    attendu: { type: 'lecture' },
-  },
-  {
-    cible: `a[href="${hashDe('semaine')}"]`,
-    titre: 'Cette semaine',
-    texte: 'Touchez « Semaine » pour voir le planning des prochains jours.',
-    attendu: { type: 'route', hash: hashDe('semaine') },
-  },
-  {
-    cible: `a[href="${hashDe('courses')}"]`,
-    titre: 'Vos courses',
-    texte: 'Touchez « Courses » pour voir la liste à acheter.',
-    attendu: { type: 'route', hash: hashDe('courses') },
-  },
-  {
-    cible: `a[href="${hashDe('recettes')}"]`,
-    titre: 'Toutes les recettes',
-    texte: 'Touchez « Recettes » pour parcourir le catalogue complet.',
-    attendu: { type: 'route', hash: hashDe('recettes') },
-  },
-  {
-    cible: `a[href="${hashDe('savoir')}"]`,
-    titre: 'Le coin Savoir',
-    texte: 'Touchez « Savoir » pour les explications et les conseils.',
-    attendu: { type: 'route', hash: hashDe('savoir') },
-  },
-]
-
-/**
- * La table des parcours. UN SEUL AUJOURD'HUI (« menus ») : les huit autres, annoncés par
- * l'utilisateur (« je veux des tutos sur tous les menus »), restent à écrire — ajouter l'un d'eux est
- * une ENTRÉE DE DONNÉES dans ce tableau, jamais une modification de `Visite` ci-dessous.
- */
-export const PARCOURS: readonly Parcours[] = [
-  { id: 'menus', titre: 'Découvrir les menus', etapes: ETAPES_MENUS },
-]
-
-/** Les étapes d'un parcours par son identifiant, ou un tableau vide s'il n'existe pas — un identifiant
- * périmé termine la visite immédiatement (voir `premierIndexValide`), jamais un plantage. */
-export function etapesDuParcours(id: string): readonly EtapeVisite[] {
-  return PARCOURS.find((p) => p.id === id)?.etapes ?? []
-}
-
 /** Premier index ≥ `depart` dont la cible existe dans le DOM, ou `null` s'il n'en reste aucune. */
-function premierIndexValide(etapes: readonly EtapeVisite[], depart: number): number | null {
+export function premierIndexValide(etapes: readonly EtapeVisite[], depart: number): number | null {
   for (let i = depart; i < etapes.length; i++) {
     const etape = etapes[i]
     if (etape !== undefined && document.querySelector(etape.cible) !== null) return i
@@ -290,9 +232,12 @@ export function Visite({
         <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etape.texte}</p>
 
         <div aria-hidden="true" className="mt-3 flex gap-1.5">
-          {etapes.map((e, i) => (
+          {/* Index en clé, pas `e.cible` : deux étapes d'un même parcours peuvent légitimement
+              partager une cible (voir `ETAPES_FRIGO`, `ui/parcours.ts`) — la liste est statique pour
+              la durée du montage, l'ordre ne bouge jamais. */}
+          {etapes.map((_e, i) => (
             <span
-              key={e.cible}
+              key={i}
               className={'h-2 w-2 rounded-full ' + (i === etapeIndex ? 'bg-accent-plein' : 'bg-bordure-forte')}
             />
           ))}

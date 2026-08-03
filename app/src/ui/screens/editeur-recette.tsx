@@ -36,6 +36,7 @@ import {
 } from '../../data/user-recipe.js'
 import { LIBELLE_CRENEAU, aujourdhuiIso, chargerSocle, rebatirCatalogue } from '../socle.js'
 import { hashDe, hashDeRecette } from '../router.js'
+import { LienTutoriel } from '../lien-tutoriel.js'
 
 const SAISIE_VIDE: SaisieRecette = {
   nom: '',
@@ -204,9 +205,10 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
 
   return (
     <section>
-      <h1 className="text-[2.1rem] text-texte">
+      <h1 data-visite="titre-composer" className="text-[2.1rem] text-texte">
         {edition !== null ? 'Modifier ma recette' : variante ? 'Adapter la recette' : 'Ma recette'}
       </h1>
+      <LienTutoriel parcoursId="composer" />
       <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
         {variante
           ? 'Changez ce que vous voulez. Le reste — texture, conservation, moment du repas — est repris de la recette d’origine.'
@@ -216,6 +218,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
       <Champ libelle="Nom du plat">
         <input
           type="text"
+          data-visite="nom-du-plat"
           value={saisie.nom}
           onChange={(e) => maj({ nom: e.target.value })}
           placeholder="Gratin de courgettes de ma mère"
@@ -334,6 +337,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
 
       <button
         type="button"
+        data-visite="enregistrer-recette"
         onClick={enregistrer}
         disabled={bloquants.length > 0}
         className="mt-6 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1.05rem] font-semibold text-white disabled:opacity-40"
@@ -434,6 +438,7 @@ function Ingredients({
         <span className="text-[0.9rem] text-texte-doux">Ajouter un ingrédient</span>
         <input
           type="search"
+          data-visite="ajout-ingredient"
           value={recherche}
           onChange={(e) => onRecherche(e.target.value)}
           placeholder="courgette, œufs, riz…"

@@ -23,7 +23,9 @@ import { Parametres } from './screens/parametres.js'
 import { EditeurRecette } from './screens/editeur-recette.js'
 import { Navigation } from './navigation.js'
 import { Panneau } from './panneau.js'
-import { etapesDuParcours, Visite } from './visite.js'
+import { Visite } from './visite.js'
+import { PARCOURS, etapesDuParcours } from './parcours.js'
+import { ProvenanceLancerParcours } from './lancer-parcours.js'
 import { chargerSocle } from './socle.js'
 import { aConsenti, readDisplay, writeDisplay } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
@@ -68,17 +70,17 @@ const ECARTABLE: Readonly<Record<Exclude<Alerte, 'aucune'>, boolean>> = {
 function Ecran({
   onglet,
   sousVue,
-  onLancerVisite,
 }: {
   readonly onglet: Onglet
   readonly sousVue: SousVue
-  readonly onLancerVisite: () => void
 }) {
   // La sous-vue prime sur l'onglet : fiche et frigo appartiennent à `recettes`, mais on y arrive
   // aussi depuis la semaine, les courses ou Aujourd'hui.
   if (sousVue.type === 'recette') return <DetailRecette recetteId={sousVue.id} origine={sousVue.origine} />
   if (sousVue.type === 'frigo') return <Frigo />
-  if (sousVue.type === 'parametres') return <Parametres onLancerVisite={onLancerVisite} />
+  // ⚠️ `Parametres` ne reçoit plus `onLancerVisite` en prop : il lance ses parcours via
+  // `useLancerParcours()` (voir `ui/lancer-parcours.tsx`), exactement comme les six autres écrans.
+  if (sousVue.type === 'parametres') return <Parametres />
   if (sousVue.type === 'editeur') return <EditeurRecette baseId={sousVue.baseId} />
   if (onglet === 'aujourdhui') return <Aujourdhui />
   if (onglet === 'semaine') return <Semaine />
@@ -149,6 +151,19 @@ function Coquille() {
    * visite tourne.
    */
   const [etapeVisite, setEtapeVisite] = useState<'aucune' | 'invitation' | 'active'>('aucune')
+  /** Quel parcours la visite active joue — l'invitation de fin d'accueil lance toujours « menus ». */
+  const [parcoursActif, setParcoursActif] = useState('menus')
+  /**
+   * Un parcours demandé depuis un AUTRE écran que le sien (typiquement Réglages), en attente que la
+   * navigation vers `parcours.ecran` ait réellement abouti avant de monter `<Visite>`.
+   *
+   * ⚠️ SANS CETTE ATTENTE, `<Visite>` MESURERAIT LE MAUVAIS ÉCRAN. Poser `window.location.hash` ne
+   * change pas la route SYNCHRONEMENT : `useRoute()` (`router.tsx`) ne se met à jour qu'à
+   * l'événement `hashchange`, un tick plus tard. Monter la visite dans le même rendu que la
+   * navigation la ferait chercher ses cibles dans le DOM de l'écran qu'on est en train de QUITTER —
+   * aucune ne résoudrait, et la visite se terminerait aussitôt, en silence (voir `parcours.ts`).
+   */
+  const [parcoursEnAttente, setParcoursEnAttente] = useState<string | null>(null)
 
   /** Écrit `visite_proposee = 1` puis, selon la réponse, lance la visite ou referme l'invitation. */
   const repondreInvitation = (accepte: boolean) => {
@@ -157,6 +172,41 @@ function Coquille() {
       .catch(() => undefined)
     setEtapeVisite(accepte ? 'active' : 'aucune')
   }
+
+  /**
+   * `lancerParcours(id)`, posé dans le contexte pour tous les écrans (voir `ui/lancer-parcours.tsx`).
+   *
+   * ⚠️ NAVIGUE D'ABORD SI LE PARCOURS APPARTIENT À UN AUTRE ÉCRAN. C'est le cas depuis la fenêtre
+   * « Revoir un tutoriel » de Réglages (`parametres.tsx`), qui liste TOUS les parcours : en choisir
+   * un qui concerne Semaine depuis Réglages doit d'abord y aller, pas afficher une visite muette.
+   * Lancé depuis l'écran auquel le parcours appartient déjà (le cas courant, via `LienTutoriel`),
+   * la navigation est un no-op — le hash ne change pas.
+   */
+  const lancerParcours = (id: string) => {
+    const parcours = PARCOURS.find((p) => p.id === id)
+    if (parcours === undefined) return
+    if (parcours.ecran !== null && window.location.hash !== parcours.ecran) {
+      window.location.hash = parcours.ecran
+      setParcoursEnAttente(id)
+      return
+    }
+    setParcoursActif(id)
+    setEtapeVisite('active')
+  }
+
+  // Termine la navigation en attente : une fois la route réellement arrivée sur l'écran du parcours,
+  // on peut monter `<Visite>` sans risquer de mesurer le DOM de l'écran précédent (voir plus haut).
+  useEffect(() => {
+    if (parcoursEnAttente === null) return
+    const parcours = PARCOURS.find((p) => p.id === parcoursEnAttente)
+    if (parcours !== undefined && window.location.hash === parcours.ecran) {
+      setParcoursActif(parcoursEnAttente)
+      setEtapeVisite('active')
+      setParcoursEnAttente(null)
+    }
+    // `route` (et non `window.location.hash`) en dépendance : c'est le changement de route, notifié
+    // par `useRoute()`, qui doit redéclencher cette vérification.
+  }, [route, parcoursEnAttente])
 
   useEffect(() => {
     let annule = false
@@ -219,7 +269,7 @@ function Coquille() {
   }
 
   return (
-    <>
+    <ProvenanceLancerParcours value={lancerParcours}>
       <Navigation courante={route.onglet} />
       {/* `pb-28` réserve la hauteur de la barre du bas sur mobile ; sur bureau la barre passe à
           gauche (`lg:pl-56`) et la réserve disparaît. Marges en rem, jamais de hauteur figée. */}
@@ -256,13 +306,7 @@ function Coquille() {
           </div>
         )}
         <main>
-          <Ecran
-            onglet={route.onglet}
-            sousVue={route.sousVue}
-            // Rejouable depuis Paramètres, indépendamment de `visite_proposee` (§ « on a déjà
-            // proposé » ≠ « déjà terminé », voir la brief) : on relance le même état `'active'`.
-            onLancerVisite={() => setEtapeVisite('active')}
-          />
+          <Ecran onglet={route.onglet} sousVue={route.sousVue} />
         </main>
       </div>
 
@@ -294,9 +338,9 @@ function Coquille() {
         </Panneau>
       )}
       {etapeVisite === 'active' && (
-        <Visite etapes={etapesDuParcours('menus')} onTerminer={() => setEtapeVisite('aucune')} />
+        <Visite etapes={etapesDuParcours(parcoursActif)} onTerminer={() => setEtapeVisite('aucune')} />
       )}
-    </>
+    </ProvenanceLancerParcours>
   )
 }
 

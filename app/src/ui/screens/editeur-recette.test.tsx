@@ -30,9 +30,17 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
+// ⚠️ `ProvenanceLancerParcours` IMPORTÉ DYNAMIQUEMENT DANS `monter`, PAS EN TÊTE DE FICHIER — voir
+// `courses.test.tsx` pour la raison : `vi.resetModules()` en `beforeEach` figerait sinon un
+// `Context` React distinct de celui que `EditeurRecette` utilise réellement dans `<LienTutoriel>`.
 async function monter(baseId: string | null = null) {
   const { EditeurRecette } = await import('./editeur-recette.js')
-  render(<EditeurRecette baseId={baseId} />)
+  const { ProvenanceLancerParcours } = await import('../lancer-parcours.js')
+  render(
+    <ProvenanceLancerParcours value={() => undefined}>
+      <EditeurRecette baseId={baseId} />
+    </ProvenanceLancerParcours>
+  )
   await screen.findByRole('heading', { level: 1 })
 }
 
