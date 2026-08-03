@@ -55,28 +55,38 @@ ingredients:
 
 etapes:
   - ordre: 1
+    texte: "Si les harengs sont crus, les congeler 7 jours dans un congélateur domestique (-18 °C) avant de les mariner : l'huile et les aromates n'éliminent pas le parasite Anisakis."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
     texte: "Émincer l'oignon et la carotte en rondelles très fines."
     lexicon_ids: [emincer]
     timer_s: null
     timer_type: null
-  - ordre: 2
+  - ordre: 3
     texte: "Ranger les filets de hareng dans un plat creux avec les rondelles, le laurier et le poivre, couvrir d'huile."
     lexicon_ids: []
     timer_s: null
     timer_type: null
-  - ordre: 3
+  - ordre: 4
     texte: "Laisser mariner au frais — une nuit vaut mieux qu'une heure, la chair s'attendrit et prend les aromates."
     lexicon_ids: [mariner]
     timer_s: 43200
     timer_type: repos
-  - ordre: 4
+  - ordre: 5
     texte: "Cuire les pommes de terre en robe des champs dans l'eau salée, puis les peler encore chaudes."
     lexicon_ids: [eplucher]
     timer_s: 1500
     timer_type: cuisson
-  - ordre: 5
+  - ordre: 6
     texte: "Couper les pommes de terre en rondelles épaisses, les arroser d'un peu d'huile de la marinade et poser les filets dessus."
     lexicon_ids: [arroser]
+    timer_s: null
+    timer_type: null
+  - ordre: 7
+    texte: "Le ministère de l'Agriculture recommande aux femmes enceintes, aux personnes âgées, aux jeunes enfants et aux personnes immunodéprimées d'éviter les poissons crus, crustacés et mollusques crus ou simplement marinés."
+    lexicon_ids: []
     timer_s: null
     timer_type: null
 
@@ -87,3 +97,9 @@ facettes:
     valeur: pescetarien
   - facette: style
     valeur: quotidien
+
+sources:
+  - type: reference
+    titre: "Manger cru : quels sont les risques et comment les éviter ? — ministère de l'Agriculture"
+    url: "https://agriculture.gouv.fr/manger-cru-quels-sont-les-risques-et-comment-les-eviter"
+    consulte_le: "2026-08-03"

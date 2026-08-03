@@ -63,6 +63,11 @@ etapes:
     lexicon_ids: []
     timer_s: 10800
     timer_type: repos
+  - ordre: 6
+    texte: "L'ANSES recommande aux personnes âgées, aux personnes immunodéprimées, aux jeunes enfants et aux femmes enceintes de ne pas consommer d'œufs crus ou peu cuits."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
 
 facettes:
   - facette: cuisine

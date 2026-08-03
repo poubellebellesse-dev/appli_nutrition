@@ -67,6 +67,11 @@ etapes:
     lexicon_ids: []
     timer_s: 300
     timer_type: cuisson
+  - ordre: 6
+    texte: "L'ANSES recommande aux personnes âgées, aux personnes immunodéprimées, aux jeunes enfants et aux femmes enceintes de ne pas consommer d'œufs crus ou peu cuits."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
 
 facettes:
   - facette: cuisine
@@ -75,3 +80,9 @@ facettes:
     valeur: vegetarien
   - facette: style
     valeur: quotidien
+
+sources:
+  - type: reference
+    titre: "Salmonella spp. — fiche de danger biologique transmissible par les aliments, ANSES (saisine 2016-SA-0080)"
+    url: "https://www.anses.fr/system/files/BIORISK2016SA0080Fi.pdf"
+    consulte_le: "2026-08-03"

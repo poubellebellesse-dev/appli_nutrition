@@ -51,30 +51,40 @@ ingredients:
 
 etapes:
   - ordre: 1
+    texte: "Congeler les sardines 7 jours dans un congélateur domestique (-18 °C), puis les décongeler au frais : la marinade au citron n'élimine pas le parasite Anisakis."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
     texte: "Lever les filets de sardines, retirer l'arête centrale et vérifier qu'il n'en reste aucune."
     lexicon_ids: [filet]
     timer_s: null
     timer_type: null
-  - ordre: 2
+  - ordre: 3
     texte: "Ranger les filets à plat dans un plat creux, peau vers le bas, et les saler."
     lexicon_ids: []
     timer_s: null
     timer_type: null
-  - ordre: 3
+  - ordre: 4
     texte: "Les couvrir entièrement de jus de citron — l'acidité « cuit » la chair, elle doit blanchir."
     lexicon_ids: [blanchir]
     timer_s: 7200
     timer_type: repos
-  - ordre: 4
+  - ordre: 5
     texte: "Égoutter le jus, puis couvrir d'huile d'olive avec les échalotes émincées et le poivron en dés."
     lexicon_ids: [emincer, egoutter, tailler_des]
     timer_s: null
     timer_type: null
-  - ordre: 5
+  - ordre: 6
     texte: "Laisser reposer au frais encore une heure et parsemer de coriandre au moment de servir."
     lexicon_ids: [parsemer]
     timer_s: 3600
     timer_type: repos
+  - ordre: 7
+    texte: "Le ministère de l'Agriculture recommande aux femmes enceintes, aux personnes âgées, aux jeunes enfants et aux personnes immunodéprimées d'éviter les poissons crus, crustacés et mollusques crus ou simplement marinés."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
 
 facettes:
   - facette: cuisine
@@ -83,3 +93,9 @@ facettes:
     valeur: pescetarien
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Manger cru : quels sont les risques et comment les éviter ? — ministère de l'Agriculture"
+    url: "https://agriculture.gouv.fr/manger-cru-quels-sont-les-risques-et-comment-les-eviter"
+    consulte_le: "2026-08-03"

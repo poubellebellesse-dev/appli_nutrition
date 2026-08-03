@@ -451,7 +451,7 @@ Adaptation assumée, même source.
   `pain-perdu`) restent sans critère : leur rédaction est améliorable, mais rien ne peut y être
   attaché comme source sanitaire.
 
-### Ce qui reste en attente d'un arbitrage
+### ~~Ce qui reste en attente d'un arbitrage~~ — **TRANCHÉ le 2026-08-03, voir §5 quinquies**
 
 - **Trois préparations crues.** `sardines-marinees-citron` et `hareng-pommes-terre-tiedes` :
   l'ANSES range explicitement les « marinades, carpaccio » parmi les « poissons crus ou insuffisamment
@@ -462,6 +462,8 @@ Adaptation assumée, même source.
 - **Onze recettes à œuf cru ou peu cuit.** Le jaune coulant est un choix culinaire, pas un défaut.
   Proposé : **un tip sourcé ANSES** nommant les quatre populations concernées (« personnes âgées,
   personnes immunodéprimées, jeunes enfants, femmes enceintes »), plutôt que onze phrases recopiées.
+  ⛔ **Cette proposition était doublement fausse et a été rejetée** (§5 quinquies) : un tip n'atteint
+  aucune recette, et le périmètre était de **15** recettes, pas de 11.
 
 ### ⚠️ La leçon de méthode, à ne pas repayer
 
@@ -473,6 +475,89 @@ Sans cette reprise, le crabe, le poulpe, la sole, la raie et les langoustines n'
 examinés — et trois des neuf corrections n'auraient pas eu lieu.
 **Toujours dériver le périmètre de la donnée, jamais d'une liste recopiée par un intermédiaire.**
 C'est la même dette que celle des tests de gabarit (`FICHE_REPRISE.md`, Méthode).
+
+---
+
+## 5 quinquies. Arbitrage des crus et des œufs peu cuits (2026-08-03)
+
+Clôture des deux arbitrages laissés ouverts en §5 quater. Décision : **la mention va dans les
+recettes**, pas dans un tip. **18 recettes modifiées.**
+
+### Pourquoi le tip a été écarté — un défaut de mécanisme, pas de goût
+
+La table `tip` est `(id, code, categorie, texte, source_url)` : **aucune colonne vers une recette ni
+vers un aliment**. Les tips sont un carrousel de l'écran Savoir, tiré indépendamment de ce qu'on
+cuisine. Un tip « œufs crus » n'apparaîtrait sur aucune des quinze recettes concernées.
+
+⚠️ **L'option avait été présentée comme « une seule place au lieu de onze ». C'était faux** : la vraie
+différence était « une place qui n'atteint pas le lecteur, contre quinze qui l'atteignent ».
+**Vérifier le mécanisme AVANT de proposer un choix, pas après** — un arbitrage rendu sur une
+description fausse doit être repris, et c'est du temps payé deux fois.
+
+Second obstacle, structurel : `catalog/tips/README.md` impose « un fait vérifiable, jamais un
+conseil », et `à éviter` figure dans `BANNED_TERMS`. Le build refuse la formulation naturelle d'un
+avertissement — un tip n'aurait pu être qu'un constat (« l'ANSES recommande… »).
+
+### Deux sources ouvertes et lues, en plus de la fiche *Salmonella* de §5 quater
+
+| Source | URL |
+|---|---|
+| Ministère de l'Agriculture, *Manger cru : quels sont les risques et comment les éviter ?* | `agriculture.gouv.fr/manger-cru-quels-sont-les-risques-et-comment-les-eviter` |
+| Préfecture de la Mayenne (relais DGAL), *Le risque parasite : Anisakis* | `mayenne.gouv.fr/…/Le-risque-parasite-Anisakis` |
+
+Les quatre citations retenues :
+
+- « Une congélation de 48h à -20°C, pratiquée par un professionnel, ou de **7 jours dans un
+  congélateur domestique (-18°C)**, suffit à éliminer le parasite. »
+- « Pour les personnes les plus sensibles (femmes enceintes, personnes âgées, jeunes enfants,
+  personnes immunodéprimées) : éviter la consommation de poissons crus, crustacés et mollusques crus
+  ou simplement marinés. »
+- « Les huîtres se conservent toujours à plat, partie creuse en bas, et s'ouvrent au dernier moment. »
+- ANSES, fiche *Salmonella* **p. 4** : « Il est recommandé aux personnes âgées, aux personnes
+  immunodéprimées, aux jeunes enfants et aux femmes enceintes de ne pas consommer d'œufs crus ou peu
+  cuits. »
+
+⚠️ **Les deux pages ont été rouvertes et relues directement**, la recherche initiale ayant signalé
+elle-même son incertitude sur la citation Anisakis. Une citation rapportée par un intermédiaire qui
+doute de sa propre lecture ne vaut pas source lue.
+
+### Ce qui a été écrit
+
+**Trois recettes crues** — étape de sécurité, mention des populations sensibles, source ministère :
+`sardines-marinees-citron` et `hareng-pommes-terre-tiedes` (congélation 7 j à -18 °C),
+`huitres-nature-citron` (conservation à plat, ouverture au dernier moment). ⚠️ Ce dernier fichier
+n'avait **aucune** source jusque-là.
+
+**Quinze recettes à œuf cru ou peu cuit** — une étape finale portant la phrase ANSES, identique au
+caractère près dans les quinze, et la source ANSES ajoutée aux douze qui ne l'avaient pas.
+
+⚠️ **Le périmètre était de 15, pas de 11.** Le chiffre de §5 quater était une sous-estimation de
+quatre recettes. Le périmètre réel vient du classement des **34** recettes contenant `food_id: oeuf`
+d'après le texte de leurs étapes : **5 crues, 10 peu cuites, 19 cuites**. Encore une fois, dériver le
+périmètre de la donnée. Deux classements ont été rectifiés à la relecture — `tarte-poireaux-brie`
+(35 min à 200 °C) et `pain-perdu` (trempage de quelques secondes) sont bien cuites, malgré une
+citation de preuve qui ne le montrait pas.
+
+### Ce qui a été délibérément NON écrit
+
+- **Rien sur la zone de production ni l'étiquette de salubrité des huîtres.** ⚠️ C'était la
+  proposition initiale ; elle a été **abandonnée faute de source lisible**. La page ministérielle ne
+  dit rien sur ce point et les deux fiches DGCCRF qui le portent renvoient **403**. §5 quater écrit
+  « zone de production autorisée et contrôlée » d'après la page biotoxines : cela reste vrai des
+  biotoxines, mais **aucune source lue ne le formule comme une consigne d'achat au consommateur**.
+- **`tortilla-espagnole` garde `conservation_jours: 2`.** La règle des 24 h de l'ANSES vise les
+  préparations « **sans cuisson** » ; une tortilla est cuite. Pas de source, pas de changement.
+- **Rien de plus sur le hareng.** La recette ne dit pas si les filets sont crus ou déjà salés — d'où
+  une étape conditionnelle (« si les harengs sont crus »). Préciser la recette vaudrait mieux que
+  d'ajouter une étape, mais c'est une décision de contenu, pas de sécurité.
+
+### Deux défauts relevés, non corrigés
+
+- `blancs-neige-citron`, étape 2 : « Monter les blancs en neige » porte `timer_type: cuisson`.
+  Monter des blancs n'est pas une cuisson.
+- `omelette-fines-herbes` et `tortilla-espagnole` : leurs textes ne disent pas si l'œuf reste coulant
+  (« laisser prendre sans remuer », « le centre doit rester moelleux »). Gardées en périmètre par
+  prudence ; la vraie correction est de décider ce que la recette enseigne.
 
 ---
 
@@ -495,10 +580,10 @@ C'est la même dette que celle des tests de gabarit (`FICHE_REPRISE.md`, Méthod
 1. ~~**Ajouter la provenance au schéma**~~ — **FAIT le 2026-08-02** (§5).
 2. ~~**Vérifier les cuissons à risque**~~ — **FAIT.** Viandes et volailles : 10 recettes (§5 bis).
    Poissons, œufs et coquillages : **75 recettes examinées, 12 corrigées** (§5 quater).
-   ⚠️ **Trois choses en restent dehors, et c'est documenté en §5 quater** : les céphalopodes
-   (`calamar`, `poulpe`) qu'aucune source lue ne couvre ; le critère de cuisson de l'œuf, qu'aucune
-   autorité ne donne ; et deux arbitrages en attente — les trois préparations crues et le tip
-   « œufs peu cuits ».
+   Crus et œufs peu cuits : **18 recettes** portent la mention des populations sensibles (§5 quinquies).
+   ⚠️ **Deux choses en restent dehors, et c'est documenté en §5 quater et §5 quinquies** : les
+   céphalopodes (`calamar`, `poulpe`) qu'aucune source lue ne couvre ; et le critère de cuisson de
+   l'œuf, qu'aucune autorité ne donne. Les deux arbitrages qui étaient en attente sont **tranchés**.
 2 bis. **Étendre le lot classiques** (§5 ter) — **4 recettes vérifiées** (blanquette, navarin,
    carottes Vichy, veau Marengo). ⚠️ Le second passage a montré que le vivier est bien plus étroit
    qu'espéré : **1 succès sur 5 tentatives**. Avant d'ouvrir un nouveau lot, faire un inventaire

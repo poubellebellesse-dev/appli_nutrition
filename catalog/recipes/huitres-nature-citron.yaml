@@ -47,28 +47,38 @@ ingredients:
 
 etapes:
   - ordre: 1
+    texte: "Conserver les huîtres à plat, partie creuse en bas, et ne les ouvrir qu'au dernier moment."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
     texte: "Rincer les coquilles à l'eau froide et écarter toute huître dont la coquille est fêlée ou déjà entrouverte."
     lexicon_ids: [rincer]
     timer_s: null
     timer_type: null
-  - ordre: 2
+  - ordre: 3
     texte: "Ouvrir chaque huître à plat, la charnière vers soi, en glissant la lame le long de la coquille supérieure. Protéger sa main d'un torchon épais."
     lexicon_ids: []
     timer_s: null
     timer_type: null
-  - ordre: 3
+  - ordre: 4
     texte: "JETER la première eau, trouble et salée. Une seconde eau, plus claire, se reforme en quelques minutes."
     lexicon_ids: []
     timer_s: 600
     timer_type: repos
-  - ordre: 4
+  - ordre: 5
     texte: "Préparer une échalote émincée très fin dans le vinaigre pour ceux qui l'aiment ainsi."
     lexicon_ids: [emincer]
     timer_s: null
     timer_type: null
-  - ordre: 5
+  - ordre: 6
     texte: "Dresser sur un lit de glace et servir aussitôt avec les quartiers de citron et le pain beurré."
     lexicon_ids: [dresser]
+    timer_s: null
+    timer_type: null
+  - ordre: 7
+    texte: "Le ministère de l'Agriculture recommande aux femmes enceintes, aux personnes âgées, aux jeunes enfants et aux personnes immunodéprimées d'éviter les poissons crus, crustacés et mollusques crus ou simplement marinés."
+    lexicon_ids: []
     timer_s: null
     timer_type: null
 
@@ -81,3 +91,9 @@ facettes:
     valeur: repas_de_fete
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Manger cru : quels sont les risques et comment les éviter ? — ministère de l'Agriculture"
+    url: "https://agriculture.gouv.fr/manger-cru-quels-sont-les-risques-et-comment-les-eviter"
+    consulte_le: "2026-08-03"
