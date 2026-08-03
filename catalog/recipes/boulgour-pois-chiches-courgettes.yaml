@@ -1,5 +1,6 @@
 id: boulgour_pois_chiches_courgettes
 nom: "Boulgour aux pois chiches et courgettes rôties"
+origine: maison
 description: >
   Des courgettes rôties au four mêlées au boulgour et aux pois chiches.
 temps_prep_min: 15
@@ -75,6 +76,8 @@ etapes:
     timer_type: null
 
 facettes:
+  - facette: cuisine
+    valeur: libanaise
   - facette: regime
     valeur: vegetalien
   - facette: style

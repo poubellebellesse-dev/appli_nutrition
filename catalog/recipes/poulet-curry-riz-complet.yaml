@@ -1,5 +1,6 @@
 id: poulet_curry_riz_complet
 nom: "Poulet au curry, riz complet"
+origine: maison
 description: >
   Des dés de poulet mijotés au curry et à la crème, servis avec du riz complet.
 temps_prep_min: 15

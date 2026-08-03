@@ -18,7 +18,15 @@
 //    spécifie explicitement sur Catalog — data/ retournera des Map vides tant que ces tables
 //    n'existent pas au build.
 
-import type { FoodId, RecipeId, NutrientId, AllergenId, LexiconEntryId, TopicId } from './ids.js'
+import type {
+  FoodId,
+  RecipeId,
+  NutrientId,
+  AllergenId,
+  LexiconEntryId,
+  TopicId,
+  EvidenceSheetId,
+} from './ids.js'
 import type { Grams, Minutes } from './units.js'
 
 // --- Nutriments & allergènes (référentiels build.mjs NUTRIENTS / ALLERGENS) ------------------
@@ -300,9 +308,36 @@ export interface RecipeFacet {
 /** `recipe_facet.valeur` quand `facette === 'regime'`. Ouvert, pas de CHECK en base. */
 export type DietCode = string
 
+/**
+ * D'ou vient le TEXTE de la recette — sans rapport avec les valeurs nutritionnelles, qui viennent
+ * toujours de CIQUAL. Distinct de `RecipeSource['type']`, qui dit pourquoi une source est citee.
+ *
+ * - `maison` — ecrite pour ce projet (241/241 aujourd'hui).
+ * - `domaine_public` — vient d'un ouvrage tombe dans le domaine public.
+ * - `libre` — vient d'une source sous licence libre (CC0, CC BY, CC BY-SA…).
+ *
+ * ⚠️ `domaine_public` et `libre` exigent une source `provenance` ; `maison` l'interdit — le build
+ * refuse la contradiction (docs/SOURCES_RECETTES.md).
+ *
+ * ⚠️ `utilisateur` et `partagee` NE PEUVENT JAMAIS APPARAÎTRE DANS LE CATALOGUE : `RECIPE_ORIGINES`
+ * (catalog/build.mjs) et le `CHECK` SQL de `CREATE TABLE recipe` n'acceptent que les trois valeurs
+ * ci-dessus, et doivent continuer de refuser celles-ci. Elles n'existent que pour les recettes
+ * stockées dans `user.db` (`data/user-recipe.ts#versRecette`), qui n'entrent jamais en catalogue.
+ * Le PIÈGE : `RecipeOrigine` sert donc à DEUX espaces de valeurs disjoints qui partagent un seul
+ * type Recipe — une recette perso composée par l'utilisateur (`utilisateur`) n'a pas été « écrite
+ * pour cette application » au sens de `maison` ; une recette reçue par fichier `.nutri-recipe` d'un
+ * tiers (`partagee`) ne l'a pas été non plus, et il serait faux de le dire dans les deux cas.
+ * - `utilisateur` — recette perso composée ou dérivée par la personne qui l'utilise (`perso` /
+ *   `variante` côté `StoredUserRecipe.source`).
+ * - `partagee` — recette perso reçue d'un tiers via `.nutri-recipe` (`importe`).
+ */
+export type RecipeOrigine = 'maison' | 'domaine_public' | 'libre' | 'utilisateur' | 'partagee'
+
 export interface Recipe {
   readonly id: RecipeId
   readonly nom: string
+  /** Voir `RecipeOrigine`. Affichee SYSTEMATIQUEMENT en tete de fiche, meme quand `sources` n'est pas vide. */
+  readonly origine: RecipeOrigine
   readonly description: string
   readonly tempsPrepMin: Minutes
   readonly tempsCuissonMin: Minutes
@@ -333,6 +368,44 @@ export interface Recipe {
    * ⚠️ NON CÂBLÉ — aucune couche ne le lit. Posé pour la feature à venir.
    */
   readonly piquant: PiquantLevel | null
+  /**
+   * Sources de la recette — vide tant qu'elle n'a été ni importée ni vérifiée.
+   *
+   * ⚠️ Le moteur ne les lit JAMAIS. C'est de l'information destinée au lecteur, au même titre
+   * que `Tip.sourceUrl` : aucune couche ne doit classer une recette sur le fait qu'elle est
+   * sourcée, sinon la traçabilité deviendrait un critère de sélection déguisé.
+   */
+  readonly sources: readonly RecipeSource[]
+  /**
+   * Date à laquelle la recette a été RÉELLEMENT cuisinée et le résultat jugé. `null` = jamais
+   * testée — le cas des 241 recettes du catalogue.
+   *
+   * ⚠️ Jamais une date approchée. C'est le champ qui porte la confiance ; une date inventée la
+   * détruit plus sûrement que son absence.
+   */
+  readonly testeLe: string | null
+}
+
+/**
+ * Ce qu'une source dit d'une recette. **Deux types, qui n'affirment pas la même chose :**
+ *
+ * - `provenance` — la recette **vient de là** (import d'une source libre). Revendique une origine,
+ *   d'où `licence` et `auteur` obligatoires : on emprunte le travail de quelqu'un.
+ * - `reference` — ouverte pour **vérifier** la recette. N'affirme aucune origine, c'est une
+ *   bibliographie. Rien à créditer, donc `licence` et `auteur` restent `null`.
+ *
+ * ⚠️ **Les confondre serait un mensonge.** Les 241 recettes du catalogue sont écrites pour ce
+ * projet ; leur attacher une `provenance` trouvée après coup fabriquerait une origine — la faute
+ * exacte que `catalog/tips/README.md` interdit. Détail : `docs/SOURCES_RECETTES.md` §1.
+ */
+export interface RecipeSource {
+  readonly type: 'provenance' | 'reference'
+  readonly titre: string
+  readonly url: string
+  /** Date d'ouverture RÉELLE du lien. Une référence non ouverte ne se cite pas. */
+  readonly consulteLe: string
+  readonly licence: string | null
+  readonly auteur: string | null
 }
 
 // --- Lexique de cuisine (table `lexicon_entry`) -----------------------------------------------
@@ -352,6 +425,12 @@ export interface Tip {
   readonly code: string
   readonly categorie: TipCategorie
   readonly texte: string
+  /**
+   * Référence publiée d'où le fait est tiré (§4.2 ARCHITECTURE). **Jamais `null`** : la colonne est
+   * `NOT NULL` et le build refuse un tip sans source. Un fait court et affirmatif est précisément
+   * celui qu'on recopie sans vérifier — c'est là que la traçabilité compte le plus.
+   */
+  readonly sourceUrl: string
 }
 
 export interface LexiconEntry {
@@ -359,6 +438,108 @@ export interface LexiconEntry {
   readonly code: string
   readonly terme: string
   readonly definition: string
+}
+
+// --- Fiches scientifiques (tables `evidence_*`, §8.2 ARCHITECTURE, §4.7 DESIGN) ---------------
+
+/**
+ * Les quatre niveaux de §5 DESIGN — « l'élément le plus surveillé » du produit.
+ *
+ * ⚠️ CE N'EST PAS UNE NOTE. §5 interdit explicitement le rouge/vert, les étoiles et toute
+ * hiérarchie de type feu tricolore : le badge qualifie la SOLIDITÉ D'UNE PREUVE, jamais la qualité
+ * d'un aliment. Un rendu coloré transformerait une information en jugement.
+ */
+export type NiveauPreuve = 'forte' | 'moderee' | 'faible' | 'preliminaire'
+
+/** Les quatre familles de niveau 1 de « Comprendre » (§6.3 ARCHITECTURE). CHECK en base. */
+export type EvidenceCategorie = 'nutriments' | 'vitamines_mineraux' | 'aliments' | 'situations'
+
+/**
+ * Nature de la source. `commentaire_critique` n'apporte aucune donnée propre : il conteste celles
+ * d'une autre source, et existe pour que la règle « une position contestée est citée AVEC sa
+ * critique » soit représentable (voir catalog/evidence/README.md).
+ */
+export type TypeEtude =
+  | 'meta_analyse'
+  | 'revue_systematique'
+  | 'essai_randomise'
+  | 'cohorte'
+  | 'rapport_autorite'
+  | 'commentaire_critique'
+
+/** `evidence_link.cible_type` (§4.2). ⚠️ `health_topic` n'a pas de table : aucun lien ne le vise. */
+export type EvidenceCibleType = 'food' | 'nutrient' | 'health_topic'
+
+/**
+ * Une référence citée par une fiche.
+ *
+ * ⚠️ `auteurs` est NULLABLE, et c'est un choix de sincérité, pas un oubli de modélisation : quand la
+ * page éditeur exige un compte, la liste d'auteurs n'a pas pu être vérifiée alors que titre, revue,
+ * année et DOI l'ont été. `null` dit « non vérifié », ce qu'une chaîne plausible ne dirait pas.
+ */
+export interface EvidenceSource {
+  /** Identifiant LOCAL à la fiche (`evidence_source.code`), pas un id global. */
+  readonly code: string
+  readonly titreEtude: string
+  readonly auteurs: string | null
+  readonly annee: number
+  readonly revue: string
+  readonly doi: string | null
+  readonly url: string
+  readonly typeEtude: TypeEtude
+  /** Effectif, seulement s'il a été vérifié à la source. `null` dans le doute. */
+  readonly effectif: string | null
+  /** Déclaration de financement publiée, reproduite telle quelle. `null` si aucune. */
+  readonly financement: string | null
+  /** Date à laquelle `url` a été ouverte et vérifiée (règle 5 du README de catalog/evidence). */
+  readonly consulteLe: string
+}
+
+/**
+ * Une position : les « affirmations courtes, chacune avec badge de preuve » de §4.7.
+ *
+ * ⚠️ `portePar` EST OBLIGATOIRE. Une affirmation de santé sans son auteur (« OMS », « revue
+ * Cochrane ») redevient une parole d'application — exactement ce que §6.1 interdit. Ne jamais y
+ * mettre « les scientifiques ».
+ */
+export interface EvidencePosition {
+  readonly code: string
+  readonly niveauPreuve: NiveauPreuve
+  readonly portePar: string
+  readonly affirmation: string
+  readonly detail: string
+  /** Codes de `EvidenceSheet.sources` — jamais vide, la contrainte est vérifiée au build. */
+  readonly sources: readonly string[]
+}
+
+export interface EvidenceLink {
+  readonly cibleType: EvidenceCibleType
+  /** `FoodId` ou `NutrientId` selon `cibleType` — polymorphe, donc `string` (pas d'FK en base). */
+  readonly cibleId: string
+}
+
+/**
+ * Un chapitre de « Comprendre » (§4.7 DESIGN, §8.2 ARCHITECTURE).
+ *
+ * ⚠️ `niveauPreuve` ici est celui du SOCLE DE CONSENSUS, et il n'est pas redondant avec celui des
+ * positions : une fiche peut reposer sur un consensus fort tout en exposant une position faible et
+ * contestée. §4.2 ARCHITECTURE ne prévoyait qu'un niveau par fiche ; l'exposition de plusieurs
+ * points de vue a imposé `evidence_position`, dont chaque ligne porte le sien.
+ */
+export interface EvidenceSheet {
+  readonly id: EvidenceSheetId
+  readonly code: string
+  /** Un titre-QUESTION (§4.7). Vérifié au build : sans « ? », le build échoue. */
+  readonly titre: string
+  readonly categorie: EvidenceCategorie
+  readonly niveauPreuve: NiveauPreuve
+  /** ISO `AAAA-MM-JJ`. §8.2 règle 4 : au-delà de 3 ans, la fiche est à réviser. */
+  readonly dateRevue: string
+  readonly resumeVulgarise: string
+  /** Dans l'ordre d'affichage voulu par la fiche (`evidence_position.ordre`). */
+  readonly positions: readonly EvidencePosition[]
+  readonly sources: readonly EvidenceSource[]
+  readonly liens: readonly EvidenceLink[]
 }
 
 // --- Types en attente de table catalogue (v1.5 / v2, voir commentaire d'en-tête) --------------
@@ -458,6 +639,8 @@ export interface Catalog {
   readonly allergens: ReadonlyMap<AllergenId, Allergen>
   readonly lexicon: ReadonlyMap<LexiconEntryId, LexiconEntry>
   readonly tips: readonly Tip[]
+  /** Chapitres de « Comprendre » (§4.7). Sources éditables : `catalog/evidence/*.md`. */
+  readonly evidence: ReadonlyMap<EvidenceSheetId, EvidenceSheet>
   readonly topics: ReadonlyMap<TopicId, HealthTopic>
   readonly substitutions: ReadonlyMap<FoodId, readonly Substitution[]>
   readonly indexes: CatalogIndexes

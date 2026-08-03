@@ -1,5 +1,6 @@
 id: boeuf_hache_sauce_tomate
 nom: "Bœuf haché sauce tomate et champignons"
+origine: maison
 description: >
   Une sauce généreuse au bœuf haché, tomate et champignons, à servir avec des pâtes
   ou du riz.
@@ -70,7 +71,7 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 4
-    texte: "Ajouter les tomates coupées en dés, saler, poivrer et laisser mijoter à couvert."
+    texte: "Ajouter les tomates coupées en dés, saler, poivrer et laisser mijoter à couvert jusqu'à ce que la viande ne soit plus rosée nulle part."
     lexicon_ids: [mijoter, tailler_des]
     timer_s: 1200
     timer_type: cuisson
@@ -82,3 +83,13 @@ facettes:
     valeur: omnivore
   - facette: style
     valeur: reconfortant
+
+sources:
+  - type: reference
+    titre: "Guide de bonnes pratiques d'hygiène — Consommateurs (ministère de l'Agriculture)"
+    url: "https://agriculture.gouv.fr/sites/default/files/documents/pdf/GBPH_Consommateurs_5958_cle8bb1ad.pdf"
+    consulte_le: "2026-08-02"
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

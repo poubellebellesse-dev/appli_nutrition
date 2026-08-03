@@ -1,0 +1,13 @@
+# Tip — fait botanique et agricole, aucune portée santé.
+# Source : Aissa R. et al. (2023), « Phytochemistry, quality control and medicinal uses of Saffron
+# (Crocus sativus L.): an updated review », Journal of Medicine and Life,
+# DOI 10.25122/jml-2022-0353.
+#
+# ⚠️ Le chiffre « 150 000 fleurs par kilo » circule beaucoup. La source retenue en donne 60 000 —
+# c'est celui-là qui est écrit, puisque c'est celui qu'on peut vérifier au bout du lien.
+code: safran-stigmates
+categorie: biologie_aliment
+texte: >
+  Le safran, ce sont les stigmates séchés de la fleur d'un crocus. Il en faut les fleurs par
+  dizaines de milliers pour un kilo — environ 60 000 — et la cueillette se fait à la main.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10478662/"

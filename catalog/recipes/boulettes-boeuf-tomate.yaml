@@ -1,5 +1,6 @@
 id: boulettes_boeuf_tomate
 nom: "Boulettes de bœuf à la sauce tomate"
+origine: maison
 description: >
   Des boulettes liées à la chapelure et à l'œuf, mijotées dans une sauce tomate au basilic.
 temps_prep_min: 25
@@ -86,7 +87,7 @@ etapes:
     timer_s: 600
     timer_type: cuisson
   - ordre: 5
-    texte: "Remettre les boulettes dans la sauce, couvrir et laisser mijoter. Ajouter le basilic et le parmesan au moment de servir."
+    texte: "Remettre les boulettes dans la sauce, couvrir et laisser mijoter — c'est ce mijotage qui les cuit à cœur, et une boulette ouverte ne doit plus être rosée au centre. Ajouter le basilic et le parmesan au moment de servir."
     lexicon_ids: [mijoter]
     timer_s: 1200
     timer_type: cuisson
@@ -98,3 +99,13 @@ facettes:
     valeur: omnivore
   - facette: style
     valeur: quotidien
+
+sources:
+  - type: reference
+    titre: "Guide de bonnes pratiques d'hygiène — Consommateurs (ministère de l'Agriculture)"
+    url: "https://agriculture.gouv.fr/sites/default/files/documents/pdf/GBPH_Consommateurs_5958_cle8bb1ad.pdf"
+    consulte_le: "2026-08-02"
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

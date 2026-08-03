@@ -103,6 +103,7 @@ export function makeRecipe(
   return {
     id: id as RecipeId,
     nom: id,
+    origine: 'maison',
     description: '',
     tempsPrepMin: min(overrides.tempsPrepMin ?? 10),
     tempsCuissonMin: min(overrides.tempsCuissonMin ?? 10),
@@ -119,6 +120,8 @@ export function makeRecipe(
     facettes: overrides.facettes ?? [],
     service: overrides.service ?? null,
     piquant: null,
+    sources: [],
+    testeLe: null,
   }
 }
 
@@ -186,6 +189,7 @@ export function makeCatalog(recipes: readonly Recipe[], foods: readonly Food[] =
     allergens: new Map(),
     lexicon: new Map(),
     tips: [],
+    evidence: new Map(),
     topics: new Map(),
     substitutions: new Map(),
     indexes: EMPTY_INDEXES,

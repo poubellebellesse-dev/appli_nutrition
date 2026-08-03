@@ -1,5 +1,6 @@
 id: spaghetti_bolognaise_lentilles
 nom: "Spaghetti à la bolognaise de lentilles"
+origine: maison
 description: >
   Une sauce mijotée aux lentilles corail, servie sur des spaghetti.
 temps_prep_min: 15
@@ -79,6 +80,8 @@ etapes:
     timer_type: null
 
 facettes:
+  - facette: cuisine
+    valeur: italienne
   - facette: regime
     valeur: vegetalien
   - facette: style

@@ -1,5 +1,6 @@
 id: salade_melon_jambon
 nom: "Melon au jambon et à la menthe"
+origine: maison
 description: >
   Des tranches de melon servies avec du jambon, un tour de poivre et de la menthe.
 temps_prep_min: 10

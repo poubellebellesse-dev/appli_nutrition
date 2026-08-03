@@ -1,0 +1,11 @@
+# Tip — fait botanique et génétique, aucune portée santé.
+# Source : Yang Y. et al. (2024), « The Influence of Different Factors on the Metabolism of
+# Capsaicinoids in Pepper (Capsicum annuum L.) », Plants 13(20):2887,
+# DOI 10.3390/plants13202887.
+code: poivron-piment-espece
+categorie: biologie_aliment
+texte: >
+  Le poivron doux et le piment fort appartiennent à la même espèce, Capsicum annuum. La plupart des
+  variétés douces portent une délétion du locus pun1, celui qui code l'enzyme finale de fabrication
+  des capsaïcinoïdes : sans elle, pas de piquant.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11511365/"

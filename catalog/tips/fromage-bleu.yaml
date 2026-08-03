@@ -1,0 +1,11 @@
+# Tip — fait de microbiologie alimentaire, aucune portée santé.
+# Source : Chávez R., Vaca I., García-Estrada C. (2023), « Secondary Metabolites Produced by the
+# Blue-Cheese Ripening Mold Penicillium roqueforti », Journal of Fungi 9(4):459,
+# DOI 10.3390/jof9040459.
+code: fromage-bleu
+categorie: biologie_aliment
+texte: >
+  Le bleu d'un fromage persillé, ce sont des spores : Penicillium roqueforti ne se développe que
+  dans les cavités où l'air pénètre, et ses spores colorées y dessinent les veines. D'où les
+  aiguilles qu'on enfonce dans la meule — sans air, pas de bleu.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10144355/"

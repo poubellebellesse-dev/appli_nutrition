@@ -1,5 +1,6 @@
 id: mousse_fromage_blanc_fruits_rouges
 nom: "Mousse de fromage blanc aux fruits rouges"
+origine: maison
 description: >
   Du fromage blanc allégé de blancs montés en neige, servi sur un coulis de framboises.
 temps_prep_min: 20
@@ -11,7 +12,7 @@ types_repas: [gouter]
 service: dessert
 saison_mois: []
 envergure: quotidien
-conservation_jours: 2
+conservation_jours: 1
 axes:
   sucre_sale: 0.7
   leger_consistant: -0.5
@@ -82,3 +83,9 @@ facettes:
     valeur: vegetarien
   - facette: style
     valeur: quotidien
+
+sources:
+  - type: reference
+    titre: "Salmonella spp. — fiche de danger biologique transmissible par les aliments, ANSES (saisine 2016-SA-0080)"
+    url: "https://www.anses.fr/system/files/BIORISK2016SA0080Fi.pdf"
+    consulte_le: "2026-08-02"

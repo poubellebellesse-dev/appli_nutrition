@@ -1,0 +1,10 @@
+# Tip — nutrition_animale. ⚠️ Contenu CULTUREL (§8.4). Formulé sur le MÉTABOLISME de l'animal, pas
+# en consigne : le produit n'est pas un manuel vétérinaire (§6.1).
+# Source : Merck Veterinary Manual, « Chocolate Toxicosis in Animals », Toxicology / Food Hazards.
+code: chien-theobromine
+categorie: nutrition_animale
+texte: >
+  Si le chocolat pose problème au chien, c'est une question de vitesse d'élimination : la
+  théobromine y persiste avec une demi-vie d'environ 17 heures. Sa concentration varie beaucoup
+  selon le produit — la poudre de cacao en contient plus de dix fois plus que le chocolat au lait.
+source_url: "https://www.merckvetmanual.com/toxicology/food-hazards/chocolate-toxicosis-in-animals"

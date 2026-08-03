@@ -1,5 +1,6 @@
 id: galettes_pois_chiches_herbes
 nom: "Galettes de pois chiches aux herbes"
+origine: maison
 description: >
   Des galettes façon falafel, cuites au four plutôt que frites.
 temps_prep_min: 15
@@ -83,6 +84,8 @@ etapes:
     timer_type: null
 
 facettes:
+  - facette: cuisine
+    valeur: maghrebine
   - facette: regime
     valeur: vegetalien
   - facette: style

@@ -1,5 +1,6 @@
 id: carottes_vichy
 nom: "Carottes Vichy"
+origine: maison
 description: >
   Des rondelles de carottes glacées au beurre et à une pointe de sucre, jusqu'à ce qu'elles brillent.
 temps_prep_min: 10
@@ -74,3 +75,9 @@ facettes:
     valeur: vegetarien
   - facette: style
     valeur: quotidien
+
+sources:
+  - type: reference
+    titre: "Escoffier, Le Guide culinaire (1903) — « Carottes à la Vichy » et « Carottes glacées », p. 1024"
+    url: "https://fr.wikisource.org/wiki/Page:Auguste_Escoffier_-_Le_Guide_Culinaire_-_Aide-m%C3%A9moire_de_cuisine_pratique,_1903.djvu/1024"
+    consulte_le: "2026-08-02"

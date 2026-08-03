@@ -1,5 +1,6 @@
 id: radis_beurre
 nom: "Radis au beurre et sel"
+origine: maison
 description: >
   Des radis croquants servis avec du beurre demi-sel et du pain, tels quels.
 temps_prep_min: 10

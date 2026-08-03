@@ -1,0 +1,12 @@
+# Tip — nutrition_humaine. ⚠️ Descriptif : constate où se trouve la vitamine, ne recommande aucun
+# régime ni aucune supplémentation (§6.1).
+# Source : Obeid R., Heil S. G., Verhoeven M. M. A., van den Heuvel E. G. H. M., de Groot L. C. P.
+# G. M., Eussen S. J. P. M. (2019), « Vitamin B12 Intake From Animal Foods, Biomarkers, and Health
+# Aspects », Frontiers in Nutrition, DOI 10.3389/fnut.2019.00093.
+code: vitamine-b12-animale
+categorie: nutrition_humaine
+texte: >
+  La vitamine B12 se trouve naturellement dans les produits d'origine animale — viandes, volailles,
+  poissons et coquillages, œufs, lait et produits laitiers. Elle est généralement absente des
+  végétaux.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6611390/"

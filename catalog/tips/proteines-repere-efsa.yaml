@@ -1,0 +1,10 @@
+# Tip — nutrition_humaine. ⚠️ Descriptif : rapporte une valeur de référence et un constat de
+# consommation publiés, sans en tirer de consigne (§6.1).
+# Source : EFSA (9 février 2012), « EFSA sets population reference intakes for protein ».
+code: proteines-repere-efsa
+categorie: nutrition_humaine
+texte: >
+  La référence de l'EFSA pour les protéines s'exprime au poids corporel : 0,83 g par kilo et par
+  jour chez l'adulte. L'agence relève que la consommation moyenne en Europe se situe le plus souvent
+  à ce niveau ou au-dessus.
+source_url: "https://www.efsa.europa.eu/en/press/news/120209"

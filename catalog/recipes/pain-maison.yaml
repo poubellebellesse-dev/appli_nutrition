@@ -1,5 +1,6 @@
 id: pain_maison
 nom: "Pain de campagne maison"
+origine: maison
 description: >
   Une pâte à pain simple — farine, eau, levure, sel — pétrie, levée deux fois et cuite à four très chaud.
 temps_prep_min: 25

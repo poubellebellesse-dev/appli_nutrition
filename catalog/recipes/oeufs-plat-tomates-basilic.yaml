@@ -1,5 +1,6 @@
 id: oeufs_plat_tomates_basilic
 nom: "Œufs au plat aux tomates et basilic"
+origine: maison
 description: >
   Des œufs cuits sur un lit de tomates poêlées à l'ail, parsemés de basilic.
 temps_prep_min: 10

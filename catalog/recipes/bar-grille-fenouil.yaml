@@ -1,5 +1,6 @@
 id: bar_grille_fenouil
 nom: "Bar grillé au fenouil"
+origine: maison
 description: >
   Un bar entier grillé, farci de fenouil et de citron, arrosé d'huile d'olive.
 temps_prep_min: 15
@@ -70,7 +71,7 @@ etapes:
     timer_s: 720
     timer_type: cuisson
   - ordre: 5
-    texte: "Retourner à l'aide de deux spatules et terminer la cuisson, puis poivrer et servir entier."
+    texte: "Retourner à l'aide de deux spatules et terminer la cuisson jusqu'à ce que la chair, près de l'arête, soit opaque et se détache facilement à la fourchette, puis poivrer et servir entier."
     lexicon_ids: []
     timer_s: 720
     timer_type: cuisson
@@ -82,3 +83,9 @@ facettes:
     valeur: pescetarien
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

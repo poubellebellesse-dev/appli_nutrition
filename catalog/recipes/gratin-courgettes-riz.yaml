@@ -1,5 +1,6 @@
 id: gratin_courgettes_riz
 nom: "Gratin de courgettes au riz"
+origine: maison
 description: >
   Des courgettes râpées mêlées de riz et d'œufs, gratinées à l'emmental.
 temps_prep_min: 20

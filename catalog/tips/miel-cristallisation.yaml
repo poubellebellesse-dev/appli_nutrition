@@ -1,0 +1,11 @@
+# Tip — fait de chimie alimentaire, aucune portée santé.
+# Source : Polatidou K., Nouska C., Tananaki C., Biliaderis C. G., Lazaridou A. (2025),
+# « Physicochemical and Rheological Characteristics of Monofloral Honeys—Kinetics of
+# Creaming–Crystallization », Foods 14(10):1835, DOI 10.3390/foods14101835.
+code: miel-cristallisation
+categorie: biologie_aliment
+texte: >
+  Un miel qui se fige n'est ni vieux ni frelaté : il cristallise parce que le glucose est bien moins
+  soluble que le fructose. Le rapport entre les deux prédit la vitesse — au-dessus de 1,33 le miel
+  reste liquide longtemps, en dessous de 1,11 il prend vite.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12111295/"

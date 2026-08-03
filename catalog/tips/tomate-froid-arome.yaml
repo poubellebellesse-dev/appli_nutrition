@@ -1,0 +1,11 @@
+# Tip — fait de physiologie post-récolte. Descriptif : constate une mesure, ne dit pas où ranger ses
+# tomates (§6.1).
+# Source : Farneti B. et al. (2015), « Chilling-Induced Changes in Aroma Volatile Profiles in
+# Tomato », Food and Bioprocess Technology, DOI 10.1007/s11947-015-1504-1.
+code: tomate-froid-arome
+categorie: biologie_aliment
+texte: >
+  Une tomate passée de 22 à 4 °C voit sa production de composés volatils chuter en cinq à six
+  heures. La remettre à température ambiante en fait remonter une partie — mais généralement pas
+  jusqu'au niveau de départ.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4579789/"

@@ -96,6 +96,7 @@ export function makeRecipe(
   return {
     id: id as Recipe["id"],
     nom: id,
+    origine: "maison",
     description: "",
     tempsPrepMin: min(10),
     tempsCuissonMin: min(10),
@@ -112,6 +113,8 @@ export function makeRecipe(
     facettes: [],
     service: null,
     piquant: null,
+    sources: [],
+    testeLe: null,
   };
 }
 
@@ -143,6 +146,7 @@ export function makeCatalog(
     allergens: new Map(),
     lexicon: new Map(),
     tips: [],
+    evidence: new Map(),
     topics: new Map(),
     substitutions: new Map(),
     indexes: makeEmptyIndexes(),

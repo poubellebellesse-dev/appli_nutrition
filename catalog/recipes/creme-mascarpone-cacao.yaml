@@ -1,5 +1,6 @@
 id: creme_mascarpone_cacao
 nom: "Crème de mascarpone au cacao"
+origine: maison
 description: >
   Une crème fouettée de mascarpone et d'œufs, saupoudrée de cacao amer, servie bien froide.
 temps_prep_min: 20
@@ -11,7 +12,7 @@ types_repas: [gouter]
 service: dessert
 saison_mois: []
 envergure: convivial
-conservation_jours: 2
+conservation_jours: 1
 axes:
   sucre_sale: 0.8
   leger_consistant: 0.2
@@ -78,3 +79,9 @@ facettes:
     valeur: vegetarien
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Salmonella spp. — fiche de danger biologique transmissible par les aliments, ANSES (saisine 2016-SA-0080)"
+    url: "https://www.anses.fr/system/files/BIORISK2016SA0080Fi.pdf"
+    consulte_le: "2026-08-02"

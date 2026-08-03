@@ -1,5 +1,6 @@
 id: blanquette_veau
 nom: "Blanquette de veau"
+origine: maison
 description: >
   Du veau poché au bouillon avec carottes et champignons, lié d'une sauce blanche à la crème.
 temps_prep_min: 25
@@ -51,6 +52,10 @@ ingredients:
     quantite_g: 200
     unite_affichage: "20 cl"
     optionnel: false
+  - food_id: jaune_oeuf
+    quantite_g: 76
+    unite_affichage: "4 jaunes d'œufs"
+    optionnel: false
   - food_id: citron
     quantite_g: 40
     unite_affichage: "1/2 citron"
@@ -86,7 +91,7 @@ etapes:
     timer_s: 600
     timer_type: cuisson
   - ordre: 5
-    texte: "Hors du feu, incorporer la crème et le jus de citron à la sauce, puis y réunir la viande, les légumes et les champignons."
+    texte: "Hors du feu, délayer les jaunes d'œufs dans la crème et verser le mélange dans la sauce SANS la faire rebouillir — elle trancherait. Ajouter le jus de citron, puis y réunir la viande, les légumes et les champignons."
     lexicon_ids: [incorporer]
     timer_s: null
     timer_type: null
@@ -100,3 +105,13 @@ facettes:
     valeur: repas_de_fete
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Escoffier, Le Guide culinaire (1903) — « Blanquette de veau à l'Ancienne », p. 712"
+    url: "https://fr.wikisource.org/wiki/Page:Auguste_Escoffier_-_Le_Guide_Culinaire_-_Aide-m%C3%A9moire_de_cuisine_pratique,_1903.djvu/712"
+    consulte_le: "2026-08-02"
+  - type: reference
+    titre: "Jeanne Anctil, 350 recettes de cuisine (1915) — « Blanquette de veau à la bourgeoise »"
+    url: "https://fr.wikisource.org/wiki/350_recettes_de_cuisine/Texte_entier"
+    consulte_le: "2026-08-02"

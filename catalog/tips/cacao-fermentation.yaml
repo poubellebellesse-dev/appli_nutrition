@@ -1,0 +1,11 @@
+# Tip — fait de transformation alimentaire, aucune portée santé.
+# Source : Castro-Alayo E. M., Idrogo-Vásquez G., Siche R., Cardenas-Toro F. P. (2019),
+# « Formation of aromatic compounds precursors during fermentation of Criollo and Forastero cocoa »,
+# Heliyon, DOI 10.1016/j.heliyon.2019.e01157.
+code: cacao-fermentation
+categorie: biologie_aliment
+texte: >
+  Une fève de cacao fraîche n'a pas le goût du chocolat. La fermentation, dans la pulpe, ne crée pas
+  l'arôme : elle fabrique ses précurseurs — acides aminés libres et sucres réducteurs. L'arôme
+  n'apparaît qu'à la torréfaction, par réaction de Maillard.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6356086/"

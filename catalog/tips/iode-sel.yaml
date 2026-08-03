@@ -1,0 +1,13 @@
+# Tip — nutrition_humaine. ⚠️ Descriptif : explique une politique de santé publique, n'adresse
+# aucune consigne d'achat ou de consommation (§6.1).
+# Source : Santos J. A. R., Christoforou A., Trieu K., McKenzie B. L., Downs S., Billot L.,
+# Webster J., Li M. (2019), « Iodine fortification of foods and condiments, other than salt, for
+# preventing iodine deficiency disorders », Cochrane Database of Systematic Reviews,
+# DOI 10.1002/14651858.CD010734.pub2.
+code: iode-sel
+categorie: nutrition_humaine
+texte: >
+  Si l'iode se retrouve dans le sel, c'est un choix de santé publique : le sel est consommé par
+  presque tout le monde en quantité régulière toute l'année, sa production est concentrée en peu de
+  sites, et l'ajout d'iodate n'en change ni le goût ni l'odeur.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6370918/"

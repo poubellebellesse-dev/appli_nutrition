@@ -1,5 +1,6 @@
 id: soupe_carottes_ail
 nom: "Soupe de carottes à l'ail"
+origine: maison
 description: >
   Une soupe veloutée de carottes, relevée d'ail doux, à déguster bien chaude.
 temps_prep_min: 15

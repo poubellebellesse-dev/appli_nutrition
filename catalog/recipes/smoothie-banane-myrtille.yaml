@@ -1,5 +1,6 @@
 id: smoothie_banane_myrtille
 nom: "Smoothie banane-myrtille"
+origine: maison
 description: >
   Banane, myrtilles et yaourt mixés avec un peu de lait et de miel.
 temps_prep_min: 5

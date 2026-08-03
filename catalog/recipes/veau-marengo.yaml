@@ -1,5 +1,6 @@
 id: veau_marengo
 nom: "Veau Marengo"
+origine: maison
 description: >
   Des morceaux de veau mijotés au vin blanc avec tomates, champignons et petits oignons.
 temps_prep_min: 20
@@ -34,6 +35,10 @@ ingredients:
   - food_id: champignon_paris
     quantite_g: 400
     unite_affichage: "400 g"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 5
+    unite_affichage: "1 gousse"
     optionnel: false
   - food_id: oignon
     quantite_g: 250
@@ -81,7 +86,7 @@ etapes:
     timer_s: 300
     timer_type: cuisson
   - ordre: 4
-    texte: "Ajouter les oignons émincés, le thym, le laurier et le sel, couvrir et laisser mijoter à feu très doux."
+    texte: "Ajouter les oignons émincés, la gousse d'ail écrasée, le thym, le laurier et le sel, couvrir et laisser mijoter à feu très doux."
     lexicon_ids: [emincer, mijoter]
     timer_s: 4200
     timer_type: cuisson
@@ -98,3 +103,9 @@ facettes:
     valeur: omnivore
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Jeanne Anctil, 350 recettes de cuisine (1915) — « Tendrons de veau à la marengo »"
+    url: "https://fr.wikisource.org/wiki/350_recettes_de_cuisine/Tendrons_de_veau_%C3%A0_la_marengo"
+    consulte_le: "2026-08-02"

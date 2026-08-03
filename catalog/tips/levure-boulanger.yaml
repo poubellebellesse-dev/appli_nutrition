@@ -1,0 +1,10 @@
+# Tip — fait de microbiologie alimentaire, aucune portée santé.
+# Source : Bai F.-Y., Han D.-Y., Duan S.-F., Wang Q.-M. (2022), « The Ecology and Evolution of the
+# Baker's Yeast Saccharomyces cerevisiae », Genes 13(2):230, DOI 10.3390/genes13020230.
+code: levure-boulanger
+categorie: biologie_aliment
+texte: >
+  La levure de boulanger est un champignon microscopique, Saccharomyces cerevisiae. Il préfère
+  fermenter les sucres même quand l'oxygène est disponible : le gaz carbonique qu'il dégage fait
+  lever la pâte, l'éthanol s'évapore à la cuisson.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8871604/"

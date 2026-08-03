@@ -1,5 +1,6 @@
 id: lotte_americaine
 nom: "Lotte à l'américaine"
+origine: maison
 description: >
   Des médaillons de lotte mijotés dans une sauce tomate au vin blanc et au cognac.
 temps_prep_min: 20
@@ -82,7 +83,7 @@ etapes:
     timer_s: 900
     timer_type: cuisson
   - ordre: 5
-    texte: "Remettre les médaillons dans la sauce pour les dernières minutes seulement, incorporer la crème hors du feu."
+    texte: "Remettre les médaillons dans la sauce pour les dernières minutes seulement, jusqu'à ce que la chair soit ferme et opaque à cœur, incorporer la crème hors du feu."
     lexicon_ids: [incorporer]
     timer_s: 420
     timer_type: cuisson
@@ -96,3 +97,9 @@ facettes:
     valeur: repas_de_fete
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

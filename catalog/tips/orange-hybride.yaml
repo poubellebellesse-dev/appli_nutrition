@@ -1,0 +1,13 @@
+# Tip — fait de génomique végétale, aucune portée santé.
+# Source : Liu S., Xu Y., Yang K., Huang Y. et al. (2025), « Origin and de novo domestication of
+# sweet orange », Nature Genetics, DOI 10.1038/s41588-025-02122-4.
+#
+# ⚠️ Le modèle exact est DÉBATTU : la source elle-même cite deux modèles antérieurs différents avant
+# de proposer le sien. Le tip s'en tient au point stable — l'orange est un hybride, pas une espèce
+# sauvage — et ne tranche pas la généalogie.
+code: orange-hybride
+categorie: biologie_aliment
+texte: >
+  L'orange douce n'existe pas à l'état sauvage : c'est un hybride, né de croisements entre mandarine
+  et pamplemousse. Les généticiens débattent encore de l'enchaînement exact des croisements.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11906365/"

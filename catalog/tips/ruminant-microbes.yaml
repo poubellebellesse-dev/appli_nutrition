@@ -1,0 +1,10 @@
+# Tip — nutrition_animale. ⚠️ Contenu CULTUREL (§8.4), sur l'animal et non sur le lecteur.
+# Source : Merck Veterinary Manual, « The Digestive System of Beef Cattle », Management and
+# Nutrition.
+code: ruminant-microbes
+categorie: nutrition_animale
+texte: >
+  Une vache ne digère pas l'herbe : ses micro-organismes le font pour elle. Son appareil digestif
+  compte quatre compartiments, dont le rumen, peuplé de bactéries, de protozoaires et de champignons
+  qui fermentent des fibres qu'aucune enzyme animale ne sait couper.
+source_url: "https://www.merckvetmanual.com/management-and-nutrition/nutrition-beef-cattle/the-digestive-system-of-beef-cattle"

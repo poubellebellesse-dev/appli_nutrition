@@ -1,5 +1,6 @@
 id: couscous_legumes
 nom: "Couscous de légumes"
+origine: maison
 description: >
   De la semoule gonflée à la vapeur, servie avec un bouillon de légumes aux épices et pois chiches.
 temps_prep_min: 25

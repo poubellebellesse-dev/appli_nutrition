@@ -1,5 +1,6 @@
 id: crepes
 nom: "Crêpes"
+origine: maison
 description: >
   Une pâte lisse de farine, œufs et lait, reposée puis cuite en fines crêpes au beurre.
 temps_prep_min: 10

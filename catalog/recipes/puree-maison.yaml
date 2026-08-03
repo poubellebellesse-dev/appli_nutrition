@@ -1,5 +1,6 @@
 id: puree_maison
 nom: "Purée de pommes de terre maison"
+origine: maison
 description: >
   Une purée onctueuse au beurre et au lait, préparée à partir de pommes de terre entières.
 temps_prep_min: 15

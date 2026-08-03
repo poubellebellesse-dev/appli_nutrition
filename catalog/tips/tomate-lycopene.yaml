@@ -1,0 +1,12 @@
+# Tip — fait de chimie alimentaire. Descriptif : décrit un mécanisme, ne conseille pas un mode de
+# cuisson (§6.1).
+# Source : Honda M., Kageyama H., Hibino T., Takemura R., Goto M., Fukaya T. (2019), « Enhanced
+# Z-isomerization of tomato lycopene through the optimal combination of food ingredients »,
+# Scientific Reports, DOI 10.1038/s41598-019-44177-4.
+code: tomate-lycopene
+categorie: biologie_aliment
+texte: >
+  Dans la tomate crue, le lycopène se présente presque entièrement sous une forme peu assimilable.
+  La chaleur le fait basculer vers d'autres isomères, nettement mieux absorbés — la cuisson change
+  donc sa disponibilité, pas sa quantité.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6538647/"

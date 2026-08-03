@@ -1,5 +1,6 @@
 id: gaspacho
 nom: "Gaspacho de tomates et concombre"
+origine: maison
 description: >
   Une soupe froide de tomates, concombre et poivron, liée au pain et à l'huile d'olive.
 temps_prep_min: 20

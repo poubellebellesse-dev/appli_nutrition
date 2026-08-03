@@ -1,5 +1,6 @@
 id: bar_vapeur_gingembre
 nom: "Bar vapeur au gingembre et sauce soja"
+origine: maison
 description: >
   Un bar entier cuit à la vapeur, arrosé d'huile de sésame brûlante, sauce soja et gingembre.
 temps_prep_min: 15

@@ -1,5 +1,6 @@
 id: sole_meuniere
 nom: "Sole meunière"
+origine: maison
 description: >
   Une sole farinée, poêlée au beurre mousseux et arrosée de jus de citron et de persil.
 temps_prep_min: 10
@@ -56,7 +57,7 @@ etapes:
     timer_s: 120
     timer_type: cuisson
   - ordre: 3
-    texte: "Poser les soles et les cuire sans les bouger, puis les retourner à la spatule large."
+    texte: "Poser les soles et les cuire sans les bouger, puis les retourner à la spatule large et terminer la cuisson jusqu'à ce que la chair soit opaque et se détache facilement de l'arête."
     lexicon_ids: []
     timer_s: 480
     timer_type: cuisson
@@ -73,3 +74,9 @@ facettes:
     valeur: pescetarien
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

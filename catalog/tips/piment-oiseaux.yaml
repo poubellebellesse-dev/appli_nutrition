@@ -1,0 +1,10 @@
+# Tip — fait d'écologie évolutive appliqué à un aliment, aucune portée santé.
+# Source : Chu Y., Cohen B. E., Chuang H. (2020), « A single TRPV1 amino acid controls species
+# sensitivity to capsaicin », Scientific Reports, DOI 10.1038/s41598-020-64584-2.
+code: piment-oiseaux
+categorie: biologie_aliment
+texte: >
+  Les oiseaux ne sentent pas le piquant du piment : leur récepteur TRPV1 est insensible à la
+  capsaïcine, à un acide aminé près. L'hypothèse retenue est celle d'une dissuasion ciblée — les
+  rongeurs détruisent les graines, les oiseaux les disséminent intactes.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7229161/"

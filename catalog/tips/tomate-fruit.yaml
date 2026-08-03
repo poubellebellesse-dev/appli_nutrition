@@ -1,6 +1,11 @@
 # Tip — « Le saviez-vous ? » (§8.4 ARCHITECTURE). Fait botanique, aucune portée santé.
+# Source : Pattison R. J., Csukasi F., Zheng Y., Fei Z., van der Knaap E., Catalá C. (2015),
+# « Comprehensive Tissue-Specific Transcriptome Analysis Reveals Distinct Regulatory Programs during
+# Early Tomato Fruit Development », Plant Physiology, DOI 10.1104/pp.15.00287.
 code: tomate-fruit
 categorie: biologie_aliment
 texte: >
-  Botaniquement, la tomate est un fruit : elle se forme à partir de la fleur et contient
-  les graines. C'est l'usage culinaire, salé, qui l'a rangée parmi les légumes.
+  Botaniquement, la tomate est un fruit charnu : elle se développe à partir de l'ovaire de la fleur,
+  dont la paroi devient la chair, et elle renferme les graines. C'est l'usage culinaire, salé, qui
+  l'a rangée parmi les légumes.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4528740/"

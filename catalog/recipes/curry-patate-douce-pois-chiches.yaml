@@ -1,5 +1,6 @@
 id: curry_patate_douce_pois_chiches
 nom: "Curry de patate douce et pois chiches"
+origine: maison
 description: >
   Un curry doux et nourrissant, lié par la patate douce.
 temps_prep_min: 15
@@ -79,6 +80,8 @@ etapes:
     timer_type: null
 
 facettes:
+  - facette: cuisine
+    valeur: indienne
   - facette: regime
     valeur: vegetalien
   - facette: style

@@ -61,11 +61,13 @@ import type {
   NutrientSense,
   Recipe,
   RecipeEnvergure,
+  RecipeOrigine,
   Tip,
   TipCategorie,
   RecipeFacet,
   RecipeId,
   RecipeIngredient,
+  RecipeSource,
   RecipeStep,
   TimerType,
 } from '../engine/domain/index.js'
@@ -126,6 +128,7 @@ interface RecipeRow {
   readonly description: string
   readonly temps_prep_min: number
   readonly temps_cuisson_min: number
+  readonly origine: string
   readonly difficulte: number
   readonly portions_base: number
   readonly image_path: string | null
@@ -139,6 +142,17 @@ interface RecipeRow {
   readonly axe_texture: string
   readonly service: string | null
   readonly piquant: number | null
+  readonly teste_le: string | null
+}
+
+interface RecipeSourceRow {
+  readonly recipe_id: string
+  readonly type: string
+  readonly titre: string
+  readonly url: string
+  readonly consulte_le: string
+  readonly licence: string | null
+  readonly auteur: string | null
 }
 
 interface RecipeIngredientRow {
@@ -237,6 +251,7 @@ interface TipRow {
   readonly code: string
   readonly categorie: string
   readonly texte: string
+  readonly source_url: string
 }
 
 export interface SqlSource {
@@ -273,12 +288,14 @@ function parseJsonArray<T>(json: string): readonly T[] {
  * aléa du jour) appartient à l'écran, qui seul dispose d'une horloge.
  */
 function loadTips(db: SqlSource): Tip[] {
-  return queryAll<TipRow>(db, 'SELECT id, code, categorie, texte FROM tip ORDER BY code').map((row) => ({
+  const sql = 'SELECT id, code, categorie, texte, source_url FROM tip ORDER BY code'
+  return queryAll<TipRow>(db, sql).map((row) => ({
     id: row.id,
     code: row.code,
     // Sûr : la colonne porte un CHECK qui n'admet que les trois catégories de §8.4.
     categorie: row.categorie as TipCategorie,
     texte: row.texte,
+    sourceUrl: row.source_url,
   }))
 }
 
@@ -441,6 +458,10 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
     (r) => r.recipe_id
   )
   const facetsByRecipe = groupByKey(queryAll<RecipeFacetRow>(db, 'SELECT * FROM recipe_facet'), (r) => r.recipe_id)
+  const sourcesByRecipe = groupByKey(
+    queryAll<RecipeSourceRow>(db, 'SELECT * FROM recipe_source ORDER BY recipe_id, titre'),
+    (r) => r.recipe_id
+  )
 
   const map = new Map<RecipeId, Recipe>()
   for (const row of recipeRows) {
@@ -469,6 +490,7 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
     map.set(id, {
       id,
       nom: row.nom,
+      origine: row.origine as RecipeOrigine,
       description: row.description,
       tempsPrepMin: min(row.temps_prep_min),
       tempsCuissonMin: min(row.temps_cuisson_min),
@@ -490,6 +512,15 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
       facettes,
       service: (row.service as CourseKind | null) ?? null,
       piquant: (row.piquant as PiquantLevel | null) ?? null,
+      sources: (sourcesByRecipe.get(row.id) ?? []).map((s) => ({
+        type: s.type as RecipeSource['type'],
+        titre: s.titre,
+        url: s.url,
+        consulteLe: s.consulte_le,
+        licence: s.licence,
+        auteur: s.auteur,
+      })),
+      testeLe: row.teste_le,
     })
   }
   return map

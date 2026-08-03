@@ -1,5 +1,6 @@
 id: salade_fruits_menthe
 nom: "Salade de fruits frais à la menthe"
+origine: maison
 description: >
   Un mélange de fruits frais coupés, relevé de jus de citron vert et de menthe ciselée.
 temps_prep_min: 20

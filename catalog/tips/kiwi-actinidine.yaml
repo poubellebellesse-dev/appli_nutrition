@@ -1,0 +1,10 @@
+# Tip — fait de biochimie alimentaire, aucune portée santé.
+# Source : Nieuwenhuizen N. J. et al. (2011), « Mapping, Complementation, and Targets of the
+# Cysteine Protease Actinidin in Kiwifruit », Plant Physiology, DOI 10.1104/pp.111.187989.
+code: kiwi-actinidine
+categorie: biologie_aliment
+texte: >
+  Le kiwi contient une enzyme, l'actinidine, qui découpe les protéines — d'où son effet attendrissant
+  sur la viande, qu'il partage avec l'ananas et la papaye. C'est aussi pourquoi une gelée au kiwi
+  cru ne prend pas : la gélatine est détruite avant d'avoir figé.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC3252086/"

@@ -205,6 +205,7 @@ export function DetailRecette({
   const portionsAffichees = portions ?? recette.portionsBase
   const quantites = vue.quantitePour(portionsAffichees)
   const facteur = portionsAffichees / (recette.portionsBase > 0 ? recette.portionsBase : 1)
+  const mention = mentionOrigine(recette)
 
   return (
     <article>
@@ -235,16 +236,14 @@ export function DetailRecette({
           </p>
         ))}
 
-      {/* ⚠️ LA MENTION REMPLACE LE SILENCE, elle ne s'y ajoute pas. Une recette du catalogue sans
-          source ni test n'a rien qui le dise, et le silence laisse SUPPOSER une provenance sourcée
-          que le dépôt n'a pas — sur un produit dont l'argument est la traçabilité, c'est le pire des
-          deux. Formulation courte et volontairement sans drame : elle disparaît d'elle-même dès que
-          `teste_le` est renseignée. Voir docs/SOURCES_RECETTES.md §5.
+      {/* ⚠️ LA MENTION S'AFFICHE SYSTÉMATIQUEMENT, même quand `sources` porte des références de
+          vérification : sans elle, une recette confrontée à Escoffier (type `reference`, jamais
+          `provenance`) laissait croire qu'elle en VENAIT. Le bloc `Sources` en bas de fiche porte
+          déjà le détail des sources `provenance` — cette phrase n'est qu'une amorce, jamais une
+          duplication. Voir docs/SOURCES_RECETTES.md §5.
           PAS pour les recettes perso : leur bandeau ci-dessus dit déjà la même chose, en mieux. */}
-      {!estRecettePerso(recetteId) && recette.sources.length === 0 && recette.testeLe === null && (
-        <p className="mt-2 text-[0.9rem] leading-relaxed text-attenue">
-          Recette maison, non encore testée.
-        </p>
+      {!estRecettePerso(recetteId) && mention !== null && (
+        <p className="mt-2 text-[0.9rem] leading-relaxed text-attenue">{mention}</p>
       )}
 
       <header className="mt-2 flex items-start justify-between gap-4">
@@ -340,6 +339,35 @@ export function DetailRecette({
       <Sources sources={recette.sources} testeLe={recette.testeLe} />
     </article>
   )
+}
+
+/**
+ * Libellé de la mention d'origine (§ mention systématique, tête de fiche).
+ *
+ * ⚠️ TABLE TOTALE, PAS UNE CASCADE DE `if` : une `RecipeOrigine` non traitée doit casser la
+ * compilation (`_exhaustive: never`), jamais s'afficher silencieusement chez l'utilisateur.
+ */
+function mentionOrigine(recette: Recipe): string | null {
+  switch (recette.origine) {
+    case 'maison':
+      return recette.testeLe === null
+        ? 'Recette écrite pour cette application, non encore testée.'
+        : 'Recette écrite pour cette application.'
+    case 'domaine_public':
+      return "Recette adaptée d'un ouvrage du domaine public."
+    case 'libre':
+      return "Recette adaptée d'une source libre."
+    // `utilisateur` / `partagee` : jamais atteint ici — `estRecettePerso` garde déjà l'appel (le
+    // bandeau perso dit la même chose, en mieux) — mais le type les porte quand même (voir le piège
+    // documenté sur `RecipeOrigine`, engine/domain/catalog.ts). `null` : pas de texte mort en double.
+    case 'utilisateur':
+    case 'partagee':
+      return null
+    default: {
+      const _exhaustive: never = recette.origine
+      return _exhaustive
+    }
+  }
 }
 
 /**

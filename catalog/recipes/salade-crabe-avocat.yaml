@@ -1,5 +1,6 @@
 id: salade_crabe_avocat
 nom: "Salade de crabe et avocat"
+origine: maison
 description: >
   De la chair de crabe mêlée d'avocat, citron vert et coriandre, servie très fraîche.
 temps_prep_min: 20
@@ -54,7 +55,7 @@ ingredients:
 
 etapes:
   - ordre: 1
-    texte: "Cuire le crabe à l'eau bouillante salée, puis le laisser refroidir complètement avant de le décortiquer."
+    texte: "Cuire le crabe à l'eau bouillante salée jusqu'à ce que la chair devienne ferme et opaque, puis le laisser refroidir complètement avant de le décortiquer."
     lexicon_ids: []
     timer_s: 1200
     timer_type: cuisson
@@ -88,3 +89,9 @@ facettes:
     valeur: repas_de_fete
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

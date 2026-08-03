@@ -1,0 +1,10 @@
+# Tip — nutrition_humaine. ⚠️ Descriptif : rapporte un seuil d'innocuité publié, ne prescrit aucune
+# consommation (§6.1). « Ne soulève pas de préoccupation » n'est pas « il faut en boire ».
+# Source : EFSA (4 juin 2015), « EFSA explains risk assessment: Caffeine ».
+code: cafeine-efsa
+categorie: nutrition_humaine
+texte: >
+  L'EFSA a évalué la caféine toutes sources confondues : jusqu'à 200 mg en une prise, soit environ
+  deux tasses de café, et jusqu'à 400 mg par jour de façon habituelle, elle ne relève pas de
+  préoccupation d'innocuité pour l'adulte en bonne santé.
+source_url: "https://www.efsa.europa.eu/sites/default/files/corporate_publications/files/efsaexplainscaffeine150527.pdf"

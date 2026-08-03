@@ -1,0 +1,11 @@
+# Tip — nutrition_humaine. ⚠️ Descriptif : rapporte une conclusion et une méthode publiées par
+# l'EFSA, sans en faire une injonction (§6.1).
+# Source : EFSA (28 janvier 2026), « Lectins in food: undercooked beans pose health risk, says
+# EFSA ».
+code: haricot-rouge-lectine
+categorie: nutrition_humaine
+texte: >
+  Le haricot rouge cru contient de la phytohémagglutinine, que l'EFSA décrit comme la lectine la
+  plus toxique des végétaux couramment consommés. L'agence indique qu'un trempage de 6 à 12 heures
+  suivi d'une demi-heure d'ébullition à 100 °C la désactive ; la vapeur et le micro-ondes, moins.
+source_url: "https://www.efsa.europa.eu/en/news/lectins-food-undercooked-beans-pose-health-risk-says-efsa"

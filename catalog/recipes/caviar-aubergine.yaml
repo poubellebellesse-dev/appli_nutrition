@@ -1,5 +1,6 @@
 id: caviar_aubergine
 nom: "Caviar d'aubergine"
+origine: maison
 description: >
   Des aubergines rôties au four, écrasées avec ail, citron, huile d'olive et cumin.
 temps_prep_min: 10

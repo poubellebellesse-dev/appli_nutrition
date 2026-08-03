@@ -1,0 +1,9 @@
+# Tip — nutrition_humaine. ⚠️ Tombe sous §6.1 et §6.2 : formulation strictement DESCRIPTIVE, on
+# rapporte ce qu'une autorité publie, on n'adresse aucune injonction au lecteur.
+# Source : EFSA (26 mars 2010), « EFSA sets European dietary reference values for nutrient intakes ».
+code: fibres-repere-efsa
+categorie: nutrition_humaine
+texte: >
+  L'EFSA, l'autorité européenne de sécurité des aliments, considère qu'un apport quotidien de 25 g
+  de fibres alimentaires suffit à un transit intestinal normal chez l'adulte.
+source_url: "https://www.efsa.europa.eu/en/press/news/nda100326"

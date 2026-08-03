@@ -1,5 +1,6 @@
 id: chocolat_chaud_avoine_tartine
 nom: "Chocolat chaud à la boisson d'avoine et tartine"
+origine: maison
 description: >
   Un chocolat chaud au cacao pur, accompagné d'une tartine.
 temps_prep_min: 5

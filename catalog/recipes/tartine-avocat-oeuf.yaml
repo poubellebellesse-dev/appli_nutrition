@@ -1,5 +1,6 @@
 id: tartine_avocat_oeuf
 nom: "Tartine d'avocat et œuf poché"
+origine: maison
 description: >
   Du pain complet grillé, de l'avocat écrasé au citron et un œuf poché coulant.
 temps_prep_min: 10

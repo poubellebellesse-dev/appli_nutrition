@@ -1,5 +1,6 @@
 id: gratin_pates_jambon
 nom: "Gratin de pâtes au jambon"
+origine: maison
 description: >
   Des pâtes liées d'une béchamel au gruyère, mêlées de dés de jambon et gratinées.
 temps_prep_min: 15

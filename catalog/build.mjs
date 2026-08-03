@@ -174,6 +174,42 @@ async function loadTips() {
   return readYamlDir(path.join(SOURCES_DIR, 'tips'))
 }
 
+// Frontmatter YAML + corps Markdown. Le corps peut être vide, la validation s'en charge ensuite.
+const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/
+
+/**
+ * Fiches scientifiques — `catalog/evidence/*.md` (§8.2 ARCHITECTURE, §4.7 DESIGN).
+ *
+ * Markdown à frontmatter et non YAML pur comme le reste du catalogue : c'est ce que prévoit §9
+ * ARCHITECTURE, et pour une raison pratique — le corps est un texte rédigé de plusieurs
+ * paragraphes (`resume_vulgarise`) qui se relit et se corrige mal une fois noyé dans un champ YAML.
+ *
+ * `README.md` est le mode d'emploi du dossier, pas une fiche : il est écarté explicitement.
+ */
+async function loadEvidence() {
+  const dirPath = path.join(SOURCES_DIR, 'evidence')
+  if (!existsSync(dirPath)) return []
+  const entries = await readdir(dirPath, { withFileTypes: true })
+  const files = entries
+    .filter((e) => e.isFile() && e.name.endsWith('.md') && e.name !== 'README.md')
+    .map((e) => path.join(dirPath, e.name))
+    .sort()
+
+  return Promise.all(
+    files.map(async (filePath) => {
+      const fichier = path.basename(filePath)
+      const raw = await readFile(filePath, 'utf8')
+      const match = raw.match(FRONTMATTER)
+      if (!match) throw new BuildError(`Fiche '${fichier}' : frontmatter absent ou mal fermé`)
+      const frontmatter = parseYaml(match[1])
+      if (frontmatter === null || typeof frontmatter !== 'object') {
+        throw new BuildError(`Fiche '${fichier}' : frontmatter vide`)
+      }
+      return { ...frontmatter, fichier, resume_vulgarise: match[2].trim() }
+    })
+  )
+}
+
 // ----------------------------------------------------------------------------
 // 5. Validation — collecte toutes les erreurs avant d'échouer (meilleur
 //    diagnostic qu'un exit sur la première erreur trouvée).
@@ -183,7 +219,218 @@ async function loadTips() {
 // jusqu'a l'ecran, ou rien ne saurait la presenter.
 const TIP_CATEGORIES = new Set(['biologie_aliment', 'nutrition_humaine', 'nutrition_animale'])
 
-function validateCatalog({ foods, lexicon, recipes, tips }) {
+// Verification de FORME seulement : le build ne sait pas si l'URL repond, encore moins si elle dit
+// ce que le tip pretend. Cela reste au redacteur (catalog/tips/README.md, regle de sourcage).
+const URL_HTTP = /^https?:\/\/\S+$/
+
+// Domaines autorises pour l'url d'une source de RECETTE (docs/SOURCES_RECETTES.md §6). Le projet
+// refuse de reprendre le travail des blogs culinaires : sans cette liste, une source suffirait a
+// faire entrer n'importe quel blog par la bande. Pour etendre, ajouter un suffixe de nom d'hote ici
+// — jamais une URL complete, jamais un `includes` sur la chaine (voir isDomaineAutorise).
+const DOMAINES_SOURCE_AUTORISES = [
+  'gouv.fr', 'gov.uk', 'europa.eu', 'who.int', 'fao.org', 'canada.ca',
+  'wikisource.org', 'wikibooks.org', 'wikimedia.org', 'wikipedia.org', 'archive.org',
+  'cuisine-libre.org', 'anses.fr', 'inrae.fr', 'efsa.europa.eu', 'nih.gov', 'usda.gov', 'doi.org',
+]
+
+// Compare sur le NOM D'HOTE parse, pas sur la chaine complete : `https://evil.com/?x=gouv.fr` ne
+// doit pas passer, et le suffixe doit matcher une frontiere de label (`gouv.fr` accepte
+// `agriculture.gouv.fr` mais pas `notgouv.fr`).
+//
+// Rend le `hostname` deja parse plutot qu'un simple booleen : l'appelant en a besoin pour son
+// message d'erreur, et reparser `url` avec un second `new URL` hors try/catch relancerait la
+// meme exception que celle deja attrapee ici pour une URL malformee — voir l'appel plus bas.
+function verifierDomaine(url) {
+  let hostname
+  try {
+    hostname = new URL(url).hostname
+  } catch {
+    return { ok: false, hostname: null }
+  }
+  const ok = DOMAINES_SOURCE_AUTORISES.some(
+    (domaine) => hostname === domaine || hostname.endsWith(`.${domaine}`)
+  )
+  return { ok, hostname }
+}
+
+// Vocabulaires fermes des fiches scientifiques — CHECK correspondants en base.
+// Les quatre niveaux de §5 DESIGN, les quatre familles de niveau 1 de §6.3, les cibles de §4.2.
+const NIVEAUX_PREUVE = new Set(['forte', 'moderee', 'faible', 'preliminaire'])
+const EVIDENCE_CATEGORIES = new Set(['nutriments', 'vitamines_mineraux', 'aliments', 'situations'])
+const TYPES_ETUDE = new Set([
+  'meta_analyse', 'revue_systematique', 'essai_randomise', 'cohorte',
+  'rapport_autorite', 'commentaire_critique',
+])
+const CIBLE_TYPES = new Set(['food', 'nutrient', 'health_topic'])
+const DATE_ISO = /^\d{4}-\d{2}-\d{2}$/
+const DOI_PREFIXE = /^10\.\d{4,9}\//
+
+// Les cuisines du catalogue. Ferme comme les autres vocabulaires, et pour la meme raison qu'eux :
+// jusqu'ici seul le NOM de la facette etait verifie, jamais sa valeur — `italienen` serait entre en
+// base sans un mot.
+//
+// ⚠️ L'ECHEC AURAIT ETE SILENCIEUX, ET A DEUX ENDROITS. Une valeur inconnue produit une pastille de
+// filtre de plus a l'ecran Recettes (elles sont derivees du catalogue, pas d'une liste), pastille
+// qui ne rendrait qu'une recette ; et `ui/drapeaux.ts` ne la trouvant pas dans sa table, elle
+// s'afficherait sans drapeau — exactement comme les 7 zones qui n'en ont volontairement pas. Rien
+// n'aurait distingue la faute de frappe du choix editorial.
+//
+// Ajouter une cuisine est donc un geste DELIBERE : une valeur ici, et un drapeau dans
+// `ui/drapeaux.ts` si — et seulement si — elle designe un pays.
+// Les deux types de source d'une recette — voir le commentaire de CREATE TABLE recipe_source.
+// `provenance` revendique une origine, `reference` n'en revendique aucune. Ferme : un troisieme
+// type inventé rendrait la distinction illisible, or c'est elle qui empeche le mensonge.
+const SOURCE_TYPES = new Set(['provenance', 'reference'])
+
+// D'ou vient le TEXTE de la recette (pas les valeurs nutritionnelles, qui viennent toujours de
+// CIQUAL) — distinct de `SOURCE_TYPES` qui dit pourquoi une source est citee. Ferme, meme raison
+// que SOURCE_TYPES : une valeur inventee laisserait croire a une provenance qui n'existe pas.
+const RECIPE_ORIGINES = new Set(['maison', 'domaine_public', 'libre'])
+
+const CUISINES = new Set([
+  'francaise', 'provencale', 'bretonne', 'italienne', 'espagnole', 'portugaise', 'grecque',
+  'britannique', 'belge', 'suisse', 'scandinave', 'hongroise', 'turque',
+  'maghrebine', 'libanaise', 'africaine',
+  'indienne', 'chinoise', 'japonaise', 'vietnamienne', 'thai', 'asiatique',
+  'mexicaine', 'tex_mex',
+  'mediterraneenne', 'internationale',
+])
+
+/**
+ * Valide les fiches scientifiques (§8.2 ARCHITECTURE).
+ *
+ * ⚠️ CE BLOC EST UN GARDE-FOU DE SECURITE, pas une commodite. Une fiche porte des affirmations de
+ * sante : §4.2 fait de `evidence_sheet_id NOT NULL` sur un critere une contrainte structurelle, et
+ * le meme raisonnement s'applique ici — une position qui ne cite aucune source, ou qui cite une
+ * source inexistante, ne doit PAS pouvoir atteindre l'ecran. Le build echoue plutot que d'afficher
+ * une affirmation non sourcee.
+ */
+function validateEvidence(evidence, foodIds, nutrientIds) {
+  const errors = []
+  const codes = new Set()
+
+  for (const fiche of evidence) {
+    const nom = fiche.fichier ?? fiche.code ?? '(fichier inconnu)'
+    const err = (msg) => errors.push(`Fiche '${nom}' : ${msg}`)
+
+    // Le code EST le nom du fichier : c'est ce qui rend une fiche retrouvable depuis un message
+    // d'erreur, et ce qui empeche deux fiches de partager une cle en base.
+    if (!fiche.code) err('code manquant')
+    else {
+      if (fiche.fichier && fiche.code !== path.basename(fiche.fichier, '.md')) {
+        err(`code '${fiche.code}' different du nom de fichier`)
+      }
+      if (codes.has(fiche.code)) err(`code en double : '${fiche.code}'`)
+      codes.add(fiche.code)
+    }
+
+    // §4.7 : « chapitre = titre-question ». Un titre affirmatif annoncerait une conclusion avant de
+    // l'avoir exposee, ce qui est precisement la posture que le produit refuse.
+    if (!fiche.titre) err('titre manquant')
+    else if (!fiche.titre.includes('?')) err(`le titre n'est pas une question : « ${fiche.titre} »`)
+
+    if (!EVIDENCE_CATEGORIES.has(fiche.categorie)) err(`categorie '${fiche.categorie}' inconnue (§6.3)`)
+    if (!NIVEAUX_PREUVE.has(fiche.niveau_preuve)) err(`niveau_preuve '${fiche.niveau_preuve}' inconnu (§5 DESIGN)`)
+    if (!DATE_ISO.test(String(fiche.date_revue ?? ''))) err(`date_revue '${fiche.date_revue}' n'est pas au format AAAA-MM-JJ`)
+    if (!fiche.resume_vulgarise) err('corps vide (resume_vulgarise)')
+
+    const sourceCodes = new Set()
+    for (const source of fiche.sources ?? []) {
+      if (!source?.id) { err('source sans id'); continue }
+      if (sourceCodes.has(source.id)) err(`source en double : '${source.id}'`)
+      sourceCodes.add(source.id)
+      if (!source.titre_etude) err(`source '${source.id}' : titre_etude manquant`)
+      if (typeof source.annee !== 'number') err(`source '${source.id}' : annee absente ou non numerique`)
+      if (!source.revue) err(`source '${source.id}' : revue manquante`)
+      if (!source.url) err(`source '${source.id}' : url manquante`)
+      if (!TYPES_ETUDE.has(source.type_etude)) err(`source '${source.id}' : type_etude '${source.type_etude}' inconnu`)
+      // Regle 5 du README : la date de consultation est ce qui distingue un lien verifie d'un lien
+      // recopie. Sans elle, on ne sait pas si la reference a jamais ete ouverte.
+      if (!DATE_ISO.test(String(source.consulte_le ?? ''))) {
+        err(`source '${source.id}' : consulte_le absente ou mal formee`)
+      }
+      if (source.doi && !DOI_PREFIXE.test(source.doi)) err(`source '${source.id}' : DOI mal forme — '${source.doi}'`)
+    }
+    if (sourceCodes.size === 0) err('aucune source')
+
+    const citees = new Set()
+    if ((fiche.positions ?? []).length === 0) err('aucune position')
+    for (const position of fiche.positions ?? []) {
+      if (!position?.id) { err('position sans id'); continue }
+      if (!NIVEAUX_PREUVE.has(position.niveau_preuve)) {
+        err(`position '${position.id}' : niveau_preuve '${position.niveau_preuve}' inconnu`)
+      }
+      // porte_par obligatoire : une affirmation de sante sans son auteur redevient une parole de
+      // l'application, ce que §6.1 interdit.
+      if (!position.porte_par) err(`position '${position.id}' : porte_par manquant`)
+      if (!position.affirmation) err(`position '${position.id}' : affirmation manquante`)
+      if (!position.detail) err(`position '${position.id}' : detail manquant`)
+      if ((position.sources ?? []).length === 0) {
+        err(`position '${position.id}' : aucune source — une affirmation non sourcee ne peut pas etre publiee`)
+      }
+      for (const ref of position.sources ?? []) {
+        if (!sourceCodes.has(ref)) err(`position '${position.id}' cite une source inconnue : '${ref}'`)
+        citees.add(ref)
+      }
+    }
+    for (const code of sourceCodes) {
+      if (!citees.has(code)) err(`source '${code}' declaree mais citee par aucune position`)
+    }
+
+    for (const lien of fiche.liens ?? []) {
+      if (!CIBLE_TYPES.has(lien?.cible_type)) { err(`lien : cible_type '${lien?.cible_type}' inconnu`); continue }
+      if (lien.cible_type === 'nutrient' && !nutrientIds.has(lien.cible_id)) {
+        err(`lien : nutriment '${lien.cible_id}' absent du referentiel`)
+      }
+      if (lien.cible_type === 'food' && !foodIds.has(lien.cible_id)) {
+        err(`lien : aliment '${lien.cible_id}' absent du catalogue`)
+      }
+      // `health_topic` est un cible_type legitime de §4.2, mais la table n'existe pas : un lien qui
+      // la vise ne pourrait etre resolu par personne. Refuse tant que les chapitres n'existent pas.
+      if (lien.cible_type === 'health_topic') {
+        err(`lien : aucun health_topic n'existe encore ('${lien.cible_id}')`)
+      }
+    }
+
+    // Lint de vocabulaire §6.2 sur TOUT ce qui sera affiche — le corps et chaque position comprises.
+    const affiches = [fiche.titre, fiche.resume_vulgarise]
+    for (const p of fiche.positions ?? []) affiches.push(p?.affirmation, p?.detail, p?.porte_par)
+    for (const texte of affiches) {
+      const bannis = findBannedTerms(String(texte ?? ''))
+      if (bannis.length > 0) err(`vocabulaire banni (${bannis.join(', ')}) dans « ${String(texte).slice(0, 60)}… »`)
+    }
+  }
+
+  return errors
+}
+
+/**
+ * §8.2 regle 4 : « Une fiche de plus de 3 ans est signalee comme a reviser. »
+ *
+ * AVERTISSEMENT et non erreur : une fiche qui vieillit reste vraie jusqu'a preuve du contraire, et
+ * faire echouer le build au passage d'une date rendrait le depot incompilable sans qu'une ligne ait
+ * change. Le but est de rappeler la relecture, pas de bloquer.
+ */
+function evidenceWarnings(evidence, maintenant) {
+  const TROIS_ANS_MS = 3 * 365.25 * 24 * 3600 * 1000
+  const warnings = []
+  for (const fiche of evidence) {
+    if (!DATE_ISO.test(String(fiche.date_revue ?? ''))) continue
+    const age = maintenant - new Date(fiche.date_revue).getTime()
+    if (age > TROIS_ANS_MS) {
+      warnings.push(`Fiche '${fiche.code}' : revue le ${fiche.date_revue}, soit il y a plus de 3 ans — a reviser (§8.2)`)
+    }
+    for (const source of fiche.sources ?? []) {
+      // auteurs a null = non verifies (voir EvidenceSource dans engine/domain/catalog.ts).
+      if (source?.auteurs === null) {
+        warnings.push(`Fiche '${fiche.code}' : source '${source.id}' sans auteurs verifies`)
+      }
+    }
+  }
+  return warnings
+}
+
+function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
   const errors = []
   const nutrientKeys = new Set(NUTRIENTS.map((n) => n.key))
   const allergenCodes = new Set(ALLERGENS.map((a) => a.code))
@@ -258,6 +505,11 @@ function validateCatalog({ foods, lexicon, recipes, tips }) {
     if (recipeIds.has(recipe.id)) errors.push(`Recette en double : id '${recipe.id}'`)
     recipeIds.add(recipe.id)
 
+    // origine dit d'ou vient le TEXTE de la recette — obligatoire, vocabulaire ferme (docs/SOURCES_RECETTES.md).
+    if (!RECIPE_ORIGINES.has(recipe.origine)) {
+      errors.push(`Recette '${recipe.id}' : origine '${recipe.origine}' inconnue (attendu : maison | domaine_public | libre)`)
+    }
+
     for (const field of [recipe.nom, recipe.description]) {
       const hits = findBannedTerms(field)
       if (hits.length > 0) {
@@ -287,6 +539,61 @@ function validateCatalog({ foods, lexicon, recipes, tips }) {
       if (!['cuisine', 'regime', 'occasion', 'style'].includes(facette.facette)) {
         errors.push(`Recette '${recipe.id}' : facette inconnue '${facette.facette}'`)
       }
+      if (facette.facette === 'cuisine' && !CUISINES.has(facette.valeur)) {
+        errors.push(`Recette '${recipe.id}' : cuisine inconnue '${facette.valeur}'`)
+      }
+    }
+
+    // Sources — bloc OPTIONNEL (absent = recette non verifiee, cas des 241 du catalogue), mais
+    // COMPLET des qu'il est present. Une source a demi renseignee est pire que pas de source : elle
+    // a l'air d'une garantie et n'en est pas une.
+    const urlsVues = new Set()
+    let aUneProvenance = false
+    for (const source of recipe.sources ?? []) {
+      const ou = `Recette '${recipe.id}', source '${source?.titre ?? source?.url ?? '?'}'`
+      if (!SOURCE_TYPES.has(source?.type)) {
+        errors.push(`${ou} : type '${source?.type}' inconnu (attendu : provenance | reference)`)
+      }
+      if (source?.type === 'provenance') aUneProvenance = true
+      if (!source?.titre || String(source.titre).trim() === '') errors.push(`${ou} : titre vide`)
+      if (!URL_HTTP.test(String(source?.url ?? ''))) {
+        errors.push(`${ou} : url absente ou non http(s)`)
+      } else {
+        if (urlsVues.has(source.url)) errors.push(`${ou} : url en double sur la meme recette`)
+        else urlsVues.add(source.url)
+        // Liste blanche §6 : le projet refuse de reprendre le travail des blogs culinaires.
+        const domaine = verifierDomaine(source.url)
+        if (!domaine.ok) {
+          const nomHote = domaine.hostname ?? `URL non analysable ('${source.url}')`
+          errors.push(
+            `${ou} : domaine '${nomHote}' hors liste blanche — les blogs ` +
+              'culinaires ne sont pas acceptes comme source (docs/SOURCES_RECETTES.md §6)'
+          )
+        }
+      }
+      if (!DATE_ISO.test(String(source?.consulte_le ?? ''))) {
+        errors.push(`${ou} : consulte_le absente ou hors format AAAA-MM-JJ`)
+      }
+      // Une PROVENANCE emprunte le travail de quelqu'un : sans licence ni auteur, le credit est
+      // inaffichable et la reutilisation n'est pas couverte. Une REFERENCE n'emprunte rien.
+      if (source?.type === 'provenance') {
+        if (!source?.licence) errors.push(`${ou} : provenance sans licence`)
+        if (!source?.auteur) errors.push(`${ou} : provenance sans auteur`)
+      }
+    }
+
+    // Coherence origine <-> sources : `maison` contredit une `provenance` (le texte ne peut pas
+    // etre a la fois ecrit ici et venir d'ailleurs) ; `domaine_public`/`libre` exige au moins une
+    // `provenance` (sinon rien ne justifie l'origine annoncee).
+    if (recipe.origine === 'maison' && aUneProvenance) {
+      errors.push(`Recette '${recipe.id}' : origine 'maison' ne peut pas porter de source 'provenance'`)
+    }
+    if ((recipe.origine === 'domaine_public' || recipe.origine === 'libre') && !aUneProvenance) {
+      errors.push(`Recette '${recipe.id}' : origine '${recipe.origine}' exige au moins une source 'provenance'`)
+    }
+
+    if (recipe.teste_le !== undefined && recipe.teste_le !== null && !DATE_ISO.test(String(recipe.teste_le))) {
+      errors.push(`Recette '${recipe.id}' : teste_le hors format AAAA-MM-JJ`)
     }
   }
 
@@ -302,6 +609,14 @@ function validateCatalog({ foods, lexicon, recipes, tips }) {
     if (!tip?.texte || String(tip.texte).trim() === '') {
       errors.push(`Tip '${tip?.code}' : texte vide`)
     }
+    // Source OBLIGATOIRE (§4.2 : `tip(id, texte, categorie, source_url)`). Le fait qu'un tip soit
+    // court ne le dispense pas d'etre verifiable — c'est meme l'inverse : une phrase isolee et
+    // affirmative est ce qui se recopie le plus vite.
+    if (!tip?.source_url || String(tip.source_url).trim() === '') {
+      errors.push(`Tip '${tip?.code}' : source_url manquante`)
+    } else if (!URL_HTTP.test(String(tip.source_url).trim())) {
+      errors.push(`Tip '${tip?.code}' : source_url doit etre une URL http(s) ('${tip.source_url}')`)
+    }
     // Le lint de vocabulaire (§6.2) s'applique au TEXTE des tips comme au reste du contenu :
     // un tip est affiche tel quel a l'utilisateur.
     const bannis = findBannedTerms(String(tip?.texte ?? ''))
@@ -309,6 +624,8 @@ function validateCatalog({ foods, lexicon, recipes, tips }) {
       errors.push(`Tip '${tip?.code}' : vocabulaire banni (${bannis.join(', ')})`)
     }
   }
+
+  errors.push(...validateEvidence(evidence ?? [], foodIds, new Set(NUTRIENTS.map((n) => n.id))))
 
   return errors
 }
@@ -391,12 +708,20 @@ CREATE TABLE food_allergen (
 CREATE TABLE recipe (
   id TEXT PRIMARY KEY,
   nom TEXT NOT NULL,
+  -- origine : d'ou vient le TEXTE de la recette — pas de rapport avec les valeurs nutritionnelles
+  --   (toujours CIQUAL). 'maison' = ecrite pour ce projet (241/241 aujourd'hui) ; 'domaine_public'
+  --   et 'libre' exigent une source 'provenance' dans recipe_source, cf CHECK applique au build.
+  origine TEXT NOT NULL CHECK (origine IN ('maison', 'domaine_public', 'libre')),
   description TEXT NOT NULL,
   temps_prep_min INTEGER NOT NULL,
   temps_cuisson_min INTEGER NOT NULL,
   difficulte INTEGER NOT NULL CHECK (difficulte IN (1, 2, 3)),
   portions_base INTEGER NOT NULL,
   image_path TEXT,
+  -- teste_le : date ISO a laquelle la recette a ete REELLEMENT cuisinee et le resultat juge.
+  --   NULL = jamais testee, ce qui est le cas des 241 recettes du catalogue. Jamais une date
+  --   approchee : c'est le champ qui porte la confiance, une date inventee la detruit.
+  teste_le TEXT,
   types_repas TEXT NOT NULL,
   saison_mois TEXT NOT NULL,
   envergure TEXT NOT NULL CHECK (envergure IN ('quotidien', 'convivial', 'fete')),
@@ -440,6 +765,30 @@ CREATE TABLE recipe_facet (
   valeur TEXT NOT NULL
 );
 
+-- Sources d'une recette. UNE recette -> N sources, comme evidence_source pour les fiches.
+--
+-- ⚠️ DEUX TYPES QUI NE DISENT PAS LA MEME CHOSE, et les confondre serait un mensonge :
+--   'provenance' = la recette VIENT de la (import d'une source libre). Revendique une origine.
+--   'reference'  = ouverte pour VERIFIER la recette. Ne revendique rien, c'est une bibliographie.
+-- Les 241 recettes du catalogue sont ecrites pour ce projet : aucune ne peut porter 'provenance'
+-- retroactivement. Leur attacher une source trouvee apres coup fabriquerait une origine — la faute
+-- exacte que catalog/tips/README.md interdit. Voir docs/SOURCES_RECETTES.md §1.
+--
+-- ⚠️ consulte_le N'EST PAS DECORATIF : une reference non ouverte ne se cite pas. La date dit
+-- quand elle l'a ete, comme evidence_source.consulte_le.
+CREATE TABLE recipe_source (
+  recipe_id TEXT NOT NULL REFERENCES recipe(id),
+  type TEXT NOT NULL CHECK (type IN ('provenance', 'reference')),
+  titre TEXT NOT NULL,
+  url TEXT NOT NULL,
+  consulte_le TEXT NOT NULL,
+  -- Renseignee pour 'provenance' (la licence commande l'affichage du credit), omise sinon : citer
+  -- une reference n'emprunte rien, donc rien a crediter.
+  licence TEXT,
+  auteur TEXT,
+  PRIMARY KEY (recipe_id, url)
+);
+
 CREATE TABLE tip (
   id TEXT PRIMARY KEY,
   code TEXT NOT NULL UNIQUE,
@@ -447,7 +796,11 @@ CREATE TABLE tip (
   -- CULTUREL, et l'ecran doit la distinguer visuellement des conseils qui s'appliquent a soi.
   categorie TEXT NOT NULL
     CHECK (categorie IN ('biologie_aliment', 'nutrition_humaine', 'nutrition_animale')),
-  texte TEXT NOT NULL
+  texte TEXT NOT NULL,
+  -- NOT NULL, et c'est le point : §4.2 prevoyait cette colonne des l'origine. Un tip est une
+  -- affirmation affichee telle quelle ; sans source, il est indiscernable d'une rumeur bien tournee.
+  -- Le format de l'URL est verifie au build (http/https), pas ici.
+  source_url TEXT NOT NULL
 );
 
 CREATE TABLE lexicon_entry (
@@ -456,9 +809,90 @@ CREATE TABLE lexicon_entry (
   terme TEXT NOT NULL,
   definition TEXT NOT NULL
 );
+
+-- Fiches scientifiques (§8.2 ARCHITECTURE, §4.7 DESIGN). Sources editables : catalog/evidence/*.md
+--
+-- ECART ASSUME AU §4.2 ARCHITECTURE, qui prevoyait UN niveau de preuve par fiche. Exposer plusieurs
+-- points de vue impose d'en porter un PAR POSITION : une fiche peut reposer sur un consensus fort
+-- tout en presentant une position faible et contestee (voir sodium-tension-arterielle). D'ou
+-- evidence_position et sa table de jonction, absentes du document d'origine.
+CREATE TABLE evidence_sheet (
+  id TEXT PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  -- Titre-QUESTION (§4.7). La presence du « ? » est verifiee au build, pas ici : SQLite ne sait pas
+  -- exprimer cette contrainte lisiblement, et le message d'erreur du build est plus utile.
+  titre TEXT NOT NULL,
+  categorie TEXT NOT NULL
+    CHECK (categorie IN ('nutriments', 'vitamines_mineraux', 'aliments', 'situations')),
+  -- Niveau du SOCLE DE CONSENSUS de la fiche, distinct de celui de chaque position.
+  niveau_preuve TEXT NOT NULL
+    CHECK (niveau_preuve IN ('forte', 'moderee', 'faible', 'preliminaire')),
+  date_revue TEXT NOT NULL,
+  resume_vulgarise TEXT NOT NULL
+);
+
+CREATE TABLE evidence_source (
+  sheet_id TEXT NOT NULL REFERENCES evidence_sheet(id),
+  -- Identifiant LOCAL a la fiche : deux fiches peuvent citer 'efsa-2019' sans se marcher dessus.
+  code TEXT NOT NULL,
+  titre_etude TEXT NOT NULL,
+  -- NULLABLE A DESSEIN : NULL = auteurs NON VERIFIES (page editeur derriere un compte), alors que
+  -- titre, revue, annee et DOI l'ont ete. Une chaine plausible mentirait ; NULL le dit.
+  auteurs TEXT,
+  annee INTEGER NOT NULL,
+  revue TEXT NOT NULL,
+  doi TEXT,
+  url TEXT NOT NULL,
+  type_etude TEXT NOT NULL CHECK (type_etude IN (
+    'meta_analyse', 'revue_systematique', 'essai_randomise', 'cohorte',
+    'rapport_autorite', 'commentaire_critique'
+  )),
+  -- effectif : renseigne SEULEMENT s'il a ete verifie a la source (« 95 767 participants »).
+  effectif TEXT,
+  -- financement : declaration publiee, reproduite telle quelle. C'est ce qui permet au lecteur de
+  --   savoir qu'une meta-analyse a ete payee par le secteur qu'elle evalue. Jamais commente ici.
+  financement TEXT,
+  consulte_le TEXT NOT NULL,
+  PRIMARY KEY (sheet_id, code)
+);
+
+CREATE TABLE evidence_position (
+  sheet_id TEXT NOT NULL REFERENCES evidence_sheet(id),
+  ordre INTEGER NOT NULL,
+  code TEXT NOT NULL,
+  niveau_preuve TEXT NOT NULL
+    CHECK (niveau_preuve IN ('forte', 'moderee', 'faible', 'preliminaire')),
+  -- porte_par : QUI soutient la position (« OMS, EFSA », « revue Cochrane »). NOT NULL par
+  --   securite : sans auteur, une affirmation de sante redevient une parole de l'application (§6.1).
+  porte_par TEXT NOT NULL,
+  affirmation TEXT NOT NULL,
+  detail TEXT NOT NULL,
+  PRIMARY KEY (sheet_id, ordre),
+  UNIQUE (sheet_id, code)
+);
+
+-- Jonction position -> sources. §4.2 rattachait les sources a la FICHE ; les rattacher a la
+-- POSITION est ce qui rend verifiable qu'aucune affirmation n'est publiee sans reference.
+CREATE TABLE evidence_position_source (
+  sheet_id TEXT NOT NULL,
+  position_ordre INTEGER NOT NULL,
+  source_code TEXT NOT NULL,
+  PRIMARY KEY (sheet_id, position_ordre, source_code),
+  FOREIGN KEY (sheet_id, position_ordre) REFERENCES evidence_position(sheet_id, ordre),
+  FOREIGN KEY (sheet_id, source_code) REFERENCES evidence_source(sheet_id, code)
+);
+
+-- cible_id est POLYMORPHE (food | nutrient | health_topic) : aucune cle etrangere possible. Son
+-- existence reelle au catalogue est verifiee au build, ou l'erreur est lisible.
+CREATE TABLE evidence_link (
+  sheet_id TEXT NOT NULL REFERENCES evidence_sheet(id),
+  cible_type TEXT NOT NULL CHECK (cible_type IN ('food', 'nutrient', 'health_topic')),
+  cible_id TEXT NOT NULL,
+  PRIMARY KEY (sheet_id, cible_type, cible_id)
+);
 `
 
-function buildDatabase({ foods, lexicon, recipes, tips }, outPath) {
+function buildDatabase({ foods, lexicon, recipes, tips, evidence }, outPath) {
   if (existsSync(outPath)) rmSync(outPath, { force: true })
 
   const db = new DatabaseSync(outPath)
@@ -509,9 +943,17 @@ function buildDatabase({ foods, lexicon, recipes, tips }, outPath) {
       }
     }
 
-    const insertTip = db.prepare('INSERT INTO tip (id, code, categorie, texte) VALUES (?, ?, ?, ?)')
+    const insertTip = db.prepare(
+      'INSERT INTO tip (id, code, categorie, texte, source_url) VALUES (?, ?, ?, ?, ?)'
+    )
     for (const tip of tips) {
-      insertTip.run(tip.code, tip.code, tip.categorie, String(tip.texte).trim())
+      insertTip.run(
+        tip.code,
+        tip.code,
+        tip.categorie,
+        String(tip.texte).trim(),
+        String(tip.source_url).trim()
+      )
     }
 
     const insertLexicon = db.prepare(
@@ -523,11 +965,15 @@ function buildDatabase({ foods, lexicon, recipes, tips }, outPath) {
 
     const insertRecipe = db.prepare(`
       INSERT INTO recipe (
-        id, nom, description, temps_prep_min, temps_cuisson_min, difficulte,
-        portions_base, image_path, types_repas, saison_mois, envergure,
+        id, nom, origine, description, temps_prep_min, temps_cuisson_min, difficulte,
+        portions_base, image_path, teste_le, types_repas, saison_mois, envergure,
         conservation_jours, axe_sucre_sale, axe_leger_consistant, axe_chaud_froid, axe_texture,
         service, piquant
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    const insertRecipeSource = db.prepare(`
+      INSERT INTO recipe_source (recipe_id, type, titre, url, consulte_le, licence, auteur)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `)
     const insertIngredient = db.prepare(`
       INSERT INTO recipe_ingredient (recipe_id, food_id, quantite_g, unite_affichage, optionnel)
@@ -543,12 +989,14 @@ function buildDatabase({ foods, lexicon, recipes, tips }, outPath) {
       insertRecipe.run(
         recipe.id,
         recipe.nom,
+        recipe.origine,
         recipe.description,
         recipe.temps_prep_min,
         recipe.temps_cuisson_min,
         recipe.difficulte,
         recipe.portions_base,
         recipe.image_path ?? null,
+        recipe.teste_le ?? null,
         JSON.stringify(recipe.types_repas ?? []),
         JSON.stringify(recipe.saison_mois ?? []),
         recipe.envergure,
@@ -563,6 +1011,17 @@ function buildDatabase({ foods, lexicon, recipes, tips }, outPath) {
       for (const ing of recipe.ingredients ?? []) {
         insertIngredient.run(recipe.id, ing.food_id, ing.quantite_g, ing.unite_affichage, ing.optionnel ? 1 : 0)
       }
+      for (const source of recipe.sources ?? []) {
+        insertRecipeSource.run(
+          recipe.id,
+          source.type,
+          source.titre,
+          source.url,
+          String(source.consulte_le),
+          source.licence ?? null,
+          source.auteur ?? null
+        )
+      }
       for (const etape of recipe.etapes ?? []) {
         insertStep.run(
           recipe.id,
@@ -575,6 +1034,76 @@ function buildDatabase({ foods, lexicon, recipes, tips }, outPath) {
       }
       for (const facette of recipe.facettes ?? []) {
         insertFacet.run(recipe.id, facette.facette, facette.valeur)
+      }
+    }
+
+    const insertSheet = db.prepare(`
+      INSERT INTO evidence_sheet (id, code, titre, categorie, niveau_preuve, date_revue, resume_vulgarise)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `)
+    const insertEvidenceSource = db.prepare(`
+      INSERT INTO evidence_source (
+        sheet_id, code, titre_etude, auteurs, annee, revue, doi, url, type_etude,
+        effectif, financement, consulte_le
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    const insertPosition = db.prepare(`
+      INSERT INTO evidence_position (sheet_id, ordre, code, niveau_preuve, porte_par, affirmation, detail)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `)
+    const insertPositionSource = db.prepare(`
+      INSERT INTO evidence_position_source (sheet_id, position_ordre, source_code) VALUES (?, ?, ?)
+    `)
+    const insertEvidenceLink = db.prepare(
+      'INSERT INTO evidence_link (sheet_id, cible_type, cible_id) VALUES (?, ?, ?)'
+    )
+
+    for (const fiche of evidence ?? []) {
+      insertSheet.run(
+        fiche.code,
+        fiche.code,
+        fiche.titre,
+        fiche.categorie,
+        fiche.niveau_preuve,
+        String(fiche.date_revue),
+        fiche.resume_vulgarise
+      )
+      // Les sources AVANT les positions : la jonction reference les deux, et les cles etrangeres
+      // sont verifiees a l'insertion (PRAGMA foreign_keys = ON).
+      for (const source of fiche.sources ?? []) {
+        insertEvidenceSource.run(
+          fiche.code,
+          source.id,
+          source.titre_etude,
+          source.auteurs ?? null,
+          source.annee,
+          source.revue,
+          source.doi ?? null,
+          source.url,
+          source.type_etude,
+          source.effectif ?? null,
+          source.financement ?? null,
+          String(source.consulte_le)
+        )
+      }
+      // `ordre` vient de la POSITION DANS LE FICHIER : l'ordre des positions est un choix editorial
+      // (le consensus d'abord, la lecture croisee en dernier), pas un detail de presentation.
+      for (const [ordre, position] of (fiche.positions ?? []).entries()) {
+        insertPosition.run(
+          fiche.code,
+          ordre,
+          position.id,
+          position.niveau_preuve,
+          position.porte_par,
+          position.affirmation,
+          String(position.detail).trim()
+        )
+        for (const ref of position.sources ?? []) {
+          insertPositionSource.run(fiche.code, ordre, ref)
+        }
+      }
+      for (const lien of fiche.liens ?? []) {
+        insertEvidenceLink.run(fiche.code, lien.cible_type, lien.cible_id)
       }
     }
 
@@ -593,25 +1122,33 @@ function buildDatabase({ foods, lexicon, recipes, tips }, outPath) {
 // ----------------------------------------------------------------------------
 
 async function main() {
-  const [foods, lexicon, recipes, tips] = await Promise.all([
+  const [foods, lexicon, recipes, tips, evidence] = await Promise.all([
     loadFoods(),
     loadLexicon(),
     loadRecipes(),
     loadTips(),
+    loadEvidence(),
   ])
 
-  const errors = validateCatalog({ foods, lexicon, recipes, tips })
+  const errors = validateCatalog({ foods, lexicon, recipes, tips, evidence })
   if (errors.length > 0) {
     console.error(`Build du catalogue échoué — ${errors.length} erreur(s) :\n`)
     for (const err of errors) console.error(`  - ${err}`)
     throw new BuildError(`${errors.length} erreur(s) de validation`)
   }
 
-  await mkdir(path.dirname(OUT_PATH), { recursive: true })
-  buildDatabase({ foods, lexicon, recipes, tips }, OUT_PATH)
+  // Affichés APRÈS la validation et AVANT le build : ce sont des rappels de relecture éditoriale,
+  // ils ne doivent ni masquer une erreur ni empêcher la génération (§8.2 règle 4).
+  for (const avertissement of evidenceWarnings(evidence, Date.now())) {
+    console.warn(`  ⚠ ${avertissement}`)
+  }
 
+  await mkdir(path.dirname(OUT_PATH), { recursive: true })
+  buildDatabase({ foods, lexicon, recipes, tips, evidence }, OUT_PATH)
+
+  const positions = evidence.reduce((total, fiche) => total + (fiche.positions?.length ?? 0), 0)
   console.log(
-    `catalog.db généré : ${foods.length} aliments, ${recipes.length} recettes, ${lexicon.length} gestes de lexique, ${tips.length} tips.`
+    `catalog.db généré : ${foods.length} aliments, ${recipes.length} recettes, ${lexicon.length} gestes de lexique, ${tips.length} tips, ${evidence.length} fiches (${positions} positions).`
   )
   console.log(`→ ${OUT_PATH}`)
 }

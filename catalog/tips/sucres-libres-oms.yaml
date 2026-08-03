@@ -1,0 +1,11 @@
+# Tip — nutrition_humaine. ⚠️ Descriptif : rapporte une recommandation d'autorité et sa définition,
+# sans l'adresser au lecteur (§6.1). Le tip porte surtout sur la DÉFINITION, souvent mal comprise.
+# Source : OMS (4 mars 2015), « WHO calls on countries to reduce sugars intake among adults and
+# children ».
+code: sucres-libres-oms
+categorie: nutrition_humaine
+texte: >
+  Quand l'OMS parle de « sucres libres » — moins de 10 % de l'apport énergétique — elle vise ceux
+  ajoutés par l'industriel, le cuisinier ou le consommateur, plus ceux du miel, des sirops et des
+  jus de fruits. Les sucres des fruits entiers, des légumes et du lait n'en font pas partie.
+source_url: "https://www.who.int/news/item/04-03-2015-who-calls-on-countries-to-reduce-sugars-intake-among-adults-and-children"

@@ -1,0 +1,12 @@
+# Tip — fait de physique alimentaire, aucune portée santé.
+# Source : Llavata B., Mello R. E., Quiles A., Correa J. L. G., Cárcel J. A. (2024), « Effect of
+# freeze-thaw and PEF pretreatments on the kinetics and microstructure of convective and
+# ultrasound-assisted drying of orange peel », npj Science of Food,
+# DOI 10.1038/s41538-024-00301-x.
+code: congelation-cristaux
+categorie: biologie_aliment
+texte: >
+  Ce n'est pas le froid qui ramollit un végétal décongelé, ce sont les cristaux de glace. Une
+  congélation lente en forme de gros, entre les cellules, qui rompent les parois ; une congélation
+  rapide en forme beaucoup de petits, bien moins destructeurs.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11344832/"

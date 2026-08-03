@@ -70,6 +70,33 @@ foods:
       - code: oeufs
         certitude: contient
 
+  # Le jaune SEUL est un aliment distinct, pas une fraction de l'œuf entier : deux fois plus de
+  # lipides, deux fois moins de protéines. Ajouté pour la liaison de la blanquette (Escoffier 1903),
+  # que l'œuf entier aurait mal décrite — c'est précisément l'erreur que la couverture nutritionnelle
+  # (§5.1 bis) cherche à éviter. Valeurs CIQUAL 22002, importées, jamais saisies.
+  # ⚠️ PAS de conditionnement_g : le jaune ne s'achète pas, il se sépare d'un œuf entier.
+  - id: jaune_oeuf
+    code_ciqual: "22002"
+    nom: "Œuf de poule, jaune, cru"
+    groupe: "œufs"
+    poids_piece_g: 19
+    origine_animale: volaille
+    derive_de: oeuf
+    toute_annee: true
+    nutriments:
+      energie_kcal: 307
+      proteines_g: 15.5
+      lipides_g: 26.7
+      glucides_g: 1.09
+      fibres_g: 0
+      fer_mg: 0.7
+      calcium_mg: 50.2
+      sodium_mg: 19.1
+      vitamine_c_mg: 0
+    allergenes:
+      - code: oeufs
+        certitude: contient
+
   - id: farine_ble
     code_ciqual: "9436"
     nom: "Farine de blé tendre T55"

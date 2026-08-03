@@ -1,5 +1,6 @@
 id: pizza_maison
 nom: "Pizza maison tomate-mozzarella"
+origine: maison
 description: >
   Une pâte levée maison, sauce tomate courte, mozzarella et basilic, cuite à four très chaud.
 temps_prep_min: 30

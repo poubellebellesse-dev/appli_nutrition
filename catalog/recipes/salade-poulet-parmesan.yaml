@@ -1,5 +1,6 @@
 id: salade_poulet_parmesan
 nom: "Salade de poulet grillé au parmesan"
+origine: maison
 description: >
   De la laitue croquante, du blanc de poulet grillé, des copeaux de parmesan et des croûtons.
 temps_prep_min: 15

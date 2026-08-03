@@ -1,5 +1,6 @@
 id: poivrons_grilles_marines
 nom: "Poivrons grillés marinés à l'ail"
+origine: maison
 description: >
   Des poivrons rôtis au four, pelés puis marinés dans l'huile d'olive avec ail et basilic.
 temps_prep_min: 20

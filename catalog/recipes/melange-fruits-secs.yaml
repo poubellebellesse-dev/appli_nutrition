@@ -1,5 +1,6 @@
 id: melange_fruits_secs
 nom: "Mélange de fruits secs et d'oléagineux"
+origine: maison
 description: >
   Un mélange à préparer d'avance et à emporter.
 temps_prep_min: 5

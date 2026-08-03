@@ -1,5 +1,6 @@
 id: riz_saute_tofu_petits_pois
 nom: "Riz sauté au tofu et aux petits pois"
+origine: maison
 description: >
   Un riz sauté au wok, tofu doré et petits pois.
 temps_prep_min: 15
@@ -71,6 +72,8 @@ etapes:
     timer_type: null
 
 facettes:
+  - facette: cuisine
+    valeur: chinoise
   - facette: regime
     valeur: vegetalien
   - facette: style

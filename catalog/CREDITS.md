@@ -53,6 +53,24 @@ bundle sont React, React DOM et SQLite WASM.
 
 ---
 
+---
+
+## Recettes
+
+**Les 241 recettes du catalogue sont écrites pour ce projet** — aucune ne provient d'une source
+externe, et il n'y a donc rien à créditer ici. Ce n'est pas un oubli : c'est le seul contenu du dépôt
+sans source, et il ne faut pas lui en inventer une.
+
+Les sources de recettes réutilisables (cuisine-libre.org, USDA MyPlate, Wikibooks Cookbook), leurs
+licences et le coût réel d'un import sont recensés dans
+[`docs/SOURCES_RECETTES.md`](../docs/SOURCES_RECETTES.md). **Toute recette qui en viendrait devra
+être créditée ici, ligne à ligne** — auteur, licence, lien.
+
+⚠️ `recipe` n'a aujourd'hui **ni colonne auteur, ni source, ni licence** : le crédit ne serait pas
+affichable à l'écran. À traiter avant le premier import.
+
+---
+
 ## À compléter avant publication
 
 - **Photos de recettes** — aucune à ce jour (0 sur 241). Chaque photo devra porter son auteur, sa

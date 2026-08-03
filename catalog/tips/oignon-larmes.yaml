@@ -1,6 +1,14 @@
 # Tip — fait de chimie alimentaire, aucune portée santé.
+# Source : Burnham P. M. (2007), « Propanethial S-oxide — The Lachrymatory Factor in Onions »,
+# Molecule of the Month, School of Chemistry, University of Bristol.
+#
+# ⚠️ La version précédente affirmait que le froid rend la molécule moins volatile, donc qu'un oignon
+# réfrigéré fait moins pleurer. La source présente cette astuce comme contestée (« discounted by
+# many people »). Le mécanisme est conservé, le remède rendu à son statut d'hypothèse.
 code: oignon-larmes
 categorie: biologie_aliment
 texte: >
-  Couper un oignon libère une molécule soufrée volatile qui irrite les yeux. Le froid la
-  rend moins volatile : un oignon sorti du réfrigérateur fait moins pleurer.
+  Couper un oignon rompt ses cellules et déclenche une cascade enzymatique qui fabrique du
+  propanethial S-oxyde, une molécule soufrée volatile qui irrite les yeux. Les astuces censées
+  l'éviter, dont le passage au réfrigérateur, restent débattues.
+source_url: "https://www.chm.bris.ac.uk/motm/pso/psojm.htm"

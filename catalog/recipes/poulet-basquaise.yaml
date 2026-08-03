@@ -1,5 +1,6 @@
 id: poulet_basquaise
 nom: "Poulet basquaise"
+origine: maison
 description: >
   Des cuisses de poulet mijotées avec poivrons, tomates, oignon et une pointe de paprika.
 temps_prep_min: 20
@@ -78,7 +79,7 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 5
-    texte: "Couvrir et laisser mijoter à feu doux jusqu'à ce que la chair se détache de l'os."
+    texte: "Couvrir et laisser mijoter à feu doux jusqu'à ce que la chair se détache de l'os — à ce stade la cuisse est cuite à cœur, et le jus près de l'os coule clair."
     lexicon_ids: [mijoter]
     timer_s: 1800
     timer_type: cuisson
@@ -90,3 +91,13 @@ facettes:
     valeur: omnivore
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Guide de bonnes pratiques d'hygiène — Consommateurs (ministère de l'Agriculture)"
+    url: "https://agriculture.gouv.fr/sites/default/files/documents/pdf/GBPH_Consommateurs_5958_cle8bb1ad.pdf"
+    consulte_le: "2026-08-02"
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

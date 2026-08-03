@@ -1,5 +1,6 @@
 id: hachis_boeuf_pommes_terre
 nom: "Hachis de bœuf aux pommes de terre"
+origine: maison
 description: >
   Du bœuf haché mijoté aux oignons, recouvert d'une purée de pommes de terre et gratiné.
 temps_prep_min: 20
@@ -55,7 +56,7 @@ etapes:
     timer_s: 1200
     timer_type: cuisson
   - ordre: 2
-    texte: "Émincer l'oignon et le faire revenir, puis ajouter le bœuf haché et le cuire en l'écrasant à la cuillère."
+    texte: "Émincer l'oignon et le faire revenir, puis ajouter le bœuf haché et le cuire en l'écrasant à la cuillère, jusqu'à ce qu'il ne reste plus de rose — le gratinage qui suit ne réchauffe que la surface."
     lexicon_ids: [emincer, hacher, revenir]
     timer_s: 600
     timer_type: cuisson
@@ -77,3 +78,13 @@ facettes:
     valeur: omnivore
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Guide de bonnes pratiques d'hygiène — Consommateurs (ministère de l'Agriculture)"
+    url: "https://agriculture.gouv.fr/sites/default/files/documents/pdf/GBPH_Consommateurs_5958_cle8bb1ad.pdf"
+    consulte_le: "2026-08-02"
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

@@ -1,5 +1,6 @@
 id: salade_grecque
 nom: "Salade grecque"
+origine: maison
 description: >
   Concombre, tomates et oignon rouge en gros morceaux, feta, olives noires et origan.
 temps_prep_min: 15

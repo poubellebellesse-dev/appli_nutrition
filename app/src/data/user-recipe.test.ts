@@ -154,6 +154,7 @@ function recetteDeBase(): Recipe {
   return {
     id: 'blanquette' as RecipeId,
     nom: 'Blanquette',
+    origine: 'maison',
     description: 'du catalogue',
     tempsPrepMin: min(25),
     tempsCuissonMin: min(90),
@@ -242,6 +243,22 @@ describe('user-recipe — conversion vers Recipe', () => {
     const recette = versRecette(construireRecette('perso:x', saisie(['tomate']), null), ALIMENTS)
     expect(recette.etapes[0]?.lexiconIds).toEqual([])
     expect(recette.etapes[0]?.timerS).toBeNull()
+  })
+
+  it('origine reflète `source` : `perso`/`variante` → `utilisateur`, `importe` → `partagee`', () => {
+    // Défaut corrigé : `versRecette` écrivait `origine: 'maison'` en dur, ce qui affirmait « écrite
+    // pour cette application » même pour une recette reçue d'un tiers via `.nutri-recipe`.
+    const perso = construireRecette('perso:x', saisie(['tomate']), null)
+    expect(perso.source).toBe('perso')
+    expect(versRecette(perso, ALIMENTS).origine).toBe('utilisateur')
+
+    const base = recetteDeBase()
+    const variante = construireRecette('perso:v', variantePartantDe(base), base)
+    expect(variante.source).toBe('variante')
+    expect(versRecette(variante, ALIMENTS).origine).toBe('utilisateur')
+
+    const importee: StoredUserRecipe = { ...perso, source: 'importe' }
+    expect(versRecette(importee, ALIMENTS).origine).toBe('partagee')
   })
 
   it('est de saison TOUTE l’année — jamais une recette qui disparaît sans explication', () => {

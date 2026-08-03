@@ -1,5 +1,6 @@
 id: poivrons_farcis_riz_boeuf
 nom: "Poivrons farcis au riz et au bœuf"
+origine: maison
 description: >
   Des poivrons évidés, garnis de riz et de bœuf haché aux herbes, cuits au four en sauce tomate.
 temps_prep_min: 25
@@ -68,7 +69,7 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 3
-    texte: "Faire revenir l'oignon et l'ail émincés, ajouter le bœuf et le cuire en l'écrasant."
+    texte: "Faire revenir l'oignon et l'ail émincés, ajouter le bœuf et le cuire en l'écrasant jusqu'à ce qu'il ne soit plus rosé — au four, la farce est protégée par le poivron et chauffe moins qu'on ne le croit."
     lexicon_ids: [emincer, revenir]
     timer_s: 600
     timer_type: cuisson
@@ -90,3 +91,13 @@ facettes:
     valeur: omnivore
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Guide de bonnes pratiques d'hygiène — Consommateurs (ministère de l'Agriculture)"
+    url: "https://agriculture.gouv.fr/sites/default/files/documents/pdf/GBPH_Consommateurs_5958_cle8bb1ad.pdf"
+    consulte_le: "2026-08-02"
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

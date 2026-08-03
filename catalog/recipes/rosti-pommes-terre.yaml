@@ -1,5 +1,6 @@
 id: rosti_pommes_terre
 nom: "Rösti de pommes de terre"
+origine: maison
 description: >
   Une galette de pommes de terre râpées, dorée à la poêle jusqu'à être croustillante.
 temps_prep_min: 15

@@ -1,6 +1,10 @@
 # Tip — fait de maturation, aucune portée santé.
+# Source : Xavier P., Rodrigues P. M., Silva C. L. M. (2024), « Shelf-Life Management and Ripening
+# Assessment of "Hass" Avocado (Persea americana) Using Deep Learning Approaches », Foods,
+# DOI 10.3390/foods13081150.
 code: avocat-mur
 categorie: biologie_aliment
 texte: >
-  L'avocat ne mûrit pas sur l'arbre : il attend d'être cueilli pour commencer. L'arbre
-  sert ainsi de garde-manger, parfois plusieurs mois.
+  L'avocat est un fruit climactérique particulier : il atteint sa maturité physiologique sur
+  l'arbre, mais ne mûrit qu'une fois cueilli. L'arbre lui sert ainsi de garde-manger.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11049431/"

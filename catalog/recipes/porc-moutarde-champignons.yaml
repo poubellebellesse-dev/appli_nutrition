@@ -1,5 +1,6 @@
 id: porc_moutarde_champignons
 nom: "Filet mignon de porc à la moutarde et aux champignons"
+origine: maison
 description: >
   Un filet mignon saisi puis mijoté dans une sauce moutarde et crème, avec des champignons.
 temps_prep_min: 15
@@ -74,7 +75,7 @@ etapes:
     timer_s: 300
     timer_type: cuisson
   - ordre: 5
-    texte: "Remettre la viande, saler, couvrir et laisser mijoter à feu doux. Trancher au moment de servir."
+    texte: "Remettre la viande, saler, couvrir et laisser mijoter à feu doux. Trancher au moment de servir : le porc se mange cuit à cœur, aucune tranche ne doit rester rosée."
     lexicon_ids: [mijoter]
     timer_s: 1200
     timer_type: cuisson
@@ -86,3 +87,13 @@ facettes:
     valeur: omnivore
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Guide de bonnes pratiques d'hygiène — Consommateurs (ministère de l'Agriculture)"
+    url: "https://agriculture.gouv.fr/sites/default/files/documents/pdf/GBPH_Consommateurs_5958_cle8bb1ad.pdf"
+    consulte_le: "2026-08-02"
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

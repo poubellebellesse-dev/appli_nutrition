@@ -1,5 +1,6 @@
 id: soupe_carotte_gingembre
 nom: "Soupe de carottes au gingembre et à l'orange"
+origine: maison
 description: >
   Des carottes fondues au bouillon, mixées avec du gingembre et un jus d'orange.
 temps_prep_min: 15

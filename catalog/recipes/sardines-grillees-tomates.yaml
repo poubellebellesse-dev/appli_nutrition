@@ -1,5 +1,6 @@
 id: sardines_grillees_tomates
 nom: "Sardines grillées, tomates au four"
+origine: maison
 description: >
   Des sardines grillées servies avec des tomates rôties à l'ail et à l'huile d'olive.
 temps_prep_min: 10

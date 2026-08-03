@@ -1,5 +1,6 @@
 id: salade_tomate_mozzarella
 nom: "Salade de tomates et mozzarella au basilic"
+origine: maison
 description: >
   Des tranches de tomate et de mozzarella alternées, basilic, huile d'olive et sel.
 temps_prep_min: 10

@@ -13,7 +13,14 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
-import type { AllergenId, Catalog, FoodId, NutrientId, RecipeId } from '../engine/domain/index.js'
+import type {
+  AllergenId,
+  Catalog,
+  EvidenceSheetId,
+  FoodId,
+  NutrientId,
+  RecipeId,
+} from '../engine/domain/index.js'
 import { loadCatalog } from './catalog-loader-node.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -189,5 +196,150 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     // où on annotera le piquant, forçant à le mettre à jour sciemment.
     expect([...catalog.recipes.values()].every((r) => r.piquant === null)).toBe(true)
     expect([...catalog.foods.values()].every((f) => f.piquant === null)).toBe(true)
+  })
+
+  // --- Fiches scientifiques (§8.2 ARCHITECTURE, §4.7 DESIGN) -----------------------------------
+  //
+  // ⚠️ CES TESTS SONT DES GARDE-FOUS DE CONTENU, pas des tests de mapping. Une fiche porte des
+  // affirmations de santé : ce qui est vérifié ici, c'est qu'aucune ne peut atteindre l'écran sans
+  // son auteur, son niveau de preuve et ses sources — les trois conditions posées par §4.7 et §6.1.
+
+  it('charge les fiches, leurs positions et leurs sources', () => {
+    expect(catalog.evidence.size).toBeGreaterThan(0)
+
+    const fiche = catalog.evidence.get('sodium-tension-arterielle' as EvidenceSheetId)
+    expect(fiche).toBeDefined()
+    expect(fiche?.titre).toContain('?')
+    expect(fiche?.categorie).toBe('nutriments')
+    expect(fiche?.positions.length).toBeGreaterThan(1)
+    expect(fiche?.sources.length).toBeGreaterThan(1)
+    expect(fiche?.liens).toContainEqual({ cibleType: 'nutrient', cibleId: 'sodium' })
+  })
+
+  it('PROPRIÉTÉ — aucune position n’est publiée sans source, sans porteur ni sans niveau de preuve', () => {
+    // La propriété de sécurité de cet écran. Une affirmation de santé anonyme ou non sourcée est
+    // exactement ce que §6.1 interdit ; le build échoue avant d'en écrire une, et ceci le prouve
+    // sur le contenu réel plutôt que sur une fixture.
+    const niveaux = ['forte', 'moderee', 'faible', 'preliminaire']
+    for (const fiche of catalog.evidence.values()) {
+      expect(fiche.positions.length).toBeGreaterThan(0)
+      for (const position of fiche.positions) {
+        expect(position.sources.length).toBeGreaterThan(0)
+        expect(position.portePar.trim()).not.toBe('')
+        expect(niveaux).toContain(position.niveauPreuve)
+      }
+    }
+  })
+
+  it('PROPRIÉTÉ — toute source citée par une position existe dans la fiche qui la cite', () => {
+    // Un renvoi orphelin afficherait une affirmation dont la référence est introuvable — pire que
+    // pas de référence du tout, puisque l'écran promettrait une source vérifiable.
+    for (const fiche of catalog.evidence.values()) {
+      const connues = new Set(fiche.sources.map((s) => s.code))
+      for (const position of fiche.positions) {
+        for (const code of position.sources) expect(connues).toContain(code)
+      }
+    }
+  })
+
+  it('préserve l’ORDRE éditorial des positions', () => {
+    // L'ordre porte l'argumentation (socle de consensus d'abord, lecture croisée en dernier). Un
+    // tri alphabétique ou par niveau de preuve la casserait sans rien signaler.
+    const fiche = catalog.evidence.get('sodium-tension-arterielle' as EvidenceSheetId)
+    expect(fiche?.positions.map((p) => p.code)).toEqual([
+      'consensus-tension',
+      'cible-autorites',
+      'cochrane-normotendus',
+      'pure-seuil',
+      'zone-de-debat',
+    ])
+  })
+
+  it('conserve `financement` et distingue `auteurs: null` d’une chaîne vide', () => {
+    // Deux champs de confiance, et deux erreurs de mapping possibles : perdre le financement
+    // déclaré (le lecteur ne saurait plus qui a payé), ou transformer un `null` — « non vérifié » —
+    // en chaîne vide, qui se lirait comme un oubli.
+    const sources = [...catalog.evidence.values()].flatMap((f) => f.sources)
+
+    const finances = sources.filter((s) => s.financement !== null)
+    expect(finances.length).toBeGreaterThan(0)
+    expect(finances.every((s) => s.financement !== '')).toBe(true)
+
+    const nonVerifies = sources.filter((s) => s.auteurs === null)
+    expect(nonVerifies.length).toBeGreaterThan(0)
+    expect(sources.every((s) => s.auteurs !== '')).toBe(true)
+  })
+
+  it('toute source porte une URL et une date de consultation', () => {
+    // Règle 5 de catalog/evidence/README.md : c'est `consulteLe` qui distingue un lien ouvert et
+    // vérifié d'une référence recopiée.
+    for (const source of [...catalog.evidence.values()].flatMap((f) => f.sources)) {
+      expect(source.url).toMatch(/^https?:\/\//)
+      expect(source.consulteLe).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    }
+  })
+
+  // --- Tips (§8.4) ------------------------------------------------------------------------------
+
+  it('charge les tips de catalog.db sans perte, avec leur source', () => {
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    try {
+      const { count } = db.prepare('SELECT COUNT(*) as count FROM tip').get() as { count: number }
+      expect(catalog.tips).toHaveLength(count)
+    } finally {
+      db.close()
+    }
+    expect(catalog.tips.length).toBeGreaterThan(0)
+  })
+
+  it('PROPRIÉTÉ : aucun tip sans source cliquable', () => {
+    // La contrainte est tenue au build (`source_url NOT NULL` + format), mais elle se perdrait
+    // silencieusement à un renommage de colonne : `row.source_url` deviendrait `undefined` et le
+    // champ arriverait vide à l'écran sans qu'aucun type ne s'en plaigne.
+    for (const tip of catalog.tips) {
+      expect(tip.sourceUrl).toMatch(/^https?:\/\/\S+$/)
+    }
+  })
+
+  it('charge les sources de recette sans perte, avec leur date de consultation', () => {
+    // Même mode de défaillance que pour les tips : un renommage de colonne ferait arriver
+    // `undefined` jusqu'à l'écran sans qu'aucun type ne s'en plaigne. La recette s'afficherait
+    // alors comme non sourcée — silencieusement, et dans le sens qui trompe.
+    const db = new DatabaseSync(dbPath, { readOnly: true })
+    let attendues = 0
+    try {
+      attendues = (db.prepare('SELECT COUNT(*) as count FROM recipe_source').get() as { count: number }).count
+    } finally {
+      db.close()
+    }
+    const chargees = [...catalog.recipes.values()].flatMap((r) => r.sources)
+    expect(chargees).toHaveLength(attendues)
+    expect(chargees.length).toBeGreaterThan(0)
+    for (const source of chargees) {
+      expect(source.url).toMatch(/^https?:\/\/\S+$/)
+      expect(source.consulteLe).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect(source.titre.trim()).not.toBe('')
+    }
+  })
+
+  it('PROPRIÉTÉ : aucune recette du catalogue ne revendique une provenance', () => {
+    // Les 241 recettes sont écrites POUR ce projet (docs/SOURCES_RECETTES.md §1). Une `provenance`
+    // affirmerait qu'elles viennent d'ailleurs — l'écran afficherait « D'après X » sur un texte que
+    // X n'a jamais écrit. Ce test tombera le jour d'un import réel : ce sera le signal de vérifier
+    // que la recette a bien été reprise d'une source libre, licence et auteur à l'appui.
+    for (const recette of catalog.recipes.values()) {
+      for (const source of recette.sources) {
+        expect(source.type).toBe('reference')
+      }
+    }
+  })
+
+  it('couvre les trois catégories de §8.4', () => {
+    // `nutrition_animale` doit rester VISUELLEMENT distinct (§8.4) : tant qu'aucun tip de cette
+    // catégorie n'existe, le rendu correspondant n'est jamais exercé. Ce test garde le cas vivant.
+    const categories = new Set(catalog.tips.map((t) => t.categorie))
+    expect(categories).toEqual(
+      new Set(['biologie_aliment', 'nutrition_humaine', 'nutrition_animale'])
+    )
   })
 })

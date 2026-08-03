@@ -1,0 +1,11 @@
+# Tip — nutrition_animale. ⚠️ Contenu CULTUREL (§8.4) : porte sur l'alimentation du chat, jamais
+# sur celle du lecteur. L'écran ajoute une mention « À propos des animaux » pour cette catégorie.
+# Source : MSD Veterinary Manual, « Nutritional Requirements of Small Animals », Management and
+# Nutrition (MSD / Merck & Co., Inc.).
+code: chat-taurine
+categorie: nutrition_animale
+texte: >
+  Le chat n'a pas les mêmes besoins que le chien : il lui faut de la taurine, de la vitamine A et de
+  l'acide arachidonique apportés par son alimentation. La taurine étant absente des végétaux, sa
+  ration doit comporter une source animale.
+source_url: "https://www.msdvetmanual.com/management-and-nutrition/nutrition-small-animals/nutritional-requirements-and-related-diseases-of-small-animals"

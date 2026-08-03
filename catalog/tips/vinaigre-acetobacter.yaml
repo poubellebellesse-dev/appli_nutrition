@@ -1,0 +1,10 @@
+# Tip — fait de microbiologie alimentaire, aucune portée santé.
+# Source : Qiu X., Zhang Y., Hong H. (2021), « Classification of acetic acid bacteria and their acid
+# resistant mechanism », AMB Express, DOI 10.1186/s13568-021-01189-6.
+code: vinaigre-acetobacter
+categorie: biologie_aliment
+texte: >
+  Le vinaigre demande deux fermentations successives : une levure transforme d'abord le sucre en
+  alcool, puis des bactéries acétiques oxydent cet alcool en acide acétique. Ces bactéries ont
+  besoin d'oxygène — d'où le nom « vin aigre », et l'aigreur d'une bouteille laissée ouverte.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7889782/"

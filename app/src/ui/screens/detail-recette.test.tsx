@@ -224,6 +224,25 @@ describe('detail-recette — les origines', () => {
     const badge = screen.getByText('francaise')
     expect(badge.querySelector('span[aria-hidden="true"]')?.textContent).toBe('🇫🇷')
   })
+
+  // Les 241 recettes réelles sont toutes `maison` (voir l'en-tête du fichier) : sans ces deux tests,
+  // une faute de frappe dans l'un des deux libellés `domaine_public` / `libre` (detail-recette.tsx
+  // #mentionOrigine) ne serait détectée par rien. Même mécanique que le repli « énergie absente » —
+  // `catalogueActif` remplace la recette de référence par une copie à l'origine forcée.
+  it.each([
+    { origine: 'domaine_public' as const, libelle: "Recette adaptée d'un ouvrage du domaine public." },
+    { origine: 'libre' as const, libelle: "Recette adaptée d'une source libre." },
+  ])('affiche le libellé d’origine « $origine »', async ({ origine, libelle }) => {
+    const reference = recetteDeReference()
+    catalogueActif = {
+      ...catalogueDeTest(),
+      recipes: new Map(catalogueDeTest().recipes).set(reference.id, { ...reference, origine }),
+    }
+
+    await monter(reference.id)
+
+    expect(screen.getByText(libelle)).toBeTruthy()
+  })
 })
 
 describe('detail-recette — les sources', () => {
@@ -257,15 +276,22 @@ describe('detail-recette — les sources', () => {
   })
 
   it('dit qu’une recette sans source n’a pas été testée, plutôt que de se taire', async () => {
-    // Le silence laisserait SUPPOSER une provenance sourcée que le catalogue n'a pas. La mention
-    // disparaît d'elle-même dès qu'une source ou une date de test existe — d'où le contrôle
-    // inverse sur la recette du lot pilote.
+    // Le silence laisserait SUPPOSER une provenance sourcée que le catalogue n'a pas.
     await monter(recetteDeReference().id)
-    expect(screen.getByText('Recette maison, non encore testée.')).toBeTruthy()
+    expect(screen.getByText('Recette écrite pour cette application, non encore testée.')).toBeTruthy()
+  })
 
-    cleanup()
+  it('⛔ affiche QUAND MÊME sa mention d’origine sur une recette qui porte des sources « reference » — c’est exactement le défaut corrigé', async () => {
+    // Avant correctif : la mention ne s'affichait QUE si `sources.length === 0`, donc les recettes
+    // du lot pilote (confrontées à une référence sanitaire, jamais « d'après ») n'affichaient plus
+    // aucune origine — on aurait pu croire qu'elles venaient d'ailleurs. `origine` répare ça : la
+    // mention s'affiche TOUJOURS, indépendamment des sources.
+    const recette = catalogueDeTest().recipes.get(RECETTE_SOURCEE)
+    if (recette === undefined) throw new Error('recette sourcée absente du catalogue réel')
+    expect(recette.sources.length).toBeGreaterThan(0)
+
     await monter(RECETTE_SOURCEE)
-    expect(screen.queryByText('Recette maison, non encore testée.')).toBeNull()
+    expect(screen.getByText('Recette écrite pour cette application, non encore testée.')).toBeTruthy()
   })
 })
 

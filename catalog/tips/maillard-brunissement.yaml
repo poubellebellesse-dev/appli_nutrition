@@ -1,0 +1,13 @@
+# Tip — fait de chimie alimentaire, aucune portée santé.
+# Source : Liu et al. (2022), « Insights into flavor and key influencing factors of Maillard
+# reaction products: A recent update », Frontiers in Nutrition, DOI 10.3389/fnut.2022.973677.
+#
+# ⚠️ Le contraste avec la caramélisation n'est PAS écrit : la source définit la réaction de Maillard
+# mais ne l'oppose pas explicitement à la caramélisation. Le tip s'en tient à la définition.
+code: maillard-brunissement
+categorie: biologie_aliment
+texte: >
+  La croûte dorée d'un pain ou d'une viande saisie vient de la réaction de Maillard : sans aucune
+  enzyme, les sucres réducteurs se lient aux acides aminés des protéines et forment des centaines de
+  composés d'arôme.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9511141/"

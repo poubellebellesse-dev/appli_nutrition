@@ -1,5 +1,6 @@
 id: soupe_tomate_basilic
 nom: "Soupe de tomates au basilic"
+origine: maison
 description: >
   Des tomates mijotées avec oignon et ail, mixées et parfumées au basilic frais.
 temps_prep_min: 10

@@ -1,0 +1,11 @@
+# Tip — fait d'histoire agricole, aucune portée santé.
+# Source : Coe K., Bostan H., Rolling W., Turner-Hissong S. et al. (2023), « Population genomics
+# identifies genetic signatures of carrot domestication and improvement and uncovers the origin of
+# high-carotenoid orange carrots », Nature Plants, DOI 10.1038/s41477-023-01526-6.
+code: carotte-orange
+categorie: biologie_aliment
+texte: >
+  La carotte n'a pas toujours été orange. Les premières carottes domestiquées, entre l'Asie Mineure
+  et l'Asie centrale, étaient violettes ou jaunes ; les orange n'apparaissent en Europe qu'au
+  XVIIᵉ siècle, avant de s'imposer partout.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10581907/"

@@ -1,7 +1,13 @@
 # Tip — fait de physique alimentaire, aucune portée santé.
+# Source : Li C. et al. (2024), « Influence of Storage Temperature on Starch Retrogradation and
+# Digestion of Chinese Steamed Bread », Foods 13(4):517, DOI 10.3390/foods13040517.
+#
+# ⚠️ La version précédente ajoutait « un passage au four le ramollit à nouveau ». Vrai en cuisine,
+# mais absent de la source retenue — retiré plutôt que sourcé de mémoire.
 code: pain-rassis
 categorie: biologie_aliment
 texte: >
-  Le pain ne rassit pas en séchant, mais en recristallisant : son amidon se réorganise.
-  C'est pourquoi le réfrigérateur l'accélère, et pourquoi un passage au four le
-  ramollit à nouveau.
+  Le pain ne rassit pas seulement en séchant : son amidon se réorganise en structures cristallines,
+  ce qu'on appelle la rétrogradation. Le froid la favorise — à 4 °C, ces structures sont plus
+  ordonnées qu'à température ambiante.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC10888248/"

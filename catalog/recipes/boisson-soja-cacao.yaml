@@ -1,5 +1,6 @@
 id: boisson_soja_cacao
 nom: "Boisson au soja au cacao"
+origine: maison
 description: >
   Un cacao froid ou chaud, à la boisson au soja.
 temps_prep_min: 5

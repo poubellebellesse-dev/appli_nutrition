@@ -1,5 +1,6 @@
 id: muesli_amande_myrtilles
 nom: "Muesli aux flocons, boisson d'amande et myrtilles"
+origine: maison
 description: >
   Un muesli non cuit, trempé quelques minutes dans une boisson à l'amande.
 temps_prep_min: 5

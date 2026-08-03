@@ -1,0 +1,12 @@
+# Tip — fait de composition alimentaire. Descriptif : constate une composition, ne hiérarchise pas
+# les chocolats (§6.1, §6.2).
+# Source : Lončarević I. et al. (2021), « White Chocolate with Resistant Starch: Impact on Physical
+# Properties, Dietary Fiber Content and Sensory Characteristics », Molecules 26(19):5908,
+# DOI 10.3390/molecules26195908.
+code: chocolat-blanc
+categorie: biologie_aliment
+texte: >
+  Le chocolat blanc ne contient aucun produit du cacao en dehors du beurre de cacao — c'est-à-dire
+  la matière grasse, sans la partie non grasse de la fève. D'où l'absence de couleur, et celle des
+  polyphénols et des fibres qu'apporte le cacao.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8512413/"

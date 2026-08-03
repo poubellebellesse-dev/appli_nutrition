@@ -9,6 +9,7 @@ function recette(id: string, prep: number, cuisson: number, nom = id): Recipe {
   return {
     id: id as RecipeId,
     nom,
+    origine: 'maison',
     description: '',
     tempsPrepMin: min(prep),
     tempsCuissonMin: min(cuisson),
@@ -25,6 +26,8 @@ function recette(id: string, prep: number, cuisson: number, nom = id): Recipe {
     facettes: [],
     service: null,
     piquant: null,
+    sources: [],
+    testeLe: null,
   }
 }
 

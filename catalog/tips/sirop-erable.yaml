@@ -1,0 +1,12 @@
+# Tip — fait de transformation alimentaire, aucune portée santé.
+# Source : Gill M., Newling B. (2022), « The Determination of Sucrose Content in Maple Sap Using
+# Time-Domain Magnetic Resonance », Sugar Tech, DOI 10.1007/s12355-022-01116-4.
+#
+# ⚠️ Le ratio « 40 litres de sève pour 1 litre de sirop », très cité, n'est PAS dans cette source.
+# Le tip donne les deux concentrations mesurées, qui disent la même chose sans chiffre emprunté.
+code: sirop-erable
+categorie: biologie_aliment
+texte: >
+  La sève d'érable est presque de l'eau : 1 à 5 % de sucre, le reste liquide. Le sirop du commerce
+  en titre environ 64 %. Tout le travail consiste donc à retirer de l'eau, pas à ajouter du sucre.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8853173/"

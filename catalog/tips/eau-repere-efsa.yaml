@@ -1,0 +1,9 @@
+# Tip — nutrition_humaine. ⚠️ Descriptif : rapporte une valeur de référence publiée, ne dit pas au
+# lecteur combien boire (§6.1).
+# Source : EFSA (26 mars 2010), « EFSA sets European dietary reference values for nutrient intakes ».
+code: eau-repere-efsa
+categorie: nutrition_humaine
+texte: >
+  Les valeurs de référence de l'EFSA pour l'eau sont de 2,0 litres par jour chez la femme et
+  2,5 litres chez l'homme. Ce sont des repères de population, pas des seuils individuels.
+source_url: "https://www.efsa.europa.eu/en/press/news/nda100326"

@@ -1,5 +1,6 @@
 id: bol_fruits_graines
 nom: "Bol de fruits frais et graines de tournesol"
+origine: maison
 description: >
   Trois fruits coupés, une poignée de graines, rien d'autre.
 temps_prep_min: 5

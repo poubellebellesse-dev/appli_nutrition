@@ -1,0 +1,8 @@
+# Tip — nutrition_humaine. ⚠️ Descriptif : une fourchette publiée, pas une consigne (§6.1).
+# Source : EFSA (26 mars 2010), « EFSA sets European dietary reference values for nutrient intakes ».
+code: macronutriments-efsa
+categorie: nutrition_humaine
+texte: >
+  L'EFSA exprime ses repères en part de l'énergie totale, et non en grammes : 45 à 60 % pour les
+  glucides, 20 à 35 % pour les lipides. Ce sont des intervalles, larges à dessein.
+source_url: "https://www.efsa.europa.eu/en/press/news/nda100326"

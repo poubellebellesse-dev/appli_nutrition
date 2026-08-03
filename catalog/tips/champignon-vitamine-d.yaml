@@ -1,0 +1,12 @@
+# Tip — fait de biochimie alimentaire. Descriptif : constate une transformation mesurée, ne
+# recommande ni un aliment ni un apport (§6.1).
+# Source : Kristensen H. L., Rosenqvist E., Jakobsen J. (2012), « Increase of vitamin D2 by UV-B
+# exposure during the growth phase of white button mushroom (Agaricus bisporus) », Food & Nutrition
+# Research, DOI 10.3402/fnr.v56i0.7114.
+code: champignon-vitamine-d
+categorie: biologie_aliment
+texte: >
+  Comme la peau humaine, le champignon fabrique de la vitamine D sous UV-B : son ergostérol se
+  transforme en vitamine D2. Sur des champignons de Paris exposés pendant leur croissance, la teneur
+  est passée de moins d'un microgramme à environ 24 pour 100 g.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC3321259/"

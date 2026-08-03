@@ -36,6 +36,7 @@
 mapping:
   # Œufs, farines, matières grasses, condiments
   oeuf: 22000                    # Oeuf cru
+  jaune_oeuf: 22002              # Oeuf, jaune (jaune d'oeuf), cru
   farine_ble: 9436               # Farine de blé tendre ou froment T55 (pour pains)
   beurre_doux: 16400             # Beurre à 80% MG minimum, doux
   huile_olive: 17270             # Huile d'olive vierge extra

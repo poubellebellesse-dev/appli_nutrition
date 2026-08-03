@@ -1,5 +1,6 @@
 id: soupe_pois_casses
 nom: "Soupe de pois cassés au laurier"
+origine: maison
 description: >
   Une soupe épaisse de pois cassés mijotés avec carotte, poireau et feuille de laurier.
 temps_prep_min: 10

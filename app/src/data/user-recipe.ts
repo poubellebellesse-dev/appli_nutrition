@@ -145,6 +145,10 @@ export function versRecette(stockee: StoredUserRecipe, foods: ReadonlyMap<FoodId
   return {
     id: stockee.id as RecipeId,
     nom: stockee.nom,
+    // ⚠️ `'utilisateur'` / `'partagee'` — PAS `'maison'` (voir le piège documenté sur `RecipeOrigine`,
+    // engine/domain/catalog.ts) : une recette `importe` vient d'un tiers, la dire « maison »
+    // affirmerait le contraire de la vérité. Même distinction que le bandeau de detail-recette.tsx.
+    origine: stockee.source === 'importe' ? 'partagee' : 'utilisateur',
     description: '',
     tempsPrepMin: min(stockee.tempsPrepMin),
     tempsCuissonMin: min(stockee.tempsCuissonMin),

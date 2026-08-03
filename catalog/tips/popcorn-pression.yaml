@@ -1,0 +1,11 @@
+# Tip — fait de physique alimentaire, aucune portée santé.
+# Source : Tavanandi H. A., Das A. K., Venkateshmurthy K., Raghavarao K. S. M. S. (2020), « Design
+# and development of a machine for continuous popping and puffing of grains », Journal of Food
+# Science and Technology, DOI 10.1007/s13197-020-04680-3.
+code: popcorn-pression
+categorie: biologie_aliment
+texte: >
+  Un grain de maïs à éclater est une cocotte-minute miniature : son enveloppe retient la vapeur que
+  produit sa propre humidité jusqu'à céder d'un coup. C'est pourquoi le taux d'humidité du grain, de
+  l'ordre de 12 à 14 %, décide de tout.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8021677/"

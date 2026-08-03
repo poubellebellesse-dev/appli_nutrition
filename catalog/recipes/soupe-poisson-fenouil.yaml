@@ -1,5 +1,6 @@
 id: soupe_poisson_fenouil
 nom: "Soupe de poisson au fenouil"
+origine: maison
 description: >
   Un bouillon de tomate et fenouil safrané au curcuma, où pochent des morceaux de merlu et de lieu.
 temps_prep_min: 25

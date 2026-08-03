@@ -1,0 +1,14 @@
+# Tip — nutrition_animale. ⚠️ Contenu CULTUREL (§8.4), sur l'animal et non sur le lecteur.
+# Source : Chiale M. C. et al. (2021), « The color of greater flamingo feathers fades when no
+# cosmetics are applied », Ecology and Evolution, DOI 10.1002/ece3.8041.
+#
+# ⚠️ L'origine ALIMENTAIRE des caroténoïdes n'est pas affirmée : la source porte sur le dépôt et le
+# maquillage, pas sur l'apport. Ne pas ajouter « qu'il tire de son alimentation » sans une seconde
+# source (catalog/tips/README.md, règle de sourçage).
+code: flamant-canthaxanthine
+categorie: nutrition_animale
+texte: >
+  Le rose du flamant tient à des caroténoïdes, dont la canthaxanthine représente plus de 60 %.
+  L'oiseau les étale lui-même sur son plumage avec les sécrétions de sa glande uropygienne : sans ce
+  maquillage, la couleur pâlit.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC8525176/"

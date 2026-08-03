@@ -1,5 +1,6 @@
 id: soupe_oignon_gratinee
 nom: "Soupe à l'oignon gratinée"
+origine: maison
 description: >
   Des oignons longuement blondis en bouillon, servis avec du pain et du gruyère gratiné.
 temps_prep_min: 15

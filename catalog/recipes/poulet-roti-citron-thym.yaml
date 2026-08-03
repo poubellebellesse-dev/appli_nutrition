@@ -1,5 +1,6 @@
 id: poulet_roti_citron_thym
 nom: "Cuisses de poulet rôties au citron et au thym"
+origine: maison
 description: >
   Des cuisses rôties au four sur des quartiers de citron et de pommes de terre, au thym.
 temps_prep_min: 15
@@ -70,7 +71,7 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 5
-    texte: "Enfourner sans couvrir, en arrosant du jus rendu à mi-cuisson — c'est ce qui fait la peau croustillante."
+    texte: "Enfourner sans couvrir, en arrosant du jus rendu à mi-cuisson — c'est ce qui fait la peau croustillante. Piquer la cuisse à l'os avant de servir : le jus doit couler clair et la chair ne plus être rosée."
     lexicon_ids: [enfourner]
     timer_s: 3000
     timer_type: cuisson
@@ -82,3 +83,13 @@ facettes:
     valeur: omnivore
   - facette: style
     valeur: quotidien
+
+sources:
+  - type: reference
+    titre: "Guide de bonnes pratiques d'hygiène — Consommateurs (ministère de l'Agriculture)"
+    url: "https://agriculture.gouv.fr/sites/default/files/documents/pdf/GBPH_Consommateurs_5958_cle8bb1ad.pdf"
+    consulte_le: "2026-08-02"
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

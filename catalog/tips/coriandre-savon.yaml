@@ -1,0 +1,15 @@
+# Tip — fait de génétique sensorielle, aucune portée santé.
+# Source : Eriksson N., Wu S., Do C. B., Kiefer A. K., Tung J. Y., Mountain J. L., Hinds D. A.,
+# Francke U. (2012), « A genetic variant near olfactory receptor genes influences cilantro
+# preference », arXiv:1209.2096 [q-bio.GN].
+#
+# ⚠️ Le rôle d'OR6A2 est présenté comme une HYPOTHÈSE dans la source (« may be the olfactory
+# receptor that contributes… »). Le tip garde ce conditionnel : c'est le variant rs72921001 qui est
+# associé, le récepteur en cause reste supposé.
+code: coriandre-savon
+categorie: biologie_aliment
+texte: >
+  Trouver à la coriandre un goût de savon a une base génétique : sur plus de 14 000 personnes, un
+  variant proche d'un groupe de gènes de récepteurs olfactifs y est associé. L'un d'eux, OR6A2,
+  reconnaît justement les aldéhydes qui font l'odeur de la plante.
+source_url: "https://arxiv.org/abs/1209.2096"

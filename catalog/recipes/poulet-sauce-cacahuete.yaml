@@ -1,5 +1,6 @@
 id: poulet_sauce_cacahuete
 nom: "Poulet à la sauce cacahuète"
+origine: maison
 description: >
   Des dés de poulet mijotés dans une sauce de cacahuètes broyées, tomate et gingembre.
 temps_prep_min: 20

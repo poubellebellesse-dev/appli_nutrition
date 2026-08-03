@@ -1,5 +1,6 @@
 id: muesli_flocons_fruits
 nom: "Muesli aux flocons d'avoine, pomme et noisettes"
+origine: maison
 description: >
   Des flocons d'avoine trempés dans le lait une nuit, garnis de pomme râpée et de noisettes.
 temps_prep_min: 10

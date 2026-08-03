@@ -1,5 +1,6 @@
 id: porridge_avoine_banane
 nom: "Porridge d'avoine à la banane et à la cannelle"
+origine: maison
 description: >
   Des flocons d'avoine cuits dans le lait, garnis de banane en rondelles, de cannelle et de miel.
 temps_prep_min: 5

@@ -1,6 +1,15 @@
 # Tip — fait de chimie alimentaire, aucune portée santé.
+# Source : Nolden A. A., Lenart G., Hayes J. E. (2019), « Putting out the fire — efficacy of common
+# beverages in reducing oral burn from capsaicin », Physiology & Behavior,
+# DOI 10.1016/j.physbeh.2019.05.018.
+#
+# ⚠️ La version précédente disait « un corps gras l'emporte ». L'essai a comparé sept boissons : le
+# lait écrémé calme aussi bien que le lait entier, ce qui pointe la PROTÉINE plutôt que la matière
+# grasse. Le tip corrige une demi-vérité très répandue — c'est ce qui le rend intéressant.
 code: piment-capsaicine
 categorie: biologie_aliment
 texte: >
-  La sensation de brûlure du piment vient de la capsaïcine, qui ne se dissout pas dans
-  l'eau. Un corps gras — lait, yaourt, huile — l'emporte, un verre d'eau la déplace.
+  La brûlure du piment vient de la capsaïcine, une molécule hydrophobe que l'eau n'emporte pas. Le
+  lait est la boisson la plus efficace des sept testées — et l'écrémé calme autant que l'entier, ce
+  qui suggère que sa protéine compte davantage que sa matière grasse.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6620146/"

@@ -1,5 +1,6 @@
 id: merlu_pane_chapelure
 nom: "Merlu pané maison, quartiers de citron"
+origine: maison
 description: >
   Des filets de merlu panés à l'œuf et à la chapelure, poêlés jusqu'à ce qu'ils dorent.
 temps_prep_min: 15
@@ -65,7 +66,7 @@ etapes:
     timer_s: 240
     timer_type: cuisson
   - ordre: 4
-    texte: "Retourner délicatement à la spatule et terminer la cuisson, puis égoutter sur du papier absorbant."
+    texte: "Retourner délicatement à la spatule et terminer la cuisson jusqu'à ce que la chair soit opaque et se détache facilement à la fourchette, puis égoutter sur du papier absorbant."
     lexicon_ids: [egoutter]
     timer_s: 240
     timer_type: cuisson
@@ -82,3 +83,9 @@ facettes:
     valeur: pescetarien
   - facette: style
     valeur: quotidien
+
+sources:
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

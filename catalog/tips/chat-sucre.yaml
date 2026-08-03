@@ -1,0 +1,9 @@
+# Tip — nutrition_animale. ⚠️ Contenu CULTUREL (§8.4), sur l'animal et non sur le lecteur.
+# Source : Li X. et al. (2005), « Pseudogenization of a Sweet-Receptor Gene Accounts for Cats'
+# Indifference toward Sugar », PLoS Genetics, DOI 10.1371/journal.pgen.0010003.
+code: chat-sucre
+categorie: nutrition_animale
+texte: >
+  Le chat ne perçoit pas le sucré : le gène Tas1r2, qui code la moitié du récepteur au goût sucré,
+  est chez lui un pseudogène inactif. Le tigre et le guépard portent la même mutation.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC1183522/"

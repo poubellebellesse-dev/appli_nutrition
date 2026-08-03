@@ -1,5 +1,6 @@
 id: escalope_milanaise
 nom: "Escalope de veau à la milanaise"
+origine: maison
 description: >
   Une escalope panée à l'œuf et à la chapelure, poêlée au beurre et servie au citron.
 temps_prep_min: 15

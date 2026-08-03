@@ -1,5 +1,6 @@
 id: pain_perdu
 nom: "Pain perdu à la cannelle"
+origine: maison
 description: >
   Des tranches de pain de mie trempées dans un mélange œuf-lait, dorées au beurre et sucrées.
 temps_prep_min: 10

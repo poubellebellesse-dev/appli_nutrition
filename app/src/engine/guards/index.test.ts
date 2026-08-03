@@ -65,6 +65,7 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
   return {
     id: id as RecipeId,
     nom: id,
+    origine: "maison",
     description: "",
     tempsPrepMin: min(10),
     tempsCuissonMin: min(10),
@@ -88,6 +89,8 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
     facettes: [],
     service: null,
     piquant: null,
+    sources: [],
+    testeLe: null,
   };
 }
 
@@ -111,6 +114,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       allergens: new Map(),
       lexicon: new Map(),
       tips: [],
+      evidence: new Map(),
       topics: new Map(),
       substitutions: new Map(),
       indexes: EMPTY_INDEXES,
@@ -140,6 +144,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       allergens: new Map(),
       lexicon: new Map(),
       tips: [],
+      evidence: new Map(),
       topics: new Map(),
       substitutions: new Map(),
       indexes: EMPTY_INDEXES,
@@ -165,6 +170,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       allergens: new Map(),
       lexicon: new Map(),
       tips: [],
+      evidence: new Map(),
       topics: new Map(),
       substitutions: new Map(),
       indexes: EMPTY_INDEXES,
@@ -186,6 +192,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       allergens: new Map(),
       lexicon: new Map(),
       tips: [],
+      evidence: new Map(),
       topics: new Map(),
       substitutions: new Map(),
       indexes: EMPTY_INDEXES,
@@ -209,6 +216,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       allergens: new Map(),
       lexicon: new Map(),
       tips: [],
+      evidence: new Map(),
       topics: new Map(),
       substitutions: new Map(),
       indexes: EMPTY_INDEXES,

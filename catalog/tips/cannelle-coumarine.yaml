@@ -1,0 +1,12 @@
+# Tip — fait de composition alimentaire. ⚠️ Descriptif : donne des teneurs mesurées, ne dit pas
+# quelle cannelle acheter ni quelle quantité consommer (§6.1, §6.2).
+# Source : Lončar M., Jakovljević M., Šubarić D., Pavlić M., Buzjak Služek V., Cindrić I.,
+# Molnar M. (2020), « Coumarins in Food and Methods of Their Determination », Foods 9(5):645,
+# DOI 10.3390/foods9050645.
+code: cannelle-coumarine
+categorie: biologie_aliment
+texte: >
+  Deux écorces différentes sont vendues sous le nom de cannelle. Leur teneur en coumarine n'a rien
+  de comparable : jusqu'à 1 % pour la cannelle de Chine, environ 0,004 % — des traces — pour celle
+  de Ceylan.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7278589/"

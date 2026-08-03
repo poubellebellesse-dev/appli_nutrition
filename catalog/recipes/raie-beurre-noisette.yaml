@@ -1,5 +1,6 @@
 id: raie_beurre_noisette
 nom: "Aile de raie au beurre noisette"
+origine: maison
 description: >
   Une aile de raie pochée au court-bouillon, nappée d'un beurre noisette au citron et persil.
 temps_prep_min: 10

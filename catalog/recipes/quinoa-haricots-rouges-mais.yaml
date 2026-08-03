@@ -1,5 +1,6 @@
 id: quinoa_haricots_rouges_mais
 nom: "Quinoa aux haricots rouges, maïs et poivrons"
+origine: maison
 description: >
   Un plat complet aux saveurs mexicaines, sans cuisson longue.
 temps_prep_min: 15
@@ -79,6 +80,8 @@ etapes:
     timer_type: null
 
 facettes:
+  - facette: cuisine
+    valeur: mexicaine
   - facette: regime
     valeur: vegetalien
   - facette: style

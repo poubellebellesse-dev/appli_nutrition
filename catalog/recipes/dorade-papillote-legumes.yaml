@@ -1,5 +1,6 @@
 id: dorade_papillote_legumes
 nom: "Dorade en papillote aux légumes"
+origine: maison
 description: >
   Des filets de dorade cuits en papillote sur un lit de courgette, tomate et fenouil.
 temps_prep_min: 20
@@ -74,7 +75,7 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 5
-    texte: "Enfourner : la papillote doit gonfler. L'ouvrir à table, la vapeur emporte tout le parfum."
+    texte: "Enfourner : la papillote doit gonfler et la chair du poisson devenir opaque, sans plus rien de translucide. L'ouvrir à table, la vapeur emporte tout le parfum."
     lexicon_ids: [papillote, enfourner]
     timer_s: 1200
     timer_type: cuisson
@@ -86,3 +87,9 @@ facettes:
     valeur: pescetarien
   - facette: style
     valeur: quotidien
+
+sources:
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

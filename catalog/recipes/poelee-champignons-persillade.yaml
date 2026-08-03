@@ -1,5 +1,6 @@
 id: poelee_champignons_persillade
 nom: "Poêlée de champignons en persillade"
+origine: maison
 description: >
   Des champignons sautés à feu vif jusqu'à ce qu'ils dorent, finis à l'ail et au persil.
 temps_prep_min: 10

@@ -1,5 +1,6 @@
 id: poulet_roti_carottes
 nom: "Blanc de poulet rôti, carottes fondantes"
+origine: maison
 description: >
   Des blancs de poulet rôtis au four sur un lit de carottes et d'oignons.
 temps_prep_min: 10
@@ -61,7 +62,7 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 4
-    texte: "Remettre au four jusqu'à ce que le poulet soit cuit à cœur et les carottes fondantes."
+    texte: "Remettre au four jusqu'à ce que les carottes soient fondantes et le poulet cuit à cœur — entaillé en son point le plus épais, il ne doit plus être rosé et rendre un jus clair."
     lexicon_ids: []
     timer_s: 900
     timer_type: cuisson
@@ -73,3 +74,13 @@ facettes:
     valeur: omnivore
   - facette: style
     valeur: quotidien
+
+sources:
+  - type: reference
+    titre: "Guide de bonnes pratiques d'hygiène — Consommateurs (ministère de l'Agriculture)"
+    url: "https://agriculture.gouv.fr/sites/default/files/documents/pdf/GBPH_Consommateurs_5958_cle8bb1ad.pdf"
+    consulte_le: "2026-08-02"
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

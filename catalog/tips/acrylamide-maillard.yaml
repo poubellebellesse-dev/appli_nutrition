@@ -1,0 +1,11 @@
+# Tip — nutrition_humaine. ⚠️ Le plus sensible du lot. Formulé sur le MÉCANISME de formation et sur
+# la position publiée de l'EFSA ; aucune consigne de cuisson, aucun aliment désigné (§6.1, §6.2).
+# Se lit en regard de `maillard-brunissement`, qui décrit la même réaction sous son autre face.
+# Source : EFSA (4 juin 2015), « EFSA explains risk assessment: Acrylamide in food ».
+code: acrylamide-maillard
+categorie: nutrition_humaine
+texte: >
+  L'acrylamide naît de la même réaction de Maillard qui dore les aliments : au-delà de 120 °C et en
+  milieu peu humide, un acide aminé, l'asparagine, réagit avec les sucres. Le brunissement et sa
+  formation ont donc la même origine chimique — un point que l'EFSA suit de près.
+source_url: "https://www.efsa.europa.eu/en/corporate/pub/acrylamide150604"

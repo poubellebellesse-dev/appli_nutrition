@@ -1,5 +1,6 @@
 id: bananes_roties_chocolat
 nom: "Bananes rôties au chocolat noir"
+origine: maison
 description: >
   Des bananes fendues, garnies de chocolat noir et passées au four jusqu'à ce qu'il fonde.
 temps_prep_min: 5

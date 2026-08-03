@@ -1,5 +1,6 @@
 id: pommes_terre_boulangere
 nom: "Pommes de terre boulangère"
+origine: maison
 description: >
   Des pommes de terre en tranches cuites au four avec des oignons fondus et du bouillon.
 temps_prep_min: 20

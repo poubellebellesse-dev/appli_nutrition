@@ -1,0 +1,11 @@
+# Tip — fait de biochimie végétale, aucune portée santé.
+# Source : Angelino D. et al. (2015), « Myrosinase-dependent and –independent formation and control
+# of isothiocyanate products of glucosinolate hydrolysis », Frontiers in Plant Science,
+# DOI 10.3389/fpls.2015.00831.
+code: chou-myrosinase
+categorie: biologie_aliment
+texte: >
+  Les choux, la moutarde et le raifort utilisent le même dispositif que l'ail et l'oignon : une
+  enzyme, la myrosinase, rangée dans des cellules à part de la molécule qu'elle découpe. Rien ne se
+  passe tant que le tissu est intact ; couper ou mâcher déclenche la réaction.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4593958/"

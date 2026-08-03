@@ -1,0 +1,12 @@
+# Tip — fait de transformation alimentaire. Descriptif : constate ce que le polissage retire, ne
+# recommande aucun riz plutôt qu'un autre (§6.1).
+# Source : Roy P., Orikasa T., Okadome H., Nakamura N., Shiina T. (2011), « Processing Conditions,
+# Rice Properties, Health and Environment », International Journal of Environmental Research and
+# Public Health, DOI 10.3390/ijerph8061957.
+code: riz-poli
+categorie: biologie_aliment
+texte: >
+  Riz complet et riz blanc sont le même grain à deux stades d'usinage. Le polissage retire environ
+  10 % du poids — les couches externes et le germe, là où se concentrent protéines, lipides,
+  vitamines et minéraux — et laisse l'amande amylacée.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC3138007/"

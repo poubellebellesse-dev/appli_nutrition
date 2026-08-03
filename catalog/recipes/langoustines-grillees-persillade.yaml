@@ -1,5 +1,6 @@
 id: langoustines_grillees_persillade
 nom: "Langoustines grillées en persillade"
+origine: maison
 description: >
   Des langoustines fendues en deux, grillées et arrosées d'un beurre à l'ail et au persil.
 temps_prep_min: 15
@@ -61,7 +62,7 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 4
-    texte: "Passer sous le gril du four, chair vers le haut, en surveillant — quelques minutes suffisent."
+    texte: "Passer sous le gril du four, chair vers le haut, jusqu'à ce que la chair devienne ferme et opaque — quelques minutes suffisent."
     lexicon_ids: []
     timer_s: 300
     timer_type: cuisson
@@ -80,3 +81,9 @@ facettes:
     valeur: repas_de_fete
   - facette: style
     valeur: convivial
+
+sources:
+  - type: reference
+    titre: "Cooking your food — Food Standards Agency (GOV.UK)"
+    url: "https://www.gov.uk/government/publications/cooking-your-food/cooking-your-food"
+    consulte_le: "2026-08-02"

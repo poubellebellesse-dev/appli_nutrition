@@ -1,5 +1,6 @@
 id: granola_maison
 nom: "Granola maison aux noix et au miel"
+origine: maison
 description: >
   Des flocons d'avoine, noisettes et amandes enrobés de miel et grillés au four.
 temps_prep_min: 10

@@ -1,0 +1,11 @@
+# Tip — fait de biochimie alimentaire, aucune portée santé.
+# Source : Yuan et al. (2025), « The membrane may be a key factor influencing browning: a mini
+# review on browning mechanisms of fresh-cut fruit and vegetables from a multi-omics perspective »,
+# Frontiers in Nutrition, DOI 10.3389/fnut.2025.1534594.
+code: pomme-brunit
+categorie: biologie_aliment
+texte: >
+  Dans une pomme intacte, les enzymes et les composés phénoliques sont rangés dans des compartiments
+  séparés. Couper la pomme rompt cette séparation : les deux se rencontrent, s'oxydent et forment
+  les polymères bruns qu'on voit apparaître.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11893370/"

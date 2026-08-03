@@ -1,5 +1,6 @@
 id: coq_au_vin
 nom: "Coq au vin"
+origine: maison
 description: >
   Des cuisses de poulet mijotées au vin rouge avec lardons, champignons et petits oignons.
 temps_prep_min: 25

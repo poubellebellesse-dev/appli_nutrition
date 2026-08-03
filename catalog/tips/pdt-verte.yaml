@@ -1,7 +1,14 @@
 # Tip — fait de conservation. Descriptif, sans injonction (§6.1).
+# Source : Zao X., Li W., Cheng L., Yu B., Sa G. (2025), « Physiological and Molecular Mechanisms of
+# Light-Induced Greening in Potatoes: A Path to Food Safety », Foods, DOI 10.3390/foods14101798.
+#
+# ⚠️ Correction par rapport à la version précédente, qui présentait la chlorophylle comme
+# « accompagnée » de solanine. La source est explicite : ce sont DEUX voies métaboliques distinctes,
+# déclenchées l'une et l'autre par la lumière. Le vert est un indicateur visuel, pas le composé amer.
 code: pomme-de-terre-verte
 categorie: biologie_aliment
 texte: >
-  Une pomme de terre verdit à la lumière : c'est de la chlorophylle, accompagnée de
-  solanine, un composé amer que la plante produit pour se défendre. D'où le stockage
-  traditionnel à l'obscurité.
+  À la lumière, une pomme de terre verdit : ses amyloplastes deviennent des chloroplastes et
+  fabriquent de la chlorophylle. En parallèle, par une voie métabolique indépendante, elle accumule
+  des glycoalcaloïdes amers. Le vert ne les contient pas — il signale les mêmes conditions.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12111433/"

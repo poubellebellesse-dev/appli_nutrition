@@ -1,6 +1,13 @@
 # Tip — fait botanique, aucune portée santé.
+# Source : Padam B. S., Tin H. S., Chye F. Y., Abdullah M. I. (2012), « Banana by-products: an
+# under-utilized renewable food biomass with great potential », Journal of Food Science and
+# Technology, DOI 10.1007/s13197-012-0861-2.
+#
+# ⚠️ La moitié « la fraise n'est pas une baie » est partie dans son propre fichier
+# (fraise-akenes.yaml) : un tip = un fait = une source (catalog/tips/README.md).
 code: banane-baie
 categorie: biologie_aliment
 texte: >
-  La banane est une baie, au sens botanique. La fraise, elle, n'en est pas une : ses
-  vrais fruits sont les petits grains jaunes plantés à sa surface.
+  La banane est une baie au sens botanique : ce sont les fleurs femelles de l'inflorescence, sur les
+  rangées basses du régime, qui donnent ces fruits charnus.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC4252442/"

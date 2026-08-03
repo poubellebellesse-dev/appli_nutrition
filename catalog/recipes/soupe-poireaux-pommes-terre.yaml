@@ -1,5 +1,6 @@
 id: soupe_poireaux_pommes_terre
 nom: "Soupe poireaux-pommes de terre"
+origine: maison
 description: >
   La soupe la plus simple du répertoire : poireaux et pommes de terre fondus, mixés ou non.
 temps_prep_min: 10

@@ -1,5 +1,6 @@
 id: tortilla_espagnole
 nom: "Tortilla espagnole aux pommes de terre"
+origine: maison
 description: >
   Une omelette épaisse de pommes de terre et d'oignons confits à l'huile d'olive.
 temps_prep_min: 15

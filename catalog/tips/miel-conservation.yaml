@@ -1,7 +1,14 @@
 # Tip — fait de conservation, aucune portée santé.
+# Source : Luca L., Pauliuc D., Oroian M. (2024), « Honey microbiota, methods for determining the
+# microbiological composition and the antimicrobial effect of honey – A review », Food Chemistry: X,
+# DOI 10.1016/j.fochx.2024.101524.
+#
+# ⚠️ La version précédente ajoutait « on en a retrouvé encore comestible dans des tombes
+# égyptiennes ». Anecdote très recopiée, sans source primaire vérifiable — retirée.
 code: miel-conservation
 categorie: biologie_aliment
 texte: >
-  Le miel ne se périme pas. Sa très faible teneur en eau et son acidité empêchent les
-  micro-organismes de s'y développer — on en a retrouvé encore comestible dans des
-  tombes égyptiennes.
+  La plupart des micro-organismes ne peuvent pas se développer dans le miel : sa teneur en eau est
+  trop basse, la pression osmotique de son sucre trop forte, son acidité trop marquée. C'est cette
+  combinaison, et non un ingrédient particulier, qui le conserve.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11214184/"

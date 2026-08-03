@@ -1,0 +1,10 @@
+# Tip — fait de biologie végétale et de transformation alimentaire. Descriptif (§6.1).
+# Source : Jørgensen K. et al. (2010), « Biosynthesis of the Cyanogenic Glucosides Linamarin and
+# Lotaustralin in Cassava », Plant Physiology, DOI 10.1104/pp.110.164053.
+code: manioc-cyanure
+categorie: biologie_aliment
+texte: >
+  Le manioc range son poison en deux compartiments séparés : d'un côté des glucosides cyanogènes, de
+  l'autre l'enzyme qui les découpe. Broyer le tubercule les met en contact et libère du cyanure —
+  d'où la préparation obligatoire avant consommation, qui coûte au passage protéines et vitamines.
+source_url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC3075754/"
