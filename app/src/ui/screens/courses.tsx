@@ -13,10 +13,8 @@
 // restes que le planning place ensuite (§7.4 ENGINE). Diviser par les convives ferait acheter de
 // quoi cuisiner un demi-plat et supprimerait ces restes. Ne pas « corriger » ça ici.
 //
-// PÉRIMÈTRE — ce que §4.3 décrit et qui n'est PAS ici : l'autocomplétion sur les aliments du
-// catalogue (un ajout manuel est un article en texte libre, sans `FoodId`), « Que cuisiner avec ? »
-// et « Vider le frigo » pré-rempli (l'écran 4.5 n'existe pas), l'impression et l'export CSV/JSON du
-// menu discret, et le découpage en deux virées de courses (`joursDeCourses`, §7.4).
+// PÉRIMÈTRE — ce que §4.3 décrit et qui n'est PAS ici : l'impression et l'export CSV/JSON du menu
+// discret, et le découpage en deux virées de courses (`joursDeCourses`, §7.4).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type {
@@ -34,6 +32,7 @@ import {
   addExtraItem,
   readAllergies,
   readLatestPlan,
+  readPantryFoodIds,
   readShoppingList,
   removeExtraItem,
   saveShoppingList,
@@ -45,6 +44,7 @@ import {
 import { LIBELLE_COURT } from '../champs-profil.js'
 import { LIBELLE_CRENEAU, aujourdhuiIso, chargerSocle, cleCreneau, profilCourant } from '../socle.js'
 import { hashDe, hashDuFrigo } from '../router.js'
+import { LienTutoriel } from '../lien-tutoriel.js'
 
 /** Les dix rayons de §4.3 — texte libre côté base, liste fermée côté saisie pour rester rangeable. */
 const RAYONS_EXTRA: readonly string[] = [
@@ -70,6 +70,13 @@ const LIBELLE_RANGEMENT: Readonly<Record<Rangement, string>> = {
 
 interface Vue {
   readonly liste: ShoppingList
+  /**
+   * Les articles écartés de `liste` parce qu'ils sont déclarés au garde-manger (§4.5, décision 41 c
+   * ETAT.md). `buildShoppingList` ne les MARQUE pas, il les RETIRE — voir l'en-tête du fichier
+   * `shopping-list.ts` (`if (deja.has(ingredient.foodId)) continue`). Cette liste est donc calculée
+   * ICI, par différence avec une liste construite sans l'option, plutôt que lue sur `liste` elle-même.
+   */
+  readonly dejaChezVous: readonly ShoppingListItem[]
   readonly enregistree: StoredShoppingList
   readonly nomAliment: (id: FoodId) => string
   readonly platDuCreneau: (slot: SlotRef) => string | null
@@ -103,7 +110,15 @@ async function calculerVue(): Promise<Etat> {
 
   profilCourant(socle.db, aujourdhuiIso())
   let enregistree = readShoppingList(socle.db)
-  const liste = socle.moteur.buildShoppingList(plan)
+  const pantryFoodIds = readPantryFoodIds(socle.db)
+  const liste = socle.moteur.buildShoppingList(plan, { pantryFoodIds })
+
+  // « Déjà chez vous » — voir l'en-tête de `Vue.dejaChezVous`. Une seule liste de référence
+  // (sans l'option) suffit : `pantryFoodIds` n'AJOUTE aucune ligne, il n'en retire.
+  const dejaChezVous =
+    pantryFoodIds.length === 0
+      ? []
+      : socle.moteur.buildShoppingList(plan).items.filter((item) => pantryFoodIds.includes(item.foodId))
 
   if (enregistree === null || enregistree.planId !== plan.id) {
     saveShoppingList(socle.db, liste)
@@ -125,6 +140,7 @@ async function calculerVue(): Promise<Etat> {
     phase: 'pret',
     vue: {
       liste,
+      dejaChezVous,
       enregistree,
       nomAliment: (id) => socle.catalogue.foods.get(id)?.nom ?? id,
       platDuCreneau: (slot) => platParCreneau.get(cleCreneau(slot.date, slot.creneau)) ?? null,
@@ -271,7 +287,10 @@ export function Courses() {
   if (etat.phase === 'sans_plan') {
     return (
       <section>
-        <h1 className="text-[2.1rem] text-texte">Mes courses</h1>
+        <h1 data-visite="titre-courses" className="text-[2.1rem] text-texte">
+          Mes courses
+        </h1>
+        <LienTutoriel parcoursId="courses" />
         <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
           La liste se construit à partir de votre semaine.
         </p>
@@ -301,7 +320,10 @@ export function Courses() {
 
   return (
     <section>
-      <h1 className="text-[2.1rem] text-texte">Mes courses</h1>
+      <h1 data-visite="titre-courses" className="text-[2.1rem] text-texte">
+        Mes courses
+      </h1>
+      <LienTutoriel parcoursId="courses" />
       {/* La semaine d'abord, le compteur EN DESSOUS et sur sa propre ligne : accolés par un point
           médian, on lisait « du 3 au 9 août · 12 sur 40 » comme une seule information. */}
       <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">{plageDuPlan(vue.liste)}</p>
@@ -322,7 +344,7 @@ export function Courses() {
         sous « Reste du plat de la veille ».
       </p>
 
-      <fieldset className="mt-5">
+      <fieldset data-visite="ranger-courses" className="mt-5">
         <legend className="text-[0.9rem] text-texte-doux">Ranger par</legend>
         <div className="mt-2 flex gap-2">
           {(['rayon', 'repas', 'jour'] as const).map((valeur) => (
@@ -347,6 +369,7 @@ export function Courses() {
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
+          data-visite="ajouter-article"
           onClick={() => setAjoutOuvert((ouvert) => !ouvert)}
           className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] bg-accent-plein px-4 text-[1rem] font-semibold text-white"
         >
@@ -403,6 +426,55 @@ export function Courses() {
           />
         )}
       </div>
+
+      {vue.dejaChezVous.length > 0 && (
+        <DejaChezVous items={vue.dejaChezVous} nomAliment={vue.nomAliment} />
+      )}
+    </section>
+  )
+}
+
+/**
+ * Section « Déjà chez vous » — les articles écartés de la liste parce qu'ils sont déclarés au
+ * garde-manger. Distincte et nommée exprès : un article qui disparaît en silence est un défaut pire
+ * que la ligne en trop qu'on raye (voir `Vue.dejaChezVous`). Non cochable : ce n'est pas une liste à
+ * acheter, il n'y a rien à y cocher.
+ *
+ * ⚠️ ELLE PORTE LE CHEMIN POUR SE CORRIGER, et c'est la moitié qui manquait. Un garde-manger se
+ * périme dans la vraie vie — on a mangé les poireaux et on ne l'a dit à personne. Nommer le retrait
+ * sans offrir le moyen de le défaire laisse l'utilisateur devant un article manquant qu'il voit,
+ * comprend, et ne peut pas récupérer sans deviner par quel écran passer. Le lien va vers « Vider le
+ * frigo », qui est l'endroit unique où ce garde-manger se règle (`hashDuFrigo`, §4.5 DESIGN).
+ */
+function DejaChezVous({
+  items,
+  nomAliment,
+}: {
+  readonly items: readonly ShoppingListItem[]
+  readonly nomAliment: (id: FoodId) => string
+}) {
+  return (
+    <section className="mt-6">
+      <h2 className="font-titre text-[1.25rem] text-texte">Déjà chez vous ({items.length})</h2>
+      <p className="mt-1 text-[0.9rem] leading-relaxed text-attenue">
+        Retirés de la liste parce qu'ils sont dans votre garde-manger.
+      </p>
+      <a
+        href={hashDuFrigo()}
+        className="mt-2 flex min-h-tactile items-center rounded-[0.7rem] text-[0.92rem] font-semibold text-accent-texte underline"
+      >
+        Vous ne les avez plus ? Modifiez votre garde-manger
+      </a>
+      <ul className="mt-2 divide-y divide-bordure rounded-[--radius-carte] border border-bordure bg-surface">
+        {items.map((item) => (
+          <li key={item.foodId} className="flex items-center gap-3 px-3 py-2">
+            <span className="flex-1 text-[1rem] text-texte-doux">{nomAliment(item.foodId)}</span>
+            <span className="shrink-0 text-[0.9rem] tabular-nums text-attenue">
+              {item.quantiteTotale} {item.unite}
+            </span>
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }

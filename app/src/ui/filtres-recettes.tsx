@@ -15,11 +15,18 @@
 // sont français et `italienne` afficherait 0 — alors que désélectionner `française` ramènerait 19
 // recettes. Chaque écran calcule donc les comptes d'un axe en appliquant tous les filtres SAUF lui.
 //
-// ⚠️ SIX AXES, TROIS EN ACCÈS DIRECT — retour d'essai explicite : « la cuisine est à deux gestes »,
-// « plus de filtres = autres filtres en plus ». Cuisine, Régime et Service ouvrent chacun SA PROPRE
-// fenêtre en un tap ; Style, Occasion et Envergure vivent derrière « Plus de filtres », qui ne les
-// duplique JAMAIS. Le geste se réduit en répartissant, pas en dépliant en place — §1 panneau.tsx
-// explique pourquoi un dépliant est écarté (contrainte d'âge du produit).
+// ⚠️ SIX AXES, TROIS EN PASTILLES DANS LE FLUX — décision 46 (docs/ETAT.md), 2026-08-02. Cuisine,
+// Régime et Service montrent leurs valeurs fréquentes SANS LE MOINDRE TAP ; Style, Occasion et
+// Envergure vivent derrière « Plus de filtres », qui ne les duplique JAMAIS. Le retour d'essai
+// demandait des facettes DÉPLIANTES (« et non passer par plus de filtres ») ; le grief mesurable
+// était « la cuisine est à deux gestes », et il se traite en RETIRANT le geste, pas en dépliant —
+// §1 panneau.tsx explique pourquoi un dépliant reste écarté (contrainte d'âge du produit).
+//
+// ⚠️ COMBIEN DE PASTILLES, ET LESQUELLES : ÇA SE DÉDUIT DES DONNÉES, jamais d'une liste écrite ici.
+// `PASTILLES_EN_LIGNE` (voir sa déclaration) tranche seul : un axe assez court tient entier et n'a
+// AUCUNE fenêtre, un axe long montre sa tête et renvoie sa traîne derrière « Tout voir ». Le
+// catalogue d'aujourd'hui fait que régime et service n'ont pas de fenêtre et que cuisine en a une —
+// ce n'est écrit nulle part, et un cinquième régime la ferait revenir toute seule.
 //
 // ⚠️ SERVICE ET ENVERGURE NE SONT PAS DES FACETTES. `recette.service` (`CourseKind`) et
 // `recette.envergure` (`RecipeEnvergure`) sont des champs directs de `Recipe`, pas des
@@ -163,6 +170,14 @@ export function compterEnvergure(
   return comptes
 }
 
+/** Un axe à ≤ `PASTILLES_EN_LIGNE` valeurs tient ENTIER sur la ligne — décision 46 (docs/ETAT.md) :
+ *  zéro geste pour le cas courant, donc pas de fenêtre à ouvrir quand il n'y a rien à cacher. Mesuré
+ *  sur le catalogue réel : régime (4) et service (4) passent tout juste ce seuil, cuisine (26) ne le
+ *  passerait à aucun seuil raisonnable. Un axe qui dépasse montre ses 4 premières valeurs (ordre
+ *  déjà trié par `valeursDeFacette`/`valeursDeService`, jamais retrié ici) puis « Tout voir › », qui
+ *  ouvre la fenêtre existante pour le reste. */
+const PASTILLES_EN_LIGNE = 4
+
 type Panneau6 = 'cuisine' | 'regime' | 'service' | 'plus' | null
 
 export function FiltresRecettes({
@@ -201,10 +216,36 @@ export function FiltresRecettes({
 
   return (
     <>
-      {/* Trois axes en ACCÈS DIRECT, un geste chacun (voir l'en-tête). */}
-      <BoutonAxe titre="Cuisine" nombreChoisi={filtres.cuisines.length} onOuvrir={() => setPanneauOuvert('cuisine')} />
-      <BoutonAxe titre="Régime" nombreChoisi={filtres.regimes.length} onOuvrir={() => setPanneauOuvert('regime')} />
-      <BoutonAxe titre="Service" nombreChoisi={filtres.services.length} onOuvrir={() => setPanneauOuvert('service')} />
+      {/* Trois axes EN PASTILLES, DANS LE FLUX — décision 46. Chacun montre ses valeurs fréquentes
+          sans le moindre tap ; seule la traîne d'un axe long reste derrière « Tout voir ». */}
+      <AxeEnLigne
+        cle="cuisine"
+        titre="Cuisine"
+        valeurs={cuisines}
+        comptes={comptes.facettes.get('cuisine' as FacetteKind)}
+        choisies={filtres.cuisines}
+        onBasculer={onBasculerCuisine}
+        onToutVoir={() => setPanneauOuvert('cuisine')}
+      />
+      <AxeEnLigne
+        cle="regime"
+        titre="Régime"
+        valeurs={regimes}
+        comptes={comptes.facettes.get('regime' as FacetteKind)}
+        choisies={filtres.regimes}
+        onBasculer={onBasculerRegime}
+        onToutVoir={() => setPanneauOuvert('regime')}
+      />
+      <AxeEnLigne
+        cle="service"
+        titre="Service"
+        valeurs={services}
+        comptes={comptes.services}
+        choisies={filtres.services}
+        libelleDe={(v) => LIBELLE_SERVICE[v]}
+        onBasculer={onBasculerService}
+        onToutVoir={() => setPanneauOuvert('service')}
+      />
 
       {/* ⚠️ TOUJOURS VISIBLE, jamais derrière une fenêtre. §4.4 range « le reste » dans le
           dépliant, mais le temps disponible n'est pas un raffinement : c'est le premier critère de
@@ -240,7 +281,6 @@ export function FiltresRecettes({
             valeurs={cuisines}
             comptes={comptes.facettes.get('cuisine' as FacetteKind)}
             choisies={filtres.cuisines}
-            toutesLesValeurs
             onBasculer={onBasculerCuisine}
           />
         </Panneau>
@@ -253,7 +293,6 @@ export function FiltresRecettes({
             valeurs={regimes}
             comptes={comptes.facettes.get('regime' as FacetteKind)}
             choisies={filtres.regimes}
-            toutesLesValeurs
             onBasculer={onBasculerRegime}
           />
         </Panneau>
@@ -267,7 +306,6 @@ export function FiltresRecettes({
             comptes={comptes.services}
             choisies={filtres.services}
             libelleDe={(v) => LIBELLE_SERVICE[v]}
-            toutesLesValeurs
             onBasculer={onBasculerService}
           />
         </Panneau>
@@ -280,7 +318,6 @@ export function FiltresRecettes({
             valeurs={styles}
             comptes={comptes.facettes.get('style' as FacetteKind)}
             choisies={filtres.styles}
-            toutesLesValeurs
             onBasculer={onBasculerStyle}
           />
           <Pastilles
@@ -288,7 +325,6 @@ export function FiltresRecettes({
             valeurs={occasions}
             comptes={comptes.facettes.get('occasion' as FacetteKind)}
             choisies={filtres.occasions}
-            toutesLesValeurs
             onBasculer={onBasculerOccasion}
           />
           <Pastilles
@@ -297,7 +333,6 @@ export function FiltresRecettes({
             comptes={comptes.envergures}
             choisies={filtres.envergures}
             libelleDe={(v) => LIBELLE_ENVERGURE[v]}
-            toutesLesValeurs
             onBasculer={onBasculerEnvergure}
           />
         </Panneau>
@@ -353,12 +388,90 @@ function BoutonAxe({
   )
 }
 
+/**
+ * Un axe en pastilles, permanentes dans le flux (décision 46, docs/ETAT.md) — jamais un dépliant
+ * (voir l'en-tête de panneau.tsx). En dessous de `PASTILLES_EN_LIGNE` valeurs, tout tient sur la
+ * ligne et il n'y a rien d'autre à faire. Au-dessus, seules les premières valeurs (ordre déjà trié
+ * par la fonction source, jamais retrié ici) plus toute valeur DÉJÀ CHOISIE — même hors de ce
+ * rang — restent visibles ; le reste vit derrière « Tout voir », qui ouvre la fenêtre existante.
+ */
+function AxeEnLigne<T extends string>({
+  cle,
+  titre,
+  valeurs,
+  comptes,
+  choisies,
+  libelleDe,
+  onBasculer,
+  onToutVoir,
+}: {
+  /** Identité STABLE de l'axe pour `ui/visite.tsx` (`data-visite="filtre-${cle}"`) — jamais dérivée
+   *  de `titre` : « Régime » porte un accent et un libellé se reformule, une clé est une identité. */
+  readonly cle: string
+  readonly titre: string
+  readonly valeurs: readonly { readonly valeur: T; readonly nombre: number }[]
+  readonly comptes: ReadonlyMap<T, number> | undefined
+  readonly choisies: readonly T[]
+  readonly libelleDe?: (valeur: T) => string
+  readonly onBasculer: (valeur: T) => void
+  readonly onToutVoir: () => void
+}) {
+  const nomDe = libelleDe ?? ((v: T) => v)
+  const aUneFenetre = valeurs.length > PASTILLES_EN_LIGNE
+  // Ordre STABLE : on filtre `valeurs`, on ne le retrie jamais (une pastille qui change de place
+  // sous le doigt est exactement ce que la contrainte d'âge du produit interdit).
+  const visibles = aUneFenetre
+    ? valeurs.filter((v, i) => i < PASTILLES_EN_LIGNE || choisies.includes(v.valeur))
+    : valeurs
+
+  return (
+    <fieldset data-visite={`filtre-${cle}`} className="mt-4">
+      <legend className="text-[0.9rem] text-texte-doux">{titre}</legend>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {visibles.map((v) => {
+          const nombre = comptes?.get(v.valeur) ?? 0
+          const active = choisies.includes(v.valeur)
+          return (
+            <Pastille
+              key={v.valeur}
+              libelle={`${nomDe(v.valeur)} (${nombre})`}
+              active={active}
+              inerte={nombre === 0 && !active}
+              onBasculer={() => onBasculer(v.valeur)}
+            />
+          )
+        })}
+        {aUneFenetre && (
+          // ⚠️ `aria-haspopup="dialog"`, PAS `aria-expanded` : ce bouton ouvre une fenêtre, il ne
+          // déplie rien ici (même raison que `BoutonAxe`, voir son en-tête).
+          <button
+            type="button"
+            onClick={onToutVoir}
+            aria-haspopup="dialog"
+            className="flex min-h-tactile items-center px-1 text-[0.92rem] font-semibold text-accent underline"
+          >
+            Tout voir ({valeurs.length}) ›
+          </button>
+        )}
+      </div>
+    </fieldset>
+  )
+}
+
+/**
+ * TOUTES les valeurs d'un axe, sans exception — c'est le contenu d'une fenêtre, et une fenêtre
+ * nommée « Tout voir » qui cacherait quelque chose serait un mensonge. Le tri en sous-ensemble est
+ * le travail d'`AxeEnLigne`, jamais celui-ci.
+ *
+ * ⚠️ Ce composant portait une prop `toutesLesValeurs` dont la branche `false` ne rendait que les
+ * valeurs SÉLECTIONNÉES. Ses six appels la passaient tous : c'était du code mort, et un septième
+ * appel qui l'aurait oubliée aurait silencieusement affiché une fenêtre presque vide. Retirée.
+ */
 function Pastilles<T extends string>({
   titre,
   valeurs,
   comptes,
   choisies,
-  toutesLesValeurs = false,
   libelleDe,
   onBasculer,
 }: {
@@ -366,21 +479,16 @@ function Pastilles<T extends string>({
   readonly valeurs: readonly { readonly valeur: T; readonly nombre: number }[]
   readonly comptes: ReadonlyMap<T, number> | undefined
   readonly choisies: readonly T[]
-  readonly toutesLesValeurs?: boolean
   readonly libelleDe?: (valeur: T) => string
   readonly onBasculer: (valeur: T) => void
 }) {
   const nomDe = libelleDe ?? ((v: T) => v)
-  // ⚠️ ORDRE STABLE, issu de la fréquence GLOBALE (ou de l'ordre naturel pour service/envergure), et
-  // non de la fréquence du moment. Réordonner les pastilles à chaque frappe les ferait danser sous
-  // le doigt. Seuls les COMPTES bougent.
-  const visibles = toutesLesValeurs ? valeurs : valeurs.filter((v) => choisies.includes(v.valeur))
 
   return (
     <fieldset className="mt-4">
       <legend className="text-[0.9rem] text-texte-doux">{titre}</legend>
       <div className="mt-2 flex flex-wrap gap-2">
-        {visibles.map((v) => {
+        {valeurs.map((v) => {
           const nombre = comptes?.get(v.valeur) ?? 0
           const active = choisies.includes(v.valeur)
           return (

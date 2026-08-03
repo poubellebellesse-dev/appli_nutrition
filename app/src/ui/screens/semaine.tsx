@@ -41,6 +41,7 @@ import { REPAS_PAR_DEFAUT, creneauxDuRythme } from '../creneau.js'
 import { readDisplay, readMealTimes } from '../../data/user-store.js'
 import { rappelsDuPlan } from '../rappel.js'
 import { reprogrammer, toutAnnuler } from '../notifications.js'
+import { LienTutoriel } from '../lien-tutoriel.js'
 
 // Le mapping « nombre de repas → créneaux » a été remonté dans `ui/creneau.ts` quand l'écran
 // Aujourd'hui en a eu besoin à son tour : deux copies auraient donné une semaine et un écran du jour
@@ -202,8 +203,8 @@ export function Semaine() {
   /** Plats refusés créneau par créneau — §7.2 : c'est ce qui rend le refus RÉPÉTÉ possible. */
   const [refus, setRefus] = useState<ReadonlyMap<string, readonly RecipeId[]>>(new Map())
   const [premierRendu, setPremierRendu] = useState(true)
-  /** Réglage « alertes en version courte » (Paramètres). Le marqueur reste, le détail se replie. */
-  const [alertesDiscretes, setAlertesDiscretes] = useState(false)
+  /** Mode avancé (Paramètres, `afficher_macros`) : gouverne aussi l'avertissement de plancher — §6.5 ARCHITECTURE. */
+  const [modeAvance, setModeAvance] = useState(false)
 
   const echouer = useCallback((erreur: unknown) => {
     setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
@@ -218,7 +219,7 @@ export function Semaine() {
         if (annule) return
         const repris = reprendre(socle, reglages)
         setReglages(repris.reglages)
-        setAlertesDiscretes(readDisplay(socle.db).alertesDiscretes)
+        setModeAvance(readDisplay(socle.db).afficherMacros)
         setEtat(repris.vue === null ? { phase: 'vide' } : { phase: 'pret', vue: repris.vue })
         setPremierRendu(false)
       })
@@ -325,7 +326,10 @@ export function Semaine() {
 
   return (
     <section>
-      <h1 className="text-[2.1rem] text-texte">Ma semaine</h1>
+      <h1 data-visite="titre-semaine" className="text-[2.1rem] text-texte">
+        Ma semaine
+      </h1>
+      <LienTutoriel parcoursId="semaine" />
       <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
         {formaterPlage(dates)} · {plan.entries.filter((e) => e.recipeId !== null).length} repas prévus
       </p>
@@ -337,6 +341,7 @@ export function Semaine() {
           découvrait les réglages qu'on aurait voulu changer d'abord. On règle, puis on relance. */}
       <button
         type="button"
+        data-visite="autre-semaine"
         onClick={() => replanifier({ ...reglages, graine: reglages.graine + 1 })}
         className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white"
       >
@@ -344,7 +349,7 @@ export function Semaine() {
       </button>
       <p className="mt-2 text-[0.9rem] text-attenue">Vos repas gardés ne changeront pas.</p>
 
-      <AlerteEnergie warnings={plan.warnings} discrete={alertesDiscretes} />
+      {modeAvance && <AlerteEnergie warnings={plan.warnings} />}
 
       <Legende />
 
@@ -390,7 +395,10 @@ function SemaineVide({
 }) {
   return (
     <section>
-      <h1 className="text-[2.1rem] text-texte">Ma semaine</h1>
+      <h1 data-visite="titre-semaine" className="text-[2.1rem] text-texte">
+        Ma semaine
+      </h1>
+      <LienTutoriel parcoursId="semaine" />
       <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
         Rien de prévu pour l'instant. Composez une semaine quand vous voulez — vous pourrez changer
         chaque repas ensuite.
@@ -401,6 +409,7 @@ function SemaineVide({
 
       <button
         type="button"
+        data-visite="composer-semaine"
         onClick={onComposer}
         className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white"
       >
@@ -420,29 +429,29 @@ function SemaineVide({
 /**
  * L'avertissement de plancher calorique — §6.5 ARCHITECTURE.
  *
- * ⚠️ LE MARQUEUR RESTE TOUJOURS VISIBLE, LE DÉTAIL PART EN FENÊTRE. Le bloc listait autrefois
- * chaque journée en clair, en permanence : sur une semaine un peu légère, sept lignes rouges
- * accueillaient l'utilisateur à chaque visite. Une version dépliante EN PLACE a suivi, mais un
- * dépliant pousse tout ce qui suit vers le bas au tap — précisément ce que `Panneau` existe pour
+ * ⚠️ AMENDEMENT du 2026-08-02 : ce composant n'est monté QUE si le mode avancé est actif
+ * (`afficher_macros`, case « Afficher plus de détails » du panneau Réglages d'affichage).
+ * L'avertissement n'est plus affiché par défaut — `checkCalorieFloor` continue de tourner à chaque
+ * plan et `WeekPlan.warnings` reste toujours peuplé, seul l'affichage est devenu conditionnel. Voir
+ * `parent (Semaine)` pour la condition de montage, et ARCHITECTURE.md §6.5 pour le raisonnement.
+ *
+ * Le réglage « version courte » (`alertes_discretes`) a disparu avec cet amendement : il n'avait de
+ * sens que pour raccourcir un texte visible par défaut, et n'a donc plus d'objet. Le libellé
+ * conservé est le long (« … apporte(nt) moins d'énergie que la référence habituelle. »).
+ *
+ * ⚠️ LE MARQUEUR RESTE TOUJOURS VISIBLE UNE FOIS MONTÉ, LE DÉTAIL PART EN FENÊTRE. Le bloc listait
+ * autrefois chaque journée en clair, en permanence : sur une semaine un peu légère, sept lignes
+ * rouges accueillaient l'utilisateur à chaque visite. Une version dépliante EN PLACE a suivi, mais
+ * un dépliant pousse tout ce qui suit vers le bas au tap — précisément ce que `Panneau` existe pour
  * éviter (voir son en-tête). Le marqueur (icône + résumé) reste dans le flux de l'écran ; le détail
  * (une ligne par jour) s'ouvre désormais dans une fenêtre en superposition, et la semaine en
- * dessous ne bouge plus. Ce que le réglage « version courte » raccourcit encore — mais NI L'UN NI
- * L'AUTRE ne fait disparaître le marqueur : l'avertissement prévient sans interdire, encore faut-il
- * qu'il prévienne.
+ * dessous ne bouge plus.
  */
-function AlerteEnergie({
-  warnings,
-  discrete,
-}: {
-  readonly warnings: WeekPlan['warnings']
-  readonly discrete: boolean
-}) {
+function AlerteEnergie({ warnings }: { readonly warnings: WeekPlan['warnings'] }) {
   const [panneauOuvert, setPanneauOuvert] = useState(false)
   if (warnings.length === 0) return null
 
-  const resume = discrete
-    ? `${warnings.length} journée${warnings.length > 1 ? 's' : ''} à surveiller`
-    : `${warnings.length === 1 ? 'Une journée apporte' : `${warnings.length} journées apportent`} moins d'énergie que la référence habituelle.`
+  const resume = `${warnings.length === 1 ? 'Une journée apporte' : `${warnings.length} journées apportent`} moins d'énergie que la référence habituelle.`
 
   return (
     <div

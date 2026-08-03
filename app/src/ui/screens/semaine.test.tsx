@@ -45,9 +45,17 @@ beforeEach(() => {
 afterEach(cleanup)
 
 /** Monte l'écran, sans attendre d'état particulier. */
+// ⚠️ `ProvenanceLancerParcours` IMPORTÉ DYNAMIQUEMENT, PAS EN TÊTE DE FICHIER — voir
+// `courses.test.tsx` : `vi.resetModules()` en `beforeEach` figerait sinon un `Context` React
+// distinct de celui que `Semaine` utilise réellement dans `<LienTutoriel>`.
 async function monter() {
   const { Semaine } = await import('./semaine.js')
-  render(<Semaine />)
+  const { ProvenanceLancerParcours } = await import('../lancer-parcours.js')
+  render(
+    <ProvenanceLancerParcours value={() => undefined}>
+      <Semaine />
+    </ProvenanceLancerParcours>
+  )
 }
 
 /** Monte et attend l'état de départ — aucune semaine composée. */
@@ -221,11 +229,40 @@ describe('semaine — les alertes d’énergie', () => {
     }
   }
 
-  it('le marqueur reste visible en permanence, le détail s’ouvre en fenêtre au tap', async () => {
-    // §6.5 ARCHITECTURE : le marqueur ne doit JAMAIS être absent. Le détail (une ligne par jour) ne
-    // s'affiche plus en bloc sous le marqueur — il s'ouvre désormais dans une fenêtre en
-    // superposition (`Panneau`), c'est le sujet de la correction documentée en tête de
-    // `AlerteEnergie` dans `semaine.tsx`.
+  /** Fonction utilitaire : le réglage `afficher_macros` (Paramètres) gouverne le mode avancé. */
+  function activerModeAvance() {
+    writeDisplay(baseCourante(), {
+      afficherMacros: true,
+      gestesBalayage: false,
+      alertesDiscretes: false,
+      bandeauStockageMasque: false,
+      rappelsActifs: false,
+      visiteProposee: false,
+    })
+  }
+
+  it('mode avancé INACTIF (le défaut) : l’avertissement n’apparaît nulle part à l’écran', async () => {
+    // AMENDEMENT du 2026-08-02 (ARCHITECTURE.md §6.5) : l'avertissement de plancher n'est plus
+    // affiché par défaut, seulement en mode avancé. `checkCalorieFloor` tourne toujours et
+    // `WeekPlan.warnings` reste peuplé — seul l'AFFICHAGE devient conditionnel. Regex, pas
+    // `queryByText` sur une chaîne nue : un `null` ne prouve rien si le libellé réel diffère d'un
+    // préfixe — voir FICHE_REPRISE.md.
+    savePlan(baseCourante(), planAvecAlerte(), '2026-08-01T00:00:00.000Z')
+    await monter()
+    await screen.findByText('Proposer une autre semaine')
+
+    expect(screen.queryByText(/journée.*apporte.*moins d.énergie/)).toBeNull()
+    expect(screen.queryByText(/journée.*à surveiller/)).toBeNull()
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('mode avancé actif : le marqueur reste visible en permanence, le détail s’ouvre en fenêtre au tap', async () => {
+    // §6.5 ARCHITECTURE : une fois monté (mode avancé actif), le marqueur ne doit JAMAIS être
+    // absent. Le détail (une ligne par jour) ne s'affiche plus en bloc sous le marqueur — il
+    // s'ouvre désormais dans une fenêtre en superposition (`Panneau`), c'est le sujet de la
+    // correction documentée en tête de `AlerteEnergie` dans `semaine.tsx`.
+    activerModeAvance()
     savePlan(baseCourante(), planAvecAlerte(), '2026-08-01T00:00:00.000Z')
     await monter()
     await screen.findByText('Proposer une autre semaine')
@@ -253,10 +290,11 @@ describe('semaine — les alertes d’énergie', () => {
     expect(screen.getByText(/Une journée apporte moins d.énergie/)).toBeDefined()
   })
 
-  it('n’allonge pas la semaine en dessous : la fenêtre de détail est un enfant direct de document.body', async () => {
+  it('mode avancé actif : n’allonge pas la semaine en dessous — la fenêtre de détail est un enfant direct de document.body', async () => {
     // Le point de fond de la conversion en superposition (voir panneau.tsx) : le `dialog` doit être
     // un enfant du PORTAIL (document.body), jamais un nœud inséré dans le flux des journées — sinon
     // ouvrir le détail repousserait la liste des repas vers le bas exactement comme avant.
+    activerModeAvance()
     savePlan(baseCourante(), planAvecAlerte(), '2026-08-01T00:00:00.000Z')
     await monter()
     await screen.findByText('Proposer une autre semaine')
@@ -266,29 +304,5 @@ describe('semaine — les alertes d’énergie', () => {
 
     const dialogue = await screen.findByRole('dialog')
     expect(dialogue.parentElement).toBe(document.body)
-  })
-
-  it('le réglage « alertes discrètes » raccourcit le résumé, sans faire disparaître le marqueur', async () => {
-    // Le code est explicite là-dessus : « NI L'UN NI L'AUTRE ne fait disparaître le marqueur ».
-    // `alertesDiscretes` change le TEXTE, pas la présence de l'alerte — ce test vérifie exactement
-    // ce que le code fait, pas ce qu'un nom de réglage pourrait laisser supposer.
-    writeDisplay(baseCourante(), {
-      afficherMacros: false,
-      gestesBalayage: false,
-      alertesDiscretes: true,
-      bandeauStockageMasque: false,
-      rappelsActifs: false,
-      visiteProposee: false,
-    })
-    savePlan(baseCourante(), planAvecAlerte(), '2026-08-01T00:00:00.000Z')
-    await monter()
-    await screen.findByText('Proposer une autre semaine')
-
-    expect(screen.queryByText(/Une journée apporte moins d.énergie/)).toBeNull()
-    const resume = screen.getByText(/1 journée à surveiller/)
-    fireEvent.click(resume.closest('button')!)
-
-    const dialogue = await screen.findByRole('dialog')
-    expect(within(dialogue).getByText(/kcal pour une référence de/)).toBeDefined()
   })
 })

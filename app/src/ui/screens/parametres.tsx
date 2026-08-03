@@ -51,6 +51,9 @@ import { creneauxDuRythme } from '../creneau.js'
 import { demanderAutorisation, etatNotifications, type EtatNotifications } from '../notifications.js'
 import type { StoredRythme } from '../../data/user-store.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
+import { PARCOURS } from '../parcours.js'
+import { useLancerParcours } from '../lancer-parcours.js'
+import { LienTutoriel } from '../lien-tutoriel.js'
 
 /**
  * ⚠️ LA VUE RÉUTILISE `ChoixProfil`, elle n'en redéclare pas une variante. Cet écran portait sa
@@ -70,7 +73,7 @@ type Etat =
   | { readonly phase: 'erreur'; readonly message: string }
 
 /** Le panneau actuellement ouvert, ou aucun. Un seul à la fois — c'est une fenêtre plein écran. */
-type PanneauId = 'allergies' | 'regime' | 'rythme' | 'affichage' | 'rappels' | 'apropos'
+type PanneauId = 'allergies' | 'regime' | 'rythme' | 'affichage' | 'rappels' | 'tutoriels' | 'apropos'
 
 async function lireVue(): Promise<Vue> {
   const socle = await chargerSocle()
@@ -107,7 +110,7 @@ function resumeRythme(rythme: StoredRythme): string {
 }
 
 function resumeAffichage(affichage: StoredDisplay): string {
-  const reglages = [affichage.gestesBalayage, affichage.alertesDiscretes, affichage.afficherMacros]
+  const reglages = [affichage.gestesBalayage, affichage.afficherMacros]
   const actifs = reglages.filter(Boolean).length
   return `${actifs} activé${actifs === 1 ? '' : 's'} sur ${reglages.length}`
 }
@@ -116,7 +119,8 @@ function resumeRappels(actifs: boolean): string {
   return actifs ? 'Activés' : 'Désactivés'
 }
 
-export function Parametres({ onLancerVisite }: { readonly onLancerVisite: () => void }) {
+export function Parametres() {
+  const lancerParcours = useLancerParcours()
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [panneauOuvert, setPanneauOuvert] = useState<PanneauId | null>(null)
 
@@ -178,7 +182,10 @@ export function Parametres({ onLancerVisite }: { readonly onLancerVisite: () => 
 
   return (
     <section>
-      <h1 className="text-[2.1rem] text-texte">Paramètres</h1>
+      <h1 data-visite="titre-parametres" className="text-[2.1rem] text-texte">
+        Paramètres
+      </h1>
+      <LienTutoriel parcoursId="reglages" />
       <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
         Tout se modifie à tout moment. Rien n'est envoyé nulle part.
       </p>
@@ -189,6 +196,7 @@ export function Parametres({ onLancerVisite }: { readonly onLancerVisite: () => 
             libelle="Mes allergies"
             valeur={resumeAllergenes(vue.catalogue, vue.allergenes)}
             onOuvrir={() => setPanneauOuvert('allergies')}
+            dataVisite="allergies"
           />
           <LigneOuvrante
             libelle="Mon régime"
@@ -209,6 +217,7 @@ export function Parametres({ onLancerVisite }: { readonly onLancerVisite: () => 
             libelle="Réglages d'affichage"
             valeur={resumeAffichage(vue.affichage)}
             onOuvrir={() => setPanneauOuvert('affichage')}
+            dataVisite="reglages-affichage"
           />
         </div>
       </Section>
@@ -226,12 +235,12 @@ export function Parametres({ onLancerVisite }: { readonly onLancerVisite: () => 
       <Section titre="Aide">
         <div className="space-y-2">
           {/* Rejouable : `visite_proposee` ne dit que « on l'a déjà proposée une fois », jamais
-              « déjà terminée » (voir `ui/visite.tsx`) — cette ligne relance le même tutoriel sans
-              condition, à tout moment. */}
+              « déjà terminé » (voir `ui/parcours.ts`) — cette ligne ouvre la liste des HUIT
+              parcours, dérivée de `PARCOURS`, jamais recopiée ici. */}
           <LigneOuvrante
-            libelle="Revoir le tutoriel"
-            valeur="Redécouvrez les onglets, pas à pas."
-            onOuvrir={onLancerVisite}
+            libelle="Revoir un tutoriel"
+            valeur="Redécouvrez un écran, pas à pas."
+            onOuvrir={() => setPanneauOuvert('tutoriels')}
           />
         </div>
       </Section>
@@ -292,22 +301,11 @@ export function Parametres({ onLancerVisite }: { readonly onLancerVisite: () => 
                 const affichage = { ...vue.affichage, gestesBalayage: !vue.affichage.gestesBalayage }
                 appliquer({ ...vue, affichage }, (db) => writeDisplay(db, affichage))
               }}
+              dataVisite="geste-balayage"
             />
             <Case
-              libelle="Alertes de la semaine en version courte"
-              description="Le repère reste visible ; seul le détail jour par jour se replie."
-              cochee={vue.affichage.alertesDiscretes}
-              onBasculer={() => {
-                const affichage = {
-                  ...vue.affichage,
-                  alertesDiscretes: !vue.affichage.alertesDiscretes,
-                }
-                appliquer({ ...vue, affichage }, (db) => writeDisplay(db, affichage))
-              }}
-            />
-            <Case
-              libelle="Afficher les valeurs nutritionnelles détaillées"
-              description="Sur la fiche d'une recette, pour cette portion."
+              libelle="Afficher plus de détails"
+              description="Les valeurs nutritionnelles sur la fiche d'une recette, et l'avertissement d'énergie sur la semaine."
               cochee={vue.affichage.afficherMacros}
               onBasculer={() => {
                 const affichage = { ...vue.affichage, afficherMacros: !vue.affichage.afficherMacros }
@@ -335,6 +333,29 @@ export function Parametres({ onLancerVisite }: { readonly onLancerVisite: () => 
               appliquer({ ...vue, heures }, (db) => writeMealTime(db, creneau, heureMin))
             }}
           />
+        </Panneau>
+      )}
+
+      {panneauOuvert === 'tutoriels' && (
+        <Panneau titre="Revoir un tutoriel" onFermer={fermer}>
+          {/* Dérivée de `PARCOURS`, jamais recopiée : un neuvième parcours ajouté à la table
+              apparaît ici tout seul (voir `ui/parcours.ts`). Choisir une ligne lance le parcours ET
+              referme la fenêtre — si son écran n'est pas celui-ci, `lancerParcours` navigue d'abord
+              (voir `ui/main.tsx`). */}
+          <ul className="space-y-2">
+            {PARCOURS.map((parcours) => (
+              <li key={parcours.id}>
+                <LigneOuvrante
+                  libelle={parcours.titre}
+                  valeur=""
+                  onOuvrir={() => {
+                    lancerParcours(parcours.id)
+                    fermer()
+                  }}
+                />
+              </li>
+            ))}
+          </ul>
         </Panneau>
       )}
 

@@ -42,6 +42,7 @@ import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { REPAS_PAR_DEFAUT, TITRE_CRENEAU, creneauDuMoment, creneauxDuRythme } from '../creneau.js'
 import { Segment } from '../champs-profil.js'
 import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
+import { LienTutoriel } from '../lien-tutoriel.js'
 
 /**
  * Combien de plats on prépare d'avance. Assez pour défiler sans recalculer à chaque flèche, pas
@@ -352,7 +353,9 @@ export function Aujourdhui() {
   if (courante === undefined) {
     return (
       <section>
-        <h1 className="text-[2.1rem] text-texte">{TITRE_CRENEAU[vue.creneau]}</h1>
+        <h1 data-visite="titre-aujourdhui" className="text-[2.1rem] text-texte">
+          {TITRE_CRENEAU[vue.creneau]}
+        </h1>
         <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
           Aucun plat ne correspond à ce que vous avez demandé. Élargissez le temps disponible, ou
           repartez de zéro.
@@ -374,11 +377,14 @@ export function Aujourdhui() {
     <section>
       <header>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="text-[2.1rem] text-texte">{TITRE_CRENEAU[vue.creneau]}</h1>
+          <h1 data-visite="titre-aujourdhui" className="text-[2.1rem] text-texte">
+            {TITRE_CRENEAU[vue.creneau]}
+          </h1>
           <p className="text-[0.9rem] tabular-nums text-attenue">
             {position + 1} sur {total}
           </p>
         </div>
+        <LienTutoriel parcoursId="aujourdhui" />
 
         {/* Un seul créneau au rythme déclaré → rien à choisir, un sélecteur inerte serait pire
             qu'absent. Pastilles côte à côte (`Segment`, comme `ChoixRythme`) : jamais de menu
@@ -407,16 +413,6 @@ export function Aujourdhui() {
         </a>
       </header>
 
-      <CarteRepas
-        suggestion={courante}
-        nom={vue.nomDe(courante.recipeId)}
-        balayageActif={vue.balayageActif}
-        surPrecedent={position > 0 ? () => deplacer(-1, total) : null}
-        surSuivant={position < total - 1 ? () => deplacer(1, total) : null}
-        surRetenir={() => retenir(courante.recipeId, vue.creneau)}
-        surProposerAutreChose={proposerAutreChose}
-      />
-
       {/* §4.1 — « détecter l'indécision PUIS proposer, plutôt qu'interroger d'emblée ». */}
       {doitAider && (
         <EncartEnvie
@@ -434,12 +430,23 @@ export function Aujourdhui() {
       {!doitAider && (
         <button
           type="button"
+          data-visite="envie"
           onClick={() => setAideOuverte(true)}
           className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-texte-doux"
         >
           Dites-moi ce que vous cherchez
         </button>
       )}
+
+      <CarteRepas
+        suggestion={courante}
+        nom={vue.nomDe(courante.recipeId)}
+        balayageActif={vue.balayageActif}
+        surPrecedent={position > 0 ? () => deplacer(-1, total) : null}
+        surSuivant={position < total - 1 ? () => deplacer(1, total) : null}
+        surRetenir={() => retenir(courante.recipeId, vue.creneau)}
+        surProposerAutreChose={proposerAutreChose}
+      />
 
       <PlatsProches
         ids={vue.prochesDe(courante.recipeId as RecipeId)}

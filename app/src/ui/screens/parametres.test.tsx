@@ -41,9 +41,17 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-async function monter(onLancerVisite: () => void = () => undefined) {
+// ⚠️ `ProvenanceLancerParcours` IMPORTÉ DYNAMIQUEMENT, PAS EN TÊTE DE FICHIER — voir
+// `courses.test.tsx` : `vi.resetModules()` en `beforeEach` figerait sinon un `Context` React
+// distinct de celui que `Parametres` utilise réellement (`useLancerParcours`).
+async function monter(lancerParcours: (id: string) => void = () => undefined) {
   const { Parametres } = await import('./parametres.js')
-  render(<Parametres onLancerVisite={onLancerVisite} />)
+  const { ProvenanceLancerParcours } = await import('../lancer-parcours.js')
+  render(
+    <ProvenanceLancerParcours value={lancerParcours}>
+      <Parametres />
+    </ProvenanceLancerParcours>
+  )
   await screen.findByRole('heading', { name: 'Paramètres' })
 }
 
@@ -161,7 +169,7 @@ describe('parametres — les réglages d’affichage', () => {
     // Le défaut a existé — `detail-recette` écrivait `{ afficherMacros }` seul.
     await monter()
     const panneau = ouvrir("Réglages d'affichage")
-    fireEvent.click(panneau.getByText('Afficher les valeurs nutritionnelles détaillées'))
+    fireEvent.click(panneau.getByText('Afficher plus de détails'))
     await waitFor(() => expect(readDisplay(baseCourante()).afficherMacros).toBe(true))
 
     fireEvent.click(panneau.getByText("Changer de plat en balayant l'écran"))
@@ -173,7 +181,7 @@ describe('parametres — les réglages d’affichage', () => {
     await monter()
     const panneau = ouvrir("Réglages d'affichage")
     expect(presseDans(panneau, "Changer de plat en balayant l'écran")).toBe('false')
-    expect(presseDans(panneau, 'Afficher les valeurs nutritionnelles détaillées')).toBe('false')
+    expect(presseDans(panneau, 'Afficher plus de détails')).toBe('false')
   })
 })
 
@@ -203,14 +211,23 @@ describe('parametres — les rappels', () => {
   })
 })
 
-describe('parametres — revoir le tutoriel', () => {
-  it('« Revoir le tutoriel » relance la visite, même si elle a déjà été proposée', async () => {
-    // Cette ligne ne dépend PAS de `visite_proposee` (voir `ui/visite.tsx`) : la déclarer déjà
+describe('parametres — revoir un tutoriel', () => {
+  it('« Revoir un tutoriel » ouvre la liste de TOUS les parcours, dérivée de `PARCOURS`', async () => {
+    // Cette ligne ne dépend PAS de `visite_proposee` (voir `ui/parcours.ts`) : la déclarer déjà
     // proposée ne doit rien changer à sa disponibilité ici.
-    const onLancerVisite = vi.fn()
-    await monter(onLancerVisite)
-    fireEvent.click(screen.getByText('Revoir le tutoriel'))
-    expect(onLancerVisite).toHaveBeenCalledTimes(1)
+    await monter()
+    const panneau = ouvrir('Revoir un tutoriel')
+    expect(panneau.getByText('Découvrir les menus')).toBeDefined()
+    expect(panneau.getByText('Réglages')).toBeDefined()
+  })
+
+  it('choisir un parcours le lance ET referme la fenêtre', async () => {
+    const lancerParcours = vi.fn()
+    await monter(lancerParcours)
+    const panneau = ouvrir('Revoir un tutoriel')
+    fireEvent.click(panneau.getByText('Découvrir les menus'))
+    expect(lancerParcours).toHaveBeenCalledWith('menus')
+    expect(screen.queryByRole('dialog')).toBeNull()
   })
 })
 

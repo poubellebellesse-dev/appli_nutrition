@@ -31,10 +31,22 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-/** Monte l'écran et attend la première carte. */
+/**
+ * Monte l'écran et attend la première carte.
+ *
+ * ⚠️ `ProvenanceLancerParcours` IMPORTÉ DYNAMIQUEMENT, PAS EN TÊTE DE FICHIER — `beforeEach` appelle
+ * `vi.resetModules()` : un import statique figerait un `Context` React d'AVANT la réinitialisation,
+ * distinct de celui que `Aujourdhui` (importé dynamiquement) utilise réellement dans
+ * `<LienTutoriel>` — `useLancerParcours()` lèverait malgré un provider bel et bien monté au-dessus.
+ */
 async function monter() {
   const { Aujourdhui } = await import('./aujourdhui.js')
-  render(<Aujourdhui />)
+  const { ProvenanceLancerParcours } = await import('../lancer-parcours.js')
+  render(
+    <ProvenanceLancerParcours value={() => undefined}>
+      <Aujourdhui />
+    </ProvenanceLancerParcours>
+  )
   await screen.findByText(/sur \d+$/)
 }
 
@@ -155,6 +167,19 @@ describe('aujourdhui — l’encart d’aide', () => {
       'Chaud ou froid ?',
       'Salé ou sucré ?',
     ])
+  })
+})
+
+describe('aujourdhui — l’ordre des blocs', () => {
+  it('« Dites-moi ce que vous cherchez » précède la carte de recette dans le document', async () => {
+    await monter()
+    const boutonEnvie = screen.getByText(/^Dites-moi ce que vous cherchez$/)
+    const carte = document.querySelector('article[data-visite="carte-plat"]') as HTMLElement
+    expect(carte).not.toBeNull()
+    // DOCUMENT_POSITION_FOLLOWING sur `carte` = `carte` vient APRÈS `boutonEnvie`.
+    expect(
+      boutonEnvie.compareDocumentPosition(carte) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
   })
 })
 

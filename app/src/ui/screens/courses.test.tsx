@@ -14,10 +14,11 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import type { JSX } from 'react'
 import type { AllergenId } from '../../engine/domain/index.js'
-import { readShoppingList, savePlan, writeAllergies } from '../../data/user-store.js'
+import { readShoppingList, savePlan, writeAllergies, writePantry } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
-import { hashDe } from '../router.js'
+import { hashDe, hashDuFrigo } from '../router.js'
 
 vi.mock('../catalog-source.js', () => ({ chargerCatalogue: () => Promise.resolve(catalogueDeTest()) }))
 vi.mock('../user-source.js', () => ({
@@ -57,12 +58,31 @@ async function avecUnPlan() {
   return { socle, plan }
 }
 
+/**
+ * Enveloppe MINUSCULE, requise depuis que `Courses` porte `<LienTutoriel>` — voir
+ * `ui/lancer-parcours.tsx` : `useLancerParcours()` lève hors de ce provider.
+ *
+ * ⚠️ `ProvenanceLancerParcours` EST IMPORTÉ DYNAMIQUEMENT ICI, PAS EN TÊTE DE FICHIER. `beforeEach`
+ * appelle `vi.resetModules()` : un import statique figerait un `Context` React d'AVANT la
+ * réinitialisation, tandis que `Courses` (importé dynamiquement dans `monter`) recevrait sa propre
+ * instance de `ui/lancer-parcours.tsx` — deux objets `Context` distincts que `useContext` ne relie
+ * jamais, et `useLancerParcours()` lèverait malgré un provider bel et bien monté au-dessus.
+ */
+async function rendreCourses(Courses: () => JSX.Element) {
+  const { ProvenanceLancerParcours } = await import('../lancer-parcours.js')
+  return render(
+    <ProvenanceLancerParcours value={() => undefined}>
+      <Courses />
+    </ProvenanceLancerParcours>
+  )
+}
+
 /** Monte l'écran et attend qu'il ait quitté la phase `chargement`. Rend le composant, pour pouvoir
  * remonter l'écran (nouveau `render`) sans changer d'import — c'est CE remontage qui prouve qu'un
  * état survit en base et pas seulement dans la mémoire React du premier montage. */
 async function monter() {
   const { Courses } = await import('./courses.js')
-  render(<Courses />)
+  await rendreCourses(Courses)
   await screen.findByRole('heading', { name: 'Mes courses' })
   return Courses
 }
@@ -199,7 +219,7 @@ describe('courses — cocher un article', () => {
     // La chaîne complète : un nouveau montage doit retrouver la case cochée DEPUIS LA BASE, pas
     // depuis un état React qui aurait juste survécu par accident.
     cleanup()
-    render(<Courses />)
+    await rendreCourses(Courses)
     await screen.findByRole('heading', { name: 'Mes courses' })
     const ligneApres = screen.getByText(nom).closest('button') as HTMLButtonElement
     expect(ligneApres.getAttribute('aria-pressed')).toBe('true')
@@ -236,7 +256,7 @@ describe('courses — les articles ajoutés à la main', () => {
     })
 
     cleanup()
-    render(<Courses />)
+    await rendreCourses(Courses)
     await screen.findByRole('heading', { name: 'Mes courses' })
     expect(screen.getByText(/Lessive/)).toBeDefined()
   })
@@ -410,8 +430,49 @@ describe('courses — la note d’allergène sur un article choisi par compléti
     await screen.findByText(/Contient un allergène que vous avez déclaré : Gluten/)
 
     cleanup()
-    render(<Courses />)
+    await rendreCourses(Courses)
     await screen.findByRole('heading', { name: 'Mes courses' })
     expect(await screen.findByText(/Contient un allergène que vous avez déclaré : Gluten/)).toBeDefined()
+  })
+})
+
+describe('courses — le garde-manger', () => {
+  it("garde-manger non vide : l'article est sous « Déjà chez vous », pas dans la liste à acheter", async () => {
+    const { socle, plan } = await avecUnPlan()
+    const liste = socle.moteur.buildShoppingList(plan)
+    const item = liste.items[0]!
+    const nom = socle.catalogue.foods.get(item.foodId)!.nom
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }])
+
+    await monter()
+
+    expect(await screen.findByText(new RegExp(`^Déjà chez vous \\(1\\)$`))).toBeDefined()
+    const sectionDejaChezVous = screen.getByText(nom).closest('section') as HTMLElement
+    expect(within(sectionDejaChezVous).getByText(new RegExp(`^Déjà chez vous`))).toBeDefined()
+    // L'article n'est plus une ligne cochable de la liste à acheter.
+    expect(screen.queryByText(nom)?.closest('button[aria-pressed]')).toBeNull()
+  })
+
+  it('garde-manger vide : la section « Déjà chez vous » n’existe pas', async () => {
+    await avecUnPlan()
+    await monter()
+    expect(screen.queryByText(/^Déjà chez vous/)).toBeNull()
+  })
+
+  // ⚠️ NOMMER LE RETRAIT SANS OFFRIR DE LE DÉFAIRE laisse l'utilisateur devant un article manquant
+  // qu'il voit, comprend, et ne peut pas récupérer sans deviner par quel écran passer. Un
+  // garde-manger se périme dans la vraie vie. Le libellé est verrouillé ici parce qu'une
+  // reformulation future recacherait ce chemin en silence — même raison que le champ de recherche
+  // de « Recettes », qui avait perdu sa capacité par un simple changement de libellé.
+  it('la section porte le chemin pour se corriger — un lien vers « Vider le frigo »', async () => {
+    const { socle, plan } = await avecUnPlan()
+    const item = socle.moteur.buildShoppingList(plan).items[0]!
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }])
+
+    await monter()
+
+    const section = (await screen.findByText(/^Déjà chez vous \(1\)$/)).closest('section') as HTMLElement
+    const lien = within(section).getByRole('link', { name: /garde-manger/i })
+    expect(lien.getAttribute('href')).toBe(hashDuFrigo())
   })
 })
