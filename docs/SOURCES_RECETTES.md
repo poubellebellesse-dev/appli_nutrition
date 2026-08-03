@@ -586,15 +586,42 @@ citation de preuve qui ne le montrait pas.
    l'œuf, qu'aucune autorité ne donne. Les deux arbitrages qui étaient en attente sont **tranchés**.
 2 bis. **Étendre le lot classiques** (§5 ter) — **4 recettes vérifiées** (blanquette, navarin,
    carottes Vichy, veau Marengo). ⚠️ Le second passage a montré que le vivier est bien plus étroit
-   qu'espéré : **1 succès sur 5 tentatives**. Avant d'ouvrir un nouveau lot, faire un inventaire
-   sur le texte local (grep, gratuit) plutôt que de tenter recette par recette.
+   qu'espéré : **1 succès sur 5 tentatives**.
+   ✅ **INVENTAIRE FAIT le 2026-08-03**, et il explique le 1 sur 5. Sur les **200 recettes sans
+   source**, le critère qui trie est : *la recette porte-t-elle un nom de plat canonique*, c'est-à-dire
+   un titre sous lequel un ouvrage de 1900-1915 l'aurait listée ?
+   - **A — classiques français, nom canonique (~30)**, territoire d'Escoffier 1903 et d'Anctil 1915 :
+     crêpes · ratatouille · coq au vin · gratin dauphinois · moules marinière · œufs mimosa ·
+     poireaux vinaigrette · soupe à l'oignon gratinée · pain perdu · riz au lait · riz pilaf ·
+     clafoutis (framboises, prunes) · tarte aux pommes · tarte au citron · flan aux œufs et caramel ·
+     escalope de veau à la milanaise · aile de raie au beurre noisette · saint-jacques poêlées ·
+     pommes de terre boulangère · pommes de terre sautées en persillade · purée de pommes de terre ·
+     endives braisées au beurre · chou rouge braisé aux pommes · haricots verts aux amandes ·
+     artichauts à la vinaigrette · radis au beurre · caviar d'aubergine · gigot d'agneau au thym ·
+     poireaux gratinés à la béchamel · gratin de chou-fleur.
+   - **B — étrangers ou régionaux (~12)**, domaine public ailleurs : gaspacho · salade grecque ·
+     houmous · taboulé · couscous de légumes · tajine d'agneau · caldo verde · focaccia · pizza ·
+     rösti · chili sin carne · poulet teriyaki.
+   - **C — compositions propres à l'appli (~158) : NE JAMAIS TENTER.** Elles se reconnaissent à leur
+     forme — *Salade de X et Y*, *Velouté de X au Y*, *Tartine de pain complet à…*, *Smoothie X-Y*,
+     *Bol de…*, *Porridge d'avoine à…*, *Dahl de…*. Ce ne sont pas des plats nommés mais des
+     assemblages écrits pour ce catalogue ; **aucun ouvrage ne les nommera jamais**, et elles portent
+     déjà `origine: maison`, qui dit exactement cela.
+   ⚠️ **Voilà la cause du 1 sur 5** : les tentatives étaient tirées dans les 200 indistinctement,
+   donc ~4 fois sur 5 dans le groupe C, où le taux de succès est **structurellement nul**. Le
+   prochain lot se tire dans A, le même vivier qui a déjà donné les quatre vérifiées.
+   ⚠️ **Le tri A/B/C est un JUGEMENT, pas une mesure** — il se conteste recette par recette. Ce qui
+   ne se conteste pas, c'est que le groupe C existe et fait les trois quarts du catalogue.
 2 ter. **Alternatives par substitution** (décision utilisateur du 2026-08-02, NON COMMENCÉE) — à
    partir des classiques vérifiés, décliner des variantes à un ou deux ingrédients près (condiment,
    aromate, garniture). ⚠️ La table `substitution` est vide par décision 27, et `suggestSubstitutions`
    n'est pas câblée : à trancher d'abord — variantes écrites comme des recettes à part entière, ou
    couples de substitution portés par le moteur ? Ce n'est pas la même conception.
-2 quater. ~~**Donner une origine à toute recette**~~ — **décision utilisateur du 2026-08-02, en
-   cours.** Champ `origine` **obligatoire**, vocabulaire fermé de trois valeurs : `maison` (le texte
+2 quater. ~~**Donner une origine à toute recette**~~ — **décision utilisateur du 2026-08-02,
+   FAIT.** ⚠️ Cette ligne disait « en cours » ; **mesuré le 2026-08-03 : 241/241 recettes portent
+   `origine: maison`**, et les trois gardes du build sont en place (`build.mjs` — vocabulaire fermé,
+   refus de `maison` portant une `provenance`, refus de `domaine_public`/`libre` sans). C'est fini.
+   Champ `origine` **obligatoire**, vocabulaire fermé de trois valeurs : `maison` (le texte
    a été écrit pour cette application — les 241 actuelles), `domaine_public`, `libre`. Le build
    refuse une recette sans, refuse une `origine: maison` portant une `provenance`, et refuse une
    `origine: libre` sans `provenance`.
