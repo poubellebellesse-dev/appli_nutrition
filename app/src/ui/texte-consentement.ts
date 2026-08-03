@@ -14,11 +14,22 @@
 // Fichier sans JSX : il est ainsi testable sans monter React (`texte-consentement.test.ts` le
 // confronte à `BANNED_TERMS`).
 
-/** Version du texte ci-dessous. À incrémenter à CHAQUE modification, résumé ou détail. */
-export const VERSION_CONSENTEMENT = 'accueil-2026-08-01'
+/** Version du texte ci-dessous. À incrémenter à CHAQUE modification, résumé, explication ou détail. */
+export const VERSION_CONSENTEMENT = 'accueil-2026-08-02'
 
 export interface PointConsentement {
   readonly resume: string
+  /**
+   * Une ligne, TOUJOURS VISIBLE, sous le résumé — demandée après l'essai sur téléphone
+   * (« petit mais complet »).
+   *
+   * ⚠️ ELLE N'EST PAS UN RÉSUMÉ DU DÉTAIL, ELLE EST LE MINIMUM SUFFISANT. Le repli existait pour la
+   * lisibilité, mais un résumé de six mots au-dessus d'un bouton « Lire » demande de faire confiance
+   * pour savoir de quoi on parle : on cochait « J'ai lu et compris » en ayant lu quatre titres. Cette
+   * ligne doit donc suffire à comprendre l'engagement SANS déplier — le détail reste là pour qui veut
+   * tout, il n'est plus la seule voie vers le sens.
+   */
+  readonly explication: string
   readonly detail: readonly string[]
 }
 
@@ -43,6 +54,8 @@ export interface PointConsentement {
 export const POINTS_CONSENTEMENT: readonly PointConsentement[] = [
   {
     resume: 'Vos données ne quittent pas cet appareil.',
+    explication:
+      'Pas de compte, pas de serveur, pas de traceur : tout est enregistré dans la mémoire de votre téléphone, et rien n’en sort.',
     detail: [
       'Il n’y a pas de compte à créer, pas de mot de passe à retenir, pas d’adresse à donner. Vous ouvrez l’application, et elle fonctionne.',
       'Il n’y a pas non plus de serveur derrière. Tout ce que vous faites ici — vos allergies, vos goûts, vos repas de la semaine, votre liste de courses — est enregistré dans la mémoire de votre téléphone, et n’en sort jamais. Rien n’est envoyé à personne : ni à des entreprises, ni à moi qui l’ai écrite.',
@@ -52,6 +65,8 @@ export const POINTS_CONSENTEMENT: readonly PointConsentement[] = [
   },
   {
     resume: 'Une aide pour cuisiner, pas un avis médical.',
+    explication:
+      'Elle propose des repas et cite ses sources. Elle ne pose aucun diagnostic, ne connaît pas votre état de santé et ne vous demande rien à ce sujet.',
     detail: [
       'Cette application vous propose des idées de repas et met à votre disposition des chapitres d’information sur les aliments. C’est ce qu’elle sait faire, et elle s’y tient.',
       'Elle ne pose aucun diagnostic. Elle ne connaît pas votre état de santé, et elle ne vous demande rien à ce sujet — ni maladie, ni ordonnance, ni résultat d’analyse. Ces questions ne la regardent pas, et elle est construite pour ne pas pouvoir y répondre.',
@@ -60,7 +75,9 @@ export const POINTS_CONSENTEMENT: readonly PointConsentement[] = [
     ],
   },
   {
-    resume: 'Gratuite et indépendante.',
+    resume: 'Gratuite, sans publicité, sans rien à vendre.',
+    explication:
+      'Rien à acheter, aucune publicité, aucune recette sponsorisée — et aucune donnée transmise à qui que ce soit, puisqu’il n’y en a pas qui sorte d’ici.',
     detail: [
       'Gratuite veut dire gratuite. Il n’y a rien à acheter, rien à débloquer, pas de version « premium » qui attendrait son heure, pas de période d’essai qui se termine un matin.',
       'Aucune publicité ne s’affichera ici. Aucune donnée n’est vendue — il n’y en a pas à vendre, elles ne quittent pas votre téléphone.',
@@ -69,6 +86,8 @@ export const POINTS_CONSENTEMENT: readonly PointConsentement[] = [
   },
   {
     resume: 'Faite par une seule personne.',
+    explication:
+      'Un développeur indépendant, seul, sans entreprise ni investisseur : personne à qui rendre des comptes, donc aucune raison de faire commerce de vous.',
     detail: [
       'Cette application est écrite par un développeur indépendant, seul, sur son temps. Il n’y a ni entreprise derrière, ni investisseur à rembourser, ni objectif de croissance à tenir.',
       'C’est précisément ce qui rend les trois promesses précédentes tenables : sans personne à qui rendre des comptes, il n’y a aucune raison de faire commerce de vous.',

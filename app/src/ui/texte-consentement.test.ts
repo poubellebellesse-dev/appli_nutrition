@@ -11,6 +11,7 @@ import { POINTS_CONSENTEMENT, VERSION_CONSENTEMENT } from './texte-consentement.
 
 const TOUTES_LES_PHRASES: readonly string[] = POINTS_CONSENTEMENT.flatMap((p) => [
   p.resume,
+  p.explication,
   ...p.detail,
 ])
 
@@ -52,6 +53,15 @@ describe('ui/texte-consentement — structure', () => {
       // Un détail vide ferait un bouton « Lire » qui n'ouvre rien.
       expect(point.detail.length).toBeGreaterThan(0)
       for (const paragraphe of point.detail) expect(paragraphe.trim()).not.toBe('')
+    }
+  })
+
+  it('donne à chaque point une explication non vide, distincte du résumé', () => {
+    // C'est la ligne TOUJOURS VISIBLE (voir l'en-tête de `PointConsentement.explication`) : vide,
+    // elle laisserait un blanc sous le résumé au lieu du minimum suffisant promis.
+    for (const point of POINTS_CONSENTEMENT) {
+      expect(point.explication.trim()).not.toBe('')
+      expect(point.explication).not.toBe(point.resume)
     }
   })
 

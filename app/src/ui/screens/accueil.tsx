@@ -184,9 +184,12 @@ function PointDepliable({ point }: { readonly point: PointConsentement }) {
         aria-expanded={ouvert}
         className="flex min-h-tactile w-full items-center gap-3 p-4 text-left text-[1rem] leading-relaxed text-texte"
       >
-        <span className="flex-1 font-medium">{point.resume}</span>
+        <span className="flex-1">
+          <span className="font-medium">{point.resume}</span>
+          <span className="mt-1 block text-[0.95rem] text-texte-doux">{point.explication}</span>
+        </span>
         <span aria-hidden="true" className="shrink-0 text-[0.85rem] font-semibold text-attenue">
-          {ouvert ? 'Replier' : 'Lire'}
+          {ouvert ? 'Replier' : 'Tout lire'}
         </span>
       </button>
       {ouvert && (

@@ -85,12 +85,24 @@ describe('accueil — les quatre engagements', () => {
     for (const resume of [
       'Vos données ne quittent pas cet appareil.',
       'Une aide pour cuisiner, pas un avis médical.',
-      'Gratuite et indépendante.',
+      'Gratuite, sans publicité, sans rien à vendre.',
       'Faite par une seule personne.',
     ]) {
       expect(screen.getByText(resume)).toBeDefined()
     }
-    for (const bouton of screen.getAllByText('Lire')) {
+    for (const bouton of screen.getAllByText('Tout lire')) {
+      expect(bouton.closest('button')!.getAttribute('aria-expanded')).toBe('false')
+    }
+  })
+
+  it("affiche l'explication de chaque engagement SANS avoir cliqué", async () => {
+    // La ligne que §4.8 demandait « petit mais complet » : elle doit se lire avant tout dépli, pas
+    // seulement une fois « Tout lire » pressé.
+    await monterAccueil()
+    expect(
+      screen.getByText(/Pas de compte, pas de serveur, pas de traceur/)
+    ).toBeDefined()
+    for (const bouton of screen.getAllByText('Tout lire')) {
       expect(bouton.closest('button')!.getAttribute('aria-expanded')).toBe('false')
     }
   })
@@ -98,7 +110,7 @@ describe('accueil — les quatre engagements', () => {
   it('rend le détail lisible AVANT d’accepter — sinon ce n’est pas un consentement', async () => {
     await monterAccueil()
     fireEvent.click(screen.getByText('Une aide pour cuisiner, pas un avis médical.'))
-    expect(screen.getByText(/ne pose aucun diagnostic/)).toBeDefined()
+    expect(screen.getByText(/ne pose aucun diagnostic\./)).toBeDefined()
     // Et le bouton de validation est toujours désactivé : on peut lire sans avoir rien accepté.
     expect(desactive('J’ai compris')).toBe(true)
   })
