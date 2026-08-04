@@ -37,6 +37,8 @@ import {
   readExcludedFoodIds,
   readFavorites,
   readHistory,
+  readPantryDeclareLe,
+  readPantryEntries,
   readPantryFoodIds,
   readPreferences,
   readProfile,
@@ -343,6 +345,34 @@ describe('user-store — goûts et favoris', () => {
     expect(readActiveTopics(db)).toEqual(['diabete'])
     writePantry(db, [{ foodId: 'farine_ble' as FoodId, quantiteApprox: 'un fond de paquet' }], '2026-08-04')
     expect(readPantryFoodIds(db)).toEqual(['farine_ble'])
+  })
+
+  // ⚠️ SANS DATE PAR LIGNE, LA MIGRATION v8 NE SERT À RIEN DÈS LE DEUXIÈME ALIMENT. `writePantry`
+  // remplace la table entière à chaque geste : dater tout le monde du jour faisait qu'ajouter un
+  // aliment ce matin certifiait fraîche une déclaration de trois semaines.
+  it('⛔ HONORE LA DATE DE CHAQUE LIGNE, et ne retombe sur la date globale que si elle manque', () => {
+    writePantry(
+      db,
+      [
+        { foodId: 'creme_fraiche' as FoodId, quantiteApprox: null, declareLe: '2026-07-01' },
+        { foodId: 'riz_blanc' as FoodId, quantiteApprox: null },
+      ],
+      '2026-08-04'
+    )
+
+    const lues = new Map(readPantryEntries(db).map((e) => [e.foodId, e.declareLe]))
+    expect(lues.get('creme_fraiche' as FoodId)).toBe('2026-07-01')
+    expect(lues.get('riz_blanc' as FoodId)).toBe('2026-08-04')
+    // La plus ancienne fait foi — c'est elle qui décide s'il faut reposer la question.
+    expect(readPantryDeclareLe(db)).toBe('2026-07-01')
+  })
+
+  it('une ligne sans date lisible ressort SANS `declareLe`, jamais avec une date inventée', () => {
+    // Lignes d'avant la migration v8 : `declare_le = ''`. L'absence d'information n'est pas une
+    // information — la remonter comme chaîne vide ferait un `Date.parse` silencieusement faux.
+    db.run("INSERT INTO user_pantry (food_id, quantite_approx, declare_le) VALUES ('oeuf', NULL, '')")
+    expect(readPantryEntries(db)).toEqual([{ foodId: 'oeuf', quantiteApprox: null }])
+    expect(readPantryDeclareLe(db)).toBeNull()
   })
 })
 

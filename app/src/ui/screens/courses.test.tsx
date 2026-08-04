@@ -592,7 +592,39 @@ describe('courses — un garde-manger périmé n’est pas appliqué', () => {
     expect(lignesAffichees().some((l) => l.includes(nom))).toBe(true)
     // …et n'est PAS annoncé comme déjà possédé, puisqu'on n'en sait rien.
     expect(screen.queryByText(/^Déjà chez vous/)).toBeNull()
-    expect(screen.getByText(/Rien n'a été retiré de cette liste/)).toBeDefined()
+    expect(screen.getByText(/date(nt)? trop pour qu/)).toBeDefined()
+  })
+
+  it('⛔ GARDE-MANGER MIXTE : le frais est appliqué, le vieux reste sur la liste', async () => {
+    // La péremption se juge ALIMENT PAR ALIMENT. Un oignon oublié depuis trois semaines ne doit pas
+    // remettre en question une crème déclarée ce matin — et inversement, la crème fraîche ne doit
+    // pas blanchir l'oignon. Sans dates par ligne, les deux basculaient ensemble.
+    const { socle, plan } = await avecUnPlan()
+    const { aujourdhui, vieux } = await datesDuFrigo()
+    const items = socle.moteur.buildShoppingList(plan).items
+    const frais = items[0]!
+    const perime = items[1]!
+    const nomFrais = socle.catalogue.foods.get(frais.foodId)!.nom
+    const nomPerime = socle.catalogue.foods.get(perime.foodId)!.nom
+    writePantry(
+      baseCourante(),
+      [
+        { foodId: frais.foodId, quantiteApprox: null, declareLe: aujourdhui },
+        { foodId: perime.foodId, quantiteApprox: null, declareLe: vieux },
+      ],
+      aujourdhui
+    )
+
+    await monter()
+
+    // Le frais a bien été retiré des courses…
+    expect(await screen.findByText(/^Déjà chez vous \(1\)$/)).toBeDefined()
+    expect(lignesAffichees().some((l) => l.includes(nomFrais))).toBe(false)
+    // …le périmé non, et c'est le seul qu'on questionne.
+    expect(lignesAffichees().some((l) => l.includes(nomPerime))).toBe(true)
+    const bandeau = screen.getByText(/date(nt)? trop pour qu/).closest('div') as HTMLElement
+    expect(within(bandeau).getByRole('checkbox', { name: nomPerime })).toBeDefined()
+    expect(within(bandeau).queryByRole('checkbox', { name: nomFrais })).toBeNull()
   })
 
   it('la question NE BLOQUE PAS — la liste est lisible pendant qu’elle est posée', async () => {
@@ -622,7 +654,7 @@ describe('courses — un garde-manger périmé n’est pas appliqué', () => {
 
     await screen.findByText(/^Déjà chez vous \(1\)$/)
     expect(lignesAffichees().some((l) => l.includes(nom))).toBe(false)
-    expect(screen.queryByText(/Rien n'a été retiré de cette liste/)).toBeNull()
+    expect(screen.queryByText(/date(nt)? trop pour qu/)).toBeNull()
     // La date, pas seulement l'affichage : sans ça la question reviendrait au montage suivant.
     expect(readPantryDeclareLe(baseCourante())).toBe(aujourdhui)
   })

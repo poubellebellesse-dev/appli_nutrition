@@ -6,9 +6,22 @@
 // l'appli, elle, continue d'y croire pour nous. Voir `reference/CONCURRENCE_ET_ATTENTES.md`.
 
 import { describe, expect, it } from 'vitest'
-import { PEREMPTION_FRIGO_JOURS, depuisQuand, frigoAConfirmer } from './confirmer-frigo.js'
+import type { FoodId } from '../engine/domain/index.js'
+import type { StoredPantryEntry } from '../data/user-store.js'
+import {
+  PEREMPTION_FRIGO_JOURS,
+  alimentsAConfirmer,
+  depuisQuand,
+  frigoAConfirmer,
+} from './confirmer-frigo.js'
 
 const AUJOURDHUI = '2026-08-04'
+
+const entree = (foodId: string, declareLe?: string): StoredPantryEntry => ({
+  foodId: foodId as FoodId,
+  quantiteApprox: null,
+  ...(declareLe === undefined ? {} : { declareLe }),
+})
 
 describe('ui/confirmer-frigo — quand redemander', () => {
   it('ne demande RIEN sur un garde-manger vide — il n’y a rien à confirmer', () => {
@@ -41,6 +54,23 @@ describe('ui/confirmer-frigo — quand redemander', () => {
     // Une horloge d'appareil reculée, un import bricolé : le cas est rare et la bonne réponse est
     // de demander, pas de faire confiance à un calcul dont on sait qu'il est faux.
     expect(frigoAConfirmer('pas-une-date', AUJOURDHUI, 5)).toBe(true)
+  })
+})
+
+describe('ui/confirmer-frigo — la question porte sur l’ALIMENT, pas sur le garde-manger', () => {
+  it('ne retient que les lignes périmées — une déclaration de ce matin n’est pas questionnée', () => {
+    const garde = [entree('creme', '2026-07-01'), entree('riz', AUJOURDHUI), entree('oeuf', '2026-08-01')]
+    expect(alimentsAConfirmer(garde, AUJOURDHUI)).toEqual(['creme'])
+  })
+
+  it('⛔ UNE LIGNE SANS DATE EST QUESTIONNÉE — les rescapées de la base v7 ne se blanchissent pas', () => {
+    const garde = [entree('creme'), entree('riz', AUJOURDHUI)]
+    expect(alimentsAConfirmer(garde, AUJOURDHUI)).toEqual(['creme'])
+  })
+
+  it('garde-manger entièrement frais : rien à demander', () => {
+    expect(alimentsAConfirmer([entree('riz', '2026-07-30')], AUJOURDHUI)).toEqual([])
+    expect(alimentsAConfirmer([], AUJOURDHUI)).toEqual([])
   })
 })
 

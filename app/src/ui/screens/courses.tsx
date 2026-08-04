@@ -32,14 +32,14 @@ import {
   addExtraItem,
   readAllergies,
   readLatestPlan,
-  readPantryDeclareLe,
-  readPantryFoodIds,
+  readPantryEntries,
   readShoppingList,
   removeExtraItem,
   saveShoppingList,
   setCoche,
   setExtraCoche,
   type StoredExtraItem,
+  type StoredPantryEntry,
   type StoredShoppingList,
 } from '../../data/user-store.js'
 import { LIBELLE_COURT } from '../champs-profil.js'
@@ -53,7 +53,7 @@ import {
 } from '../socle.js'
 import { hashDe, hashDuFrigo } from '../router.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
-import { ConfirmerFrigo, frigoAConfirmer } from '../confirmer-frigo.js'
+import { ConfirmerFrigo, alimentsAConfirmer } from '../confirmer-frigo.js'
 
 /** Les dix rayons de §4.3 — texte libre côté base, liste fermée côté saisie pour rester rangeable. */
 const RAYONS_EXTRA: readonly string[] = [
@@ -107,7 +107,8 @@ interface Vue {
    */
   readonly couvertsParUnReste: readonly CreneauCouvert[]
   readonly gardeAConfirmer: readonly FoodId[]
-  readonly declareLe: string | null
+  /** Le garde-manger entier, dates comprises — `ConfirmerFrigo` réécrit la table et en a besoin. */
+  readonly entreesFrigo: readonly StoredPantryEntry[]
   /** Pour `ConfirmerFrigo`, qui réécrit `user_pantry` quand l'utilisateur répond. */
   readonly socle: Socle
   readonly enregistree: StoredShoppingList
@@ -143,8 +144,12 @@ async function calculerVue(): Promise<Etat> {
 
   profilCourant(socle.db, aujourdhuiIso())
   let enregistree = readShoppingList(socle.db)
-  const pantryFoodIds = readPantryFoodIds(socle.db)
-  const declareLe = readPantryDeclareLe(socle.db)
+  const entreesFrigo = readPantryEntries(socle.db)
+  const pantryFoodIds = entreesFrigo.map((e) => e.foodId)
+  // ⚠️ PÉRIMÉ SE JUGE ALIMENT PAR ALIMENT, pas garde-manger par garde-manger : une crème déclarée ce
+  // matin reste appliquée même si un oignon traîne depuis trois semaines. Seul l'oignon est remis en
+  // question, et seule sa ligne reste dans les courses.
+  const aConfirmer = alimentsAConfirmer(entreesFrigo, aujourdhuiIso())
 
   // ⚠️ UN GARDE-MANGER PÉRIMÉ N'EST PAS APPLIQUÉ ICI, et c'est l'inverse de « Choisir un plat ».
   // Là-bas la question RETIENT les résultats ; ici elle n'empêche rien. La différence n'est pas
@@ -153,8 +158,7 @@ async function calculerVue(): Promise<Etat> {
   // et on ne s'en aperçoit qu'au moment de cuisiner. On échoue du côté de la ligne en trop, qui se
   // raye. Même raison que « Déjà chez vous » plus bas : un article qui disparaît en silence est un
   // défaut pire que celui qu'on voit et qu'on barre.
-  const perime = frigoAConfirmer(declareLe, aujourdhuiIso(), pantryFoodIds.length)
-  const applique = perime ? [] : pantryFoodIds
+  const applique = pantryFoodIds.filter((id) => !aConfirmer.includes(id))
   const liste = socle.moteur.buildShoppingList(plan, { pantryFoodIds: applique })
 
   // « Déjà chez vous » — voir l'en-tête de `Vue.dejaChezVous`. Une seule liste de référence
@@ -204,8 +208,8 @@ async function calculerVue(): Promise<Etat> {
       liste,
       dejaChezVous,
       couvertsParUnReste,
-      gardeAConfirmer: perime ? pantryFoodIds : [],
-      declareLe,
+      gardeAConfirmer: aConfirmer,
+      entreesFrigo,
       socle,
       enregistree,
       nomAliment: (id) => socle.catalogue.foods.get(id)?.nom ?? id,
@@ -404,12 +408,13 @@ export function Courses() {
       {vue.gardeAConfirmer.length > 0 && (
         <div className="mt-4">
           <p className="mb-2 text-[0.9rem] leading-relaxed text-texte-doux">
-            Rien n'a été retiré de cette liste : votre garde-manger date trop pour qu'on s'y fie.
+            {vue.gardeAConfirmer.length === 1
+              ? 'Un aliment de votre garde-manger date trop pour qu’on s’y fie : il est resté sur la liste.'
+              : `${vue.gardeAConfirmer.length} aliments de votre garde-manger datent trop pour qu’on s’y fie : ils sont restés sur la liste.`}
           </p>
           <ConfirmerFrigo
             socle={vue.socle}
-            garde={vue.gardeAConfirmer}
-            declareLe={vue.declareLe}
+            entrees={vue.entreesFrigo}
             aujourdhui={aujourdhuiIso()}
             onConfirme={rafraichir}
           />

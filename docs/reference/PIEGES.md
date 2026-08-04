@@ -91,6 +91,15 @@
   garde-manger sert à retirer des articles de la liste ». **Avant de conclure qu'il ne manque que de
   l'affichage, vérifier que le champ est REMPLI et LU** — un appelant qui omet une option optionnelle
   ne produit aucune erreur, ni au type, ni au test, ni à l'écran.
+- ⛔ **La variante la plus discrète : un champ rempli ET lu, qui ne contient pas ce que son nom
+  dit.** `user_pantry.declare_le` était censé porter « quand l'utilisateur a répondu de cet
+  aliment ». `writePantry` réécrivant la table ENTIÈRE à chaque geste et l'écran Frigo passant la
+  date du jour pour toutes les lignes, il portait en réalité « quand la ligne a été écrite » —
+  ajouter un aliment ce matin certifiait fraîche une déclaration de trois semaines, et la
+  confirmation ne se déclenchait plus jamais. Le champ existait, était rempli, était lu, et la
+  fonctionnalité qu'il portait était morte dès le deuxième aliment. **Aucun type, aucun test, aucun
+  écran ne pouvait le voir** : seule la SÉMANTIQUE était fausse. → dès qu'un écrivain remplace tout
+  un ensemble, se demander ce que chaque ligne conservée doit GARDER de son état d'avant.
 - ⚠️ **`MealHistory.windowDays` n'est lu par AUCUNE couche.** La fenêtre de 21 jours n'existe que
   parce que `readHistory` la borne en SQL.
 - ⚠️ **Une PRIMARY KEY contenant une colonne NULL ne dédoublonne pas** dans SQLite. → index UNIQUE

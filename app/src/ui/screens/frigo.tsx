@@ -24,7 +24,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Catalog, FacetteKind, FoodId, RecipeId } from '../../engine/domain/index.js'
 import type { Engine, PantryMatch, PantryResult } from '../../engine/api/index.js'
 import { normaliser } from '../../engine/search/index.js'
-import { readUserState, writePantry } from '../../data/user-store.js'
+import { readPantryEntries, readUserState, writePantry } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import { hashDe, hashDeRecette } from '../router.js'
 import {
@@ -154,13 +154,23 @@ export function Frigo() {
     chargerSocle()
       // ⚠️ LA DATE EST INJECTÉE, jamais `Date.now()` — et elle sert : un garde-manger non daté ne
       // peut pas se faire questionner quand il vieillit (`ui/confirmer-frigo.tsx`, migration v8).
-      .then((s) =>
+      //
+      // ⚠️ CHAQUE ALIMENT GARDE SA PROPRE DATE, ET C'EST UN BUG DÉJÀ PAYÉ. `writePantry` réécrit la
+      // table ENTIÈRE à chaque ajout et à chaque retrait : dater tout le monde d'aujourd'hui faisait
+      // qu'ajouter du riz ce matin certifiait fraîche une crème déclarée il y a trois semaines. Un
+      // geste qui ne la concernait pas la blanchissait, et la question ne se posait plus jamais —
+      // c'est-à-dire que la migration v8 ne servait à rien dès le deuxième aliment.
+      .then((s) => {
+        const connues = new Map(readPantryEntries(s.db).map((e) => [e.foodId, e.declareLe]))
         writePantry(
           s.db,
-          suivant.map((foodId) => ({ foodId, quantiteApprox: null })),
+          suivant.map((foodId) => {
+            const date = connues.get(foodId)
+            return { foodId, quantiteApprox: null, ...(date === undefined ? {} : { declareLe: date }) }
+          }),
           aujourdhuiIso()
         )
-      )
+      })
       .catch(() => undefined)
   }, [])
 

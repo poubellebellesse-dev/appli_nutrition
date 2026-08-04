@@ -64,6 +64,36 @@ export function frigoAConfirmer(
   return !Number.isFinite(ecartJours) || ecartJours > PEREMPTION_FRIGO_JOURS
 }
 
+/**
+ * Les aliments du garde-manger qui ont dépassé le seuil — les autres ne sont PAS questionnés.
+ *
+ * ⚠️ LA QUESTION EST PAR ALIMENT, PAS PAR GARDE-MANGER, depuis que chaque ligne porte sa date.
+ * Faire cocher une crème déclarée ce matin parce qu'un oignon traîne depuis trois semaines serait
+ * exactement le bruit que §4.3 interdit : « l'appli ne demande rien ». On ne demande que sur ce dont
+ * on ne répond plus.
+ */
+export function alimentsAConfirmer(
+  entrees: readonly StoredPantryEntry[],
+  aujourdhui: string
+): readonly FoodId[] {
+  return entrees
+    .filter((entree) => frigoAConfirmer(entree.declareLe ?? null, aujourdhui, 1))
+    .map((entree) => entree.foodId)
+}
+
+/**
+ * La date à citer pour un GROUPE d'aliments : la plus ancienne, et `null` dès que l'une manque —
+ * on ne dit pas « il y a 9 jours » quand une ligne peut dater de six mois.
+ */
+function plusAncienne(entrees: readonly StoredPantryEntry[]): string | null {
+  let minimum: string | null = null
+  for (const entree of entrees) {
+    if (entree.declareLe === undefined) return null
+    if (minimum === null || entree.declareLe < minimum) minimum = entree.declareLe
+  }
+  return minimum
+}
+
 /** « il y a 3 semaines », « il y a 9 jours », ou « à une date inconnue ». */
 export function depuisQuand(declareLe: string | null, aujourdhui: string): string {
   if (declareLe === null) return 'à une date que l’application n’a pas gardée'
@@ -78,19 +108,23 @@ export function depuisQuand(declareLe: string | null, aujourdhui: string): strin
 
 export function ConfirmerFrigo({
   socle,
-  garde,
-  declareLe,
+  entrees,
   aujourdhui,
   onConfirme,
 }: {
   readonly socle: Socle
-  readonly garde: readonly FoodId[]
-  readonly declareLe: string | null
+  /** Le garde-manger ENTIER, dates comprises — pas seulement les lignes périmées : voir `valider`. */
+  readonly entrees: readonly StoredPantryEntry[]
   readonly aujourdhui: string
   /** Reçoit la liste retenue — l'appelant s'en sert pour relancer sa recherche. */
   readonly onConfirme: (garde: readonly FoodId[]) => void
 }) {
+  const garde = useMemo(() => alimentsAConfirmer(entrees, aujourdhui), [entrees, aujourdhui])
   const [coches, setCoches] = useState<ReadonlySet<FoodId>>(() => new Set(garde))
+  const declareLe = useMemo(
+    () => plusAncienne(entrees.filter((e) => garde.includes(e.foodId))),
+    [entrees, garde]
+  )
 
   const noms = useMemo(
     () => new Map(garde.map((id) => [id, socle.catalogue.foods.get(id)?.nom ?? id])),
@@ -108,13 +142,18 @@ export function ConfirmerFrigo({
     // ⚠️ DÉCOCHER RETIRE POUR DE BON (décision utilisateur du 2026-08-04). Ne l'ignorer que pour la
     // recherche en cours reposerait la même question à l'identique la fois suivante : on
     // contournerait la dérive au lieu de la corriger, ce qui est exactement le défaut visé.
-    const retenus = garde.filter((id) => coches.has(id))
-    const entrees: readonly StoredPantryEntry[] = retenus.map((foodId) => ({
-      foodId,
-      quantiteApprox: null,
-    }))
-    writePantry(socle.db, entrees, aujourdhui)
-    onConfirme(retenus)
+    //
+    // ⚠️ ON RÉÉCRIT LE GARDE-MANGER ENTIER, PAS LA SEULE LISTE AFFICHÉE. `writePantry` remplace la
+    // table : ne lui passer que les lignes questionnées effacerait en silence tout ce qui était
+    // encore frais. Et les lignes fraîches CONSERVENT leur date — les redater d'aujourd'hui
+    // rejouerait le défaut qu'on vient de corriger, à l'envers.
+    const suivant: readonly StoredPantryEntry[] = entrees
+      .filter((entree) => !garde.includes(entree.foodId) || coches.has(entree.foodId))
+      .map((entree) =>
+        garde.includes(entree.foodId) ? { ...entree, declareLe: aujourdhui } : entree
+      )
+    writePantry(socle.db, suivant, aujourdhui)
+    onConfirme(suivant.map((entree) => entree.foodId))
   }
 
   return (

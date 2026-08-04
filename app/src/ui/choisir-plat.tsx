@@ -23,9 +23,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FoodId, HardConstraints, RecipeId } from '../engine/domain/index.js'
-import { readPantryDeclareLe, readPantryFoodIds, readUserState } from '../data/user-store.js'
+import { readPantryEntries, readUserState, type StoredPantryEntry } from '../data/user-store.js'
 import { Panneau } from './panneau.js'
-import { ConfirmerFrigo, frigoAConfirmer } from './confirmer-frigo.js'
+import { ConfirmerFrigo, alimentsAConfirmer } from './confirmer-frigo.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, type Socle } from './socle.js'
 
 /** Combien de résultats on montre. Au-delà, on demande de préciser plutôt que de dérouler 200 lignes. */
@@ -56,8 +56,8 @@ export function ChoisirPlat({
 }) {
   const [onglet, setOnglet] = useState<Onglet>('catalogue')
   const [texte, setTexte] = useState('')
-  const [garde, setGarde] = useState<readonly FoodId[]>([])
-  const [declareLe, setDeclareLe] = useState<string | null>(null)
+  const [entrees, setEntrees] = useState<readonly StoredPantryEntry[]>([])
+  const garde = useMemo(() => entrees.map((e) => e.foodId), [entrees])
   /** Passe à vrai dès que l'utilisateur a répondu — la question ne se repose pas dans la session. */
   const [frigoConfirme, setFrigoConfirme] = useState(false)
   const [contraintes, setContraintes] = useState<HardConstraints | null>(null)
@@ -71,8 +71,7 @@ export function ChoisirPlat({
   // désigne un plat à la main, donc le seul où un filtre périmé se traduirait par une assiette
   // dangereuse posée de sa propre main.
   useEffect(() => {
-    setGarde(readPantryFoodIds(socle.db))
-    setDeclareLe(readPantryDeclareLe(socle.db))
+    setEntrees(readPantryEntries(socle.db))
     setContraintes(
       readUserState(socle.db, { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() }).constraints
     )
@@ -85,7 +84,7 @@ export function ChoisirPlat({
     if (onglet === 'frigo') {
       // Tant que la confirmation n'a pas été donnée, on ne propose RIEN : une recette fondée sur un
       // garde-manger périmé est plus nuisible que pas de recette du tout.
-      if (garde.length === 0 || frigoAConfirmer(declareLe, aujourdhuiIso(), garde.length)) {
+      if (garde.length === 0 || alimentsAConfirmer(entrees, aujourdhuiIso()).length > 0) {
         if (!frigoConfirme) return []
       }
       const res = socle.moteur.searchByPantry({ constraints: contraintes, pantryFoodIds: garde })
@@ -107,13 +106,13 @@ export function ChoisirPlat({
       manquants: [],
       couverture: null,
     }))
-  }, [socle, onglet, texte, garde, contraintes, declareLe, frigoConfirme])
+  }, [socle, onglet, texte, garde, entrees, contraintes, frigoConfirme])
 
   const poser = useCallback((recipeId: RecipeId) => onPoser(recipeId), [onPoser])
 
   /** Le garde-manger a vieilli et l'utilisateur n'a pas encore répondu — voir `confirmer-frigo.tsx`. */
   const aConfirmer =
-    onglet === 'frigo' && !frigoConfirme && frigoAConfirmer(declareLe, aujourdhuiIso(), garde.length)
+    onglet === 'frigo' && !frigoConfirme && alimentsAConfirmer(entrees, aujourdhuiIso()).length > 0
 
   return (
     <Panneau titre={`Choisir un plat — ${libelleCreneau}`} onFermer={onFermer}>
@@ -145,12 +144,12 @@ export function ChoisirPlat({
         <div className="mt-4">
           <ConfirmerFrigo
             socle={socle}
-            garde={garde}
-            declareLe={declareLe}
+            entrees={entrees}
             aujourdhui={aujourdhuiIso()}
-            onConfirme={(retenus) => {
-              setGarde(retenus)
-              setDeclareLe(aujourdhuiIso())
+            onConfirme={() => {
+              // Relu en base plutôt que reconstruit ici : `ConfirmerFrigo` vient de réécrire la
+              // table avec les dates par ligne, et c'est elle qui fait foi.
+              setEntrees(readPantryEntries(socle.db))
               setFrigoConfirme(true)
             }}
           />
