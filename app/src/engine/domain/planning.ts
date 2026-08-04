@@ -84,8 +84,36 @@ export interface PlanWarning {
   readonly kind: 'plancher_calorique'
   /** ISO yyyy-mm-dd du jour concerné. */
   readonly date: string
+  /**
+   * Énergie des repas PRÉVUS ce jour-là — pas l'apport de la personne.
+   *
+   * ⚠️ LA DISTINCTION N'EST PAS UN DÉTAIL DE VOCABULAIRE, elle décide de ce que l'écran a le droit
+   * d'écrire. Le plan ne contient que des recettes posées : ni le pain sur la table, ni le yaourt,
+   * ni le fruit, ni le verre de lait, ni un repas pris dehors. Un plan à deux créneaux — le DÉFAUT
+   * de l'écran Semaine — n'a même pas de petit-déjeuner. Présenter ce total comme « la journée »
+   * serait faux, et sur une application qui se donne des garde-fous TCA (§6.5 ARCHITECTURE),
+   * annoncer à quelqu'un qu'il mange 830 kcal par jour quand on n'en sait rien est exactement le
+   * genre d'affirmation à ne pas produire.
+   */
   readonly kcal: number
+  /**
+   * Le plancher de §6.5 — un SEUIL DE VIGILANCE, jamais un apport de référence.
+   *
+   * ⚠️ 1 200 kcal n'est pas « ce qu'il faudrait manger » : c'est la limite sous laquelle une
+   * alimentation devient risquée. La référence journalière d'une femme active de 30-49 ans tourne
+   * autour de 2 000. Écrire « pour une référence de 1 200 kcal » — ce que l'écran a fait jusqu'au
+   * 2026-08-04 — présentait un plancher de sécurité comme une cible, donc suggérait qu'atteindre
+   * 1 200 suffisait.
+   */
   readonly seuil: number
+  /**
+   * Combien de CRÉNEAUX remplis ont été additionnés pour obtenir `kcal`.
+   *
+   * Existe pour que l'appelant puisse dire « vos 2 repas prévus » au lieu de « votre journée ».
+   * Compte des créneaux, pas des entrées : un déjeuner qui porte un plat ET son accompagnement
+   * compte pour UN repas (voir `MealPlanEntry.service`).
+   */
+  readonly repasComptes: number
 }
 
 export interface WeekPlan {

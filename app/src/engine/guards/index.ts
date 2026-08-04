@@ -216,7 +216,17 @@ export const checkCalorieFloor = (
   for (const [date, jour] of parJour) {
     if (!MAIN_SLOTS.every((slot) => jour.remplis.has(slot))) continue
     if (jour.kcal >= floor) continue
-    warnings.push({ kind: 'plancher_calorique', date, kcal: Math.round(jour.kcal), seuil: floor })
+    warnings.push({
+      kind: 'plancher_calorique',
+      date,
+      kcal: Math.round(jour.kcal),
+      seuil: floor,
+      // ⚠️ DES CRÉNEAUX, PAS DES ENTRÉES. `jour.remplis` est un Set de créneaux : un déjeuner qui
+      // porte un plat ET son accompagnement compte pour UN repas. L'appelant s'en sert pour écrire
+      // « vos 2 repas prévus » — voir le commentaire de `PlanWarning.kcal` sur pourquoi il n'a pas
+      // le droit d'écrire « votre journée ».
+      repasComptes: jour.remplis.size,
+    })
   }
   return warnings
 }

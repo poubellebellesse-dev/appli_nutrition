@@ -699,35 +699,15 @@ n'est plus affiché par défaut ; il n'apparaît qu'en mode avancé.**
 > initiale de §6.5 jugeait nécessaire. La réserve a été posée avant la décision et écartée
 > explicitement — `ETAT.md` décision 45.
 
-**Ce qui borne la portée de l'amendement** — ⛔ **RÉÉCRIT LE 2026-08-04, la première version reposait
-sur un chiffre faux.** Le texte disait : « la décision 34 a mesuré le cas nominal à 1 208 kcal
-minimum, ZÉRO avertissement ; ce qui devient invisible par défaut est un cas rare ». Ce chiffre était
-**une mesure sur UNE graine**. Remesuré le 2026-08-03 sur vingt : **0 graine sur 20** y parvenait, et
-le cas nominal tournait à 830 kcal avec 4 avertissements sur 7 jours. **L'amendement a donc été
-justifié, pendant deux jours, par une propriété que le moteur n'avait pas.** La leçon est consignée
-dans `reference/PIEGES.md` : sur ce moteur, une mesure sur une graine ne prouve rien.
+**Ce qui borne la portée de l'amendement**, et qui a pesé dans la décision :
 
-Ce qui est vrai, **mesuré le 2026-08-04 sur 20 graines × 7 jours** (`npm run engine:plancher`) :
-
-- Le cas nominal ne déclenche **plus rien : 20/20 semaines sans aucun avertissement**, minimum
-  1 331 kcal — depuis que le planificateur pose un accompagnement en plus du plat (`ETAT.md` n°54).
-  La cause du déclenchement n'était pas le contenu : le plan comparait des **plats** à une
-  **journée**.
-- ⚠️ **Ça reste FAUX pour les régimes pauvres en accompagnements** : végétalien 14 j rend encore
-  **5 avertissements**, « végétalien + sans gluten » **9**. Ce sont les utilisateurs pour qui
-  l'information compte le plus, et ce sont eux qui ne la verront pas. **C'est une limite de CONTENU**,
-  et le masquage ne la traite pas.
+- La décision 34 a **mesuré** le cas nominal (7 jours × 3 créneaux) à **1 208 kcal minimum, ZÉRO
+  avertissement**. Ce qui devient invisible par défaut est un cas **rare**, pas l'ordinaire.
+- Les journées qui déclenchent encore l'alerte sont des **combinaisons extrêmes de régimes**
+  (« sans gluten NI lait NI œuf » : 16 créneaux remplis sur 21). ⚠️ **C'est une limite de CONTENU**,
+  et le masquage ne la traite pas — elle reste à combler, indépendamment de ce réglage.
 - Le plan a **toujours été rendu quand même** : l'avertissement n'a jamais bloqué personne. Le
   masquer retire une information, pas une possibilité.
-
-> ⚠️ **CE QUE L'AVERTISSEMENT MESURE, ET CE QU'IL NE MESURE PAS** (précisé le 2026-08-04). Il
-> additionne **les recettes posées au plan**, pas l'apport de la personne : ni le pain sur la table,
-> ni un yaourt, ni un repas pris dehors — ni le petit-déjeuner quand le plan n'a que deux créneaux,
-> **ce qui est le réglage par défaut de l'écran Semaine**. `PlanWarning.repasComptes` porte le nombre
-> de créneaux additionnés pour que l'écran puisse écrire « vos 2 repas prévus » plutôt que « votre
-> journée ». Et 1 200 kcal est un **seuil de vigilance**, jamais un apport de référence (≈ 2 000 pour
-> une femme active) : l'écran a écrit « pour une référence de 1 200 kcal » jusqu'à cette date, ce qui
-> présentait un plancher de sécurité comme une cible.
 
 ⚠️ **Ce que cet amendement N'AUTORISE PAS** : masquer les quatre autres garde-fous, masquer un
 allergène déclaré, ou étendre le raisonnement « par défaut c'est plus sobre » à un signal de
@@ -928,52 +908,37 @@ chantier de contenu différé — l'atout « zéro donnée » voyage, lui, parto
 
 ## 9. Structure du projet
 
-> ⚠️ **Rectifié le 2026-08-03 contre le disque.** La version précédente annonçait `app/src/safety/`
-> et `app/src/features/` — **ni l'un ni l'autre n'a jamais existé**. Le garde-fou de vocabulaire
-> vivait en réalité dans `engine/guards/`, et les écrans dans `ui/screens/`. Un agent qui lisait ce
-> paragraphe cherchait `features/`, ne le trouvait pas, et pouvait le créer.
-> L'arbre ci-dessous est relevé sur le dépôt, pas rédigé de mémoire.
-
 ```
 appli_nutrition/
-├─ CLAUDE.md                    ← chargé à chaque session : invariants, commandes, carte de docs/
-├─ docs/                        ← ARCHITECTURE · ENGINE (index) + reference/ · DESIGN · ETAT · FICHE_REPRISE
+├─ ARCHITECTURE.md              ← ce document
 ├─ app/
 │  ├─ src/
-│  │  ├─ engine/                ← TS pur, zéro dépendance UI/DB, ≥90 % de couverture
-│  │  │  ├─ domain/             ← types, ids, marques, catalogue, requête, résultat, planning (12 f.)
-│  │  │  ├─ nutrition/          ← L2 : agrégation, signatures, couverture, besoins, ingrédient caractéristique
-│  │  │  ├─ selection/          ← L3 : exclusions (allergènes, régime, temps, équipement), passe de score,
-│  │  │  │  │                      diversification, similarité, explication, archétypes, alternatives, PRNG
-│  │  │  │  └─ scoring/         ← les 8 couches de score CODÉES : craving · habit · nutri · pantry ·
-│  │  │  │                        preference · season · speed · variety  (occasion/topic/cost : déclarées, non codées)
-│  │  │  ├─ planning/           ← L4 : plan-week · plan-leftovers · reroll-slot · scale-recipe · shopping-list
-│  │  │  ├─ search/             ← recherche de recettes (normalisation accent-insensible)
-│  │  │  ├─ guards/             ← les 5 garde-fous · **banned-terms.ts** = le lint du vocabulaire banni §6.2
-│  │  │  └─ api/                ← L5 : la surface publique du moteur
-│  │  ├─ data/                  ← accès SQLite, migrations, export/import, sources catalogue et user
-│  │  ├─ ui/                    ← PWA : router, navigation, panneau (fenêtres), thème, visite guidée
-│  │  │  └─ screens/            ← les 10 écrans : accueil · aujourdhui · courses · detail-recette ·
-│  │  │                           editeur-recette · frigo · parametres · recettes · savoir · semaine
-│  │  └─ cli/                   ← bancs de mesure : try-engine · try-planning · stress-planning ·
-│  │                              mesure-similarite · diag-couverture · list-recipes
-│  └─ public/catalog/catalog.db ← base livrée avec l'app, produite par `npm run build`
+│  │  ├─ engine/                ← TS pur, zéro dépendance, ≥90 % de couverture
+│  │  │  ├─ types.ts
+│  │  │  ├─ filters.ts          ← contraintes dures (§5.2)
+│  │  │  ├─ scoring.ts          ← contraintes souples (§5.3)
+│  │  │  ├─ diversify.ts        ← (§5.4)
+│  │  │  ├─ explain.ts          ← (§5.5)
+│  │  │  ├─ planner.ts          ← planning 7 jours (§5.6)
+│  │  │  └─ shopping.ts         ← (§5.7)
+│  │  ├─ data/                  ← accès SQLite, migrations, export/import
+│  │  ├─ safety/                ← consentement, disclaimers, garde-fous §6.5
+│  │  │  └─ lint-contenu.test.ts ← échoue si le vocabulaire banni §6.2 apparaît
+│  │  ├─ features/              ← écrans
+│  │  └─ ui/                    ← composants
+│  └─ public/catalog/catalog.db
 ├─ catalog/                     ← sources éditables, versionnées en clair
-│  ├─ sources/                  ← foods.yaml · ciqual-mapping.yaml · CIQUAL 2025
-│  ├─ recipes/*.yaml            ← 241
-│  ├─ evidence/*.md             ← 8 fiches « Comprendre » — frontmatter = métadonnées, corps = résumé
-│  ├─ tips/*.yaml               ← 73
-│  ├─ lexicon/*.yaml + *.webp   ← 62 gestes de cuisine illustrés (§8.5)
+│  ├─ sources/ciqual/
+│  ├─ recipes/*.yaml
+│  ├─ evidence/*.md             ← frontmatter = métadonnées, corps = résumé
+│  ├─ tips/*.yaml
+│  ├─ topics/*.md               ← chapitres santé (§8.2 bis)
+│  ├─ lexicon/*.yaml + *.webp   ← gestes de cuisine illustrés (§8.5)
+│  ├─ occasions/dates.yaml      ← table figée sur 10 ans (§8.6)
 │  ├─ CREDITS.md
-│  ├─ build.mjs                 ← génère catalog.db · build-icons.mjs · import-ciqual.mjs
-│  └─ build.test.ts
-├─ tests/                       ← intégration : frontières engine/, catalogue réel, cohérence régime & lexique
-├─ vite.config.ts               ← build PWA (root: 'app', COOP/COEP pour OPFS)
-└─ vitest.config.ts             ← ⚠️ SÉPARÉ EXPRÈS — `root: 'app'` faisait disparaître 44 tests
+│  └─ build.mjs                 ← génère catalog.db
+└─ tests/
 ```
-
-> ⚠️ **`occasions/` et `topics/` sont annoncés au §8 mais n'existent pas encore sur le disque** —
-> cohérent avec les couches `occasion`/`topic` déclarées au registre et non codées.
 
 **Le catalogue est éditable en texte, compilé en binaire.** Les recettes et fiches vivent en
 YAML/Markdown (lisibles, versionnables, relisibles par un tiers) ; `build.mjs` produit le `.db`.

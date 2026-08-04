@@ -519,6 +519,31 @@ describe('planning/plan-week — interaction avec assertCalorieFloor', () => {
     expect(warnings.length).toBeGreaterThan(0) // et il est signalé
     expect(warnings[0]).toMatchObject({ kind: 'plancher_calorique', seuil: 1200 })
   })
+
+  it('⛔ DIT COMBIEN DE REPAS IL A COMPTÉS — il ne mesure PAS une journée', async () => {
+    const { checkCalorieFloor } = await import('../guards/index.js')
+    // ⚠️ AJOUTÉ LE 2026-08-04. `checkCalorieFloor` additionne les recettes POSÉES AU PLAN, pas
+    // l'apport de la personne : ni le pain, ni un yaourt, ni un repas pris dehors — ni le
+    // petit-déjeuner quand le plan n'a que deux créneaux, ce qui est le DÉFAUT de l'écran Semaine.
+    // Sans ce champ, l'écran ne peut écrire que « votre journée », et sur une application à
+    // garde-fous TCA (§6.5) annoncer à quelqu'un qu'il mange 830 kcal par jour quand on n'en sait
+    // rien est exactement l'affirmation à ne pas produire.
+    const maigre = {
+      ...CATALOG,
+      nutrients: [{ id: 'energie', code: 'energie', nom: 'Énergie', unite: 'kcal', vnrAdulte: 2000, categorie: 'macronutriment', sens: 'cible' }],
+      indexes: { ...CATALOG.indexes, recipeNutrients: new Map(RECIPES.map((r) => [r.id, new Float64Array([50])])) },
+    } as unknown as Catalog
+
+    const deuxRepas = planWeek(maigre, makePlanRequest({ days: 2, slots: ['dejeuner', 'diner'] }), fakeSuggest(['a', 'b', 'c', 'd']))
+    expect(checkCalorieFloor(deuxRepas, makePlanRequest().profile, maigre)[0]?.repasComptes).toBe(2)
+
+    const troisRepas = planWeek(
+      maigre,
+      makePlanRequest({ days: 2, slots: ['petit_dejeuner', 'dejeuner', 'diner'] }),
+      fakeSuggest(['a', 'b', 'c', 'd', 'e', 'f'])
+    )
+    expect(checkCalorieFloor(troisRepas, makePlanRequest().profile, maigre)[0]?.repasComptes).toBe(3)
+  })
 })
 
 describe('planning/plan-week — cible nutritionnelle RESTANTE (§7.1, cumul réinjecté)', () => {

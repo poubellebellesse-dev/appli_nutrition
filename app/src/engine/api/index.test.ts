@@ -853,7 +853,7 @@ describe("engine/api — avertissements d'un plan (§6.5)", () => {
     // et conservait donc `warnings`. Un plan dont la journée tient largement sortait d'un reroll en
     // portant encore l'avertissement d'une version précédente.
     const engine = createEngine(makeEnergyFixture());
-    const perime: PlanWarning = { kind: "plancher_calorique", date: "2026-08-03", kcal: 900, seuil: 1200 };
+    const perime: PlanWarning = { kind: "plancher_calorique", date: "2026-08-03", kcal: 900, seuil: 1200, repasComptes: 2 };
     const apres = engine.rerollSlot(
       planWith("gratin", "cassoulet", [perime]),
       { date: "2026-08-03", creneau: "diner" },

@@ -544,7 +544,7 @@ describe('user-store — planning', () => {
     // changement de profil. L'appelant doit rappeler engine.checkPlan().
     savePlan(
       db,
-      { ...plan, warnings: [{ kind: 'plancher_calorique', date: '2026-08-03', kcal: 900, seuil: 1200 }] },
+      { ...plan, warnings: [{ kind: 'plancher_calorique', date: '2026-08-03', kcal: 900, seuil: 1200, repasComptes: 2 }] },
       AUJOURDHUI
     )
     expect(readPlan(db, plan.id)?.warnings).toEqual([])

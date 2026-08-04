@@ -270,7 +270,7 @@ describe('semaine — les alertes d’énergie', () => {
     await monter()
     await screen.findByText('Proposer une autre semaine')
 
-    expect(screen.queryByText(/journée.*apporte.*moins d.énergie/)).toBeNull()
+    expect(screen.queryByText(/repas prévus restent sous le seuil/)).toBeNull()
     expect(screen.queryByText(/journée.*à surveiller/)).toBeNull()
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(screen.queryByRole('status')).toBeNull()
@@ -288,10 +288,10 @@ describe('semaine — les alertes d’énergie', () => {
 
     // Le détail n'est nulle part dans le DOM tant que la fenêtre n'a pas été ouverte — ni en bloc
     // sous le marqueur (l'ancien comportement), ni déjà présent dans un panneau caché.
-    expect(screen.queryByText(/kcal pour une référence de/)).toBeNull()
+    expect(screen.queryByText(/Seuil de vigilance/)).toBeNull()
     expect(screen.queryByRole('dialog')).toBeNull()
 
-    const marqueur = screen.getByText(/Une journée apporte moins d.énergie/)
+    const marqueur = screen.getByText(/les repas prévus restent sous le seuil de vigilance/)
     const boutonDetail = marqueur.closest('button')!
     // `aria-haspopup="dialog"`, PAS `aria-expanded` : ce bouton ouvre une fenêtre, il n'allonge
     // rien en place (voir filtres-recettes.tsx pour le même patron).
@@ -300,13 +300,19 @@ describe('semaine — les alertes d’énergie', () => {
 
     fireEvent.click(boutonDetail)
     const dialogue = await screen.findByRole('dialog')
-    expect(within(dialogue).getByText(/kcal pour une référence de 1500 kcal/)).toBeDefined()
+    // ⚠️ CE QUE CES TROIS ATTENTES GARDENT (2026-08-04) : le texte disait « une journée apporte
+    // moins d'énergie que la référence habituelle », ce qui était faux deux fois. Ce qui est
+    // additionné, ce sont les repas PRÉVUS — pas ce que la personne mange ; et 1 500 kcal est un
+    // SEUIL DE VIGILANCE, pas une référence (elle tourne autour de 2 000).
+    expect(within(dialogue).getByText(/2 repas prévus/)).toBeDefined()
+    expect(within(dialogue).getByText(/Seuil de vigilance : 1500 kcal pour une journée entière/)).toBeDefined()
+    expect(within(dialogue).getByText(/ne compte que les recettes de votre plan/)).toBeDefined()
 
     // « ← Retour » referme la fenêtre — ciblé par regex : le libellé réel porte la flèche.
     fireEvent.click(within(dialogue).getByText(/Retour/))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     // Le marqueur, lui, n'a jamais bougé.
-    expect(screen.getByText(/Une journée apporte moins d.énergie/)).toBeDefined()
+    expect(screen.getByText(/les repas prévus restent sous le seuil de vigilance/)).toBeDefined()
   })
 
   it('mode avancé actif : n’allonge pas la semaine en dessous — la fenêtre de détail est un enfant direct de document.body', async () => {
@@ -318,7 +324,7 @@ describe('semaine — les alertes d’énergie', () => {
     await monter()
     await screen.findByText('Proposer une autre semaine')
 
-    const marqueur = screen.getByText(/Une journée apporte moins d.énergie/)
+    const marqueur = screen.getByText(/les repas prévus restent sous le seuil de vigilance/)
     fireEvent.click(marqueur.closest('button')!)
 
     const dialogue = await screen.findByRole('dialog')

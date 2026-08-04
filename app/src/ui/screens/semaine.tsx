@@ -474,7 +474,18 @@ function AlerteEnergie({ warnings }: { readonly warnings: WeekPlan['warnings'] }
   const [panneauOuvert, setPanneauOuvert] = useState(false)
   if (warnings.length === 0) return null
 
-  const resume = `${warnings.length === 1 ? 'Une journée apporte' : `${warnings.length} journées apportent`} moins d'énergie que la référence habituelle.`
+  // ⚠️ « LES REPAS PRÉVUS », JAMAIS « LA JOURNÉE ». Le texte disait « une journée apporte moins
+  // d'énergie que la référence habituelle » : deux erreurs dans une phrase de dix mots. Ce qui est
+  // additionné, ce sont les recettes POSÉES AU PLAN — pas le pain sur la table, pas le yaourt, pas
+  // un repas pris dehors, et pas le petit-déjeuner quand le plan n'a que deux créneaux, ce qui est
+  // le DÉFAUT de cet écran. Et 1 200 kcal n'est pas « la référence habituelle » (≈ 2 000 pour une
+  // femme active) mais le SEUIL DE VIGILANCE de §6.5. Annoncer à quelqu'un qu'il mange 830 kcal par
+  // jour quand on n'en sait rien est précisément ce qu'une application à garde-fous TCA ne doit pas
+  // produire.
+  const resume =
+    warnings.length === 1
+      ? 'Sur une journée, les repas prévus restent sous le seuil de vigilance.'
+      : `Sur ${warnings.length} journées, les repas prévus restent sous le seuil de vigilance.`
 
   return (
     <div
@@ -517,10 +528,20 @@ function AlerteEnergie({ warnings }: { readonly warnings: WeekPlan['warnings'] }
           <ul className="list-inside list-disc">
             {warnings.map((w) => (
               <li key={w.date}>
-                {formaterJour(w.date)} — {Math.round(w.kcal)} kcal pour une référence de {w.seuil} kcal
+                {formaterJour(w.date)} — {w.repasComptes} repas prévus, {Math.round(w.kcal)} kcal au total.
+                Seuil de vigilance : {w.seuil} kcal pour une journée entière.
               </li>
             ))}
           </ul>
+          {/* ⚠️ CE PARAGRAPHE EST LA MOITIÉ UTILE DU PANNEAU, pas une précaution de forme. Sans lui,
+              les chiffres ci-dessus se lisent comme un journal alimentaire — ce que §6.5 interdit
+              explicitement. Il dit ce qui n'est PAS compté, et il ne prescrit rien : ni « mangez
+              plus », ni « ajoutez un plat ». On informe, on ne juge pas (principe 6). */}
+          <p className="mt-3">
+            Ce total ne compte que les recettes de votre plan. Le pain, un yaourt, un fruit, un repas
+            pris ailleurs — rien de tout cela n'y figure, et le petit-déjeuner non plus s'il n'est pas
+            au plan.
+          </p>
         </Panneau>
       )}
     </div>
