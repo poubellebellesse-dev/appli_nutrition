@@ -25,3 +25,13 @@ documents Ciqual/
 
 # PWA — sortie de `vite build`, reconstructible
 dist/
+
+# Dossiers de TRAVAIL, jamais versionnés — trois `git add` les ont embarqués par accident
+# (2026-08-04) avant que cette section existe.
+#   `_avant_decoupe_*` : copies des documents AVANT un découpage, filet de sécurité le temps du lot.
+#   Les suivre dupliquerait chaque fait à deux endroits, ce que la règle d'unicité interdit — et un
+#   instantané qu'on veut GARDER va dans docs/archive/, daté, pas ici.
+docs/_avant_decoupe_*/
+atelier/
+capture/
+.codeboarding/
