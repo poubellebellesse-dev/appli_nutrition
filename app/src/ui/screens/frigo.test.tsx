@@ -81,10 +81,11 @@ const PANTRY_RICHE = [
   'sucre_blanc',
 ] as const
 
-function seedPantry(foodIds: readonly string[]): void {
+function seedPantry(foodIds: readonly string[], declareLe = '2026-08-04'): void {
   writePantry(
     baseCourante(),
-    foodIds.map((foodId) => ({ foodId: foodId as FoodId, quantiteApprox: null }))
+    foodIds.map((foodId) => ({ foodId: foodId as FoodId, quantiteApprox: null })),
+    declareLe
   )
 }
 

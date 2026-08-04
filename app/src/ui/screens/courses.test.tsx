@@ -442,7 +442,7 @@ describe('courses — le garde-manger', () => {
     const liste = socle.moteur.buildShoppingList(plan)
     const item = liste.items[0]!
     const nom = socle.catalogue.foods.get(item.foodId)!.nom
-    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }])
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], '2026-08-04')
 
     await monter()
 
@@ -467,7 +467,7 @@ describe('courses — le garde-manger', () => {
   it('la section porte le chemin pour se corriger — un lien vers « Vider le frigo »', async () => {
     const { socle, plan } = await avecUnPlan()
     const item = socle.moteur.buildShoppingList(plan).items[0]!
-    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }])
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], '2026-08-04')
 
     await monter()
 

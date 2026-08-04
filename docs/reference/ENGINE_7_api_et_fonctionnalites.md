@@ -288,7 +288,7 @@ plus lourd » redevient le meilleur candidat — une soupe de carottes *est* un 
 | **Alternatives d'une recette** | `suggestAlternatives` PROPOSÉ (§8, socle en P1b, feature P1c/P2) | v1 |
 | **Import / partage de recette** | fichier `.nutri-recipe`, P2P sans serveur (§8.7 ARCHI) | v1 |
 | **Commentaires locaux** | `user_recipe_note`, exportables avec le partage | v1 |
-| **Mode cuisine** | couche UI (timers par étape) — hors moteur (§5bis ARCHI) | v1/v1.5 |
+| **Mode cuisine** | couche UI (timers par étape) — hors moteur (§5bis ARCHI) | v1 mono-recette · v1.5 multi-recettes |
 | Fiches scientifiques | `topics/` + `evidence/` | v2 |
 | Thématiques santé | couche `topic`, poids 0 | v2 |
 | Coût des repas | couche `cost` | v3 |

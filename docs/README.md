@@ -26,6 +26,7 @@ lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Périmètre produit, modèle de données, cadre santé et réglementaire, contenu, risques |
 | [ENGINE.md](./ENGINE.md) | **Index du moteur.** Découpé le 2026-08-03 en 8 parties dans [reference/](./reference/) — 2 126 lignes → 8 fichiers de 122 à 355 lignes, contenu et numérotation de sections inchangés. Toute référence `ENGINE §x.y` reste valide |
 | [reference/PIEGES.md](./reference/PIEGES.md) | Pièges de build, navigateur, moteur et interface · règle de sourçage du contenu Savoir · les impasses déjà payées. Sorti de `FICHE_REPRISE.md` le 2026-08-03 |
+| [reference/CONCURRENCE_ET_ATTENTES.md](./reference/CONCURRENCE_ET_ATTENTES.md) | Ce que les utilisateurs demandent — et reprochent — aux applications comparables. Sourcé et daté, avec la qualité de chaque source : plusieurs des formules les plus citées viennent de blogs de concurrents. Relevé le 2026-08-04 |
 | [DESIGN.md](./DESIGN.md) | Écrans, navigation, jetons visuels, badge de preuve |
 
 Ordre d'autorité quand deux documents se contredisent : **le code fait foi**, puis `ENGINE.md` sur

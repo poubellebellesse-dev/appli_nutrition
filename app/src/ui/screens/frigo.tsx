@@ -152,7 +152,15 @@ export function Frigo() {
   const enregistrer = useCallback((suivant: readonly FoodId[]) => {
     setGarde(suivant)
     chargerSocle()
-      .then((s) => writePantry(s.db, suivant.map((foodId) => ({ foodId, quantiteApprox: null }))))
+      // ⚠️ LA DATE EST INJECTÉE, jamais `Date.now()` — et elle sert : un garde-manger non daté ne
+      // peut pas se faire questionner quand il vieillit (`ui/confirmer-frigo.tsx`, migration v8).
+      .then((s) =>
+        writePantry(
+          s.db,
+          suivant.map((foodId) => ({ foodId, quantiteApprox: null })),
+          aujourdhuiIso()
+        )
+      )
       .catch(() => undefined)
   }, [])
 

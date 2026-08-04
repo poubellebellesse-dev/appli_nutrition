@@ -341,7 +341,7 @@ describe('user-store — goûts et favoris', () => {
   it('fait l’aller-retour sur les thématiques actives et le garde-manger', () => {
     writeActiveTopics(db, ['diabete' as TopicId], AUJOURDHUI)
     expect(readActiveTopics(db)).toEqual(['diabete'])
-    writePantry(db, [{ foodId: 'farine_ble' as FoodId, quantiteApprox: 'un fond de paquet' }])
+    writePantry(db, [{ foodId: 'farine_ble' as FoodId, quantiteApprox: 'un fond de paquet' }], '2026-08-04')
     expect(readPantryFoodIds(db)).toEqual(['farine_ble'])
   })
 })
@@ -429,7 +429,7 @@ describe('user-store — readUserState', () => {
       origine: 'choisi',
     })
     writeActiveTopics(db, ['diabete' as TopicId], AUJOURDHUI)
-    writePantry(db, [{ foodId: 'farine_ble' as FoodId, quantiteApprox: null }])
+    writePantry(db, [{ foodId: 'farine_ble' as FoodId, quantiteApprox: null }], '2026-08-04')
 
     const etat = readUserState(db, { windowDays: 21, today: AUJOURDHUI })
 

@@ -331,7 +331,7 @@ puis garantis par le test de lint de contenu.
 | Mode sombre complet | Prévu, à décliner sur chaque écran |
 | Choix final du badge de preuve | Variantes proposées, à trancher |
 | **Écran de partage** (fichier `.nutri-recipe` + carte-image) | Décidé, pas maquetté |
-| **Mode cuisine** (multi-recettes, suivi d'étape, timers) | Décidé, à spécifier — v1/v1.5 (§5bis ARCHI) |
+| **Mode cuisine** (suivi d'étape, minuteurs, écran allumé) | **Spécifié et maquetté** — v1 mono-recette, v1.5 multi-recettes (§5bis ARCHI). Pas d'écran maquetté *dans ce document* : maquette hors dépôt |
 | **Thèmes d'accent curatés** | Décidé, jetons à définir |
 | **Toggles « Mes favoris » / variété** (Aujourd'hui, §4.1) | Proposé, pas maquetté — P3 |
 | **Sélecteur d'archétype** (onboarding + Paramètres, §ENGINE 6.3 bis) | Proposé, pas maquetté — P3 |

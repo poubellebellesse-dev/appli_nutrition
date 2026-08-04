@@ -259,14 +259,45 @@ export function readPantryFoodIds(db: UserDb): readonly FoodId[] {
     .map((row) => row.food_id as FoodId)
 }
 
-/** Remplace le garde-manger entier — il s'efface à volonté, c'est un état ponctuel (§4.3). */
-export function writePantry(db: UserDb, entries: readonly StoredPantryEntry[]): void {
+/**
+ * Date ISO de la dernière déclaration du garde-manger, ou `null`.
+ *
+ * ⚠️ `null` A DEUX CAUSES ET UNE SEULE LECTURE. Garde-manger vide (rien à dater) ou lignes d'avant
+ * la migration v8 (`declare_le = ''`, date inconnue) : dans les deux cas l'appelant ne sait PAS
+ * quand ça a été déclaré, et doit traiter la donnée comme non datée — jamais comme fraîche.
+ * L'absence d'information n'est pas une information.
+ *
+ * ⚠️ LA PLUS ANCIENNE DES LIGNES, pas la plus récente. `writePantry` réécrit tout d'un coup, donc
+ * elles partagent normalement la même date ; prendre le MIN garantit qu'une ligne rescapée d'une
+ * base v7 ne se fasse pas blanchir par une ligne saisie ce matin.
+ */
+export function readPantryDeclareLe(db: UserDb): string | null {
+  const lignes = db.all<{ readonly plus_ancienne: string | null }>(
+    'SELECT MIN(declare_le) AS plus_ancienne FROM user_pantry'
+  )
+  const valeur = lignes[0]?.plus_ancienne ?? null
+  return valeur === null || valeur === '' ? null : valeur
+}
+
+/**
+ * Remplace le garde-manger entier — il s'efface à volonté, c'est un état ponctuel (§4.3).
+ *
+ * `declareLe` est la date ISO du jour, INJECTÉE : ce module ne lit jamais l'horloge (même règle que
+ * le moteur, §3 ENGINE). Elle sert à dire depuis quand la déclaration tient — voir
+ * `readPantryDeclareLe` et `ui/confirmer-frigo.tsx`.
+ */
+export function writePantry(
+  db: UserDb,
+  entries: readonly StoredPantryEntry[],
+  declareLe: string
+): void {
   withTransaction(db, () => {
     db.run('DELETE FROM user_pantry')
     for (const entry of entries) {
-      db.run('INSERT INTO user_pantry (food_id, quantite_approx) VALUES (?, ?)', [
+      db.run('INSERT INTO user_pantry (food_id, quantite_approx, declare_le) VALUES (?, ?, ?)', [
         entry.foodId,
         entry.quantiteApprox,
+        declareLe,
       ])
     }
   })

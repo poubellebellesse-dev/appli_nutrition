@@ -403,3 +403,56 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     expect(boutonChoisir.disabled).toBe(true)
   })
 })
+
+describe('semaine — le garde-manger périmé se fait confirmer avant de servir', () => {
+  // ⚠️ CE QUE CE BLOC GARDE : un garde-manger de trois semaines produisait des recettes « réalisables
+  // avec ce que vous avez » fondées sur des aliments qu'on n'a plus, sans que rien ne le dise. C'est
+  // le grief n°1 relevé sur les applications comparables — voir reference/CONCURRENCE_ET_ATTENTES.md.
+
+  async function ouvrirOngletFrigo() {
+    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
+    const dialogue = await screen.findByRole('dialog')
+    fireEvent.click(within(dialogue).getByRole('tab', { name: 'Avec ce que j’ai' }))
+    return dialogue
+  }
+
+  it('⛔ NE PROPOSE RIEN tant que la question n’a pas été répondue', async () => {
+    const { writePantry } = await import('../../data/user-store.js')
+    const foods = [...catalogueDeTest().foods.keys()].slice(0, 3)
+    writePantry(baseCourante(), foods.map((foodId) => ({ foodId, quantiteApprox: null })), '2026-01-01')
+
+    await composerSemaine()
+    const dialogue = await ouvrirOngletFrigo()
+
+    expect(within(dialogue).getByText(/Vous les avez toujours/)).toBeDefined()
+    expect(within(dialogue).queryByText(/du mieux couvert/)).toBeNull()
+  })
+
+  it('un garde-manger déclaré AUJOURD’HUI n’est pas questionné — l’appli ne réclame rien', async () => {
+    const { writePantry } = await import('../../data/user-store.js')
+    const { aujourdhuiIso } = await import('../socle.js')
+    const foods = [...catalogueDeTest().foods.keys()].slice(0, 3)
+    writePantry(baseCourante(), foods.map((foodId) => ({ foodId, quantiteApprox: null })), aujourdhuiIso())
+
+    await composerSemaine()
+    const dialogue = await ouvrirOngletFrigo()
+
+    expect(within(dialogue).queryByText(/Vous les avez toujours/)).toBeNull()
+  })
+
+  it('⛔ DÉCOCHER RETIRE POUR DE BON — la question ne se repose pas à l’identique', async () => {
+    const { writePantry, readPantryFoodIds } = await import('../../data/user-store.js')
+    const foods = [...catalogueDeTest().foods.keys()].slice(0, 3)
+    writePantry(baseCourante(), foods.map((foodId) => ({ foodId, quantiteApprox: null })), '2026-01-01')
+
+    await composerSemaine()
+    const dialogue = await ouvrirOngletFrigo()
+
+    const cases = within(dialogue).getAllByRole('checkbox')
+    expect(cases).toHaveLength(3)
+    fireEvent.click(cases[0]!)
+    fireEvent.click(within(dialogue).getByText(/Continuer avec 2 aliments/))
+
+    await waitFor(() => expect(readPantryFoodIds(baseCourante())).toHaveLength(2))
+  })
+})

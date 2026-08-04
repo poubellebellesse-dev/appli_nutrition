@@ -46,7 +46,8 @@ Six principes, par ordre de priorité. En cas de conflit, le plus haut gagne.
 - **Import d'une recette** (URL/collage, usage perso local — faits + lien source, §8.7) *(v1/v2 à confirmer)*
 - **Partage de recette** entre utilisateurs par fichier autonome (P2P, sans serveur, §8.7) *(v1/v2 à confirmer)*
 - **Favoris** · **commentaires locaux** par recette/étape, exportables avec le partage *(v1/v2 à confirmer)*
-- **Mode cuisine** : suivi multi-recettes + timers par étape *(v1/v1.5 à trancher, §5bis)*
+- **Mode cuisine** : étape courante, minuteurs et écran allumé, **une recette à la fois** *(v1,
+  §5bis)* ; suivi **multi-recettes** et synchronisation du service *(v1.5, §5bis)*
 
 > La fenêtre de planification descend à **2 jours** : un utilisateur qui part en week-end doit
 > pouvoir ne planifier que samedi et dimanche, sans attendre le lundi suivant.
@@ -476,14 +477,67 @@ rayon. Arrondi aux conditionnements courants (on n'achète pas 43 g de beurre).
 
 ### 5bis — Mode cuisine (couche UI, hors moteur)
 
-Fonctionnalité de présentation par-dessus le moteur, à spécifier comme écran propre *(v1/v1.5 à
-trancher)*. Trois besoins : **suivi de plusieurs recettes en parallèle** (entrée + plat + dessert,
-bascule et synchronisation du service), **suivi d'étape** (taper une étape marque où on en est) et
-**timers par étape** (`recipe_step.timer_s` / `timer_type`, plusieurs décomptes en parallèle).
+Écran de présentation par-dessus le moteur : il ne calcule rien, il montre une recette **déjà
+choisie** à quelqu'un qui a les mains occupées. **Découpé en deux livraisons** (décision 8 de
+`ETAT.md`, tranchée le 2026-08-04) :
 
-⚠️ Sur **iOS-PWA les timers en arrière-plan sont non fiables** : garder l'écran allumé (Wake Lock
-API), décompte in-app, notification best-effort. Argument de plus pour Capacitor si le mode cuisine
-devient central. L'interdiction de `Date.now` ne vise que `engine/` — l'UI utilise l'heure réelle.
+| | Périmètre | Statut |
+|---|---|---|
+| **v1** | Une recette à la fois : écran allumé, étape courante, minuteurs, quantité à la demande | À coder |
+| **v1.5** | Plusieurs recettes en parallèle — entrée + plat + dessert, bascule et **synchronisation du service** | Différé |
+
+Le découpage n'est pas un étalement du travail : la v1 ne demande **aucune donnée nouvelle du
+moteur** et rend visible ce qui est déjà buildé, tandis que la synchronisation de service est un
+problème d'ordonnancement à part entière (`CONCEPTION_B_VIN_REPAS.md` §5).
+
+#### Les quatre points de la v1
+
+1. **L'écran ne s'éteint pas** — `navigator.wakeLock.request('screen')`, demandé à l'entrée dans
+   l'écran, relâché à la sortie et **re-demandé sur `visibilitychange`** (le verrou tombe quand
+   l'onglet passe en arrière-plan). Dégradation silencieuse si l'API manque : l'écran ne reste pas
+   allumé, rien d'autre ne change.
+2. **Une étape à la fois, et l'utilisateur sait où il en est** — position affichée (« 3 sur 6 ») et
+   jalons. ⚠️ **Les étapes n'avancent que sur appui** : ni minuterie de défilement, ni carrousel.
+   C'est la règle déjà tranchée pour l'accueil (`RETOUR_ESSAI_TELEPHONE.md` §6.5), appliquée ici.
+3. **Le minuteur est dans l'étape qui le porte** — `recipe_step.timer_s` / `timer_type`, **plusieurs
+   décomptes en parallèle**, et un décompte **survit au changement d'étape**. Un minuteur lancé
+   ailleurs reste donc visible depuis l'étape courante, étiqueté par son étape d'origine.
+4. **La quantité se lit sans quitter l'étape** — appuyer sur un ingrédient cité par l'étape affiche
+   son `unite_affichage`. Même principe que les gestes du lexique, déjà dépliés sur place
+   (`detail-recette.tsx`) : personne ne doit perdre son étape pour savoir ce que « pocher » veut dire.
+
+#### Ce que la v1 exige avant d'être codable
+
+- ⚠️ **Le lien étape → ingrédient n'existe pas.** Le point 4 n'est pas du câblage. Il demande un
+  champ **`etapes[].food_ids`** en YAML et une table `recipe_step_ingredient(recipe_id, ordre,
+  food_id)`, **écrits à la main et validés au build** — exactement le régime de `lexicon_ids`
+  (authored, puis build rouge sur un identifiant inconnu, `build.mjs:531`). ⚠️ **La dérivation
+  automatique par rapprochement de texte a été envisagée et écartée** : `food` n'a ni synonyme ni
+  alias, et le texte réel ne contient pas les noms du catalogue — « les poivrons » ne rapproche pas
+  `poivron_rouge`, et « saler » ne rapproche rien du tout. Un rapprochement automatique
+  silencieusement incomplet est pire que pas de rapprochement. Plan de montée :
+  `CONCEPTION_MODE_CUISINE.md`.
+- ⚠️ **Toutes les `recipe_step` ne sont pas des gestes.** `chakchouka` finit sur un avertissement
+  ANSES compté comme 6ᵉ étape : « 6 sur 6 » promet un geste alors que le plat est servi. Un
+  avertissement doit sortir du flux des étapes, ou porter une marque qui l'en distingue.
+
+#### Hors périmètre, et pourquoi
+
+- **Pilotage vocal / mains libres.** C'est ce que les gens réclament spontanément, et c'est ce qui
+  échoue en cuisine réelle : neuf modes d'échec relevés sur douze foyers observés
+  ([arXiv 2306.09992](https://arxiv.org/abs/2306.09992)) — perte de la vue d'ensemble, surcharge,
+  fragmentation, « elle m'a ignoré ». S'y ajoute une raison propre au projet : une permission micro
+  fissure le principe 2 (souveraineté) même si tout reste local.
+- **Avancement automatique des étapes.** Interdit par le point 2 ci-dessus.
+
+⚠️ Sur **iOS-PWA les timers en arrière-plan sont non fiables** : décompte in-app, notification
+best-effort. **Wake Lock n'est PLUS un argument pour Capacitor** — l'API est à ~93 % de couverture et
+Safari iOS la gère depuis 16.4 ; seule la fiabilité des notifications en arrière-plan reste un
+argument. L'interdiction de `Date.now` ne vise que `engine/` — l'UI utilise l'heure réelle.
+
+> Maquette cliquable de l'écran v1 (chakchouka, minuteurs réels, Wake Lock actif) :
+> <https://claude.ai/code/artifact/00aae6df-f33d-4cb6-97cf-e11751419e0e>. Hors dépôt — elle illustre
+> la spec, elle ne la remplace pas.
 
 ### Fonctionnalités conçues en session 2 — état d'implémentation par point, voir docs/archive/RECAP_SESSION_2.md
 
@@ -1014,7 +1068,8 @@ YAML/Markdown (lisibles, versionnables, relisibles par un tiers) ; `build.mjs` p
 2. Liste définitive des 8-10 chapitres santé de la v2
 3. Revue juridique par un professionnel avant publication publique — recommandée, non bloquante
    pour le développement
-4. **Mode cuisine** en v1 ou v1.5 (feature nouvelle, sizeable — après le socle P0, §5bis)
+4. ~~**Mode cuisine** en v1 ou v1.5~~ — **tranché le 2026-08-04** : mono-recette en v1,
+   synchronisation multi-recettes en v1.5 (§5bis)
 5. **Multi-langue** : structure prévue dès le schéma (§8.8) ; 1ʳᵉ langue = français ; 2ᵉ langue et
    localisation du contenu santé (par marché, juridique) = v2+
 6. **Cible iOS** : **PWA** par défaut (gratuit, pas de Mac) ; Capacitor + App Store seulement si

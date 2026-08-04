@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 7
+export const USER_SCHEMA_VERSION = 8
 
 export interface Migration {
   readonly version: number
@@ -455,6 +455,27 @@ const V7_STATEMENTS: readonly string[] = [
      ADD COLUMN visite_proposee INTEGER NOT NULL DEFAULT 0 CHECK (visite_proposee IN (0,1))`,
 ]
 
+/**
+ * v8 — DATER LE GARDE-MANGER.
+ *
+ * ⚠️ POURQUOI CETTE COLONNE, et ce n'est pas du confort. `user_pantry` disait CE QU'ON A sans dire
+ * DEPUIS QUAND, et deux écrans s'en servent pour affirmer des choses : l'écran Courses RETIRE de la
+ * liste ce qu'on est censé avoir (on rentre sans crème), la fenêtre « Choisir un plat » propose des
+ * recettes réalisables avec. Un garde-manger de trois semaines fait mentir les deux en silence.
+ *
+ * C'est le grief n°1 relevé sur les applications comparables (voir
+ * `reference/CONCURRENCE_ET_ATTENTES.md`) : « on le remplit une semaine, puis plus jamais — et un
+ * inventaire à moitié à jour est PIRE que pas d'inventaire, parce qu'on cesse d'y croire ».
+ *
+ * `DEFAULT ''` = date INCONNUE, pas « aujourd'hui ». Les lignes d'avant cette migration ont pu être
+ * saisies il y a six mois ; les traiter comme fraîches serait précisément l'erreur que la colonne
+ * existe pour empêcher. L'absence d'information n'est pas une information (§5.1 bis ENGINE) — une
+ * date vide déclenche donc la demande de confirmation, comme une date ancienne.
+ */
+const V8_STATEMENTS: readonly string[] = [
+  `ALTER TABLE user_pantry ADD COLUMN declare_le TEXT NOT NULL DEFAULT ''`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -463,6 +484,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 5, statements: V5_STATEMENTS },
   { version: 6, statements: V6_STATEMENTS },
   { version: 7, statements: V7_STATEMENTS },
+  { version: 8, statements: V8_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */
