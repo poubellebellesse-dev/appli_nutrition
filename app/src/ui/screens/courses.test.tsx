@@ -16,7 +16,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { JSX } from 'react'
 import type { AllergenId } from '../../engine/domain/index.js'
-import { readShoppingList, savePlan, writeAllergies, writePantry } from '../../data/user-store.js'
+import {
+  readPantryDeclareLe,
+  readPantryFoodIds,
+  readShoppingList,
+  savePlan,
+  writeAllergies,
+  writePantry,
+} from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 import { hashDe, hashDuFrigo } from '../router.js'
 
@@ -436,13 +443,31 @@ describe('courses — la note d’allergène sur un article choisi par compléti
   })
 })
 
+/**
+ * Les dates du garde-manger, TOUJOURS relatives au jour courant.
+ *
+ * ⚠️ AUCUN LITTÉRAL DE DATE ICI, et ce n'est pas du zèle : ces tests écrivaient `'2026-08-04'`, ce
+ * qui était le jour même où ils ont été écrits. Depuis que `courses.tsx` n'applique plus un
+ * garde-manger de plus de sept jours, ce littéral serait devenu périmé une semaine plus tard et les
+ * tests seraient passés au rouge un matin sans qu'aucune ligne de code ait bougé.
+ */
+async function datesDuFrigo(): Promise<{ aujourdhui: string; vieux: string }> {
+  const { aujourdhuiIso } = await import('../socle.js')
+  const aujourdhui = aujourdhuiIso()
+  const vieux = new Date(Date.parse(`${aujourdhui}T00:00:00Z`) - 30 * 86_400_000)
+    .toISOString()
+    .slice(0, 10)
+  return { aujourdhui, vieux }
+}
+
 describe('courses — le garde-manger', () => {
   it("garde-manger non vide : l'article est sous « Déjà chez vous », pas dans la liste à acheter", async () => {
     const { socle, plan } = await avecUnPlan()
+    const { aujourdhui } = await datesDuFrigo()
     const liste = socle.moteur.buildShoppingList(plan)
     const item = liste.items[0]!
     const nom = socle.catalogue.foods.get(item.foodId)!.nom
-    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], '2026-08-04')
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], aujourdhui)
 
     await monter()
 
@@ -466,14 +491,94 @@ describe('courses — le garde-manger', () => {
   // de « Recettes », qui avait perdu sa capacité par un simple changement de libellé.
   it('la section porte le chemin pour se corriger — un lien vers « Vider le frigo »', async () => {
     const { socle, plan } = await avecUnPlan()
+    const { aujourdhui } = await datesDuFrigo()
     const item = socle.moteur.buildShoppingList(plan).items[0]!
-    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], '2026-08-04')
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], aujourdhui)
 
     await monter()
 
     const section = (await screen.findByText(/^Déjà chez vous \(1\)$/)).closest('section') as HTMLElement
     const lien = within(section).getByRole('link', { name: /garde-manger/i })
     expect(lien.getAttribute('href')).toBe(hashDuFrigo())
+  })
+})
+
+/**
+ * ⚠️ CE QUE CE BLOC GARDE, et il garde l'INVERSE de `choisir-plat`. Sur cet écran, le garde-manger ne
+ * fait jamais qu'ENLEVER des lignes. Un garde-manger périmé appliqué quand même vous fait donc
+ * rentrer du magasin SANS la crème, et vous ne le découvrez qu'au moment de cuisiner — alors que
+ * l'ignorer vous fait, au pire, racheter une crème que vous aviez. Les deux erreurs ne coûtent pas
+ * la même chose : celle-ci se raye d'un trait, l'autre gâche le repas.
+ *
+ * D'où deux comportements pour un même composant, et c'est délibéré : dans « Choisir un plat » la
+ * question RETIENT les résultats (un garde-manger périmé y rend la proposition FAUSSE), ici elle
+ * n'empêche rien (il rend seulement la liste TROP LONGUE). Voir décision 57, `ETAT.md`.
+ */
+describe('courses — un garde-manger périmé n’est pas appliqué', () => {
+  it('⛔ AUCUNE LIGNE N’EST RETIRÉE quand le garde-manger a plus de sept jours', async () => {
+    const { socle, plan } = await avecUnPlan()
+    const { vieux } = await datesDuFrigo()
+    const item = socle.moteur.buildShoppingList(plan).items[0]!
+    const nom = socle.catalogue.foods.get(item.foodId)!.nom
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], vieux)
+
+    await monter()
+
+    // L'article reste une ligne à acheter…
+    expect(lignesAffichees().some((l) => l.includes(nom))).toBe(true)
+    // …et n'est PAS annoncé comme déjà possédé, puisqu'on n'en sait rien.
+    expect(screen.queryByText(/^Déjà chez vous/)).toBeNull()
+    expect(screen.getByText(/Rien n'a été retiré de cette liste/)).toBeDefined()
+  })
+
+  it('la question NE BLOQUE PAS — la liste est lisible pendant qu’elle est posée', async () => {
+    // C'est toute la différence avec « Choisir un plat ». Retenir une liste de courses derrière
+    // douze cases à cocher pendant que quelqu'un est debout dans un magasin coûterait plus que les
+    // deux lignes en trop qu'elle contient.
+    const { socle, plan } = await avecUnPlan()
+    const { vieux } = await datesDuFrigo()
+    const item = socle.moteur.buildShoppingList(plan).items[0]!
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], vieux)
+
+    await monter()
+
+    expect(screen.getByText(/Vous les avez toujours/)).toBeDefined()
+    expect(lignesAffichees().length).toBeGreaterThan(0)
+  })
+
+  it('« Oui, tout est là » redate le garde-manger et la liste se resserre aussitôt', async () => {
+    const { socle, plan } = await avecUnPlan()
+    const { aujourdhui, vieux } = await datesDuFrigo()
+    const item = socle.moteur.buildShoppingList(plan).items[0]!
+    const nom = socle.catalogue.foods.get(item.foodId)!.nom
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], vieux)
+
+    await monter()
+    fireEvent.click(screen.getByText('Oui, tout est là'))
+
+    await screen.findByText(/^Déjà chez vous \(1\)$/)
+    expect(lignesAffichees().some((l) => l.includes(nom))).toBe(false)
+    expect(screen.queryByText(/Rien n'a été retiré de cette liste/)).toBeNull()
+    // La date, pas seulement l'affichage : sans ça la question reviendrait au montage suivant.
+    expect(readPantryDeclareLe(baseCourante())).toBe(aujourdhui)
+  })
+
+  it('⛔ DÉCOCHER RETIRE POUR DE BON — la ligne reste à acheter et le frigo est vidé en base', async () => {
+    // Ne l'ignorer que pour l'affichage en cours reposerait la même question à l'identique la fois
+    // suivante : on contournerait la dérive au lieu de la corriger (décision 57).
+    const { socle, plan } = await avecUnPlan()
+    const { vieux } = await datesDuFrigo()
+    const item = socle.moteur.buildShoppingList(plan).items[0]!
+    const nom = socle.catalogue.foods.get(item.foodId)!.nom
+    writePantry(baseCourante(), [{ foodId: item.foodId, quantiteApprox: null }], vieux)
+
+    await monter()
+    fireEvent.click(screen.getByRole('checkbox', { name: nom }))
+    fireEvent.click(screen.getByText('Continuer avec 0 aliment'))
+
+    await waitFor(() => expect(readPantryFoodIds(baseCourante())).toEqual([]))
+    expect(lignesAffichees().some((l) => l.includes(nom))).toBe(true)
+    expect(screen.queryByText(/^Déjà chez vous/)).toBeNull()
   })
 })
 

@@ -13,6 +13,13 @@
 //   - « Choisir un plat » propose des recettes réalisables avec. Là au moins l'erreur se voit tout
 //     de suite, devant le frigo ouvert.
 //
+// ⚠️ LES DEUX APPELANTS NE S'EN SERVENT PAS PAREIL, ET IL NE FAUT PAS UNIFORMISER. `choisir-plat.tsx`
+// RETIENT ses résultats tant qu'on n'a pas répondu — un garde-manger périmé y rend la proposition
+// FAUSSE. `courses.tsx` n'attend rien : là-bas le garde-manger ne fait qu'ENLEVER des lignes, donc
+// un garde-manger douteux n'est simplement pas appliqué, la liste sort entière et ce composant
+// s'affiche en bandeau. Ce qui sépare les deux n'est pas l'écran mais le SENS de l'erreur : l'un
+// devient faux, l'autre seulement trop long. Voir décision 57 (`ETAT.md`).
+//
 // ⚠️ CE N'EST PAS UN RAPPEL, ET LA DISTINCTION EST LA RÈGLE DU PRODUIT. §4.3 ARCHITECTURE pose que
 // le garde-manger est « FACULTATIF ET PONCTUEL, jamais un inventaire à tenir : l'appli ne demande
 // rien ». On ne relance donc personne, on ne notifie pas, on n'affiche aucun badge. La question est

@@ -36,10 +36,15 @@ La recherche valide cette ligne plus fort que prévu — c'est exactement le pi�
 « gestion du garde-manger » reste en v3, distincte et non engagée.
 
 **Ce qui a été ajouté le 2026-08-04** (décision utilisateur) : `user_pantry.declare_le` (migration
-v8) et `ui/confirmer-frigo.tsx`. Au-delà de **7 jours**, la liste s'affiche à cocher avant de servir
-à quoi que ce soit ; décocher retire pour de bon. La question n'est posée qu'au **moment de l'usage**
-— jamais en rappel, jamais en notification, jamais en badge : le produit s'interdit de réclamer
-l'entretien d'un inventaire.
+v8) et `ui/confirmer-frigo.tsx`. Au-delà de **7 jours**, la liste s'affiche à cocher ; décocher
+retire pour de bon. La question n'est posée qu'au **moment de l'usage** — jamais en rappel, jamais en
+notification, jamais en badge : le produit s'interdit de réclamer l'entretien d'un inventaire.
+
+⚠️ **Les deux écrans concernés ne réagissent PAS pareil, et c'est délibéré.** Dans « Choisir un
+plat », la question retient les résultats : un garde-manger périmé y rend la proposition *fausse*.
+Dans Courses, elle n'empêche rien — le garde-manger ne fait qu'*enlever* des lignes, donc un
+garde-manger douteux n'est pas appliqué du tout et la liste sort entière. Acheter une crème en double
+se raye d'un trait ; rentrer sans gâche le repas. Voir décision 57 (`ETAT.md`).
 
 ## 2. « Il me manque toujours un ou deux ingrédients »
 

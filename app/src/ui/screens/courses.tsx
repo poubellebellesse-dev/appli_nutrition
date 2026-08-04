@@ -32,6 +32,7 @@ import {
   addExtraItem,
   readAllergies,
   readLatestPlan,
+  readPantryDeclareLe,
   readPantryFoodIds,
   readShoppingList,
   removeExtraItem,
@@ -42,9 +43,17 @@ import {
   type StoredShoppingList,
 } from '../../data/user-store.js'
 import { LIBELLE_COURT } from '../champs-profil.js'
-import { LIBELLE_CRENEAU, aujourdhuiIso, chargerSocle, cleCreneau, profilCourant } from '../socle.js'
+import {
+  LIBELLE_CRENEAU,
+  aujourdhuiIso,
+  chargerSocle,
+  cleCreneau,
+  profilCourant,
+  type Socle,
+} from '../socle.js'
 import { hashDe, hashDuFrigo } from '../router.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { ConfirmerFrigo, frigoAConfirmer } from '../confirmer-frigo.js'
 
 /** Les dix rayons de §4.3 — texte libre côté base, liste fermée côté saisie pour rester rangeable. */
 const RAYONS_EXTRA: readonly string[] = [
@@ -77,6 +86,14 @@ interface Vue {
    * ICI, par différence avec une liste construite sans l'option, plutôt que lue sur `liste` elle-même.
    */
   readonly dejaChezVous: readonly ShoppingListItem[]
+  /**
+   * Le garde-manger quand il a trop vieilli pour qu'on s'y fie — VIDE le reste du temps. Non
+   * appliqué à `liste` : voir le bloc de `calculerVue` et le bandeau `ConfirmerFrigo`.
+   */
+  readonly gardeAConfirmer: readonly FoodId[]
+  readonly declareLe: string | null
+  /** Pour `ConfirmerFrigo`, qui réécrit `user_pantry` quand l'utilisateur répond. */
+  readonly socle: Socle
   readonly enregistree: StoredShoppingList
   readonly nomAliment: (id: FoodId) => string
   readonly platDuCreneau: (slot: SlotRef) => string | null
@@ -111,14 +128,25 @@ async function calculerVue(): Promise<Etat> {
   profilCourant(socle.db, aujourdhuiIso())
   let enregistree = readShoppingList(socle.db)
   const pantryFoodIds = readPantryFoodIds(socle.db)
-  const liste = socle.moteur.buildShoppingList(plan, { pantryFoodIds })
+  const declareLe = readPantryDeclareLe(socle.db)
+
+  // ⚠️ UN GARDE-MANGER PÉRIMÉ N'EST PAS APPLIQUÉ ICI, et c'est l'inverse de « Choisir un plat ».
+  // Là-bas la question RETIENT les résultats ; ici elle n'empêche rien. La différence n'est pas
+  // cosmétique : `pantryFoodIds` ne fait jamais qu'ENLEVER des lignes de cette liste, donc ignorer un
+  // garde-manger douteux fait acheter en double, tandis que l'appliquer à tort fait rentrer SANS —
+  // et on ne s'en aperçoit qu'au moment de cuisiner. On échoue du côté de la ligne en trop, qui se
+  // raye. Même raison que « Déjà chez vous » plus bas : un article qui disparaît en silence est un
+  // défaut pire que celui qu'on voit et qu'on barre.
+  const perime = frigoAConfirmer(declareLe, aujourdhuiIso(), pantryFoodIds.length)
+  const applique = perime ? [] : pantryFoodIds
+  const liste = socle.moteur.buildShoppingList(plan, { pantryFoodIds: applique })
 
   // « Déjà chez vous » — voir l'en-tête de `Vue.dejaChezVous`. Une seule liste de référence
   // (sans l'option) suffit : `pantryFoodIds` n'AJOUTE aucune ligne, il n'en retire.
   const dejaChezVous =
-    pantryFoodIds.length === 0
+    applique.length === 0
       ? []
-      : socle.moteur.buildShoppingList(plan).items.filter((item) => pantryFoodIds.includes(item.foodId))
+      : socle.moteur.buildShoppingList(plan).items.filter((item) => applique.includes(item.foodId))
 
   if (enregistree === null || enregistree.planId !== plan.id) {
     saveShoppingList(socle.db, liste)
@@ -145,6 +173,9 @@ async function calculerVue(): Promise<Etat> {
     vue: {
       liste,
       dejaChezVous,
+      gardeAConfirmer: perime ? pantryFoodIds : [],
+      declareLe,
+      socle,
       enregistree,
       nomAliment: (id) => socle.catalogue.foods.get(id)?.nom ?? id,
       platDuCreneau: (slot) => platParCreneau.get(cleCreneau(slot.date, slot.creneau)) ?? null,
@@ -334,6 +365,25 @@ export function Courses() {
       <p className="mt-1 text-[0.95rem] leading-relaxed text-attenue">
         {faits} sur {total} cochés
       </p>
+
+      {/* ⚠️ CE BANDEAU N'EST PAS UN MUR, contrairement à celui de « Choisir un plat ». Retenir une
+          liste de courses derrière douze cases à cocher pendant que quelqu'un est debout dans le
+          magasin coûterait plus cher que les deux lignes en trop qu'elle contient. Il DIT ce qui a
+          été fait — rien n'a été retiré — et offre de corriger. L'ignorer laisse l'état sûr. */}
+      {vue.gardeAConfirmer.length > 0 && (
+        <div className="mt-4">
+          <p className="mb-2 text-[0.9rem] leading-relaxed text-texte-doux">
+            Rien n'a été retiré de cette liste : votre garde-manger date trop pour qu'on s'y fie.
+          </p>
+          <ConfirmerFrigo
+            socle={vue.socle}
+            garde={vue.gardeAConfirmer}
+            declareLe={vue.declareLe}
+            aujourdhui={aujourdhuiIso()}
+            onConfirme={rafraichir}
+          />
+        </div>
+      )}
 
       {/* ⚠️ LES RESTES N'ÉTAIENT NOMMÉS NULLE PART ICI, alors que cette liste est calculée pour en
           produire : les quantités ne sont PAS divisées par le nombre de convives, exprès (voir
