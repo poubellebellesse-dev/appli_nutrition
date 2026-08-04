@@ -147,6 +147,21 @@
   ne vérifie que lui-même.
 - ⚠️ **Les maquettes contredisent leur propre cahier des charges.** Leur bouton principal est à
   3,95:1, sous le seuil AA, alors que le même bundle exige 7:1. Écarts mesurés en §1 DESIGN.
+- ⛔ **`cleanup()` ne démonte QUE ce que testing-library a monté.** `main.tsx` appelle
+  `createRoot(...).render(...)` **à l'import** ; sa racine lui est donc inconnue. Avec
+  `vi.resetModules()` + `import('./main.js')` à chaque test, `main.test.tsx` et
+  `main-accessibilite.test.tsx` laissaient **quatre coquilles React vivantes** en fin de fichier —
+  détachées du DOM (`document.body.innerHTML` est réécrit) mais **toujours abonnées à `window`**.
+  Deux symptômes, tous deux intermittents, et c'est ce qui a fait perdre du temps : un `hashchange`
+  entendu par toutes les racines à la fois (le `waitFor` sur le focus attend un `<main>` que ses
+  voisines lui disputent, échec dans un test qui n'a rien fait de mal), et un réveil du planificateur
+  React **après** la destruction de jsdom → `ReferenceError: window is not defined`, remonté en
+  « Unhandled Error » avec **1315 tests au vert et un exit code 1**. **Un compte de tests vert avec
+  un exit non nul n'est pas un flake, c'est une fuite** — lire la section « Unhandled Errors », elle
+  nomme le fichier d'origine. Correctif : `main.tsx` **exporte sa racine**, les deux fichiers de test
+  la démontent en `afterEach` sous `act()`. ⚠️ Ne pas aller chercher la racine par
+  `import('./main.js')` DANS le nettoyage : sur un test qui a échoué avant de monter, ça la monterait
+  au lieu de la rendre.
 
 
 ## Contenu : la règle qui tient tout l'onglet Savoir

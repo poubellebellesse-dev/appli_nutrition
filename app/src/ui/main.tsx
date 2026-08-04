@@ -383,7 +383,24 @@ function Coquille() {
   )
 }
 
-createRoot(document.getElementById('root')!).render(
+/**
+ * La racine React de l'application, EXPORTÉE — et c'est le seul but de l'export.
+ *
+ * ⚠️ Au navigateur, personne ne la lit : la page se ferme, la racine part avec. **Elle est exportée
+ * pour que les tests puissent la RENDRE.** `createRoot(...).render(...)` est appelé À L'IMPORT (voir
+ * l'en-tête des fichiers de test), donc `cleanup()` de testing-library ne la connaît pas — il ne
+ * démonte que ce qu'il a monté lui-même. Sans cet export, chaque `import('./main.js')` d'un test
+ * laissait une racine montée derrière lui, toujours abonnée aux événements de `window`, toujours
+ * capable de programmer du travail : quatre racines vivantes à la fin du fichier, qui se disputaient
+ * le `hashchange` et se réveillaient après la destruction de jsdom (`ReferenceError: window is not
+ * defined`). Voir `reference/PIEGES.md`.
+ *
+ * ⚠️ **Ne pas transformer cet export en « fonction de montage » appelée conditionnellement.** Ce
+ * fichier est le point d'entrée déclaré dans `index.html` ; monter à l'import est son contrat.
+ */
+export const racine = createRoot(document.getElementById('root')!)
+
+racine.render(
   <StrictMode>
     <Coquille />
   </StrictMode>

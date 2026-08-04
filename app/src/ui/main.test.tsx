@@ -13,7 +13,7 @@
 // `visite_proposee = 0`. On traverse donc le vrai parcours d'accueil, comme `accueil.test.tsx`.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { readDisplay, writeDisplay } from '../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from './test-socle.js'
 
@@ -25,12 +25,20 @@ vi.mock('./user-source.js', () => ({
   surErreurDePersistance: () => undefined,
 }))
 
+/** Voir `main-accessibilite.test.tsx` : `cleanup()` ne démonte PAS la racine de `main.tsx`, qui est
+ * créée à l'import. Sans ça, chaque test en laissait une vivante derrière lui. */
+let demonter: (() => void) | null = null
+
 beforeEach(() => {
   vi.resetModules()
   reinitialiserBase()
   document.body.innerHTML = '<div id="root"></div>'
 })
-afterEach(cleanup)
+afterEach(() => {
+  demonter?.()
+  demonter = null
+  cleanup()
+})
 
 const clic = (texte: string | RegExp) => fireEvent.click(screen.getByText(texte))
 
@@ -40,7 +48,8 @@ const desactive = (texte: string): boolean =>
 
 /** Monte la coquille et traverse l'intro jusqu'à « Aujourd'hui », comme `accueil.test.tsx`. */
 async function monterEtTerminerIntro() {
-  await import('./main.js')
+  const { racine } = await import('./main.js')
+  demonter = () => act(() => racine.unmount())
   await screen.findByRole('heading', { name: 'Bienvenue' })
 
   clic('J’ai lu et compris')

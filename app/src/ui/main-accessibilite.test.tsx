@@ -17,9 +17,17 @@
 //
 // ⚠️ LE ROUTEUR EST UN MODULE SINGLETON (`router.tsx`) : `window.location.hash` est remis à `''`
 // avant et après chaque test, même précaution que `visite.test.tsx`.
+//
+// ⛔ CONSÉQUENCE DU MONTAGE À L'IMPORT, ET ELLE A COÛTÉ : `cleanup()` NE DÉMONTE PAS CETTE RACINE.
+// Testing-library ne rend que ce qu'il a monté lui-même ; la racine de `main.tsx` lui est inconnue.
+// Chaque test en créait donc une de plus, toutes encore abonnées à `window` — d'où un `hashchange`
+// entendu par quatre coquilles à la fois (le `waitFor` sur le focus attendait un `<main>` que ses
+// voisines lui disputaient) et un réveil du planificateur React APRÈS la destruction de jsdom
+// (`ReferenceError: window is not defined`, remonté en « Unhandled Error » sans faire échouer de
+// test). **C'est pour ça que `main.tsx` exporte `racine` : pour qu'on puisse la rendre ici.**
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
 import { recordConsent } from '../data/user-store.js'
 import { VERSION_CONSENTEMENT } from './texte-consentement.js'
 import { hashDe } from './router.js'
@@ -33,6 +41,11 @@ vi.mock('./user-source.js', () => ({
   surErreurDePersistance: () => undefined,
 }))
 
+/** La racine montée par le test courant, à rendre en sortie. `null` tant que rien n'est monté — un
+ * test qui échoue avant `monterAppConsentie()` n'a rien à démonter, et `afterEach` ne doit surtout
+ * pas importer `main.js` pour aller chercher la racine : ce serait la MONTER depuis le nettoyage. */
+let demonter: (() => void) | null = null
+
 beforeEach(() => {
   vi.resetModules()
   reinitialiserBase()
@@ -40,6 +53,8 @@ beforeEach(() => {
   window.location.hash = ''
 })
 afterEach(() => {
+  demonter?.()
+  demonter = null
   cleanup()
   window.location.hash = ''
 })
@@ -59,7 +74,8 @@ function naviguerVers(hash: string) {
  */
 async function monterAppConsentie(): Promise<void> {
   recordConsent(baseCourante(), VERSION_CONSENTEMENT, new Date().toISOString())
-  await import('./main.js')
+  const { racine } = await import('./main.js')
+  demonter = () => act(() => racine.unmount())
   await screen.findByRole('navigation', { name: 'Navigation principale' })
 }
 
