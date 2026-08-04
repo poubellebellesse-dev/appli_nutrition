@@ -194,6 +194,21 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   alias) ; **(b)** `recipe_step.nature` pour distinguer un geste d'un avertissement — **18 recettes**
   comptent aujourd'hui un avertissement ANSES comme une étape à faire. Spec : `ARCHITECTURE.md`
   §5bis. **Ordre des lots et méthode de montée : `CONCEPTION_MODE_CUISINE.md`.**
+- **Le minuteur sonne au premier plan, pas en arrière-plan** (2026-08-04) — et **la reprise remplace
+  la notification** : l'étape atteinte et les minuteurs survivent à la fermeture (schéma **v9**), un
+  bandeau les ramène. ⚠️ **Échéance absolue (`fin_ms`), jamais un temps restant** : un restant se
+  fige quand l'appli est fermée, et l'écran affirmerait quelque chose de faux sur de la nourriture.
+  Motif du non-arrière-plan : les quatre voies Android ont été vérifiées et coûtent toutes plus
+  qu'elles ne rapportent — `SCHEDULE_EXACT_ALARM` est un aller-retour dans les réglages système et
+  non une fenêtre, `USE_EXACT_ALARM` est **bloquée à la publication Play** hors agenda/réveil, aucun
+  `foregroundServiceType` ne convient à un minuteur. **Aucune permission Android nouvelle.** Le pari
+  `USE_EXACT_ALARM` reste rejouable. Détail et comparatif des applis existantes :
+  `CONCEPTION_MODE_CUISINE.md` §5-6.
+- **Cuisine partagée multi-appareils : v2** (2026-08-04). ⚠️ **Le principe 2 ne l'interdit PAS** —
+  le partage `.nutri-recipe` fait déjà sortir des données à l'initiative de l'utilisateur ; la ligne
+  est « pas de serveur, pas de collecte, rien sans geste explicite », pas « aucune donnée ne sort ».
+  C'est le coût qui tranche : plugin Bluetooth natif, permissions à l'exécution, état distribué. Un
+  téléphone posé au milieu absorbe l'essentiel du besoin (§7 E de `CONCEPTION_MODE_CUISINE.md`).
 
 ### Média, stockage & modèle
 - **Gestes de cuisine** : boucle WebP 3 s pour les gestes simples ; **3 clips MP4 de 3 s**

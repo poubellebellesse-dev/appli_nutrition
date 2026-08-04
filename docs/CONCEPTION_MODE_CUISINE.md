@@ -5,7 +5,8 @@
 > chacun est fini. Ouvert le 2026-08-04, après la fermeture de la décision 8 (`ETAT.md` §4).
 
 Rappel du découpage tranché : **v1 = une recette à la fois** · **v1.5 = synchronisation
-multi-recettes** · **le pilotage vocal est exclu, pas différé**.
+multi-recettes** · **le pilotage vocal est exclu, pas différé** · **la v1 sonne au premier plan mais
+pas en arrière-plan**, et la reprise remplace la notification (§5).
 
 ---
 
@@ -18,6 +19,9 @@ multi-recettes** · **le pilotage vocal est exclu, pas différé**.
 | Affichage d'un minuteur | ❌ **zéro** | `detail-recette.tsx:328` rend `texte` + gestes, rien d'autre |
 | Gestes du lexique dépliés sur place | ✅ codé | `detail-recette.tsx:524-570` |
 | Écran allumé | ❌ aucun appel `wakeLock` dans le dépôt | — |
+| Alarme au premier plan | ❌ aucun son, aucune vibration | — |
+| Reprise d'une cuisson | ❌ rien en base | schéma **v9** à écrire, §4.0 |
+| Notifications programmées | ✅ **mais calibrées pour les repas** | `notifications.ts:78` — `allowWhileIdle`, donc ±9 min en Doze : voir §5 |
 | Lien étape → ingrédient | ❌ **n'existe pas** | prérequis A, §2 |
 | Distinction geste / avertissement | ❌ **n'existe pas** | prérequis B, §3 |
 
@@ -143,20 +147,53 @@ L'ordre suit une règle : **livrer ce qui est utile seul avant ce qui coûte che
 | Lot | Contenu | Dépend de | Nature |
 |---|---|---|---|
 | **L0** | Prérequis B — `recipe_step.nature`, 18 recettes marquées | — | schéma + contenu |
-| **L1** | **Écran mono-recette** : écran allumé, étape courante, minuteurs parallèles | L0 | code |
+| **L1** | **Écran mono-recette** : écran allumé, étape courante, minuteurs parallèles, **alarme au premier plan**, **reprise (schéma v9 + bandeau)** | L0 | code |
 | **L2** | Prérequis A — `food_ids` sur 1 118 étapes, 3 passes du §2.4 | — (parallélisable avec L1) | contenu |
 | **L3** | Quantité au tap sur un ingrédient de l'étape | L1 + L2 | code |
 | **L4** | v1.5 — synchronisation multi-recettes, bascule de service | L1 | code |
+
+### 4.0 Le schéma v9 — reprise et minuteurs
+
+`USER_SCHEMA_VERSION` est à **8**. La reprise est une **v9**, migration à part entière (la règle
+posée en v2 ne fait pas d'exception d'ancienneté).
+
+```sql
+CREATE TABLE user_cuisine_session (
+  id            INTEGER PRIMARY KEY CHECK (id = 1),  -- une seule session : la v1 est mono-recette
+  recette_id    TEXT NOT NULL,
+  ordre_courant INTEGER NOT NULL,
+  ouverte_le    INTEGER NOT NULL                     -- ms epoch, pour périmer une session oubliée
+);
+
+CREATE TABLE user_cuisine_timer (
+  ordre           INTEGER PRIMARY KEY,  -- l'étape qui porte le minuteur
+  fin_ms          INTEGER NOT NULL,     -- ÉCHÉANCE ABSOLUE, jamais un « restant » (§5bis point 6)
+  pause_restant_s INTEGER               -- NULL = en marche ; sinon en pause avec ce reste
+);
+```
+
+- **`id = 1`** — même forme que `user_profile` et `user_rythme` : une ligne, pas une collection. La
+  v1.5 fera sauter cette contrainte, pas avant.
+- **`pause_restant_s` nullable est le discriminant.** En marche, il n'existe qu'une heure de fin ;
+  en pause, il n'existe qu'un reste. Deux régimes, une table, aucun état impossible.
+- ⚠️ **`INSERT … ON CONFLICT DO UPDATE`, jamais `INSERT OR REPLACE`** — la session a des minuteurs
+  enfants, c'est le piège déjà payé (`reference/PIEGES.md`).
+- **Péremption : 12 h.** Le bandeau affiche l'ancienneté (« commencée il y a 2 h ») et se referme
+  seul au-delà. ⚠️ Seuil arbitraire, posé faute de mieux — à revoir au premier retour d'usage.
 
 ### 4.1 Ce que touche L1
 
 | Fichier | Rôle |
 |---|---|
+| `app/src/data/user-schema.ts` | La migration **v9** ci-dessus, `USER_SCHEMA_VERSION` 8 → 9 |
+| `app/src/data/user-store.ts` | Lire / écrire la session et ses minuteurs |
 | `app/src/ui/ecran-allume.ts` *(nouveau)* | Wake Lock : demande, relâche, **re-demande sur `visibilitychange`**. Dégradation muette si l'API manque |
+| `app/src/ui/alarme.ts` *(nouveau)* | Son + vibration + signal visuel. **Déverrouille l'audio sur l'appui « Lancer »**, pas à l'expiration |
 | `app/src/ui/screens/cuisine.tsx` *(nouveau)* | L'écran. Étape courante, minuteurs, navigation |
 | `app/src/ui/screens/cuisine.test.tsx` *(nouveau)* | Voir §4.2 |
 | `app/src/ui/navigation.tsx` | Route `#/cuisine/:recetteId` |
 | `app/src/ui/screens/detail-recette.tsx` | Le bouton d'entrée dans le mode |
+| `app/src/ui/screens/aujourdhui.tsx` | Le bandeau « Reprendre la cuisson » |
 | `app/src/ui/parcours.ts` | Une entrée de visite guidée, comme les 9 écrans existants |
 
 ⚠️ **Rien dans `engine/`.** Le mode cuisine ne calcule rien ; si un lot demande d'y toucher, c'est le
@@ -176,17 +213,66 @@ lot qui est faux.
 5. **L'absence de Wake Lock ne casse rien** — `navigator.wakeLock` absent : l'écran fonctionne, seule
    la mention change.
 6. **Aucun score affiché** — filet du principe 6, comme sur les autres écrans.
+7. **Une session reprise dit la vérité** — écrire `fin_ms` dans le passé, rouvrir : l'écran annonce
+   « terminé il y a N min », jamais un décompte figé ni « ça vient de sonner ». **C'est le test qui
+   verrouille le point 6 de §5bis**, et le seul qui porte sur une affirmation de l'appli à propos de
+   la nourriture.
+8. **Une session périmée ne réapparaît pas** — `ouverte_le` à plus de 12 h : pas de bandeau.
+
+⚠️ **Le déverrouillage audio n'est PAS testable en Vitest.** `jsdom` n'implémente pas la politique
+d'autoplay : un test vert ne prouverait rien. C'est un **point de vérification manuelle sur
+appareil**, à faire en même temps que le Wake Lock en WebView et le pari sur `rem` (risque n°1 de la
+décision 9). Les trois se testent dans la même session, sur le même téléphone.
 
 ---
 
-## 5. Ce qui reste ouvert
+## 5. L'alarme en arrière-plan — les quatre voies, vérifiées et refusées
+
+**Tranché le 2026-08-04 : la v1 ne sonne pas quand l'appli n'est pas visible.** Ce paragraphe existe
+pour que la question ne se re-débatte pas à l'aveugle : les quatre voies ont été instruites, chacune
+coûte plus qu'elle ne rapporte **à ce stade**. Aucune n'est enterrée.
+
+Le problème, en une phrase : un minuteur de cuisine doit sonner à la seconde pendant que le téléphone
+dort, et **« posé, immobile, écran éteint » est la définition même du mode Doze**, qu'Android a
+conçu pour supprimer exactement ces réveils. Le cas d'usage est le cas d'école que le système
+combat.
+
+| Voie | Ce qu'elle coûte | Verdict |
+|---|---|---|
+| `allowWhileIdle` — **déjà en place** (`notifications.ts:78`) | En Doze, **une notification toutes les 9 min par appli**. Correct pour un rappel de repas à ±10 min, inutilisable pour 8 min de pochage | Insuffisant |
+| `SCHEDULE_EXACT_ALARM` | ⚠️ **Ce n'est pas une fenêtre d'autorisation.** Aucun « Autoriser / Refuser » : l'appli ne peut que projeter l'utilisateur dans `Paramètres › Applis › Accès spécial › Alarmes et rappels`, où il doit trouver l'appli, basculer un interrupteur et revenir seul. Pour un public « toutes tranches d'âge », c'est disqualifiant | Refusée |
+| `USE_EXACT_ALARM` | Aucune friction, accordée à l'installation. Mais réservée aux applis d'agenda et de réveil, et **Play refuse la publication** hors de ces catégories. La politique nomme bien « alarm or timer app » — le test est « **core, user facing functionality** », et notre fiche Play dira « nutrition ». Le refus tombe **à la soumission, après tout le travail** | Pari, non joué |
+| Service de premier plan | **Aucun `foregroundServiceType` ne convient** : `shortService` plafonne à ~3 min, tous les autres sont caméra / position / média / santé. Reste `specialUse` → déclaration en Play Console avec **lien vidéo démontrant la fonctionnalité**, re-jugée **à chaque mise à jour**. Et le plugin Capacitor existe mais est **Sponsorware** (payant), annoncé pour Capacitor 4 quand le projet est en 8 | Refusée |
+
+⚠️ **Les Live Updates d'Android 16 ne sauvent pas la quatrième voie.** Elles sont l'équivalent des
+Live Activities d'iOS, mais *« the work behind Live Updates typically runs in a foreground service on
+Android 14+ … they remain complementary technologies »* : c'est **l'affichage, pas le moteur**. Ni le
+`foregroundServiceType` ni la déclaration Play ne disparaissent.
+
+**Ce qui remplace l'alarme :** le point 6 de §5bis. On ne sonne pas, mais au retour on ne ment pas.
+Le pari `USE_EXACT_ALARM` reste rejouable — c'est une ligne de manifeste, pas une réécriture.
+
+## 6. Ce que font les autres applis
+
+| Appli | Écran allumé | Sonne appli fermée |
+|---|---|---|
+| Applis **de minuteur** (Cooking Timer, Kitchen Timer Pro) | — | ✅ — elles ont droit à `USE_EXACT_ALARM`, leur fiche Play dit « minuteur ». **Pas un précédent utilisable** |
+| Kitchen Stories | ✅ mode « start cooking » plein écran qui empêche la veille | ❌ |
+| **Nous (v1)** | ✅ | ❌ — remplacé par la reprise |
+| Paprika (natif, payant) | ✅ réglage « Keep Screen On » | ✅ *« Timers will fire and play a sound even if the app is not open »* |
+
+⚠️ **Le manque face à Paprika est réel et assumé.** Détail révélateur : sa page d'aide ne demande à
+l'utilisateur de toucher **aucun** réglage système — donc elle ne passe pas par
+`SCHEDULE_EXACT_ALARM`. Reste `USE_EXACT_ALARM` ou l'imprécision assumée. **Déduction, pas preuve :
+son manifeste n'a pas été lu.** Et c'est une appli native payante, sans aucune de nos contraintes.
+
+## 7. Ce qui reste ouvert
 
 | # | Question | Piste |
 |---|---|---|
-| A | Un minuteur terminé pendant que l'app est en arrière-plan : notification, ou rien ? | `@capacitor/local-notifications` est installé mais `npx cap add android` n'a jamais été lancé (`ETAT.md` §4 n°9). Sur PWA pure, best-effort |
-| B | Le mode cuisine garde-t-il l'étape atteinte si on quitte l'écran ? | Suppose une écriture dans `user_*`. Non tranché — L1 peut vivre sans |
-| C | Entrée dans le mode : depuis la fiche recette seulement, ou aussi depuis « Aujourd'hui » ? | Depuis la fiche en L1. Le reste dépend de L4 |
-| D | Le son du minuteur | Aucune décision. ⚠️ Un son qui se déclenche seul dans une appli sans compte et sans permission demandée n'est pas neutre |
+| C | Entrée dans le mode depuis « Aujourd'hui » **autrement que pour reprendre** | Le bandeau de reprise couvre le retour ; démarrer une cuisson depuis l'accueil dépend de L4 |
+| D | Le seuil de péremption du bandeau (12 h) | Arbitraire, posé faute de mieux. À revoir au premier retour d'usage |
+| E | Cuisine partagée **sur plusieurs appareils** | ⚠️ **Pas interdit par le principe 2** — le partage `.nutri-recipe` fait déjà sortir des données à l'initiative de l'utilisateur. Bloqué par le coût : plugin Bluetooth natif, permissions à l'exécution, état distribué (qui gagne si deux personnes avancent l'étape ?). Et un téléphone posé au milieu absorbe l'essentiel du besoin. **v2** |
 
 ---
 

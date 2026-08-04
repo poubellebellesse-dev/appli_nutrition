@@ -490,12 +490,14 @@ Le découpage n'est pas un étalement du travail : la v1 ne demande **aucune don
 moteur** et rend visible ce qui est déjà buildé, tandis que la synchronisation de service est un
 problème d'ordonnancement à part entière (`CONCEPTION_B_VIN_REPAS.md` §5).
 
-#### Les quatre points de la v1
+#### Les six points de la v1
 
 1. **L'écran ne s'éteint pas** — `navigator.wakeLock.request('screen')`, demandé à l'entrée dans
-   l'écran, relâché à la sortie et **re-demandé sur `visibilitychange`** (le verrou tombe quand
-   l'onglet passe en arrière-plan). Dégradation silencieuse si l'API manque : l'écran ne reste pas
-   allumé, rien d'autre ne change.
+   l'écran, relâché à la sortie et **re-demandé sur `visibilitychange`**. ⚠️ **Le verrou tombe quand
+   le document devient `hidden`, pas quand l'appli perd le focus** : en écran partagé ou sous une
+   fenêtre flottante, l'appli reste visible et le verrou tient. Ce qui le relâche, c'est d'être
+   entièrement recouverte, ou l'écran verrouillé. Dégradation silencieuse si l'API manque : l'écran
+   ne reste pas allumé, rien d'autre ne change.
 2. **Une étape à la fois, et l'utilisateur sait où il en est** — position affichée (« 3 sur 6 ») et
    jalons. ⚠️ **Les étapes n'avancent que sur appui** : ni minuterie de défilement, ni carrousel.
    C'est la règle déjà tranchée pour l'accueil (`RETOUR_ESSAI_TELEPHONE.md` §6.5), appliquée ici.
@@ -505,6 +507,20 @@ problème d'ordonnancement à part entière (`CONCEPTION_B_VIN_REPAS.md` §5).
 4. **La quantité se lit sans quitter l'étape** — appuyer sur un ingrédient cité par l'étape affiche
    son `unite_affichage`. Même principe que les gestes du lexique, déjà dépliés sur place
    (`detail-recette.tsx`) : personne ne doit perdre son étape pour savoir ce que « pocher » veut dire.
+5. **Le minuteur sonne quand l'appli est visible** — son **plus** vibration (`navigator.vibrate`)
+   **plus** signal visuel, jamais le son seul : le canal média peut être à zéro indépendamment de la
+   sonnerie. ⚠️ **L'audio se déverrouille sur l'appui « Lancer », pas à l'expiration.** La WebView
+   refuse une lecture sans geste utilisateur préalable, et **ce refus ne lève aucune erreur** — un
+   minuteur muet en production, sans rien dans les logs. C'est le seul point de la v1 qui exige un
+   test manuel sur appareil.
+6. **La cuisson se reprend** — l'étape atteinte et les minuteurs survivent à la fermeture de
+   l'appli, et un bandeau « Reprendre la cuisson » les ramène depuis « Aujourd'hui ».
+   ⚠️ **On stocke une ÉCHÉANCE ABSOLUE (`fin_ms`), jamais un temps restant.** Un restant suppose que
+   quelqu'un décompte ; appli fermée, personne ne décompte, et le nombre se fige — l'écran
+   annoncerait 8 minutes de pochage restantes sur des œufs trop cuits depuis un quart d'heure. La
+   casserole, elle, ne fait pas de pause. Au retour, `fin_ms - Date.now()` donne soit le reste réel,
+   soit « terminé il y a 4 min » — **jamais « ça vient de sonner »**. Seule la pause, déclenchée par
+   l'utilisateur, stocke un reste figé. Schéma : `CONCEPTION_MODE_CUISINE.md`.
 
 #### Ce que la v1 exige avant d'être codable
 
@@ -529,15 +545,34 @@ problème d'ordonnancement à part entière (`CONCEPTION_B_VIN_REPAS.md` §5).
   fragmentation, « elle m'a ignoré ». S'y ajoute une raison propre au projet : une permission micro
   fissure le principe 2 (souveraineté) même si tout reste local.
 - **Avancement automatique des étapes.** Interdit par le point 2 ci-dessus.
+- **Sonner quand l'appli n'est pas visible** — **reporté, pas enterré**. Un minuteur exact en
+  arrière-plan exige une alarme exacte Android, et les trois voies ont été vérifiées et coûtent
+  toutes cher : `SCHEDULE_EXACT_ALARM` impose un aller-retour dans les réglages système (ce n'est
+  **pas** une fenêtre d'autorisation), `USE_EXACT_ALARM` est réservée aux applis d'agenda et de
+  réveil et **Play refuse la publication** hors de ces catégories, et un service de premier plan
+  n'a **aucun `foregroundServiceType` adapté** (`shortService` plafonne à ~3 min) — il faudrait
+  `specialUse`, qui se justifie en Play Console **vidéo à l'appui, à chaque mise à jour**. Le point 6
+  couvre le besoin autrement : on ne sonne pas, mais au retour on dit la vérité. Comparatif des
+  applis existantes et les quatre voies en détail : `CONCEPTION_MODE_CUISINE.md`.
+- **Cuisine partagée sur plusieurs appareils** — deux cuisiniers, deux téléphones synchronisés.
+  ⚠️ **Ce n'est PAS interdit par le principe 2** : l'appli fait déjà sortir des données de l'appareil
+  à l'initiative de l'utilisateur (partage `.nutri-recipe`, §8.7, codé). La ligne est « pas de
+  serveur, pas de collecte, rien sans geste explicite », pas « aucune donnée ne sort ». C'est le
+  **coût** qui tranche : plugin natif Bluetooth, permissions à l'exécution, et surtout un problème
+  d'état distribué (qui gagne si deux personnes avancent l'étape en même temps ?) pour un cas rare.
+  Et le besoin est largement absorbé par un téléphone posé au milieu que tout le monde voit. **v2.**
 
-⚠️ Sur **iOS-PWA les timers en arrière-plan sont non fiables** : décompte in-app, notification
-best-effort. **Wake Lock n'est PLUS un argument pour Capacitor** — l'API est à ~93 % de couverture et
-Safari iOS la gère depuis 16.4 ; seule la fiabilité des notifications en arrière-plan reste un
-argument. L'interdiction de `Date.now` ne vise que `engine/` — l'UI utilise l'heure réelle.
+⚠️ **La cible empaquetée est Android** (décision 9, `ETAT.md`) — Capacitor, `LocalNotifications`
+déjà installé. Le web reste au plan pour iOS, où les timers en arrière-plan sont de toute façon non
+fiables. **Wake Lock n'est pas un argument pour Capacitor** : l'API est portée par Chromium depuis la
+version 84, donc par la WebView Android. ⚠️ **Non vérifié sur appareil**, et c'est la même famille
+que le risque n°1 de la décision 9 — un échec y serait SILENCIEUX. L'interdiction de `Date.now` ne
+vise que `engine/` ; l'UI utilise l'heure réelle, et le point 6 en dépend.
 
 > Maquette cliquable de l'écran v1 (chakchouka, minuteurs réels, Wake Lock actif) :
 > <https://claude.ai/code/artifact/00aae6df-f33d-4cb6-97cf-e11751419e0e>. Hors dépôt — elle illustre
-> la spec, elle ne la remplace pas.
+> la spec, elle ne la remplace pas. Elle couvre les points 1 à 4 ; **les points 5 et 6 ne s'y voient
+> pas** (ils supposent un son et une base).
 
 ### Fonctionnalités conçues en session 2 — état d'implémentation par point, voir docs/archive/RECAP_SESSION_2.md
 
