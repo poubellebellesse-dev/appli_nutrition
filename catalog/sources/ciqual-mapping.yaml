@@ -396,3 +396,95 @@ mapping:
   porc_echine: 28302             # Porc, échine crue
   veau_cote: 6510                # Veau, côte crue
   canard_cuisse: 36203           # Canard, cuisse avec peau, sans os, crue
+
+  # ==========================================================================
+  # Lot d'élargissement (2026-08-04). 56 aliments, tirés uniquement de Ciqual — aucune seconde
+  # table. Voir la note en tête de ce fichier : mélanger USDA ou CoFID rouvrirait les valeurs
+  # « PROV-000xx, ordres de grandeur usuels, PAS vérifiées » que le projet a payé pour supprimer,
+  # et `--check` traite un aliment sans code Ciqual comme une ERREUR, pas un avertissement.
+  # On utilise 304 des 3 484 entrées : la table n'est pas la contrainte.
+  #
+  # ⚠️ NON TROUVÉS dans Ciqual, écartés sans substitut inventé : edamame, gambas, oseille,
+  # petit-suisse, skyr, badiane, porto, graine de tournesol décortiquée (déjà au catalogue),
+  # et la confiture nature (Ciqual n'a que des versions allégées ou des produits composés).
+  # ==========================================================================
+
+  # Poissons
+  thon_frais: 26064              # Thon albacore, cru (26181 est l'appertisé, déjà `thon_conserve`)
+  fletan: 26009                  # Flétan de l'Atlantique ou flétan, cru
+  rouget: 26085                  # Rouget-barbet de roche, cru
+  turbot: 26174                  # Turbot, cru (26042 sauvage et 26201 élevage sont typés)
+  carrelet: 26055                # Carrelet ou plie ou plie commune, cru
+  haddock: 26090                 # Haddock (fumé) ou églefin fumé
+
+  # Fruits de mer — bulot, bigorneau et seiche sont des MOLLUSQUES ; homard et écrevisse des
+  # CRUSTACÉS. Deux allergènes réglementaires distincts, ne pas les confondre.
+  bulot: 10019                   # Bulot ou buccin, cru
+  bigorneau: 10074               # Bigorneau, cru
+  seiche: 10016                  # Seiche, crue
+  homard: 10010                  # Homard, cru
+  ecrevisse: 10030               # Écrevisse, crue
+
+  # Fromages et lait
+  reblochon: 12045               # Reblochon
+  cantal: 12724                  # Cantal (12109 jeune et 12722 entre-deux sont typés)
+  saint_nectaire: 12752          # Saint-Nectaire, sans précision
+  bleu_auvergne: 12521           # Fromage bleu d'Auvergne
+  munster: 12039                 # Munster
+  lait_ecreme: 19050             # Lait écrémé, UHT
+
+  # Farines, céréales et pains
+  farine_complete: 9410          # Farine de blé tendre ou froment T110 (`farine_ble` est le T55)
+  farine_sarrasin: 9540          # Farine de sarrasin
+  farine_millet: 9555            # Farine de millet (Ciqual n'a pas le grain seul)
+  epeautre: 9001                 # Épeautre, cru
+  pain_seigle: 7125              # Pain de seigle et froment
+  biscotte: 7300                 # Biscotte classique
+
+  # Protéines végétales
+  tempeh: 20917                  # Tempeh
+  seitan: 25598                  # Seitan, préemballé
+
+  # Fruits à coque et graines — pécan, macadamia et noix du Brésil sont des ESPÈCES DISTINCTES
+  # de `noix` (le cerneau de noyer) : pas de sous-famille commune malgré le mot « noix ».
+  noix_pecan: 15026              # Noix de pécan, sans sel ajouté
+  noix_macadamia: 15027          # Noix de macadamia, sans sel ajouté
+  noix_bresil: 15008             # Noix du Brésil ou noix d'Amazonie, sans sel ajouté
+  graine_chia: 15047             # Chia, graine, séchée
+  graine_courge: 15064           # Courge, graine, séchée
+  graine_lin: 15034              # Lin, graine
+  beurre_cacahuete: 15202        # Beurre de cacahuète ou pâte d'arachide
+
+  # Fruits
+  groseille: 13019               # Groseille, crue (13020 est la groseille à MAQUEREAU, autre fruit)
+  cassis: 13007                  # Cassis, cru
+  mure: 13029                    # Mûre (de ronce), crue
+  grenade: 13018                 # Grenade, chair sans peau, avec pépins, crue
+  litchi: 13023                  # Litchi, chair sans peau, sans noyau, cru
+  coing: 13010                   # Coing, cru
+  compote_pomme: 13038           # Compote de pomme, préemballée
+
+  # Légumes
+  chou_chinois: 20167            # Chou chinois pé-tsaï, cru
+  salsifis: 20197                # Salsifis noir, ou scorsonère d'Espagne, cru
+  rutabaga: 20201                # Rutabaga, cru
+  chou_rave: 20065               # Chou-rave, cru
+
+  # Condiments et sauces
+  ketchup: 11008                 # Ketchup, préemballé
+  mayonnaise: 11054              # Mayonnaise (70% MG min.), préemballée
+  tahin: 15203                   # Tahin ou purée de sésame
+  harissa: 11112                 # Harissa (sauce au piment), préemballée
+  nuoc_mam: 11194                # Sauce nuoc mâm ou sauce au poisson, préemballée
+  safran: 11039                  # Safran
+  cardamome: 11075               # Cardamome, poudre
+
+  # Matières grasses
+  huile_arachide: 17040          # Huile d'arachide
+  graisse_canard: 16550          # Graisse de canard
+
+  # Produits sucrés, œufs, alcools
+  chocolat_lait: 31004           # Chocolat au lait, tablette
+  chocolat_blanc: 31010          # Chocolat blanc, tablette
+  oeuf_caille: 22050             # Oeuf de caille, cru
+  cidre: 5003                    # Cidre (aliment moyen)
