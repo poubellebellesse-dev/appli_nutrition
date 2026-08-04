@@ -188,9 +188,12 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   la synchronisation de service est, elle, un problème d'ordonnancement entier. **Le pilotage vocal
   est exclu**, pas différé — il échoue en cuisine réelle (neuf modes d'échec, arXiv 2306.09992) et
   une permission micro fissure le principe 2. Spec : `ARCHITECTURE.md` §5bis.
-- ⚠️ **Deux prérequis de la v1 ne sont pas satisfaits** et ne sont pas du câblage : la table dérivée
-  `recipe_step_ingredient` (sans elle, pas de quantité au tap) et le fait qu'une `recipe_step` peut
-  ne pas être un geste (avertissement ANSES compté comme étape). Détail : `ARCHITECTURE.md` §5bis.
+- ⚠️ **Deux prérequis de la v1 ne sont pas satisfaits, et ce n'est pas du câblage** : **(a)** le lien
+  étape → ingrédient — `etapes[].food_ids` **écrit à la main**, pas dérivé, sur **1 118 étapes** (la
+  dérivation par rapprochement de texte a été envisagée et écartée : `food` n'a ni synonyme ni
+  alias) ; **(b)** `recipe_step.nature` pour distinguer un geste d'un avertissement — **18 recettes**
+  comptent aujourd'hui un avertissement ANSES comme une étape à faire. Spec : `ARCHITECTURE.md`
+  §5bis. **Ordre des lots et méthode de montée : `CONCEPTION_MODE_CUISINE.md`.**
 
 ### Média, stockage & modèle
 - **Gestes de cuisine** : boucle WebP 3 s pour les gestes simples ; **3 clips MP4 de 3 s**
