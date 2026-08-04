@@ -161,7 +161,9 @@ Mesuré avant correction : **11 petits-déjeuners placés sur 14** avec 17 recet
 > **122 plats de médiane 432 kcal**.
 >
 > C'est exactement le trou que `CourseKind` (entrée/plat/accompagnement/dessert) comblerait — il
-> existe dans le domaine mais **n'est pas sur `Recipe`**. **Décision ouverte** — ETAT §4 n°34.
+> existe dans le domaine mais **n'est pas sur `Recipe`**. ~~**Décision ouverte** — ETAT §4 n°34.~~
+> ⚠️ *Phrase datée du 2026-07-28, fausse depuis : la 34 est fermée et `Recipe.service` existe — voir
+> juste en dessous.*
 >
 > ✅ **SUITE, 2026-08-03 puis 2026-08-04.** `Recipe.service` existe et est désormais LU par
 > `planWeek` (décision 53) : un repas principal placé automatiquement doit être un plat, en
