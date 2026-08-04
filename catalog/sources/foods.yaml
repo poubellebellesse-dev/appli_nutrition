@@ -221,6 +221,7 @@ foods:
     nom: "Poivre noir moulu"
     groupe: "condiments"
     fond_de_placard: true
+    sous_famille: "poivre"
     toute_annee: true
     nutriments:
       energie_kcal: 331
@@ -6831,4 +6832,784 @@ foods:
       vitamine_c_mg: 9.97
     allergenes:
       - code: sulfites
+        certitude: contient
+
+  # ==========================================================================
+  # Quatrième lot (2026-08-04) — 40 aliments. Deux trous entiers : le catalogue n'avait AUCUN
+  # abat, et aucune farine sans gluten hors sarrasin et millet. Détail des appariements, entrées
+  # écartées et candidats non trouvés : catalog/sources/ciqual-mapping.yaml.
+  #
+  # ⚠️ `pousse_soja` NE CONTIENT PAS DE SOJA. Ciqual la nomme « Graine germée de haricot mungo ou
+  # pousse de "soja" », guillemets compris, précisément parce que l'appellation commerciale est
+  # fausse : c'est du haricot mungo, une autre espèce. Lui coller l'allergène `soja` exclurait à
+  # tort ce légume de toutes les assiettes qui évitent le soja. Allergènes vides, et c'est juste.
+  #
+  # ⚠️ `lupin` est à lui seul l'un des 14 allergènes réglementaires (annexe II du règlement UE
+  # 1169/2011). Il ne se déduit d'aucun autre — ne pas l'oublier si on ajoute des farines.
+  # ==========================================================================
+
+  - id: foie_genisse
+    code_ciqual: "40104"
+    nom: "Foie de génisse, cru"
+    groupe: "viandes"
+    origine_animale: mammifere
+    sous_famille: "boeuf"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 136
+      proteines_g: 21
+      lipides_g: 4.3
+      glucides_g: 3.33
+      fibres_g: 0
+      fer_mg: 5.92
+      calcium_mg: 6.48
+      sodium_mg: 59.9
+      vitamine_c_mg: 27
+    allergenes: []
+
+  - id: rognon_boeuf
+    code_ciqual: "40402"
+    nom: "Rognon de bœuf, cru"
+    groupe: "viandes"
+    origine_animale: mammifere
+    sous_famille: "boeuf"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 95.7
+      proteines_g: 17.1
+      lipides_g: 2.65
+      glucides_g: 0.85
+      fibres_g: 0
+      fer_mg: 7.04
+      calcium_mg: 13
+      sodium_mg: 169
+      vitamine_c_mg: 9.4
+    allergenes: []
+
+  - id: tripes
+    code_ciqual: "40502"
+    nom: "Tripes de bœuf, crues"
+    groupe: "viandes"
+    origine_animale: mammifere
+    sous_famille: "boeuf"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 81.5
+      proteines_g: 12.1
+      lipides_g: 3.69
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.59
+      calcium_mg: 69
+      sodium_mg: 97
+      vitamine_c_mg: 3
+    allergenes: []
+
+  - id: foie_agneau
+    code_ciqual: "40102"
+    nom: "Foie d'agneau, cru"
+    groupe: "viandes"
+    origine_animale: mammifere
+    sous_famille: "agneau"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 137
+      proteines_g: 21.8
+      lipides_g: 5.45
+      glucides_g: 0.16
+      fibres_g: 0
+      fer_mg: 6.43
+      calcium_mg: 7
+      sodium_mg: 57.4
+      vitamine_c_mg: 4
+    allergenes: []
+
+  - id: gesier_poulet
+    code_ciqual: "40700"
+    nom: "Gésier de poulet, cru"
+    groupe: "viandes"
+    origine_animale: volaille
+    sous_famille: "poulet"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 99.1
+      proteines_g: 16.8
+      lipides_g: 3.53
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 2.49
+      calcium_mg: 11
+      sodium_mg: 75.5
+      vitamine_c_mg: 3.7
+    allergenes: []
+
+  # Farines naturellement sans gluten, mais moulues en meunerie mixte → `traces`, jamais rien.
+  - id: farine_riz
+    code_ciqual: "9520"
+    nom: "Farine de riz"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 357
+      proteines_g: 7.62
+      lipides_g: 2.5
+      glucides_g: 73.9
+      fibres_g: 3.3
+      fer_mg: 0.79
+      calcium_mg: 9.5
+      sodium_mg: 5
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: gluten
+        certitude: traces
+
+  - id: farine_chataigne
+    code_ciqual: "9570"
+    nom: "Farine de châtaigne"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 362
+      proteines_g: 5.69
+      lipides_g: 3.43
+      glucides_g: 70.4
+      fibres_g: 12.6
+      fer_mg: 0.1
+      calcium_mg: 61.6
+      vitamine_c_mg: 16
+    allergenes:
+      - code: gluten
+        certitude: traces
+
+  - id: farine_pois_chiche
+    code_ciqual: "9580"
+    nom: "Farine de pois chiche"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 359
+      proteines_g: 22.4
+      lipides_g: 6.69
+      glucides_g: 47
+      fibres_g: 10.8
+      fer_mg: 4.86
+      calcium_mg: 45
+      sodium_mg: 64
+      vitamine_c_mg: 0
+    allergenes:
+      - code: gluten
+        certitude: traces
+
+  - id: sorgho
+    code_ciqual: "9360"
+    nom: "Sorgho complet, cru"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 349
+      proteines_g: 10.6
+      lipides_g: 3.46
+      glucides_g: 65.4
+      fibres_g: 6.7
+      fer_mg: 3.36
+      calcium_mg: 13
+      sodium_mg: 2
+      vitamine_c_mg: 0
+    allergenes:
+      - code: gluten
+        certitude: traces
+
+  - id: tapioca
+    code_ciqual: "4000"
+    nom: "Tapioca (perles du Japon)"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 250
+    toute_annee: true
+    nutriments:
+      energie_kcal: 354
+      proteines_g: 0.19
+      lipides_g: 0.02
+      glucides_g: 87.8
+      fibres_g: 0.9
+      fer_mg: 1.58
+      calcium_mg: 20
+      sodium_mg: 1
+      vitamine_c_mg: 0
+    allergenes: []
+
+  # Pas de sous-famille « riz » : la zizanie n'est pas de l'Oryza sativa, malgré le nom commercial.
+  - id: riz_sauvage
+    code_ciqual: "9108"
+    nom: "Riz sauvage, cru"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 250
+    toute_annee: true
+    nutriments:
+      energie_kcal: 344
+      proteines_g: 11.1
+      lipides_g: 0.94
+      glucides_g: 69.2
+      fibres_g: 5.9
+      fer_mg: 1
+      calcium_mg: 6.95
+      sodium_mg: 2.7
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: morbier
+    code_ciqual: "12743"
+    nom: "Morbier"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 200
+    derive_de: lait_entier
+    toute_annee: true
+    nutriments:
+      energie_kcal: 355
+      proteines_g: 22.8
+      lipides_g: 29.2
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.06
+      calcium_mg: 600
+      sodium_mg: 562
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: pont_leveque
+    code_ciqual: "12042"
+    nom: "Pont-l'Évêque"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 200
+    derive_de: lait_entier
+    toute_annee: true
+    nutriments:
+      energie_kcal: 326
+      proteines_g: 22.7
+      lipides_g: 26.2
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.07
+      calcium_mg: 660
+      sodium_mg: 520
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: mimolette
+    code_ciqual: "12737"
+    nom: "Mimolette demi-vieille"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 200
+    derive_de: lait_entier
+    toute_annee: true
+    nutriments:
+      energie_kcal: 371
+      proteines_g: 30.6
+      lipides_g: 27.5
+      glucides_g: 0.75
+      fibres_g: 0
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: cancoillotte
+    code_ciqual: "12325"
+    nom: "Cancoillotte"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 200
+    derive_de: lait_entier
+    toute_annee: true
+    nutriments:
+      energie_kcal: 151
+      proteines_g: 13.8
+      lipides_g: 10.5
+      glucides_g: 0.48
+      fibres_g: 0
+      fer_mg: 0.13
+      calcium_mg: 260
+      sodium_mg: 692
+      vitamine_c_mg: 0
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  # Pas de `derive_de: lait_entier` : l'Ossau-Iraty est au lait de BREBIS, pas de vache.
+  # L'allergène `lait` couvre les deux ; la filiation, non.
+  - id: ossau_iraty
+    code_ciqual: "12119"
+    nom: "Ossau-Iraty (brebis)"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 200
+    toute_annee: true
+    nutriments:
+      energie_kcal: 423
+      proteines_g: 24.2
+      lipides_g: 36
+      glucides_g: 1
+      fibres_g: 0
+      fer_mg: 0.32
+      calcium_mg: 764
+      sodium_mg: 677
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: mulet
+    code_ciqual: "26091"
+    nom: "Mulet, cru"
+    groupe: "poissons"
+    origine_animale: poisson
+    toute_annee: true
+    nutriments:
+      energie_kcal: 118
+      proteines_g: 20.1
+      lipides_g: 3.62
+      glucides_g: 1.35
+      fibres_g: 0
+      fer_mg: 0.7
+      calcium_mg: 13.6
+      sodium_mg: 70.4
+      vitamine_c_mg: 1.2
+    allergenes:
+      - code: poissons
+        certitude: contient
+
+  - id: tilapia
+    code_ciqual: "27019"
+    nom: "Tilapia, cru"
+    groupe: "poissons"
+    origine_animale: poisson
+    toute_annee: true
+    nutriments:
+      energie_kcal: 91.6
+      proteines_g: 18.1
+      lipides_g: 2.13
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.27
+      calcium_mg: 8.16
+      sodium_mg: 28.3
+      vitamine_c_mg: 0
+    allergenes:
+      - code: poissons
+        certitude: contient
+
+  - id: chou_kale
+    code_ciqual: "20346"
+    nom: "Chou kale, cru"
+    groupe: "légumes"
+    saison_mois: [10, 11, 12, 1, 2, 3]
+    nutriments:
+      energie_kcal: 34.6
+      proteines_g: 2.92
+      lipides_g: 1.49
+      glucides_g: 0.32
+      fibres_g: 4.1
+      fer_mg: 1.6
+      calcium_mg: 254
+      sodium_mg: 53
+      vitamine_c_mg: 93.4
+    allergenes: []
+
+  - id: pourpier
+    code_ciqual: "20127"
+    nom: "Pourpier, cru"
+    groupe: "légumes"
+    saison_mois: [6, 7, 8, 9]
+    nutriments:
+      proteines_g: 2.03
+      lipides_g: 0.36
+      fer_mg: 1.99
+      calcium_mg: 65
+      sodium_mg: 45
+      vitamine_c_mg: 21
+    allergenes: []
+
+  - id: salade_frisee
+    code_ciqual: "20012"
+    nom: "Frisée, crue"
+    groupe: "légumes"
+    saison_mois: [9, 10, 11]
+    nutriments:
+      energie_kcal: 26
+      proteines_g: 1.7
+      lipides_g: 0.3
+      glucides_g: 2.13
+      fibres_g: 4
+      fer_mg: 0.9
+      calcium_mg: 100
+      sodium_mg: 45
+      vitamine_c_mg: 24
+    allergenes: []
+
+  - id: scarole
+    code_ciqual: "20090"
+    nom: "Scarole, crue"
+    groupe: "légumes"
+    saison_mois: [9, 10, 11]
+    nutriments:
+      energie_kcal: 20.5
+      proteines_g: 1.44
+      lipides_g: 0.23
+      glucides_g: 2
+      fibres_g: 2.3
+      fer_mg: 0.38
+      calcium_mg: 53.7
+      sodium_mg: 13.7
+      vitamine_c_mg: 11.5
+    allergenes: []
+
+  # Voir l'alerte en tête de lot : c'est du haricot mungo, pas du soja. Allergènes vides.
+  - id: pousse_soja
+    code_ciqual: "20183"
+    nom: "Pousses de haricot mungo"
+    groupe: "légumes"
+    conditionnement_g: 200
+    toute_annee: true
+    nutriments:
+      energie_kcal: 28.3
+      proteines_g: 2.57
+      lipides_g: 0.5
+      glucides_g: 3.4
+      fibres_g: 1.7
+      fer_mg: 0.44
+      calcium_mg: 16
+      sodium_mg: 17.1
+      vitamine_c_mg: 4.13
+    allergenes: []
+
+  - id: haricot_mungo
+    code_ciqual: "20530"
+    nom: "Haricot mungo, sec"
+    groupe: "légumineuses"
+    conditionnement_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 343
+      proteines_g: 25.2
+      lipides_g: 1.64
+      glucides_g: 47.6
+      fibres_g: 18.3
+      fer_mg: 7.57
+      calcium_mg: 138
+      sodium_mg: 38
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: lupin
+    code_ciqual: "20534"
+    nom: "Lupin, graine sèche"
+    groupe: "légumineuses"
+    conditionnement_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 356
+      proteines_g: 36.2
+      lipides_g: 9.74
+      glucides_g: 21.5
+      fibres_g: 18.9
+      fer_mg: 4.36
+      calcium_mg: 176
+      sodium_mg: 15
+      vitamine_c_mg: 4.8
+    allergenes:
+      - code: lupin
+        certitude: contient
+
+  - id: soja_texture
+    code_ciqual: "20591"
+    nom: "Protéines de soja texturées"
+    groupe: "légumineuses"
+    conditionnement_g: 200
+    toute_annee: true
+    nutriments:
+      energie_kcal: 150
+      proteines_g: 18.6
+      lipides_g: 2.9
+      glucides_g: 7.03
+      fibres_g: 5.61
+      fer_mg: 3.3
+      calcium_mg: 90
+      sodium_mg: 5
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: soja
+        certitude: contient
+
+  - id: goyave
+    code_ciqual: "13083"
+    nom: "Goyave, crue"
+    groupe: "fruits"
+    poids_piece_g: 100
+    toute_annee: true
+    nutriments:
+      energie_kcal: 68.3
+      proteines_g: 2.55
+      lipides_g: 0.95
+      glucides_g: 9.02
+      fibres_g: 5.4
+      fer_mg: 0.26
+      calcium_mg: 18
+      sodium_mg: 2
+      vitamine_c_mg: 228
+    allergenes: []
+
+  - id: banane_plantain
+    code_ciqual: "53100"
+    nom: "Banane plantain, crue"
+    groupe: "fruits"
+    poids_piece_g: 200
+    toute_annee: true
+    nutriments:
+      energie_kcal: 132
+      proteines_g: 1.3
+      lipides_g: 0.37
+      glucides_g: 29.6
+      fibres_g: 2.3
+      fer_mg: 0.6
+      calcium_mg: 3
+      sodium_mg: 4
+      vitamine_c_mg: 18.4
+    allergenes: []
+
+  - id: nefle
+    code_ciqual: "13564"
+    nom: "Nèfle du Japon, crue"
+    groupe: "fruits"
+    poids_piece_g: 40
+    saison_mois: [4, 5]
+    nutriments:
+      energie_kcal: 48.1
+      proteines_g: 0.43
+      lipides_g: 0.2
+      glucides_g: 9.9
+      fibres_g: 1.7
+      fer_mg: 0.28
+      calcium_mg: 16
+      sodium_mg: 1
+      vitamine_c_mg: 1
+    allergenes: []
+
+  - id: poivre_blanc
+    code_ciqual: "11019"
+    nom: "Poivre blanc, moulu"
+    groupe: "condiments"
+    fond_de_placard: true
+    conditionnement_g: 30
+    sous_famille: "poivre"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 313
+      proteines_g: 12.1
+      lipides_g: 2.12
+      glucides_g: 48.3
+      fibres_g: 26.2
+      fer_mg: 14.3
+      calcium_mg: 265
+      sodium_mg: 5
+      vitamine_c_mg: 21
+    allergenes: []
+
+  - id: carvi
+    code_ciqual: "11064"
+    nom: "Carvi, graine"
+    groupe: "condiments"
+    fond_de_placard: true
+    conditionnement_g: 30
+    toute_annee: true
+    nutriments:
+      energie_kcal: 334
+      proteines_g: 19.8
+      lipides_g: 14.6
+      glucides_g: 11.9
+      fibres_g: 38
+      fer_mg: 16.2
+      calcium_mg: 689
+      sodium_mg: 17
+      vitamine_c_mg: 21
+    allergenes: []
+
+  # Le miso est souvent fermenté avec de l'orge — d'où `gluten: traces` en plus du soja.
+  - id: miso
+    code_ciqual: "20916"
+    nom: "Miso"
+    groupe: "condiments"
+    conditionnement_g: 300
+    toute_annee: true
+    nutriments:
+      energie_kcal: 188
+      proteines_g: 11.7
+      lipides_g: 6.01
+      glucides_g: 18.1
+      fibres_g: 5.4
+      fer_mg: 2.49
+      calcium_mg: 57
+      sodium_mg: 3730
+      vitamine_c_mg: 0
+    allergenes:
+      - code: soja
+        certitude: contient
+      - code: gluten
+        certitude: traces
+
+  # Le pignon de pin n'est PAS un « fruit à coque » au sens de l'annexe II (liste fermée) ; c'est
+  # la noix de cajou fréquemment ajoutée en industrie qui justifie les `traces`.
+  - id: pesto
+    code_ciqual: "11179"
+    nom: "Sauce pesto"
+    groupe: "condiments"
+    conditionnement_g: 190
+    toute_annee: true
+    nutriments:
+      energie_kcal: 370
+      proteines_g: 3.94
+      lipides_g: 35.4
+      glucides_g: 6.6
+      fibres_g: 2.5
+      fer_mg: 0.59
+      calcium_mg: 150
+      sodium_mg: 1060
+      vitamine_c_mg: 92.6
+    allergenes:
+      - code: lait
+        certitude: contient
+      - code: fruits_a_coque
+        certitude: traces
+
+  # La tapenade traditionnelle contient des anchois — `traces` parce que les versions sans
+  # existent et que Ciqual ne précise pas.
+  - id: tapenade
+    code_ciqual: "11043"
+    nom: "Tapenade"
+    groupe: "condiments"
+    conditionnement_g: 100
+    toute_annee: true
+    nutriments:
+      energie_kcal: 229
+      proteines_g: 1.93
+      lipides_g: 21.9
+      glucides_g: 3.29
+      fibres_g: 5.26
+      fer_mg: 4.3
+      calcium_mg: 63
+      sodium_mg: 1280
+      vitamine_c_mg: 1.05
+    allergenes:
+      - code: poissons
+        certitude: traces
+
+  - id: graine_pavot
+    code_ciqual: "11061"
+    nom: "Graines de pavot"
+    groupe: "fruits à coque et oléagineux"
+    conditionnement_g: 100
+    toute_annee: true
+    nutriments:
+      energie_kcal: 534
+      proteines_g: 21.2
+      lipides_g: 41.6
+      glucides_g: 13.7
+      fibres_g: 10
+      fer_mg: 9.76
+      calcium_mg: 1440
+      sodium_mg: 26
+      vitamine_c_mg: 1
+    allergenes: []
+
+  - id: huile_coco
+    code_ciqual: "16050"
+    nom: "Huile de coco vierge"
+    groupe: "matières grasses"
+    conditionnement_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 899
+      proteines_g: 0.16
+      lipides_g: 99.9
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.5
+      calcium_mg: 10
+      sodium_mg: 4
+      vitamine_c_mg: 2
+    allergenes: []
+
+  - id: huile_noisette
+    code_ciqual: "17210"
+    nom: "Huile de noisette"
+    groupe: "matières grasses"
+    conditionnement_g: 250
+    toute_annee: true
+    nutriments:
+      energie_kcal: 900
+      proteines_g: 0
+      lipides_g: 100
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0
+      calcium_mg: 0
+      sodium_mg: 0
+      vitamine_c_mg: 0
+    allergenes:
+      - code: fruits_a_coque
+        certitude: contient
+
+  - id: sucre_vanille
+    code_ciqual: "31044"
+    nom: "Sucre vanillé"
+    groupe: "produits sucrés"
+    conditionnement_g: 8
+    toute_annee: true
+    nutriments:
+      energie_kcal: 397
+      proteines_g: 0.1
+      lipides_g: 0.33
+      glucides_g: 98.6
+      fibres_g: 0.37
+      sodium_mg: 3
+    allergenes: []
+
+  - id: melasse
+    code_ciqual: "31067"
+    nom: "Mélasse de canne"
+    groupe: "produits sucrés"
+    conditionnement_g: 250
+    toute_annee: true
+    nutriments:
+      energie_kcal: 300
+      proteines_g: 0
+      lipides_g: 0.1
+      glucides_g: 74.7
+      fibres_g: 0
+      fer_mg: 4.72
+      calcium_mg: 205
+      sodium_mg: 37
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: pate_amande
+    code_ciqual: "15201"
+    nom: "Pâte d'amande"
+    groupe: "produits sucrés"
+    conditionnement_g: 200
+    toute_annee: true
+    nutriments:
+      energie_kcal: 432
+      proteines_g: 5.8
+      lipides_g: 13.5
+      glucides_g: 70.3
+      fibres_g: 2.8
+      fer_mg: 0.88
+      calcium_mg: 91
+      sodium_mg: 7
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: fruits_a_coque
         certitude: contient

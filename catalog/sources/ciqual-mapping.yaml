@@ -561,3 +561,80 @@ mapping:
   saindoux: 16520                # Saindoux — graisse de PORC, voir l'alerte ci-dessus
   sirop_agave: 31089             # Sirop d'agave
   creme_marron: 15013            # Crème de marron ou confiture de châtaigne, préemballée
+
+  # ==========================================================================
+  # Quatrième lot (2026-08-04). 40 aliments. Deux trous entiers comblés : le catalogue n'avait
+  # AUCUN abat, et aucune farine sans gluten hors sarrasin et millet.
+  #
+  # ⚠️ TROIS ENTRÉES ÉCARTÉES POUR RESPECTER LA CONVENTION « ALIMENT CRU » de ce fichier :
+  # `coque` (10034), `tourteau` (10025) et `crevette grise` (10006) n'existent que CUITS chez
+  # Ciqual, alors que les cinq fruits de mer déjà au catalogue pointent tous sur du cru
+  # (moule 10014, huître 10011, crevette 10021, langoustine 10024, crabe 10039). `tourteau`
+  # aurait en plus doublonné `crabe`. Ne pas les rouvrir sans changer la convention d'abord.
+  #
+  # ⚠️ `riz_sauvage` NE REJOINT PAS la sous-famille « riz » : la zizanie est une autre plante que
+  # l'Oryza sativa, malgré le nom commercial. Même raisonnement que « noix » et « champignon ».
+  #
+  # NON TROUVÉS, écartés sans substitut : sumac, garam masala, ras el hanout, genièvre, anis vert,
+  # wasabi, sauce Worcestershire, vinaigre de riz, piment doux, physalis, quetsche, airelle,
+  # azuki, poudre d'amande, pâtisson, oursin, ris de veau, langue de bœuf. `crosne` n'existe qu'en
+  # surgelé et `châtaigne` qu'en bouillie — écartés aussi.
+  # ==========================================================================
+
+  # Abats — aucun n'existait. Chacun rejoint la famille de son animal.
+  foie_genisse: 40104            # Foie, génisse, cru
+  foie_agneau: 40102             # Foie, agneau, cru
+  rognon_boeuf: 40402            # Rognon, boeuf, cru
+  tripes: 40502                  # Tripes, boeuf, crues
+  gesier_poulet: 40700           # Gésier, poulet, cru
+
+  # Farines et céréales sans gluten — le catalogue n'avait que sarrasin et millet.
+  farine_riz: 9520               # Farine de riz
+  farine_chataigne: 9570         # Farine de châtaigne
+  farine_pois_chiche: 9580       # Farine de pois chiche
+  tapioca: 4000                  # Tapioca ou perles du Japon, cru
+  riz_sauvage: 9108              # Riz sauvage, cru — PAS dans la sous-famille « riz », voir ci-dessus
+  sorgho: 9360                   # Sorgho complet, cru
+
+  # Fromages régionaux
+  morbier: 12743                 # Morbier
+  ossau_iraty: 12119             # Ossau-Iraty (fromage de brebis)
+  pont_leveque: 12042            # Pont l'Évêque
+  mimolette: 12737               # Mimolette demi-vieille (6 mois d'affinage minimum)
+  cancoillotte: 12325            # Cancoillotte (spécialité fromagère fondue)
+
+  # Poissons
+  mulet: 26091                   # Mulet, cru
+  tilapia: 27019                 # Tilapia, cru
+
+  # Légumes et salades
+  chou_kale: 20346               # Chou kale, cru
+  pourpier: 20127                # Pourpier, feuille, cru
+  salade_frisee: 20012           # Salade ou chicorée frisée, crue
+  scarole: 20090                 # Scarole, crue
+  pousse_soja: 20183             # Graine germée de haricot mungo ou pousse de « soja », crue
+
+  # Légumineuses — ⚠️ `lupin` est l'un des 14 allergènes réglementaires à lui seul.
+  haricot_mungo: 20530           # Haricot mungo, sec
+  lupin: 20534                   # Lupin, graine, sec
+  soja_texture: 20591            # Protéine de soja texturée, réhydratée
+
+  # Fruits
+  goyave: 13083                  # Goyave, chair sans peau, crue
+  banane_plantain: 53100         # Banane plantain, crue
+  nefle: 13564                   # Nèfle du Japon, chair et peau, sans noyau, crue
+
+  # Condiments et sauces
+  poivre_blanc: 11019            # Poivre blanc, poudre (`poivre_noir` est le jumeau)
+  carvi: 11064                   # Carvi, graine
+  miso: 20916                    # Miso
+  pesto: 11179                   # Sauce pesto, préemballée
+  tapenade: 11043                # Tapenade, préemballée
+  graine_pavot: 11061            # Pavot, graine
+
+  # Matières grasses et produits sucrés
+  huile_coco: 16050              # Huile ou graisse de coco, vierge
+  huile_noisette: 17210          # Huile de noisette
+  sucre_vanille: 31044           # Sucre vanillé
+  melasse: 31067                 # Mélasse de canne
+  pate_amande: 15201             # Pâte d'amande, préemballée
