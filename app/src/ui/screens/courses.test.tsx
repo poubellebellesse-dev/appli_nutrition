@@ -467,6 +467,43 @@ describe('courses — les repas couverts par un reste', () => {
     expect(within(section).getAllByRole('listitem')).toHaveLength(restes.length)
   })
 
+  // ⚠️ BUG TROUVÉ ET CORRIGÉ LE 2026-08-04, deux commits après avoir été écrit. La section
+  // annonçait « Rien à acheter pour eux », et c'était FAUX dans le cas nominal : `planLeftovers` ne
+  // remplace que le PLAT du créneau, son accompagnement reste une recette entière que
+  // `buildShoppingList` achète. Sur un plan de sept jours en mode repas, TOUS les créneaux couverts
+  // par un reste en portent un — l'écran affirmait donc le contraire de la liste juste au-dessus.
+  it('⛔ NOMME L’ACCOMPAGNEMENT, QUI LUI EST BIEN À ACHETER', async () => {
+    const { socle, plan } = await avecUnPlan()
+    const avecAccompagnement = plan.entries.filter(
+      (e) =>
+        e.isLeftover &&
+        plan.entries.some(
+          (a) =>
+            a.service === 'accompagnement' &&
+            !a.isLeftover &&
+            a.slot.date === e.slot.date &&
+            a.slot.creneau === e.slot.creneau
+        )
+    )
+    // Si le moteur cessait d'accompagner les restes, ce test deviendrait vide sans le dire.
+    expect(avecAccompagnement.length).toBeGreaterThan(0)
+
+    await monter()
+
+    const section = (await screen.findByText(/^Couverts par un reste/)).closest('section') as HTMLElement
+    const accompagnement = plan.entries.find(
+      (a) =>
+        a.service === 'accompagnement' &&
+        !a.isLeftover &&
+        a.slot.date === avecAccompagnement[0]!.slot.date &&
+        a.slot.creneau === avecAccompagnement[0]!.slot.creneau
+    )!
+    const nom = socle.catalogue.recipes.get(accompagnement.recipeId!)!.nom
+    expect(within(section).getByText(new RegExp(`avec ${nom} — à acheter`))).toBeDefined()
+    // Et la promesse fausse ne doit pas revenir par une reformulation.
+    expect(section.textContent).not.toMatch(/[Rr]ien à acheter/)
+  })
+
   it('⛔ RIEN N’Y EST COCHABLE — ce ne sont pas des articles à acheter', async () => {
     await avecUnPlan()
     await monter()

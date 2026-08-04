@@ -81,6 +81,13 @@ const LIBELLE_RANGEMENT: Readonly<Record<Rangement, string>> = {
 interface CreneauCouvert {
   readonly cle: string
   readonly titre: string
+  /**
+   * Le nom de l'accompagnement du même créneau, `null` s'il n'y en a pas — et il y en a presque
+   * toujours un. `planLeftovers` ne remplace que le PLAT : l'accompagnement reste une vraie recette,
+   * qui part bel et bien dans les courses. Sans ce champ, la section affirmait « rien à acheter pour
+   * ces repas » alors que la moitié de l'assiette était dans la liste.
+   */
+  readonly accompagnement: string | null
 }
 
 interface Vue {
@@ -187,14 +194,26 @@ async function calculerVue(): Promise<Etat> {
   // Les créneaux servis par un reste — voir l'en-tête de `Vue.couvertsParUnReste`. Un reste porte
   // toujours la recette de son plat source (`plan-leftovers.ts`), donc son nom est celui du plat
   // qu'on retrouvera dans l'assiette.
+  //
+  // ⚠️ L'ACCOMPAGNEMENT DU CRÉNEAU EST RÉSOLU AUSSI, et ce n'est pas un ornement : `planLeftovers`
+  // ne remplace que le plat, l'accompagnement reste une recette à cuisiner et donc à acheter.
+  const accompagnementDuCreneau = new Map<string, string>()
+  for (const entree of plan.entries) {
+    if (entree.service !== 'accompagnement' || entree.recipeId === null || entree.isLeftover) continue
+    const nom = socle.catalogue.recipes.get(entree.recipeId)?.nom
+    if (nom !== undefined) accompagnementDuCreneau.set(cleCreneau(entree.slot.date, entree.slot.creneau), nom)
+  }
+
   const couvertsParUnReste: CreneauCouvert[] = []
   for (const entree of plan.entries) {
     if (!entree.isLeftover || entree.recipeId === null) continue
     const nom = socle.catalogue.recipes.get(entree.recipeId)?.nom
     if (nom === undefined) continue
+    const cle = cleCreneau(entree.slot.date, entree.slot.creneau)
     couvertsParUnReste.push({
-      cle: cleCreneau(entree.slot.date, entree.slot.creneau),
+      cle,
       titre: `${formaterJour(entree.slot.date)} · ${LIBELLE_CRENEAU[entree.slot.creneau]} — ${nom}`,
+      accompagnement: accompagnementDuCreneau.get(cle) ?? null,
     })
   }
 
@@ -547,8 +566,12 @@ function CouvertsParUnReste({ creneaux }: { readonly creneaux: readonly CreneauC
   return (
     <section className="mt-6">
       <h2 className="font-titre text-[1.25rem] text-texte">Couverts par un reste ({creneaux.length})</h2>
+      {/* ⚠️ « RIEN À ACHETER POUR EUX » ÉTAIT FAUX, et faux dans le cas NOMINAL — corrigé le
+          2026-08-04, deux commits après avoir été écrit. `planLeftovers` ne remplace que le PLAT :
+          l'accompagnement du créneau reste une recette entière, qui part dans les courses. Sur un
+          plan de sept jours en mode repas, TOUS les créneaux couverts par un reste en portent un. */}
       <p className="mt-1 text-[0.9rem] leading-relaxed text-attenue">
-        Ces repas réutilisent un plat déjà prévu. Rien à acheter pour eux.
+        Ces repas réutilisent un plat déjà cuisiné : il n’est pas dans votre liste.
       </p>
       {/* Même raison que le lien vers le frigo dans « Déjà chez vous » : nommer un effet sans dire
           où il se voit laisse la question entière. La Semaine porte déjà « Reste du plat de la
@@ -563,6 +586,11 @@ function CouvertsParUnReste({ creneaux }: { readonly creneaux: readonly CreneauC
         {creneaux.map((creneau) => (
           <li key={creneau.cle} className="px-3 py-2 text-[1rem] text-texte-doux">
             {creneau.titre}
+            {creneau.accompagnement !== null && (
+              <span className="block text-[0.88rem] text-attenue">
+                avec {creneau.accompagnement} — à acheter
+              </span>
+            )}
           </li>
         ))}
       </ul>
