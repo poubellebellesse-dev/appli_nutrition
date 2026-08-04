@@ -143,4 +143,75 @@
     outline: 3px solid var(--color-accent-texte);
     outline-offset: 2px;
   }
+
+  /* `<main tabIndex={-1}>` (`main.tsx`) reçoit le focus par programme à chaque changement de route.
+   * Sans cette règle, l'anneau de `:focus-visible` ci-dessus encadrerait tout l'écran à chaque
+   * navigation — ce sélecteur ne vise que les conteneurs focalisés par programme, jamais le lien
+   * d'évitement ni les autres éléments interactifs, qui restent de vrais `<button>`/`<a>` sans
+   * `tabindex="-1"`. */
+  [tabindex='-1']:focus {
+    outline: none;
+  }
+
+  /* Certains visiteurs demandent au système de réduire les animations (vertige, épilepsie…). §5
+   * DESIGN ne prévoit aujourd'hui aucune animation ni transition dans `app/src` — cette règle est
+   * PURE PRÉVENTION avant les carrousels et boucles WebP à venir, posée maintenant pour ne pas devoir
+   * repasser sur chaque média plus tard.
+   *
+   * ⚠️ `0.01ms`, JAMAIS `none` : `none` supprime l'événement `animationend` et casserait tout
+   * composant qui l'écoute pour savoir quand une animation est terminée. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Lien d'évitement (`main.tsx`) : invisible tant qu'il n'a pas le focus, mais jamais retiré du flux
+ * de tabulation — `display:none`/`visibility:hidden` rendraient l'élément infocusable, détruisant sa
+ * fonction même. Rognage à 1px plutôt : la technique standard pour masquer sans désactiver.
+ *
+ * ⚠️ CE NOM OCCULTE DÉLIBÉRÉMENT L'UTILITAIRE `sr-only` DE TAILWIND. Cette règle est hors `@layer`,
+ * donc elle l'emporte sur `@layer utilities`. Les déclarations sont équivalentes ; ce qui justifie
+ * de redéfinir, c'est la variante `:focus` ci-dessous — l'obtenir en utilitaires demanderait une
+ * dizaine de variantes `focus:` dans le JSX, là où le projet centralise déjà ce genre de règle ici
+ * (même raison que la substitution de jetons en mode sombre, §1 DESIGN). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Au focus, redevient un vrai bloc lisible en haut à gauche, sur un fond opaque — pas transparent
+ * par-dessus le contenu. */
+.sr-only:focus {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  width: auto;
+  height: auto;
+  padding: 0.75rem 1.25rem;
+  margin: 0;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  /* ⚠️ 60 ET NON 50. `panneau.tsx` et `visite.tsx` sont à `z-50` et sortent par un portail en fin de
+   * `<body>` — à `z-index` égal, le dernier du DOM l'emporte. Comme `Panneau` ne piège pas le focus,
+   * un `Shift+Tab` depuis une fenêtre ouverte remonte jusqu'ici : à 50, le lien recevait le focus
+   * DERRIÈRE la fenêtre, donc un focus actif et invisible. */
+  z-index: 60;
+  background-color: var(--color-surface);
+  color: var(--color-texte);
+  border-radius: var(--radius-carte);
 }

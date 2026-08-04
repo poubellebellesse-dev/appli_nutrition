@@ -9,7 +9,7 @@
 // remplacés par domain/ selection/ planning/). Rouvrir ce chantier pour deux écrans n'apporterait
 // rien ; à signaler le jour où les huit existeront.
 
-import { StrictMode, useEffect, useState } from 'react'
+import { StrictMode, useEffect, useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Aujourdhui } from './screens/aujourdhui.js'
 import { Semaine } from './screens/semaine.js'
@@ -137,6 +137,19 @@ function LienParametres({ actif }: { readonly actif: boolean }) {
 
 function Coquille() {
   const route = useRoute()
+  const refContenu = useRef<HTMLElement>(null)
+  /**
+   * La route du rendu précédent, pour distinguer une vraie navigation d'un simple remontage.
+   *
+   * ⚠️ UN DRAPEAU « a déjà monté » NE SUFFIT PAS. `<StrictMode>` (bas de ce fichier) invoque chaque
+   * effet DEUX FOIS au montage en développement : le premier passage lèverait le drapeau, le second
+   * le trouverait levé et volerait le focus au chargement — exactement ce que la garde existe pour
+   * empêcher. Comparer la route est idempotent, donc insensible au nombre d'invocations.
+   *
+   * Repose sur `lireRouteStable` (`router.tsx`), qui ne rend un nouvel objet que si le hash a
+   * changé. Si cette stabilité disparaissait, l'effet se déclencherait à chaque rendu.
+   */
+  const refRoutePrecedente = useRef(route)
   const [alerte, setAlerte] = useState<Alerte>('aucune')
   /**
    * `null` = on ne sait pas encore. Distinguer « pas encore lu » de « pas consenti » évite le
@@ -236,6 +249,20 @@ function Coquille() {
     }
   }, [])
 
+  /**
+   * Focus sur le contenu à chaque changement de route, et défilement remis à zéro.
+   *
+   * ⚠️ LE PREMIER MONTAGE EST IGNORÉ. Voler le focus au chargement annoncerait l'écran sans qu'on
+   * l'ait demandé. Au passage, remettre le défilement à zéro corrige un vrai défaut : changer
+   * d'onglet en étant descendu dans la page atterrissait jusqu'ici au milieu du nouvel écran.
+   */
+  useEffect(() => {
+    if (refRoutePrecedente.current === route) return
+    refRoutePrecedente.current = route
+    refContenu.current?.focus({ preventScroll: true })
+    window.scrollTo(0, 0)
+  }, [route])
+
   if (consenti === null) return null
 
   // ⚠️ PAS DE BARRE DE NAVIGATION PENDANT L'ACCUEIL. §4.8 est un parcours linéaire jusqu'à une
@@ -270,6 +297,18 @@ function Coquille() {
 
   return (
     <ProvenanceLancerParcours value={lancerParcours}>
+      {/* Premier élément focusable du document. ⚠️ UN `<button>`, JAMAIS UNE ANCRE `#contenu` : le
+          routeur est par hash (voir `router.tsx`), une ancre déclencherait `hashchange` et
+          `ONGLET_PAR_HASH` ne reconnaîtrait pas `#contenu` — le repli renverrait sur « Aujourd'hui »,
+          l'inverse exact de ce que ce lien doit faire. Invisible tant qu'il n'a pas le focus
+          (`.sr-only`, `theme.css`). */}
+      <button
+        type="button"
+        onClick={() => refContenu.current?.focus({ preventScroll: true })}
+        className="sr-only"
+      >
+        Aller au contenu
+      </button>
       <Navigation courante={route.onglet} />
       {/* `pb-28` réserve la hauteur de la barre du bas sur mobile ; sur bureau la barre passe à
           gauche (`lg:pl-56`) et la réserve disparaît. Marges en rem, jamais de hauteur figée. */}
@@ -305,7 +344,7 @@ function Coquille() {
             )}
           </div>
         )}
-        <main>
+        <main ref={refContenu} tabIndex={-1}>
           <Ecran onglet={route.onglet} sousVue={route.sousVue} />
         </main>
       </div>
