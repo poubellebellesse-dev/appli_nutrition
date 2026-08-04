@@ -1291,6 +1291,7 @@ foods:
     groupe: "lait et produits laitiers"
     conditionnement_g: 150
     origine_animale: mammifere
+    sous_famille: "chevre"
     toute_annee: true
     nutriments:
       energie_kcal: 194
@@ -1791,6 +1792,7 @@ foods:
     groupe: "condiments"
     fond_de_placard: true
     conditionnement_g: 40
+    sous_famille: "gingembre"
     toute_annee: true
     nutriments:
       energie_kcal: 335
@@ -6077,6 +6079,739 @@ foods:
     allergenes:
       - code: oeufs
         certitude: contient
+
+  # ==========================================================================
+  # Troisième lot (2026-08-04) — 39 aliments. Détail des appariements et des candidats non
+  # trouvés : catalog/sources/ciqual-mapping.yaml.
+  #
+  # ⚠️ AUCUNE sous-famille « champignon » : cèpe, girolle, morille, pleurote et champignon de
+  # Paris sont des ESPÈCES distinctes, pas le même produit de base — même raisonnement que pour
+  # « noix » et « chou ». Les replier ferait passer une poêlée de morilles pour un reste de
+  # champignons de Paris.
+  #
+  # ⚠️ `gelatine` et `saindoux` portent `origine_animale` — collagène de mammifère et graisse de
+  # porc. Deux aliments qu'on croit neutres et qui ne le sont pas : sans cette déclaration, le
+  # filtre végétarien les laisserait passer. `agar_agar` est ajouté dans le même lot précisément
+  # parce qu'il est leur équivalent végétal.
+  # ==========================================================================
+
+  - id: cepe
+    code_ciqual: "20160"
+    nom: "Cèpe, cru"
+    groupe: "légumes"
+    saison_mois: [9, 10, 11]
+    nutriments:
+      energie_kcal: 28.8
+      proteines_g: 3.23
+      lipides_g: 0.49
+      glucides_g: 2
+      fibres_g: 2.12
+      fer_mg: 1.07
+      calcium_mg: 22.7
+      sodium_mg: 21
+      vitamine_c_mg: 2.83
+    allergenes: []
+
+  - id: girolle
+    code_ciqual: "20103"
+    nom: "Girolle (chanterelle), crue"
+    groupe: "légumes"
+    saison_mois: [7, 8, 9, 10]
+    nutriments:
+      energie_kcal: 24.7
+      proteines_g: 1.49
+      lipides_g: 0.53
+      glucides_g: 1.77
+      fibres_g: 3.8
+      fer_mg: 3.47
+      calcium_mg: 15
+      sodium_mg: 9
+      vitamine_c_mg: 5.67
+    allergenes: []
+
+  - id: morille
+    code_ciqual: "20105"
+    nom: "Morille, crue"
+    groupe: "légumes"
+    saison_mois: [4, 5]
+    nutriments:
+      energie_kcal: 23.5
+      proteines_g: 3.12
+      lipides_g: 0.57
+      glucides_g: 0.1
+      fibres_g: 2.8
+      fer_mg: 1.2
+      calcium_mg: 43
+      sodium_mg: 21
+      vitamine_c_mg: 5
+    allergenes: []
+
+  - id: pleurote
+    code_ciqual: "20114"
+    nom: "Pleurote, crue"
+    groupe: "légumes"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 26.8
+      proteines_g: 3.31
+      lipides_g: 0.41
+      glucides_g: 1.5
+      fibres_g: 2.3
+      fer_mg: 1.33
+      calcium_mg: 3
+      sodium_mg: 18
+      vitamine_c_mg: 4
+    allergenes: []
+
+  - id: shiitake
+    code_ciqual: "20211"
+    nom: "Shiitaké séché"
+    groupe: "légumes"
+    conditionnement_g: 50
+    toute_annee: true
+    nutriments:
+      energie_kcal: 316
+      proteines_g: 9.58
+      lipides_g: 0.99
+      glucides_g: 63.9
+      fibres_g: 11.5
+      fer_mg: 1.72
+      calcium_mg: 11
+      sodium_mg: 13
+      vitamine_c_mg: 3.5
+    allergenes: []
+
+  - id: champignon_noir
+    code_ciqual: "20202"
+    nom: "Champignon noir séché"
+    groupe: "légumes"
+    conditionnement_g: 50
+    toute_annee: true
+    nutriments:
+      proteines_g: 7.5
+      lipides_g: 0.075
+      sodium_mg: 35
+    allergenes: []
+
+  - id: courge_spaghetti
+    code_ciqual: "20145"
+    nom: "Courge spaghetti, crue"
+    groupe: "légumes"
+    saison_mois: [9, 10, 11, 12]
+    nutriments:
+      energie_kcal: 32.3
+      proteines_g: 0.64
+      lipides_g: 0.57
+      glucides_g: 5.41
+      fibres_g: 1.5
+      fer_mg: 0.31
+      calcium_mg: 23
+      sodium_mg: 17
+      vitamine_c_mg: 2.1
+    allergenes: []
+
+  - id: tomme
+    code_ciqual: "12758"
+    nom: "Tomme de vache"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 200
+    derive_de: lait_entier
+    toute_annee: true
+    nutriments:
+      energie_kcal: 364
+      proteines_g: 21.6
+      lipides_g: 29.4
+      glucides_g: 3.37
+      fibres_g: 0
+      calcium_mg: 953
+      sodium_mg: 510
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: raclette
+    code_ciqual: "12749"
+    nom: "Raclette"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 400
+    derive_de: lait_entier
+    toute_annee: true
+    nutriments:
+      energie_kcal: 342
+      proteines_g: 23.4
+      lipides_g: 27.5
+      glucides_g: 0
+      fibres_g: 0
+      calcium_mg: 658
+      sodium_mg: 676
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: beaufort
+    code_ciqual: "12105"
+    nom: "Beaufort"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 200
+    derive_de: lait_entier
+    toute_annee: true
+    nutriments:
+      energie_kcal: 404
+      proteines_g: 26.7
+      lipides_g: 33
+      glucides_g: 0.72
+      fibres_g: 0.063
+      fer_mg: 0.24
+      calcium_mg: 845
+      sodium_mg: 440
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: maroilles
+    code_ciqual: "12036"
+    nom: "Maroilles"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 200
+    derive_de: lait_entier
+    toute_annee: true
+    nutriments:
+      energie_kcal: 325
+      proteines_g: 21.9
+      lipides_g: 26.4
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.09
+      calcium_mg: 580
+      sodium_mg: 834
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: chevre_affine
+    code_ciqual: "12803"
+    nom: "Chèvre affiné"
+    groupe: "lait et produits laitiers"
+    conditionnement_g: 100
+    sous_famille: "chevre"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 308
+      proteines_g: 20.7
+      lipides_g: 24.7
+      glucides_g: 1.24
+      fibres_g: 0
+      fer_mg: 0.25
+      calcium_mg: 112
+      sodium_mg: 516
+    allergenes:
+      - code: lait
+        certitude: contient
+
+  - id: julienne
+    code_ciqual: "26130"
+    nom: "Julienne (lingue), crue"
+    groupe: "poissons"
+    origine_animale: poisson
+    toute_annee: true
+    nutriments:
+      energie_kcal: 80.8
+      proteines_g: 19.2
+      lipides_g: 0.44
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.68
+      calcium_mg: 27.6
+      sodium_mg: 128
+      vitamine_c_mg: 0
+    allergenes:
+      - code: poissons
+        certitude: contient
+
+  - id: espadon
+    code_ciqual: "26082"
+    nom: "Espadon, cru"
+    groupe: "poissons"
+    origine_animale: poisson
+    toute_annee: true
+    nutriments:
+      energie_kcal: 134
+      proteines_g: 18.9
+      lipides_g: 5.97
+      glucides_g: 1
+      fibres_g: 0
+      fer_mg: 0.65
+      calcium_mg: 12.1
+      sodium_mg: 112
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: poissons
+        certitude: contient
+
+  - id: sandre
+    code_ciqual: "27024"
+    nom: "Sandre, cru"
+    groupe: "poissons"
+    origine_animale: poisson
+    toute_annee: true
+    nutriments:
+      energie_kcal: 87.2
+      proteines_g: 18.3
+      lipides_g: 1.08
+      glucides_g: 1.06
+      fibres_g: 0
+      fer_mg: 0.3
+      calcium_mg: 54
+      sodium_mg: 57
+      vitamine_c_mg: 1
+    allergenes:
+      - code: poissons
+        certitude: contient
+
+  - id: gingembre_frais
+    code_ciqual: "11074"
+    nom: "Gingembre, racine fraîche"
+    groupe: "condiments"
+    sous_famille: "gingembre"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 33.3
+      proteines_g: 1.1
+      lipides_g: 1.1
+      glucides_g: 3.4
+      fibres_g: 2.7
+      fer_mg: 0.4
+      calcium_mg: 11
+      sodium_mg: 6.3
+      vitamine_c_mg: 0.5
+    allergenes: []
+
+  - id: herbes_provence
+    code_ciqual: "11060"
+    nom: "Herbes de Provence séchées"
+    groupe: "condiments"
+    fond_de_placard: true
+    conditionnement_g: 30
+    toute_annee: true
+    nutriments:
+      energie_kcal: 283
+      proteines_g: 11.5
+      lipides_g: 7.2
+      glucides_g: 23.1
+      fibres_g: 40.1
+      fer_mg: 69.8
+      calcium_mg: 1860
+      sodium_mg: 35
+      vitamine_c_mg: 54
+    allergenes: []
+
+  # `agar_agar` est l'alternative végétale à `gelatine` — voir l'origine animale de cette dernière.
+  - id: agar_agar
+    code_ciqual: "11085"
+    nom: "Agar-agar séché"
+    groupe: "condiments"
+    conditionnement_g: 20
+    toute_annee: true
+    nutriments:
+      proteines_g: 6.21
+      lipides_g: 0.3
+      fer_mg: 21.4
+      calcium_mg: 625
+      sodium_mg: 102
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: gelatine
+    code_ciqual: "11007"
+    nom: "Gélatine sèche"
+    groupe: "condiments"
+    conditionnement_g: 20
+    origine_animale: mammifere
+    toute_annee: true
+    nutriments:
+      energie_kcal: 348
+      proteines_g: 86.9
+      lipides_g: 0.1
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 1.2
+      calcium_mg: 280
+      sodium_mg: 298
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: levure_biere
+    code_ciqual: "11009"
+    nom: "Levure de bière en paillettes"
+    groupe: "condiments"
+    conditionnement_g: 150
+    toute_annee: true
+    nutriments:
+      energie_kcal: 334
+      proteines_g: 40.4
+      lipides_g: 4.5
+      glucides_g: 21.8
+      fibres_g: 22.5
+      fer_mg: 4.1
+      calcium_mg: 130
+      sodium_mg: 141
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: gluten
+        certitude: traces
+
+  - id: germe_ble
+    code_ciqual: "9660"
+    nom: "Germe de blé"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 250
+    toute_annee: true
+    nutriments:
+      energie_kcal: 375
+      proteines_g: 27.2
+      lipides_g: 9.5
+      glucides_g: 35.1
+      fibres_g: 16.3
+      fer_mg: 8.9
+      calcium_mg: 54
+      sodium_mg: 7.2
+      vitamine_c_mg: 0.5
+    allergenes:
+      - code: gluten
+        certitude: contient
+
+  - id: son_ble
+    code_ciqual: "9621"
+    nom: "Son de blé"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 250
+    toute_annee: true
+    nutriments:
+      energie_kcal: 270
+      proteines_g: 14.8
+      lipides_g: 3.88
+      glucides_g: 22.7
+      fibres_g: 42.9
+      fer_mg: 10.6
+      calcium_mg: 73
+      sodium_mg: 6
+      vitamine_c_mg: 0
+    allergenes:
+      - code: gluten
+        certitude: contient
+
+  - id: couscous
+    code_ciqual: "9681"
+    nom: "Graine de couscous"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 366
+      proteines_g: 12.3
+      lipides_g: 1.32
+      glucides_g: 72.7
+      fibres_g: 4.5
+      fer_mg: 1.08
+      calcium_mg: 24
+      sodium_mg: 7
+      vitamine_c_mg: 0
+    allergenes:
+      - code: gluten
+        certitude: contient
+
+  - id: nouilles_asiatiques
+    code_ciqual: "9863"
+    nom: "Nouilles asiatiques sèches, aux œufs"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 250
+    toute_annee: true
+    nutriments:
+      energie_kcal: 371
+      proteines_g: 11.9
+      lipides_g: 3
+      glucides_g: 71
+      fibres_g: 4
+      sodium_mg: 397
+    allergenes:
+      - code: gluten
+        certitude: contient
+      - code: oeufs
+        certitude: contient
+
+  - id: gnocchi
+    code_ciqual: "26264"
+    nom: "Gnocchi à la pomme de terre"
+    groupe: "céréales et dérivés"
+    conditionnement_g: 400
+    toute_annee: true
+    nutriments:
+      energie_kcal: 176
+      proteines_g: 4.66
+      lipides_g: 1.42
+      glucides_g: 35
+      fibres_g: 2.2
+      sodium_mg: 468
+    allergenes:
+      - code: gluten
+        certitude: contient
+      - code: oeufs
+        certitude: traces
+
+  - id: galette_riz
+    code_ciqual: "7352"
+    nom: "Galette de riz soufflé"
+    groupe: "céréales et dérivés"
+    poids_piece_g: 9
+    toute_annee: true
+    nutriments:
+      energie_kcal: 381
+      proteines_g: 8.39
+      lipides_g: 3
+      glucides_g: 77.9
+      fibres_g: 3.4
+      fer_mg: 1.2
+      calcium_mg: 13.2
+      sodium_mg: 88
+      vitamine_c_mg: 2
+    allergenes: []
+
+  - id: boudin_noir
+    code_ciqual: "8703"
+    nom: "Boudin noir, à cuire"
+    groupe: "viandes"
+    poids_piece_g: 120
+    origine_animale: mammifere
+    sous_famille: "porc"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 297
+      proteines_g: 12.2
+      lipides_g: 27.1
+      glucides_g: 0.29
+      fibres_g: 1.42
+      fer_mg: 17.4
+      calcium_mg: 22.4
+      sodium_mg: 574
+    allergenes:
+      - code: lait
+        certitude: traces
+
+  - id: saucisson_sec
+    code_ciqual: "30300"
+    nom: "Saucisson sec"
+    groupe: "viandes"
+    conditionnement_g: 200
+    origine_animale: mammifere
+    sous_famille: "porc"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 418
+      proteines_g: 24.2
+      lipides_g: 33.1
+      glucides_g: 5.48
+      fibres_g: 0.73
+      fer_mg: 1.27
+      calcium_mg: 14.4
+      sodium_mg: 1900
+      vitamine_c_mg: 5
+    allergenes:
+      - code: lait
+        certitude: traces
+
+  # Pas de sous-famille « porc » : la merguez est au mouton et au bœuf, pas au porc.
+  - id: merguez
+    code_ciqual: "30151"
+    nom: "Merguez, crue"
+    groupe: "viandes"
+    poids_piece_g: 70
+    origine_animale: mammifere
+    toute_annee: true
+    nutriments:
+      energie_kcal: 381
+      proteines_g: 12.8
+      lipides_g: 36.3
+      fibres_g: 0
+    allergenes:
+      - code: sulfites
+        certitude: traces
+
+  - id: pintade
+    code_ciqual: "36700"
+    nom: "Pintade, viande crue"
+    groupe: "viandes"
+    origine_animale: volaille
+    toute_annee: true
+    nutriments:
+      energie_kcal: 128
+      proteines_g: 22
+      lipides_g: 4.46
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.81
+      calcium_mg: 11
+      sodium_mg: 68
+      vitamine_c_mg: 1.5
+    allergenes: []
+
+  - id: kaki
+    code_ciqual: "13066"
+    nom: "Kaki, cru"
+    groupe: "fruits"
+    poids_piece_g: 170
+    saison_mois: [10, 11, 12]
+    nutriments:
+      energie_kcal: 66
+      proteines_g: 0.88
+      lipides_g: 0.3
+      glucides_g: 14.3
+      fibres_g: 3.4
+      fer_mg: 0.06
+      calcium_mg: 6.9
+      sodium_mg: 5
+      vitamine_c_mg: 3.41
+    allergenes: []
+
+  - id: mirabelle
+    code_ciqual: "13027"
+    nom: "Mirabelle, crue"
+    groupe: "fruits"
+    saison_mois: [8, 9]
+    nutriments:
+      energie_kcal: 74.6
+      proteines_g: 0.63
+      lipides_g: 0.5
+      glucides_g: 18
+      fibres_g: 2.2
+      fer_mg: 0.13
+      calcium_mg: 11
+      sodium_mg: 5
+      vitamine_c_mg: 5.29
+    allergenes: []
+
+  - id: fruit_passion
+    code_ciqual: "13016"
+    nom: "Fruit de la passion, cru"
+    groupe: "fruits"
+    poids_piece_g: 50
+    toute_annee: true
+    nutriments:
+      energie_kcal: 102
+      proteines_g: 2.13
+      lipides_g: 3
+      glucides_g: 10.9
+      fibres_g: 6.8
+      fer_mg: 0.56
+      calcium_mg: 8.1
+      sodium_mg: 5
+      vitamine_c_mg: 25.6
+    allergenes: []
+
+  - id: papaye
+    code_ciqual: "13035"
+    nom: "Papaye, crue"
+    groupe: "fruits"
+    poids_piece_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 39.6
+      proteines_g: 0.75
+      lipides_g: 0.3
+      glucides_g: 8.53
+      fibres_g: 1.8
+      fer_mg: 0.16
+      calcium_mg: 22
+      sodium_mg: 5
+      vitamine_c_mg: 65.3
+    allergenes: []
+
+  - id: cranberry_seche
+    code_ciqual: "13178"
+    nom: "Cranberries séchées"
+    groupe: "fruits"
+    conditionnement_g: 150
+    toute_annee: true
+    nutriments:
+      energie_kcal: 332
+      proteines_g: 0.25
+      lipides_g: 1
+      glucides_g: 76.4
+      fibres_g: 5.7
+      fer_mg: 0.16
+      calcium_mg: 8
+      sodium_mg: 5
+      vitamine_c_mg: 0.5
+    allergenes: []
+
+  - id: huile_pepins_raisin
+    code_ciqual: "17350"
+    nom: "Huile de pépins de raisin"
+    groupe: "matières grasses"
+    conditionnement_g: 500
+    toute_annee: true
+    nutriments:
+      energie_kcal: 900
+      proteines_g: 0
+      lipides_g: 100
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0.05
+      calcium_mg: 0.3
+      sodium_mg: 5
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: saindoux
+    code_ciqual: "16520"
+    nom: "Saindoux"
+    groupe: "matières grasses"
+    conditionnement_g: 250
+    origine_animale: mammifere
+    toute_annee: true
+    nutriments:
+      energie_kcal: 900
+      proteines_g: 0
+      lipides_g: 100
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 0
+      calcium_mg: 0
+      sodium_mg: 0
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: sirop_agave
+    code_ciqual: "31089"
+    nom: "Sirop d'agave"
+    groupe: "produits sucrés"
+    conditionnement_g: 250
+    toute_annee: true
+    nutriments:
+      proteines_g: 0.25
+      lipides_g: 0.5
+      glucides_g: 78
+      fibres_g: 0
+      sodium_mg: 3.99
+    allergenes: []
+
+  - id: creme_marron
+    code_ciqual: "15013"
+    nom: "Crème de marron"
+    groupe: "produits sucrés"
+    conditionnement_g: 250
+    toute_annee: true
+    nutriments:
+      energie_kcal: 278
+      proteines_g: 0.95
+      lipides_g: 0.66
+      glucides_g: 65.9
+      fibres_g: 2.28
+      fer_mg: 1.7
+      calcium_mg: 11.3
+      sodium_mg: 10
+      vitamine_c_mg: 6.29
+    allergenes: []
 
   - id: cidre
     code_ciqual: "5003"

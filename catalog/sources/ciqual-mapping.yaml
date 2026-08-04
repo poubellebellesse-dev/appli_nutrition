@@ -488,3 +488,76 @@ mapping:
   chocolat_blanc: 31010          # Chocolat blanc, tablette
   oeuf_caille: 22050             # Oeuf de caille, cru
   cidre: 5003                    # Cidre (aliment moyen)
+
+  # ==========================================================================
+  # Troisième lot (2026-08-04). 39 aliments. Le catalogue n'avait qu'UN champignon.
+  #
+  # ⚠️ PAS de sous-famille « champignon », pour la même raison que « noix » et « chou » :
+  # cèpe, girolle, morille et champignon de Paris sont des ESPÈCES distinctes, pas le même
+  # produit de base. Les replier ferait passer une poêlée de morilles pour un reste de
+  # champignons de Paris.
+  #
+  # ⚠️ DEUX ALIMENTS PORTENT UNE ORIGINE ANIMALE QU'ON N'ATTEND PAS, et c'est décisif pour
+  # le filtre végétarien : `gelatine` (collagène de mammifère) et `saindoux` (graisse de porc).
+  # `agar_agar` est justement leur équivalent végétal — d'où son ajout dans le même lot.
+  #
+  # NON TROUVÉS, écartés sans substitut : cassonade (sucre_roux couvre), pâte à tartiner,
+  # abricot sec, germe de soja, tomate séchée, vinaigre blanc, brochet, foie de veau, pâté de
+  # campagne, lasagnes sèches. Asperge blanche et riz basmati n'existent que CUITS chez Ciqual,
+  # contre la convention « aliment cru » de ce fichier — écartés aussi.
+  # ==========================================================================
+
+  # Champignons
+  cepe: 20160                    # Champignon, cèpe, cru
+  girolle: 20103                 # Champignon, chanterelle ou girolle, crue
+  pleurote: 20114                # Champignon, pleurote, crue
+  morille: 20105                 # Champignon, morille, crue
+  shiitake: 20211                # Champignon, lentin comestible ou shiitaké, séché
+  champignon_noir: 20202         # Champignon noir, séché
+
+  # Fromages
+  tomme: 12758                   # Tomme ou tome de vache
+  raclette: 12749                # Raclette (fromage)
+  beaufort: 12105                # Beaufort
+  maroilles: 12036               # Maroilles, sans précision
+  chevre_affine: 12803           # Fromage de chèvre lactique affiné (`chevre_frais` est le 12805)
+
+  # Poissons
+  julienne: 26130                # Julienne ou lingue, crue (20265 est une découpe de LÉGUMES)
+  espadon: 26082                 # Espadon, cru
+  sandre: 27024                  # Sandre, cru
+
+  # Aides culinaires et condiments
+  gingembre_frais: 11074         # Gingembre, racine fraîche (`gingembre_poudre` est le 11006)
+  agar_agar: 11085               # Agar (algue), séché
+  gelatine: 11007                # Gélatine, sèche
+  levure_biere: 11009            # Levure de bière en paillettes
+  herbes_provence: 11060         # Herbes de Provence, séchées
+
+  # Céréales et féculents
+  germe_ble: 9660                # Germe de blé
+  son_ble: 9621                  # Son de blé
+  couscous: 9681                 # Graine de couscous, à cuire (`semoule_ble` est le 9610, non précuit)
+  nouilles_asiatiques: 9863      # Pâtes ou nouilles asiatiques sèches, au blé et aux oeufs, crues
+  gnocchi: 26264                 # Gnocchi à la pomme de terre, à cuire
+  galette_riz: 7352              # Galette de riz complet soufflé
+
+  # Viandes et charcuteries
+  boudin_noir: 8703              # Boudin noir, à cuire
+  merguez: 30151                 # Merguez crue (aliment moyen)
+  saucisson_sec: 30300           # Saucisson sec
+  pintade: 36700                 # Pintade, viande crue
+
+  # Fruits
+  kaki: 13066                    # Kaki, chair et peau, cru
+  fruit_passion: 13016           # Fruit de la passion ou maracudja, cru
+  papaye: 13035                  # Papaye, chair sans peau, crue
+  mirabelle: 13027               # Prune mirabelle, sans noyau, crue
+  cranberry_seche: 13178         # Canneberge ou cranberry, séchée, sucrée
+
+  # Légumes, matières grasses, sucrés
+  courge_spaghetti: 20145        # Courge spaghetti, chair sans peau, crue
+  huile_pepins_raisin: 17350     # Huile de pépins de raisin
+  saindoux: 16520                # Saindoux — graisse de PORC, voir l'alerte ci-dessus
+  sirop_agave: 31089             # Sirop d'agave
+  creme_marron: 15013            # Crème de marron ou confiture de châtaigne, préemballée
