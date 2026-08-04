@@ -638,3 +638,66 @@ mapping:
   sucre_vanille: 31044           # Sucre vanillé
   melasse: 31067                 # Mélasse de canne
   pate_amande: 15201             # Pâte d'amande, préemballée
+
+  # ==========================================================================
+  # Cinquième lot (2026-08-04). 36 aliments. Poissons de criée, gibier, fromages AOP, et les
+  # familles que ces ajouts referment : `dinde`, `moutarde`, `avoine` naissent ici, `riz` et
+  # `lait` gagnent un membre.
+  #
+  # NON TROUVÉS, écartés sans substitut : oie, teff, fonio, riz noir, seigle en grain, babeurre,
+  # chayotte, corossol (jus seulement), goyavier, fleur d'oranger, vinaigre de xérès, vinaigre de
+  # vin blanc, extrait de vanille, gros sel, poivre vert (sauce seulement).
+  # `igname` et `gombo` n'existent qu'en relevés Martinique CUITS — écartés par la convention.
+  # ==========================================================================
+
+  # Poissons de criée
+  perche: 27010                  # Perche ou perche européenne, crue (27025 est la perche du NIL)
+  tacaud: 26133                  # Tacaud, cru
+  saint_pierre: 26104            # Saint-Pierre, cru (12839 est un fromage de chèvre)
+  congre: 26127                  # Congre ou congre commun, cru
+  grondin: 26106                 # Grondin, cru
+  sebaste: 26210                 # Sébaste du nord ou grand sébaste, crue
+
+  # Volailles et gibier
+  dinde_viande: 36301            # Dinde, viande crue — donne enfin une famille à `escalope_dinde`
+  caille_viande: 36101           # Caille, viande crue
+  mouton: 21001                  # Mouton, viande crue — PAS dans la famille « agneau », voir foods.yaml
+  chevreuil: 14005               # Chevreuil, viande crue
+  sanglier: 14002                # Sanglier, viande crue
+
+  # Fromages AOP et pâtes pressées
+  chaource: 12028                # Chaource
+  epoisses: 12038                # Époisses
+  livarot: 12037                 # Livarot
+  neufchatel: 12031              # Neufchâtel
+  gouda: 12736                   # Gouda (12767 est le gouda au cumin)
+  cheddar: 12726                 # Cheddar
+
+  # Laits transformés
+  lait_concentre_sucre: 19027    # Lait concentré sucré, entier
+  lait_poudre: 19021             # Lait en poudre, entier
+  kefir: 19865                   # Kéfir de lait (18316 est le kéfir de FRUITS, sans lait)
+
+  # Céréales
+  avoine: 9310                   # Avoine, crue — jumelle de `flocons_avoine`
+  son_avoine: 9640               # Son d'avoine
+  amarante: 9345                 # Amarante, crue
+  riz_rouge: 9109                # Riz rouge, cru — Oryza sativa, DONC dans la famille « riz »
+
+  # Légumes
+  manioc: 54031                  # Manioc, racine crue
+  cardon: 20054                  # Cardon, cru
+  chou_romanesco: 20280          # Chou romanesco ou brocoli à pomme, cru
+
+  # Fruits
+  kumquat: 13549                 # Kumquat, chair et peau, sans pépin, cru
+  carambole: 13054               # Carambole, chair et peau, crue
+  tamarin: 13080                 # Tamarin, fruit mûr, chair sans peau, cru
+  sureau: 13126                  # Sureau, baie, crue
+
+  # Condiments
+  bouillon_boeuf: 11001          # Bouillon de boeuf, déshydraté — complète légumes et volaille
+  moutarde_ancienne: 11021       # Moutarde à l'ancienne — jumelle de `moutarde_dijon`
+  raifort: 11016                 # Raifort, frais
+  sarriette_seche: 11062         # Sarriette, séchée
+  marjolaine_seche: 11034        # Marjolaine, séchée
