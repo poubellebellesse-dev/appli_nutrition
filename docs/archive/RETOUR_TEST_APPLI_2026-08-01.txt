@@ -1,0 +1,45 @@
+Pour les choix de bienvenur défile sans rien changer ? -> attendre l'utilisateur.
+pour la barre de menue en bas -> augmenter la taille de 0.5 a 1cm -> sur certain telephone on ne vois pas en bas
+
+le message Vos réglages sont enregistrés sur cet appareil, mais le navigateur ne garantit pas de les conserver. Ajoutez l'application à votre écran d'accueil pour ne rien perdre. -> afficher une fois avec une croix qui ne l'affiche plus
+ou sont ranger le vider mon frigo ? ou sont ranger les reste deja ?
+page aujourd'hui
+ 
+sur le téléphone il est 11h45 -> affiche SE Soir 
+-> je veux une interface comme tinder : une recette avec une grosse image qui prend la majorité de l'ecran -> en haut c'est oui -> on affiche la recette -> a droite et gauche -> on défile les recette ( gauche on reviens , droite nouvelle recette 
+peut etre gauche on enléve pour la recette pour le repas -> a droite on grde au cas ou 
+-> en cliquant sur la photo la photo prends tous l'ecran -> on peut faire défiler les photos a droite ou a gauche )-> en cliquant sur la recette on affiche la recette avec possibilité de revenir ou on était avec un bouton retour 
+
+-> en bas -> on affiche des plat qui ressemble a celui que l'ont a vus ( plat alternatif, ect )
+
+possibilité de mettre des filtre 
+
+au bout de 10 recette differente swyper -> on demande des precision a l'utilisateur ( du filtre le plus general au moins ) 
+
+Ecran Ma semaine
+
+le "proposer une autre semaine doit être en dessous du menue pour changer les jours repas par jours et convives
+les alerte 5 journée apportent moins d'energie que l réfenrece habituel -> il faut un menue au deroualnt en haut de l'ecran -> affiche une symbole erreur puis l'utilisateur tire oui ou non -> avec possibilité d'enlever ce genre de notification 
+-> image de la recette dans chaue recette -> par défaut ne rien générer comme recette ( mettre vide ) 
+-> possibilité de rajouter en manuel la recette directements
+-> possibilité de rajouter des plat preparer aussi 
+-> possibilité de faire une recette avec les reste du friogo directement aussi 
+ajouter vider le frigo pour proposer plusierus recette
+-> pour la premiere utilisation -> il ne doit y avoir aucune doéne déja mise dans l'appli( les repas dans la semaines, les algos de recherche déja calibré pour l'utilisateur, le vider le frigo déja remplit ,ect ) 
+-> possibilité
+
+
+ecran Mes courses
+
+- photos des aliments afficher -> plus parlant 
+- le compteur d'aliments ajouter en dessous de la semaines 
+- ou sont ranger les reste de la veille ?- comment l'utilisateur peut le voir ?
+
+ecran mes recettes-> filtre temps ne doit pas etre cacher mais directement en vuis 
+quand on fait plus de filtre -> ouvre une fenetre avec plein de filtre -> catégorie de filtre en menue déroulant -> 
+
+
+idées. 
+- en fontion de la recette, du temps mis pour la préparer, du temps sur le téléphone et hje suppose d'une heure déclaré de repas -> envoie de notification pour rappeler qu'il faut preparer le repas -> option pour activé ou désactivé se genre de notification )
+
+Réfléchie a toute les propositions et presente moi des corrections.

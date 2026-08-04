@@ -100,9 +100,9 @@ describe('aujourdhui — l’encart d’aide', () => {
     expect(screen.queryByText(/Rien n'est obligatoire/)).toBeNull()
   })
 
-  it('s’ouvre après sept changements sans choix', async () => {
+  it('s’ouvre après dix changements sans choix', async () => {
     await monter()
-    for (let i = 0; i < 7; i++) fireEvent.click(bouton(/Suivant/))
+    for (let i = 0; i < 10; i++) fireEvent.click(bouton(/Suivant/))
     await screen.findByText(/Rien n'est obligatoire/)
     expect(screen.getByText('Plutôt léger ou consistant ?')).toBeDefined()
   })
@@ -112,7 +112,7 @@ describe('aujourdhui — l’encart d’aide', () => {
     // qui rendait la condition d'affichage de l'encart fausse : il disparaissait entre la première
     // pastille et la deuxième.
     await monter()
-    for (let i = 0; i < 7; i++) fireEvent.click(bouton(/Suivant/))
+    for (let i = 0; i < 10; i++) fireEvent.click(bouton(/Suivant/))
     await screen.findByText(/Rien n'est obligatoire/)
 
     fireEvent.click(screen.getByText('Léger'))
@@ -142,15 +142,15 @@ describe('aujourdhui — l’encart d’aide', () => {
 
   it('choisir un plat remet le compteur d’indécision à zéro', async () => {
     await monter()
-    for (let i = 0; i < 7; i++) fireEvent.click(bouton(/Suivant/))
+    for (let i = 0; i < 10; i++) fireEvent.click(bouton(/Suivant/))
     await screen.findByText(/Rien n'est obligatoire/)
 
     fireEvent.click(bouton(/J'ai choisi ce plat/))
     await waitFor(() => expect(screen.queryByText(/Rien n'est obligatoire/)).toBeNull())
 
-    // Sept nouveaux plats distincts après le choix redéclenchent l'encart : la remise à zéro n'est
+    // Dix nouveaux plats distincts après le choix redéclenchent l'encart : la remise à zéro n'est
     // pas définitive.
-    for (let i = 0; i < 7; i++) fireEvent.click(bouton(/Suivant/))
+    for (let i = 0; i < 10; i++) fireEvent.click(bouton(/Suivant/))
     await screen.findByText(/Rien n'est obligatoire/)
   })
 

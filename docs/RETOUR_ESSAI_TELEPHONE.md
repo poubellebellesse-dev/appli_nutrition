@@ -485,3 +485,116 @@ complet vit désormais dans `ETAT.md` §4, décisions 45 et 46** — ici, seul l
 - **Le message `non_persistant`** dit « Ajoutez l'application à votre écran d'accueil », ce qui
   n'aura aucun sens dans une application native Capacitor. Conséquence connue de la décision
   Capacitor, toujours non traitée.
+
+---
+
+## §6. Le lot `test appli.txt` — instruit le 2026-08-03
+
+> ⚠️ **Ce lot n'est PAS celui de l'essai téléphone.** Il date de la session 8 (2026-08-01) et il a
+> été **délibérément laissé non instruit** — `archive/RECAP_SESSION_8.md` §6 le dit et explique
+> pourquoi : l'archiver l'aurait enterré. Il est instruit ici, dans le backlog des retours
+> utilisateur, et **pas dans un second document** : deux backlogs qui se recoupent sont précisément
+> ce qui a fait qu'une moitié de ce lot a été traitée par une piste parallèle sans que personne le
+> sache. Le verbatim est parti dans `archive/RETOUR_TEST_APPLI_2026-08-01.txt`.
+
+**Méthode.** Les 21 demandes ont été confrontées **une par une au code du 2026-08-03**, pas à la
+mémoire du projet — chaque ligne porte sa preuve en `fichier:ligne`. Neuf étaient déjà satisfaites.
+C'est en soi le constat le plus utile du lot : **le fichier a dormi pendant que le produit le
+rattrapait**, et personne ne le savait parce que rien ne rapprochait les deux.
+
+### §6.1 Déjà satisfaites — ne rien refaire (9)
+
+| Demande (verbatim abrégé) | Preuve |
+|---|---|
+| « augmenter la taille de 0.5 à 1 cm » (barre du bas) | `theme.css:79` — `--spacing-tactile: 3rem`, appliqué en `min-height`. ⚠️ **En rem et jamais en cm** : une hauteur en centimètres ne suivrait pas la police système à 150 %, ce que le bloc commun de `theme.css` impose |
+| « afficher une fois avec une croix qui ne l'affiche plus » | `main.tsx:64-67` — `ECARTABLE.non_persistant = true`, l'écart est persisté |
+| « sur le téléphone il est 11h45 → affiche Ce soir » | **Cause nommée et corrigée** : `aujourdhui.tsx` portait `const CRENEAU = 'diner'` EN DUR (`creneau.ts:3-7`). À 11 h 45 et rythme 3, `creneauDuMoment` rend « Ce midi » (`FIN_DE_CRENEAU.dejeuner = 14`). Plus un sélecteur manuel de créneau |
+| « en bas → on affiche des plats qui ressemblent » | « Dans le même esprit », 4 recettes via `similarRecipes` (`aujourdhui.tsx:54,203,738`). ⚠️ **Présent mais mal réglé** — λ jamais calibré, voir §3 « Aujourd'hui » |
+| « le proposer une autre semaine doit être en dessous du menu » | `semaine.tsx:337` (réglages jours/repas/convives) puis `342-349` (bouton). L'ordre demandé est celui du code |
+| « par défaut ne rien générer comme recette (mettre vide) » et « aucune donnée déjà mise dans l'appli » | `semaine.tsx:163-166` — « NE PLANIFIE PLUS À LA PLACE ». Aucun seed, aucune fixture de démonstration nulle part |
+| « ajouter vider le frigo pour proposer plusieurs recettes » | Déjà le cas : jusqu'à **30** recettes (`frigo.tsx:61`) |
+| « filtre temps ne doit pas être caché mais directement en vue » | `filtres-recettes.tsx:42-46` — `PALIERS_TEMPS` en accès direct |
+| « envoi de notification pour rappeler qu'il faut préparer le repas — option pour activer ou désactiver » | `notifications.ts:14,72` (`LocalNotifications.schedule()`) + réglage `parametres.tsx:229`, panneau « rappels ». ⚠️ **Jamais exécutées sur un appareil** : `npx cap add android` n'a jamais été lancé |
+
+### §6.2 Réelles et ouvertes — parties en décisions 49 à 52 (4)
+
+Le raisonnement complet vit dans `ETAT.md` §4. Ici, seul le constat de code qui les motive.
+
+1. ⛔ **« possibilité de rajouter en manuel la recette directement »** — et le défaut est **pire
+   qu'un manque**. Sur un créneau vide, le bouton s'intitule « **Choisir** » (`semaine.tsx:698`) et
+   appelle `onChanger` → `rerollSlot` (`semaine.tsx:268-294`), c'est-à-dire un **tirage
+   automatique**. Le libellé promet un choix et rend un tirage. ⚠️ **Cette moitié-là est à corriger
+   même si la fonction n'est jamais écrite** : un bouton qui ment sur ce qu'il fait est un défaut
+   autonome. → **décision 49**.
+2. ⛔ **« possibilité de faire une recette avec les restes du frigo directement »** — l'écran Frigo
+   sait proposer 30 recettes, mais **aucun chemin depuis un créneau** : seul `SemaineVide` porte le
+   lien (`semaine.tsx:423`). Même besoin que le point 1 — « remplir CE créneau », deux sources
+   différentes. → **décision 49** (le même geste, pas deux).
+3. ⛔ **« où sont rangés les restes de la veille ? comment l'utilisateur peut le voir ? »** — les
+   restes s'affichent dans Semaine (`semaine.tsx:624,685`) et **sont absents des Courses**
+   (`courses.tsx:344` n'a qu'un texte explicatif). ⚠️ L'enjeu n'est pas cosmétique : les restes font
+   tomber une semaine de courses de **24 à 15 kg** (§2 ARCHITECTURE, `shopping-list.ts`). L'effet le
+   plus spectaculaire du moteur est **invisible là où il se produit**. → **décision 50**.
+4. ⛔ **« possibilité de rajouter des plats préparés »** — rien : `meal_plan_entry.recipe_id`
+   désigne une recette du catalogue ou `NULL` (`user-schema.ts:203`), il n'existe aucun type
+   « plat du commerce ». ⚠️ **Ce n'est pas qu'un champ à ajouter.** Un plat préparé sans valeurs
+   CIQUAL crève `checkCalorieFloor` (`guards/index.ts:195`) et la couche `nutri` : le moteur
+   compterait un créneau rempli à zéro kcal, ce qui est le **contraire** d'une case vide. → **décision 51**.
+
+### §6.3 Bloquées par le contenu, pas par le code (2)
+
+- **« je veux une interface comme tinder »** (grande image, balayage gauche/droite, haut = oui,
+  photo en plein écran, galerie). **0 photo sur 241 recettes** — c'est la décision A de la session 8,
+  actée sur le principe, aucun code écrit. ⚠️ **Ce que personne n'avait relevé** : le balayage
+  **existe déjà** (`aujourdhui.tsx:512-513`) et il est **désactivé par défaut**
+  (`parametres.tsx:299`, réglage `gestesBalayage`). Si l'écran devient une grande image qu'on
+  balaie, ce défaut n'a plus de sens et doit s'inverser — sans quoi la fonction centrale de l'écran
+  restera cachée derrière deux gestes dans les réglages, exactement le défaut du chantier D. →
+  **décision 52**.
+- **« photos des aliments affichées → plus parlant »** (Courses). Aucune image ni icône dans la
+  liste (`courses.tsx`, aucun `img` ni `Vignette`). ⚠️ **Fausse piste écartée** : `catalog/build-icons.mjs`
+  a été ouvert en croyant tenir un branchement oublié — il produit les **icônes de l'application**
+  (l'assiette du lanceur PWA), pas des visuels d'aliments. C'est bien du contenu à produire, comme
+  les photos de recettes.
+
+### §6.4 Contredisent une règle verrouillée ou une décision déjà prise (2)
+
+- **« il faut un menu déroulant en haut de l'écran → affiche un symbole erreur puis l'utilisateur
+  tire oui ou non → avec possibilité d'enlever ce genre de notification »** (alerte d'énergie).
+  ⚠️ Trois choses, et aucune n'appelle un menu déroulant : (a) la règle « plus aucun menu déroulant
+  hors de l'accueil » est verrouillée ; (b) la forme actuelle — bandeau `role="status"` + bouton
+  `aria-haspopup="dialog"` ouvrant un `Panneau` (`semaine.tsx:457-490`) — **fait déjà ce que la
+  demande décrit**, « tirer » pour voir le détail ; (c) « possibilité d'enlever ce genre de
+  notification » est **sur-satisfaite** par la décision 45, qui la masque par défaut.
+  ⛔ **Mais cette demande rouvre la décision 45 par la bande, et une mesure du 2026-08-03 lui donne
+  raison** — voir `ETAT.md` §4 décision 45, amendée.
+- **« quand on fait plus de filtres → ouvre une fenêtre avec plein de filtres → catégorie de filtre
+  en menu déroulant »**. La fenêtre existe (décision 46). Le menu déroulant tombe sous la même règle
+  verrouillée, et la **décision 46 a tranché cette forme le 2026-08-02** — pastilles dans le flux,
+  « Tout voir (k) › » en fenêtre. Non rouverte : aucune raison neuve.
+
+### §6.5 Tranchées avec l'utilisateur le 2026-08-03 (4)
+
+- ✅ **« au bout de 10 recettes différentes swipées → on demande des précisions »** — l'encart
+  existait, **à 7** et non à 10. **Porté à 10** (`aujourdhui.tsx:63`, `SEUIL_INDECISION`), tests
+  alignés. ⚠️ **Conséquence écrite dans le code** : `PROFONDEUR` vaut 12, donc à l'intérieur d'une
+  seule passe l'encart ne peut plus s'ouvrir qu'à la **11ᵉ carte sur 12**. Il reste atteignable
+  parce que `vues` accumule aussi les plats des passes suivantes — mais **monter encore le seuil
+  sans monter `PROFONDEUR` le rendrait inatteignable en une passe**.
+- ✅ **« du filtre le plus général au moins »** — déjà l'ordre du code, et il est verrouillé par un
+  commentaire : `AXES_ENVIE` va du plus général au plus précis (`aujourdhui.tsx:74`).
+- ✅ **« le compteur d'aliments ajoutés en dessous de la semaine »** (Courses) — **déjà satisfaite** :
+  le compteur « X sur Y cochés » est le 4ᵉ bloc, juste sous la plage de dates du plan
+  (`courses.tsx:326-332`). Confirmé par l'utilisateur, rien à déplacer.
+- ✅ **« Pour les choix de bienvenue défile sans rien changer ? → attendre l'utilisateur »** —
+  **aucun défilement automatique** dans l'accueil : les étapes n'avancent que sur clic
+  (`accueil.tsx:87`, `128-145`), il n'y a ni timer ni carrousel. L'utilisateur considère le problème
+  résolu. ⚠️ **Aucune cause n'a été identifiée** — si le symptôme réapparaît, c'est une observation
+  neuve, pas une régression de ce qui suit.
+
+### §6.6 Ce qui reste renvoyé à un chantier déjà ouvert (2)
+
+- **« possibilité de mettre des filtres »** sur Aujourd'hui — l'écran passe par `suggestMeals` et ses
+  axes d'envie, pas par la recherche à facettes. Décision ouverte, déjà posée en §2 A.
+- **« en cliquant sur la photo la photo prend tout l'écran, on peut faire défiler les photos »** —
+  suspendu aux photos, comme §6.3.

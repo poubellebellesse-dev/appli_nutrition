@@ -56,11 +56,18 @@ const NB_PROCHES = 4
 /**
  * Après combien de changements SANS CHOIX on propose de l'aide.
  *
- * §4.1 dit « ~4 changements ». Porté à 7 à la demande de l'utilisateur : à quatre, l'encart tombe
- * alors qu'on est encore en train de regarder tranquillement. L'esprit de la spec est conservé —
- * « détecter l'indécision PUIS proposer, plutôt qu'interroger d'emblée » — c'est le seuil qui bouge.
+ * §4.1 dit « ~4 changements ». Porté à 7, puis à 10 le 2026-08-03, à la demande de l'utilisateur :
+ * à quatre, l'encart tombe alors qu'on est encore en train de regarder tranquillement. L'esprit de
+ * la spec est conservé — « détecter l'indécision PUIS proposer, plutôt qu'interroger d'emblée » —
+ * c'est le seuil qui bouge.
+ *
+ * ⚠️ 10 EST PROCHE DU FOND DE LA PILE, et c'est à savoir. `PROFONDEUR` vaut 12 : à l'intérieur d'une
+ * seule passe de suggestions, l'encart ne peut plus s'ouvrir qu'à la 11ᵉ carte sur 12. Il reste
+ * atteignable confortablement parce que `vues` accumule AUSSI les plats des passes suivantes
+ * (« Proposer autre chose » change la graine, pas le compteur) — mais monter encore le seuil sans
+ * monter `PROFONDEUR` rendrait l'encart inatteignable en une passe.
  */
-const SEUIL_INDECISION = 7
+const SEUIL_INDECISION = 10
 
 /** Paliers de temps de l'écran. Mêmes valeurs que le rythme, pour ne pas inventer un 3ᵉ barème. */
 const PALIERS_TEMPS: readonly { readonly minutes: number | null; readonly libelle: string }[] = [

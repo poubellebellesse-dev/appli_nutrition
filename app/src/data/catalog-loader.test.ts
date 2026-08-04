@@ -110,7 +110,9 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     const omelette = catalog.recipes.get('omelette_fines_herbes' as RecipeId)
     expect(omelette).toBeDefined()
     expect(omelette?.ingredients).toHaveLength(5)
-    expect(omelette?.etapes.map((e) => e.ordre)).toEqual([1, 2, 3, 4])
+    // 5 étapes depuis le 2026-08-03 : la mention ANSES « œufs crus ou peu cuits » a été ajoutée en
+    // étape finale aux 15 recettes à œuf cru ou peu cuit (SOURCES_RECETTES.md §5 quinquies).
+    expect(omelette?.etapes.map((e) => e.ordre)).toEqual([1, 2, 3, 4, 5])
     expect(omelette?.facettes).toContainEqual({ facette: 'regime', valeur: 'vegetarien' })
     expect(omelette?.typesRepas).toEqual(['petit_dejeuner', 'dejeuner', 'diner'])
 

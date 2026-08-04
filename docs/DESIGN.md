@@ -107,6 +107,33 @@ Chaque interaction gestuelle des maquettes est **doublée d'un contrôle visible
 
 Un geste invisible n'existe pas pour une partie des utilisateurs. Cette règle prime sur l'élégance.
 
+### 3.1 Photos et mouvement — quatre règles que le CSS ne sait pas porter
+
+Le socle technique est posé (2026-08-03) : `theme.css` honore `prefers-reduced-motion`, et
+`<main tabIndex={-1}>` reçoit le focus à chaque changement de route, précédé d'un lien d'évitement.
+⚠️ **Ce socle est purement préventif** — il n'existe aujourd'hui aucune animation dans `app/src`.
+Il est posé **avant** les carrousels et les boucles de §4.7 précisément pour ne pas avoir à repasser
+sur chaque média ensuite. Les quatre règles ci-dessous, elles, ne s'automatisent pas.
+
+1. **`alt=""` quand le nom du plat est adjacent.** Contre-intuitif, et pourtant correct :
+   `alt="Blanquette de veau"` sous un titre qui dit déjà « Blanquette de veau » fait **annoncer le
+   plat deux fois**. La photo apporte l'appétit, pas une information transcriptible.
+2. **Jamais de photo sans nom visible.** L'écran 4 de §4.8 fait glisser des photos sans nom : il est
+   inutilisable sans la vue. ⚠️ **La bonne réponse n'est pas un meilleur `alt`** — c'est un nom à
+   l'écran, pour tout le monde.
+3. **Jamais de texte incrusté dans la photo.** Il n'est ni traduisible, ni agrandissable, ni lisible
+   par un lecteur d'écran, et il se pixellise au zoom.
+4. **Toute boucle animée porte un bouton lecture/pause visible.** ⚠️ WCAG 2.2.2 fixe le seuil à
+   5 secondes : une boucle WebP de 3 s qui tourne **en permanence** le dépasse, puisqu'elle ne
+   s'arrête jamais. La règle vise les vignettes de gestes de §4.7.
+
+**Technique, pour quand les photos arriveront** : `width`/`height` ou `aspect-ratio` sur chaque
+`<img>` — sans quoi la page **saute sous le doigt** au chargement, ce qui est un problème moteur et
+non esthétique · `loading="lazy"` partout sauf l'image de tête · WebP.
+⚠️ **Mode sombre** : une photo en pleine lumière sur `#1b1815` à 19 h est un flash. Prévoir un voile
+ou un `filter: brightness(...)` — **coefficient à mesurer sur écran réel, pas à décider sur le
+papier**.
+
 ---
 
 ## 4. Les écrans

@@ -1,6 +1,6 @@
 # Index de la documentation
 
-**Huit documents vivants**, quatre rôles (plus ce fichier, qui n'est que l'index). Il dit **lequel
+**Huit documents vivants**, quatre rôles (plus ce fichier, qui n'est que l'index, et [reference/](./reference/), qui porte les parties du moteur et les pièges). Il dit **lequel
 lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
 
 > Les instantanés datés — récits des sessions 1 à 7 et audit du 2026-07-27 — sont dans
@@ -9,6 +9,8 @@ lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
 
 ## Par où commencer
 
+0. **[../CLAUDE.md](../CLAUDE.md)** — chargé automatiquement à chaque session : ce qu'on construit,
+   les invariants, les commandes de vérification, la carte de cette doc. Rien à faire, il est déjà là.
 1. **[FICHE_REPRISE.md](./FICHE_REPRISE.md)** — ⭐ à lire en premier à chaque reprise. Une page :
    où on en est, quoi faire ensuite, ce qu'il ne faut pas défaire.
 2. **[ETAT.md](./ETAT.md)** — l'état complet quand la fiche ne suffit pas : avancement détaillé,
@@ -22,7 +24,8 @@ lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
 | Document | Périmètre |
 |---|---|
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Périmètre produit, modèle de données, cadre santé et réglementaire, contenu, risques |
-| [ENGINE.md](./ENGINE.md) | Le moteur seul : couches, contrats, algorithmes, API, plan de lancement, stratégie de test |
+| [ENGINE.md](./ENGINE.md) | **Index du moteur.** Découpé le 2026-08-03 en 8 parties dans [reference/](./reference/) — 2 126 lignes → 8 fichiers de 122 à 355 lignes, contenu et numérotation de sections inchangés. Toute référence `ENGINE §x.y` reste valide |
+| [reference/PIEGES.md](./reference/PIEGES.md) | Pièges de build, navigateur, moteur et interface · règle de sourçage du contenu Savoir · les impasses déjà payées. Sorti de `FICHE_REPRISE.md` le 2026-08-03 |
 | [DESIGN.md](./DESIGN.md) | Écrans, navigation, jetons visuels, badge de preuve |
 
 Ordre d'autorité quand deux documents se contredisent : **le code fait foi**, puis `ENGINE.md` sur
@@ -33,7 +36,7 @@ corrige dans le document, elle ne se contourne pas dans le code.
 
 | Document | Rôle |
 |---|---|
-| [FICHE_REPRISE.md](./FICHE_REPRISE.md) | Point de reprise condensé. Une page, jamais plus. |
+| [FICHE_REPRISE.md](./FICHE_REPRISE.md) | Point de reprise condensé. **Une page, jamais plus — plafond dur : 100 lignes.** Ramenée de 341 à 100 lignes le 2026-08-03. |
 | [ETAT.md](./ETAT.md) | État complet, avancement, décisions figées et ouvertes. |
 
 > **Règle d'unicité** : chaque fait vit à UN SEUL endroit. La fiche donne l'état vérifié et la
@@ -51,6 +54,7 @@ détail. Deux repères :
 | [archive/AUDIT_2026-07-27.md](./archive/AUDIT_2026-07-27.md) | Regard **extérieur** sur le dépôt au commit `e2625d3` (112 recettes). Chiffres dépassés ; **deux constats restent VIVANTS** : zéro photo, revue juridique |
 | [archive/RECAP_SESSION_6.md](./archive/RECAP_SESSION_6.md) | Le contenu de Savoir. **§2 consigne les trois tips que la vérification a démentis**, et les sujets écartés faute de source lisible |
 | [archive/RECAP_SESSION_7.md](./archive/RECAP_SESSION_7.md) | **Même période que la 6, piste parallèle** — tests des 9 écrans, plantage sur garde-manger non vide, menus déroulants remplacés par des fenêtres. **§2 liste trois défauts trouvés et non corrigés**, **§5 ce qui reste branché à moitié** |
+| [archive/FICHE_REPRISE_extraits_2026-08-03.md](./archive/FICHE_REPRISE_extraits_2026-08-03.md) | Trois sections datées sorties de la fiche le 2026-08-03 : les quatre défauts du 01/08 corrigés, le premier essai téléphone, la provenance des recettes. Sujets traités au fond dans `RETOUR_ESSAI_TELEPHONE.md` et `SOURCES_RECETTES.md` |
 | [archive/RECAP_SESSION_5.md](./archive/RECAP_SESSION_5.md) | 8 écrans, `user.db`, installabilité. **§2 consigne ce que le navigateur et l'usage ont démenti** ; **§7 le journal des lots** |
 
 Ils décrivent un état **vrai à leur date**. Les corriger après coup falsifierait l'historique : une
@@ -69,7 +73,7 @@ une piste a été écartée vaut souvent l'énoncé de celle qui a été retenue
 |---|---|---|
 | [CONCEPTION_B_VIN_REPAS.md](./CONCEPTION_B_VIN_REPAS.md) | Conseils vin (métadonnée éditoriale, loi Évin) et modes recette/repas | 8 décisions tranchées, rang 0 codé, le reste en file |
 | [STRATEGIE_DISTRIBUTION.md](./STRATEGIE_DISTRIBUTION.md) | Positionnement, stores, modèle économique, marketing organique | Cadre posé, points « à confirmer » ouverts jusqu'à la publication |
-| [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) | Backlog issu du premier essai sur un vrai appareil (2026-08-02) | 11 lots livrés ; reste bloqué par des DÉCISIONS et du CONTENU, plus par du code |
+| [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) | Backlog des retours utilisateur — l'essai sur un vrai appareil (2026-08-02) en §1 à §5, **et le lot `test appli.txt` de la session 8 en §6**, instruit le 2026-08-03 | 11 lots livrés ; reste bloqué par des DÉCISIONS et du CONTENU, plus par du code |
 | [SOURCES_RECETTES.md](./SOURCES_RECETTES.md) | D'où viennent les 241 recettes, quelles sources libres existent, ce que coûte un import | Sources vérifiées le 2026-08-02, aucune encore utilisée ; 4 décisions ouvertes |
 
 > ⚠️ `RETOUR_ESSAI_TELEPHONE.md` est **un backlog, pas un état** — seule exception à la règle
