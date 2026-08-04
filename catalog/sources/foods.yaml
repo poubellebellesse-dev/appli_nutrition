@@ -454,6 +454,7 @@ foods:
     nom: "Bœuf haché 5% MG, cru"
     groupe: "viandes"
     origine_animale: mammifere
+    sous_famille: "boeuf"
     toute_annee: true
     nutriments:
       energie_kcal: 130
@@ -2609,6 +2610,7 @@ foods:
     nom: "Jambon à cuire"
     groupe: "viandes"
     origine_animale: mammifere
+    sous_famille: "porc"
     toute_annee: true
     nutriments:
       energie_kcal: 163
@@ -2627,6 +2629,7 @@ foods:
     nom: "Veau, escalope crue"
     groupe: "viandes"
     origine_animale: mammifere
+    sous_famille: "veau"
     toute_annee: true
     nutriments:
       energie_kcal: 114
@@ -2644,6 +2647,7 @@ foods:
     nom: "Canard, viande crue"
     groupe: "viandes"
     origine_animale: volaille
+    sous_famille: "canard"
     toute_annee: true
     nutriments:
       energie_kcal: 127
@@ -4813,6 +4817,153 @@ foods:
       calcium_mg: 0
       sodium_mg: 1
       vitamine_c_mg: 0
+    allergenes: []
+
+  # ==========================================================================
+  # Découpes de viande (2026-08-04) — peuplent les sous-familles ANIMALES.
+  #
+  # ⚠️ La `sous_famille` nomme le PRODUIT DE BASE, jamais la découpe : `boeuf`, `porc`, `agneau`,
+  # `veau`, `canard` — pas `epaule`, `cote` ni `steak`. Voir `Food.sousFamille` dans
+  # app/src/engine/domain/catalog.ts et l'en-tête de selection/scoring/variety.ts, où le repli par
+  # `groupe` a été mesuré puis écarté. La justification complète est dans ciqual-mapping.yaml.
+  #
+  # Deux familles NAISSENT ici : `veau` (côte + escalope) et `canard` (cuisse + magret). Deux
+  # viandes restent sans famille et c'est correct — `escalope_dinde` et `lapin` sont seules de leur
+  # espèce, ce que la doc de `sousFamille` prescrit explicitement (`null` quand l'aliment est seul).
+  # ==========================================================================
+
+  - id: boeuf_entrecote
+    code_ciqual: "6103"
+    nom: "Bœuf, entrecôte crue"
+    groupe: "viandes"
+    poids_piece_g: 200
+    origine_animale: mammifere
+    sous_famille: "boeuf"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 231
+      proteines_g: 19.4
+      lipides_g: 17.1
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 2.21
+      calcium_mg: 8
+      sodium_mg: 29.8
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: boeuf_bavette
+    code_ciqual: "6212"
+    nom: "Bœuf, bavette d'aloyau crue"
+    groupe: "viandes"
+    poids_piece_g: 150
+    origine_animale: mammifere
+    sous_famille: "boeuf"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 133
+      proteines_g: 20.4
+      lipides_g: 5.67
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 3.31
+      calcium_mg: 25
+      sodium_mg: 34.4
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: agneau_cotelette
+    code_ciqual: "21521"
+    nom: "Agneau, côtelette crue"
+    groupe: "viandes"
+    poids_piece_g: 70
+    origine_animale: mammifere
+    sous_famille: "agneau"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 262
+      proteines_g: 16.6
+      lipides_g: 21.5
+      glucides_g: 0.35
+      fibres_g: 0
+      fer_mg: 1.39
+      calcium_mg: 8.77
+      sodium_mg: 75.1
+    allergenes: []
+
+  - id: porc_cote
+    code_ciqual: "28100"
+    nom: "Porc, côte crue"
+    groupe: "viandes"
+    poids_piece_g: 150
+    origine_animale: mammifere
+    sous_famille: "porc"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 164
+      proteines_g: 19.8
+      lipides_g: 9.3
+      glucides_g: 0.38
+      fibres_g: 0
+      fer_mg: 0.66
+      calcium_mg: 7.05
+      sodium_mg: 49.2
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: porc_echine
+    code_ciqual: "28302"
+    nom: "Porc, échine crue"
+    groupe: "viandes"
+    origine_animale: mammifere
+    sous_famille: "porc"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 238
+      proteines_g: 17.1
+      lipides_g: 18.8
+      glucides_g: 0.1
+      fibres_g: 0
+      fer_mg: 1.08
+      calcium_mg: 7.64
+      sodium_mg: 73.3
+    allergenes: []
+
+  - id: veau_cote
+    code_ciqual: "6510"
+    nom: "Veau, côte crue"
+    groupe: "viandes"
+    poids_piece_g: 180
+    origine_animale: mammifere
+    sous_famille: "veau"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 189
+      proteines_g: 18.3
+      lipides_g: 12.9
+      glucides_g: 0
+      fibres_g: 0
+      fer_mg: 1.26
+      calcium_mg: 13
+      sodium_mg: 43.4
+      vitamine_c_mg: 0
+    allergenes: []
+
+  - id: canard_cuisse
+    code_ciqual: "36203"
+    nom: "Canard, cuisse avec peau, crue"
+    groupe: "viandes"
+    poids_piece_g: 200
+    origine_animale: volaille
+    sous_famille: "canard"
+    toute_annee: true
+    nutriments:
+      energie_kcal: 104
+      proteines_g: 18.7
+      lipides_g: 3.1
+      glucides_g: 0.3
+      fibres_g: 0
+      sodium_mg: 103
     allergenes: []
 
   - id: biere

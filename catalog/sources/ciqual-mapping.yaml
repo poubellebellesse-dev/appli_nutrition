@@ -381,3 +381,18 @@ mapping:
   # Alcools de cuisine
   rhum: 1004                     # Rhum
   biere: 5001                    # Bière « coeur de marché » (4-5° alcool)
+
+  # Découpes de viande (2026-08-04) — peuplent les sous-familles ANIMALES. Rappel de la définition
+  # verrouillée dans `Food.sousFamille` : une sous-famille regroupe le MÊME PRODUIT DE BASE
+  # (`poulet_blanc` + `poulet_cuisse` → `poulet`), JAMAIS la découpe. Des familles nommées
+  # `epaule` / `cote` / `steak` mettraient l'épaule d'agneau et l'épaule de porc dans le même sac
+  # — « déjà mangé » alors que ce n'est pas le même animal — et sépareraient `boeuf_steak` de
+  # `boeuf_paleron`, si bien que du bœuf deux jours de suite ne compterait plus comme répétition.
+  # C'est l'erreur symétrique de celle que `variety.ts` a mesurée puis écartée sur `groupe`.
+  boeuf_entrecote: 6103          # Boeuf, entrecôte crue (6905 est du CHEVAL — ne pas confondre)
+  boeuf_bavette: 6212            # Boeuf, bavette d'aloyau crue
+  agneau_cotelette: 21521        # Agneau, côte ou côtelette, crue (aliment moyen)
+  porc_cote: 28100               # Porc, côte crue
+  porc_echine: 28302             # Porc, échine crue
+  veau_cote: 6510                # Veau, côte crue
+  canard_cuisse: 36203           # Canard, cuisse avec peau, sans os, crue
