@@ -42,6 +42,7 @@ import { readDisplay, readMealTimes } from '../../data/user-store.js'
 import { rappelsDuPlan } from '../rappel.js'
 import { reprogrammer, toutAnnuler } from '../notifications.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { ChoisirPlat } from '../choisir-plat.js'
 
 // Le mapping « nombre de repas → créneaux » a été remonté dans `ui/creneau.ts` quand l'écran
 // Aujourd'hui en a eu besoin à son tour : deux copies auraient donné une semaine et un écran du jour
@@ -211,6 +212,10 @@ export function Semaine() {
   })
   /** Plats refusés créneau par créneau — §7.2 : c'est ce qui rend le refus RÉPÉTÉ possible. */
   const [refus, setRefus] = useState<ReadonlyMap<string, readonly RecipeId[]>>(new Map())
+  /** Le créneau dont la fenêtre « Choisir un plat » est ouverte, ou `null`. */
+  const [aChoisir, setAChoisir] = useState<SlotRef | null>(null)
+  /** Le socle, gardé pour la fenêtre de choix — elle interroge le moteur à chaque frappe. */
+  const [socleCharge, setSocleCharge] = useState<Socle | null>(null)
   const [premierRendu, setPremierRendu] = useState(true)
   /** Mode avancé (Paramètres, `afficher_macros`) : gouverne aussi l'avertissement de plancher — §6.5 ARCHITECTURE. */
   const [modeAvance, setModeAvance] = useState(false)
@@ -228,6 +233,7 @@ export function Semaine() {
         if (annule) return
         const repris = reprendre(socle, reglages)
         setReglages(repris.reglages)
+        setSocleCharge(socle)
         setModeAvance(readDisplay(socle.db).afficherMacros)
         setEtat(repris.vue === null ? { phase: 'vide' } : { phase: 'pret', vue: repris.vue })
         setPremierRendu(false)
@@ -303,6 +309,48 @@ export function Semaine() {
           )
           savePlan(socle.db, suivant, maintenantIso())
           setRefus(new Map(refus).set(cle, dejaRefuses))
+          setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
+        })
+        .catch(echouer)
+    },
+    [etat, refus, echouer]
+  )
+
+  /**
+   * « Choisir » — pose sur un créneau le plat que l'utilisateur a désigné (décision 49).
+   *
+   * ⚠️ CE N'EST PAS `changer` AVEC UN ARGUMENT, et c'est tout le sujet de la décision 49 : `changer`
+   * TIRE (il exclut ce qui est déjà au plan, il accumule les refus), celui-ci POSE. Refuser à
+   * quelqu'un le plat qu'il vient de désigner parce qu'il figure déjà mercredi serait absurde.
+   *
+   * On efface les refus accumulés sur ce créneau au passage : ils étaient la mémoire d'un tirage,
+   * et l'utilisateur vient de trancher lui-même.
+   */
+  const poser = useCallback(
+    (slot: SlotRef, recipeId: RecipeId) => {
+      if (etat.phase !== 'pret') return
+      const { plan, profil } = etat.vue
+
+      chargerSocle()
+        .then((socle) => {
+          const etatUtilisateur = readUserState(socle.db, {
+            windowDays: FENETRE_HISTORIQUE_JOURS,
+            today: aujourdhuiIso(),
+          })
+          const suivant = socle.moteur.setSlotRecipe(plan, slot, recipeId, {
+            profile: profil,
+            constraints: etatUtilisateur.constraints,
+            history: etatUtilisateur.history,
+            activeTopics: etatUtilisateur.activeTopics,
+            seed: plan.seed,
+          })
+          savePlan(socle.db, suivant, maintenantIso())
+          // ⚠️ LES RAPPELS SUIVENT LE PLAT, sinon l'appareil sonne pour un plat qu'on a remplacé.
+          reprogrammerLesRappels(socle, suivant)
+          const refusSuivants = new Map(refus)
+          refusSuivants.delete(cleCreneau(slot.date, slot.creneau))
+          setRefus(refusSuivants)
+          setAChoisir(null)
           setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
         })
         .catch(echouer)
@@ -390,6 +438,7 @@ export function Semaine() {
                     }
                     onGarder={() => basculerVerrou({ date, creneau })}
                     onChanger={() => changer({ date, creneau })}
+                    onChoisir={() => setAChoisir({ date, creneau })}
                   />
                 )
               })}
@@ -397,6 +446,18 @@ export function Semaine() {
           </article>
         ))}
       </div>
+
+      {/* ⚠️ MONTÉE AU NIVEAU DE L'ÉCRAN, pas dans la carte du créneau. `Panneau` passe par un portail
+          vers `document.body` : la monter dans chaque carte donnerait 21 composants prêts à s'ouvrir
+          pour un seul qui s'ouvre jamais à la fois. */}
+      {aChoisir !== null && socleCharge !== null && (
+        <ChoisirPlat
+          socle={socleCharge}
+          libelleCreneau={`${formaterJour(aChoisir.date)} · ${LIBELLE_CRENEAU[aChoisir.creneau]}`}
+          onPoser={(recipeId) => poser(aChoisir, recipeId)}
+          onFermer={() => setAChoisir(null)}
+        />
+      )}
     </section>
   )
 }
@@ -693,13 +754,17 @@ function Creneau({
   accompagnement,
   onGarder,
   onChanger,
+  onChoisir,
 }: {
   readonly entry: MealPlanEntry
   readonly nom: string | null
   /** L'accompagnement posé sur le MÊME créneau, ou `null` en mode recette (un plat seul). */
   readonly accompagnement: { readonly recipeId: RecipeId; readonly nom: string } | null
   readonly onGarder: () => void
+  /** Tirage : le moteur repropose. */
   readonly onChanger: () => void
+  /** Choix : l'utilisateur désigne le plat lui-même (décision 49). */
+  readonly onChoisir: () => void
 }) {
   const vide = entry.recipeId === null
   const recipeId = entry.recipeId
@@ -748,6 +813,12 @@ function Creneau({
         </p>
       )}
 
+      {/* ⚠️ DEUX BOUTONS PARCE QUE CE SONT DEUX GESTES — décision 49, et c'est la correction d'un
+          MENSONGE. Un seul bouton portait les deux : il s'appelait « Choisir » sur un créneau vide
+          et appelait `rerollSlot`, donc un TIRAGE. Le libellé promettait un choix et rendait un
+          hasard. Même classe de défaut que `note_allergene` ou `Recipe.service` déclaré et jamais
+          lu : l'écart entre ce qui est annoncé et ce qui est branché.
+          « Proposer » tire, « Choisir » ouvre la fenêtre de sélection. Les mots disent l'acte. */}
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
@@ -755,7 +826,16 @@ function Creneau({
           disabled={entry.locked}
           className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[0.9rem] font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
         >
-          {vide ? 'Choisir' : 'Changer'}
+          {vide ? 'Proposer' : 'Changer'}
+        </button>
+        <button
+          type="button"
+          onClick={onChoisir}
+          disabled={entry.locked}
+          aria-haspopup="dialog"
+          className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[0.9rem] font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
+        >
+          Choisir
         </button>
         <button
           type="button"

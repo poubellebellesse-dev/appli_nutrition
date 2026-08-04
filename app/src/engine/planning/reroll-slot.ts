@@ -108,21 +108,101 @@ export function rerollSlot(
     if (!(error instanceof NoViableRecipeError)) throw error
   }
 
-  // ⚠️ L'ACCOMPAGNEMENT SE RECALCULE AVEC LE PLAT, il ne survit pas au refus. Le garder tel quel
-  // laissait passer des paires bancales — on refusait « Poulet rôti » pour tomber sur « Rösti de
-  // pommes de terre », et la purée de pommes de terre restait à côté. Pire : elle n'était même plus
-  // le meilleur choix pour le nouveau plat, juste un vestige de l'ancien.
-  //
-  // La graine vient de `requete`, donc du reroll : refuser deux fois de suite ne redonne pas le
-  // même couple. `null` en plat → pas d'accompagnement, le créneau redevient vide pour de bon.
+  return reposerLeCreneau(catalog, plan, slot, cible, choisi, suggest, requete)
+}
+
+/**
+ * Pose un plat CHOISI par l'utilisateur sur un créneau. Rend un nouveau plan.
+ *
+ * ⚠️ POURQUOI CETTE FONCTION EXISTE À CÔTÉ DE `rerollSlot`, et non comme une option de celui-ci.
+ * Décision 49 : « Choisir » et « Changer » sont deux gestes différents, et l'un d'eux TIRAIT AU SORT
+ * en s'appelant « Choisir ». La différence n'est pas cosmétique — un tirage écarte ce qui est déjà
+ * au plan (`exclus`), un CHOIX ne le peut pas : refuser à quelqu'un le plat qu'il vient de désigner
+ * parce qu'il figure déjà mercredi serait absurde. Rien n'est exclu ici, la recette demandée est
+ * posée.
+ *
+ * ⚠️ CE QUI N'EST PAS CONTOURNÉ POUR AUTANT, et c'était la contrainte écrite de la décision 49 :
+ *   - l'accompagnement est recalculé par `pickAccompagnement`, comme partout ailleurs ;
+ *   - `checkCalorieFloor` repasse sur le plan entier — c'est `createEngine` qui le fait, au même
+ *     endroit que pour un reroll (§6.5 ne se contourne pas parce que le geste est manuel) ;
+ *   - un créneau VERROUILLÉ refuse le dépôt, comme il refuse un reroll.
+ * En revanche les couches d'exclusion ne sont PAS rejouées ici : c'est l'écran qui ne propose que
+ * des recettes passées par `browseRecipes`/`searchByPantry`, lesquels appliquent déjà allergies et
+ * régime. Le moteur ne peut pas deviner qu'un `RecipeId` reçu est légitime — d'où cette phrase,
+ * pour que personne n'appelle cette fonction depuis un chemin qui n'a pas filtré.
+ */
+export function setSlotRecipe(
+  catalog: Catalog,
+  plan: WeekPlan,
+  slot: SlotRef,
+  recipeId: RecipeId,
+  contexte: RerollContext,
+  suggest: SuggestForSlot
+): WeekPlan {
+  if (!catalog.recipes.has(recipeId)) {
+    throw new RangeError(`setSlotRecipe : recette inconnue « ${recipeId} ».`)
+  }
+
+  const index = plan.entries.findIndex(
+    (e) => e.slot.date === slot.date && e.slot.creneau === slot.creneau && e.service !== 'accompagnement'
+  )
+  if (index < 0) return plan
+
+  const cible = plan.entries[index]!
+  if (cible.locked) return plan
+
+  const requete: SuggestionRequest = {
+    profile: contexte.profile,
+    constraints: contexte.constraints,
+    context: {
+      date: slot.date,
+      creneau: slot.creneau,
+      envie: null,
+      tempsDisponibleMin: null,
+      requiredFoodIds: [],
+      pantryFoodIds: [],
+    },
+    history: contexte.history,
+    preferences: new Map(),
+    favoriteRecipeIds: new Set(),
+    activeTopics: contexte.activeTopics,
+    // Sert UNIQUEMENT à l'accompagnement : `pickAccompagnement` remplace cette borne par la taille
+    // du catalogue. Le plat, lui, ne vient pas d'un classement.
+    limit: 1,
+    skipDiversification: true,
+    seed: contexte.seed,
+  }
+
+  return reposerLeCreneau(catalog, plan, slot, cible, recipeId, suggest, requete)
+}
+
+/**
+ * Reconstruit un créneau autour d'un plat — le tronc commun du tirage et du choix manuel.
+ *
+ * ⚠️ L'ACCOMPAGNEMENT SE RECALCULE AVEC LE PLAT, il ne survit pas au changement. Le garder tel quel
+ * laissait passer des paires bancales — on refusait « Poulet rôti » pour tomber sur « Rösti de
+ * pommes de terre », et la purée de pommes de terre restait à côté. Pire : elle n'était même plus
+ * le meilleur choix pour le nouveau plat, juste un vestige de l'ancien.
+ *
+ * `null` en plat → pas d'accompagnement, le créneau redevient vide pour de bon.
+ */
+function reposerLeCreneau(
+  catalog: Catalog,
+  plan: WeekPlan,
+  slot: SlotRef,
+  cible: MealPlanEntry,
+  choisi: RecipeId | null,
+  suggest: SuggestForSlot,
+  requete: SuggestionRequest
+): WeekPlan {
   const complement = choisi === null ? null : pickAccompagnement(catalog, suggest, requete, choisi)
 
-  const platRejoue: MealPlanEntry = {
+  const platPose: MealPlanEntry = {
     ...cible,
     recipeId: choisi,
     portions: choisi === null ? 0 : (catalog.recipes.get(choisi)?.portionsBase ?? 0),
-    // Un reroll produit une SUGGESTION, jamais un reste : le plat de la veille n'a pas été cuisiné
-    // en double parce qu'on a refusé celui-ci.
+    // Ni un reroll ni un choix ne produisent un RESTE : le plat de la veille n'a pas été cuisiné en
+    // double parce qu'on a changé celui-ci.
     isLeftover: false,
     // Le champ dit le MODE : `'plat'` seulement s'il y a bien une seconde entrée derrière.
     service: complement === null ? null : 'plat',
@@ -138,7 +218,7 @@ export function rerollSlot(
       entries.push(entree)
       continue
     }
-    entries.push(platRejoue)
+    entries.push(platPose)
     if (complement !== null) {
       entries.push({
         slot: { date: slot.date, creneau: slot.creneau },

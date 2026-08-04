@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import { MAX_PLAN_DAYS, MIN_PLAN_DAYS, addDays, planWeek } from './plan-week.js'
-import { rerollSlot } from './reroll-slot.js'
+import { rerollSlot, setSlotRecipe } from './reroll-slot.js'
 import { makeCatalog, makeFood, makeRecipe } from '../selection/test-fixtures.js'
 import { NoViableRecipeError } from '../domain/index.js'
 import type { Catalog, FoodId, MealPlanEntry, MealSlot, RecipeId, RecipeIngredient, SuggestionRequest, SuggestionResult, WeekPlan, WeekPlanRequest } from '../domain/index.js'
@@ -354,6 +354,105 @@ describe('planning/reroll-slot — l’accompagnement suit le plat qu’on rempl
     )
 
     expect(apres.entries.filter((e) => e.slot.date === '2026-08-04').map((e) => e.recipeId)).toEqual(avant)
+  })
+})
+
+describe('planning/setSlotRecipe — POSER un plat choisi, ce qui n’est pas le TIRER', () => {
+  // ⚠️ CE QUE CES TESTS GARDENT — décision 49. Le bouton « Choisir » d'un créneau vide appelait
+  // `rerollSlot`, donc un tirage : le libellé promettait un choix et rendait un hasard. La
+  // différence n'est pas cosmétique, elle est dans le code — un tirage ÉCARTE ce qui est déjà au
+  // plan, un choix ne le peut pas.
+
+  const MENU = makeCatalog([
+    makeRecipe('plat1', { service: 'plat' }),
+    makeRecipe('plat2', { service: 'plat' }),
+    makeRecipe('acc', { service: 'accompagnement' }),
+  ])
+  const CONTEXTE = {
+    profile: makePlanRequest().profile,
+    constraints: makePlanRequest().constraints,
+    history: { windowDays: 21, entries: [] },
+    activeTopics: [],
+    seed: 1,
+  } as const
+
+  function planDeDeuxJours(): WeekPlan {
+    return planWeek(MENU, makePlanRequest({ days: 2 }), fakeSuggest(['plat1', 'acc', 'plat2']))
+  }
+
+  it('pose EXACTEMENT la recette demandée, et lui adjoint son accompagnement', () => {
+    const plan = planDeDeuxJours()
+    const apres = setSlotRecipe(
+      MENU,
+      plan,
+      { date: '2026-08-04', creneau: 'diner' },
+      'plat1' as RecipeId,
+      CONTEXTE,
+      fakeSuggest(['plat2', 'acc'])
+    )
+    const duCreneau = apres.entries.filter((e) => e.slot.date === '2026-08-04')
+
+    expect(duCreneau.map((e) => e.recipeId)).toEqual(['plat1', 'acc'])
+    expect(duCreneau.map((e) => e.service)).toEqual(['plat', 'accompagnement'])
+  })
+
+  it('⛔ N’EXCLUT PAS ce qui est déjà au plan — c’est là que « choisir » diffère de « tirer »', () => {
+    // `plat1` est déjà le dîner du 3. Le refuser au 4 sous prétexte qu'il figure ailleurs serait
+    // absurde : l'utilisateur vient de le DÉSIGNER. `rerollSlot`, lui, l'écarterait — et c'est
+    // correct pour un tirage. Les deux comportements sont justes ; il fallait deux fonctions.
+    const plan = planDeDeuxJours()
+    expect(plan.entries.some((e) => e.slot.date === '2026-08-03' && e.recipeId === 'plat1')).toBe(true)
+
+    const apres = setSlotRecipe(
+      MENU,
+      plan,
+      { date: '2026-08-04', creneau: 'diner' },
+      'plat1' as RecipeId,
+      CONTEXTE,
+      fakeSuggest(['plat2', 'acc'])
+    )
+
+    expect(apres.entries.filter((e) => e.recipeId === 'plat1' && e.service !== 'accompagnement')).toHaveLength(2)
+  })
+
+  it('refuse un créneau VERROUILLÉ, comme le reroll — sans lever', () => {
+    // §7.2 : un créneau gardé est « invisible pour toute replanification ». Un geste manuel n'est
+    // pas une porte dérobée pour écraser ce qu'on a dit vouloir garder.
+    const plan = planDeDeuxJours()
+    const verrouille: WeekPlan = {
+      ...plan,
+      entries: plan.entries.map((e) => (e.slot.date === '2026-08-04' ? { ...e, locked: true } : e)),
+    }
+    const apres = setSlotRecipe(
+      MENU,
+      verrouille,
+      { date: '2026-08-04', creneau: 'diner' },
+      'plat1' as RecipeId,
+      CONTEXTE,
+      fakeSuggest(['plat2'])
+    )
+
+    expect(apres).toBe(verrouille)
+  })
+
+  it('lève sur une recette inconnue plutôt que de poser un créneau fantôme', () => {
+    expect(() =>
+      setSlotRecipe(
+        MENU,
+        planDeDeuxJours(),
+        { date: '2026-08-04', creneau: 'diner' },
+        'inexistante' as RecipeId,
+        CONTEXTE,
+        fakeSuggest([])
+      )
+    ).toThrow(RangeError)
+  })
+
+  it('un créneau absent du plan rend le plan INCHANGÉ, à l’identité près', () => {
+    const plan = planDeDeuxJours()
+    expect(
+      setSlotRecipe(MENU, plan, { date: '2026-09-01', creneau: 'diner' }, 'plat1' as RecipeId, CONTEXTE, fakeSuggest([]))
+    ).toBe(plan)
   })
 })
 

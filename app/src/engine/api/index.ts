@@ -56,7 +56,7 @@ import { planWeek as runPlanWeek } from '../planning/plan-week.js'
 import { planLeftovers as runPlanLeftovers } from '../planning/plan-leftovers.js'
 import { buildShoppingList as runBuildShoppingList } from '../planning/shopping-list.js'
 import { scaleRecipe as runScaleRecipe } from '../planning/scale-recipe.js'
-import { rerollSlot as runRerollSlot } from '../planning/reroll-slot.js'
+import { rerollSlot as runRerollSlot, setSlotRecipe as runSetSlotRecipe } from '../planning/reroll-slot.js'
 import type { RerollContext } from '../planning/reroll-slot.js'
 import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
@@ -132,6 +132,23 @@ export interface Engine {
    * il garde le résultat, pas la demande qui l'a produit.
    */
   rerollSlot(plan: WeekPlan, slot: SlotRef, contexte: RerollContext, opts?: RerollOptions): WeekPlan
+  /**
+   * Pose sur un créneau une recette CHOISIE par l'utilisateur (décision 49, §7.2).
+   *
+   * ⚠️ À NE PAS CONFONDRE AVEC `rerollSlot`, et la confusion a existé dans le produit : le bouton
+   * « Choisir » d'un créneau vide appelait le TIRAGE. Un reroll écarte ce qui est déjà au plan ; un
+   * choix ne le peut pas — refuser à quelqu'un le plat qu'il vient de désigner parce qu'il figure
+   * déjà mercredi serait absurde.
+   *
+   * ⚠️ L'APPELANT DOIT AVOIR FILTRÉ. Cette fonction pose le `recipeId` reçu sans rejouer les couches
+   * d'exclusion : c'est l'écran qui ne présente que des recettes issues de `browseRecipes` ou de
+   * `searchByPantry`, lesquels appliquent allergies et régime. Le plancher calorique, lui, est bien
+   * recalculé ici — un geste manuel n'est pas une porte de sortie de §6.5.
+   *
+   * Créneau introuvable ou VERROUILLÉ : le plan rendu est l'objet d'entrée, inchangé. Recette
+   * inconnue du catalogue : `RangeError`.
+   */
+  setSlotRecipe(plan: WeekPlan, slot: SlotRef, recipeId: RecipeId, contexte: RerollContext): WeekPlan
   /**
    * Place les restes dans un plan existant (§7.3) — rend un NOUVEAU plan, n'altère pas l'entrée.
    * `convives` = assiettes servies par repas, défaut 1. Un reste REMPLACE un plat prévu ; il ne
@@ -651,6 +668,16 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       // Créneau absent ou verrouillé : `runRerollSlot` rend le plan D'ENTRÉE, à l'identité près.
       // Rien n'a bougé, donc aucun avertissement n'a pu changer — et §7.2 promet un plan
       // « inchangé », ce qu'un objet reconstruit ne serait plus tout à fait.
+      if (apres === plan) return plan
+      return { ...apres, warnings: checkCalorieFloor(apres, contexte.profile, enrichedCatalog) }
+    },
+    setSlotRecipe: (plan, slot, recipeId, contexte) => {
+      const apres = runSetSlotRecipe(enrichedCatalog, plan, slot, recipeId, contexte, (r) =>
+        runSuggestMeals(enrichedCatalog, r, now)
+      )
+      // ⚠️ LE PLANCHER REPASSE, MÊME SUR UN GESTE MANUEL. C'était la contrainte écrite de la
+      // décision 49 : poser un plat soi-même ne doit pas être le chemin par lequel §6.5 se
+      // contourne. Même ligne, même fonction, même endroit que pour un reroll.
       if (apres === plan) return plan
       return { ...apres, warnings: checkCalorieFloor(apres, contexte.profile, enrichedCatalog) }
     },

@@ -331,3 +331,75 @@ describe('semaine — les alertes d’énergie', () => {
     expect(dialogue.parentElement).toBe(document.body)
   })
 })
+
+describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () => {
+  // ⚠️ LE DÉFAUT QUE CE BLOC GARDE. Sur un créneau vide, le bouton s'intitulait « Choisir » et
+  // appelait `rerollSlot` — un TIRAGE. Le libellé promettait un choix et rendait un hasard. C'est la
+  // classe de défaut que ce projet rencontre en boucle sous d'autres formes (`note_allergene`,
+  // filtre d'allergènes sur liste vide, `Recipe.service` déclaré mais jamais lu) : l'écart entre ce
+  // qui est ANNONCÉ et ce qui est BRANCHÉ.
+
+  it('⛔ le bouton de TIRAGE ne s’appelle plus « Choisir » — les mots disent l’acte', async () => {
+    await composerSemaine()
+
+    // « Changer » sur un créneau rempli, « Proposer » sur un vide : les deux tirent, et aucun des
+    // deux ne prétend choisir. « Choisir » existe à côté, et ouvre la fenêtre.
+    expect(screen.getAllByText('Changer').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Choisir').length).toBeGreaterThan(0)
+    for (const bouton of screen.getAllByText('Choisir')) {
+      expect(bouton.closest('button')!.getAttribute('aria-haspopup')).toBe('dialog')
+    }
+  })
+
+  it('ouvre une fenêtre à deux sources, et le titre dit OÙ le plat se posera', async () => {
+    await composerSemaine()
+    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
+
+    const dialogue = await screen.findByRole('dialog')
+    expect(within(dialogue).getByText(/Choisir un plat —/)).toBeDefined()
+    expect(within(dialogue).getByRole('tab', { name: 'Chercher une recette' })).toBeDefined()
+    expect(within(dialogue).getByRole('tab', { name: 'Avec ce que j’ai' })).toBeDefined()
+  })
+
+  it('⛔ POSE LA RECETTE DÉSIGNÉE, et l’écrit en base', async () => {
+    // Le cœur du lot : ce qu'on tape dans la fenêtre est ce qui atterrit dans le plan. Un tirage
+    // « amélioré » qui rendrait autre chose serait le même mensonge sous un autre habillage.
+    await composerSemaine()
+    const avant = readLatestPlan(baseCourante())!.entries
+    const premier = avant.find((e) => e.service !== 'accompagnement')!
+
+    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
+    const dialogue = await screen.findByRole('dialog')
+
+    // La première recette proposée par la fenêtre, quelle qu'elle soit — on ne teste pas le
+    // classement de `browseRecipes` ici, seulement que le clic pose CE plat-là.
+    const boutons = within(dialogue).getAllByRole('button')
+    const choix = boutons.find((b) => b.textContent !== null && b.getAttribute('role') !== 'tab' && !/Retour/.test(b.textContent))!
+    const nomChoisi = choix.textContent
+
+    fireEvent.click(choix)
+
+    await waitFor(() => {
+      const apres = readLatestPlan(baseCourante())!.entries.find(
+        (e) => e.slot.date === premier.slot.date && e.slot.creneau === premier.slot.creneau && e.service !== 'accompagnement'
+      )
+      const nom = catalogueDeTest().recipes.get(apres!.recipeId!)?.nom
+      expect(nomChoisi).toContain(nom)
+    })
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('un créneau GARDÉ n’est pas choisissable — pas de porte dérobée sur un verrou', async () => {
+    // §7.2 : un créneau gardé est « invisible pour toute replanification ». Un geste manuel ne doit
+    // pas être le chemin par lequel on écrase ce qu'on vient de dire vouloir garder.
+    await composerSemaine()
+    const boutonGarder = screen.getAllByText('Garder')[0]!.closest('button') as HTMLButtonElement
+    const carte = carteDuBouton(boutonGarder)
+
+    fireEvent.click(boutonGarder)
+    await waitFor(() => expect(boutonGarder.getAttribute('aria-pressed')).toBe('true'))
+
+    const boutonChoisir = [...carte.querySelectorAll('button')].find((b) => b.textContent === 'Choisir')!
+    expect(boutonChoisir.disabled).toBe(true)
+  })
+})
