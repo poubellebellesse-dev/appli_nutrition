@@ -77,6 +77,12 @@ const LIBELLE_RANGEMENT: Readonly<Record<Rangement, string>> = {
   jour: 'Jour',
 }
 
+/** Un créneau servi par un reste : « mardi · Déjeuner — Ratatouille ». */
+interface CreneauCouvert {
+  readonly cle: string
+  readonly titre: string
+}
+
 interface Vue {
   readonly liste: ShoppingList
   /**
@@ -90,6 +96,16 @@ interface Vue {
    * Le garde-manger quand il a trop vieilli pour qu'on s'y fie — VIDE le reste du temps. Non
    * appliqué à `liste` : voir le bloc de `calculerVue` et le bandeau `ConfirmerFrigo`.
    */
+  /**
+   * Les créneaux que le planning a couverts avec un reste — ils n'ont rien coûté à cette liste.
+   *
+   * ⚠️ LU SUR `isLeftover`, PAS CALCULÉ PAR DIFFÉRENCE, et c'est l'inverse de `dejaChezVous`
+   * juste au-dessus. Le garde-manger n'est marqué nulle part, donc il FAUT le retrouver en
+   * comparant deux listes ; un reste, lui, porte son propre drapeau (§7.3 ENGINE). Refaire une
+   * différence ici ne donnerait d'ailleurs rien : un reste réutilise LA MÊME recette que son plat
+   * source, donc le cuisiner à part n'ajouterait aucun article — ça doublerait des quantités.
+   */
+  readonly couvertsParUnReste: readonly CreneauCouvert[]
   readonly gardeAConfirmer: readonly FoodId[]
   readonly declareLe: string | null
   /** Pour `ConfirmerFrigo`, qui réécrit `user_pantry` quand l'utilisateur répond. */
@@ -164,6 +180,20 @@ async function calculerVue(): Promise<Etat> {
     if (nom !== undefined) platParCreneau.set(cleCreneau(entree.slot.date, entree.slot.creneau), nom)
   }
 
+  // Les créneaux servis par un reste — voir l'en-tête de `Vue.couvertsParUnReste`. Un reste porte
+  // toujours la recette de son plat source (`plan-leftovers.ts`), donc son nom est celui du plat
+  // qu'on retrouvera dans l'assiette.
+  const couvertsParUnReste: CreneauCouvert[] = []
+  for (const entree of plan.entries) {
+    if (!entree.isLeftover || entree.recipeId === null) continue
+    const nom = socle.catalogue.recipes.get(entree.recipeId)?.nom
+    if (nom === undefined) continue
+    couvertsParUnReste.push({
+      cle: cleCreneau(entree.slot.date, entree.slot.creneau),
+      titre: `${formaterJour(entree.slot.date)} · ${LIBELLE_CRENEAU[entree.slot.creneau]} — ${nom}`,
+    })
+  }
+
   // Mêmes allergies déclarées que le reste de l'appli (`readAllergies`, table `user_allergy`) —
   // aucun chemin dédié : un allergène décoché ailleurs doit l'être ici aussi.
   const allergiesDeclarees = new Set<AllergenId>(readAllergies(socle.db).map((a) => a.allergenId))
@@ -173,6 +203,7 @@ async function calculerVue(): Promise<Etat> {
     vue: {
       liste,
       dejaChezVous,
+      couvertsParUnReste,
       gardeAConfirmer: perime ? pantryFoodIds : [],
       declareLe,
       socle,
@@ -481,9 +512,55 @@ export function Courses() {
         )}
       </div>
 
+      {vue.couvertsParUnReste.length > 0 && <CouvertsParUnReste creneaux={vue.couvertsParUnReste} />}
+
       {vue.dejaChezVous.length > 0 && (
         <DejaChezVous items={vue.dejaChezVous} nomAliment={vue.nomAliment} />
       )}
+    </section>
+  )
+}
+
+/**
+ * Section « Couverts par un reste » — les repas de la semaine qui n'ont rien coûté à cette liste.
+ *
+ * ⚠️ C'EST L'EFFET LE PLUS SPECTACULAIRE DU MOTEUR, ET IL ÉTAIT INVISIBLE LÀ OÙ IL SE PRODUIT
+ * (décision 50, `ETAT.md`). Les restes font tomber une semaine de courses de 24 à 15 kg (§2
+ * ARCHITECTURE) ; l'écran Semaine les montre depuis toujours (`Reste du plat de la veille`), l'écran
+ * Courses n'en disait rien — et la question a été posée deux fois de suite pendant l'essai sur
+ * téléphone : « où sont rangés les restes de la veille ? comment l'utilisateur peut le voir ? ».
+ *
+ * ⚠️ AUCUN CHIFFRE DE GAIN N'EST AFFICHÉ, et ce n'est pas une omission. Un reste réutilise LA MÊME
+ * recette que son plat source : le contrefactuel « et si ce repas était cuisiné à part ? »
+ * n'ajouterait aucun ARTICLE, il doublerait des QUANTITÉS. Un « n articles évités » vaudrait donc
+ * zéro en permanence, et un total en poids demanderait d'additionner des grammes, des millilitres et
+ * des pièces. On nomme ce qui est couvert ; on ne chiffre pas ce qu'on ne peut pas défendre.
+ *
+ * Non cochable, comme « Déjà chez vous » : il n'y a rien à acheter ici.
+ */
+function CouvertsParUnReste({ creneaux }: { readonly creneaux: readonly CreneauCouvert[] }) {
+  return (
+    <section className="mt-6">
+      <h2 className="font-titre text-[1.25rem] text-texte">Couverts par un reste ({creneaux.length})</h2>
+      <p className="mt-1 text-[0.9rem] leading-relaxed text-attenue">
+        Ces repas réutilisent un plat déjà prévu. Rien à acheter pour eux.
+      </p>
+      {/* Même raison que le lien vers le frigo dans « Déjà chez vous » : nommer un effet sans dire
+          où il se voit laisse la question entière. La Semaine porte déjà « Reste du plat de la
+          veille » sur le créneau concerné. */}
+      <a
+        href={hashDe('semaine')}
+        className="mt-2 flex min-h-tactile items-center rounded-[0.7rem] text-[0.92rem] font-semibold text-accent-texte underline"
+      >
+        Voir ces repas dans ma semaine
+      </a>
+      <ul className="mt-2 divide-y divide-bordure rounded-[--radius-carte] border border-bordure bg-surface">
+        {creneaux.map((creneau) => (
+          <li key={creneau.cle} className="px-3 py-2 text-[1rem] text-texte-doux">
+            {creneau.titre}
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }

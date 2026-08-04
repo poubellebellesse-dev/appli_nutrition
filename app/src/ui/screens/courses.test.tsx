@@ -44,7 +44,7 @@ afterEach(cleanup)
  * Sept jours, deux repas, un convive : de quoi laisser `buildShoppingList` produire une liste non
  * triviale et `planLeftovers` placer des restes comme `semaine.tsx` le fait réellement.
  */
-async function avecUnPlan() {
+async function avecUnPlan({ restes = true }: { restes?: boolean } = {}) {
   const { chargerSocle, aujourdhuiIso, profilCourant } = await import('../socle.js')
   const socle = await chargerSocle()
   const date = aujourdhuiIso()
@@ -60,7 +60,9 @@ async function avecUnPlan() {
     convives: 1,
     seed: 1,
   })
-  const plan = socle.moteur.planLeftovers(brut, profil, 1)
+  // `restes: false` sert le seul cas où l'absence de restes EST ce qu'on vérifie — le plan brut de
+  // `planWeek` n'en porte aucun, c'est `planLeftovers` qui les pose (§7.3 ENGINE).
+  const plan = restes ? socle.moteur.planLeftovers(brut, profil, 1) : brut
   savePlan(socle.db, plan, date)
   return { socle, plan }
 }
@@ -440,6 +442,68 @@ describe('courses — la note d’allergène sur un article choisi par compléti
     await rendreCourses(Courses)
     await screen.findByRole('heading', { name: 'Mes courses' })
     expect(await screen.findByText(/Contient un allergène que vous avez déclaré : Gluten/)).toBeDefined()
+  })
+})
+
+/**
+ * ⚠️ CE QUE CE BLOC GARDE (décision 50). Les restes font tomber une semaine de courses de 24 à 15 kg
+ * (§2 ARCHITECTURE) : c'est l'effet le plus spectaculaire du moteur, et il était **invisible là où il
+ * se produit**. L'écran Semaine les montrait depuis toujours, l'écran Courses n'en disait rien — au
+ * point que la question a été posée deux fois de suite pendant l'essai sur téléphone (« où sont
+ * rangés les restes de la veille ? comment l'utilisateur peut le voir ? »).
+ */
+describe('courses — les repas couverts par un reste', () => {
+  it('nomme chaque créneau servi par un reste, et il y en a autant que dans le plan', async () => {
+    const { plan } = await avecUnPlan()
+    const restes = plan.entries.filter((e) => e.isLeftover)
+    // Si `planLeftovers` cessait d'en placer, ce test passerait au vert en ne vérifiant plus rien.
+    expect(restes.length).toBeGreaterThan(0)
+
+    await monter()
+
+    const section = (
+      await screen.findByText(new RegExp(`^Couverts par un reste \\(${restes.length}\\)$`))
+    ).closest('section') as HTMLElement
+    expect(within(section).getAllByRole('listitem')).toHaveLength(restes.length)
+  })
+
+  it('⛔ RIEN N’Y EST COCHABLE — ce ne sont pas des articles à acheter', async () => {
+    await avecUnPlan()
+    await monter()
+
+    const section = (await screen.findByText(/^Couverts par un reste/)).closest('section') as HTMLElement
+    expect(within(section).queryAllByRole('button')).toHaveLength(0)
+  })
+
+  // Même raison que le lien vers « Vider le frigo » de « Déjà chez vous » : nommer un effet sans
+  // dire où il se voit laisse la question entière — et c'est LA question qui a été posée deux fois.
+  it('porte le chemin pour aller voir ces repas — un lien vers la Semaine', async () => {
+    await avecUnPlan()
+    await monter()
+
+    const section = (await screen.findByText(/^Couverts par un reste/)).closest('section') as HTMLElement
+    const lien = within(section).getByRole('link', { name: /semaine/i })
+    expect(lien.getAttribute('href')).toBe(hashDe('semaine'))
+  })
+
+  it('plan sans le moindre reste : la section n’existe pas', async () => {
+    const { plan } = await avecUnPlan({ restes: false })
+    expect(plan.entries.some((e) => e.isLeftover)).toBe(false)
+
+    await monter()
+    expect(screen.queryByText(/^Couverts par un reste/)).toBeNull()
+  })
+
+  // ⚠️ AUCUN CHIFFRE DE GAIN, ET C'EST DÉLIBÉRÉ (voir l'en-tête de `CouvertsParUnReste`). Un reste
+  // réutilise LA MÊME recette que son plat source : le cuisiner à part n'ajouterait aucun article,
+  // ça doublerait des quantités. Un « n articles évités » vaudrait zéro en permanence, et un total
+  // en poids demanderait d'additionner des grammes, des millilitres et des pièces.
+  it('⛔ N’AFFICHE AUCUN GAIN CHIFFRÉ — on ne chiffre pas ce qu’on ne peut pas défendre', async () => {
+    await avecUnPlan()
+    await monter()
+
+    const section = (await screen.findByText(/^Couverts par un reste/)).closest('section') as HTMLElement
+    expect(section.textContent).not.toMatch(/kg|économis|évité|au lieu de|\d+\s*%/i)
   })
 })
 
