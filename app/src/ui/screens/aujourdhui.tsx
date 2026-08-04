@@ -301,7 +301,18 @@ export function Aujourdhui() {
         .then((socle) => {
           // Le créneau vient de la vue, pas d'une relecture de l'horloge : un plat retenu à 13 h 59
           // s'enregistre sur le déjeuner qu'on regardait, même si l'écriture aboutit à 14 h 01.
-          recordMeal(socle.db, { recipeId: recipeId as never, date: aujourdhuiIso(), creneau, origine: 'choisi' })
+          // ⚠️ `as RecipeId`, PAS `as never` — la nuance porte sur le sens de la donnée. Ailleurs
+          // dans l'interface, `as never` sert des `Map.get()` : un id faux y rend `undefined`, sans
+          // conséquence. ICI ON ÉCRIT, et en base : un id qui ne serait pas du catalogue s'y
+          // installerait, ressortirait par `readHistory` et partirait dans les couches `habit` et
+          // `variety` sans que rien ne proteste. Un cast large sur une lecture est une commodité ;
+          // sur une écriture persistée, c'est une porte.
+          recordMeal(socle.db, {
+            recipeId: recipeId as RecipeId,
+            date: aujourdhuiIso(),
+            creneau,
+            origine: 'choisi',
+          })
           // Choisir MET FIN à l'indécision : le compteur repart, l'encart se referme.
           setVues(new Set())
           setAideOuverte(false)
