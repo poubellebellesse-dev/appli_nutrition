@@ -5,8 +5,8 @@
 >
 > ⚠️ **Trois règles tenues dans ces textes, à ne pas défaire en les réécrivant :**
 > 1. **Aucune adresse e-mail n'est inventée.** cuisine-libre.org se joint par son formulaire,
->    <https://www.cuisine-libre.org/contact> — la page ne publie aucune adresse. Pour Santé publique
->    France, la voie n'est pas identifiée : passer par le formulaire institutionnel.
+>    <https://www.cuisine-libre.org/contact> — la page ne publie aucune adresse. Santé publique
+>    France se joint à **`droits@santepubliquefrance.fr`**, vérifié le 2026-08-04 (voir §0).
 > 2. **Nulle part il n'est écrit que l'application est open source.** Il n'y a pas de fichier de
 >    licence dans le dépôt et `package.json` ne porte pas de champ `license` : ce serait faux.
 > 3. **Aucun engagement de gratuité perpétuelle n'est pris** — voir la note §3.
@@ -46,6 +46,36 @@ ci-dessous. Ne pas réintroduire les formulations barrées en recopiant une vers
 | Mention obligatoire | ✅ « l'ajout en bas de chaque contenu de la mention "Droits réservés Santé publique France" », **plus** « l'ajout de la mention : "… paru sur le site mangerbouger.fr" » avec **lien hypertexte** |
 | ~~« Ces mentions m'interdisent la réutilisation sans votre accord »~~ | ❌ **FAUX, et c'était l'erreur grave.** Leurs mentions **autorisent** la reproduction d'« extraits textuels non modifiés » à titre non commercial, sous les deux conditions ci-dessus. Écrire l'inverse annonçait qu'on ne les avait pas lues. |
 | ~~« ~2 000 recettes »~~ | ⚠️ **invérifiable** : la page recettes n'affiche aucun compteur (chargement par « Afficher plus de recettes »). Des tiers avancent ~2 300. → **ne citer aucun chiffre.** |
+
+### À qui écrire chez Santé publique France — vérifié le 2026-08-04
+
+⚠️ **`edif@santepubliquefrance.fr` est la MAUVAISE adresse.** C'est le service qui expédie les
+brochures papier — la page qui la donne parle de « commande de documents », de « coordonnées
+postales » et de « 5 exemplaires maximum ». Une demande de droits y sera classée, pas traitée.
+
+| Adresse | Usage déclaré (FAQ officielle SPF) |
+|---|---|
+| **`droits@santepubliquefrance.fr`** | ✅ **« Demandes de réutilisation, adaptation et reproduction de contenus »**, listée sous « Demander une autorisation » dans les mentions légales |
+| `edif@santepubliquefrance.fr` | ❌ « Commandes de documentation et questions de compte » |
+| `presse@` · `engagement@` · `dpo@` | presse · réserve sanitaire · données personnelles |
+| `nutrition@mangerbouger.fr` | questions éditoriales mangerbouger (voie de repli, pas la bonne) |
+
+⚠️ **Réserve à connaître** : la FAQ formule `droits@` autour d'« un **visuel** extrait d'un
+document », alors que les mentions légales la placent sous « Demander une autorisation » sans
+restriction. C'est la bonne première porte, mais le courrier demande explicitement une réorientation
+si le service n'est pas compétent — sinon le message est classé au lieu d'être transmis.
+
+**Ce qu'il faut demander, et c'est une forme précise.** Les mentions légales de
+santepubliquefrance.fr disent mot à mot : « La reproduction, la traduction, ou toute utilisation de
+données ou d'informations […] à des fins autres que de recherches, d'études personnelles, éducatives
+et non commerciales, sont subordonnées à l'obtention préalable d'une **autorisation écrite formelle
+de la directrice générale de Santé publique France**. » → Ce n'est pas un accord informel par
+courriel : c'est un acte signé à la direction générale. Le courrier doit le nommer, faute de quoi on
+obtient une réponse aimable qui n'autorise rien.
+
+⚠️ **Ne nommer personne dans le courrier.** Le nom du directeur de la publication relevé sur
+mangerbouger le 2026-08-04 (Geneviève Chêne) n'a pas été revérifié comme étant l'actuelle direction
+générale. S'adresser au service, jamais à une personne.
 
 **Les deux vrais motifs de la demande à SPF**, une fois les mentions lues correctement :
 1. **le volume** — reprendre l'ensemble des recettes n'est plus « des extraits », c'est la substance
@@ -104,8 +134,8 @@ Cordialement,
 
 ## 2. Santé publique France — recettes de mangerbouger.fr
 
-**Voie :** formulaire de contact de santepubliquefrance.fr ou de mangerbouger.fr.
-**Objet :** Réutilisation des recettes de mangerbouger.fr dans une application hors-ligne — demande de précisions
+**Voie :** `droits@santepubliquefrance.fr`
+**Objet :** Demande d'autorisation de reproduction — recettes de mangerbouger.fr dans une application hors-ligne
 
 Madame, Monsieur,
 
@@ -140,10 +170,15 @@ sur chaque recette.
   désigné comme « sain » ou « mauvais » ;
 - elle est en développement et **n'est pas encore publiée**.
 
-**Trois questions :**
+**Ma demande.** Vos mentions légales prévoient que toute utilisation excédant la recherche, l'étude
+personnelle ou l'usage éducatif non commercial est subordonnée à une autorisation écrite formelle de
+la direction générale. **C'est cette autorisation que je sollicite**, pour la reproduction des
+recettes de *La Fabrique à menus* au sein de cette application.
 
-1. La reprise de l'ensemble des recettes, plutôt que d'extraits, entre-t-elle dans le cadre que vous
-   accordez, ou demande-t-elle une autorisation distincte ?
+**Trois questions l'accompagnent :**
+
+1. La reprise de l'ensemble des recettes, plutôt que d'extraits, relève-t-elle bien de cette
+   autorisation formelle, et quelle procédure dois-je suivre pour la solliciter dans les formes ?
 2. Qu'est-ce qui satisferait la condition de lien hypertexte pour une application sans réseau —
    l'affichage de l'URL en clair suffirait-il ?
 3. Que recouvre exactement l'usage « non commercial » pour une application gratuite distribuée sur un
@@ -152,6 +187,10 @@ sur chaque recette.
 Je pose la troisième franchement : je ne suis pas en mesure de m'engager aujourd'hui à ce que cette
 application reste gratuite indéfiniment, et je préfère vous le dire plutôt que de souscrire à un
 engagement que je ne tiendrais peut-être pas. Si cela ferme la porte, je le comprendrai.
+
+Je vous écris à cette adresse parce que vos mentions légales la désignent pour les demandes
+d'autorisation de reproduction. Si ma demande relève d'un autre service, je vous serais reconnaissant
+de me l'indiquer ou de la lui transmettre.
 
 Je vous remercie de l'attention portée à cette demande.
 

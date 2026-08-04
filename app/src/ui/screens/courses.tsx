@@ -125,9 +125,13 @@ async function calculerVue(): Promise<Etat> {
     enregistree = readShoppingList(socle.db)!
   }
 
+  // ⚠️ LE PLAT, PAS LA DERNIÈRE ENTRÉE DU CRÉNEAU. Un déjeuner porte jusqu'à deux lignes depuis le
+  // mode repas (`plan-week.ts`) ; ce `set` en boucle gardait donc la SECONDE, et la liste de courses
+  // titrait « lundi · Déjeuner — Ratatouille » à la place du plat. Rien n'aurait planté : le
+  // regroupement aurait juste désigné le mauvais repas.
   const platParCreneau = new Map<string, string>()
   for (const entree of plan.entries) {
-    if (entree.recipeId === null) continue
+    if (entree.recipeId === null || entree.service === 'accompagnement') continue
     const nom = socle.catalogue.recipes.get(entree.recipeId)?.nom
     if (nom !== undefined) platParCreneau.set(cleCreneau(entree.slot.date, entree.slot.creneau), nom)
   }

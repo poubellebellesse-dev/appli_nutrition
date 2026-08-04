@@ -52,13 +52,15 @@ JOURNÉE — la comparaison n'a jamais été homogène. Le planificateur pose d�
 en plus du plat aux repas principaux. Mesuré sur 20 graines × 7 jours (`npm run engine:plancher`) :
 **min 813 → 1 302 kcal, médiane 1 023 → 1 528, et 0/20 → 20/20 semaines sans aucun avertissement**.
 
-⛔ **CE QUI RESTE OUVERT ET DOIT ÊTRE TRANCHÉ AVANT LA PUBLICATION.** La décision 45 masque l'alerte
-de plancher par défaut *au motif que le déclenchement est rare* — la prémisse était fausse au
-moment où elle a été écrite, elle est redevenue vraie pour d'autres raisons. **Trois issues, aucune
-tranchée**, et §6.5 ARCHITECTURE est contraignante pour la publication. À noter avant d'arbitrer :
-le banc rend encore **5 avertissements en végétalien 14 j et 9 en « végétalien + sans gluten »** —
-ces régimes n'ont pas assez d'accompagnements (18 posés sur 28 attendus, 11 sur 56). Le chantier ③
-(écrire du contenu d'accompagnement) est donc devenu la suite directe de la correction.
+✅ **La décision 45 est tranchée le 2026-08-04 : on reste sur l'alerte MASQUÉE par défaut.** Ce n'est
+plus une prémisse fausse mais un choix assumé et daté, ce que §6.5 ARCHITECTURE demandait. Ne pas
+rouvrir sans élément neuf.
+
+▶ **LE CHANTIER SUIVANT, ET IL EST DE CONTENU.** Le banc rend encore **5 avertissements en
+végétalien 14 j et 9 en « végétalien + sans gluten »** : ces régimes n'ont pas assez
+d'accompagnements (18 posés sur 28 attendus, 11 sur 56). **Écrire des accompagnements végétaliens et
+sans gluten fait tomber ces deux chiffres**, et c'est la seule chose qui les fera tomber — aucun
+réglage du moteur n'invente du contenu. Chantier en cours côté utilisateur.
 
 **Ce qui reste n'est plus du code d'écran.** Trois chantiers, par ordre de dépendance :
 

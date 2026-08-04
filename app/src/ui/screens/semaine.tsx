@@ -707,9 +707,9 @@ function Creneau({
       </p>
 
       {/* ⚠️ « avec » EN TOUTES LETTRES, pas une simple seconde ligne. Deux noms empilés se lisent
-          comme deux plats au choix ; le mot dit que c'est UNE assiette. Et pas de bouton propre :
-          l'accompagnement suit son plat — le changer séparément n'a pas de sens tant que
-          `rerollSlot` ne le recalcule pas (voir reroll-slot.ts). */}
+          comme deux plats au choix ; le mot dit que c'est UNE assiette. Pas de bouton propre non
+          plus : « Changer » rejoue le plat ET son accompagnement (`reroll-slot.ts`), ce qui est le
+          comportement attendu — on refuse une assiette, pas une garniture. */}
       {accompagnement !== null && (
         <p className="mt-1 text-[0.95rem] leading-snug text-texte-doux">
           avec{' '}

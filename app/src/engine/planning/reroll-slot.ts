@@ -29,7 +29,7 @@ import type {
   WeekPlan,
 } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
-import type { SuggestForSlot } from './plan-week.js'
+import { pickAccompagnement, type SuggestForSlot } from './plan-week.js'
 
 export interface RerollContext {
   readonly profile: UserProfile
@@ -62,10 +62,6 @@ export function rerollSlot(
   // PLAT — reproposer le riz à la place du poulet serait absurde. On vise donc l'entrée dont le
   // service n'est pas `accompagnement`, et non l'indice trouvé le premier.
   //
-  // ⚠️ L'ACCOMPAGNEMENT N'EST PAS RECALCULÉ, et c'est une dette assumée (voir `ETAT.md`) : après un
-  // refus, le nouveau plat peut répéter l'accompagnement resté en place. Le recalculer ici
-  // demanderait de rejouer `pickAccompagnement`, qui vit dans `plan-week.ts` avec le catalogue et
-  // la cible nutritionnelle du jour — hors de portée d'un reroll de créneau isolé.
   const index = plan.entries.findIndex(
     (e) => e.slot.date === slot.date && e.slot.creneau === slot.creneau && e.service !== 'accompagnement'
   )
@@ -112,14 +108,47 @@ export function rerollSlot(
     if (!(error instanceof NoViableRecipeError)) throw error
   }
 
-  const entries: MealPlanEntry[] = [...plan.entries]
-  entries[index] = {
+  // ⚠️ L'ACCOMPAGNEMENT SE RECALCULE AVEC LE PLAT, il ne survit pas au refus. Le garder tel quel
+  // laissait passer des paires bancales — on refusait « Poulet rôti » pour tomber sur « Rösti de
+  // pommes de terre », et la purée de pommes de terre restait à côté. Pire : elle n'était même plus
+  // le meilleur choix pour le nouveau plat, juste un vestige de l'ancien.
+  //
+  // La graine vient de `requete`, donc du reroll : refuser deux fois de suite ne redonne pas le
+  // même couple. `null` en plat → pas d'accompagnement, le créneau redevient vide pour de bon.
+  const complement = choisi === null ? null : pickAccompagnement(catalog, suggest, requete, choisi)
+
+  const platRejoue: MealPlanEntry = {
     ...cible,
     recipeId: choisi,
     portions: choisi === null ? 0 : (catalog.recipes.get(choisi)?.portionsBase ?? 0),
     // Un reroll produit une SUGGESTION, jamais un reste : le plat de la veille n'a pas été cuisiné
     // en double parce qu'on a refusé celui-ci.
     isLeftover: false,
+    // Le champ dit le MODE : `'plat'` seulement s'il y a bien une seconde entrée derrière.
+    service: complement === null ? null : 'plat',
+  }
+
+  // On reconstruit le créneau plutôt que de patcher en place : le nombre d'entrées peut passer de
+  // 1 à 2 ou de 2 à 1, et un `entries[i] = …` ne sait pas exprimer ça sans décaler tout le reste.
+  const entries: MealPlanEntry[] = []
+  for (const entree of plan.entries) {
+    const memeCreneau = entree.slot.date === slot.date && entree.slot.creneau === slot.creneau
+    if (memeCreneau && entree.service === 'accompagnement') continue // remplacé plus bas, ou supprimé
+    if (!memeCreneau) {
+      entries.push(entree)
+      continue
+    }
+    entries.push(platRejoue)
+    if (complement !== null) {
+      entries.push({
+        slot: { date: slot.date, creneau: slot.creneau },
+        recipeId: complement,
+        portions: catalog.recipes.get(complement)?.portionsBase ?? 0,
+        locked: false,
+        isLeftover: false,
+        service: 'accompagnement',
+      })
+    }
   }
 
   return { ...plan, entries }

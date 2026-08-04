@@ -196,3 +196,49 @@ describe('ui/rappel — rappels d’un plan', () => {
     expect(rappelsDuPlan(plan([entree('2026-08-05', 'diner', 'rapide')]), RECETTES, new Map(), LUNDI_8H)).toEqual([])
   })
 })
+
+// --- Le mode repas : deux plats sur un même créneau ----------------------------------------------
+
+describe('ui/rappel — un créneau qui porte plat ET accompagnement', () => {
+  // ⚠️ BUG TROUVÉ ET CORRIGÉ LE 2026-08-04. La boucle portait sur `plan.entries` : depuis que
+  // `planWeek` pose un accompagnement en plus du plat, un seul dîner produisait DEUX notifications,
+  // à deux instants différents. Sur une application dont l'argument est qu'elle ne harcèle personne,
+  // doubler les rappels est exactement le défaut à ne pas laisser passer.
+
+  function assiette(date: string, plat: string, accompagnement: string): readonly MealPlanEntry[] {
+    return [
+      { ...entree(date, 'diner', plat), service: 'plat' },
+      { ...entree(date, 'diner', accompagnement), service: 'accompagnement' },
+    ]
+  }
+
+  it('⛔ NE POSE QU’UN SEUL RAPPEL, pas un par entrée', () => {
+    const rappels = rappelsDuPlan(plan(assiette('2026-08-05', 'long', 'rapide')), RECETTES, DINER_19H30, LUNDI_8H)
+
+    expect(rappels).toHaveLength(1)
+  })
+
+  it('se cale sur le plat le plus LONG — commencer à l’heure du plus court ferait servir en retard', () => {
+    const rappels = rappelsDuPlan(plan(assiette('2026-08-05', 'rapide', 'long')), RECETTES, DINER_19H30, LUNDI_8H)
+
+    // 210 min pour le Gigot, quel que soit son rôle dans le repas — et non 15 min pour la Salade.
+    expect(rappels[0]?.recipeId).toBe('long')
+    expect(rappels[0]?.texte).toContain('210 min')
+  })
+
+  it('dit qu’il y a un second plat — le taire ferait sous-estimer le travail', () => {
+    const rappels = rappelsDuPlan(plan(assiette('2026-08-05', 'long', 'rapide')), RECETTES, DINER_19H30, LUNDI_8H)
+
+    expect(rappels[0]?.texte).toBe('Gigot demande 210 min, et il y a 1 autre plat à ce repas.')
+    for (const interdit of ['oubliez', 'devriez', 'il faut', 'vite']) {
+      expect(rappels[0]?.texte.toLowerCase()).not.toContain(interdit)
+    }
+  })
+
+  it('un accompagnement dont la recette est INCONNUE ne fait pas perdre le rappel du plat', () => {
+    const rappels = rappelsDuPlan(plan(assiette('2026-08-05', 'long', 'fantome')), RECETTES, DINER_19H30, LUNDI_8H)
+
+    expect(rappels).toHaveLength(1)
+    expect(rappels[0]?.texte).toBe('Gigot demande 210 min.')
+  })
+})

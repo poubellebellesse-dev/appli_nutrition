@@ -44,8 +44,6 @@
 //
 // ⚠️ CE QUI N'EST TOUJOURS PAS FAIT :
 //   - les RESTES (`planLeftovers`, §7.3) — `isLeftover` reste `false` partout.
-//   - `rerollSlot` remplace le plat SANS recalculer l'accompagnement attaché : une paire bancale
-//     reste possible après un refus. Dette assumée, consignée dans `ETAT.md`.
 //
 // ⚠️ LA SUGGESTION EST INJECTÉE, pas reconstruite. `planWeek` reçoit `suggest` en paramètre plutôt
 // que de recomposer `runExclusionPass` + `runScoringPass` + `diversify` lui-même. Deux raisons :
@@ -71,7 +69,7 @@ import type {
   WeekPlan,
   WeekPlanRequest,
 } from '../domain/index.js'
-import { NoViableRecipeError } from '../domain/index.js'
+import { COURSE_ORDER, NoViableRecipeError } from '../domain/index.js'
 import type { NutrientVector, SuggestionResult } from '../domain/index.js'
 import { resolveReferenceIntakes } from '../nutrition/index.js'
 import { signatureOverlap } from '../nutrition/signature.js'
@@ -159,10 +157,22 @@ function addNutrients(placedToday: Float64Array, apport: NutrientVector | undefi
  * Verrous ramenés à leur créneau, LIMITÉS À LA FENÊTRE du plan.
  *
  * Un verrou hors fenêtre est ignoré : il n'appartient pas à ce plan, et le compter dans
- * `placedRecipeIds` interdirait sa recette pour rien. Doublon de créneau : le premier gagne.
+ * `placedRecipeIds` interdirait sa recette pour rien.
+ *
+ * ⚠️ UNE LISTE PAR CRÉNEAU, PAS UNE ENTRÉE — corrigé le 2026-08-04. La règle était « deux verrous
+ * sur le même créneau : le premier gagne », écrite quand un créneau ne portait qu'un plat. Depuis le
+ * mode repas, garder un déjeuner verrouille DEUX entrées (le plat et son accompagnement) : n'en
+ * reposer qu'une faisait DISPARAÎTRE l'accompagnement à chaque « Proposer une autre semaine ». Le
+ * repas gardé changeait donc quand même — exactement ce que §7.2 promet d'empêcher — et la journée
+ * perdait ~250 kcal en silence.
+ *
+ * Le départage subsiste, mais PAR SERVICE : deux verrous de même service sur le même créneau, le
+ * premier gagne. La liste est rendue dans l'ordre de service français (`COURSE_ORDER`), `null` en
+ * tête — le même ordre que le `ORDER BY` de `readPlan`, pour qu'un plan relu et un plan calculé se
+ * présentent pareil.
  */
-function indexLockedEntries(req: WeekPlanRequest): ReadonlyMap<string, MealPlanEntry> {
-  const lockedBySlot = new Map<string, MealPlanEntry>()
+function indexLockedEntries(req: WeekPlanRequest): ReadonlyMap<string, readonly MealPlanEntry[]> {
+  const lockedBySlot = new Map<string, MealPlanEntry[]>()
   if (req.lockedEntries === undefined || req.lockedEntries.length === 0) return lockedBySlot
 
   const fenetre = new Set<string>()
@@ -173,9 +183,16 @@ function indexLockedEntries(req: WeekPlanRequest): ReadonlyMap<string, MealPlanE
 
   for (const entry of req.lockedEntries) {
     const cle = slotKey(entry.slot.date, entry.slot.creneau)
-    if (!fenetre.has(cle) || lockedBySlot.has(cle)) continue
-    lockedBySlot.set(cle, entry)
+    if (!fenetre.has(cle)) continue
+    const deja = lockedBySlot.get(cle) ?? []
+    if (deja.some((e) => e.service === entry.service)) continue
+    deja.push(entry)
+    lockedBySlot.set(cle, deja)
   }
+
+  const rang = (entry: MealPlanEntry): number =>
+    entry.service === null ? -1 : COURSE_ORDER.indexOf(entry.service)
+  for (const liste of lockedBySlot.values()) liste.sort((a, b) => rang(a) - rang(b))
   return lockedBySlot
 }
 
@@ -199,9 +216,15 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
   // verrouillées entrent dans `placedRecipeIds` DÈS MAINTENANT : sinon le glouton pourrait placer
   // lundi le plat verrouillé pour mercredi, et le plan contiendrait deux fois le même dîner.
   // C'est exactement ce qu'un réassemblage côté appelant ne peut pas garantir.
+  //
+  // ⚠️ SAUF LES ACCOMPAGNEMENTS, exemptés de `placedRecipeIds` partout ailleurs pour que le riz
+  // puisse revenir. Les y mettre ici les interdirait pour toute la semaine au seul motif qu'un
+  // créneau a été gardé.
   const lockedBySlot = indexLockedEntries(req)
-  for (const verrou of lockedBySlot.values()) {
-    if (verrou.recipeId !== null) placedRecipeIds.add(verrou.recipeId)
+  for (const verrous of lockedBySlot.values()) {
+    for (const verrou of verrous) {
+      if (verrou.recipeId !== null && verrou.service !== 'accompagnement') placedRecipeIds.add(verrou.recipeId)
+    }
   }
 
   for (let dayOffset = 0; dayOffset < req.days; dayOffset++) {
@@ -216,10 +239,11 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       // Créneau gardé par l'utilisateur : on le repose tel quel, sans rien demander à `suggest`.
       // Son apport et son entrée d'historique sont comptés ICI, à SA date — les semer en amont
       // ferait voir au lundi un repas du mercredi (`variety` ignore le futur, `habit` non).
-      const verrou = lockedBySlot.get(slotKey(date, creneau))
-      if (verrou !== undefined) {
-        entries.push({ ...verrou, slot: { date, creneau }, locked: true })
-        if (verrou.recipeId !== null) {
+      const verrous = lockedBySlot.get(slotKey(date, creneau))
+      if (verrous !== undefined && verrous.length > 0) {
+        for (const verrou of verrous) {
+          entries.push({ ...verrou, slot: { date, creneau }, locked: true })
+          if (verrou.recipeId === null) continue
           workingEntries.push({ recipeId: verrou.recipeId, date, creneau, origine: 'choisi' })
           addNutrients(placedToday, catalog.indexes.recipeNutrients.get(verrou.recipeId))
         }
@@ -256,14 +280,20 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       workingEntries.push({ recipeId: scored, date, creneau, origine: 'choisi' })
       addNutrients(placedToday, catalog.indexes.recipeNutrients.get(scored))
 
+      // ⚠️ UNE SECONDE REQUÊTE DE CRÉNEAU, PAS `history`/`cible` RÉUTILISÉS. L'historique doit
+      // maintenant contenir le plat qu'on vient de poser, et la cible doit être CE QUI RESTE une
+      // fois son apport déduit — sinon l'accompagnement serait classé contre la journée entière.
       const complement = pickAccompagnement(
         catalog,
         suggest,
-        req,
-        date,
-        creneau,
-        { windowDays: req.history.windowDays, entries: [...workingEntries] },
-        remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex),
+        slotRequest(
+          req,
+          date,
+          creneau,
+          { windowDays: req.history.windowDays, entries: [...workingEntries] },
+          remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex),
+          req.days * req.slots.length
+        ),
         scored
       )
 
@@ -466,20 +496,15 @@ const SEUIL_REPETITION = 0.3
  * toute suggestion, y compris celles que l'utilisateur pilote — exactement ce que la décision 53
  * refuse, et le même raisonnement que `requiredFoodIds` tenu hors de `HardConstraints` (acquis n°2).
  */
-function pickAccompagnement(
+export function pickAccompagnement(
   catalog: Catalog,
   suggest: SuggestForSlot,
-  req: WeekPlanRequest,
-  date: string,
-  creneau: MealSlot,
-  history: MealHistory,
-  cible: NutrientVector,
+  base: SuggestionRequest,
   platId: RecipeId
 ): RecipeId | null {
-  if (!CRENEAUX_REPAS_PRINCIPAL.includes(creneau)) return null
+  if (!CRENEAUX_REPAS_PRINCIPAL.includes(base.context.creneau)) return null
   if (catalog.recipes.get(platId)?.service !== 'plat') return null
 
-  const base = slotRequest(req, date, creneau, history, cible, req.days * req.slots.length)
   const requete: SuggestionRequest = {
     ...base,
     // TOUT le catalogue, pas la fenêtre du glouton. Les accompagnements sont minoritaires (20 sur
@@ -488,7 +513,9 @@ function pickAccompagnement(
     limit: catalog.recipes.size,
     // Flux dérivé DISTINCT de celui du plat. La même graine corrélerait la tête des deux
     // classements — même piège que les 14 créneaux partageant `req.seed`, corrigé plus haut.
-    seed: derive(req.seed, `${slotKey(date, creneau)}|accompagnement`),
+    // On dérive depuis `base.seed`, qui est DÉJÀ le flux du créneau : l'accompagnement de lundi et
+    // celui de mardi restent donc distincts sans que cette fonction ait à connaître la date.
+    seed: derive(base.seed, 'accompagnement'),
   }
 
   let result: SuggestionResult

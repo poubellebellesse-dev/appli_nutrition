@@ -476,3 +476,37 @@ describe('courses — le garde-manger', () => {
     expect(lien.getAttribute('href')).toBe(hashDuFrigo())
   })
 })
+
+describe('courses — le regroupement « Repas » nomme le PLAT, pas son accompagnement', () => {
+  it('⛔ un créneau à deux entrées est titré par le plat', async () => {
+    // ⚠️ BUG TROUVÉ ET CORRIGÉ LE 2026-08-04. `platParCreneau` se construisait par `set` en boucle
+    // sur `plan.entries` : depuis que `planWeek` pose un accompagnement en plus du plat, la SECONDE
+    // entrée écrasait la première et la liste titrait « lundi · Déjeuner — Ratatouille » au lieu du
+    // plat. Rien n'aurait planté — le regroupement aurait juste désigné le mauvais repas.
+    const { plan, socle } = await avecUnPlan()
+    await monter()
+
+    const accompagnements = plan.entries.filter((e) => e.service === 'accompagnement')
+    expect(accompagnements.length).toBeGreaterThan(0) // sinon le test ne prouve rien
+
+    fireEvent.click(screen.getByText('Repas'))
+    await waitFor(() =>
+      expect(screen.getAllByRole('heading', { level: 2 }).some((h) => (h.textContent ?? '').includes(' — '))).toBe(true)
+    )
+
+    const titres = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent ?? '')
+    for (const acc of accompagnements) {
+      const nom = socle.catalogue.recipes.get(acc.recipeId!)?.nom
+      if (nom === undefined) continue
+      // Le nom d'un accompagnement ne peut apparaître que s'il est AUSSI le plat d'un autre créneau
+      // (rien ne l'interdit) — on vérifie donc le créneau précis, pas l'absence globale du mot.
+      const prefixe = titres.find((t) => t.includes(' — ') && t.endsWith(`— ${nom}`))
+      if (prefixe === undefined) continue
+      const platDuMemeCreneau = plan.entries.find(
+        (e) =>
+          e.slot.date === acc.slot.date && e.slot.creneau === acc.slot.creneau && e.service !== 'accompagnement'
+      )
+      expect(socle.catalogue.recipes.get(platDuMemeCreneau!.recipeId!)?.nom).toBe(nom)
+    }
+  })
+})

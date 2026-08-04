@@ -2,9 +2,10 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import { MAX_PLAN_DAYS, MIN_PLAN_DAYS, addDays, planWeek } from './plan-week.js'
+import { rerollSlot } from './reroll-slot.js'
 import { makeCatalog, makeFood, makeRecipe } from '../selection/test-fixtures.js'
 import { NoViableRecipeError } from '../domain/index.js'
-import type { Catalog, FoodId, MealPlanEntry, MealSlot, RecipeId, RecipeIngredient, SuggestionRequest, SuggestionResult, WeekPlanRequest } from '../domain/index.js'
+import type { Catalog, FoodId, MealPlanEntry, MealSlot, RecipeId, RecipeIngredient, SuggestionRequest, SuggestionResult, WeekPlan, WeekPlanRequest } from '../domain/index.js'
 
 const RECIPES = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => makeRecipe(id))
 const CATALOG = makeCatalog(RECIPES)
@@ -226,6 +227,133 @@ describe('planning/plan-week — l’ACCOMPAGNEMENT posé en plus du plat (mode 
     const acc = plan.entries.find((e) => e.service === 'accompagnement')
 
     expect(acc?.recipeId).toBe('accLoin')
+  })
+})
+
+describe('planning/plan-week — un créneau GARDÉ garde son assiette ENTIÈRE', () => {
+  // ⚠️ BUG TROUVÉ ET CORRIGÉ LE 2026-08-04, invisible de tous les tests existants. La règle des
+  // verrous était « deux verrous sur le même créneau : le premier gagne », écrite quand un créneau
+  // ne portait qu'un plat. Depuis le mode repas, garder un déjeuner verrouille DEUX entrées : n'en
+  // reposer qu'une faisait DISPARAÎTRE l'accompagnement à chaque « Proposer une autre semaine ».
+  // Le repas gardé changeait donc quand même — ce que §7.2 promet d'empêcher — et la journée
+  // perdait son complément d'énergie en silence.
+
+  const MENU = makeCatalog([
+    makeRecipe('plat1', { service: 'plat' }),
+    makeRecipe('plat2', { service: 'plat' }),
+    makeRecipe('acc', { service: 'accompagnement' }),
+  ])
+
+  it('repose le plat ET son accompagnement, pas seulement le premier', () => {
+    const verrous: MealPlanEntry[] = [
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
+    ]
+    const plan = planWeek(
+      MENU,
+      makePlanRequest({ days: 2, lockedEntries: verrous }),
+      fakeSuggest(['plat2', 'acc'])
+    )
+    const gardes = plan.entries.filter((e) => e.slot.date === '2026-08-03')
+
+    expect(gardes.map((e) => e.recipeId)).toEqual(['plat1', 'acc'])
+    expect(gardes.every((e) => e.locked)).toBe(true)
+  })
+
+  it('un accompagnement VERROUILLÉ n’est pas interdit ailleurs dans la semaine', () => {
+    // `placedRecipeIds` est amorcé avec les verrous ; y mettre l'accompagnement l'interdirait pour
+    // toute la semaine au seul motif qu'un créneau a été gardé, alors qu'il est exempté partout
+    // ailleurs. C'est la même exemption, appliquée à l'amorçage.
+    const verrous: MealPlanEntry[] = [
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
+    ]
+    const plan = planWeek(
+      MENU,
+      makePlanRequest({ days: 2, lockedEntries: verrous }),
+      fakeSuggest(['plat2', 'acc'])
+    )
+
+    expect(plan.entries.filter((e) => e.slot.date === '2026-08-04' && e.recipeId === 'acc')).toHaveLength(1)
+  })
+
+  it('deux verrous de MÊME service sur un créneau : le premier gagne toujours', () => {
+    const verrous: MealPlanEntry[] = [
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat2' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+    ]
+    const plan = planWeek(MENU, makePlanRequest({ days: 2, lockedEntries: verrous }), fakeSuggest(['plat2']))
+
+    expect(plan.entries.filter((e) => e.slot.date === '2026-08-03').map((e) => e.recipeId)).toEqual(['plat1'])
+  })
+})
+
+describe('planning/reroll-slot — l’accompagnement suit le plat qu’on remplace', () => {
+  // ⚠️ CE QUE CES TESTS GARDENT — dette identifiée le 2026-08-04 et corrigée le même jour. Le reroll
+  // ne touchait que l'entrée du plat : l'accompagnement de l'ANCIEN plat restait attaché au NOUVEAU.
+  // On refusait « Poulet rôti » pour tomber sur « Rösti de pommes de terre », et la purée de pommes
+  // de terre était toujours là. Pire qu'une paire bancale : un vestige.
+
+  const MENU = makeCatalog([
+    makeRecipe('plat1', { service: 'plat' }),
+    makeRecipe('plat2', { service: 'plat' }),
+    makeRecipe('plat3', { service: 'plat' }),
+    makeRecipe('acc', { service: 'accompagnement' }),
+  ])
+  const CONTEXTE = {
+    profile: makePlanRequest().profile,
+    constraints: makePlanRequest().constraints,
+    history: { windowDays: 21, entries: [] },
+    activeTopics: [],
+    seed: 1,
+  } as const
+
+  function planDeDeuxJours(): WeekPlan {
+    return planWeek(MENU, makePlanRequest({ days: 2 }), fakeSuggest(['plat1', 'acc', 'plat2', 'plat3']))
+  }
+
+  it('remplace le plat ET son accompagnement, sans laisser de vestige', () => {
+    const plan = planDeDeuxJours()
+    const slot = { date: '2026-08-03', creneau: 'diner' as MealSlot }
+    expect(plan.entries.filter((e) => e.slot.date === slot.date)).toHaveLength(2)
+
+    const apres = rerollSlot(MENU, plan, slot, CONTEXTE, fakeSuggest(['plat1', 'plat2', 'acc', 'plat3']))
+    const duCreneau = apres.entries.filter((e) => e.slot.date === slot.date)
+
+    expect(duCreneau.map((e) => e.service)).toEqual(['plat', 'accompagnement'])
+    expect(duCreneau[0]?.recipeId).not.toBe('plat1') // le plat refusé ne revient pas
+    expect(duCreneau[1]?.recipeId).toBe('acc')
+  })
+
+  it('⛔ NE LAISSE PAS L’ACCOMPAGNEMENT SEUL quand plus aucun plat n’est disponible', () => {
+    // Le créneau redevient VIDE pour de bon. Un accompagnement orphelin serait pire que rien : il
+    // afficherait « du riz » comme dîner sans que personne l'ait choisi.
+    const plan = planDeDeuxJours()
+    const slot = { date: '2026-08-03', creneau: 'diner' as MealSlot }
+
+    const apres = rerollSlot(MENU, plan, slot, CONTEXTE, fakeSuggest([]))
+    const duCreneau = apres.entries.filter((e) => e.slot.date === slot.date)
+
+    expect(duCreneau).toHaveLength(1)
+    expect(duCreneau[0]?.recipeId).toBeNull()
+    expect(duCreneau[0]?.service).toBeNull()
+  })
+
+  it('ne touche AUCUN autre créneau — la promesse de §7.1 tient malgré la reconstruction', () => {
+    // La correction reconstruit le créneau au lieu de patcher un indice : c'est ce qui permet de
+    // passer de 2 entrées à 1. Il fallait garder la garantie que le reste du plan ne bouge pas.
+    const plan = planDeDeuxJours()
+    const avant = plan.entries.filter((e) => e.slot.date === '2026-08-04').map((e) => e.recipeId)
+
+    const apres = rerollSlot(
+      MENU,
+      plan,
+      { date: '2026-08-03', creneau: 'diner' },
+      CONTEXTE,
+      fakeSuggest(['plat2', 'acc'])
+    )
+
+    expect(apres.entries.filter((e) => e.slot.date === '2026-08-04').map((e) => e.recipeId)).toEqual(avant)
   })
 })
 

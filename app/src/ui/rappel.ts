@@ -12,7 +12,7 @@
 // de `ui/notifications.ts`, qui a besoin, lui, d'un conteneur natif. La frontière est volontaire :
 // tout ce qui peut se tester sans appareil est ici.
 
-import type { MealSlot, Recipe, RecipeId, WeekPlan } from '../engine/domain/index.js'
+import type { MealPlanEntry, MealSlot, Recipe, RecipeId, WeekPlan } from '../engine/domain/index.js'
 
 /**
  * Marge avant le début effectif de la préparation.
@@ -86,32 +86,51 @@ export function rappelsDuPlan(
 ): readonly Rappel[] {
   const rappels: Rappel[] = []
 
+  // ⚠️ UN RAPPEL PAR REPAS, PAS PAR ENTRÉE — corrigé le 2026-08-04. Depuis le mode repas
+  // (`plan-week.ts`), un déjeuner porte le plat ET son accompagnement : boucler sur `entries` posait
+  // DEUX notifications pour une seule assiette, à deux instants différents. On regroupe donc par
+  // créneau, et le rappel se cale sur le plat le plus LONG à préparer : c'est lui qui décide de
+  // l'heure à laquelle on se met en cuisine — commencer à celle du plus court ferait servir en
+  // retard, ce que le rappel existe précisément pour éviter.
+  const parCreneau = new Map<string, MealPlanEntry[]>()
   for (const entree of plan.entries) {
-    if (entree.recipeId === null) continue
-    // Un reste ne se cuisine pas : il se réchauffe. Prévenir deux heures avant serait absurde.
-    if (entree.isLeftover) continue
+    if (entree.recipeId === null || entree.isLeftover) continue
+    const cle = `${entree.slot.date}|${entree.slot.creneau}`
+    parCreneau.set(cle, [...(parCreneau.get(cle) ?? []), entree])
+  }
 
-    const heureRepas = heures.get(entree.slot.creneau)
+  for (const duCreneau of parCreneau.values()) {
+    const premier = duCreneau[0]!
+    const heureRepas = heures.get(premier.slot.creneau)
     if (heureRepas === undefined) continue
 
-    const recette = recettes.get(entree.recipeId)
-    if (recette === undefined) continue
+    const aCuisiner = duCreneau
+      .map((e) => recettes.get(e.recipeId!))
+      .filter((r): r is Recipe => r !== undefined)
+      .map((r) => ({ recette: r, minutes: r.tempsPrepMin + r.tempsCuissonMin }))
+    if (aCuisiner.length === 0) continue
 
-    const debut = heureDuRappel(heureRepas, recette.tempsPrepMin + recette.tempsCuissonMin)
+    const leplusLong = aCuisiner.reduce((a, b) => (b.minutes > a.minutes ? b : a))
+    const debut = heureDuRappel(heureRepas, leplusLong.minutes)
     if (debut === null) continue
 
-    const quandMs = instantLocal(entree.slot.date, debut)
+    const quandMs = instantLocal(premier.slot.date, debut)
     if (quandMs <= maintenantMs) continue
 
     rappels.push({
-      recipeId: entree.recipeId,
-      date: entree.slot.date,
-      creneau: entree.slot.creneau,
+      recipeId: leplusLong.recette.id,
+      date: premier.slot.date,
+      creneau: premier.slot.creneau,
       quandMs,
       titre: 'C’est le moment de commencer',
       // ⚠️ FACTUEL, SANS INJONCTION (§6.2 ARCHITECTURE). Ni « n'oubliez pas », ni « vous devriez » :
       // on rappelle un fait — ce plat demande ce temps-là — et on n'en fait pas une obligation.
-      texte: `${recette.nom} demande ${recette.tempsPrepMin + recette.tempsCuissonMin} min.`,
+      // Quand le repas compte plusieurs plats, on nomme celui qui commande l'heure et on dit qu'il
+      // y en a d'autres : taire le second ferait sous-estimer le travail restant.
+      texte:
+        aCuisiner.length === 1
+          ? `${leplusLong.recette.nom} demande ${leplusLong.minutes} min.`
+          : `${leplusLong.recette.nom} demande ${leplusLong.minutes} min, et il y a ${aCuisiner.length - 1} autre plat à ce repas.`,
     })
   }
 
