@@ -306,3 +306,78 @@ mapping:
   sirop_erable: 31034            # Sirop d'érable
   datte: 13011                   # Datte, chair et peau, sans noyau, sèche
   raisin_sec: 13046              # Raisin sec
+
+  # Lot « débloquants » (2026-08-04) — comble les asymétries relevées en posant les 200 aliments à
+  # plat : un aliment présent dont le jumeau manquait (jaune sans blanc, feuilletée sans brisée,
+  # levure boulangère sans levure chimique, crème épaisse sans crème fluide, bouillon de légumes
+  # sans bouillon de volaille), plus les absences qui rendaient un classique inécrivable.
+  #
+  # ⚠️ TROIS CANDIDATS ÉCARTÉS faute d'entrée Ciqual propre. Ne pas les rouvrir sans en apporter une :
+  #   - `lardons` : Ciqual n'a que des plats composés (tartiflette, choucroute, omelette…) et
+  #     « Lard gras, cru » (16530), qui n'est pas la poitrine taillée. `porc_poitrine` couvre déjà.
+  #   - `penne`, `riz_arborio` : aucune entrée distincte. Les rattacher ferait pointer deux ids
+  #     du catalogue sur le code de `pates_spaghetti` et de `riz_blanc` — un doublon déguisé.
+  #
+  # ⚠️ `cerise` = 13008, dont Ciqual écrit le nom « Ceriser » (coquille de la table source). Les
+  #   trois autres résultats d'une recherche « cerise » sont de l'ACÉROLA, un fruit sans rapport
+  #   (13055, 13404) ou un jus (2040). Exactement le piège décrit en tête de ce fichier.
+  #
+  # ⚠️ `creme_liquide` = 19417 et `creme_fraiche` = 19410 : même taux (30 % MG), textures
+  #   différentes (fluide UHT / épaisse rayon frais). Deux produits, deux comportements en cuisson.
+
+  # Œufs, pâtes et poudres levantes
+  blanc_oeuf: 22001              # Oeuf, blanc (blanc d'oeuf), cru
+  pate_brisee: 23410             # Pâte brisée, matière grasse végétale, préemballée, crue
+  levure_chimique: 11046         # Levure chimique ou poudre à lever
+  maizena: 9510                  # Amidon de maïs ou fécule de maïs
+  pain_baguette: 7001            # Pain blanc (par ex. : baguette, boule…)
+
+  # Laitiers et boisson végétale
+  creme_liquide: 19417           # Crème 30% MG, fluide, UHT
+  ricotta: 19585                 # Ricotta
+  yaourt_grec: 19860             # Yaourt à la grecque nature (vache ; 19550 est au lait de brebis)
+  lait_coco: 18041               # Lait de coco
+
+  # Viandes et charcuteries
+  boeuf_paleron: 6270            # Boeuf, paleron cru — le morceau à braiser
+  boeuf_steak: 6201              # Boeuf, steak ou bifteck cru
+  saucisse_toulouse: 30110       # Saucisse de Toulouse crue
+  jambon_cru: 28812              # Jambon sec (générique ; 28844 Parme et 28845 Serrano sont typés)
+  chorizo: 30315                 # Chorizo
+
+  # Poissons et fruits de mer
+  saumon_fume: 26037             # Saumon fumé (nature ; 25992 et 25993 sont aromatisés)
+  surimi: 26046                  # Surimi, bâtonnets, tranche ou râpé saveur crabe
+  palourde: 10017                # Clam, praire ou palourde, cru
+
+  # Fruits
+  cerise: 13008                  # « Ceriser », chair et peau, sans noyau, crue — voir l'alerte ci-dessus
+  citron_vert: 13067             # Citron vert ou lime, chair sans peau, sans pépins, cru
+  pamplemousse: 13040            # Pomelo (dit Pamplemousse), chair sans peau, sans pépins, cru
+  pruneau: 13042                 # Pruneau, sans noyau, sec
+  nectarine: 13399               # Nectarine ou brugnon, sans noyau, crue (aliment moyen)
+  noix_coco_rapee: 15007         # Noix de coco, chair, sèche
+
+  # Légumes
+  tomate_cerise: 20172           # Tomate cerise, crue
+  oignon_rouge: 20238            # Oignon rouge, cru
+  potimarron: 20132              # Potimarron, chair sans peau, cru
+  cresson: 20022                 # Cresson de fontaine, cru (20199 est le cresson alénois)
+  pois_gourmand: 20173           # Pois mange-tout ou pois gourmand, cru
+  poivron_jaune: 20168           # Poivron jaune, cru
+
+  # Condiments, herbes et épices
+  bouillon_volaille: 11174       # Bouillon de volaille, déshydraté
+  ciboulette: 11003              # Ciboule ou ciboulette, fraîche
+  muscade: 11048                 # Noix de muscade
+  capre: 11040                   # Câpres, au vinaigre
+  vanille_gousse: 11057          # Vanille, gousse (11065 et 11098 sont des extraits)
+  vinaigre_cidre: 11090          # Vinaigre de cidre
+  piment_cayenne: 11088          # Poivre de Cayenne ou piment de Cayenne, poudre
+  estragon_frais: 11092          # Estragon, frais
+  clou_girofle: 11052            # Clou de girofle
+  sauge_seche: 11037             # Sauge, séchée
+
+  # Alcools de cuisine
+  rhum: 1004                     # Rhum
+  biere: 5001                    # Bière « coeur de marché » (4-5° alcool)
