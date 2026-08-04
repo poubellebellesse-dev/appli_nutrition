@@ -28,7 +28,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import type { RecipeId, WeekPlan } from '../../engine/domain/index.js'
+import type { MealPlanEntry, RecipeId, WeekPlan } from '../../engine/domain/index.js'
 import { readLatestPlan, savePlan, writeDisplay } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 
@@ -93,7 +93,13 @@ describe('semaine — composer un plan', () => {
     expect(enregistre).not.toBeNull()
     expect(enregistre!.days).toBe(7)
     // Défaut du premier lancement : 2 repas/jour (déjeuner + dîner) × 7 jours.
-    expect(enregistre!.entries.length).toBe(14)
+    //
+    // ⚠️ ON COMPTE LES CRÉNEAUX, PAS LES LIGNES DU PLAN. Depuis le mode repas (2026-08-04), un
+    // déjeuner porte jusqu'à DEUX entrées — le plat et son accompagnement. Compter `entries` a
+    // donné 28 le jour où la fonctionnalité est arrivée : le test aurait échoué sur un plan
+    // parfaitement correct, et le réflexe aurait été de « réparer » le moteur.
+    const creneauxServis = new Set(enregistre!.entries.map((e) => `${e.slot.date}|${e.slot.creneau}`))
+    expect(creneauxServis.size).toBe(14)
     expect(enregistre!.entries.some((e) => e.recipeId !== null)).toBe(true)
     expect(document.querySelectorAll('a[href^="#/recette/"]').length).toBeGreaterThan(0)
   })
@@ -136,21 +142,29 @@ describe('semaine — les réglages', () => {
 describe('semaine — changer un plat', () => {
   it('« Changer » reroll UNIQUEMENT le créneau visé, et l’écrit en base', async () => {
     // `rerollSlot` est censé ne toucher qu'un créneau — le reste du plan doit survivre à l'identique.
+    //
+    // ⚠️ REPÉRAGE PAR (date, créneau, service), PAS PAR INDICE. Un créneau porte désormais jusqu'à
+    // deux entrées : indexer positionnellement ferait comparer le plat de lundi à l'accompagnement
+    // de lundi dès que leur nombre change. Et « Changer » vise LE PLAT — reproposer le riz à la
+    // place du poulet n'aurait aucun sens (voir `reroll-slot.ts`).
     await composerSemaine()
-    const avant = readLatestPlan(baseCourante())!.entries
-    const indexCible = 0 // premier jour, premier créneau (déjeuner) — premier bouton rendu à l'écran.
+    const cle = (e: MealPlanEntry): string => `${e.slot.date}|${e.slot.creneau}|${e.service ?? ''}`
+    const avant = new Map(readLatestPlan(baseCourante())!.entries.map((e) => [cle(e), e.recipeId]))
+
+    const premier = readLatestPlan(baseCourante())!.entries.find((e) => e.service !== 'accompagnement')!
+    const cleCible = cle(premier)
 
     fireEvent.click(screen.getAllByText('Changer')[0]!)
 
     await waitFor(() => {
-      const apres = readLatestPlan(baseCourante())!.entries
-      expect(apres[indexCible]!.recipeId).not.toBe(avant[indexCible]!.recipeId)
+      const apres = new Map(readLatestPlan(baseCourante())!.entries.map((e) => [cle(e), e.recipeId]))
+      expect(apres.get(cleCible)).not.toBe(avant.get(cleCible))
     })
 
-    const apres = readLatestPlan(baseCourante())!.entries
-    for (let i = 0; i < avant.length; i++) {
-      if (i === indexCible) continue
-      expect(apres[i]!.recipeId).toBe(avant[i]!.recipeId)
+    const apres = new Map(readLatestPlan(baseCourante())!.entries.map((e) => [cle(e), e.recipeId]))
+    for (const [k, recipeId] of avant) {
+      if (k === cleCible) continue
+      expect(apres.get(k)).toBe(recipeId)
     }
   })
 })
@@ -180,19 +194,24 @@ describe('semaine — les verrous', () => {
     const boutonChanger = [...carte.querySelectorAll('button')].find((b) => b.textContent === 'Changer')!
     expect(boutonChanger.disabled).toBe(true)
 
+    // ⚠️ MÊME PIÈGE QUE PLUS HAUT : on retrouve le créneau gardé par sa (date, créneau), pas par
+    // son indice. Une régénération ne rend pas forcément le même NOMBRE d'entrées — un plat sans
+    // accompagnement possible en produit une, un plat accompagné en produit deux.
     const avecVerrou = readLatestPlan(baseCourante())!.entries
-    const indexVerrou = avecVerrou.findIndex((e) => e.locked)
-    expect(indexVerrou).toBeGreaterThanOrEqual(0)
-    const recetteGardee = avecVerrou[indexVerrou]!.recipeId
+    const verrou = avecVerrou.find((e) => e.locked && e.service !== 'accompagnement')
+    expect(verrou).toBeDefined()
+    const recetteGardee = verrou!.recipeId
+    const memeSlot = (e: MealPlanEntry): boolean =>
+      e.slot.date === verrou!.slot.date && e.slot.creneau === verrou!.slot.creneau
 
     fireEvent.click(screen.getByText('Proposer une autre semaine'))
     await waitFor(() => {
-      const apres = readLatestPlan(baseCourante())!.entries
-      expect(apres[indexVerrou]!.locked).toBe(true)
+      const apres = readLatestPlan(baseCourante())!.entries.find(memeSlot)
+      expect(apres?.locked).toBe(true)
     })
 
-    const apres = readLatestPlan(baseCourante())!.entries
-    expect(apres[indexVerrou]!.recipeId).toBe(recetteGardee)
+    const apres = readLatestPlan(baseCourante())!.entries.find(memeSlot)
+    expect(apres!.recipeId).toBe(recetteGardee)
   })
 })
 

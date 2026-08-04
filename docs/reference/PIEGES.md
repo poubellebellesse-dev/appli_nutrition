@@ -37,6 +37,34 @@
   lisent via `ui/test-socle.ts`. `build.mjs` supprime sa sortie avant de la recréer. Tout build
   lancé depuis un test va dans un dossier temporaire (`--out`) — corrigé le 2026-08-01.
 
+**Les bancs mentent par omission — ce qu'ils ne comptent pas**
+
+- ⚠️ **`plan-stress` affiche « 20/20 configurations saines » avec DIX CRÉNEAUX VIDES de plus.**
+  Constaté le 2026-08-03 : un filtre trop dur sur `Recipe.service` a fait retomber le végétalien
+  14 j de **42/42 à 32/42** créneaux remplis, et le « végétalien + sans gluten » de 16 trous à 33 —
+  banc **vert** d'un bout à l'autre. Il ne compte comme échec qu'un plantage, un doublon, un créneau
+  manquant ou un non-déterminisme ; **un créneau VIDE est un résultat normal** pour lui (un
+  catalogue à 7 petits-déjeuners ne peut pas en fournir 14). **Lire la colonne « remplis », pas le
+  verdict.** Même famille que les 572 → 528 tests de `vitest.config.ts` : un compte qui baisse sans
+  rouge est un signal, pas un hasard.
+- ⚠️ **Un banc qui compte des LIGNES quand la donnée compte des CRÉNEAUX crie au feu sur du code
+  juste.** Le 2026-08-04, `planWeek` s'est mis à poser deux entrées par repas principal (le plat et
+  son accompagnement, décision 54). `plan-stress` est passé à **3/20 configurations saines** en
+  affichant « 35 créneaux au lieu de 21 » et « DOUBLON (14) » — les deux assertions étaient
+  simplement périmées : il comptait `plan.entries.length` au lieu des `(date, créneau)` distincts, et
+  jugeait doublon une répétition d'accompagnement AUTORISÉE par construction. **Le réflexe dangereux
+  est de « réparer » le moteur pour reverdir le banc.** Avant de toucher au code : vérifier que
+  l'assertion mesure encore ce qu'elle croit mesurer. Trois autres endroits portaient exactement le
+  même défaut au même moment — `semaine.test.tsx` (« 28 au lieu de 14 »), le compteur « repas
+  prévus » de l'écran Semaine, et le `ORDER BY` de `readPlan` qui ne départageait pas deux lignes du
+  même créneau.
+- ⚠️ **Une mesure sur UNE graine ne prouve rien sur ce moteur.** La décision 34 a consigné
+  « 1 208 kcal minimum, ZÉRO avertissement » comme un acquis ; c'était un tirage. Six jours plus
+  tard, **0 graine sur 20** y parvenait, et le chiffre avait entre-temps servi à justifier de
+  masquer une alerte de sécurité (décision 45). → `npm run engine:plancher` balaie vingt graines et
+  affiche la dispersion. **Le classement est reproductible à graine égale, pas déterministe d'une
+  graine à l'autre** — une seule mesure ne dit rien de la propriété.
+
 **Navigateur**
 
 - ⚠️ **Aucun VFS OPFS de SQLite ne tourne sur le thread principal.** Les deux testent

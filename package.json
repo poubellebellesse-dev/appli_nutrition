@@ -14,6 +14,7 @@
     "engine:try": "tsx app/src/cli/try-engine.ts",
     "engine:plan": "tsx app/src/cli/try-planning.ts",
     "engine:plan-stress": "tsx app/src/cli/stress-planning.ts",
+    "engine:plancher": "tsx app/src/cli/diag-plancher.ts",
     "engine:couverture": "tsx app/src/cli/diag-couverture.ts",
     "dev": "vite",
     "preview": "vite preview",

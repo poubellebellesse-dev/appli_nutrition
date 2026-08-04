@@ -99,6 +99,20 @@ describe('nutrition/signature — computeRecipeSignature', () => {
 })
 
 describe('nutrition/signature — signatureOverlap', () => {
+  it('⛔ IL N’EXISTE PAS DE MESURE « DIRIGÉE » ICI — la signature est normalisée à 1', () => {
+    // GARDE-FOU CONTRE UNE IMPASSE DÉJÀ PAYÉE (2026-08-04, voir l'en-tête de signature.ts). Une
+    // fonction « quelle part de ce que j'ajoute est déjà dans l'assiette » a été écrite pour poser
+    // un accompagnement sans répéter le plat, puis retirée : `Σ min / Σ(ajouté)` avec un
+    // dénominateur qui vaut TOUJOURS 1 n'est qu'une remise à l'échelle monotone du Jaccard.
+    // Ce test le rend impossible à réinventer sans s'en apercevoir.
+    const plat = sig({ agneau: 0.75, pomme_de_terre: 0.25 })
+    const accompagnement = sig({ pomme_de_terre: 1 })
+
+    const sommeDesMinima = 0.25 // ce que la fonction « dirigée » rendait, dans les DEUX sens
+    expect(signatureOverlap(plat, accompagnement)).toBeCloseTo(sommeDesMinima / (2 - sommeDesMinima), 10)
+  })
+
+
   it('deux signatures identiques donnent 1, deux disjointes donnent 0', () => {
     expect(signatureOverlap(sig({ a: 0.5, b: 0.5 }), sig({ a: 0.5, b: 0.5 }))).toBeCloseTo(1, 10)
     expect(signatureOverlap(sig({ a: 1 }), sig({ b: 1 }))).toBe(0)

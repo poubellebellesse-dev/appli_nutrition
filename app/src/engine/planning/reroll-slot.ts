@@ -57,7 +57,18 @@ export function rerollSlot(
   suggest: SuggestForSlot,
   opts: RerollOptions = {}
 ): WeekPlan {
-  const index = plan.entries.findIndex((e) => e.slot.date === slot.date && e.slot.creneau === slot.creneau)
+  // ⚠️ LE PLAT, PAS LA PREMIÈRE ENTRÉE DU CRÉNEAU. Depuis le mode repas (2026-08-04), un déjeuner
+  // porte jusqu'à deux entrées : le plat et son accompagnement. « Changer » veut dire changer LE
+  // PLAT — reproposer le riz à la place du poulet serait absurde. On vise donc l'entrée dont le
+  // service n'est pas `accompagnement`, et non l'indice trouvé le premier.
+  //
+  // ⚠️ L'ACCOMPAGNEMENT N'EST PAS RECALCULÉ, et c'est une dette assumée (voir `ETAT.md`) : après un
+  // refus, le nouveau plat peut répéter l'accompagnement resté en place. Le recalculer ici
+  // demanderait de rejouer `pickAccompagnement`, qui vit dans `plan-week.ts` avec le catalogue et
+  // la cible nutritionnelle du jour — hors de portée d'un reroll de créneau isolé.
+  const index = plan.entries.findIndex(
+    (e) => e.slot.date === slot.date && e.slot.creneau === slot.creneau && e.service !== 'accompagnement'
+  )
   if (index < 0) return plan
 
   const cible = plan.entries[index]!

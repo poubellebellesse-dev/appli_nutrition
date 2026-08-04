@@ -166,3 +166,18 @@ export function signatureOverlap(a: ReadonlyMap<string, number>, b: ReadonlyMap<
 
   return union === 0 ? 0 : intersection / union
 }
+
+// ⚠️ IMPASSE DÉJÀ PAYÉE — 2026-08-04, une mesure « dirigée » écrite puis RETIRÉE. L'idée : mesurer
+// « quelle PART de ce que j'ajoute est déjà dans l'assiette », `Σ min / Σ(ajouté)`, pour poser un
+// accompagnement sans répéter le plat (`planning/plan-week.ts`). Elle paraissait distincte du
+// Jaccard ci-dessus, et elle rendait bien d'autres chiffres.
+//
+// Elle ne l'est pas. Une signature est NORMALISÉE À 1 (voir `computeRecipeSignature`) : le
+// dénominateur vaut donc toujours 1, la fonction se réduit à `Σ min`, et comme `Σ min + Σ max = 2`,
+// on a `dirigé = 2 · overlap / (1 + overlap)`. Une remise à l'échelle MONOTONE — même ordre, mêmes
+// paires au-dessus de n'importe quel seuil équivalent. Vérifié sur le catalogue : la paire
+// « Boulgour aux pois chiches » × « Boulgour aux légumes grillés » sort à 44 % ici et 61 % là, ce
+// qui est exactement `2 × 0,44 / 1,44`.
+//
+// Il n'existe pas de mesure dirigée dans cet espace : il faudrait des masses BRUTES, que la
+// signature a précisément jetées en normalisant. Ne pas réécrire cette fonction.

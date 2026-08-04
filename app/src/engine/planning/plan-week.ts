@@ -33,9 +33,19 @@
 // marge — ça ne rend pas l'énergie contraignante. Le seul mécanisme qui REFUSE une journée
 // insuffisante reste `assertCalorieFloor`. Ne pas confondre les deux.
 //
+// ⚠️ LE MODE REPAS EST PARTIELLEMENT OUVERT depuis le 2026-08-04, et il faut savoir jusqu'où.
+// `planWeek` produit DEUX entrées sur un même créneau quand il pose un plat en déjeuner ou en dîner :
+// l'une `service: 'plat'`, l'autre `service: 'accompagnement'` (voir `pickAccompagnement`). Tout
+// lecteur de `WeekPlan.entries` doit donc cesser de supposer une entrée par créneau — `find` sur
+// (date, créneau) rend le plat, jamais l'assiette entière.
+//   - `entree`, `fromage` et `dessert` ne sont TOUJOURS PAS produits, ni le petit-déjeuner ni le
+//     goûter, qui restent en mode recette (une entrée, `service: null`).
+//   - un plat posé SEUL garde `service: null`, pas `'plat'` : le champ dit le MODE, pas la recette.
+//
 // ⚠️ CE QUI N'EST TOUJOURS PAS FAIT :
 //   - les RESTES (`planLeftovers`, §7.3) — `isLeftover` reste `false` partout.
-//   - le MODE REPAS (`service`, v1.5) — `service` reste `null`, un plat par créneau.
+//   - `rerollSlot` remplace le plat SANS recalculer l'accompagnement attaché : une paire bancale
+//     reste possible après un refus. Dette assumée, consignée dans `ETAT.md`.
 //
 // ⚠️ LA SUGGESTION EST INJECTÉE, pas reconstruite. `planWeek` reçoit `suggest` en paramètre plutôt
 // que de recomposer `runExclusionPass` + `runScoringPass` + `diversify` lui-même. Deux raisons :
@@ -64,6 +74,7 @@ import type {
 import { NoViableRecipeError } from '../domain/index.js'
 import type { NutrientVector, SuggestionResult } from '../domain/index.js'
 import { resolveReferenceIntakes } from '../nutrition/index.js'
+import { signatureOverlap } from '../nutrition/signature.js'
 import { derive } from '../selection/prng.js'
 
 /** Ce que `planWeek` demande au moteur de sélection — voir l'en-tête sur l'injection. */
@@ -223,22 +234,73 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       const scored = pickForSlot(
         suggest,
         slotRequest(req, date, creneau, history, cible, req.days * req.slots.length),
-        placedRecipeIds
+        placedRecipeIds,
+        (recipeId) => peutRemplirSeul(catalog, creneau, recipeId)
       )
 
-      entries.push({
-        slot: { date, creneau },
-        recipeId: scored,
-        portions: scored === null ? 0 : (catalog.recipes.get(scored)?.portionsBase ?? 0),
-        locked: false,
-        isLeftover: false,
-        service: null,
-      })
+      if (scored === null) {
+        entries.push({
+          slot: { date, creneau },
+          recipeId: null,
+          portions: 0,
+          locked: false,
+          isLeftover: false,
+          service: null,
+        })
+        continue
+      }
 
-      if (scored === null) continue
+      // Le plat entre dans les deux protections AVANT qu'on cherche son accompagnement : l'historique
+      // de travail sert à ne pas lui adjoindre ce qu'on vient déjà de servir ailleurs.
       placedRecipeIds.add(scored)
       workingEntries.push({ recipeId: scored, date, creneau, origine: 'choisi' })
       addNutrients(placedToday, catalog.indexes.recipeNutrients.get(scored))
+
+      const complement = pickAccompagnement(
+        catalog,
+        suggest,
+        req,
+        date,
+        creneau,
+        { windowDays: req.history.windowDays, entries: [...workingEntries] },
+        remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex),
+        scored
+      )
+
+      // ⚠️ `service` DIT LE MODE, il ne décrit pas la recette. `null` = mode recette, une entrée pour
+      // ce créneau ; non-`null` = mode repas, plusieurs. Une recette de service `plat` posée SEULE
+      // garde donc `service: null` — sinon un lecteur qui compte les entrées non nulles croirait
+      // qu'il en manque une (§2.1 CONCEPTION_B_VIN_REPAS, et le commentaire de `MealPlanEntry`).
+      entries.push({
+        slot: { date, creneau },
+        recipeId: scored,
+        portions: catalog.recipes.get(scored)?.portionsBase ?? 0,
+        locked: false,
+        isLeftover: false,
+        service: complement === null ? null : 'plat',
+      })
+
+      if (complement === null) continue
+
+      entries.push({
+        slot: { date, creneau },
+        recipeId: complement,
+        portions: catalog.recipes.get(complement)?.portionsBase ?? 0,
+        locked: false,
+        isLeftover: false,
+        service: 'accompagnement',
+      })
+      // ⚠️ PAS DANS `placedRecipeIds`, ET C'EST LE CŒUR DE LA RÈGLE. On mange du riz plusieurs fois
+      // par semaine : l'interdit dur du doublon exact, juste pour un plat, serait faux ici. Mais
+      // l'entrée d'historique, elle, EST poussée — `variety` fait décroître le score d'un
+      // accompagnement récent. Le riz peut revenir, il ne doit pas lasser. C'est exactement
+      // l'asymétrie décrite en tête de fichier entre les deux protections, appliquée pour la
+      // première fois séparément.
+      //
+      // ⚠️ MESURÉ le 2026-08-04 avant d'écrire ça : sans l'entrée d'historique, la semaine nominale
+      // rendait `7× Ratatouille` et `7× Boulgour aux légumes grillés` sur 14 créneaux.
+      workingEntries.push({ recipeId: complement, date, creneau, origine: 'choisi' })
+      addNutrients(placedToday, catalog.indexes.recipeNutrients.get(complement))
     }
   }
 
@@ -269,7 +331,8 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
 function pickForSlot(
   suggest: SuggestForSlot,
   req: SuggestionRequest,
-  placedRecipeIds: ReadonlySet<RecipeId>
+  placedRecipeIds: ReadonlySet<RecipeId>,
+  peutRemplirSeul: (recipeId: RecipeId) => boolean
 ): RecipeId | null {
   let result: SuggestionResult
   try {
@@ -279,8 +342,170 @@ function pickForSlot(
     throw error
   }
 
+  // DEUX PASSES, et l'ordre est tout l'intérêt. La première ne retient qu'un plat ; la seconde
+  // reprend les mêmes candidats sans cette exigence.
+  //
+  // ⚠️ PRÉFÉRENCE, PAS EXIGENCE — et ce n'est pas un adoucissement de confort, c'est une régression
+  // MESURÉE le 2026-08-03. La règle en version dure a fait retomber le végétalien 14 j de 42/42
+  // créneaux remplis à 32/42, et le « végétalien + sans gluten » de 16 trous à 33 : beaucoup des
+  // 30 recettes végétaliennes de la décision 37 sont des accompagnements ou des entrées. Défaire
+  // cet acquis pour éviter une assiette d'artichauts au dîner serait un très mauvais échange —
+  // un créneau VIDE ne nourrit personne.
+  //
+  // ⚠️ LE BANC N'A RIEN DIT. `plan-stress` affichait 20/20 « configurations saines » avec dix
+  // créneaux vides de plus : il ne compte comme échec qu'un plantage, un doublon ou un
+  // non-déterminisme. Un compte de créneaux remplis qui baisse sans rouge est un signal, comme le
+  // compte de tests qui baisse sans rouge de `vitest.config.ts`.
+  for (const suggestion of result.suggestions) {
+    if (placedRecipeIds.has(suggestion.recipeId)) continue
+    if (!peutRemplirSeul(suggestion.recipeId)) continue
+    return suggestion.recipeId
+  }
   for (const suggestion of result.suggestions) {
     if (!placedRecipeIds.has(suggestion.recipeId)) return suggestion.recipeId
+  }
+  return null
+}
+
+/** Créneaux où le placement automatique doit poser un vrai plat — voir `peutRemplirSeul`. */
+const CRENEAUX_REPAS_PRINCIPAL: readonly MealSlot[] = ['dejeuner', 'diner']
+
+/**
+ * Cette recette peut-elle constituer À ELLE SEULE ce créneau, en placement AUTOMATIQUE ?
+ *
+ * ⚠️ LA RÈGLE NE VAUT QUE POUR LE PLACEMENT AUTOMATIQUE, et c'est une décision utilisateur du
+ * 2026-08-03. Chercher, parcourir, choisir une entrée comme dîner reste entièrement permis : le
+ * produit informe, il ne juge pas (principe 6). Ce qui est interdit ici, c'est que la MACHINE
+ * décide qu'une assiette d'artichauts sera le dîner de samedi, sans que personne l'ait demandé.
+ * D'où le filtre posé dans `planWeek` et NON dans `HardConstraints` — l'y mettre le rendrait
+ * exprimable dans toute suggestion, y compris celles que l'utilisateur pilote. Même raisonnement
+ * que `requiredFoodIds`, tenu hors de `HardConstraints` pour la raison inverse (acquis n°2).
+ *
+ * ⚠️ `service === null` EST ACCEPTÉ, ce n'est pas un oubli. `Recipe.service` vaut `null` pour les
+ * recettes qui remplissent un créneau seules (`catalog.ts`) ; seules les valeurs EXPLICITES
+ * `entree`, `accompagnement`, `fromage` et `dessert` désignent un rôle partiel. Refuser `null`
+ * viderait le vivier de tout ce qui n'a pas été annoté.
+ *
+ * ⚠️ POURQUOI PAS UN SEUIL D'ÉNERGIE à la place. « Assez consistant pour faire un repas » se
+ * mesurerait en kcal, et un nombre qui décide si un plat est un vrai repas EST un jugement
+ * nutritionnel — précisément ce que le principe 6 interdit. Le service est un fait éditorial, pas
+ * une note.
+ *
+ * MESURÉ le 2026-08-03 avant d'écrire cette règle : 61 recettes sur 189 éligibles à un repas
+ * principal ne sont pas des plats (39 entrées, 20 accompagnements, 2 desserts), et leur médiane est
+ * de ~250 kcal/portion contre 437 pour un plat.
+ */
+function peutRemplirSeul(catalog: Catalog, creneau: MealSlot, recipeId: RecipeId): boolean {
+  if (!CRENEAUX_REPAS_PRINCIPAL.includes(creneau)) return true
+  const service = catalog.recipes.get(recipeId)?.service ?? null
+  return service === null || service === 'plat'
+}
+
+/**
+ * Chevauchement de composition au-delà duquel un accompagnement est refusé : il répéterait le plat.
+ *
+ * ⚠️ MESURÉ SUR `recipeFamilySignature`, PAS SUR `recipeSignature`, et ce n'est pas une confusion
+ * entre les deux espaces (acquis n°4). Les deux index gardent leur rôle — le brut sert la
+ * SIMILARITÉ, le replié sert la RÉCENCE. Ce filtre est un TROISIÈME lecteur du replié, et il l'est
+ * exprès : la question posée ici est « ce que j'ajoute est-il le MÊME PRODUIT DE BASE que ce qui est
+ * dans l'assiette ? », qui est mot pour mot la définition de `sousFamille` (voir `Food.sousFamille`).
+ * MESURÉ : « Dahl de lentilles corail » + « Lentilles vertes aux carottes » sort à 8 % en brut —
+ * deux `foodId` distincts — et à 36 % une fois replié. Le brut ne peut PAS voir ce cas.
+ *
+ * MESURÉ le 2026-08-04 sur les 2 880 paires `plat × accompagnement` du catalogue réel. À 0,30 :
+ * 40 paires refusées (1,4 %), et AUCUN plat ne se retrouve sans le moindre accompagnement possible
+ * — le refus ne coûte donc rien, le suivant du classement prend la place. De part et d'autre :
+ *
+ *   99 %  Rösti de pommes de terre       + Pommes de terre sautées       refusé
+ *   50 %  Lentilles à la poitrine de porc+ Lentilles vertes aux carottes refusé
+ *   44 %  Boulgour aux pois chiches      + Boulgour aux légumes grillés  refusé
+ *   40 %  Caldo verde                    + Purée de pommes de terre      refusé
+ *   31 %  Tofu sauté au brocoli          + Brocoli sauté au sésame       refusé
+ *   ------------------------------------------------------------------- 0,30
+ *   29 %  Sardines et pommes de terre    + Gratin dauphinois             accepté ⚠️
+ *   28 %  Cuisses de poulet rôties       + Gratin dauphinois             accepté
+ *
+ * ⚠️ CE SEUIL NE REMPLACE PAS L'INFORMATION QUI MANQUE, et la ligne à 29 % le dit : rien dans le
+ * catalogue ne déclare qu'un plat SE SUFFIT. Les 144 plats portent `service: 'plat'` et rien
+ * d'autre. La composition partagée est un substitut mesurable, pas la vérité éditoriale.
+ *
+ * ⚠️ NE PAS CORRIGER ÇA EN DESCENDANT LE SEUIL. À 0,28, « Sardines et pommes de terre » + « Gratin
+ * dauphinois » tombe — mais « Cuisses de poulet rôties » + « Gratin dauphinois » aussi, et c'est un
+ * classique parfaitement mangeable. Le signal ne SAIT PAS que les pommes de terre du plat de
+ * sardines sont déjà le féculent : il voit deux plats qui partagent un ingrédient, exactement comme
+ * le poulet et son gratin. Seul un champ éditorial sur les 144 plats tranche.
+ *
+ * ⚠️ NE PAS CHERCHER UNE MESURE « DIRIGÉE » NON PLUS — impasse déjà payée, voir l'en-tête de
+ * `nutrition/signature.ts` : les signatures sont normalisées à 1, toute variante de ce genre est
+ * une remise à l'échelle monotone du même Jaccard, donc le même classement.
+ */
+const SEUIL_REPETITION = 0.3
+
+/**
+ * L'accompagnement à poser EN PLUS du plat, ou `null` si ce créneau n'en prend pas.
+ *
+ * ⚠️ POURQUOI CETTE FONCTION EXISTE — décision du 2026-08-04, et c'est LE correctif du plancher
+ * calorique de §6.5, contrairement au filtre `service` de la veille. `checkCalorieFloor` compare
+ * une JOURNÉE à un plancher journalier, alors que le plan ne posait que des PLATS : trois plats
+ * cuisinés ne font pas ce qu'une personne mange dans la journée. La comparaison n'a jamais été
+ * homogène. MESURÉ sur 20 graines × 7 jours, cas nominal :
+ *
+ *   SANS accompagnement : min 813  · médiane 1023 · max 1205 — 38 jours sous 1 200 sur 140
+ *   AVEC accompagnement : min 1345 · médiane 1545 · max 1869 —  0 jour  sous 1 200 sur 140
+ *
+ * 1 545 kcal pour trois repas cuisinés reste réaliste : ce n'est pas du gonflage destiné à passer
+ * le contrôle, c'est l'assiette qui devient complète.
+ *
+ * ⚠️ SEULEMENT DERRIÈRE UN `service: 'plat'` EXPLICITE. Une recette à `service: null` remplit son
+ * créneau seule (`peutRemplirSeul`) — lui adjoindre du riz serait une invention. Et une entrée ou
+ * un accompagnement posé par la SECONDE passe de `pickForSlot` est déjà un pis-aller : l'empiler
+ * avec un second pis-aller aggraverait le cas au lieu de le corriger.
+ *
+ * ⚠️ AUCUN FILTRE PAR `service` N'EST POSÉ DANS LA REQUÊTE, et ce n'est pas un oubli. Le tri se fait
+ * ICI, sur la liste rendue. Poser le service dans `SuggestionRequest` le rendrait exprimable dans
+ * toute suggestion, y compris celles que l'utilisateur pilote — exactement ce que la décision 53
+ * refuse, et le même raisonnement que `requiredFoodIds` tenu hors de `HardConstraints` (acquis n°2).
+ */
+function pickAccompagnement(
+  catalog: Catalog,
+  suggest: SuggestForSlot,
+  req: WeekPlanRequest,
+  date: string,
+  creneau: MealSlot,
+  history: MealHistory,
+  cible: NutrientVector,
+  platId: RecipeId
+): RecipeId | null {
+  if (!CRENEAUX_REPAS_PRINCIPAL.includes(creneau)) return null
+  if (catalog.recipes.get(platId)?.service !== 'plat') return null
+
+  const base = slotRequest(req, date, creneau, history, cible, req.days * req.slots.length)
+  const requete: SuggestionRequest = {
+    ...base,
+    // TOUT le catalogue, pas la fenêtre du glouton. Les accompagnements sont minoritaires (20 sur
+    // 241 éligibles à un repas principal) : ils peuvent parfaitement se trouver tous hors des 22
+    // premiers rangs, et le créneau n'aurait alors aucun complément sans que rien ne le signale.
+    limit: catalog.recipes.size,
+    // Flux dérivé DISTINCT de celui du plat. La même graine corrélerait la tête des deux
+    // classements — même piège que les 14 créneaux partageant `req.seed`, corrigé plus haut.
+    seed: derive(req.seed, `${slotKey(date, creneau)}|accompagnement`),
+  }
+
+  let result: SuggestionResult
+  try {
+    result = suggest(requete)
+  } catch (error) {
+    if (error instanceof NoViableRecipeError) return null
+    throw error
+  }
+
+  const signaturePlat = catalog.indexes.recipeFamilySignature.get(platId) ?? new Map<string, number>()
+  for (const suggestion of result.suggestions) {
+    if (catalog.recipes.get(suggestion.recipeId)?.service !== 'accompagnement') continue
+    const signatureAcc =
+      catalog.indexes.recipeFamilySignature.get(suggestion.recipeId) ?? new Map<string, number>()
+    if (signatureOverlap(signaturePlat, signatureAcc) >= SEUIL_REPETITION) continue
+    return suggestion.recipeId
   }
   return null
 }

@@ -2,9 +2,9 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import { MAX_PLAN_DAYS, MIN_PLAN_DAYS, addDays, planWeek } from './plan-week.js'
-import { makeCatalog, makeRecipe } from '../selection/test-fixtures.js'
+import { makeCatalog, makeFood, makeRecipe } from '../selection/test-fixtures.js'
 import { NoViableRecipeError } from '../domain/index.js'
-import type { Catalog, MealPlanEntry, MealSlot, RecipeId, SuggestionRequest, SuggestionResult, WeekPlanRequest } from '../domain/index.js'
+import type { Catalog, FoodId, MealPlanEntry, MealSlot, RecipeId, RecipeIngredient, SuggestionRequest, SuggestionResult, WeekPlanRequest } from '../domain/index.js'
 
 const RECIPES = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => makeRecipe(id))
 const CATALOG = makeCatalog(RECIPES)
@@ -64,6 +64,168 @@ describe('planning/plan-week — forme du plan', () => {
 
   it('refuse une liste de créneaux vide plutôt que de rendre un plan vide silencieux', () => {
     expect(() => planWeek(CATALOG, makePlanRequest({ slots: [] }), fakeSuggest(['a']))).toThrow(RangeError)
+  })
+})
+
+describe('planning/plan-week — un repas principal placé AUTOMATIQUEMENT est un plat', () => {
+  // ⚠️ CE QUE CES TESTS GARDENT, et pourquoi ils existent. Mesuré le 2026-08-03 sur le catalogue
+  // réel : 61 recettes sur 189 éligibles à un déjeuner ou un dîner ne sont PAS des plats (39
+  // entrées, 20 accompagnements, 2 desserts), et le planificateur en plaçait — « Artichauts à la
+  // vinaigrette » comme déjeuner, « Boulgour aux légumes grillés » comme dîner. `planWeek` filtrait
+  // sur `typesRepas` (à quel MOMENT) et jamais sur `service` (quel RÔLE).
+  //
+  // ⚠️ LA RÈGLE NE VAUT QUE POUR LE PLACEMENT AUTOMATIQUE. Choisir soi-même une entrée comme dîner
+  // reste permis partout ailleurs — décision utilisateur du 2026-08-03.
+
+  const MIXTE = makeCatalog([
+    makeRecipe('plat1', { service: 'plat' }),
+    makeRecipe('plat2', { service: 'plat' }),
+    makeRecipe('ent', { service: 'entree' }),
+    makeRecipe('acc', { service: 'accompagnement' }),
+    makeRecipe('sansService', { service: null }),
+  ])
+
+  it('préfère le plat à l’entrée pour un dîner, même si l’entrée est mieux classée', () => {
+    const plan = planWeek(MIXTE, makePlanRequest({ days: 2 }), fakeSuggest(['ent', 'plat1', 'plat2']))
+
+    expect(plan.entries[0]?.recipeId).toBe('plat1')
+    expect(plan.entries[1]?.recipeId).toBe('plat2')
+  })
+
+  it('⛔ REPLI — pose l’accompagnement plutôt que de laisser le créneau VIDE', () => {
+    // La règle en version dure a fait retomber le végétalien 14 j de 42/42 créneaux remplis à
+    // 32/42 : beaucoup des recettes végétaliennes de la décision 37 sont des accompagnements. Un
+    // créneau vide ne nourrit personne — la préférence ne doit jamais devenir une exigence.
+    const plan = planWeek(MIXTE, makePlanRequest({ days: 2 }), fakeSuggest(['acc', 'ent']))
+
+    expect(plan.entries.map((e) => e.recipeId)).toEqual(['acc', 'ent'])
+  })
+
+  it('accepte `service: null` — sinon tout le catalogue non annoté disparaîtrait', () => {
+    const plan = planWeek(MIXTE, makePlanRequest({ days: 2 }), fakeSuggest(['sansService', 'plat1']))
+
+    expect(plan.entries[0]?.recipeId).toBe('sansService')
+  })
+
+  it('ne s’applique PAS au petit-déjeuner : un dessert y est légitime', () => {
+    const catalogue = makeCatalog([makeRecipe('dess', { service: 'dessert' }), makeRecipe('plat1', { service: 'plat' })])
+    const plan = planWeek(
+      catalogue,
+      makePlanRequest({ days: 2, slots: ['petit_dejeuner'] }),
+      fakeSuggest(['dess', 'plat1'])
+    )
+
+    expect(plan.entries[0]?.recipeId).toBe('dess')
+  })
+})
+
+describe('planning/plan-week — l’ACCOMPAGNEMENT posé en plus du plat (mode repas, 2026-08-04)', () => {
+  // ⚠️ CE QUE CE BLOC GARDE, ET POURQUOI IL EST LE CORRECTIF DU PLANCHER. `checkCalorieFloor` (§6.5)
+  // compare une JOURNÉE à un plancher journalier alors que le plan ne posait que des PLATS : trois
+  // plats cuisinés ne sont pas ce qu'une personne mange dans une journée, la comparaison n'a jamais
+  // été homogène. MESURÉ sur 20 graines × 7 jours du catalogue réel (`npm run engine:plancher`) :
+  //   SANS : min 813  · médiane 1023 — 38 jours sous 1 200 sur 140
+  //   AVEC : min 1371 · médiane 1532 —  0 jour  sous 1 200 sur 140
+
+  const AVEC_ACC = makeCatalog([
+    makeRecipe('plat1', { service: 'plat' }),
+    makeRecipe('plat2', { service: 'plat' }),
+    makeRecipe('acc', { service: 'accompagnement' }),
+    makeRecipe('ent', { service: 'entree' }),
+    makeRecipe('sansService', { service: null }),
+  ])
+
+  it('pose DEUX entrées sur le créneau — le plat, puis son accompagnement', () => {
+    const plan = planWeek(AVEC_ACC, makePlanRequest({ days: 2 }), fakeSuggest(['plat1', 'acc', 'plat2']))
+    const jour1 = plan.entries.filter((e) => e.slot.date === '2026-08-03')
+
+    expect(jour1.map((e) => e.recipeId)).toEqual(['plat1', 'acc'])
+    expect(jour1.map((e) => e.service)).toEqual(['plat', 'accompagnement'])
+  })
+
+  it('⛔ LE RIZ PEUT REVENIR — l’accompagnement échappe à l’interdit de doublon', () => {
+    // `placedRecipeIds` interdit le doublon exact dans la fenêtre : c'est juste pour un plat, FAUX
+    // pour un accompagnement. On mange du riz plusieurs fois par semaine. Sans cette exemption, la
+    // fonctionnalité s'auto-détruirait dès la deuxième journée — un seul accompagnement au monde.
+    const plan = planWeek(AVEC_ACC, makePlanRequest({ days: 2 }), fakeSuggest(['plat1', 'acc', 'plat2']))
+    const accs = plan.entries.filter((e) => e.service === 'accompagnement')
+
+    expect(accs).toHaveLength(2)
+    expect(accs.every((e) => e.recipeId === 'acc')).toBe(true)
+  })
+
+  it('⛔ … MAIS IL PASSE PAR L’HISTORIQUE DE TRAVAIL, sinon il lasse', () => {
+    // L'autre moitié de l'asymétrie. Le riz peut revenir, il ne doit pas revenir SEPT FOIS : c'est
+    // `variety` qui l'en empêche, et `variety` ne voit que ce qui est dans l'historique. MESURÉ sans
+    // cette ligne, sur le catalogue réel : `7× Ratatouille` et `7× Boulgour` sur 14 créneaux.
+    const vu: SuggestionRequest[] = []
+    const espion = (req: SuggestionRequest): SuggestionResult => {
+      vu.push(req)
+      return fakeSuggest(['plat1', 'acc', 'plat2'])(req)
+    }
+    planWeek(AVEC_ACC, makePlanRequest({ days: 2 }), espion)
+
+    // La requête du DEUXIÈME jour doit voir l'accompagnement du premier.
+    const dernier = vu[vu.length - 1]!
+    expect(dernier.history.entries.some((e) => e.recipeId === 'acc')).toBe(true)
+  })
+
+  it('un plat posé SEUL garde `service: null` — le champ dit le mode, pas la recette', () => {
+    // Sans accompagnement disponible, on reste en mode recette. Écrire `'plat'` ferait croire à
+    // tout lecteur qu'une seconde entrée existe sur ce créneau.
+    const sansAcc = makeCatalog([makeRecipe('plat1', { service: 'plat' }), makeRecipe('plat2', { service: 'plat' })])
+    const plan = planWeek(sansAcc, makePlanRequest({ days: 2 }), fakeSuggest(['plat1', 'plat2']))
+
+    expect(plan.entries).toHaveLength(2)
+    expect(plan.entries.every((e) => e.service === null)).toBe(true)
+  })
+
+  it('n’accompagne QUE derrière un `service: "plat"` explicite', () => {
+    // Une recette à `service: null` remplit son créneau seule : lui adjoindre du riz serait une
+    // invention. Et une entrée posée par la seconde passe de `pickForSlot` est déjà un pis-aller —
+    // l'empiler avec un second pis-aller aggraverait le cas.
+    const plan = planWeek(AVEC_ACC, makePlanRequest({ days: 2 }), fakeSuggest(['sansService', 'ent', 'acc']))
+
+    expect(plan.entries.some((e) => e.service === 'accompagnement')).toBe(false)
+  })
+
+  it('ne touche NI le petit-déjeuner NI le goûter — ils restent en mode recette', () => {
+    const plan = planWeek(
+      AVEC_ACC,
+      makePlanRequest({ days: 2, slots: ['petit_dejeuner', 'gouter'] }),
+      fakeSuggest(['plat1', 'acc', 'plat2'])
+    )
+
+    expect(plan.entries.every((e) => e.service === null)).toBe(true)
+  })
+
+  it('⛔ REFUSE l’accompagnement qui RÉPÈTE le plat — pas de boulgour sur du boulgour', () => {
+    // Rien dans le catalogue ne dit si un plat se suffit : les 144 plats portent `service: 'plat'`
+    // et rien d'autre. Le substitut mesurable est le chevauchement de composition
+    // (`signatureOverlap`, seuil 0,30 — mesuré sur les 2 880 paires réelles). Ici `accProche` est
+    // fait du MÊME aliment dominant que `platBoulgour` : il doit être écarté au profit du suivant.
+    const boulgour = makeFood('boulgour')
+    const poulet = makeFood('poulet')
+    const carotte = makeFood('carotte')
+    const ing = (foodId: string, quantiteG: number): RecipeIngredient =>
+      ({ foodId: foodId as FoodId, quantiteG, uniteAffichage: 'g', optionnel: false }) as RecipeIngredient
+
+    const catalogue = makeCatalog(
+      [
+        makeRecipe('platBoulgour', { service: 'plat', ingredients: [ing('boulgour', 200), ing('poulet', 20)] }),
+        makeRecipe('accProche', { service: 'accompagnement', ingredients: [ing('boulgour', 180)] }),
+        makeRecipe('accLoin', { service: 'accompagnement', ingredients: [ing('carotte', 180)] }),
+      ],
+      [boulgour, poulet, carotte]
+    )
+    const plan = planWeek(
+      catalogue,
+      makePlanRequest({ days: 2 }),
+      fakeSuggest(['platBoulgour', 'accProche', 'accLoin'])
+    )
+    const acc = plan.entries.find((e) => e.service === 'accompagnement')
+
+    expect(acc?.recipeId).toBe('accLoin')
   })
 })
 

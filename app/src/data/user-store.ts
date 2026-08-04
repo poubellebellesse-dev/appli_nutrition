@@ -344,6 +344,21 @@ const ORDRE_CRENEAU = `CASE creneau
     WHEN 'petit_dejeuner' THEN 0 WHEN 'dejeuner' THEN 1 WHEN 'gouter' THEN 2 ELSE 3 END`
 
 /**
+ * Ordre de SERVICE à l'intérieur d'un créneau — l'ordre français figé par `COURSE_ORDER` (domaine).
+ *
+ * ⚠️ INDISPENSABLE DEPUIS LE MODE REPAS (2026-08-04) : un créneau porte désormais jusqu'à deux
+ * lignes (`plat` + `accompagnement`, voir `planning/plan-week.ts`). Sans ce second critère, SQL ne
+ * garantit RIEN sur leur ordre relatif — en pratique le rowid, donc l'ordre d'insertion, mais rien
+ * dans la norme ne l'exige et rien ne préviendrait le jour où il change. Un écran qui prend « la
+ * première entrée du créneau » pour le plat afficherait alors l'accompagnement.
+ *
+ * `NULL` (mode recette, une seule ligne) passe en tête : c'est le cas où la question ne se pose pas.
+ */
+const ORDRE_SERVICE = `CASE service
+    WHEN 'entree' THEN 1 WHEN 'plat' THEN 2 WHEN 'accompagnement' THEN 3
+    WHEN 'fromage' THEN 4 WHEN 'dessert' THEN 5 ELSE 0 END`
+
+/**
  * Écrit un plan et TOUS ses créneaux, en remplaçant intégralement la version précédente.
  *
  * `misAJourLe` est un horodatage ISO complet (pas seulement une date) INJECTÉ par l'appelant —
@@ -421,7 +436,7 @@ export function readPlan(db: UserDb, planId: string): WeekPlan | null {
     }>(
       `SELECT date, creneau, service, recipe_id, portions, verrouille, est_reste
        FROM meal_plan_entry WHERE plan_id = ?
-       ORDER BY date, ${ORDRE_CRENEAU}`,
+       ORDER BY date, ${ORDRE_CRENEAU}, ${ORDRE_SERVICE}`,
       [planId]
     )
     .map(

@@ -51,9 +51,20 @@ export function planLeftovers(plan: WeekPlan, catalog: Catalog, convives = 1): W
 
   const entries: MealPlanEntry[] = [...plan.entries]
 
+  // ⚠️ LES ACCOMPAGNEMENTS SONT HORS-JEU DANS LES DEUX SENS, depuis le mode repas (2026-08-04). Ni
+  // source de restes, ni créneau d'accueil :
+  //   - EN CIBLE, écraser une entrée `accompagnement` par un plat de la veille laisserait le
+  //     créneau avec deux plats dont l'un se dit accompagnement — la ligne mentirait sur elle-même ;
+  //   - EN SOURCE, le comptage `dejaPlaces` ci-dessous repose sur « `planWeek` interdit le doublon
+  //     de recette ». CE N'EST PLUS VRAI POUR LES ACCOMPAGNEMENTS, exemptés exprès de
+  //     `placedRecipeIds` pour que le riz puisse revenir. Deux occurrences de la même semoule
+  //     fausseraient la déduction et casseraient l'idempotence.
+  // Placer les restes d'un accompagnement reste à faire — c'est un lot en soi, pas un effet de bord.
+  const estAccompagnement = (e: MealPlanEntry): boolean => e.service === 'accompagnement'
+
   for (let source = 0; source < entries.length; source++) {
     const entree = entries[source]!
-    if (entree.recipeId === null || entree.isLeftover) continue
+    if (entree.recipeId === null || entree.isLeftover || estAccompagnement(entree)) continue
 
     const recette = catalog.recipes.get(entree.recipeId)
     if (recette === undefined) continue
@@ -69,7 +80,7 @@ export function planLeftovers(plan: WeekPlan, catalog: Catalog, convives = 1): W
 
     for (let cible = source + 1; cible < entries.length && repasPlacables > 0; cible++) {
       const candidat = entries[cible]!
-      if (candidat.locked || candidat.isLeftover) continue
+      if (candidat.locked || candidat.isLeftover || estAccompagnement(candidat)) continue
 
       // Le lendemain au plus tôt, et dans la limite de conservation.
       const age = ecartJours(entree.slot.date, candidat.slot.date)

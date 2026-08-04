@@ -97,6 +97,15 @@ function creneauxDuPlan(plan: WeekPlan): readonly MealSlot[] {
   return vus
 }
 
+/** Créneaux effectivement servis — un créneau compte pour UN repas, plat et accompagnement compris. */
+function repasServis(plan: WeekPlan): number {
+  const servis = new Set<string>()
+  for (const e of plan.entries) {
+    if (e.recipeId !== null) servis.add(`${e.slot.date}|${e.slot.creneau}`)
+  }
+  return servis.size
+}
+
 function nombreDeRepas(plan: WeekPlan): number {
   const compte = creneauxDuPlan(plan).length
   return compte >= 1 && compte <= 3 ? compte : REPAS_PAR_DEFAUT
@@ -331,7 +340,10 @@ export function Semaine() {
       </h1>
       <LienTutoriel parcoursId="semaine" />
       <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
-        {formaterPlage(dates)} · {plan.entries.filter((e) => e.recipeId !== null).length} repas prévus
+        {/* ⚠️ DES REPAS, PAS DES ENTRÉES. Compter les lignes du plan doublerait le total depuis que
+            le déjeuner porte un plat ET son accompagnement : « 28 repas prévus » pour quatorze
+            assiettes. On compte les CRÉNEAUX servis. */}
+        {formaterPlage(dates)} · {repasServis(plan)} repas prévus
       </p>
 
       <Reglage reglages={reglages} onChange={(suivants) => replanifier(suivants)} />
@@ -359,12 +371,23 @@ export function Semaine() {
             <h2 className="font-titre text-[1.25rem] text-texte">{formaterJour(date)}</h2>
             <div className="mt-2 grid gap-2 sm:grid-cols-3">
               {creneaux.map((creneau) => {
-                const entry = plan.entries.find((e) => memeCreneau(e, { date, creneau }))
+                // ⚠️ DEUX ENTRÉES POSSIBLES PAR CRÉNEAU depuis le mode repas — `find` seul rendait
+                // le plat et faisait DISPARAÎTRE l'accompagnement de l'écran alors qu'il est bien
+                // au plan, compté dans l'énergie du jour et acheté dans les courses. Le défaut
+                // n'aurait rien cassé : il aurait juste menti.
+                const duCreneau = plan.entries.filter((e) => memeCreneau(e, { date, creneau }))
+                const entry = duCreneau.find((e) => e.service !== 'accompagnement')
+                const accompagnement = duCreneau.find((e) => e.service === 'accompagnement')
                 return entry === undefined ? null : (
                   <Creneau
                     key={creneau}
                     entry={entry}
                     nom={entry.recipeId === null ? null : nomDe(entry.recipeId)}
+                    accompagnement={
+                      accompagnement?.recipeId == null
+                        ? null
+                        : { recipeId: accompagnement.recipeId, nom: nomDe(accompagnement.recipeId) }
+                    }
                     onGarder={() => basculerVerrou({ date, creneau })}
                     onChanger={() => changer({ date, creneau })}
                   />
@@ -646,11 +669,14 @@ function Legende() {
 function Creneau({
   entry,
   nom,
+  accompagnement,
   onGarder,
   onChanger,
 }: {
   readonly entry: MealPlanEntry
   readonly nom: string | null
+  /** L'accompagnement posé sur le MÊME créneau, ou `null` en mode recette (un plat seul). */
+  readonly accompagnement: { readonly recipeId: RecipeId; readonly nom: string } | null
   readonly onGarder: () => void
   readonly onChanger: () => void
 }) {
@@ -679,6 +705,19 @@ function Creneau({
           </a>
         )}
       </p>
+
+      {/* ⚠️ « avec » EN TOUTES LETTRES, pas une simple seconde ligne. Deux noms empilés se lisent
+          comme deux plats au choix ; le mot dit que c'est UNE assiette. Et pas de bouton propre :
+          l'accompagnement suit son plat — le changer séparément n'a pas de sens tant que
+          `rerollSlot` ne le recalcule pas (voir reroll-slot.ts). */}
+      {accompagnement !== null && (
+        <p className="mt-1 text-[0.95rem] leading-snug text-texte-doux">
+          avec{' '}
+          <a href={hashDeRecette(accompagnement.recipeId, 'semaine')} className="text-texte-doux">
+            {accompagnement.nom}
+          </a>
+        </p>
+      )}
 
       {/* Les états se disent AUSSI en toutes lettres — l'emoji seul serait invisible à un lecteur
           d'écran, et le cadenas de la maquette ne suffit pas à expliquer ce qu'il signifie. */}

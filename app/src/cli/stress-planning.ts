@@ -67,20 +67,35 @@ function essai(nom: string, r: WeekPlanRequest): void {
     return
   }
 
+  // ⚠️ ON COMPTE DES CRÉNEAUX, PAS DES LIGNES — et ce banc s'est trompé une journée entière sur ce
+  // point (2026-08-04). Depuis le mode repas, un déjeuner porte jusqu'à DEUX entrées : le plat et
+  // son accompagnement. Compter `plan.entries` a rendu « 35 créneaux au lieu de 21 » sur 17 des 20
+  // configurations, sur un moteur parfaitement correct.
+  const creneauxRemplis = new Set<string>()
+  for (const e of plan.entries) {
+    if (e.recipeId !== null) creneauxRemplis.add(`${e.slot.date}|${e.slot.creneau}`)
+  }
+  const creneauxPoses = new Set(plan.entries.map((e) => `${e.slot.date}|${e.slot.creneau}`))
+
+  // ⚠️ LE DOUBLON NE SE JUGE QUE SUR LES PLATS. Un accompagnement est EXEMPTÉ de `placedRecipeIds`
+  // exprès (`plan-week.ts`) : on mange du riz plusieurs fois par semaine. Le compter comme doublon
+  // ferait crier ce banc sur la règle qu'on vient d'écrire. Sa monotonie se surveille ailleurs —
+  // `npm run engine:plancher` publie le compte de répétitions.
+  const plats = plan.entries.filter((e) => e.recipeId !== null && e.service !== 'accompagnement')
   const remplis = plan.entries.filter((e) => e.recipeId !== null)
-  const distincts = new Set(remplis.map((e) => e.recipeId))
+  const distincts = new Set(plats.map((e) => e.recipeId))
   const attendus = r.days * r.slots.length
 
   const problemes: string[] = []
-  if (plan.entries.length !== attendus) problemes.push(`${plan.entries.length} créneaux au lieu de ${attendus}`)
-  if (distincts.size !== remplis.length) problemes.push(`DOUBLON (${remplis.length - distincts.size})`)
+  if (creneauxPoses.size !== attendus) problemes.push(`${creneauxPoses.size} créneaux au lieu de ${attendus}`)
+  if (distincts.size !== plats.length) problemes.push(`DOUBLON DE PLAT (${plats.length - distincts.size})`)
 
   // Déterminisme : deux appels identiques doivent rendre le même plan.
   const bis = engine.planWeek(r)
   const memeOrdre = bis.entries.every((e, i) => e.recipeId === plan.entries[i]?.recipeId)
   if (!memeOrdre) problemes.push('NON DÉTERMINISTE')
 
-  const vides = plan.entries.length - remplis.length
+  const vides = attendus - creneauxRemplis.size
   const kcalParJour = new Map<string, number>()
   for (const e of plan.entries) {
     const k = e.recipeId === null ? 0 : (catalog.indexes.recipeNutrients.get(e.recipeId)?.[energyIndex] ?? 0)
@@ -95,8 +110,9 @@ function essai(nom: string, r: WeekPlanRequest): void {
     detail:
       problemes.length > 0
         ? problemes.join(' · ')
-        : `${remplis.length}/${attendus} remplis${vides > 0 ? `, ${vides} vide(s)` : ''}` +
-          ` · ${distincts.size} distinctes · min ${min} kcal · ${plan.warnings.length} avert.`,
+        : `${creneauxRemplis.size}/${attendus} remplis${vides > 0 ? `, ${vides} vide(s)` : ''}` +
+          ` · ${distincts.size} plats distincts · ${remplis.length - plats.length} accomp.` +
+          ` · min ${min} kcal · ${plan.warnings.length} avert.`,
   })
 }
 
