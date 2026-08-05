@@ -27,16 +27,15 @@ suggestion → planifier sa semaine → sortir sa liste de courses → cuisiner.
 qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** Un nombre écrit ici est faux dès le commit
-suivant. Au **2026-08-06**, `main` porte le travail des sessions « gardes & décisions » et
-« recherche d'aliments ».
+suivant. Au **2026-08-06**, `main` porte les trois pistes du 2026-08-05 : « gardes & décisions »,
+« recherche d'aliments » et **le mode cuisine** (`2c10db4`, L0 + L1). **Rien n'est en vol.**
 
-⛔ **LE LOT L1 DU MODE CUISINE N'EST PAS COMMITTÉ, et c'est le premier fait à traiter.** Neuf
-fichiers non suivis par git — `alarme.ts(+test)`, `cuisine-session.ts(+test)`, `ecran-allume.ts`,
-`reprise-cuisine.tsx(+test)`, `screens/cuisine.tsx(+test)` — plus des modifications dans
-`user-schema.ts`, `user-store.ts`, `router.tsx`, `main.tsx`, `theme.css`, `detail-recette.tsx`,
-`aujourdhui.tsx`. **Les quatre commandes sont vertes AVEC** (relevé du 2026-08-06 ci-dessus) — mais
-c'est à revérifier soi-même, pas à croire sur parole. Récit :
-[archive/RECAP_SESSION_2026-08-05_mode-cuisine.md](./archive/RECAP_SESSION_2026-08-05_mode-cuisine.md) §6.
+✅ **Vérifié SUR LE COMMIT, pas sur l'arbre de travail** — `2c10db4` sorti dans un worktree isolé,
+catalogue rebâti, puis `vitest` / `tsc` / `vite build` : **1 492 passed (84 fichiers)**, typecheck
+propre, build ✓. C'est la parade au piège « ce qu'on commite n'est pas ce qu'on a testé »
+([reference/PIEGES.md](./reference/PIEGES.md)), qui avait poussé `main` rouge la veille. ⚠️ **Un
+test a échoué au premier passage puis est passé au second** — `main.test.tsx`, dialogue « Une visite
+guidée ? », sous la charge du build : **bascule de minutage à surveiller**, pas une régression.
 
 ⛔ **DEUX SESSIONS DANS UN MÊME DÉPÔT : ce qui a coûté cher.** Cinq fichiers étaient édités des deux
 côtés (`user-schema.ts`, `user-store.ts`, `user-store.test.ts`, `ARCHITECTURE.md`, `ETAT.md`).
@@ -115,8 +114,8 @@ lots : **[CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md)** · récit 
 **[archive/…_mode-cuisine.md](./archive/RECAP_SESSION_2026-08-05_mode-cuisine.md)**. ✅ **L0 et L1
 faits** — `recipe_step.nature`, puis l'écran `#/cuisine/<id>` : écran allumé, une étape à la fois qui
 **n'avance jamais seule**, minuteurs parallèles, alarme au premier plan, reprise (schéma **v10**).
-Les 512 minuteurs sont enfin visibles. ⛔ **L1 n'est pas committé** (voir plus haut). ▶ **Au
-suivant : L2**, le prérequis A — `food_ids` sur **1 101 gestes**, du contenu, pas du code.
+Les 512 minuteurs sont enfin visibles. ▶ **Au suivant : L2**, le prérequis A — `food_ids` sur
+**1 101 gestes**, du contenu, pas du code.
 ⚠️ **L1 n'a pas d'entrée de visite guidée** (`parcours.ts`) : à trancher.
 ⛔ **L'alarme ne sonne PAS quand l'appli est fermée — c'est une décision instruite, pas un oubli** :
 les quatre voies Android coûtent toutes plus qu'elles ne rapportent. Ne pas la rouvrir sans lire

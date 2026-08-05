@@ -183,12 +183,20 @@ fichier**, pas seulement ici.
 
 ## 6. Mes erreurs
 
-- ⛔ **L1 N'EST PAS COMMITTÉ.** Neuf fichiers sont non suivis par git à la clôture de cette session
-  (`alarme.ts`, `alarme.test.ts`, `cuisine-session.ts`, `cuisine-session.test.ts`, `ecran-allume.ts`,
-  `reprise-cuisine.tsx`, `reprise-cuisine.test.tsx`, `screens/cuisine.tsx`, `screens/cuisine.test.tsx`),
-  plus des modifications dans `user-schema.ts`, `user-store.ts`, `router.tsx`, `main.tsx`,
-  `theme.css`, `detail-recette.tsx`, `aujourdhui.tsx`. **Les quatre commandes sont vertes avec** —
-  c'est le premier fait à vérifier à la reprise, pas à croire sur parole.
+- **L1 a failli ne pas être committé.** Il l'a été en clôture, dans `2c10db4` — 21 fichiers, dont
+  neuf neufs. ⚠️ **Deux corrections ont été nécessaires avant de pouvoir le faire**, et elles disent
+  ce que coûte le travail à deux dans un même dépôt :
+  1. **Mon propre fichier de test avait été modifié par l'autre piste** pour dépendre de son
+     `confianceDeTest()` — non committé. Committer L1 seul aurait donné un arbre **rouge**. Découplé
+     en fournissant une table de confiance vide, ce qui est juste ici : le mode cuisine n'affiche
+     aucune valeur nutritionnelle, donc aucune provenance à coter.
+  2. **Quatre documents étaient mixtes** (`FICHE_REPRISE`, `ETAT`, `PIEGES`, `archive/README`) :
+     laissés hors du commit plutôt que découpés à la main — c'est le découpage manuel qui avait
+     poussé `main` rouge la veille. L'autre piste les a committés ensuite, mon texte compris.
+- ✅ **Le commit a été vérifié SUR LE COMMIT**, sorti dans un worktree isolé avec son catalogue
+  rebâti : **1 492 passed (84 fichiers)**, typecheck propre, build ✓. ⚠️ **Un test a échoué au
+  premier passage puis est passé au second** (`main.test.tsx`, dialogue de visite guidée, sous la
+  charge du build) — **bascule de minutage à surveiller**, consignée plutôt que tue.
 
 - **L0 a été emporté par le commit d'une autre session.** `c17af24 feat(recherche): « lardon »
   trouve enfin la poitrine de porc` contient **40 fichiers** : ses 9 et mes 31. Rien n'est perdu,
