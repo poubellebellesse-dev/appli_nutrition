@@ -208,7 +208,15 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   le partage `.nutri-recipe` fait déjà sortir des données à l'initiative de l'utilisateur ; la ligne
   est « pas de serveur, pas de collecte, rien sans geste explicite », pas « aucune donnée ne sort ».
   C'est le coût qui tranche : plugin Bluetooth natif, permissions à l'exécution, état distribué. Un
-  téléphone posé au milieu absorbe l'essentiel du besoin (§7 E de `CONCEPTION_MODE_CUISINE.md`).
+  téléphone posé au milieu absorbe l'essentiel du besoin (§8 E de `CONCEPTION_MODE_CUISINE.md`).
+- **Signal d'alarme : l'INVERSION de l'écran** (2026-08-05, **essayé sur appareil**) — retenue
+  contre quatre autres (cadre, bandes latérales, plein écran, balayage) au seul critère qui compte :
+  être vue **du coin de l'œil**, téléphone posé de côté. Elle donne l'écart de luminance maximal
+  **sans masquer le contenu**. **L'alarme sonne jusqu'à l'arrêt** — appui n'importe où sur l'écran,
+  garde-fou automatique à 5 min. ⚠️ **La vibration n'est PAS acquise** : `navigator.vibrate` n'a rien
+  produit à l'essai ; l'alarme ne doit pas en dépendre. ⚠️ **Le pari `rem` à 150 % reste NON
+  MESURÉ** — le premier essai visait le mauvais réglage (Android au lieu de Chrome). Compte rendu
+  complet : `CONCEPTION_MODE_CUISINE.md` §7.
 
 ### Média, stockage & modèle
 - **Gestes de cuisine** : boucle WebP 3 s pour les gestes simples ; **3 clips MP4 de 3 s**

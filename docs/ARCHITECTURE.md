@@ -490,7 +490,7 @@ Le découpage n'est pas un étalement du travail : la v1 ne demande **aucune don
 moteur** et rend visible ce qui est déjà buildé, tandis que la synchronisation de service est un
 problème d'ordonnancement à part entière (`CONCEPTION_B_VIN_REPAS.md` §5).
 
-#### Les six points de la v1
+#### Les sept points de la v1
 
 1. **L'écran ne s'éteint pas** — `navigator.wakeLock.request('screen')`, demandé à l'entrée dans
    l'écran, relâché à la sortie et **re-demandé sur `visibilitychange`**. ⚠️ **Le verrou tombe quand
@@ -507,13 +507,28 @@ problème d'ordonnancement à part entière (`CONCEPTION_B_VIN_REPAS.md` §5).
 4. **La quantité se lit sans quitter l'étape** — appuyer sur un ingrédient cité par l'étape affiche
    son `unite_affichage`. Même principe que les gestes du lexique, déjà dépliés sur place
    (`detail-recette.tsx`) : personne ne doit perdre son étape pour savoir ce que « pocher » veut dire.
-5. **Le minuteur sonne quand l'appli est visible** — son **plus** vibration (`navigator.vibrate`)
-   **plus** signal visuel, jamais le son seul : le canal média peut être à zéro indépendamment de la
-   sonnerie. ⚠️ **L'audio se déverrouille sur l'appui « Lancer », pas à l'expiration.** La WebView
-   refuse une lecture sans geste utilisateur préalable, et **ce refus ne lève aucune erreur** — un
-   minuteur muet en production, sans rien dans les logs. C'est le seul point de la v1 qui exige un
-   test manuel sur appareil.
-6. **La cuisson se reprend** — l'étape atteinte et les minuteurs survivent à la fermeture de
+5. **Le minuteur sonne quand l'appli est visible** — **essayé sur appareil le 2026-08-05**, détail
+   dans `CONCEPTION_MODE_CUISINE.md`. Trois règles en sont sorties :
+   - ⚠️ **L'audio se déverrouille sur l'appui « Lancer », pas à l'expiration.** La WebView refuse une
+     lecture sans geste utilisateur préalable et **ce refus ne lève aucune erreur** — un minuteur
+     muet en production, sans rien dans les logs. Vérifié : un contexte déverrouillé le reste, le son
+     sort bien plusieurs minutes après l'appui.
+   - **Le signal visuel est l'INVERSION de tout l'écran**, ~2 Hz. Retenu à l'essai contre quatre
+     autres (cadre, bandes latérales, plein écran, balayage) sur le seul critère qui compte : être vu
+     **du coin de l'œil**, téléphone posé de côté. La vision périphérique ne perçoit ni détail ni
+     couleur mais réagit aux écarts de luminance sur de grandes surfaces — l'inversion en donne le
+     maximum **sans masquer le contenu**, contrairement à l'aplat plein écran.
+   - **La vibration est un bonus, pas un canal sur lequel compter.** `navigator.vibrate` n'a rien
+     produit sur l'appareil d'essai, ni immédiatement ni en différé. La voie native
+     (`@capacitor/haptics`) est probablement la bonne, mais **elle n'est pas installée** et rien ne
+     doit dépendre d'elle. L'alarme reste correcte avec le son et l'inversion seuls.
+6. **L'alarme sonne jusqu'à ce qu'on l'arrête** — **un appui n'importe où sur l'écran**, pas
+   seulement sur un bouton : avec les mains grasses, viser une cible précise est le geste qu'on rate,
+   et le coût d'un arrêt accidentel est nul puisqu'on est devant. Garde-fou : **arrêt automatique à
+   5 minutes**, pour ne pas laisser un téléphone clignoter sur un plan de travail vide. ⚠️ Une alarme
+   qui s'éteint seule au bout de quelques secondes rate exactement la personne partie mettre la
+   table — c'est-à-dire son cas d'usage.
+7. **La cuisson se reprend** — l'étape atteinte et les minuteurs survivent à la fermeture de
    l'appli, et un bandeau « Reprendre la cuisson » les ramène depuis « Aujourd'hui ».
    ⚠️ **On stocke une ÉCHÉANCE ABSOLUE (`fin_ms`), jamais un temps restant.** Un restant suppose que
    quelqu'un décompte ; appli fermée, personne ne décompte, et le nombre se fige — l'écran
@@ -551,7 +566,7 @@ problème d'ordonnancement à part entière (`CONCEPTION_B_VIN_REPAS.md` §5).
   **pas** une fenêtre d'autorisation), `USE_EXACT_ALARM` est réservée aux applis d'agenda et de
   réveil et **Play refuse la publication** hors de ces catégories, et un service de premier plan
   n'a **aucun `foregroundServiceType` adapté** (`shortService` plafonne à ~3 min) — il faudrait
-  `specialUse`, qui se justifie en Play Console **vidéo à l'appui, à chaque mise à jour**. Le point 6
+  `specialUse`, qui se justifie en Play Console **vidéo à l'appui, à chaque mise à jour**. Le point 7
   couvre le besoin autrement : on ne sonne pas, mais au retour on dit la vérité. Comparatif des
   applis existantes et les quatre voies en détail : `CONCEPTION_MODE_CUISINE.md`.
 - **Cuisine partagée sur plusieurs appareils** — deux cuisiniers, deux téléphones synchronisés.
@@ -567,12 +582,13 @@ déjà installé. Le web reste au plan pour iOS, où les timers en arrière-plan
 fiables. **Wake Lock n'est pas un argument pour Capacitor** : l'API est portée par Chromium depuis la
 version 84, donc par la WebView Android. ⚠️ **Non vérifié sur appareil**, et c'est la même famille
 que le risque n°1 de la décision 9 — un échec y serait SILENCIEUX. L'interdiction de `Date.now` ne
-vise que `engine/` ; l'UI utilise l'heure réelle, et le point 6 en dépend.
+vise que `engine/` ; l'UI utilise l'heure réelle, et le point 7 en dépend.
 
 > Maquette cliquable de l'écran v1 (chakchouka, minuteurs réels, Wake Lock actif) :
 > <https://claude.ai/code/artifact/00aae6df-f33d-4cb6-97cf-e11751419e0e>. Hors dépôt — elle illustre
-> la spec, elle ne la remplace pas. Elle couvre les points 1 à 4 ; **les points 5 et 6 ne s'y voient
-> pas** (ils supposent un son et une base).
+> la spec, elle ne la remplace pas. Elle couvre les points 1 à 6 — **c'est elle qui a servi à
+> l'essai du 2026-08-05** et qui a départagé les cinq signaux visuels. Seul le point 7 (la reprise)
+> ne s'y voit pas : il suppose une base.
 
 ### Fonctionnalités conçues en session 2 — état d'implémentation par point, voir docs/archive/RECAP_SESSION_2.md
 

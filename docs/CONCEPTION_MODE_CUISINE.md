@@ -167,7 +167,7 @@ CREATE TABLE user_cuisine_session (
 
 CREATE TABLE user_cuisine_timer (
   ordre           INTEGER PRIMARY KEY,  -- l'étape qui porte le minuteur
-  fin_ms          INTEGER NOT NULL,     -- ÉCHÉANCE ABSOLUE, jamais un « restant » (§5bis point 6)
+  fin_ms          INTEGER NOT NULL,     -- ÉCHÉANCE ABSOLUE, jamais un « restant » (§5bis point 7)
   pause_restant_s INTEGER               -- NULL = en marche ; sinon en pause avec ce reste
 );
 ```
@@ -215,7 +215,7 @@ lot qui est faux.
 6. **Aucun score affiché** — filet du principe 6, comme sur les autres écrans.
 7. **Une session reprise dit la vérité** — écrire `fin_ms` dans le passé, rouvrir : l'écran annonce
    « terminé il y a N min », jamais un décompte figé ni « ça vient de sonner ». **C'est le test qui
-   verrouille le point 6 de §5bis**, et le seul qui porte sur une affirmation de l'appli à propos de
+   verrouille le point 7 de §5bis**, et le seul qui porte sur une affirmation de l'appli à propos de
    la nourriture.
 8. **Une session périmée ne réapparaît pas** — `ouverte_le` à plus de 12 h : pas de bandeau.
 
@@ -249,7 +249,7 @@ Live Activities d'iOS, mais *« the work behind Live Updates typically runs in a
 Android 14+ … they remain complementary technologies »* : c'est **l'affichage, pas le moteur**. Ni le
 `foregroundServiceType` ni la déclaration Play ne disparaissent.
 
-**Ce qui remplace l'alarme :** le point 6 de §5bis. On ne sonne pas, mais au retour on ne ment pas.
+**Ce qui remplace l'alarme :** le point 7 de §5bis. On ne sonne pas, mais au retour on ne ment pas.
 Le pari `USE_EXACT_ALARM` reste rejouable — c'est une ligne de manifeste, pas une réécriture.
 
 ## 6. Ce que font les autres applis
@@ -266,7 +266,36 @@ l'utilisateur de toucher **aucun** réglage système — donc elle ne passe pas 
 `SCHEDULE_EXACT_ALARM`. Reste `USE_EXACT_ALARM` ou l'imprécision assumée. **Déduction, pas preuve :
 son manifeste n'a pas été lu.** Et c'est une appli native payante, sans aucune de nos contraintes.
 
-## 7. Ce qui reste ouvert
+## 7. Essai sur appareil — 2026-08-05
+
+**Environnement : Chrome Android, PAS la WebView applicative.** L'instrument est la maquette
+(§5bis), ouverte en HTTPS. ⚠️ Servir le `dist/` sur `http://192.168.x.x` aurait faussé l'essai :
+`navigator.wakeLock` n'existe pas hors contexte sécurisé, et l'échec aurait eu l'air d'un défaut
+de l'API.
+
+| Ce qui a été mesuré | Résultat |
+|---|---|
+| **Déverrouillage audio sur le geste** | ✅ **Validé.** Le son sort, et un contexte déverrouillé le reste — il sonne encore plusieurs minutes après l'appui. C'était le point le plus fragile de la spec |
+| **Signal visuel** | ✅ **Inversion retenue**, contre cadre, bandes latérales, plein écran et balayage. Protocole : téléphone posé de côté, regard fixé devant — de face, les cinq marchent, ce qui rend un essai de face inutile |
+| **Arrêt sur appui n'importe où** | ✅ Validé |
+| **Vibration** | ❌ **Rien**, ni immédiatement ni en différé. Ce n'est donc pas l'expiration de l'activation utilisateur, qui était l'hypothèse. Probablement le navigateur ou l'appareil ; à rejouer dans l'appli installée, où `@capacitor/haptics` serait de toute façon la bonne voie — **plugin non installé, à flaguer avant** |
+| **Le pari `rem` à 150 %** | ⚠️ **NON MESURÉ.** Un premier essai n'a rien montré, mais l'instrument était en cause : il visait la taille de police d'Android alors que **Chrome a sa propre mise à l'échelle du texte** (⋮ → Paramètres → Accessibilité), et un `text-size-adjust: 100%` dans un reset l'aurait de toute façon neutralisée. La sonde a été corrigée — la mesure reste à refaire. **Ne pas conclure dans un sens ni dans l'autre** |
+
+### Ce que cet essai ne prouve pas
+
+Il tourne dans Chrome. Le **risque n°1 de la décision 9** porte exactement sur l'écart entre Chrome
+et une WebView applicative, et il reste entier. Trois choses sont à rejouer sur un APK :
+
+1. Le Wake Lock dans la WebView.
+2. La vibration par `@capacitor/haptics` plutôt que par l'API web.
+3. **Le pari `rem`** — le seul dont l'échec déborderait très au-delà du mode cuisine, puisque les
+   neuf écrans reposent dessus.
+
+⚠️ **Obstacles connus à cet essai-là** : le SDK Android n'est pas installé, `npx cap add android`
+n'a jamais été lancé, et le **JDK 25** de la machine est vraisemblablement trop récent pour le
+Gradle de Capacitor 8, qui attend du 17 ou du 21.
+
+## 8. Ce qui reste ouvert
 
 | # | Question | Piste |
 |---|---|---|

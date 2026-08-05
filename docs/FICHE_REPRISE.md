@@ -69,7 +69,9 @@ réglage du moteur n'invente du contenu. Chantier en cours côté utilisateur.
    passe ne rend pas le contenu publiable.
 2. **Vérifier sur un vrai téléphone.** `npx vite build && npx vite preview --host`, puis installer.
    Le service worker et l'installation **ne s'activent qu'en build de production** — `npm run dev`
-   ne les monte pas.
+   ne les monte pas. ⚠️ **Essai partiel le 2026-08-05, dans Chrome et NON dans la WebView**
+   (`CONCEPTION_MODE_CUISINE.md` §7) : audio validé, vibration morte, **pari `rem` à 150 % NON
+   MESURÉ** — le seul dont l'échec toucherait les neuf écrans. `http://` casse `wakeLock`.
 3. **Empaquetage Capacitor, puis Play.** ⚠️ **La cible n'est plus TWA/Bubblewrap** — décision du
    2026-08-01, `archive/RECAP_SESSION_8.md` §3. `capacitor.config.ts` et `@capacitor/*` sont en
    place ; `npx cap add android` n'a jamais été lancé (pas de SDK sur la machine). **Ni origine
@@ -79,6 +81,11 @@ réglage du moteur n'invente du contenu. Chantier en cours côté utilisateur.
 **Contenu qui reste** : **photos (0 sur 241 recettes — désormais OBLIGATOIRES, production en cours
 côté utilisateur)**, lexique illustré, 27 tips pour la centaine visée, 8 fiches sur les 60-100 de
 §8.2. Rien de tout cela n'est un problème de code.
+
+▶ **UN CHANTIER DE CODE EST PRÊT : le mode cuisine** (décision 8 fermée le 2026-08-04). Spec :
+`ARCHITECTURE.md` §5bis · lots : **[CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md)**.
+Commencer par **L0** (un champ, 18 lignes de YAML), puis **L1** — l'écran, qui n'attend PAS les
+1 118 annotations du prérequis A. Motif : **512 minuteurs buildés, chargés, affichés nulle part.**
 
 ✅ **La vérification sanitaire des recettes est terminée** (2026-08-03) : viandes et volailles
 (§5 bis), poissons, œufs et coquillages (§5 quater), puis crus et œufs peu cuits (§5 quinquies —
@@ -109,6 +116,7 @@ automatiquement à chaque session. Plus recopiés ici : un fait, un seul endroit
 | Écrans, jetons visuels, badge de preuve | [DESIGN.md](./DESIGN.md) |
 | Règles d'écriture du contenu Savoir | [../catalog/tips/README.md](../catalog/tips/README.md) · [../catalog/evidence/README.md](../catalog/evidence/README.md) |
 | Stores, hébergement, modèle économique | [STRATEGIE_DISTRIBUTION.md](./STRATEGIE_DISTRIBUTION.md) |
+| **Mode cuisine** : ordre des lots, prérequis, essai sur appareil | [CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md) |
 | Ce qui a été essayé **et écarté**, et pourquoi | [archive/](./archive/) |
 | **Pièges, impasses, règle de sourçage du contenu** | [reference/PIEGES.md](./reference/PIEGES.md) |
 | Les invariants du moteur, les commandes de vérification | [../CLAUDE.md](../CLAUDE.md) |
