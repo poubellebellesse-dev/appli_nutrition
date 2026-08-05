@@ -59,8 +59,29 @@ export interface WeekPlanRequest {
 
 export interface MealPlanEntry {
   readonly slot: SlotRef
-  /** null = créneau vide. */
+  /** null = créneau vide, OU rempli hors catalogue — voir `horsCatalogue`, qui les départage. */
   readonly recipeId: RecipeId | null
+  /**
+   * Libellé libre d'un plat que l'application ne sait pas mesurer — plat préparé, traiteur,
+   * restaurant (décision 51, issue « (a) créneau exclu », tranchée le 2026-08-05).
+   *
+   * ⚠️ CE CHAMP EST LE MARQUEUR, il n'en a pas un à côté de lui. Non-`null` signifie « ce créneau
+   * est REMPLI et son apport est INCONNU » — l'état que rien ne savait exprimer, et qui n'est ni
+   * « vide » (`recipeId` et `horsCatalogue` tous deux `null`) ni « rempli et mesurable ». Ajouter
+   * un booléen en plus créerait deux champs capables de se contredire.
+   *
+   * ⚠️ EXCLUSIF AVEC `recipeId`, et la base le refuse (`meal_plan_entry`, migration 9) : porter les
+   * deux poserait « lequel compte ? » à chaque lecture.
+   *
+   * ⚠️ REQUIS, PAS OPTIONNEL, et c'est délibéré. Un champ optionnel qu'un appelant oublie ne
+   * produit AUCUNE erreur — ni au type, ni au test, ni à l'écran ; c'est le défaut que ce projet a
+   * déjà payé trois fois (`reference/PIEGES.md`). Le rendre requis force chaque site de
+   * construction à écrire `horsCatalogue: null`, donc à voir que le cas existe.
+   *
+   * ⚠️ AUCUNE ÉNERGIE SAISIE À CÔTÉ. L'issue (b) de la décision 51 a été écartée : un nombre tapé
+   * par l'utilisateur se mélangerait aux valeurs CIQUAL sans marque de provenance (principe 3).
+   */
+  readonly horsCatalogue: string | null
   readonly portions: number
   /** Un créneau verrouillé est invisible pour toute replanification ultérieure (§7.2 ENGINE). */
   readonly locked: boolean

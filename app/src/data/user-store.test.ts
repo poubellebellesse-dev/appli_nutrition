@@ -498,6 +498,7 @@ describe('user-store — planning', () => {
       {
         slot: { date: '2026-08-03', creneau: 'diner' },
         recipeId: 'r1' as RecipeId,
+        horsCatalogue: null,
         portions: 4,
         locked: true,
         isLeftover: false,
@@ -506,6 +507,7 @@ describe('user-store — planning', () => {
       {
         slot: { date: '2026-08-04', creneau: 'diner' },
         recipeId: 'r2' as RecipeId,
+        horsCatalogue: null,
         portions: 2,
         locked: false,
         isLeftover: true,
@@ -514,6 +516,7 @@ describe('user-store — planning', () => {
       {
         slot: { date: '2026-08-05', creneau: 'diner' },
         recipeId: null,
+        horsCatalogue: null,
         portions: 0,
         locked: false,
         isLeftover: false,
@@ -553,6 +556,7 @@ describe('user-store — planning', () => {
         entries: creneaux.map((creneau) => ({
           slot: { date: '2026-08-03', creneau },
           recipeId: `r-${creneau}` as RecipeId,
+          horsCatalogue: null,
           portions: 1,
           locked: false,
           isLeftover: false,
@@ -605,6 +609,54 @@ describe('user-store — planning', () => {
   it('refuse un plan d’avant la migration v2 plutôt que d’afficher zéro jour', () => {
     db.run(`INSERT INTO meal_plan (id, date_debut, jours, seed) VALUES ('vieux', '2026-08-03', 0, 0)`)
     expect(readPlan(db, 'vieux')).toBeNull()
+  })
+
+  // --- Plats préparés (décision 51, migration v9) ---------------------------------------------
+
+  it('un plat préparé fait l’aller-retour — sans quoi le créneau redeviendrait vide au rechargement', () => {
+    // ⚠️ LE VRAI RISQUE EST ICI, pas dans le moteur. Un champ ajouté au type et oublié dans l'INSERT
+    // ou dans le SELECT ne casse RIEN : le plan s'affiche, le créneau se vide au rechargement, et
+    // rien ne le signale. C'est la classe de défaut que ce projet a déjà payée trois fois.
+    const avecPrepare: WeekPlan = {
+      ...plan,
+      entries: [
+        ...plan.entries,
+        {
+          slot: { date: '2026-08-05', creneau: 'gouter' },
+          recipeId: null,
+          horsCatalogue: 'Lasagnes surgelées',
+          portions: 0,
+          locked: false,
+          isLeftover: false,
+          service: null,
+        },
+      ],
+    }
+    savePlan(db, avecPrepare, '2026-08-03T10:00:00.000Z')
+
+    const relu = readPlan(db, avecPrepare.id)
+    const prepare = relu?.entries.find((e) => e.slot.creneau === 'gouter')
+    expect(prepare?.horsCatalogue).toBe('Lasagnes surgelées')
+    expect(prepare?.recipeId).toBeNull()
+  })
+
+  it('une entrée ordinaire relit `horsCatalogue: null`, jamais `undefined`', () => {
+    // `undefined` passerait les tests du moteur (`!== null` reste vrai) tout en faisant croire à
+    // chaque garde que la journée est immesurable. Un plan entier cesserait d'être vérifié.
+    savePlan(db, plan, '2026-08-03T10:00:00.000Z')
+    const relu = readPlan(db, plan.id)
+    expect(relu?.entries.every((e) => e.horsCatalogue === null)).toBe(true)
+  })
+
+  it('la BASE refuse une recette ET un libellé sur la même ligne — la garantie vient de la forme', () => {
+    // Le quatrième état est inexprimable, pas seulement découragé : sans ce `CHECK`, la question
+    // « lequel des deux compte ? » se poserait à chaque lecture, et chaque lecteur y répondrait seul.
+    expect(() =>
+      db.run(
+        `INSERT INTO meal_plan_entry (plan_id, date, creneau, recipe_id, portions, hors_catalogue)
+         VALUES ('plan-2026-08-03-3', '2026-08-03', 'diner', 'r1', 2, 'Pizza')`
+      )
+    ).toThrow()
   })
 })
 

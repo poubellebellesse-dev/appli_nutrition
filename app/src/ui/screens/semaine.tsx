@@ -99,11 +99,18 @@ function creneauxDuPlan(plan: WeekPlan): readonly MealSlot[] {
   return vus
 }
 
-/** Créneaux effectivement servis — un créneau compte pour UN repas, plat et accompagnement compris. */
+/**
+ * Créneaux effectivement servis — un créneau compte pour UN repas, plat et accompagnement compris.
+ *
+ * ⚠️ UN PLAT PRÉPARÉ COMPTE (décision 51). Le test `recipeId !== null` seul l'aurait ignoré :
+ * l'en-tête aurait annoncé « 2 repas prévus » sous une semaine qui en affiche trois. Ce compte dit
+ * ce qui est PRÉVU, pas ce que l'application sait mesurer — les deux questions sont distinctes, et
+ * c'est seulement la seconde qui écarte le hors-catalogue (voir `checkCalorieFloor`).
+ */
 function repasServis(plan: WeekPlan): number {
   const servis = new Set<string>()
   for (const e of plan.entries) {
-    if (e.recipeId !== null) servis.add(`${e.slot.date}|${e.slot.creneau}`)
+    if (e.recipeId !== null || e.horsCatalogue !== null) servis.add(`${e.slot.date}|${e.slot.creneau}`)
   }
   return servis.size
 }
@@ -359,6 +366,40 @@ export function Semaine() {
     [etat, refus, echouer]
   )
 
+  /**
+   * Pose un plat PRÉPARÉ sur un créneau (décision 51, issue « (a) »).
+   *
+   * ⚠️ MÊME CHEMIN D'ÉCRITURE QUE `poser`, DÉLIBÉRÉMENT : `setSlotHorsCatalogue` puis `savePlan`
+   * puis `reprogrammerLesRappels`. Ce créneau-ci ne produira AUCUN rappel — `rappelsDuPlan` saute
+   * les entrées sans recette (`ui/rappel.ts`), et c'est correct : un rappel dit « commence à
+   * cuisiner, ça prend 45 min », ce qu'un plat préparé n'a pas. Mais le plan a CHANGÉ, et les
+   * rappels des AUTRES créneaux doivent suivre — sans cet appel, l'appareil sonnerait encore pour
+   * le plat que celui-ci vient de remplacer.
+   *
+   * Le moteur RECALCULE les avertissements au passage : c'est ce recalcul qui RETIRE l'alerte de
+   * plancher de cette journée, et non l'écran qui la masquerait.
+   */
+  const poserHorsCatalogue = useCallback(
+    (slot: SlotRef, libelle: string) => {
+      if (etat.phase !== 'pret') return
+      const { plan, profil } = etat.vue
+
+      chargerSocle()
+        .then((socle) => {
+          const suivant = socle.moteur.setSlotHorsCatalogue(plan, slot, libelle, profil)
+          savePlan(socle.db, suivant, maintenantIso())
+          reprogrammerLesRappels(socle, suivant)
+          const refusSuivants = new Map(refus)
+          refusSuivants.delete(cleCreneau(slot.date, slot.creneau))
+          setRefus(refusSuivants)
+          setAChoisir(null)
+          setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
+        })
+        .catch(echouer)
+    },
+    [etat, refus, echouer]
+  )
+
   if (etat.phase === 'chargement') return <p className="text-attenue">Construction de la semaine…</p>
   if (etat.phase === 'erreur') {
     return (
@@ -456,6 +497,7 @@ export function Semaine() {
           socle={socleCharge}
           libelleCreneau={`${formaterJour(aChoisir.date)} · ${LIBELLE_CRENEAU[aChoisir.creneau]}`}
           onPoser={(recipeId) => poser(aChoisir, recipeId)}
+          onPoserHorsCatalogue={(libelle) => poserHorsCatalogue(aChoisir, libelle)}
           onFermer={() => setAChoisir(null)}
         />
       )}
@@ -767,7 +809,12 @@ function Creneau({
   /** Choix : l'utilisateur désigne le plat lui-même (décision 49). */
   readonly onChoisir: () => void
 }) {
-  const vide = entry.recipeId === null
+  // ⚠️ « VIDE » N'EST PLUS « SANS RECETTE » depuis la décision 51. Un plat préparé porte
+  // `recipeId: null` ET un libellé : le créneau est REMPLI. S'en tenir à `recipeId === null` lui
+  // donnerait le cadre pointillé et le texte « Aucun plat » alors qu'il y a un dîner prévu — et le
+  // bouton dirait « Proposer » pour un créneau déjà occupé.
+  const horsCatalogue = entry.horsCatalogue
+  const vide = entry.recipeId === null && horsCatalogue === null
   const recipeId = entry.recipeId
   const apparence = entry.locked
     ? 'border-2 border-accent bg-accent-doux'
@@ -784,7 +831,10 @@ function Creneau({
       </p>
 
       <p className="mt-1 font-titre text-[1.1rem] leading-snug text-texte">
-        {nom === null || recipeId === null ? (
+        {horsCatalogue !== null ? (
+          // Pas de lien : il n'y a aucune fiche derrière, et un lien mort se remarque plus tard.
+          <span className="text-texte">{horsCatalogue}</span>
+        ) : nom === null || recipeId === null ? (
           <span className="text-attenue">Aucun plat</span>
         ) : (
           <a href={hashDeRecette(recipeId, 'semaine')} className="text-texte no-underline">
@@ -792,6 +842,18 @@ function Creneau({
           </a>
         )}
       </p>
+
+      {/* ⚠️ DIRE POURQUOI L'APPLI SE TAIT SUR CE REPAS, sinon son silence passe pour un oubli.
+          C'est la contrepartie visible de la décision 51 : l'alerte de plancher calorique ne se
+          déclenche plus sur une journée qui contient ce créneau, et l'utilisateur ne peut pas le
+          deviner. Formulé comme un FAIT sur ce que l'application sait, jamais comme un reproche sur
+          ce qui est mangé (principe 6 : informer, jamais juger) — ni « non équilibré », ni
+          « pensez à », ni code couleur. */}
+      {horsCatalogue !== null && (
+        <p className="mt-1 text-[0.85rem] leading-snug text-attenue">
+          Repas noté à la main — l’application ne connaît pas ce qu’il apporte.
+        </p>
+      )}
 
       {/* ⚠️ « avec » EN TOUTES LETTRES, pas une simple seconde ligne. Deux noms empilés se lisent
           comme deux plats au choix ; le mot dit que c'est UNE assiette. Pas de bouton propre non

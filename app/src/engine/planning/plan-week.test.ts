@@ -246,8 +246,8 @@ describe('planning/plan-week — un créneau GARDÉ garde son assiette ENTIÈRE'
 
   it('repose le plat ET son accompagnement, pas seulement le premier', () => {
     const verrous: MealPlanEntry[] = [
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'plat' },
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
     ]
     const plan = planWeek(
       MENU,
@@ -265,8 +265,8 @@ describe('planning/plan-week — un créneau GARDÉ garde son assiette ENTIÈRE'
     // toute la semaine au seul motif qu'un créneau a été gardé, alors qu'il est exempté partout
     // ailleurs. C'est la même exemption, appliquée à l'amorçage.
     const verrous: MealPlanEntry[] = [
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'plat' },
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
     ]
     const plan = planWeek(
       MENU,
@@ -279,8 +279,8 @@ describe('planning/plan-week — un créneau GARDÉ garde son assiette ENTIÈRE'
 
   it('deux verrous de MÊME service sur un créneau : le premier gagne toujours', () => {
     const verrous: MealPlanEntry[] = [
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'plat' },
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat2' as RecipeId, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat2' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
     ]
     const plan = planWeek(MENU, makePlanRequest({ days: 2, lockedEntries: verrous }), fakeSuggest(['plat2']))
 
@@ -764,6 +764,7 @@ describe('planning/plan-week — créneaux VERROUILLÉS (§7.2, « vos repas gar
   const verrou = (date: string, creneau: MealSlot, recette: string | null): MealPlanEntry => ({
     slot: { date, creneau },
     recipeId: recette as RecipeId | null,
+    horsCatalogue: null,
     portions: 4,
     locked: true,
     isLeftover: false,
@@ -877,5 +878,116 @@ describe('planning/plan-week — créneaux VERROUILLÉS (§7.2, « vos repas gar
 
     expect(vide).toEqual(sans)
     expect(sans.entries.every((e) => e.locked === false)).toBe(true)
+  })
+})
+
+// --- Plats préparés : le cumul réinjecté se désarme (décision 51) ------------------------------
+//
+// ⚠️ CE QUE CE LOT CORRIGE EST UNE ERREUR SILENCIEUSE, pas un plantage. `addNutrients` ne fait RIEN
+// sur une recette inconnue : un créneau hors catalogue comptait donc ZÉRO dans `placedToday`, et
+// `remainingTarget` demandait aux créneaux suivants de couvrir la journée ENTIÈRE. Le planificateur
+// surcompensait pour un repas qui existe et qu'il ne voit pas. En omettant la cible, chaque créneau
+// retombe sur la part fixe du créneau — on renonce à piloter un total qu'on ne sait pas calculer.
+
+/** Capture les requêtes reçues, pour observer si une cible nutritionnelle a été imposée. */
+function suggestEspion(order: readonly string[]): {
+  readonly suggest: (req: SuggestionRequest) => SuggestionResult
+  readonly recues: SuggestionRequest[]
+} {
+  const recues: SuggestionRequest[] = []
+  return {
+    recues,
+    suggest: (req) => {
+      recues.push(req)
+      return {
+        suggestions: order.map((id) => ({ recipeId: id as RecipeId })),
+        rejected: { totalInitial: 0, totalRejected: 0, byLayer: new Map(), entries: [] },
+        diagnostics: {},
+      } as unknown as SuggestionResult
+    },
+  }
+}
+
+describe('planning/plan-week — une journée immesurable cesse de réinjecter son cumul', () => {
+  it('SANS plat préparé, la cible est bien imposée à chaque créneau — le témoin', () => {
+    // Sans ce témoin, le test suivant serait vert même si `plan-week` avait cessé d'imposer une
+    // cible partout, ce qui serait une régression et non le correctif.
+    const espion = suggestEspion(['a', 'b', 'c', 'd'])
+    // `days: 2` et non 1 : §7.1 impose une fenêtre de 2 à 14 jours, `planWeek` refuse en dessous.
+    planWeek(CATALOG, makePlanRequest({ days: 2, slots: ['dejeuner', 'diner'] }), espion.suggest)
+
+    expect(espion.recues.length).toBeGreaterThan(0)
+    expect(espion.recues.every((r) => r.nutrientTarget !== undefined)).toBe(true)
+  })
+
+  it('… et elle ne l’est plus du tout le jour où un créneau est hors catalogue', () => {
+    const verrou: MealPlanEntry = {
+      slot: { date: '2026-08-03', creneau: 'dejeuner' },
+      recipeId: null,
+      horsCatalogue: 'Cantine',
+      portions: 0,
+      locked: true,
+      isLeftover: false,
+      service: null,
+    }
+    const espion = suggestEspion(['a', 'b', 'c', 'd'])
+    planWeek(
+      CATALOG,
+      makePlanRequest({ days: 2, slots: ['dejeuner', 'diner'], lockedEntries: [verrou] }),
+      espion.suggest
+    )
+
+    const leJour = espion.recues.filter((r) => r.context.date === '2026-08-03')
+    expect(leJour.length).toBeGreaterThan(0)
+    expect(leJour.some((r) => r.nutrientTarget !== undefined)).toBe(false)
+  })
+
+  it('⚠️ un plat préparé au DÎNER désarme déjà le DÉJEUNER — la journée se juge avant la boucle', () => {
+    // Le point le plus facile à rater. À découvrir le plat préparé au fil des créneaux, le déjeuner
+    // (planifié en premier) aurait déjà été classé contre une journée entière : l'erreur serait
+    // seulement devenue plus discrète, pas corrigée.
+    const verrou: MealPlanEntry = {
+      slot: { date: '2026-08-03', creneau: 'diner' },
+      recipeId: null,
+      horsCatalogue: 'Restaurant',
+      portions: 0,
+      locked: true,
+      isLeftover: false,
+      service: null,
+    }
+    const espion = suggestEspion(['a', 'b', 'c', 'd'])
+    planWeek(
+      CATALOG,
+      makePlanRequest({ days: 2, slots: ['dejeuner', 'diner'], lockedEntries: [verrou] }),
+      espion.suggest
+    )
+
+    const dejeuner = espion.recues.filter(
+      (r) => r.context.creneau === 'dejeuner' && r.context.date === '2026-08-03'
+    )
+    expect(dejeuner.length).toBeGreaterThan(0)
+    expect(dejeuner.every((r) => r.nutrientTarget === undefined)).toBe(true)
+  })
+
+  it('le désarmement est JOURNALIER : le lendemain retrouve sa cible', () => {
+    const verrou: MealPlanEntry = {
+      slot: { date: '2026-08-03', creneau: 'diner' },
+      recipeId: null,
+      horsCatalogue: 'Restaurant',
+      portions: 0,
+      locked: true,
+      isLeftover: false,
+      service: null,
+    }
+    const espion = suggestEspion(['a', 'b', 'c', 'd'])
+    planWeek(
+      CATALOG,
+      makePlanRequest({ days: 2, slots: ['dejeuner', 'diner'], lockedEntries: [verrou] }),
+      espion.suggest
+    )
+
+    const lendemain = espion.recues.filter((r) => r.context.date === '2026-08-04')
+    expect(lendemain.length).toBeGreaterThan(0)
+    expect(lendemain.every((r) => r.nutrientTarget !== undefined)).toBe(true)
   })
 })

@@ -100,11 +100,15 @@ function slotRequest(
   date: string,
   creneau: MealSlot,
   history: MealHistory,
-  nutrientTarget: NutrientVector,
+  nutrientTarget: NutrientVector | undefined,
   nombreDeCreneaux: number
 ): SuggestionRequest {
   return {
-    nutrientTarget,
+    // ⚠️ OMISE, PAS POSÉE À `undefined` — `exactOptionalPropertyTypes` est actif, et surtout c'est
+    // l'ABSENCE de la clé que `scoreNutri` interprète comme « pas de cible imposée, prends la part
+    // fixe du créneau » (nutri.ts : `req.nutrientTarget ?? defaultSlotTarget(...)`). Une clé
+    // présente valant `undefined` dirait la même chose à l'exécution, mais par accident.
+    ...(nutrientTarget === undefined ? {} : { nutrientTarget }),
     profile: req.profile,
     constraints: req.constraints,
     context: {
@@ -235,6 +239,22 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
     // fenêtre, mais l'apport se juge jour par jour, comme `assertCalorieFloor`).
     const placedToday = new Float64Array(dailyReference.length)
 
+    // ⚠️ UNE JOURNÉE QUI PORTE UN PLAT PRÉPARÉ CESSE DE RÉINJECTER SON CUMUL (décision 51, issue
+    // « (a) », 2026-08-05). Le cumul réinjecté suppose que `placedToday` dit ce qui a déjà été
+    // couvert aujourd'hui. Un créneau hors catalogue n'a pas d'apport connu : il compterait ZÉRO
+    // (`addNutrients` ne fait rien sur une recette inconnue), et `remainingTarget` demanderait alors
+    // aux créneaux restants de couvrir la journée ENTIÈRE — le planificateur surcompenserait pour un
+    // repas qui existe et qu'il ne voit pas. En omettant la cible, chaque créneau retombe sur la part
+    // fixe du créneau (`defaultSlotTarget`), le comportement d'avant le cumul réinjecté. On renonce à
+    // piloter un total qu'on ne sait pas calculer, plutôt que de le piloter faux.
+    //
+    // ⚠️ CALCULÉ AVANT LA BOUCLE, pas au fil des créneaux. Un plat préparé au DÎNER doit désarmer le
+    // cumul dès le DÉJEUNER : à le découvrir en chemin, le déjeuner aurait déjà été classé contre une
+    // journée entière, et l'erreur serait seulement plus discrète.
+    const journeeImmesurable = req.slots.some((creneau) =>
+      (lockedBySlot.get(slotKey(date, creneau)) ?? []).some((verrou) => verrou.horsCatalogue !== null)
+    )
+
     for (const [slotIndex, creneau] of req.slots.entries()) {
       // Créneau gardé par l'utilisateur : on le repose tel quel, sans rien demander à `suggest`.
       // Son apport et son entrée d'historique sont comptés ICI, à SA date — les semer en amont
@@ -254,7 +274,9 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       // le tableau vif ferait voir à la requête du lundi les repas placés le mercredi. Défaut réel,
       // trouvé par test — la sortie du glouton était juste, mais l'objet remis à l'appelant mentait.
       const history: MealHistory = { windowDays: req.history.windowDays, entries: [...workingEntries] }
-      const cible = remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex)
+      const cible = journeeImmesurable
+        ? undefined
+        : remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex)
       const scored = pickForSlot(
         suggest,
         slotRequest(req, date, creneau, history, cible, req.days * req.slots.length),
@@ -266,6 +288,7 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
         entries.push({
           slot: { date, creneau },
           recipeId: null,
+          horsCatalogue: null,
           portions: 0,
           locked: false,
           isLeftover: false,
@@ -291,7 +314,9 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
           date,
           creneau,
           { windowDays: req.history.windowDays, entries: [...workingEntries] },
-          remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex),
+          journeeImmesurable
+            ? undefined
+            : remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex),
           req.days * req.slots.length
         ),
         scored
@@ -304,6 +329,7 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       entries.push({
         slot: { date, creneau },
         recipeId: scored,
+        horsCatalogue: null,
         portions: catalog.recipes.get(scored)?.portionsBase ?? 0,
         locked: false,
         isLeftover: false,
@@ -315,6 +341,7 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       entries.push({
         slot: { date, creneau },
         recipeId: complement,
+        horsCatalogue: null,
         portions: catalog.recipes.get(complement)?.portionsBase ?? 0,
         locked: false,
         isLeftover: false,

@@ -56,7 +56,11 @@ import { planWeek as runPlanWeek } from '../planning/plan-week.js'
 import { planLeftovers as runPlanLeftovers } from '../planning/plan-leftovers.js'
 import { buildShoppingList as runBuildShoppingList } from '../planning/shopping-list.js'
 import { scaleRecipe as runScaleRecipe } from '../planning/scale-recipe.js'
-import { rerollSlot as runRerollSlot, setSlotRecipe as runSetSlotRecipe } from '../planning/reroll-slot.js'
+import {
+  rerollSlot as runRerollSlot,
+  setSlotRecipe as runSetSlotRecipe,
+  setSlotHorsCatalogue as runSetSlotHorsCatalogue,
+} from '../planning/reroll-slot.js'
 import type { RerollContext } from '../planning/reroll-slot.js'
 import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
@@ -149,6 +153,24 @@ export interface Engine {
    * inconnue du catalogue : `RangeError`.
    */
   setSlotRecipe(plan: WeekPlan, slot: SlotRef, recipeId: RecipeId, contexte: RerollContext): WeekPlan
+  /**
+   * Pose un plat HORS CATALOGUE — plat préparé, traiteur, restaurant (décision 51, issue « (a) »).
+   *
+   * ⚠️ CE CRÉNEAU SORT DU CALCUL NUTRITIONNEL, il n'y entre pas à zéro. `checkCalorieFloor` devient
+   * SILENCIEUX sur toute la journée qui en contient un, et `planWeek` cesse d'y réinjecter le cumul.
+   * C'est l'arbitrage, pas un effet de bord : l'application préfère se taire plutôt que de fonder
+   * une alerte de sécurité sur un chiffre que rien ne source (principe 3). Voir le commentaire de
+   * `checkCalorieFloor` pour ce que ce silence coûte.
+   *
+   * ⚠️ AUCUN CONTEXTE, contrairement à `setSlotRecipe` : il n'y a ni suggestion à demander, ni
+   * accompagnement à choisir, ni allergène à filtrer sur un plat dont on ne connaît pas la
+   * composition. L'application ne peut RIEN affirmer sur ce plat — c'est précisément pour ça qu'il
+   * est hors catalogue.
+   *
+   * Créneau introuvable ou VERROUILLÉ : le plan rendu est l'objet d'entrée, inchangé. Libellé vide
+   * ou blanc : `RangeError`.
+   */
+  setSlotHorsCatalogue(plan: WeekPlan, slot: SlotRef, libelle: string, profile: UserProfile): WeekPlan
   /**
    * Place les restes dans un plan existant (§7.3) — rend un NOUVEAU plan, n'altère pas l'entrée.
    * `convives` = assiettes servies par repas, défaut 1. Un reste REMPLACE un plat prévu ; il ne
@@ -680,6 +702,15 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       // contourne. Même ligne, même fonction, même endroit que pour un reroll.
       if (apres === plan) return plan
       return { ...apres, warnings: checkCalorieFloor(apres, contexte.profile, enrichedCatalog) }
+    },
+    setSlotHorsCatalogue: (plan, slot, libelle, profile) => {
+      const apres = runSetSlotHorsCatalogue(plan, slot, libelle)
+      // Le plancher repasse ici AUSSI, exactement comme pour un reroll ou un choix manuel — et
+      // c'est ce passage qui RETIRE l'avertissement de la journée devenue immesurable. Sauter
+      // l'appel laisserait en place une alerte calculée sur l'état d'avant : un chiffre périmé
+      // affiché à côté d'un plat qui n'y est plus.
+      if (apres === plan) return plan
+      return { ...apres, warnings: checkCalorieFloor(apres, profile, enrichedCatalog) }
     },
     checkPlan: (plan, profile) => checkCalorieFloor(plan, profile, enrichedCatalog),
     browseRecipes: (req) => {

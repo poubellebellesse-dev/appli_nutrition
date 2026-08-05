@@ -280,7 +280,19 @@ meal_history(date, creneau, recipe_id, origine)    -- AJOUT 2026-07-30 (CODÉ)
     --   (`data/user-store.ts`, readHistory) : aucune couche du moteur ne lit `windowDays`.
 
 meal_plan(id, date_debut)
-meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste)
+meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste,
+                hors_catalogue)
+    -- hors_catalogue : AJOUT v9 (décision 51, 2026-08-05). Libellé libre d'un plat que
+    --   l'application ne sait pas mesurer — plat préparé, traiteur, restaurant. Non-NULL =
+    --   « créneau REMPLI, apport INCONNU », l'état qu'aucune colonne ne savait dire ; vide reste
+    --   recipe_id NULL ET hors_catalogue NULL. Le libellé EST le marqueur : pas de booléen à
+    --   côté, qui pourrait le contredire.
+    -- ⚠️ CHECK (recipe_id IS NULL OR hors_catalogue IS NULL) — porter les deux est
+    --   structurellement inexprimable, pas seulement découragé.
+    -- ⚠️ AUCUNE COLONNE D'ÉNERGIE, et c'est l'arbitrage : l'issue (b) de la décision 51 a été
+    --   écartée, un nombre tapé par l'utilisateur se mêlerait aux valeurs CIQUAL sans provenance
+    --   (principe 3). La journée qui contient un tel créneau sort du contrôle §6.5 plutôt que
+    --   d'y entrer avec un chiffre inventé.
     -- service : NULL en mode recette (un plat unique), sinon 'entree' | 'plat' | 'dessert' |
     --   'accompagnement' (mode repas, §2.7 CONCEPTION_B_VIN_REPAS) ; la clé s'étend à
     --   (plan_id, date, creneau, service)

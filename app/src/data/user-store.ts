@@ -449,8 +449,9 @@ export function savePlan(db: UserDb, plan: WeekPlan, misAJourLe: string): void {
     for (const entry of plan.entries) {
       db.run(
         `INSERT INTO meal_plan_entry
-           (plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+           (plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste,
+            hors_catalogue)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           plan.id,
           entry.slot.date,
@@ -460,6 +461,7 @@ export function savePlan(db: UserDb, plan: WeekPlan, misAJourLe: string): void {
           entry.portions,
           entry.locked ? 1 : 0,
           entry.isLeftover ? 1 : 0,
+          entry.horsCatalogue,
         ]
       )
     }
@@ -495,8 +497,9 @@ export function readPlan(db: UserDb, planId: string): WeekPlan | null {
       readonly portions: number
       readonly verrouille: number
       readonly est_reste: number
+      readonly hors_catalogue: string | null
     }>(
-      `SELECT date, creneau, service, recipe_id, portions, verrouille, est_reste
+      `SELECT date, creneau, service, recipe_id, portions, verrouille, est_reste, hors_catalogue
        FROM meal_plan_entry WHERE plan_id = ?
        ORDER BY date, ${ORDRE_CRENEAU}, ${ORDRE_SERVICE}`,
       [planId]
@@ -505,6 +508,7 @@ export function readPlan(db: UserDb, planId: string): WeekPlan | null {
       (e): MealPlanEntry => ({
         slot: { date: e.date, creneau: e.creneau as MealSlot },
         recipeId: (e.recipe_id as RecipeId | null) ?? null,
+        horsCatalogue: e.hors_catalogue ?? null,
         portions: e.portions,
         locked: e.verrouille === 1,
         isLeftover: e.est_reste === 1,

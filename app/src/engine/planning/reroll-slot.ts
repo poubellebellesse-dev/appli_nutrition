@@ -177,6 +177,65 @@ export function setSlotRecipe(
 }
 
 /**
+ * Pose un plat HORS CATALOGUE sur un créneau — plat préparé, traiteur, repas au restaurant.
+ * Décision 51, issue « (a) créneau exclu du calcul », tranchée le 2026-08-05. Rend un nouveau plan.
+ *
+ * ⚠️ NI CATALOGUE, NI `suggest`, NI ACCOMPAGNEMENT — et les trois absences sont le sujet, pas une
+ * simplification. Il n'y a rien à chercher : l'utilisateur a déjà son plat. Lui adjoindre du riz
+ * choisi par le moteur reviendrait à compléter nutritionnellement une assiette dont on ne connaît
+ * pas le contenu ; c'est la même raison qui interdit à `pickAccompagnement` de s'invoquer derrière
+ * une recette à `service: null`. Un accompagnement déjà posé sur ce créneau est donc SUPPRIMÉ.
+ *
+ * ⚠️ CE QUI N'EST PAS CONTOURNÉ. Un créneau VERROUILLÉ refuse le dépôt, comme pour un tirage ou un
+ * choix. Et `checkCalorieFloor` repasse sur le plan entier via `createEngine` — il en ressort
+ * simplement SILENCIEUX sur cette journée-là, ce qui est l'arbitrage lui-même et non un
+ * contournement : voir le commentaire de la garde pour ce que ça coûte.
+ *
+ * ⚠️ LE LIBELLÉ EST NETTOYÉ ET REFUSÉ S'IL EST VIDE. Un `horsCatalogue: ''` serait le pire des
+ * états : non-`null`, donc « rempli et immesurable » pour toutes les gardes, mais illisible à
+ * l'écran — un créneau occupé par rien, qui éteindrait l'alerte de plancher sans que personne ne
+ * puisse voir pourquoi.
+ */
+export function setSlotHorsCatalogue(plan: WeekPlan, slot: SlotRef, libelle: string): WeekPlan {
+  const propre = libelle.trim()
+  if (propre === '') {
+    throw new RangeError('setSlotHorsCatalogue : le libellé du plat ne peut pas être vide.')
+  }
+
+  const index = plan.entries.findIndex(
+    (e) => e.slot.date === slot.date && e.slot.creneau === slot.creneau && e.service !== 'accompagnement'
+  )
+  if (index < 0) return plan
+
+  const cible = plan.entries[index]!
+  if (cible.locked) return plan
+
+  const entries: MealPlanEntry[] = []
+  for (const entree of plan.entries) {
+    const memeCreneau = entree.slot.date === slot.date && entree.slot.creneau === slot.creneau
+    if (memeCreneau && entree.service === 'accompagnement') continue
+    if (!memeCreneau) {
+      entries.push(entree)
+      continue
+    }
+    entries.push({
+      ...cible,
+      recipeId: null,
+      horsCatalogue: propre,
+      // ⚠️ ZÉRO PORTION, ET CE N'EST PAS « ZÉRO ASSIETTE ». `portions` compte ce que la RECETTE
+      // produit, pour la liste de courses et les restes — un plat qu'on n'a pas cuisiné n'en produit
+      // aucune. La quantité mangée, elle, n'est demandée nulle part et ne doit pas l'être (§6.5).
+      portions: 0,
+      isLeftover: false,
+      // Mode recette : une seule entrée sur ce créneau, puisqu'il n'y a plus d'accompagnement.
+      service: null,
+    })
+  }
+
+  return { ...plan, entries }
+}
+
+/**
  * Reconstruit un créneau autour d'un plat — le tronc commun du tirage et du choix manuel.
  *
  * ⚠️ L'ACCOMPAGNEMENT SE RECALCULE AVEC LE PLAT, il ne survit pas au changement. Le garder tel quel
@@ -223,6 +282,7 @@ function reposerLeCreneau(
       entries.push({
         slot: { date: slot.date, creneau: slot.creneau },
         recipeId: complement,
+        horsCatalogue: null,
         portions: catalog.recipes.get(complement)?.portionsBase ?? 0,
         locked: false,
         isLeftover: false,

@@ -230,6 +230,7 @@ describe('semaine — les alertes d’énergie', () => {
         {
           slot: { date: '2026-08-03', creneau: 'dejeuner' },
           recipeId: RECETTE_FICTIVE,
+          horsCatalogue: null,
           portions: 1,
           locked: false,
           isLeftover: false,
@@ -238,6 +239,7 @@ describe('semaine — les alertes d’énergie', () => {
         {
           slot: { date: '2026-08-03', creneau: 'diner' },
           recipeId: RECETTE_FICTIVE,
+          horsCatalogue: null,
           portions: 1,
           locked: false,
           isLeftover: false,
@@ -351,7 +353,7 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     }
   })
 
-  it('ouvre une fenêtre à deux sources, et le titre dit OÙ le plat se posera', async () => {
+  it('ouvre une fenêtre à trois sources, et le titre dit OÙ le plat se posera', async () => {
     await composerSemaine()
     fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
 
@@ -359,6 +361,9 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     expect(within(dialogue).getByText(/Choisir un plat —/)).toBeDefined()
     expect(within(dialogue).getByRole('tab', { name: 'Chercher une recette' })).toBeDefined()
     expect(within(dialogue).getByRole('tab', { name: 'Avec ce que j’ai' })).toBeDefined()
+    // Troisième source depuis la décision 51 : « j'ai un dîner prévu et ce n'est pas une recette »
+    // est une façon de remplir un créneau, pas une fonctionnalité à part.
+    expect(within(dialogue).getByRole('tab', { name: 'Un plat préparé' })).toBeDefined()
   })
 
   it('⛔ POSE LA RECETTE DÉSIGNÉE, et l’écrit en base', async () => {
@@ -387,6 +392,80 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
       expect(nomChoisi).toContain(nom)
     })
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  // --- Plats préparés (décision 51, issue « (a) ») ---------------------------------------------
+
+  it('⛔ POSE LE PLAT PRÉPARÉ, l’écrit en base, et l’AFFICHE — les trois, pas deux sur trois', async () => {
+    // ⚠️ CE TEST EXISTE POUR LE TROISIÈME MAILLON. Un champ écrit en base et jamais relu à l'écran
+    // ne casse rien : le créneau affiche « Aucun plat » et personne ne voit passer l'oubli. C'est
+    // exactement `note_allergene` et `Recipe.service`, deux fois déjà.
+    await composerSemaine()
+    const avant = readLatestPlan(baseCourante())!.entries
+    const premier = avant.find((e) => e.service !== 'accompagnement')!
+
+    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
+    const dialogue = await screen.findByRole('dialog')
+    fireEvent.click(within(dialogue).getByRole('tab', { name: 'Un plat préparé' }))
+
+    const champ = within(dialogue).getByRole('textbox')
+    fireEvent.change(champ, { target: { value: '  Lasagnes surgelées  ' } })
+    fireEvent.click(within(dialogue).getByText('Poser ce plat'))
+
+    await waitFor(() => {
+      const apres = readLatestPlan(baseCourante())!.entries.find(
+        (e) => e.slot.date === premier.slot.date && e.slot.creneau === premier.slot.creneau && e.service !== 'accompagnement'
+      )
+      // Nettoyé au passage : un libellé encadré d'espaces ne doit pas devenir la vérité en base.
+      expect(apres!.horsCatalogue).toBe('Lasagnes surgelées')
+      expect(apres!.recipeId).toBeNull()
+    })
+    expect(screen.queryByRole('dialog')).toBeNull()
+    // À l'écran, et PAS sous « Aucun plat » : le créneau est rempli.
+    expect(screen.getByText('Lasagnes surgelées')).toBeDefined()
+  })
+
+  it('dit à l’écran que l’appli ne connaît pas cet apport — sinon son silence passe pour un oubli', async () => {
+    // C'est la contrepartie visible de la décision 51 : l'alerte de plancher calorique ne se
+    // déclenche plus sur cette journée, et l'utilisateur ne peut pas le deviner. Formulé comme un
+    // fait sur ce que l'application SAIT, jamais comme un reproche sur ce qui est mangé (principe 6).
+    await composerSemaine()
+    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
+    const dialogue = await screen.findByRole('dialog')
+    fireEvent.click(within(dialogue).getByRole('tab', { name: 'Un plat préparé' }))
+
+    // Annoncé AVANT le geste, dans la fenêtre.
+    expect(within(dialogue).getByText(/ne connaîtra pas ce que ce repas apporte/)).toBeDefined()
+
+    fireEvent.change(within(dialogue).getByRole('textbox'), { target: { value: 'Restaurant' } })
+    fireEvent.click(within(dialogue).getByText('Poser ce plat'))
+
+    // Et rappelé APRÈS, sur la carte du créneau.
+    await waitFor(() => expect(screen.getByText(/l’application ne connaît pas ce qu’il apporte/)).toBeDefined())
+  })
+
+  it('⛔ NE DEMANDE NI CALORIES NI QUANTITÉ — c’est l’arbitrage, pas un manque', async () => {
+    // L'issue (b) de la décision 51 (saisie d'énergie facultative) a été écartée : un nombre tapé
+    // par l'utilisateur se mélangerait aux valeurs CIQUAL sans provenance (principe 3). Un champ
+    // « quantité mangée » est en outre nommément interdit par §6.5 ARCHITECTURE. Si ce test rougit,
+    // quelqu'un a rouvert une décision tranchée en ajoutant un champ « pendant qu'on y est ».
+    await composerSemaine()
+    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
+    const dialogue = await screen.findByRole('dialog')
+    fireEvent.click(within(dialogue).getByRole('tab', { name: 'Un plat préparé' }))
+
+    expect(within(dialogue).queryAllByRole('spinbutton')).toHaveLength(0)
+    expect(within(dialogue).queryByText(/kcal|calorie|quantité/i)).toBeNull()
+  })
+
+  it('un libellé blanc ne pose rien — un créneau occupé par rien éteindrait l’alerte en silence', async () => {
+    await composerSemaine()
+    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
+    const dialogue = await screen.findByRole('dialog')
+    fireEvent.click(within(dialogue).getByRole('tab', { name: 'Un plat préparé' }))
+
+    fireEvent.change(within(dialogue).getByRole('textbox'), { target: { value: '   ' } })
+    expect((within(dialogue).getByText('Poser ce plat') as HTMLButtonElement).disabled).toBe(true)
   })
 
   it('un créneau GARDÉ n’est pas choisissable — pas de porte dérobée sur un verrou', async () => {

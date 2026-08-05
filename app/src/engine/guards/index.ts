@@ -201,10 +201,15 @@ export const checkCalorieFloor = (
   if (energyIndex < 0) return [] // catalogue sans nutriment d'énergie : rien à vérifier
 
   const floor = CALORIE_FLOOR_BY_SEX[profile.sexe]
-  const parJour = new Map<string, { kcal: number; remplis: Set<MealSlot> }>()
+  const parJour = new Map<string, { kcal: number; remplis: Set<MealSlot>; immesurable: boolean }>()
 
   for (const entry of plan.entries) {
-    const jour = parJour.get(entry.slot.date) ?? { kcal: 0, remplis: new Set<MealSlot>() }
+    const jour = parJour.get(entry.slot.date) ?? {
+      kcal: 0,
+      remplis: new Set<MealSlot>(),
+      immesurable: false,
+    }
+    if (entry.horsCatalogue !== null) jour.immesurable = true
     if (entry.recipeId !== null) {
       jour.kcal += catalog.indexes.recipeNutrients.get(entry.recipeId)?.[energyIndex] ?? 0
       jour.remplis.add(entry.slot.creneau)
@@ -214,6 +219,22 @@ export const checkCalorieFloor = (
 
   const warnings: PlanWarning[] = []
   for (const [date, jour] of parJour) {
+    // ⚠️ UN SEUL CRÉNEAU HORS CATALOGUE DISQUALIFIE LA JOURNÉE ENTIÈRE (décision 51, issue « (a) »,
+    // tranchée le 2026-08-05). Un plat préparé remplit son créneau sans qu'on sache ce qu'il
+    // apporte : le total du jour n'est plus un total, c'est une somme partielle. La comparer à un
+    // plancher produirait un avertissement FAUX à tous les coups — « 640 kcal » pour une journée
+    // qui en contient peut-être 1 800, et §6.5 interdit précisément d'affirmer à quelqu'un ce
+    // qu'il mange quand on n'en sait rien (c'est la correction de la décision 56).
+    //
+    // ⛔ CE QUE ÇA COÛTE, ET C'EST LE PRIX ASSUMÉ DE L'ISSUE (a) : sur ces journées-là, l'alerte de
+    // plancher ne se déclenche plus DU TOUT — y compris si les repas mesurables sont très légers.
+    // Les deux autres issues achetaient cette alerte en fabriquant un chiffre : (b) en le faisant
+    // taper par l'utilisateur, sans provenance ; (c) en inventant un aliment. On préfère renoncer à
+    // une alerte plutôt que la fonder sur un nombre que rien ne source (principe 3).
+    //
+    // C'est la MÊME règle que la ligne suivante, pas une exception : on n'évalue que les journées
+    // dont on connaît réellement l'apport. Incomplète ou immesurable, on se tait.
+    if (jour.immesurable) continue
     if (!MAIN_SLOTS.every((slot) => jour.remplis.has(slot))) continue
     if (jour.kcal >= floor) continue
     warnings.push({

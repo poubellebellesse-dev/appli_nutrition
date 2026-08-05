@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 8
+export const USER_SCHEMA_VERSION = 9
 
 export interface Migration {
   readonly version: number
@@ -476,6 +476,39 @@ const V8_STATEMENTS: readonly string[] = [
   `ALTER TABLE user_pantry ADD COLUMN declare_le TEXT NOT NULL DEFAULT ''`,
 ]
 
+/**
+ * v9 — LES PLATS PRÉPARÉS (décision 51, tranchée le 2026-08-05, issue « (a) créneau exclu »).
+ *
+ * Un plat du commerce, un traiteur, un repas au restaurant : le créneau est REMPLI, et sa valeur
+ * nutritionnelle est INCONNUE. Les deux à la fois — c'est ce qu'aucun état du schéma ne savait dire.
+ *
+ * ⚠️ UNE COLONNE, PAS UNE COLONNE ET UN DRAPEAU. Le libellé EST le marqueur : `hors_catalogue`
+ * non-NULL signifie « rempli, immesurable ». Ajouter à côté un booléen `est_hors_catalogue`
+ * créerait deux champs capables de se contredire, et il faudrait alors décider lequel fait foi —
+ * la classe de défaut que ce projet paie en boucle. Les trois états sont lisibles sans ambiguïté :
+ *
+ *   recipe_id NOT NULL, hors_catalogue NULL  → une recette du catalogue ou une recette perso
+ *   recipe_id NULL,     hors_catalogue NULL  → créneau VIDE (le plan n'a pas su le remplir)
+ *   recipe_id NULL,     hors_catalogue NOT NULL → rempli par un plat qu'on ne sait pas mesurer
+ *
+ * ⚠️ LE `CHECK` REND LE QUATRIÈME ÉTAT INEXPRIMABLE, il ne se contente pas de le décourager. Porter
+ * une recette ET un libellé libre poserait la question « lequel compte ? » à chaque lecture ; la
+ * base refuse la ligne. Même raison de fond que `requiredFoodIds` dans `MealContext` plutôt que
+ * dans `HardConstraints` : la garantie vient de la forme (acquis n°2 du CLAUDE.md).
+ *
+ * ⚠️ VÉRIFIÉ SUR SQLite AVANT D'ÊTRE ÉCRIT, comme l'index unique de v1 l'avait été : `ALTER TABLE
+ * … ADD COLUMN … CHECK (…)` référençant une AUTRE colonne est accepté, et la contrainte mord —
+ * les trois états ci-dessus passent, le quatrième lève « CHECK constraint failed ». Ce n'était pas
+ * acquis : c'est exactement sur ce genre de détail qu'une `PRIMARY KEY` avait laissé passer des
+ * doublons de créneau (voir l'index `meal_plan_entry_slot`).
+ *
+ * ⚠️ PAS DE COLONNE D'ÉNERGIE, ET C'EST L'ARBITRAGE LUI-MÊME. L'issue (b) de la décision 51 — une
+ * saisie d'énergie facultative — a été écartée : un nombre tapé par l'utilisateur se mélangerait
+ * aux valeurs CIQUAL dans les mêmes totaux sans marque de provenance (principe 3, traçabilité).
+ * N'ajouter cette colonne « puisqu'on y est » rouvrirait la décision en passant.
+ */
+const V9_STATEMENTS: readonly string[]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -485,6 +518,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 6, statements: V6_STATEMENTS },
   { version: 7, statements: V7_STATEMENTS },
   { version: 8, statements: V8_STATEMENTS },
+  { version: 9, statements: V9_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

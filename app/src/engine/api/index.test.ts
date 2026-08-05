@@ -801,6 +801,7 @@ function planWith(dejeuner: string, diner: string, warnings: readonly PlanWarnin
   const entry = (creneau: "dejeuner" | "diner", recette: string) => ({
     slot: { date: "2026-08-03", creneau },
     recipeId: recette as RecipeId,
+    horsCatalogue: null,
     portions: 2,
     locked: false,
     isLeftover: false,
@@ -869,5 +870,130 @@ describe("engine/api — avertissements d'un plan (§6.5)", () => {
     );
 
     expect(apres.warnings).toEqual([]);
+  });
+});
+
+// --- Plats préparés (décision 51, issue « (a) créneau exclu ») ---------------------------------
+//
+// Ce que ces tests verrouillent n'est PAS « le plat préparé s'affiche » — c'est que le moteur SE
+// TAIT sur la journée qui en contient un. Une alerte calculée sur une somme partielle serait un FAUX
+// à tous les coups : « 640 kcal » pour une journée qui en contient peut-être 1 800. §6.5 interdit
+// d'affirmer à quelqu'un ce qu'il mange quand on n'en sait rien (correction de la décision 56).
+//
+// ⚠️ LE PLAT PRÉPARÉ EST AU GOÛTER, ET C'EST TOUT LE SUJET. Première version de ces tests : il était
+// au DÎNER — ils passaient au vert AVEC ET SANS la garde, donc ils ne prouvaient rien. La raison
+// est que `checkCalorieFloor` n'évalue que les journées dont le déjeuner ET le dîner sont remplis,
+// et qu'un plat préparé (`recipeId: null`) ne remplit rien : la journée était déjà écartée par la
+// règle d'AVANT. Le seul cas où le nouveau drapeau décide vraiment est un créneau HORS
+// déjeuner/dîner — le portail s'ouvre, et le total additionné est incomplet. C'est là qu'une fausse
+// alerte se produisait.
+
+function planTroisCreneaux(dejeuner: string, diner: string, gouter: { readonly recette: string } | { readonly prepare: string }) {
+  const recette = (creneau: "dejeuner" | "diner" | "gouter", id: string) => ({
+    slot: { date: "2026-08-03", creneau },
+    recipeId: id as RecipeId,
+    horsCatalogue: null,
+    portions: 2,
+    locked: false,
+    isLeftover: false,
+    service: null,
+  });
+  return {
+    id: "p",
+    startDate: "2026-08-03",
+    days: 2,
+    seed: 1,
+    entries: [
+      recette("dejeuner", dejeuner),
+      recette("diner", diner),
+      "recette" in gouter
+        ? recette("gouter", gouter.recette)
+        : {
+            slot: { date: "2026-08-03", creneau: "gouter" as const },
+            recipeId: null,
+            horsCatalogue: gouter.prepare,
+            portions: 0,
+            locked: false,
+            isLeftover: false,
+            service: null,
+          },
+    ],
+    warnings: [] as readonly PlanWarning[],
+  };
+}
+
+describe("engine/api — un plat préparé rend la journée immesurable (décision 51)", () => {
+  it("SANS plat préparé, la journée légère déclenche bien l'alerte — le témoin", () => {
+    // Sans ce témoin, le test suivant serait vert pour n'importe quelle raison, y compris parce que
+    // la fixture ne déclenche jamais rien.
+    const engine = createEngine(makeEnergyFixture());
+    const plan = planTroisCreneaux("bouillon", "consomme", { recette: "bouillon" });
+    expect(engine.checkPlan(plan, PROFIL_TEST).map((w) => w.date)).toEqual(["2026-08-03"]);
+  });
+
+  it("… et elle se tait dès qu'un créneau de cette journée est un plat préparé", () => {
+    const engine = createEngine(makeEnergyFixture());
+    const plan = planTroisCreneaux("bouillon", "consomme", { prepare: "Lasagnes surgelées" });
+    expect(engine.checkPlan(plan, PROFIL_TEST)).toEqual([]);
+  });
+
+  it("⛔ le silence vaut MÊME quand les repas mesurables sont très légers — c'est le prix assumé", () => {
+    // CE TEST DOCUMENTE UNE PERTE, pas un succès. L'issue (a) achète l'honnêteté du chiffre au prix
+    // de l'alerte. Les deux autres issues la gardaient en fabriquant un nombre — tapé par
+    // l'utilisateur (b) ou inventé via un aliment approchant (c). Si ce test devient gênant, c'est
+    // la DÉCISION 51 qu'il faut rouvrir, pas le test qu'il faut assouplir.
+    const engine = createEngine(makeEnergyFixture());
+    const plan = planTroisCreneaux("consomme", "consomme", { prepare: "Restaurant" });
+    expect(engine.checkPlan(plan, PROFIL_TEST)).toEqual([]);
+  });
+
+  it("une AUTRE journée du même plan garde son alerte — l'exclusion est journalière, pas globale", () => {
+    const engine = createEngine(makeEnergyFixture());
+    const base = planTroisCreneaux("bouillon", "consomme", { prepare: "Traiteur" });
+    const plan = {
+      ...base,
+      entries: [
+        ...base.entries,
+        { slot: { date: "2026-08-04", creneau: "dejeuner" as const }, recipeId: "bouillon" as RecipeId, horsCatalogue: null, portions: 2, locked: false, isLeftover: false, service: null },
+        { slot: { date: "2026-08-04", creneau: "diner" as const }, recipeId: "consomme" as RecipeId, horsCatalogue: null, portions: 2, locked: false, isLeftover: false, service: null },
+      ],
+    };
+    expect(engine.checkPlan(plan, PROFIL_TEST).map((w) => w.date)).toEqual(["2026-08-04"]);
+  });
+
+  it("setSlotHorsCatalogue RETIRE l'avertissement de la journée qu'il rend immesurable", () => {
+    // Le recalcul doit se faire DANS le moteur. Sauté, le plan sortirait en portant une alerte
+    // calculée sur l'état d'avant — un chiffre périmé à côté d'un plat qui n'y est plus. Même
+    // défaut que la régression de `rerollSlot` plus haut.
+    const engine = createEngine(makeEnergyFixture());
+    const avant = planTroisCreneaux("bouillon", "consomme", { recette: "bouillon" });
+    expect(engine.checkPlan(avant, PROFIL_TEST)).toHaveLength(1);
+
+    const apres = engine.setSlotHorsCatalogue(avant, { date: "2026-08-03", creneau: "gouter" }, "Pizza livrée", PROFIL_TEST);
+    expect(apres.warnings).toEqual([]);
+    expect(apres.entries.find((e) => e.slot.creneau === "gouter")!.horsCatalogue).toBe("Pizza livrée");
+  });
+
+  it("le libellé est NETTOYÉ, et un libellé blanc est refusé", () => {
+    // Un `horsCatalogue: ''` serait le pire état possible : non-`null`, donc « rempli et
+    // immesurable » pour toutes les gardes, mais invisible à l'écran — un créneau occupé par rien,
+    // qui éteindrait l'alerte sans que personne puisse voir pourquoi.
+    const engine = createEngine(makeEnergyFixture());
+    const plan = planTroisCreneaux("bouillon", "consomme", { recette: "bouillon" });
+    const slot = { date: "2026-08-03", creneau: "gouter" as const };
+
+    expect(engine.setSlotHorsCatalogue(plan, slot, "  Pizza  ", PROFIL_TEST).entries.find((e) => e.slot.creneau === "gouter")!.horsCatalogue).toBe("Pizza");
+    expect(() => engine.setSlotHorsCatalogue(plan, slot, "   ", PROFIL_TEST)).toThrow(RangeError);
+  });
+
+  it("un créneau VERROUILLÉ refuse le dépôt, comme il refuse un tirage", () => {
+    const engine = createEngine(makeEnergyFixture());
+    const base = planTroisCreneaux("bouillon", "consomme", { recette: "bouillon" });
+    const verrouille = {
+      ...base,
+      entries: base.entries.map((e) => (e.slot.creneau === "gouter" ? { ...e, locked: true } : e)),
+    };
+    const apres = engine.setSlotHorsCatalogue(verrouille, { date: "2026-08-03", creneau: "gouter" }, "Pizza", PROFIL_TEST);
+    expect(apres).toBe(verrouille);
   });
 });
