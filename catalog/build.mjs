@@ -98,10 +98,15 @@ const ALLERGENS = [
 // Exporté : app/src/engine/guards/banned-terms.ts en garde une COPIE (engine/ ne peut pas importer
 // ce fichier, §3 ENGINE) ; tests/banned-terms-consistency.test.mjs importe les deux listes depuis
 // leurs sources respectives et échoue si elles divergent — voir l'en-tête de banned-terms.ts.
+//
+// ⚠️ CHAQUE ENTRÉE EST LE RADICAL LE PLUS COURT QUI COUVRE SA FAMILLE, et aucune n'est sous-chaîne
+// d'une autre. L'appariement se fait par SOUS-CHAÎNE : allonger une entrée jusqu'à une forme
+// conjuguée précise ne la rend pas plus stricte, elle rend la liste plus TROUÉE. Le détail du
+// relevé du 2026-08-05 (« guérison », « guérissent », « guéri », « thérapeutique » passaient tous
+// les quatre) est en tête de app/src/engine/guards/banned-terms.ts.
 export const BANNED_TERMS = [
   // Famille thérapeutique (§6.1)
-  'soigne', 'soigner', 'guérit', 'guérir', 'traite', 'traiter',
-  'prévient la maladie', 'remède', 'thérapie',
+  'soigne', 'guéri', 'traite', 'prévient', 'remède', 'thérap',
   // Famille jugement (principe 6)
   'malsain', 'mauvais pour', 'à éviter', 'trop gras', 'cheat meal',
   'se rattraper', 'plaisir coupable', 'aliment sain',
@@ -130,8 +135,13 @@ const NORMALIZED_BANNED = BANNED_TERMS.map((term) => ({ term, normalized: normal
 /**
  * Cherche les termes bannis dans un champ texte de contenu.
  * Retourne la liste des termes trouvés (vide si rien).
+ *
+ * ⚠️ EXPORTÉE POUR ÊTRE COMPARÉE, pas pour être appelée d'ailleurs. `BANNED_TERMS` était seule
+ * exportée et tests/banned-terms-consistency.test.mjs ne comparait donc que les LISTES — alors que
+ * `normalize` et cette fonction-ci sont dupliquées elles aussi dans guards/banned-terms.ts. Une
+ * divergence de normalisation entre les deux copies laissait le test parfaitement vert.
  */
-function findBannedTerms(text) {
+export function findBannedTerms(text) {
   if (typeof text !== 'string' || text.length === 0) return []
   const normalized = normalize(text)
   return NORMALIZED_BANNED.filter(({ normalized: n }) => normalized.includes(n)).map((m) => m.term)

@@ -38,24 +38,53 @@ import { describe, expect, it } from 'vitest'
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { BANNED_TERMS as GUARD_BANNED_TERMS } from '../app/src/engine/guards/banned-terms.js'
+import {
+  BANNED_TERMS as GUARD_BANNED_TERMS,
+  findBannedTerms as guardFindBannedTerms,
+} from '../app/src/engine/guards/banned-terms.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.join(__dirname, '..')
 
-function readCatalogBannedTerms() {
+/**
+ * Exécute une expression dans catalog/build.mjs, côté vrai Node — voir l'avertissement ci-dessus sur
+ * le shebang + CRLF. `expression` reçoit le module chargé sous le nom `m` et rend du JSON.
+ */
+function lireDepuisBuild(expression) {
   const result = spawnSync(
     process.execPath,
-    ['--input-type=module', '-e', "import('./catalog/build.mjs').then(m => process.stdout.write(JSON.stringify(m.BANNED_TERMS)))"],
+    [
+      '--input-type=module',
+      '-e',
+      `import('./catalog/build.mjs').then(m => process.stdout.write(JSON.stringify(${expression})))`,
+    ],
     { cwd: REPO_ROOT, encoding: 'utf8' }
   )
   if (result.status !== 0) {
-    throw new Error(`lecture de BANNED_TERMS depuis catalog/build.mjs échouée : ${result.stderr}`)
+    throw new Error(`lecture depuis catalog/build.mjs échouée : ${result.stderr}`)
   }
   return JSON.parse(result.stdout)
 }
 
-const CATALOG_BANNED_TERMS = readCatalogBannedTerms()
+const CATALOG_BANNED_TERMS = lireDepuisBuild('m.BANNED_TERMS')
+
+// Corpus de comparaison. Chaque ligne existe pour une raison : les quatre premières sont les FUITES
+// mesurées le 2026-08-05 (formes fléchies qu'aucune entrée n'attrapait), les suivantes couvrent la
+// normalisation (accents, casse), le multi-mots, et de la langue de recette qui ne doit rien
+// déclencher. Toute divergence entre les deux copies sur l'une d'elles est un défaut de sécurité.
+const CORPUS = [
+  'La guérison passe par l’assiette',
+  'Ces plantes guérissent l’insomnie',
+  'Il en est guéri depuis',
+  'Une approche thérapeutique de l’assiette',
+  'Ce plat GUERIT tout',
+  'un aliment sain à privilégier',
+  'Prévient la maladie cardiovasculaire',
+  'à éviter en excès',
+  'Rincer soigneusement les lentilles',
+  'Émincer finement, cuire à feu doux',
+  '',
+]
 
 describe('lexique banni — cohérence catalog/build.mjs ↔ engine/guards/banned-terms.ts (§6.2 ARCHITECTURE)', () => {
   it('les deux listes ne sont pas vides (garde-fou contre une dérive vers « les deux vides »)', () => {
@@ -65,5 +94,27 @@ describe('lexique banni — cohérence catalog/build.mjs ↔ engine/guards/banne
 
   it('les deux listes contiennent exactement les mêmes termes, peu importe l’ordre', () => {
     expect([...GUARD_BANNED_TERMS].sort()).toEqual([...CATALOG_BANNED_TERMS].sort())
+  })
+
+  // ⛔ CE QUI MANQUAIT (2026-08-05). Les deux tests ci-dessus comparent les LISTES, et l'en-tête de
+  // guards/banned-terms.ts affirmait que ce fichier était « la vraie garantie » contre la dérive.
+  // Mais `normalize()` et `findBannedTerms()` sont dupliquées elles aussi. Si l'une des deux cessait
+  // de retirer les accents, ou passait de `includes` à un autre appariement, les listes resteraient
+  // identiques au caractère près et ce fichier resterait VERT — pendant que le build et le moteur
+  // n'interdiraient plus la même chose.
+  it('les deux implémentations rendent le même verdict sur tout le corpus', () => {
+    const attendu = lireDepuisBuild(`[${CORPUS.map((t) => JSON.stringify(t)).join(',')}].map(t => m.findBannedTerms(t))`)
+    for (const [i, texte] of CORPUS.entries()) {
+      expect([...guardFindBannedTerms(texte)].sort(), `divergence sur « ${texte} »`).toEqual(
+        [...attendu[i]].sort()
+      )
+    }
+  })
+
+  it('le corpus fait bien travailler la garde — sinon on comparerait deux fois « rien »', () => {
+    // Sans ça, un corpus devenu inoffensif rendrait le test ci-dessus vert en comparant des listes
+    // vides : la panne la plus discrète possible pour un test de non-divergence.
+    const bloques = CORPUS.filter((t) => guardFindBannedTerms(t).length > 0)
+    expect(bloques.length).toBeGreaterThanOrEqual(7)
   })
 })

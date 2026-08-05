@@ -18,11 +18,33 @@
 //
 // Dépendances : aucune — fonctions pures sur des chaînes, pas de types domain/ nécessaires ici.
 
-/** Vocabulaire banni de toute chaîne affichée par l'application (§6.2 ARCHITECTURE, deux familles). */
+/**
+ * Vocabulaire banni de toute chaîne affichée par l'application (§6.2 ARCHITECTURE, deux familles).
+ *
+ * ⚠️ CHAQUE ENTRÉE EST LE RADICAL LE PLUS COURT QUI COUVRE SA FAMILLE, et aucune n'est sous-chaîne
+ * d'une autre — propriété verrouillée par `guards/index.test.ts`. L'appariement se fait par
+ * SOUS-CHAÎNE : allonger une entrée jusqu'à une forme conjuguée précise ne la rend pas plus stricte,
+ * elle rend la liste plus TROUÉE.
+ *
+ * ⛔ RELEVÉ DU 2026-08-05, la moitié du défaut que personne n'avait vue. La liste portait
+ * `guérit`, `guérir` et `thérapie` — l'infinitif et la 3ᵉ personne. « guérison », « guérissent »,
+ * « guéri » et « thérapeutique » n'en sont sous-chaînes d'AUCUNE : les quatre passaient la garde.
+ * `ETAT.md` ne documentait que l'excès inverse (« rincer SOIGNEusement » rejeté à cause de
+ * `soigne`), la moitié rassurante. `guéri` et `thérap` couvrent maintenant toute la famille.
+ *
+ * Elle portait aussi `soigner` et `traiter`, MORTS : `soigne` et `traite` en sont sous-chaînes,
+ * donc ils ne pouvaient jamais être signalés seuls — ils ne faisaient qu'allonger le message
+ * (« traite, traiter » pour un seul motif) et donner à la liste une couverture apparente.
+ *
+ * ⛔ ET `prévient la maladie`, qui n'attrapait QUE ses propres mots littéraux : ni le pluriel
+ * (« prévient les maladies »), ni — surtout — la forme qu'on écrit vraiment, « prévient le
+ * cancer », « prévient le diabète ». Une entrée-phrase est un radical qui ne couvre rien. Réduite à
+ * `prévient` : dans une application qui s'interdit toute allégation santé (§6.1), ce verbe
+ * n'introduit jamais autre chose.
+ */
 export const BANNED_TERMS: readonly string[] = [
   // Famille thérapeutique (§6.1 ARCHITECTURE)
-  'soigne', 'soigner', 'guérit', 'guérir', 'traite', 'traiter',
-  'prévient la maladie', 'remède', 'thérapie',
+  'soigne', 'guéri', 'traite', 'prévient', 'remède', 'thérap',
   // Famille jugement (principe 6 ARCHITECTURE)
   'malsain', 'mauvais pour', 'à éviter', 'trop gras', 'cheat meal',
   'se rattraper', 'plaisir coupable', 'aliment sain',

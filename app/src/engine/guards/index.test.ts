@@ -25,6 +25,7 @@ import {
   assertNoTherapeuticClaim,
   assertScoringLayersNeverExclude,
 } from "./index.js";
+import { BANNED_TERMS, findBannedTerms } from "./banned-terms.js";
 
 const EMPTY_INDEXES: CatalogIndexes = {
   recipesByAllergen: new Map(),
@@ -401,5 +402,77 @@ describe("guards/assertNoTherapeuticClaim — lexique banni (§6.2 ARCHITECTURE)
     expect(() =>
       assertNoTherapeuticClaim([explanationWithLabel("à éviter en excès")]),
     ).toThrow(/nutri/);
+  });
+});
+
+// --- Les formes que le lexique laissait passer (mesuré le 2026-08-05) ---------------------------
+//
+// ⛔ CE QUI L'A MOTIVÉ. `docs/ETAT.md` documentait ce lexique comme « sur-bloquant » : la garde
+// cherche des SOUS-CHAÎNES, donc « rincer SOIGNEusement » est rejeté. C'était la moitié rassurante
+// du défaut. Le même choix SOUS-bloquait : `guérit`/`guérir` ne sont pas des sous-chaînes de
+// « guérison », « guérissent » ni « guéri », et `thérapie` n'en est pas une de « thérapeutique ».
+// La garde couvrait l'infinitif et la 3ᵉ personne, pas le nom ni le participe — soit les formes
+// qu'on écrit le plus naturellement en français.
+//
+// La correction ne change PAS l'appariement (rester en sous-chaîne est le sens sûr de l'erreur) :
+// elle raccourcit chaque entrée jusqu'au radical qui couvre sa famille. `guéri` attrape guérit,
+// guérir, guérison, guérissent et guéri d'un seul tenant ; `thérap` attrape thérapie, thérapeute
+// et thérapeutique.
+describe("guards/assertNoTherapeuticClaim — les formes fléchies, pas seulement l'infinitif", () => {
+  const FUITES: readonly string[] = [
+    "La guérison passe par l'assiette",
+    "Ces plantes guérissent l'insomnie",
+    "Il en est guéri depuis",
+    "Une approche thérapeutique de l'assiette",
+    // `prévient la maladie` était une entrée-PHRASE : elle n'attrapait que ses propres mots
+    // littéraux, donc ni le pluriel ni — surtout — la forme qu'on écrit vraiment.
+    "Prévient les maladies cardiaques",
+    "Prévient le cancer du côlon",
+  ];
+
+  for (const label of FUITES) {
+    it(`lève sur « ${label} »`, () => {
+      expect(() =>
+        assertNoTherapeuticClaim([explanationWithLabel(label)]),
+      ).toThrow(EngineSafetyError);
+    });
+  }
+
+  it("ne s'est pas élargi au point d'attraper de la langue ordinaire", () => {
+    // Le raccourcissement des entrées ne doit pas créer de NOUVEAU faux positif. « soigneusement »
+    // en reste un — connu, documenté, et laissé tel quel : le corriger demanderait un appariement
+    // par mot exact plus des listes de conjugaison complètes, soit un échec sûr échangé contre un
+    // échec dangereux.
+    for (const label of [
+      "une cuisson douce et régulière",
+      "des légumes de saison, crus ou cuits",
+      "à préparer la veille si le temps manque",
+    ]) {
+      expect(() =>
+        assertNoTherapeuticClaim([explanationWithLabel(label)]),
+      ).not.toThrow();
+    }
+  });
+});
+
+describe("guards/banned-terms — la forme du lexique lui-même", () => {
+  it("aucune entrée n'est sous-chaîne d'une autre — une entrée couverte ne peut jamais être signalée seule", () => {
+    // Ce n'est pas de l'esthétique. `soigner` et `traiter` ÉTAIENT dans la liste alors que `soigne`
+    // et `traite` y étaient aussi : ils ne pouvaient jamais apparaître sans eux, et le message
+    // d'erreur listait « traite, traiter » pour un seul motif. Une entrée qui ne peut pas
+    // discriminer est du bruit dans un message de sécurité — et donne à la liste une apparence de
+    // couverture qu'elle n'a pas.
+    const normalisees = BANNED_TERMS.map((t) =>
+      t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""),
+    );
+    const couvertes = normalisees.filter((terme, i) =>
+      normalisees.some((autre, j) => i !== j && terme.includes(autre)),
+    );
+    expect(couvertes, `entrées déjà couvertes par une plus courte : ${couvertes.join(", ")}`).toEqual([]);
+  });
+
+  it("findBannedTerms rend LE terme du lexique, pas le texte apparié", () => {
+    // Le message d'erreur cite l'entrée fautive pour que l'auteur sache quoi chercher dans la liste.
+    expect(findBannedTerms("La guérison est en marche")).toEqual(["guéri"]);
   });
 });
