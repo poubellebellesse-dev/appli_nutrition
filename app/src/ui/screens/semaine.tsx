@@ -31,6 +31,7 @@ import {
   aujourdhuiIso,
   chargerSocle,
   cleCreneau,
+  formaterJour,
   maintenantIso,
   profilCourant,
   type Socle,
@@ -854,16 +855,6 @@ function Creneau({
       </div>
     </div>
   )
-}
-
-/** « lun. 3 août ». Le fuseau est forcé en UTC : les dates du plan sont des jours, pas des instants. */
-function formaterJour(isoDate: string): string {
-  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('fr-FR', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  })
 }
 
 function formaterPlage(dates: readonly string[]): string {

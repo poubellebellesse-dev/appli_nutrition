@@ -29,6 +29,7 @@ import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.
 import { hashDe, hashDeRecette } from '../router.js'
 import {
   COMPTES_VIDES,
+  FACETTES,
   FILTRES_VIDES,
   FiltresActifs,
   FiltresRecettes,
@@ -50,13 +51,6 @@ const RACCOURCIS_PAR_FAMILLE = 8
 
 /** Facettes filtrables — les mêmes que l'écran Recettes (§4.4). Service et envergure ne sont pas
  *  des facettes, voir l'en-tête de `filtres-recettes.tsx`. */
-const FACETTES: readonly FacetteKind[] = [
-  'cuisine' as FacetteKind,
-  'regime' as FacetteKind,
-  'style' as FacetteKind,
-  'occasion' as FacetteKind,
-]
-
 /** Combien de résultats afficher. La liste est classée : au-delà, la couverture devient dérisoire. */
 const RESULTATS_AFFICHES = 30
 

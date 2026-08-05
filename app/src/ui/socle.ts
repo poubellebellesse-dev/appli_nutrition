@@ -148,3 +148,22 @@ export function profilCourant(db: UserDb, date: string): UserProfile {
 export function cleCreneau(date: string, creneau: MealSlot): string {
   return `${date}|${creneau}`
 }
+
+/**
+ * « lun. 3 août ». Le fuseau est forcé en UTC : les dates du plan sont des JOURS, pas des instants —
+ * sans ça, un plan écrit à 23 h recule d'un jour à l'affichage selon le fuseau du téléphone.
+ *
+ * ⚠️ ELLE VIT ICI, avec `cleCreneau` et `LIBELLE_CRENEAU`, parce que c'est la MÊME famille : comment
+ * un créneau du plan se nomme à l'écran. Elle a été écrite deux fois — `courses.tsx` et
+ * `semaine.tsx` — à l'identique. Deux copies identiques ne cassent rien le jour où on les écrit ;
+ * elles cassent le jour où l'une des deux change, et la même journée se lit alors différemment selon
+ * l'écran. Les deux composent d'ailleurs le même libellé, `formaterJour(...) · LIBELLE_CRENEAU[...]`.
+ */
+export function formaterJour(isoDate: string): string {
+  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('fr-FR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  })
+}

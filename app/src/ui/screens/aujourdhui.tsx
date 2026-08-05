@@ -40,7 +40,11 @@ import {
 } from '../socle.js'
 import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { REPAS_PAR_DEFAUT, TITRE_CRENEAU, creneauDuMoment, creneauxDuRythme } from '../creneau.js'
-import { Segment } from '../champs-profil.js'
+// ⚠️ `PALIERS_TEMPS` est IMPORTÉ, pas recopié. Il l'était — même valeurs, mot pour mot — alors que
+// `champs-profil.tsx` l'exportait déjà sans que personne le lise. Le réglage de temps de cet écran
+// et celui du profil répondent à la même question ; deux tables jumelles ne restent jumelles que
+// jusqu'à la première retouche de l'une des deux.
+import { PALIERS_TEMPS, Segment } from '../champs-profil.js'
 import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
 
@@ -70,13 +74,6 @@ const NB_PROCHES = 4
 const SEUIL_INDECISION = 10
 
 /** Paliers de temps de l'écran. Mêmes valeurs que le rythme, pour ne pas inventer un 3ᵉ barème. */
-const PALIERS_TEMPS: readonly { readonly minutes: number | null; readonly libelle: string }[] = [
-  { minutes: 20, libelle: '20 min' },
-  { minutes: 30, libelle: '30 min' },
-  { minutes: 45, libelle: '45 min' },
-  { minutes: null, libelle: 'Peu importe' },
-]
-
 /**
  * Les axes de l'encart d'aide, du plus général au plus précis — l'ordre demandé.
  *

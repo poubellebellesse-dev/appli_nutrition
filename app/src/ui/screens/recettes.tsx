@@ -43,6 +43,7 @@ import { normaliser, valeursDeFacette } from '../../engine/search/index.js'
 import type { BrowseResult, Engine } from '../../engine/api/index.js'
 import {
   COMPTES_VIDES,
+  FACETTES,
   FILTRES_VIDES,
   FiltresActifs,
   FiltresRecettes,
@@ -80,13 +81,6 @@ const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
 /** Les quatre facettes filtrables — celles qu'il faut compter dynamiquement. Service et envergure
  *  ne sont PAS des facettes (`recette.service`/`recette.envergure`, champs directs) : ils ont leur
  *  propre comptage, voir `compterService`/`compterEnvergure`. */
-const FACETTES: readonly FacetteKind[] = [
-  'cuisine' as FacetteKind,
-  'regime' as FacetteKind,
-  'style' as FacetteKind,
-  'occasion' as FacetteKind,
-]
-
 /** Ce que cet écran ajoute aux filtres communs à « Recettes » et « Vider le frigo ». */
 interface Filtres {
   readonly commun: FiltresRecette

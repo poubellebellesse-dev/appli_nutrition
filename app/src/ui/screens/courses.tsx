@@ -48,6 +48,7 @@ import {
   aujourdhuiIso,
   chargerSocle,
   cleCreneau,
+  formaterJour,
   profilCourant,
   type Socle,
 } from '../socle.js'
@@ -946,16 +947,6 @@ function BoutonPartager({ vue, coches }: { readonly vue: Vue; readonly coches: R
       {copie ? 'Copié' : 'Partager'}
     </button>
   )
-}
-
-/** « lun. 3 août ». UTC forcé : les dates du plan sont des jours, pas des instants. */
-function formaterJour(isoDate: string): string {
-  return new Date(`${isoDate}T00:00:00Z`).toLocaleDateString('fr-FR', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  })
 }
 
 function plageDuPlan(liste: ShoppingList): string {

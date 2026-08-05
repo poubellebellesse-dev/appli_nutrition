@@ -38,7 +38,30 @@ import type { Catalog, CourseKind, FacetteKind, RecipeEnvergure, RecipeId } from
 import { valeursDeEnvergure, valeursDeFacette, valeursDeService } from '../engine/search/index.js'
 import { Panneau } from './panneau.js'
 
-/** Paliers de temps total, en minutes. */
+/**
+ * Les quatre axes de facette, communs à « Recettes » et « Vider le frigo ».
+ *
+ * ⚠️ ILS VIVENT ICI PARCE QUE LES DEUX ÉCRANS IMPORTENT DÉJÀ CE FICHIER. La liste était recopiée
+ * dans `screens/recettes.tsx` et `screens/frigo.tsx`, à l'identique — alors que `recettes.tsx` la
+ * décrivait justement comme « les filtres communs aux deux écrans ». Une liste commune écrite deux
+ * fois n'est commune que jusqu'au premier ajout d'axe.
+ */
+export const FACETTES: readonly FacetteKind[] = [
+  'cuisine' as FacetteKind,
+  'regime' as FacetteKind,
+  'style' as FacetteKind,
+  'occasion' as FacetteKind,
+]
+
+/**
+ * Paliers de temps total, en minutes — POUR LE FILTRE DE CATALOGUE.
+ *
+ * ⚠️ CE NE SONT PAS CEUX DU PROFIL, et l'écart n'est documenté nulle part. `champs-profil.tsx`
+ * propose 20 / 30 / 45 / « Peu importe », ici c'est 20 / 40 / 60. Les deux répondent pourtant à la
+ * même question — « combien de temps je veux y passer ». Écart relevé le 2026-08-05, LAISSÉ EN
+ * L'ÉTAT : l'aligner changerait ce que voit l'utilisateur sur l'écran Recettes, ce qui est une
+ * décision de produit et pas un nettoyage. À trancher, pas à harmoniser en silence.
+ */
 const PALIERS_TEMPS: readonly { readonly minutes: number; readonly libelle: string }[] = [
   { minutes: 20, libelle: '20 min' },
   { minutes: 40, libelle: '40 min' },
