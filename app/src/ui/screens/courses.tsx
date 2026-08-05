@@ -27,7 +27,7 @@ import type {
   SlotRef,
 } from '../../engine/domain/index.js'
 import { rayonDe, RAYONS_ALIMENTAIRES } from '../../engine/planning/shopping-list.js'
-import { normaliser } from '../../engine/search/index.js'
+import { chercherParNom, normaliser } from '../../engine/search/index.js'
 import {
   addExtraItem,
   readAllergies,
@@ -799,11 +799,17 @@ function FormulaireAjout({
   // Même motif que `editeur-recette.tsx` (« Ajouter un ingrédient ») : une liste maison, pas un
   // `<datalist>`, parce qu'il faut récupérer l'ALIMENT choisi (pour en déduire le rayon), pas
   // seulement le texte de son nom.
+  //
+  // ⛔ ICI, UNE LISTE VIDE FAIT TAIRE LA NOTE D'ALLERGÈNE, et c'est ce qui distingue cet écran des
+  // deux autres. Sans proposition, on saisit du texte libre, `alimentChoisi` reste `null`, et
+  // `noteAllergeneDe` — qui exige un `Food` — n'a rien à quoi s'appliquer. Le défaut de rappel ne
+  // faisait donc pas qu'agacer : il retirait une information que l'application avait. D'où
+  // `chercherParNom` plutôt qu'une sous-chaîne, qui rendait vide dès que la saisie était plus longue
+  // que le nom éditorial (« noix de saint-jacques » contre « Coquille Saint-Jacques », décision 58).
   const propositions = useMemo(() => {
     if (!propositionsVisibles) return []
-    const cherche = normaliser(libelle.trim())
-    if (cherche.length < 2) return []
-    return [...foods.values()].filter((f) => normaliser(f.nom).includes(cherche)).slice(0, 6)
+    if (normaliser(libelle.trim()).length < 2) return []
+    return chercherParNom([...foods.values()], libelle, 6)
   }, [foods, libelle, propositionsVisibles])
 
   return (

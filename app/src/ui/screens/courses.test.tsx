@@ -751,3 +751,54 @@ describe('courses — le regroupement « Repas » nomme le PLAT, pas son accompa
     }
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// Décision 58, cause (1). La complétion comparait des SOUS-CHAÎNES : une saisie plus longue que le
+// nom éditorial, ou dans un autre ordre, rendait une liste VIDE. Ici ce n'était pas qu'un défaut de
+// confort — sans proposition à cliquer, on saisit du texte libre et la note d'allergène disparaît.
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+
+/** Les mots d'un nom, remis dans l'ordre inverse : « Courgette, crue » → « crue courgette ».
+ *  Garantit une saisie qui n'est PAS une sous-chaîne du nom, sans dépendre d'un aliment précis. */
+function motsInverses(nom: string): string {
+  return nom
+    .split(/[^\p{L}]+/u)
+    .filter((mot) => mot.length > 2)
+    .reverse()
+    .join(' ')
+}
+
+describe('courses — la complétion ne dépend plus de l’ordre ni de la longueur de la saisie', () => {
+  it('« crue courgette » propose Courgette — l’ordre des mots n’est pas celui du nom éditorial', async () => {
+    await avecUnPlan()
+    await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: 'crue courgette' },
+    })
+
+    expect(await within(formulaire()).findByText('Courgette, crue')).toBeDefined()
+  })
+
+  it('⛔ et la note d’allergène suit : une saisie qui ne trouvait rien la faisait TAIRE', async () => {
+    // Sans proposition cliquable, `alimentChoisi` reste `null` et `noteAllergeneDe` n'a rien à quoi
+    // s'appliquer. Le rappel manqué retirait donc une information que l'application avait.
+    const aliment = [...catalogueDeTest().foods.values()].find((f) =>
+      f.allergenes.some((a) => a.allergenId === ('gluten' as AllergenId))
+    )
+    if (aliment === undefined) throw new Error('aucun aliment du catalogue de test ne porte le gluten')
+    writeAllergies(baseCourante(), [{ allergenId: 'gluten' as AllergenId, severite: null }])
+    await avecUnPlan()
+    await monter()
+
+    fireEvent.click(screen.getByText('Ajouter un article'))
+    fireEvent.change(screen.getByPlaceholderText('Lessive, pain, croquettes…'), {
+      target: { value: motsInverses(aliment.nom) },
+    })
+    fireEvent.click(await within(formulaire()).findByText(aliment.nom))
+    fireEvent.click(screen.getByText('Ajouter'))
+
+    expect(await screen.findByText(/Contient un allergène que vous avez déclaré : Gluten/)).toBeDefined()
+  })
+})

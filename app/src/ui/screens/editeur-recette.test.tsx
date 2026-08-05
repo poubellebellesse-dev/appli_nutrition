@@ -256,3 +256,15 @@ describe('éditeur — modifier une recette perso', () => {
     expect(relue?.piquant).toBe(2)
   })
 })
+
+describe('éditeur — la recherche d’ingrédient répond comme les autres écrans', () => {
+  it('« crue courgette » trouve Courgette : l’ordre des mots n’est pas celui du nom éditorial', async () => {
+    // Décision 58, cause (1). La sous-chaîne échouait dès que la saisie n'était pas un fragment
+    // littéral du nom. Trois écrans interrogent le même catalogue d'aliments ; les trois doivent y
+    // répondre pareil, sinon « je l'ai trouvé sur l'autre écran » devient un défaut.
+    await monter()
+    await ajouterIngredient('crue courgette')
+
+    expect(document.body.textContent).toMatch(/Courgette/)
+  })
+})

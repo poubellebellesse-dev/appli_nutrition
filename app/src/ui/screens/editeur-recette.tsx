@@ -18,7 +18,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Catalog, FoodId, MealSlot, RecipeEnvergure, SensoryAxes } from '../../engine/domain/index.js'
-import { normaliser } from '../../engine/search/index.js'
+import { chercherParNom, normaliser } from '../../engine/search/index.js'
 import {
   AXES_PAR_DEFAUT,
   construireRecette,
@@ -365,12 +365,14 @@ function Ingredients({
 }) {
   const deja = ingredients.map((i) => i.foodId)
 
+  // ⚠️ MÊME APPARIEMENT QU'AILLEURS (`chercherParNom`), et surtout pas une sous-chaîne réécrite ici.
+  // C'était le cas, et une saisie plus longue que le nom éditorial rendait une liste VIDE — voir
+  // `frigo.tsx` et la décision 58. Trois écrans interrogent le même catalogue d'aliments ; les trois
+  // doivent y répondre pareil, sinon « on l'a trouvé sur l'autre écran » devient un défaut.
   const propositions = useMemo(() => {
-    const cherche = normaliser(recherche.trim())
-    if (cherche.length < 2) return []
-    return [...catalogue.foods.values()]
-      .filter((a) => !deja.includes(a.id) && normaliser(a.nom).includes(cherche))
-      .slice(0, 6)
+    if (normaliser(recherche.trim()).length < 2) return []
+    const candidats = [...catalogue.foods.values()].filter((a) => !deja.includes(a.id))
+    return chercherParNom(candidats, recherche, 6)
   }, [catalogue, recherche, deja])
 
   const nomDe = (foodId: string) => catalogue.foods.get(foodId as FoodId)?.nom ?? foodId
