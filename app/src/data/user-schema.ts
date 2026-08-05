@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 9
+export const USER_SCHEMA_VERSION = 10
 
 export interface Migration {
   readonly version: number
@@ -512,6 +512,53 @@ const V9_STATEMENTS: readonly string[] = [
      ADD COLUMN hors_catalogue TEXT CHECK (recipe_id IS NULL OR hors_catalogue IS NULL)`,
 ]
 
+/**
+ * v10 — LA CUISSON EN COURS SURVIT À LA FERMETURE (lot L1, `CONCEPTION_MODE_CUISINE.md` §4.0).
+ *
+ * ⚠️ ANNONCÉE « v9 » DANS LE DOCUMENT DE PLAN, elle est une v10 : la v9 a été prise le même jour par
+ * les plats préparés. La règle de v2 ne fait pas d'exception d'ancienneté, et deux migrations
+ * portant le même numéro seraient la perte de données que ce fichier existe pour empêcher.
+ *
+ * ⚠️ `fin_ms` EST UNE ÉCHÉANCE ABSOLUE, JAMAIS UN TEMPS RESTANT — c'est le point 7 de §5bis
+ * ARCHITECTURE, et c'est une garantie de sécurité, pas de confort. Un « restant » stocké se fige
+ * quand l'application est fermée ; la casserole, elle, ne fait pas de pause. Au retour, un restant
+ * figé afficherait « il reste 4 min » sur un plat qui cuit depuis quarante — l'appli mentirait à
+ * propos de nourriture. Une échéance absolue rend l'erreur inexprimable : `fin_ms - maintenant` est
+ * soit un reste réel, soit un dépassement.
+ *
+ * ⚠️ LES DEUX RÉGIMES SONT MUTUELLEMENT EXCLUSIFS PAR CONSTRUCTION, et le `CHECK` est ce qui le
+ * rend vrai. En marche il n'existe qu'une échéance ; en pause il n'existe qu'un reste. Le document
+ * de plan esquissait `fin_ms NOT NULL` + `pause_restant_s` nullable : une ligne en pause y aurait
+ * gardé une échéance périmée, lisible par erreur — exactement l'état à deux champs contradictoires
+ * que la v9 vient d'écarter sur `hors_catalogue`. La garantie vient de la forme (acquis n°2).
+ *
+ * `ouverte_le` en ms epoch, comme `fin_ms` : la péremption du bandeau se calcule par soustraction,
+ * et une chaîne ISO demanderait une analyse à chaque lecture.
+ *
+ * `id = 1` — une seule session, la v1 est mono-recette. La v1.5 (synchronisation multi-recettes)
+ * fera sauter cette contrainte, pas avant.
+ */
+const V10_STATEMENTS: readonly string[] = [
+  `CREATE TABLE user_cuisine_session (
+     id INTEGER PRIMARY KEY CHECK (id = 1),
+     recette_id TEXT NOT NULL,
+     ordre_courant INTEGER NOT NULL CHECK (ordre_courant >= 1),
+     ouverte_le INTEGER NOT NULL
+   )`,
+
+  `CREATE TABLE user_cuisine_timer (
+     session_id INTEGER NOT NULL DEFAULT 1
+       REFERENCES user_cuisine_session(id) ON DELETE CASCADE,
+     ordre INTEGER NOT NULL CHECK (ordre >= 1),
+     fin_ms INTEGER,
+     pause_restant_s INTEGER CHECK (pause_restant_s IS NULL OR pause_restant_s >= 0),
+     -- En marche OU en pause, jamais les deux, jamais aucun des deux.
+     CHECK ((fin_ms IS NOT NULL AND pause_restant_s IS NULL)
+         OR (fin_ms IS NULL AND pause_restant_s IS NOT NULL)),
+     PRIMARY KEY (session_id, ordre)
+   )`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -522,6 +569,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 7, statements: V7_STATEMENTS },
   { version: 8, statements: V8_STATEMENTS },
   { version: 9, statements: V9_STATEMENTS },
+  { version: 10, statements: V10_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

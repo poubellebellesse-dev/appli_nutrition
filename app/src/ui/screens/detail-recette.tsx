@@ -29,7 +29,7 @@ import type {
 import { readDisplay, readUserState, setFavorite, writeDisplay } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import type { OrigineRecette } from '../router.js'
-import { hashDe, hashDeLEditeur, hashDuFrigo } from '../router.js'
+import { hashDe, hashDeLEditeur, hashDeLaCuisine, hashDuFrigo } from '../router.js'
 import { estRecettePerso, readUserRecipe } from '../../data/user-recipe.js'
 import { quantiteAffichee } from '../quantites.js'
 import { origineDeCuisine } from '../drapeaux.js'
@@ -324,6 +324,18 @@ export function DetailRecette({
       </ul>
 
       <h2 className="mt-8 text-[1.5rem] text-texte">Préparation</h2>
+
+      {/* L'entrée du mode cuisine (§5bis). Ici et pas en tête de fiche : on le lance au moment de
+          se mettre aux fourneaux, après avoir lu les ingrédients. */}
+      {recette.etapes.some((e) => e.nature === 'geste') && (
+        <a
+          href={hashDeLaCuisine(recette.id)}
+          className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] bg-accent-plein px-4 text-[1.08rem] font-semibold text-white"
+        >
+          Cuisiner pas à pas
+        </a>
+      )}
+
       {/* ⚠️ SEULS LES GESTES SONT NUMÉROTÉS. Les 18 mentions sanitaires vivent dans `etapes` faute
           d'un autre endroit où les écrire, mais les numéroter promettait une action de plus alors
           que le plat est déjà servi — chakchouka annonçait « 6 » pour cinq gestes. */}

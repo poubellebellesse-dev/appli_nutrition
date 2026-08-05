@@ -47,6 +47,7 @@ import { REPAS_PAR_DEFAUT, TITRE_CRENEAU, creneauDuMoment, creneauxDuRythme } fr
 import { PALIERS_TEMPS, Segment } from '../champs-profil.js'
 import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { RepriseCuisine } from '../reprise-cuisine.js'
 
 /**
  * Combien de plats on prépare d'avance. Assez pour défiler sans recalculer à chaque flèche, pas
@@ -390,6 +391,8 @@ export function Aujourdhui() {
 
   return (
     <section>
+      {/* AVANT le titre, et c'est l'ordre qui compte : quelque chose est peut-être sur le feu. */}
+      <RepriseCuisine nomDeRecette={vue.nomDe} />
       <header>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1 data-visite="titre-aujourdhui" className="text-[2.1rem] text-texte">

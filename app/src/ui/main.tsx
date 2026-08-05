@@ -21,6 +21,7 @@ import { Savoir } from './screens/savoir.js'
 import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
 import { Parametres } from './screens/parametres.js'
 import { EditeurRecette } from './screens/editeur-recette.js'
+import { Cuisine } from './screens/cuisine.js'
 import { Navigation } from './navigation.js'
 import { Panneau } from './panneau.js'
 import { Visite } from './visite.js'
@@ -82,6 +83,7 @@ function Ecran({
   // `useLancerParcours()` (voir `ui/lancer-parcours.tsx`), exactement comme les six autres écrans.
   if (sousVue.type === 'parametres') return <Parametres />
   if (sousVue.type === 'editeur') return <EditeurRecette baseId={sousVue.baseId} />
+  if (sousVue.type === 'cuisine') return <Cuisine recetteId={sousVue.id} />
   if (onglet === 'aujourdhui') return <Aujourdhui />
   if (onglet === 'semaine') return <Semaine />
   if (onglet === 'courses') return <Courses />

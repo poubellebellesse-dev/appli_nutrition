@@ -16,17 +16,17 @@ pas en arrière-plan**, et la reprise remplace la notification (§5).
 |---|---|---|
 | `recipe_step.timer_s` / `timer_type` | ✅ écrits, buildés, chargés | 512 étapes sur 1 119, dans 203 recettes sur 241 |
 | `RecipeStep.timerS` côté app | ✅ chargé jusqu'en mémoire | `catalog-loader.ts:481-482` |
-| Affichage d'un minuteur | ❌ **zéro** | `detail-recette.tsx:328` rend `texte` + gestes, rien d'autre |
-| Gestes du lexique dépliés sur place | ✅ codé | `detail-recette.tsx:524-570` |
-| Écran allumé | ❌ aucun appel `wakeLock` dans le dépôt | — |
-| Alarme au premier plan | ❌ aucun son, aucune vibration | — |
-| Reprise d'une cuisson | ❌ rien en base | schéma **v9** à écrire, §4.0 |
+| Gestes du lexique dépliés sur place | ✅ codé | `detail-recette.tsx` — **sur la fiche, pas en mode cuisine** |
+| Affichage d'un minuteur | ✅ **fait le 2026-08-05** (L1) | `screens/cuisine.tsx` |
+| Écran allumé | ✅ **fait** (L1) | `ui/ecran-allume.ts` |
+| Alarme au premier plan | ✅ **fait** (L1) | `ui/alarme.ts` |
+| Reprise d'une cuisson | ✅ **faite** (L1) | schéma **v10**, §4.0 · `ui/reprise-cuisine.tsx` |
 | Notifications programmées | ✅ **mais calibrées pour les repas** | `notifications.ts:78` — `allowWhileIdle`, donc ±9 min en Doze : voir §5 |
 | Lien étape → ingrédient | ❌ **n'existe pas** | prérequis A, §2 |
 | Distinction geste / avertissement | ✅ **faite le 2026-08-05** (L0) | `recipe_step.nature`, §3 |
 
-**Le fait structurant : 512 minuteurs sont payés et invisibles.** C'est ce qui justifie de livrer
-l'écran avant les prérequis, et non l'inverse (§4).
+**Le fait structurant était : 512 minuteurs payés et invisibles.** C'est ce qui a justifié de livrer
+l'écran avant les prérequis, et non l'inverse (§4). ✅ **Ils sont visibles depuis le 2026-08-05.**
 
 ---
 
@@ -162,61 +162,84 @@ L'ordre suit une règle : **livrer ce qui est utile seul avant ce qui coûte che
 | Lot | Contenu | Dépend de | Nature |
 |---|---|---|---|
 | ~~**L0**~~ | ✅ **Fait le 2026-08-05** — prérequis B, `recipe_step.nature`, 18 recettes marquées | — | schéma + contenu |
-| **L1** | **Écran mono-recette** : écran allumé, étape courante, minuteurs parallèles, **alarme au premier plan**, **reprise (schéma v9 + bandeau)** | L0 | code |
+| ~~**L1**~~ | ✅ **Fait le 2026-08-05** — écran mono-recette : écran allumé, étape courante, minuteurs parallèles, alarme au premier plan, reprise (schéma **v10** + bandeau) | L0 | code |
 | **L2** | Prérequis A — `food_ids` sur 1 101 gestes, 3 passes du §2.4 | — (parallélisable avec L1) | contenu |
 | **L3** | Quantité au tap sur un ingrédient de l'étape | L1 + L2 | code |
 | **L4** | v1.5 — synchronisation multi-recettes, bascule de service | L1 | code |
 
-### 4.0 Le schéma v9 — reprise et minuteurs
+### 4.0 Le schéma v10 — reprise et minuteurs ✅ ÉCRIT
 
-`USER_SCHEMA_VERSION` est à **8**. La reprise est une **v9**, migration à part entière (la règle
-posée en v2 ne fait pas d'exception d'ancienneté).
+⚠️ **CE PARAGRAPHE ANNONÇAIT UNE « v9 ». C'EST UNE v10.** Entre la rédaction du plan et son
+exécution, une autre piste a pris la v9 pour les plats préparés (décision 51, le même jour). La
+règle de v2 ne fait pas d'exception d'ancienneté : deux migrations portant le même numéro seraient
+exactement la perte de données que `user-schema.ts` existe pour empêcher.
 
 ```sql
 CREATE TABLE user_cuisine_session (
   id            INTEGER PRIMARY KEY CHECK (id = 1),  -- une seule session : la v1 est mono-recette
   recette_id    TEXT NOT NULL,
-  ordre_courant INTEGER NOT NULL,
+  ordre_courant INTEGER NOT NULL CHECK (ordre_courant >= 1),
   ouverte_le    INTEGER NOT NULL                     -- ms epoch, pour périmer une session oubliée
 );
 
 CREATE TABLE user_cuisine_timer (
-  ordre           INTEGER PRIMARY KEY,  -- l'étape qui porte le minuteur
-  fin_ms          INTEGER NOT NULL,     -- ÉCHÉANCE ABSOLUE, jamais un « restant » (§5bis point 7)
-  pause_restant_s INTEGER               -- NULL = en marche ; sinon en pause avec ce reste
+  session_id      INTEGER NOT NULL DEFAULT 1
+                    REFERENCES user_cuisine_session(id) ON DELETE CASCADE,
+  ordre           INTEGER NOT NULL CHECK (ordre >= 1),
+  fin_ms          INTEGER,              -- ÉCHÉANCE ABSOLUE, jamais un « restant » (§5bis point 7)
+  pause_restant_s INTEGER CHECK (pause_restant_s IS NULL OR pause_restant_s >= 0),
+  CHECK ((fin_ms IS NOT NULL AND pause_restant_s IS NULL)
+      OR (fin_ms IS NULL AND pause_restant_s IS NOT NULL)),
+  PRIMARY KEY (session_id, ordre)
 );
 ```
 
 - **`id = 1`** — même forme que `user_profile` et `user_rythme` : une ligne, pas une collection. La
   v1.5 fera sauter cette contrainte, pas avant.
-- **`pause_restant_s` nullable est le discriminant.** En marche, il n'existe qu'une heure de fin ;
-  en pause, il n'existe qu'un reste. Deux régimes, une table, aucun état impossible.
+- ⚠️ **Le `CHECK` d'exclusion est un ÉCART VOLONTAIRE au plan.** L'esquisse ci-dessus portait
+  `fin_ms NOT NULL` et faisait de `pause_restant_s` le seul discriminant : une ligne en pause y
+  aurait gardé une **échéance périmée, lisible par erreur**. Les deux colonnes sont donc nullables
+  et mutuellement exclusives — en marche il n'existe qu'une échéance, en pause qu'un reste. La
+  garantie vient de la forme (acquis n°2), comme `hors_catalogue` en v9.
 - ⚠️ **`INSERT … ON CONFLICT DO UPDATE`, jamais `INSERT OR REPLACE`** — la session a des minuteurs
-  enfants, c'est le piège déjà payé (`reference/PIEGES.md`).
+  enfants, c'est le piège déjà payé (`reference/PIEGES.md`). Verrouillé par un test qui réécrit la
+  session et vérifie que ses minuteurs sont toujours là.
 - **Péremption : 12 h.** Le bandeau affiche l'ancienneté (« commencée il y a 2 h ») et se referme
   seul au-delà. ⚠️ Seuil arbitraire, posé faute de mieux — à revoir au premier retour d'usage.
 
-### 4.1 Ce que touche L1
+### 4.1 Ce qu'a touché L1 (relevé après coup)
 
 | Fichier | Rôle |
 |---|---|
-| `app/src/data/user-schema.ts` | La migration **v9** ci-dessus, `USER_SCHEMA_VERSION` 8 → 9 |
-| `app/src/data/user-store.ts` | Lire / écrire la session et ses minuteurs |
+| `app/src/data/user-schema.ts` | La migration **v10** ci-dessus, `USER_SCHEMA_VERSION` 9 → 10 |
+| `app/src/data/user-store.ts` | `readCuisineSession` / `writeCuisineSession` / `clearCuisineSession` |
+| `app/src/ui/cuisine-session.ts` *(nouveau, non prévu)* | **La logique pure du point 7** : état d'un minuteur, péremption, libellés. Extraite de l'écran pour être testable sans DOM — c'est le seul code du mode dont l'erreur porterait sur de la nourriture |
 | `app/src/ui/ecran-allume.ts` *(nouveau)* | Wake Lock : demande, relâche, **re-demande sur `visibilitychange`**. Dégradation muette si l'API manque |
-| `app/src/ui/alarme.ts` *(nouveau)* | Son + vibration + signal visuel. **Déverrouille l'audio sur l'appui « Lancer »**, pas à l'expiration |
+| `app/src/ui/alarme.ts` *(nouveau)* | Son + vibration + arrêt automatique. **Déverrouille l'audio sur l'appui « Lancer »**, pas à l'expiration. **Aucun rendu** : le signal visuel appartient à l'écran |
+| `app/src/ui/reprise-cuisine.tsx` *(nouveau, non prévu)* | Le bandeau, sorti d'`aujourdhui.tsx` pour que cet écran ne bouge que de deux lignes |
 | `app/src/ui/screens/cuisine.tsx` *(nouveau)* | L'écran. Étape courante, minuteurs, navigation |
-| `app/src/ui/screens/cuisine.test.tsx` *(nouveau)* | Voir §4.2 |
-| `app/src/ui/navigation.tsx` | Route `#/cuisine/:recetteId` |
-| `app/src/ui/screens/detail-recette.tsx` | Le bouton d'entrée dans le mode |
-| `app/src/ui/screens/aujourdhui.tsx` | Le bandeau « Reprendre la cuisson » |
-| `app/src/ui/parcours.ts` | Une entrée de visite guidée, comme les 9 écrans existants |
+| `app/src/ui/theme.css` | L'animation d'inversion, avec son `prefers-reduced-motion` |
+| `app/src/ui/router.tsx` | Route `#/cuisine/<id>` — ⚠️ **troisième route paramétrée**, voir ci-dessous |
+| `app/src/ui/main.tsx` | Le branchement de la sous-vue |
+| `app/src/ui/screens/detail-recette.tsx` | Le bouton « Cuisiner pas à pas », sous « Préparation » |
+| `app/src/ui/screens/aujourdhui.tsx` | Le bandeau « Reprendre la cuisson », **avant le titre** |
+
+⚠️ **`parcours.ts` n'a PAS été touché** — le plan prévoyait une entrée de visite guidée. Elle n'a pas
+été faite : la visite guidée présente des écrans qu'on atteint depuis la barre d'onglets, et le mode
+cuisine s'ouvre depuis une fiche recette. À trancher, pas à oublier.
+
+⚠️ **La question de la bibliothèque de routage a été ROUVERTE, comme `router.tsx` l'exigeait au
+troisième cas paramétré. Réponse : toujours non**, et le raisonnement est écrit dans le fichier
+plutôt que laissé à refaire. Ce qui la rouvrirait vraiment : une route qui en imbrique une autre.
 
 ⚠️ **Rien dans `engine/`.** Le mode cuisine ne calcule rien ; si un lot demande d'y toucher, c'est le
-lot qui est faux.
+lot qui est faux. Vérifié : L1 n'a ajouté aucun import dans `engine/`.
 
-### 4.2 Les tests qui font foi pour L1
+### 4.2 Les tests qui font foi pour L1 — ✅ les huit sont écrits et verts
 
-Écrits **avant** l'écran, ils encodent les décisions plutôt que le rendu :
+Ils encodent les décisions plutôt que le rendu. Où ils vivent : **`screens/cuisine.test.tsx`** (17),
+**`cuisine-session.test.ts`** (15, purs, sans DOM), **`reprise-cuisine.test.tsx`** (10, purs),
+**`alarme.test.ts`** (8), **`user-store.test.ts`** (+8 sur la v10), **`router.test.ts`** (+4).
 
 1. **Les étapes n'avancent jamais seules** — avancer les faux timers de vitest de plusieurs minutes
    laisse l'étape courante inchangée. C'est le test qui verrouille le point 2 de §5bis contre une
@@ -224,8 +247,8 @@ lot qui est faux.
 2. **Un minuteur survit au changement d'étape** — lancer à l'étape 2, aller en 4, le décompte est
    toujours là et étiqueté « étape 2 ».
 3. **Plusieurs décomptes coexistent** — deux minuteurs lancés, deux décomptes distincts.
-4. **Le compteur ignore les avertissements** — chakchouka annonce 5 étapes, pas 6. ✅ La donnée est
-   là (L0) et la fiche recette le vérifie déjà ; il reste à le vérifier sur l'écran cuisine.
+4. **Le compteur ignore les avertissements** — chakchouka annonce 5 étapes, pas 6, et la mention
+   ANSES n'apparaît qu'à la dernière.
 5. **L'absence de Wake Lock ne casse rien** — `navigator.wakeLock` absent : l'écran fonctionne, seule
    la mention change.
 6. **Aucun score affiché** — filet du principe 6, comme sur les autres écrans.
@@ -234,6 +257,11 @@ lot qui est faux.
    verrouille le point 7 de §5bis**, et le seul qui porte sur une affirmation de l'appli à propos de
    la nourriture.
 8. **Une session périmée ne réapparaît pas** — `ouverte_le` à plus de 12 h : pas de bandeau.
+
+**Un neuvième s'est ajouté à l'écriture, et il n'était pas dans le plan :** ⛔ **l'alarme ne sonne
+PAS pour un minuteur déjà échu à l'ouverture.** Sans ce garde-fou, reprendre une cuisson déclenche
+la sonnerie pour un plat sorti du feu depuis quarante minutes — le mensonge du point 7 retourné en
+son contraire sonore. Le code le tient par un `Set` des minuteurs échus au montage.
 
 ⚠️ **Le déverrouillage audio n'est PAS testable en Vitest.** `jsdom` n'implémente pas la politique
 d'autoplay : un test vert ne prouverait rien. C'est un **point de vérification manuelle sur
@@ -307,6 +335,13 @@ et une WebView applicative, et il reste entier. Trois choses sont à rejouer sur
 3. **Le pari `rem`** — le seul dont l'échec déborderait très au-delà du mode cuisine, puisque les
    neuf écrans reposent dessus.
 
+⚠️ **Depuis L1 (2026-08-05), l'instrument n'est plus la maquette : c'est l'écran réel.** Le prochain
+essai doit se faire sur `#/cuisine/chakchouka` dans un build servi **en HTTPS** — en `http://`,
+`navigator.wakeLock` n'existe pas et l'échec ressemblera à un défaut de l'appareil. Ce qui reste à
+constater de visu, et qu'aucun test ne peut donner : **le son sort au premier appui sur « Lancer le
+minuteur »** (politique d'autoplay), **l'écran ne s'éteint pas**, et **l'inversion se voit du coin
+de l'œil** avec le téléphone posé de côté.
+
 ⚠️ **Obstacles connus à cet essai-là** : le SDK Android n'est pas installé, `npx cap add android`
 n'a jamais été lancé, et le **JDK 25** de la machine est vraisemblablement trop récent pour le
 Gradle de Capacitor 8, qui attend du 17 ou du 21.
@@ -321,6 +356,9 @@ Gradle de Capacitor 8, qui attend du 17 ou du 21.
 
 ---
 
-**Maquette de référence pour L1** (chakchouka, minuteurs réels, Wake Lock actif) :
-<https://claude.ai/code/artifact/00aae6df-f33d-4cb6-97cf-e11751419e0e> — hors dépôt, illustre la
-spec sans la remplacer.
+⚠️ **PÉRIMÉE DEPUIS L1.** La maquette qui a servi à trancher le signal visuel et à valider l'audio
+(chakchouka, minuteurs réels, Wake Lock actif) vivait hors dépôt :
+<https://claude.ai/code/artifact/00aae6df-f33d-4cb6-97cf-e11751419e0e>. **Elle n'est plus la
+référence de rien** — l'écran réel existe (`ui/screens/cuisine.tsx`) et c'est lui qu'il faut essayer
+sur appareil. Le lien est conservé parce que le récit de l'essai du 2026-08-05 (§7) s'y rapporte ;
+il n'a aucune autorité sur le code.

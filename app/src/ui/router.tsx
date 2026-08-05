@@ -39,6 +39,8 @@ export type SousVue =
   | { readonly type: 'parametres' }
   /** Éditeur de recette. `baseId` non nul = on adapte une recette existante. */
   | { readonly type: 'editeur'; readonly baseId: string | null }
+  /** Mode cuisine, plein écran, sur UNE recette (§5bis ARCHITECTURE). */
+  | { readonly type: 'cuisine'; readonly id: string }
 
 /**
  * D'où l'on arrive sur une fiche recette — porte le retour contextuel (« ← Aujourd'hui »,
@@ -96,6 +98,25 @@ const PREFIXE_RECETTE = '#/recette/'
 const PREFIXE_EDITEUR = '#/composer'
 
 /**
+ * Le mode cuisine — TROISIÈME route paramétrée du projet.
+ *
+ * ⚠️ LA QUESTION DE LA BIBLIOTHÈQUE A ÉTÉ ROUVERTE ICI, comme l'en-tête et `PREFIXE_EDITEUR`
+ * l'exigeaient (« à rouvrir vraiment au troisième »). Réponse : TOUJOURS NON, et voici pourquoi
+ * plutôt que de laisser le lecteur suivant refaire le calcul.
+ *
+ *   - Le motif est le MÊME que les deux autres : un préfixe, un identifiant encodé, aucun
+ *     imbriquement. C'est le troisième cas d'un patron déjà écrit, pas un troisième patron.
+ *   - `react-router-dom` est conçu autour de l'History API ; ce projet route par HASH, et pour une
+ *     raison qui ne changera pas (PWA servie hors ligne, aucun serveur pour réécrire les URL).
+ *   - Le coût réel ci-dessous est de six lignes.
+ *
+ * ⚠️ CE QUI REROUVRIRAIT VRAIMENT LA QUESTION, et qui n'est pas le nombre de routes : une route qui
+ * en imbrique une autre, ou un besoin de transition/garde de navigation. Là, le fait maison
+ * commencerait à réimplémenter une bibliothèque.
+ */
+const PREFIXE_CUISINE = '#/cuisine/'
+
+/**
  * « Vider le frigo » N'EST PAS UN ONGLET. §4.5 DESIGN et la maquette le disent accessible « depuis
  * Aujourd'hui et Recettes » ; la barre reste à cinq onglets stables v1 → v2 (§2 DESIGN). Une barre
  * qui gagnerait un sixième onglet changerait de forme sous les doigts de l'utilisateur.
@@ -140,6 +161,18 @@ export function routeDepuisHash(hash: string): Route {
       baseId = null
     }
     return { onglet: 'recettes', sousVue: { type: 'editeur', baseId } }
+  }
+
+  if (hash.startsWith(PREFIXE_CUISINE)) {
+    // Même précaution que les deux autres routes paramétrées : `decodeURIComponent` lève sur un `%`
+    // isolé. Un fragment illisible ramène à la liste, jamais un écran blanc.
+    try {
+      const id = decodeURIComponent(hash.slice(PREFIXE_CUISINE.length))
+      if (id !== '') return { onglet: 'recettes', sousVue: { type: 'cuisine', id } }
+    } catch {
+      /* fragment illisible → liste des recettes */
+    }
+    return { onglet: 'recettes', sousVue: LISTE }
   }
 
   if (hash.startsWith(PREFIXE_RECETTE)) {
@@ -208,6 +241,10 @@ export function hashDeRecette(id: string, origine?: OrigineRecette): string {
 
 export function hashDuFrigo(): string {
   return HASH_FRIGO
+}
+
+export function hashDeLaCuisine(id: string): string {
+  return `${PREFIXE_CUISINE}${encodeURIComponent(id)}`
 }
 
 export function hashDesParametres(): string {

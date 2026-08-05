@@ -29,6 +29,9 @@ import type { UserDb } from './user-db.js'
 import { MIGRATIONS, USER_SCHEMA_VERSION, migrate, readSchemaVersion } from './user-schema.js'
 import {
   aConsenti,
+  clearCuisineSession,
+  readCuisineSession,
+  writeCuisineSession,
   readActiveTopics,
   readAllergies,
   readConstraints,
@@ -957,6 +960,83 @@ describe('user-store — réglages d’affichage (v4)', () => {
     expect(readDisplay(db).visiteProposee).toBe(false)
     writeDisplay(db, { ...readDisplay(db), visiteProposee: true })
     expect(readDisplay(db).visiteProposee).toBe(true)
+  })
+})
+
+describe('user-store — la cuisson en cours (v10)', () => {
+  const SESSION = {
+    recetteId: 'chakchouka',
+    ordreCourant: 3,
+    ouverteLe: 1_770_000_000_000,
+    minuteurs: [
+      { ordre: 2, finMs: 1_770_000_600_000, pauseRestantS: null },
+      { ordre: 3, finMs: null, pauseRestantS: 120 },
+    ],
+  }
+
+  it('aucune cuisson au départ', () => {
+    expect(readCuisineSession(db)).toBeNull()
+  })
+
+  it('fait l’aller-retour complet, minuteurs compris et triés', () => {
+    writeCuisineSession(db, SESSION)
+    expect(readCuisineSession(db)).toEqual(SESSION)
+  })
+
+  // ⚠️ LE PIÈGE DÉJÀ PAYÉ (reference/PIEGES.md). `INSERT OR REPLACE` sur la session supprimerait la
+  // ligne avant de la réinsérer, déclenchant le CASCADE sur `user_cuisine_timer` — les minuteurs
+  // qu'on est en train d'écrire disparaîtraient dans le même appel, sans la moindre erreur.
+  it('⛔ réécrire la session ne perd PAS ses minuteurs', () => {
+    writeCuisineSession(db, SESSION)
+    writeCuisineSession(db, { ...SESSION, ordreCourant: 4 })
+
+    const relue = readCuisineSession(db)
+    expect(relue?.ordreCourant).toBe(4)
+    expect(relue?.minuteurs).toHaveLength(2)
+  })
+
+  it('remplace les minuteurs au lieu de les empiler — arrêter un minuteur doit le FAIRE disparaître', () => {
+    writeCuisineSession(db, SESSION)
+    writeCuisineSession(db, { ...SESSION, minuteurs: [SESSION.minuteurs[0]!] })
+
+    expect(readCuisineSession(db)?.minuteurs.map((t) => t.ordre)).toEqual([2])
+  })
+
+  it('fermer la cuisson emporte ses minuteurs', () => {
+    writeCuisineSession(db, SESSION)
+    clearCuisineSession(db)
+
+    expect(readCuisineSession(db)).toBeNull()
+    const restants = db.all<{ readonly n: number }>('SELECT COUNT(*) AS n FROM user_cuisine_timer')
+    expect(restants[0]?.n).toBe(0)
+  })
+
+  // La garantie vient de la FORME (acquis n°2) : en marche il n'existe qu'une échéance, en pause il
+  // n'existe qu'un reste. Un minuteur portant les deux serait une contradiction lisible dans les
+  // deux sens — la base doit le refuser, pas le code de lecture.
+  it('⛔ refuse un minuteur qui serait en marche ET en pause', () => {
+    writeCuisineSession(db, SESSION)
+    expect(() =>
+      db.run('INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (1, 9, 1, 1)')
+    ).toThrow()
+  })
+
+  it('⛔ refuse un minuteur qui ne serait NI en marche NI en pause', () => {
+    writeCuisineSession(db, SESSION)
+    expect(() =>
+      db.run(
+        'INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (1, 9, NULL, NULL)'
+      )
+    ).toThrow()
+  })
+
+  it('⛔ une seule cuisson à la fois — la v1 est mono-recette', () => {
+    writeCuisineSession(db, SESSION)
+    expect(() =>
+      db.run('INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (2, ?, 1, 0)', [
+        'omelette_fines_herbes',
+      ])
+    ).toThrow()
   })
 })
 

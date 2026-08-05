@@ -198,6 +198,40 @@
   border: 0;
 }
 
+/* --- Signal visuel d'alarme du mode cuisine (§5bis point 5 ARCHITECTURE) -----------------------
+ *
+ * ⚠️ L'INVERSION DE TOUT L'ÉCRAN, RETENUE À L'ESSAI SUR APPAREIL le 2026-08-05, contre un cadre
+ * clignotant, des bandes latérales, un aplat plein écran et un balayage. Protocole : téléphone posé
+ * SUR LE CÔTÉ, regard fixé devant. De face les cinq marchaient, ce qui rendait l'essai de face
+ * inutile — la vision périphérique ne voit ni le détail ni la couleur, elle voit le MOUVEMENT et le
+ * changement de luminance sur une grande surface. L'inversion change les deux d'un coup.
+ *
+ * `steps(1)` et non une transition douce : un fondu étale le changement dans le temps et perd
+ * précisément ce que l'œil périphérique détecte. La bascule doit être franche.
+ *
+ * ⚠️ RESPECTE `prefers-reduced-motion`. Un clignotement à ~1,6 Hz sur toute la surface est
+ * exactement ce que ce réglage existe pour éviter ; l'alarme reste alors sonore et écrite. */
+@keyframes cuisine-inversion {
+  0%,
+  49% {
+    filter: invert(1) hue-rotate(180deg);
+  }
+  50%,
+  100% {
+    filter: none;
+  }
+}
+
+[data-alarme='oui'] {
+  animation: cuisine-inversion 0.62s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-alarme='oui'] {
+    animation: none;
+  }
+}
+
 /* Au focus, redevient un vrai bloc lisible en haut à gauche, sur un fond opaque — pas transparent
  * par-dessus le contenu. */
 .sr-only:focus {

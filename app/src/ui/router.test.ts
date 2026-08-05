@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   hashDe,
+  hashDeLaCuisine,
   hashDeRecette,
   hashDesParametres,
   hashDuFrigo,
@@ -113,6 +114,35 @@ describe('ui/router — vider le frigo', () => {
     const fragments = [hashDe('recettes'), hashDeRecette('x'), hashDuFrigo()]
     expect(new Set(fragments).size).toBe(3)
     expect(new Set(fragments.map((f) => routeDepuisHash(f).sousVue.type)).size).toBe(3)
+  })
+})
+
+describe('ui/router — mode cuisine', () => {
+  it('porte l’identifiant de la recette qu’on cuisine', () => {
+    expect(routeDepuisHash(hashDeLaCuisine('chakchouka'))).toEqual({
+      onglet: 'recettes',
+      sousVue: { type: 'cuisine', id: 'chakchouka' },
+    })
+  })
+
+  it('survit à un identifiant qui a besoin d’être encodé', () => {
+    const id = 'recette perso/2026'
+    expect(routeDepuisHash(hashDeLaCuisine(id))).toEqual({
+      onglet: 'recettes',
+      sousVue: { type: 'cuisine', id },
+    })
+  })
+
+  // Même précaution que les deux autres routes paramétrées : un signet tronqué produit facilement
+  // un `%` isolé, sur lequel `decodeURIComponent` lève. Un fragment illisible ramène à la liste.
+  it('un fragment illisible ramène à la liste, jamais un écran blanc', () => {
+    expect(routeDepuisHash('#/cuisine/%')).toEqual({ onglet: 'recettes', sousVue: { type: 'liste' } })
+    expect(routeDepuisHash('#/cuisine/')).toEqual({ onglet: 'recettes', sousVue: { type: 'liste' } })
+  })
+
+  it('ne se confond pas avec la fiche de la MÊME recette', () => {
+    expect(hashDeLaCuisine('x')).not.toBe(hashDeRecette('x'))
+    expect(routeDepuisHash(hashDeRecette('x')).sousVue.type).toBe('recette')
   })
 })
 

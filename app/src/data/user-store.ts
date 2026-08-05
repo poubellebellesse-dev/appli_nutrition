@@ -888,3 +888,92 @@ export function writeMealTime(db: UserDb, creneau: MealSlot, heureMin: number | 
   }
   db.run('INSERT OR REPLACE INTO user_meal_time (creneau, heure_min) VALUES (?, ?)', [creneau, heureMin])
 }
+
+// --- Cuisson en cours (v10, mode cuisine §5bis) -------------------------------------------------
+
+/**
+ * Un minuteur en cours, tel qu'il survit à la fermeture de l'application.
+ *
+ * ⚠️ EXACTEMENT L'UN DES DEUX CHAMPS EST NON NUL, et la base le garantit (CHECK de la v10) :
+ * `finMs` = en marche, avec son **échéance absolue** ; `pauseRestantS` = en pause, avec son reste
+ * figé. Une pause est le seul cas où figer un reste est vrai, parce que c'est l'utilisateur qui a
+ * arrêté le temps.
+ */
+export interface StoredCuisineTimer {
+  readonly ordre: number
+  readonly finMs: number | null
+  readonly pauseRestantS: number | null
+}
+
+export interface StoredCuisineSession {
+  readonly recetteId: string
+  /** `ordre` de l'étape affichée — pas son rang, la valeur du champ. */
+  readonly ordreCourant: number
+  /** ms epoch. Sert à périmer une session oubliée ; voir `ui/cuisine-session.ts`. */
+  readonly ouverteLe: number
+  readonly minuteurs: readonly StoredCuisineTimer[]
+}
+
+export function readCuisineSession(db: UserDb): StoredCuisineSession | null {
+  const row = db.all<{
+    readonly recette_id: string
+    readonly ordre_courant: number
+    readonly ouverte_le: number
+  }>('SELECT recette_id, ordre_courant, ouverte_le FROM user_cuisine_session WHERE id = 1')[0]
+  if (!row) return null
+
+  const minuteurs = db
+    .all<{
+      readonly ordre: number
+      readonly fin_ms: number | null
+      readonly pause_restant_s: number | null
+    }>('SELECT ordre, fin_ms, pause_restant_s FROM user_cuisine_timer WHERE session_id = 1 ORDER BY ordre')
+    .map((t) => ({ ordre: t.ordre, finMs: t.fin_ms, pauseRestantS: t.pause_restant_s }))
+
+  return {
+    recetteId: row.recette_id,
+    ordreCourant: row.ordre_courant,
+    ouverteLe: row.ouverte_le,
+    minuteurs,
+  }
+}
+
+/**
+ * Écrit la session et SES minuteurs, en remplaçant les précédents.
+ *
+ * ⚠️ `INSERT … ON CONFLICT DO UPDATE`, JAMAIS `INSERT OR REPLACE` — piège déjà payé
+ * (`reference/PIEGES.md`) : `REPLACE` supprime la ligne avant de la réinsérer, ce qui déclencherait
+ * le `ON DELETE CASCADE` et effacerait les minuteurs qu'on est en train d'enregistrer.
+ *
+ * Le `DELETE` des minuteurs est explicite plutôt que confié au CASCADE : ce fichier ne peut pas
+ * garantir que `PRAGMA foreign_keys` est ON, l'ouverture appartenant aux adaptateurs. Même
+ * précaution que `savePlan`.
+ */
+export function writeCuisineSession(db: UserDb, session: StoredCuisineSession): void {
+  withTransaction(db, () => {
+    db.run(
+      `INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le)
+       VALUES (1, ?, ?, ?)
+       ON CONFLICT (id) DO UPDATE SET
+         recette_id = excluded.recette_id,
+         ordre_courant = excluded.ordre_courant,
+         ouverte_le = excluded.ouverte_le`,
+      [session.recetteId, session.ordreCourant, session.ouverteLe]
+    )
+    db.run('DELETE FROM user_cuisine_timer WHERE session_id = 1')
+    for (const t of session.minuteurs) {
+      db.run(
+        'INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (1, ?, ?, ?)',
+        [t.ordre, t.finMs, t.pauseRestantS]
+      )
+    }
+  })
+}
+
+/** Ferme la cuisson. Les minuteurs suivent, par CASCADE et par `DELETE` explicite. */
+export function clearCuisineSession(db: UserDb): void {
+  withTransaction(db, () => {
+    db.run('DELETE FROM user_cuisine_timer WHERE session_id = 1')
+    db.run('DELETE FROM user_cuisine_session WHERE id = 1')
+  })
+}

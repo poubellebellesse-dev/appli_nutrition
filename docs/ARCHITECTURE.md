@@ -304,6 +304,21 @@ meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille
 shopping_list(id, plan_id, genere_le)
 shopping_list_item(list_id, food_id, quantite_totale, unite, coche, prix_estime)
 
+-- Cuisson en cours — AJOUT v10 (mode cuisine §5bis, lot L1, 2026-08-05). CODÉ.
+user_cuisine_session(id, recette_id, ordre_courant, ouverte_le)
+    -- id = 1 : UNE seule cuisson. La v1 est mono-recette ; la v1.5 fera sauter la contrainte.
+    -- ouverte_le en ms epoch — la péremption du bandeau de reprise (12 h) est une soustraction.
+user_cuisine_timer(session_id, ordre, fin_ms, pause_restant_s)
+    -- ⚠️ fin_ms est une ÉCHÉANCE ABSOLUE, JAMAIS un temps restant. Un restant se fige quand
+    --   l'application est fermée ; la casserole, elle, ne fait pas de pause. Au retour, un
+    --   restant figé afficherait « il reste 4 min » sur un plat qui cuit depuis quarante :
+    --   l'appli mentirait à propos de nourriture. Voir §5bis point 7.
+    -- ⚠️ CHECK ((fin_ms NOT NULL AND pause_restant_s NULL) OR (fin_ms NULL AND pause_restant_s
+    --   NOT NULL)) — en marche il n'existe qu'une échéance, en pause qu'un reste. Les deux à la
+    --   fois est structurellement inexprimable, comme hors_catalogue ci-dessus.
+    -- ON DELETE CASCADE depuis la session → écriture par INSERT … ON CONFLICT DO UPDATE, JAMAIS
+    --   INSERT OR REPLACE (reference/PIEGES.md : REPLACE supprime avant de réinsérer).
+
 -- Articles NON alimentaires (conçu session 2, PAS CODÉ — à créer quand buildShoppingList
 -- existera, P1c+). Table SÉPARÉE de food : aucun nutriment, aucun allergène structuré, jamais
 -- éligible comme ingrédient de recette. Branchée uniquement sur la liste de courses.
