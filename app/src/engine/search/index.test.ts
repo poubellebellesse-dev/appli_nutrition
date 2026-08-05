@@ -107,7 +107,11 @@ describe('search/chercherParNom — ce que la sous-chaîne seule ne trouvait pas
   })
 
   it('rend vide quand l’aliment est vraiment absent — on ne rapproche pas à tout prix', () => {
-    expect(noms('coppa')).toEqual([])
+    // ⚠️ « coppa » tenait ce rôle et l'a perdu : l'aliment est ENTRÉ au catalogue réel le
+    // 2026-08-05. Le test passait quand même (fixture locale), mais sa justification était devenue
+    // fausse. « kimchi » est vérifié absent des 450 aliments au 2026-08-05 — à remesurer avant de
+    // s'y fier, c'est la troisième fois que les exemples de la décision 58 pourrissent en un jour.
+    expect(noms('kimchi')).toEqual([])
   })
 })
 

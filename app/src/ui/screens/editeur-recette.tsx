@@ -37,6 +37,7 @@ import {
 import { LIBELLE_CRENEAU, aujourdhuiIso, chargerSocle, rebatirCatalogue } from '../socle.js'
 import { hashDe, hashDeRecette } from '../router.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { BoutonParcourir, ParcoursAliments } from '../parcours-aliments.js'
 
 const SAISIE_VIDE: SaisieRecette = {
   nom: '',
@@ -377,6 +378,21 @@ function Ingredients({
 
   const nomDe = (foodId: string) => catalogue.foods.get(foodId as FoodId)?.nom ?? foodId
 
+  const [parcours, setParcours] = useState(false)
+
+  // Un seul chemin d'ajout pour les deux entrées — la recherche et le parcours. Les dupliquer ferait
+  // diverger la quantité par défaut, et l'écart ne se verrait qu'à l'usage.
+  const ajouter = (foodId: FoodId) => {
+    onChange([
+      ...ingredients,
+      // `uniteAffichage` reprend la quantité en grammes : c'est un texte FIGÉ que le moteur ne met
+      // jamais à l'échelle (`ui/quantites.ts`). Écrire « 1 pièce » ici afficherait la même chose
+      // pour 2 personnes que pour 6.
+      { foodId, quantiteG: 100, uniteAffichage: '100 g', optionnel: false },
+    ])
+    onRecherche('')
+  }
+
   return (
     <>
       <h2 className="mt-8 font-titre text-[1.4rem] text-texte">Ingrédients</h2>
@@ -453,16 +469,7 @@ function Ingredients({
             <li key={aliment.id}>
               <button
                 type="button"
-                onClick={() => {
-                  onChange([
-                    ...ingredients,
-                    // `uniteAffichage` reprend la quantité en grammes : c'est un texte FIGÉ que le
-                    // moteur ne met jamais à l'échelle (`ui/quantites.ts`). Écrire « 1 pièce » ici
-                    // afficherait la même chose pour 2 personnes que pour 6.
-                    { foodId: aliment.id, quantiteG: 100, uniteAffichage: '100 g', optionnel: false },
-                  ])
-                  onRecherche('')
-                }}
+                onClick={() => ajouter(aliment.id)}
                 className="flex min-h-tactile w-full items-center px-3 text-left text-[1rem] text-texte"
               >
                 {aliment.nom}
@@ -470,6 +477,19 @@ function Ingredients({
             </li>
           ))}
         </ul>
+      )}
+
+      <BoutonParcourir onOuvrir={() => setParcours(true)} />
+      {parcours && (
+        <ParcoursAliments
+          foods={catalogue.foods}
+          deja={deja}
+          onChoisir={(aliment) => {
+            ajouter(aliment.id)
+            setParcours(false)
+          }}
+          onFermer={() => setParcours(false)}
+        />
       )}
     </>
   )

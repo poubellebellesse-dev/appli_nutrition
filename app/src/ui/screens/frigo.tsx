@@ -45,6 +45,7 @@ import {
   type FiltresRecette,
 } from '../filtres-recettes.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { BoutonParcourir, ParcoursAliments } from '../parcours-aliments.js'
 
 /** Combien de raccourcis par famille. Au-delà, la grille devient une liste et ne rend plus service. */
 const RACCOURCIS_PAR_FAMILLE = 8
@@ -390,6 +391,8 @@ function Recherche({
   readonly onSaisir: (texte: string) => void
   readonly onChoisir: (foodId: FoodId) => void
 }) {
+  const [parcours, setParcours] = useState(false)
+
   const propositions = useMemo(() => {
     if (normaliser(valeur.trim()).length < 2) return []
     const candidats = [...catalogue.foods.values()].filter((aliment) => !deja.includes(aliment.id))
@@ -423,6 +426,22 @@ function Recherche({
             </li>
           ))}
         </ul>
+      )}
+
+      {/* ⚠️ VISIBLE EN PERMANENCE, pas seulement quand la recherche échoue. Ne l'afficher qu'en cas
+          d'échec supposerait qu'on sache reconnaître un échec — or le pire cas mesuré n'est PAS la
+          liste vide, c'est la liste qui rend un faux ami en premier (cause 4, décision 58). */}
+      <BoutonParcourir onOuvrir={() => setParcours(true)} />
+      {parcours && (
+        <ParcoursAliments
+          foods={catalogue.foods}
+          deja={deja}
+          onChoisir={(aliment) => {
+            onChoisir(aliment.id)
+            setParcours(false)
+          }}
+          onFermer={() => setParcours(false)}
+        />
       )}
     </div>
   )

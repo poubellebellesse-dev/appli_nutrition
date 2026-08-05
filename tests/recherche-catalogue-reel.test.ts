@@ -474,3 +474,49 @@ describe('chercherParNom — synonymes d’aliments sur le catalogue réel', () 
     ])
   })
 })
+
+// --- Les 33 saisies du langage courant (décision 58) -------------------------------------------
+//
+// ⚠️ CETTE LISTE EXISTE PARCE QUE L'ANCIENNE N'EXISTAIT PAS. La décision 58 qualifiait sa mesure de
+// « reproductible » et en décrivait la méthode — mais les 33 saisies n'étaient écrites NULLE PART.
+// Une mesure dont on ne peut pas rejouer l'entrée n'est pas reproductible, elle est invérifiable :
+// le « 7 muettes sur 33 » d'origine n'est comparable à rien. Celle-ci est versionnée pour que le
+// prochain relevé soit un vrai avant/après.
+//
+// `limite: 6` — le nombre réellement affiché par l'écran Frigo (`frigo.tsx`). Mesurer sur 10 ou 20
+// dirait quelque chose que personne ne voit.
+
+const SAISIES_COURANTES: readonly string[] = [
+  'lardon', 'gambas', 'chipolata', 'noix de saint-jacques', 'coppa', 'sauce tomate',
+  'tomates', 'boite de tomates', 'creme fraiche', 'blanc de poulet', 'pomme de terre',
+  'oeuf', 'steak hache', 'jambon blanc', 'pate a tarte', 'yaourt nature', 'huile olive',
+  'fromage rape', 'pain de mie', 'lait', 'beurre', 'riz', 'pates', 'poivron rouge',
+  'courgette', 'oignon', 'ail', 'citron', 'saumon fume', 'thon en boite', 'mais',
+  'haricots verts', 'champignon de paris',
+]
+
+describe('chercherParNom — les 33 saisies du langage courant, sur le catalogue réel', () => {
+  const surLEcran = (saisie: string) => chercherParNom([...catalogue.foods.values()], saisie, 6)
+
+  it('AUCUNE ne rend une liste vide — causes (1) et (2) de la décision 58, closes', () => {
+    expect(SAISIES_COURANTES).toHaveLength(33)
+    const muettes = SAISIES_COURANTES.filter((s) => surLEcran(s).length === 0)
+    expect(muettes).toEqual([])
+  })
+
+  // ⚠️ CE QUI SUIT N'EST PAS UNE VALIDATION DU CLASSEMENT — c'est la cause (4), consignée.
+  // Ces cinq saisies rendent un FAUX AMI en PREMIER : « sauce tomate » propose une conserve de
+  // maquereau, « fromage rape » un fromage blanc. On n'assertionne PAS le premier rang, qui est
+  // faux et qu'on ne veut pas verrouiller ; on assertionne ce qui compte pour l'utilisateur et
+  // reste vrai — le bon aliment est DANS les six affichés, donc atteignable. Si un jour cette
+  // assertion casse, ce n'est plus un défaut de confort : l'aliment est sorti de l'écran.
+  it.each([
+    ['sauce tomate', 'Concentré de tomate'],
+    ['fromage rape', 'Emmental râpé'],
+    ['jambon blanc', 'Jambon à cuire'],
+    ['pate a tarte', 'Pâte brisée, crue'],
+    ['thon en boite', 'Thon, conserve au naturel, égoutté'],
+  ])('« %s » classe mal, mais « %s » reste dans les six affichés', (saisie, attendu) => {
+    expect(surLEcran(saisie).map((f) => f.nom)).toContain(attendu)
+  })
+})

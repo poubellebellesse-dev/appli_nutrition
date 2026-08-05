@@ -55,6 +55,7 @@ import {
 import { hashDe, hashDuFrigo } from '../router.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
 import { ConfirmerFrigo, alimentsAConfirmer } from '../confirmer-frigo.js'
+import { BoutonParcourir, ParcoursAliments } from '../parcours-aliments.js'
 
 /** Les dix rayons de §4.3 — texte libre côté base, liste fermée côté saisie pour rester rangeable. */
 const RAYONS_EXTRA: readonly string[] = [
@@ -796,6 +797,7 @@ function FormulaireAjout({
   // textuelle sur du texte libre, exactement ce que l'en-tête du fichier écarte. Remis à `null` dès
   // que le texte est retouché : un libellé modifié n'est plus garanti correspondre à l'aliment choisi.
   const [alimentChoisi, setAlimentChoisi] = useState<Food | null>(null)
+  const [parcours, setParcours] = useState(false)
 
   // Même motif que `editeur-recette.tsx` (« Ajouter un ingrédient ») : une liste maison, pas un
   // `<datalist>`, parce qu'il faut récupérer l'ALIMENT choisi (pour en déduire le rayon), pas
@@ -860,6 +862,25 @@ function FormulaireAjout({
           ))}
         </ul>
       )}
+      {/* ⚠️ LE PARCOURS FAIT ICI LE MÊME GESTE QUE LA LISTE DE PROPOSITIONS, pas un autre : il
+          renseigne le libellé, PRÉSÉLECTIONNE le rayon et retient l'aliment choisi. C'est ce
+          dernier point qui compte — sans `alimentChoisi`, `noteAllergeneDe` n'a rien à quoi
+          s'appliquer et l'écran perd une information qu'il possédait. */}
+      <BoutonParcourir onOuvrir={() => setParcours(true)} />
+      {parcours && (
+        <ParcoursAliments
+          foods={foods}
+          onChoisir={(aliment) => {
+            setLibelle(aliment.nom)
+            setRayon(rayonDe(aliment, foods))
+            setAlimentChoisi(aliment)
+            setPropositionsVisibles(false)
+            setParcours(false)
+          }}
+          onFermer={() => setParcours(false)}
+        />
+      )}
+
       <label className="mt-3 block">
         <span className="text-[0.95rem] text-texte-doux">Quantité (facultatif)</span>
         <input
