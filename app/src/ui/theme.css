@@ -93,15 +93,20 @@
   :root {
     --color-fond: #1b1815;
     --color-surface: #241f1b;
-    --color-texte: #f4ede2; /* 14,2:1 sur le fond sombre */
-    --color-texte-doux: #d8cfc2;
-    --color-attenue: #a99f93; /* 7,3:1 — même exigence qu'en clair */
+    --color-texte: #f4ede2; /* 15,20:1 sur le fond · 14,03:1 sur la surface */
+    --color-texte-doux: #d8cfc2; /* 11,47:1 · 10,59:1 */
+    /* ⚠️ RELEVÉ DE #a99f93 LE 2026-08-05 : il annonçait « 7,3:1 — même exigence qu'en clair » et
+     * mesurait 6,79:1 sur le fond, 6,27:1 sur la surface. Il échouait donc précisément l'exigence
+     * pour laquelle le mode CLAIR avait été retravaillé (les trois écarts aux maquettes, §1 DESIGN),
+     * et le commentaire affirmait le contraire. Le sombre n'avait jamais été mesuré. Ce jeton porte
+     * 80 usages. `contraste.test.ts` recalcule désormais tout depuis ce fichier. */
+    --color-attenue: #b3a99d; /* 7,64:1 sur le fond · 7,06:1 sur la surface */
     --color-bordure: #3a332d;
     --color-bordure-forte: #4a423a;
 
     /* L'accent s'ÉCLAIRCIT en sombre : la même terracotta sur fond noir tombe sous 3:1. */
     --color-accent: #d98963;
-    --color-accent-texte: #e9a583; /* 7,6:1 sur #1b1815 */
+    --color-accent-texte: #e9a583; /* 8,56:1 sur le fond · 7,91:1 sur la surface (annonçait 7,6) */
     --color-accent-plein: #b35f38;
     --color-accent-doux: #3a2820;
 
