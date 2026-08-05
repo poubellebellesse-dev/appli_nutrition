@@ -199,6 +199,22 @@ piment/matière grasse — voir [archive/RECAP_SESSION_6.md](../archive/RECAP_SE
 *Ces trois blocs viennent de la section « La prochaine étape » de la fiche. Ce ne sont pas des
 étapes : ce sont des impasses déjà payées, et les consignes pour ne pas les repayer.*
 
+⛔ **L'OCR d'Escoffier sépare les mots par DEUX espaces — un `grep` naïf ment.** Le texte intégral
+d'archive.org (`bnf-bpt6k65768837_djvu.txt`, 1 984 936 octets) contient `haricots  verts`, jamais
+`haricots verts`. Conséquence mesurée le 2026-08-05 : `grep "haricots verts"` rend **0**,
+`grep -E "haricots[[:space:]]+verts"` rend **51**. Un premier balayage a produit **cinq faux zéros**
+(haricots verts, purée de pommes, chou rouge, beurre noisette, riz au lait) avant correction du
+motif. **Toujours `[[:space:]]+` entre les mots** — sans quoi on classera « absent d'Escoffier » un
+plat qui y est. ✅ Les zéros déjà consignés dans `SOURCES_RECETTES.md` §5 ter ont été retestés avec
+le motif tolérant : ratatouille, gratin dauphinois et coq au vin sont **réellement** absents.
+
+⛔ **Une occurrence n'est pas une formule, et « milanaise » est un faux ami.** Trois échecs du même
+genre sont déjà payés : le riz pilaf (38 occurrences de « Pilaw », **toutes en renvoi**), la sole
+meunière (renvoi vers une « formule initiale » jamais atteinte en 4 tentatives), et les crêpes
+(**huit** variantes renvoyant à un « appareil A/B/C » jamais défini). Pire, l'**escalope à la
+milanaise** : chez Escoffier « milanaise » désigne une **garniture** de macaroni et tomate, pas une
+escalope panée — même mot, autre plat. Compter les occurrences ne dit rien ; il faut lire la ligne.
+
 **Suite du chantier provenance** (par ordre d'utilité, [SOURCES_RECETTES.md](../SOURCES_RECETTES.md)
 §7) : écrire à **cuisine-libre.org** — désormais pour ses **~3 800 recettes**, plus seulement les 603 CC0/DP, le
 CC BY-SA ayant été accepté le 2026-08-02 ; écrire à **Santé publique France** pour les ~2 000 recettes

@@ -387,12 +387,50 @@ croûtons frits, garniture caractéristique du Marengo chez Anctil, n'ont PAS é
 seule source, et c'est une garniture de service qui changerait le profil nutritionnel du plat.
 Divergence connue et assumée.
 
+### Troisième passage (2026-08-05) — 13 classiques tentés, 2 aboutis
+
+| Recette | Résultat |
+|---|---|
+| **Aile de raie au beurre noisette** | ⚠️ **un geste manquant, corrigé.** Escoffier, *Raie*, principe de traitement : « La pocher à l'eau salée […] et acidulée de 2 décilitres de vinaigre au litre. Étant cuite, l'égoutter [et retir]er la peau » → notre méthode est conforme. Le beurre renvoie à *Morue*, « Beurres noisette et noir (aux) » : « Morue pochée, égouttée, dépouillée, **séchée** et dressée en plat. Saupoudrer de persil concassé, ajouter filet de jus de citron, et couvrir avec beurre noisette ou noir (300 grammes pour un service). » **Le séchage manquait chez nous** — un beurre noisette ne nappe pas une chair mouillée. Ajouté à l'étape 3. |
+| **Endives braisées au beurre** | ✅ **conforme, rien à corriger.** Escoffier, *Endives* : « pour 1 kilo d'endives, 4 décilitres d'eau, 50 grammes de beurre, 12 grammes de sel et un jus de citron ». Nous : 56 g de beurre au kilo. Et son *Nota* — « **dans aucun cas ce légume ne doit être blanchi** » — était déjà respecté. Le sucre et le retrait du cône amer sont des écarts **assumés par notre propre description**, comme les carottes du navarin. |
+| Gigot d'agneau au thym | ❌ Escoffier ne connaît le gigot qu'« à la menthe » et « à l'estragon ». Pas de formule au thym. |
+| Escalope à la milanaise | ❌ **FAUX AMI, à ne pas rouvrir.** « Milanaise » chez Escoffier est une **garniture** (macaroni, tomate), jamais une escalope panée. Le mot est le même, le plat n'a rien à voir. |
+| Crêpes | ❌ **renvoi mort.** Les huit variantes (du Couvent, Georgette, Gil-Blas, Normande, Parisienne, Paysanne, Russe, Suzette) renvoient toutes à un « appareil A/B/C » jamais défini dans le texte. Même impasse exacte que la sole meunière. |
+| Artichauts à la vinaigrette · Poireaux vinaigrette | ❌ 0 formule. « Vinaigrette » ne compte que 7 occurrences dans tout l'ouvrage : Escoffier code très peu les hors-d'œuvre froids. |
+| Purée de pommes de terre | ❌ 4 occurrences, **toutes comme ingrédient d'autre chose**, jamais comme formule. |
+| Pain perdu · Tarte aux pommes · Tarte au citron · Clafoutis · Pommes de terre boulangère | ❌ absents (motif tolérant, voir ci-dessous). |
+
+**2 sur 13.** Le rendement annoncé au second passage (1 sur 5) se confirme, et la cause est
+maintenant claire : **Escoffier code la cuisine de restaurant de 1903**, pas la cuisine domestique.
+Les hors-d'œuvre froids, les tartes et les entremets familiaux n'y sont presque pas — et quand le
+plat y est, il y est souvent par renvoi.
+
+⚠️ **Ce qui reste du groupe A n'a plus grand-chose à donner.** Sur les ~30 classiques listés au §7
+point 2 bis, 4 avaient été traités, 13 viennent de l'être : il reste une douzaine de candidats, tous
+du même genre que ceux qui viennent d'échouer (moules marinière, œufs mimosa, riz au lait, flan,
+saint-jacques, chou rouge, haricots verts aux amandes, caviar d'aubergine, gratin de chou-fleur,
+poireaux gratinés). **Ne pas relancer ce chantier en espérant mieux** : apporter une source NOUVELLE
+— un autre ouvrage en domaine public, plus domestique qu'Escoffier — est le seul moyen de déplacer
+ce plafond.
+
 ### Méthode : télécharger une fois, chercher en local
 
 Chercher page par page sur Wikisource coûte 2 à 4 requêtes par recette, dont la moitié tombent sur
 un renvoi interne. **Télécharger le texte intégral une fois** (`archive.org/download/bnf-bpt6k65768837/`,
 1,9 Mo) rend les recherches suivantes gratuites et permet de répondre à « ce plat y est-il ? » en une
-seconde.
+seconde. URL exacte, revérifiée le 2026-08-05 :
+`https://archive.org/download/bnf-bpt6k65768837/bnf-bpt6k65768837_djvu.txt` — 1 984 936 octets.
+
+⛔ **L'OCR SÉPARE LES MOTS PAR DEUX ESPACES, et c'est le piège le plus coûteux du fichier.**
+Le texte contient `haricots  verts`, jamais `haricots verts`. Un `grep "haricots verts"` naïf rend
+donc **0** là où `grep -E "haricots[[:space:]]+verts"` en rend **51**. Mesuré le 2026-08-05 : un
+premier balayage a produit **cinq faux zéros** (haricots verts, purée de pommes, chou rouge, beurre
+noisette, riz au lait) avant que le motif ne soit corrigé. **Toujours interroger ce fichier avec
+`[[:space:]]+` entre les mots** — un zéro obtenu autrement ne prouve rien.
+✅ **Les zéros DÉJÀ consignés dans ce document ont été retestés avec le motif tolérant et tiennent** :
+ratatouille, gratin dauphinois et coq au vin sont bien absents d'Escoffier. Les trois occurrences de
+« soupe à l'oignon » sont des renvois internes à d'autres potages (Garbure-Cooper, Garbure à
+l'Oignon, Thourins), jamais la formule gratinée.
 
 ⚠️ **Mais l'OCR d'archive.org est dégradé** — scan BnF, « citron » y devient « cîlroii », le titre
 courant « LE GUIDE CULINAIRE » devient « LE LKhE LLLI.XAIHE ». Il sert à **localiser et décider**,

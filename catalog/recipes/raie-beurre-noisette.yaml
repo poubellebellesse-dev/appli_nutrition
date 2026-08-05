@@ -61,7 +61,7 @@ etapes:
     timer_s: 600
     timer_type: cuisson
   - ordre: 3
-    texte: "Égoutter les ailes et retirer la peau des deux côtés, qui s'enlève facilement à chaud."
+    texte: "Égoutter les ailes, retirer la peau des deux côtés — elle s'enlève facilement à chaud — puis éponger la chair avant de dresser : un beurre noisette ne nappe pas un poisson mouillé."
     lexicon_ids: [egoutter]
     timer_s: null
     timer_type: null
