@@ -186,6 +186,36 @@ describe('catalog/build.mjs — build réel (recettes sources valides)', () => {
     }
   })
 
+  it.each([
+    ['jambon_blanc', '28900', /cuit/i, 100, 130],
+    ['canard_magret', '36206', /magret/i, 300, 400],
+  ])(
+    '⛔ `%s` porte bien le code %s — les deux confusions maigre/gras déjà payées',
+    (id, code, motAttendu, kcalMin, kcalMax) => {
+      const livre = path.join(REPO_ROOT, 'app', 'public', 'catalog', 'catalog.db')
+      const db = new DatabaseSync(livre, { readOnly: true })
+      try {
+        const food = db.prepare('SELECT code_ciqual, nom FROM food WHERE id = ?').get(id) as
+          | { code_ciqual: string; nom: string }
+          | undefined
+        expect(food?.code_ciqual).toBe(code)
+        expect(food?.nom).toMatch(motAttendu)
+
+        const { valeur } = db
+          .prepare(
+            "SELECT valeur_pour_100g AS valeur FROM food_nutrient WHERE food_id = ? AND nutrient_id = 'energie'"
+          )
+          .get(id) as { valeur: number }
+        // Fourchette LARGE, pas une valeur exacte : c'est la CONFUSION de produit qu'on interdit
+        // (canard maigre pour du magret, rôti cru pour du jambon cuit), pas une révision Ciqual.
+        expect(valeur).toBeGreaterThan(kcalMin)
+        expect(valeur).toBeLessThan(kcalMax)
+      } finally {
+        db.close()
+      }
+    }
+  )
+
   it('le catalogue livré existe à son emplacement par défaut', () => {
     // Garantie conservée du test précédent, désormais en LECTURE SEULE : `app/public/catalog/` est
     // ce que sert la PWA et ce que lisent les tests d'écran. Si ce fichier manque, `npm run build`.

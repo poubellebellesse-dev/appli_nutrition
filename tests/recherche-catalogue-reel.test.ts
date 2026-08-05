@@ -473,10 +473,14 @@ describe('chercherParNom — synonymes d’aliments sur le catalogue réel', () 
     // mesures. Une liste devinée pourrirait.
     const porteurs = [...catalogue.foods.values()].filter((f) => f.synonymes.length > 0)
     expect(porteurs.map((f) => f.id as string).sort()).toEqual([
+      'creme_liquide',
       'crevette',
+      'jambon_blanc',
+      'maizena',
       'porc_poitrine',
       'saucisse_toulouse',
       'thon_conserve',
+      'thon_frais',
     ])
   })
 })
@@ -499,15 +503,41 @@ const SAISIES_COURANTES: readonly string[] = [
   'fromage rape', 'pain de mie', 'lait', 'beurre', 'riz', 'pates', 'poivron rouge',
   'courgette', 'oignon', 'ail', 'citron', 'saumon fume', 'thon en boite', 'mais',
   'haricots verts', 'champignon de paris',
+  // Ajoutées le 2026-08-05 par le balayage `catalog/audit-mapping.mjs` — chacune était un échec
+  // MESURÉ, pas une intuition : « maizena » et « magret » ne rendaient RIEN, « creme liquide »
+  // rendait de la crème de marron, « thon frais » rendait une fraise.
+  'maizena', 'creme liquide', 'thon frais', 'magret', 'jambon blanc',
 ]
 
 describe('chercherParNom — les 33 saisies du langage courant, sur le catalogue réel', () => {
   const surLEcran = (saisie: string) => chercherParNom([...catalogue.foods.values()], saisie, 6)
 
   it('AUCUNE ne rend une liste vide — causes (1) et (2) de la décision 58, closes', () => {
-    expect(SAISIES_COURANTES).toHaveLength(33)
+    expect(SAISIES_COURANTES).toHaveLength(38)
     const muettes = SAISIES_COURANTES.filter((s) => surLEcran(s).length === 0)
     expect(muettes).toEqual([])
+  })
+
+  it.each([
+    ['maizena', 'Fécule de maïs'],
+    ['maïzena', 'Fécule de maïs'],
+    ['creme liquide', 'Crème fluide 30% MG'],
+    ['thon frais', 'Thon albacore, cru'],
+    ['jambon blanc', 'Jambon cuit'],
+    ['jambon cuit', 'Jambon cuit'],
+    ['jambon cru', 'Jambon sec'],
+  ])('« %s » rend « %s » EN PREMIER — échec mesuré au balayage, réglé par un synonyme', (saisie, attendu) => {
+    expect(surLEcran(saisie)[0]?.nom).toBe(attendu)
+  })
+
+  it('« magret » est réglé par la DONNÉE, pas par un synonyme', () => {
+    // ⚠️ CE CAS EST INSTRUCTIF. « magret » ne rendait rien parce que `canard_magret` portait le code
+    // 36201 « Canard, viande crue » — le mot n'était donc dans AUCUN nom. Corriger le mapping vers
+    // 36206 « Canard, magret cru » a réglé la recherche par ricochet, et un synonyme « magret »
+    // serait désormais REFUSÉ au build comme entrée morte. Chercher un synonyme avant de vérifier
+    // la donnée aurait recouvert l'erreur au lieu de la corriger.
+    expect(surLEcran('magret')[0]?.nom).toBe('Canard, magret cru')
+    expect(catalogue.foods.get('canard_magret' as FoodId)?.synonymes).toEqual([])
   })
 
   it('« thon en boîte » rend la conserve EN PREMIER — le synonyme a réglé ce cas', () => {
@@ -525,11 +555,11 @@ describe('chercherParNom — les 33 saisies du langage courant, sur le catalogue
   // aliment est DANS les six affichés, donc atteignable. Si un jour cette assertion casse, ce n'est
   // plus un défaut de confort : l'aliment est sorti de l'écran.
   //
-  // ⛔ « jambon blanc » N'EST PAS DANS CETTE LISTE, ET C'EST DÉLIBÉRÉ. On ne peut pas lui désigner
-  // de bon aliment : `jambon_blanc` porte le code Ciqual 28700, « Jambon de porc à cuire ou jambon à
-  // rôtir/cuire au four » — un rôti CRU, pas du jambon blanc. Le jambon blanc est 28900/28925
-  // (« Jambon cuit, supérieur », « Jambon cuit, de Paris ») et n'est PAS au catalogue. Lui poser un
-  // synonyme désignerait le mauvais produit ; c'est un manque de contenu, cause (3).
+  // ⛔ « jambon blanc » A QUITTÉ CETTE LISTE le 2026-08-05, et la façon dont il l'a quittée compte.
+  // Il n'a PAS été réglé par un synonyme : `jambon_blanc` portait le code 28700, « Jambon de porc à
+  // cuire ou jambon à rôtir » — un rôti CRU. Lui poser un synonyme aurait désigné le mauvais
+  // produit et donné à l'erreur l'air d'être corrigée. C'est le mapping qui a été repointé (28900),
+  // et le synonyme n'est venu qu'APRÈS, une fois l'aliment juste.
   it.each([
     ['sauce tomate', 'Concentré de tomate'],
     ['fromage rape', 'Emmental râpé'],

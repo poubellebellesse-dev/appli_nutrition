@@ -208,9 +208,18 @@ mapping:
   porc_filet_mignon: 28204       # Porc, filet mignon cru
   porc_roti: 28300               # Porc, rôti cru
   porc_poitrine: 28002           # Porc, poitrine crue
-  jambon_blanc: 28700            # Jambon de porc à cuire ou jambon à rôtir/cuire au four
+  # ⚠️ 28900 ET NON 28700. `jambon_blanc` pointait sur 28700 « Jambon de porc à cuire ou jambon à
+  # rôtir/cuire au four » — un RÔTI CRU, pas du jambon blanc. 163 kcal et 9 g de lipides au lieu de
+  # 113 et 2,83 : ÷ 3,2 sur le gras. Le sodium, lui, bougeait à peine (870 → 788). Cinq recettes en
+  # dépendaient. 28925 (« de Paris ») a été écarté : le Ciqual n'y donne AUCUN sodium, or c'est la
+  # valeur qui compte le plus sur une charcuterie. Trouvé au balayage du 2026-08-05.
+  jambon_blanc: 28900            # Jambon cuit, supérieur
   veau_escalope: 6521            # Veau, escalope crue
-  canard_magret: 36201           # Canard, viande crue
+  # ⚠️ 36206 ET NON 36201. `canard_magret` pointait sur 36201 « Canard, viande crue » — du canard
+  # MAIGRE. Le magret est le filet AVEC sa couche de gras : 337 kcal et 29,4 g de lipides contre
+  # 127 kcal et 5,95 g. L'erreur portait sur × 4,9 en lipides, et l'une des deux recettes
+  # concernées s'appelle `magret-canard-miel`. Trouvée au balayage id ⇄ nom Ciqual du 2026-08-05.
+  canard_magret: 36206           # Canard, magret cru
   lapin: 34001                   # Lapin, viande crue
   poulet_cuisse: 36024           # Poulet, cuisse, viande crue
   agneau_epaule: 21504           # Agneau, épaule crue

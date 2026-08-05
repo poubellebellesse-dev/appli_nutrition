@@ -66,8 +66,23 @@ licences et le coût réel d'un import sont recensés dans
 [`docs/SOURCES_RECETTES.md`](../docs/SOURCES_RECETTES.md). **Toute recette qui en viendrait devra
 être créditée ici, ligne à ligne** — auteur, licence, lien.
 
-⚠️ `recipe` n'a aujourd'hui **ni colonne auteur, ni source, ni licence** : le crédit ne serait pas
-affichable à l'écran. À traiter avant le premier import.
+~~⚠️ `recipe` n'a aujourd'hui ni colonne auteur, ni source, ni licence : le crédit ne serait pas
+affichable à l'écran. À traiter avant le premier import.~~
+
+✅ **CORRIGÉ LE 2026-08-05 — C'ÉTAIT FAUX, et depuis un moment.** Tout le dispositif existe et il est
+branché de bout en bout :
+
+| Élément | État |
+|---|---|
+| `recipe.origine` | `maison \| domaine_public \| libre`, NOT NULL + CHECK |
+| `recipe_source` | `type`, `titre`, `url`, `consulte_le`, **`licence`**, **`auteur`** |
+| Validation au build | Bidirectionnelle : `maison` + `provenance` → **erreur** ; `domaine_public`/`libre` sans `provenance` → **erreur** |
+| Affichage | `ui/screens/detail-recette.tsx` : « **D'après** *titre* — *auteur* · *licence* » |
+
+Une recette importée sait donc se créditer à l'écran, et le build REFUSE une origine revendiquée
+sans source. **Le premier import n'est plus bloqué par ce point.** Aujourd'hui 41 recettes portent
+52 sources, **toutes de type `reference`** (consultées pour vérifier) et **aucune `provenance`** —
+ce qui est cohérent avec « les 241 recettes sont écrites pour ce projet ».
 
 ---
 

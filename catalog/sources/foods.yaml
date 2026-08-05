@@ -2633,22 +2633,27 @@ foods:
     allergenes: []
 
   - id: jambon_blanc
-    code_ciqual: "28700"
-    nom: "Jambon à cuire"
+    code_ciqual: "28900"
+    nom: "Jambon cuit"
+    # Le Ciqual dit « cuit », le rayon dit « blanc ». Le nom suit le Ciqual, le synonyme suit le
+    # panier — et l'identifiant, lui, disait « blanc » depuis toujours : c'est le mapping qui
+    # mentait, pas lui.
+    synonymes:
+      - jambon blanc
     groupe: "viandes"
     origine_animale: mammifere
     sous_famille: "porc"
     toute_annee: true
     nutriments:
-      energie_kcal: 163
-      proteines_g: 18.8
-      lipides_g: 9
-      glucides_g: 1.75
-      fibres_g: 0.5
-      fer_mg: 0.88
-      calcium_mg: 7.67
-      sodium_mg: 870
-      vitamine_c_mg: 0.8
+      energie_kcal: 113
+      proteines_g: 21
+      lipides_g: 2.83
+      glucides_g: 0.76
+      fibres_g: 0.19
+      fer_mg: 0.54
+      calcium_mg: 20
+      sodium_mg: 788
+      vitamine_c_mg: 18.1
     allergenes: []
 
   - id: veau_escalope
@@ -2670,22 +2675,20 @@ foods:
     allergenes: []
 
   - id: canard_magret
-    code_ciqual: "36201"
-    nom: "Canard, viande crue"
+    code_ciqual: "36206"
+    nom: "Canard, magret cru"
     groupe: "viandes"
     origine_animale: volaille
     sous_famille: "canard"
     toute_annee: true
     nutriments:
-      energie_kcal: 127
-      proteines_g: 18.3
-      lipides_g: 5.95
-      glucides_g: 0
+      energie_kcal: 337
+      proteines_g: 17.9
+      lipides_g: 29.4
+      glucides_g: 0.1
       fibres_g: 0
-      fer_mg: 2.4
-      calcium_mg: 11
-      sodium_mg: 74
-      vitamine_c_mg: 5.8
+      calcium_mg: 5
+      sodium_mg: 54.4
     allergenes: []
 
   - id: lapin
@@ -4152,6 +4155,10 @@ foods:
   - id: maizena
     code_ciqual: "9510"
     nom: "Fécule de maïs"
+    # Marque devenue nom commun. Mesuré : « maïzena » ne rendait RIEN — le mot n'est nulle part
+    # dans le nom Ciqual. C'est l'identifiant lui-même qui portait le mot du panier.
+    synonymes:
+      - maïzena
     groupe: "céréales et dérivés"
     conditionnement_g: 400
     toute_annee: true
@@ -4190,6 +4197,10 @@ foods:
   - id: creme_liquide
     code_ciqual: "19417"
     nom: "Crème fluide 30% MG"
+    # Le Ciqual dit « fluide », la brique dit « liquide ». Mesuré : « crème liquide » rendait
+    # « Crème de marron » en premier — les deux n'apparient que « crème ».
+    synonymes:
+      - crème liquide
     groupe: "lait et produits laitiers"
     conditionnement_g: 200
     derive_de: lait_entier
@@ -5040,6 +5051,10 @@ foods:
   - id: thon_frais
     code_ciqual: "26064"
     nom: "Thon albacore, cru"
+    # Le Ciqual dit « cru », l'étal dit « frais ». Mesuré : « thon frais » rendait « Fraise, crue »
+    # en premier — « frais » se réduit à « frai », et « Fraise » commence par « frai ».
+    synonymes:
+      - thon frais
     groupe: "poissons"
     origine_animale: poisson
     sous_famille: "thon"

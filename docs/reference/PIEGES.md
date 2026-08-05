@@ -37,6 +37,31 @@
   lisent via `ui/test-socle.ts`. `build.mjs` supprime sa sortie avant de la recréer. Tout build
   lancé depuis un test va dans un dossier temporaire (`--out`) — corrigé le 2026-08-01.
 
+**Ce qu'on commite n'est pas ce qu'on a testé**
+
+- ⛔ **Les quatre commandes vérifient l'ARBRE DE TRAVAIL, jamais l'INDEX.** Tant que l'index est
+  composé d'un `git add` de fichiers entiers, les deux coïncident et la distinction ne coûte rien.
+  Dès qu'on compose l'index autrement — `git add -p`, un `git update-index` à la main, un fichier
+  reconstruit — il devient un **TROISIÈME ÉTAT**, entre `HEAD` et l'arbre, que **rien ne vérifie**.
+  Payé le 2026-08-05 : `main` a été poussé rouge avec 1 452 tests verts et un typecheck propre à
+  l'écran, parce que les deux portaient sur l'arbre. → **vérifier le COMMIT lui-même**
+  (`git worktree add --detach .verif <sha>`, puis `node catalog/build.mjs` et les quatre commandes
+  dedans), pas l'arbre dont il est censé sortir.
+- ⚠️ **Un arbre neuf n'a pas de `catalog.db`** : il est gitignoré. Une suite lancée dans un worktree
+  frais rend ~168 échecs « unable to open database file » qui ne sont **pas** des régressions. Faire
+  `node catalog/build.mjs` d'abord, sinon on diagnostique un fantôme.
+- ⚠️ **Découper un bloc de code par recherche de `]` ou `}` est faux dès qu'il y a une annotation de
+  type.** Le premier `]` après `const X: readonly string[] = [` est celui de `string[]`, pas la
+  fermeture du littéral. C'est exactement ce qui a tronqué la migration v9 en
+  `const V9_STATEMENTS: readonly string[]` — déclarée, VIDE, et une base neuve n'aurait jamais reçu
+  sa colonne. Chercher la fermeture **en début de ligne** (`
+]`), ou ne pas découper du tout.
+- ⚠️ **Une session concurrente peut committer entre votre commit et sa vérification.** `HEAD~1` ne
+  désigne alors plus ce qu'on croit : ce jour-là il pointait sur le commit cassé lui-même, et une
+  « réparation » construite dessus l'aurait recopié. Relire `git log` avant de reconstruire quoi que
+  ce soit — et **réparer en AVANT**, jamais en réécrivant un historique sur lequel quelqu'un
+  construit déjà.
+
 **Les bancs mentent par omission — ce qu'ils ne comptent pas**
 
 - ⚠️ **`plan-stress` affiche « 20/20 configurations saines » avec DIX CRÉNEAUX VIDES de plus.**
@@ -163,6 +188,46 @@
   `import('./main.js')` DANS le nettoyage : sur un test qui a échoué avant de monter, ça la monterait
   au lieu de la rendre.
 
+
+- **Un identifiant d'aliment peut CONTREDIRE sa ligne Ciqual, et rien ne rougit.** `jambon_blanc`
+  pointait sur 28700 « Jambon de porc à cuire ou jambon à rôtir » — un rôti CRU. `canard_magret`
+  pointait sur 36201 « Canard, viande crue », du canard maigre : **× 4,9 sur les lipides**, sur une
+  recette nommée `magret-canard-miel`. Sept recettes portaient de fausses valeurs. Ni le build, ni le
+  type, ni les tests, ni l'écran ne pouvaient le voir : `ciqual-mapping.yaml` est écrit ET RELU à la
+  main, et le nom éditorial transcrivait fidèlement… la mauvaise ligne. C'est le défaut signature du
+  projet — un champ rempli mais FAUX — transposé aux **données**.
+  → **`node catalog/audit-mapping.mjs` après chaque lot de contenu.** Il compare les mots de
+  l'identifiant au nom Ciqual réel et rend une liste à relire (10 candidats, 2 vrais défauts au
+  premier passage). ⚠️ **Il ne peut pas devenir un test** : `documents Ciqual/` est gitignoré.
+  ⚠️ Le premier des deux a été trouvé **par accident**, en cherchant où poser un synonyme.
+
+- **VÉRIFIER LA DONNÉE AVANT DE POSER UN SYNONYME — sinon on recouvre l'erreur.** « magret » ne
+  rendait rien ; le réflexe était d'ajouter un synonyme. En allant voir sur quel aliment le poser, on
+  a trouvé que `canard_magret` portait le mauvais code. **Corriger le mapping a réparé la recherche
+  tout seul**, et un synonyme « magret » serait désormais REFUSÉ au build comme entrée morte. Le
+  poser d'abord aurait donné un résultat qui avait l'air juste : le mot aurait trouvé son aliment,
+  qui aurait continué de porter les valeurs d'un canard maigre.
+
+- **Agrandir le catalogue FABRIQUE des faux amis de recherche.** `sauce tomate` rend « Maquereau
+  sauce tomate » en premier — le nom contient littéralement la saisie, le rang sous-chaîne fait son
+  travail. Ce faux ami est né de l'ajout de `maquereau_tomate`, pas d'un défaut de `chercherParNom`.
+  Le mécanisme se reproduira à chaque lot de contenu ; ce n'est pas une raison de ne pas en faire,
+  c'en est une de **relancer la mesure des saisies** (`tests/recherche-catalogue-reel.test.ts`).
+
+- **UN NUMÉRO DE MIGRATION ÉCRIT DANS UN DOCUMENT DE PLAN N'EST PAS RÉSERVÉ.**
+  `CONCEPTION_MODE_CUISINE.md` annonçait la reprise de cuisson en **v9**, plan rédigé le 2026-08-04.
+  Le 2026-08-05, une autre piste a livré la v9 pour les plats préparés (décision 51), et le lot du
+  mode cuisine est parti en **v10**. Deux migrations portant le même numéro, c'est la perte de
+  données que `user-schema.ts` existe pour empêcher : la base rapporte une version qu'elle n'a pas
+  réellement jouée, et l'écart ne se voit qu'à la première requête sur une colonne absente.
+  ➡️ **Relire `USER_SCHEMA_VERSION` au moment d'écrire la migration, jamais se fier au plan.**
+
+- **`navigator.wakeLock` N'EXISTE PAS HORS CONTEXTE SÉCURISÉ, et l'échec ne le dit pas.** Servir un
+  `dist/` sur `http://192.168.x.x` pour essayer sur un téléphone — le réflexe évident — fait
+  disparaître l'API. Le symptôme est « l'écran s'éteint quand même », qui se lit comme un défaut de
+  l'appareil ou du navigateur, et on part chercher au mauvais endroit. Même famille que la politique
+  d'autoplay : **le refus est silencieux, il n'y a pas d'erreur à attraper.** ➡️ Tout essai du mode
+  cuisine sur appareil se fait **en HTTPS**.
 
 ## Contenu : la règle qui tient tout l'onglet Savoir
 
