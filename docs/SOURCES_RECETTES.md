@@ -413,6 +413,44 @@ poireaux gratinés). **Ne pas relancer ce chantier en espérant mieux** : apport
 — un autre ouvrage en domaine public, plus domestique qu'Escoffier — est le seul moyen de déplacer
 ce plafond.
 
+### Quatrième passage (2026-08-05) — Anctil seule, 6 recettes confrontées
+
+**Pourquoi Anctil et plus Escoffier.** Le troisième passage a nommé le plafond : Escoffier code la
+cuisine de RESTAURANT. Anctil 1915 est un manuel des **écoles ménagères** québécoises — cuisine
+domestique, tartes et entremets compris. C'est exactement le complément qui manquait, et le premier
+croisement le confirme : **Anctil a la tarte aux pommes, la tarte aux citrons et la purée de pommes
+de terre, qu'Escoffier n'a pas.**
+
+| Recette | Résultat |
+|---|---|
+| **Purée de pommes de terre** ← Anctil 139 (p. 112) | ⚠️ **un geste manquant, corrigé.** « Les passer au presse-purée, leur ajouter 3 cuillerées à table de beurre, et une tasse de lait chaud. **Mettre la casserole sur le feu, tourner vivement jusqu'à ce que la purée soit bien blanche, et bien lisse.** » Nous nous arrêtions à l'incorporation. Ce retour sur le feu chasse l'eau restante — étape 4 ajoutée. ⚠️ **Source unique** (Escoffier n'a pas de formule : 4 occurrences, toutes comme ingrédient). Retenu sur le **précédent du Marengo** : la source l'écrit explicitement, le geste est cohérent, et il n'ajoute aucun ingrédient. |
+| **Tarte au citron** ← Anctil 246 (p. 177-178) | ✅ **convergence forte, rien à corriger.** Elle « pique la pâte afin qu'elle ne gonfle pas » et la cuit AVANT de garnir — exactement nos étapes 1 et 2, cuisson à blanc comprise. Le zeste de deux citrons et la meringue sont des variantes d'une seule source. |
+| **Tarte aux pommes** ← Anctil 247 (p. 178-179) | ✅ **noyau commun conforme.** Quartiers « rangés en rond, à cheval les uns sur les autres », saupoudrés de sucre et de cannelle : nous avons les trois. La pâte au saindoux et la finition œuf-crème sont québécoises — même arbitrage que le bacon et les cornichons de sa blanquette. |
+| **Gratin de chou-fleur** ← Anctil 151 | ❌ **autre préparation** : beurre fondu et fromage râpé, sans béchamel. ⚠️ **Muscade non retenue** — Anctil assaisonne « sel, poivre et une pincée de muscade », mais la muscade d'Escoffier apparaît dans une *Royale de poisson*, pas dans sa béchamel : **pas de second témoin**. Même arbitrage que les croûtons du Marengo. |
+| **Poireaux gratinés** ← Anctil 170, *Poireaux à la crème* | ✅ **divergence assumée par construction.** Elle **réserve l'eau de cuisson** et en fait la moitié du mouillement ; nous **pressons** les poireaux pour la chasser, et notre étape 3 dit pourquoi (« l'eau rendue au four délaierait la béchamel »). Sa sauce est un légumier, la nôtre un gratin. Roux identique de part et d'autre : 2 c. à table de beurre et de farine ≈ nos 50 g + 50 g. |
+
+**1 correction sur 6**, mais un rendement bien meilleur qu'Escoffier en *couverture* : 3 des 6 plats
+n'existaient pas du tout chez lui.
+
+### Méthode Anctil : énumérer les titres, pas chercher dans un OCR
+
+⭐ **Wikisource transcrit Anctil UNE PAGE PAR RECETTE**, ce qui change tout par rapport au blob OCR
+d'Escoffier. On peut **lister les 372 sous-pages en une requête** et voir d'un coup ce que le livre
+contient — plus de faux zéros, plus d'OCR à déchiffrer, et la citation est propre du premier coup.
+
+```bash
+curl -A "appli-nutrition-sourcing/1.0" \
+  "https://fr.wikisource.org/w/api.php?action=query&list=allpages&apprefix=350%20recettes%20de%20cuisine/&aplimit=500&format=json"
+# puis, pour une recette :
+curl -A "appli-nutrition-sourcing/1.0" \
+  "https://fr.wikisource.org/w/api.php?action=parse&prop=text&format=json&page=350%20recettes%20de%20cuisine/<Titre>"
+```
+
+⚠️ **Deux pièges de l'API, payés le 2026-08-05.** `prop=extracts` rend du **VIDE** sur ces pages :
+elles sont transcluses depuis l'espace `Page:`, il faut `action=parse&prop=text` puis dépouiller le
+HTML. Et Wikimedia **refuse les requêtes sans `User-Agent`** — `urllib` sans en-tête rend un
+**403 Forbidden**, `curl -A` passe.
+
 ### Méthode : télécharger une fois, chercher en local
 
 Chercher page par page sur Wikisource coûte 2 à 4 requêtes par recette, dont la moitié tombent sur

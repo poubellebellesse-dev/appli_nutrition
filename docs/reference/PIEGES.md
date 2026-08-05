@@ -208,6 +208,14 @@ motif. **Toujours `[[:space:]]+` entre les mots** — sans quoi on classera « a
 plat qui y est. ✅ Les zéros déjà consignés dans `SOURCES_RECETTES.md` §5 ter ont été retestés avec
 le motif tolérant : ratatouille, gratin dauphinois et coq au vin sont **réellement** absents.
 
+⭐ **Pour Anctil 1915, ne pas imiter la méthode Escoffier — Wikisource la transcrit UNE PAGE PAR
+RECETTE.** On liste les **372** sous-pages en une requête (`action=query&list=allpages&apprefix=350
+recettes de cuisine/`), donc on voit ce que le livre contient au lieu de le deviner : pas d'OCR, pas
+de faux zéro, citation propre du premier coup. ⚠️ Deux pièges d'API payés le 2026-08-05 :
+`prop=extracts` rend du **vide** (pages transcluses depuis l'espace `Page:` → utiliser
+`action=parse&prop=text` et dépouiller le HTML), et Wikimedia renvoie **403 Forbidden** sans
+`User-Agent` (`urllib` nu échoue, `curl -A` passe).
+
 ⛔ **Une occurrence n'est pas une formule, et « milanaise » est un faux ami.** Trois échecs du même
 genre sont déjà payés : le riz pilaf (38 occurrences de « Pilaw », **toutes en renvoi**), la sole
 meunière (renvoi vers une « formule initiale » jamais atteinte en 4 tentatives), et les crêpes

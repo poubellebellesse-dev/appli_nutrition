@@ -53,6 +53,11 @@ etapes:
     lexicon_ids: [egoutter, ecraser, incorporer]
     timer_s: null
     timer_type: null
+  - ordre: 4
+    texte: "Remettre la casserole sur feu doux et tourner vivement quelques instants : c'est ce passage sur le feu qui chasse l'eau restante et rend la purée blanche et lisse."
+    lexicon_ids: []
+    timer_s: 120
+    timer_type: cuisson
 
 facettes:
   - facette: cuisine
