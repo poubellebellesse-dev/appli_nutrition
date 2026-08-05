@@ -432,6 +432,36 @@ de terre, qu'Escoffier n'a pas.**
 **1 correction sur 6**, mais un rendement bien meilleur qu'Escoffier en *couverture* : 3 des 6 plats
 n'existaient pas du tout chez lui.
 
+### Cinquième passage (2026-08-05) — BALAYAGE SYSTÉMATIQUE, et il clôt le sujet
+
+⭐ **Les 241 recettes ont été croisées avec les 372 titres d'Anctil, une bonne fois.** Plus de
+pêche au jugé : 89 652 paires évaluées par recouvrement de mots distinctifs (Jaccard), noms composés
+repliés en un seul jeton — sans quoi « pommes de terre » fait matcher tous les plats de patates entre
+eux et noie le signal.
+
+**Résultat : 21 candidats sérieux, dont 5 déjà traités** (purée, tarte aux pommes, gratin de
+chou-fleur, blanquette, Marengo). Les 4 restants ont été lus :
+
+| Notre recette | Anctil | Verdict |
+|---|---|---|
+| **Poireaux vinaigrette** · **Artichauts à la vinaigrette** | 116, *Sauce vinaigrette* | ✅ **conforme — et la convergence est frappante.** Anctil : « 2 cuillerées à table de vinaigre à l'estragon, 4 cuillerées à table d'huile d'olive », soit **1 : 2**. Nous : 25 g / 50 g (**1 : 2**) et 25 g / 60 g (1 : 2,4). **Moutarde et échalote présentes des deux côtés.** Ce rapport n'avait aucune source jusqu'ici. Ses câpres, cornichons et céleri en font une ravigote — variante, pas notre erreur. |
+| **Œufs brouillés au persil** | 193, *Œufs brouillés* | ✅ **conforme sur les gestes** : « le battre légèrement », « en remuant constamment », « jusqu'à ce qu'elle ait une consistance crémeuse » — nos trois étapes disent la même chose. Son lait mêlé aux œufs crus et sa cuisson à la poêle sont une autre école que notre bain-marie et notre crème hors du feu ; une seule source, et notre étape porte déjà sa justification. Non corrigé. |
+| Œufs cocotte aux épinards | 176, *Épinards aux œufs* | ❌ **autre plat** : épinards hachés à la crème, décorés de quartiers d'œufs durs. Rien à voir avec des œufs cocotte. |
+| Riz aux légumes sautés | 25, *Soupe au riz et aux légumes* | ❌ **autre plat** : c'est un potage. |
+
+**0 correction sur ce passage — et c'est le résultat utile.** Le rapport 1:2 de nos vinaigrettes,
+écrit sans source, se trouve confirmé mot pour mot par un manuel de 1915.
+
+⛔ **NE PAS RELANCER LE CROISEMENT ANCTIL.** Il a été fait en entier, pas par échantillon : les 372
+titres sont épuisés. Ce qui reste chez elle ne correspond à aucune de nos 241 recettes. Rouvrir ce
+chantier demande **une troisième source**, pas une énième passe sur les deux mêmes livres.
+
+**Méthode, pour la refaire contre un AUTRE ouvrage** : lister les titres de la source, normaliser
+(sans accents, minuscules, mots vides retirés), **replier les noms composés en un jeton unique**
+(`pommes de terre` → `pdt`, `chou fleur` → `choufleur`…), puis Jaccard sur les jeux de mots en ne
+gardant que le meilleur candidat par recette au-dessus de 0,34. Le repli des composés est le point
+qui fait tout : sans lui, le premier essai a rendu **1 180 paires** illisibles au lieu de 21.
+
 ### Méthode Anctil : énumérer les titres, pas chercher dans un OCR
 
 ⭐ **Wikisource transcrit Anctil UNE PAGE PAR RECETTE**, ce qui change tout par rapport au blob OCR
