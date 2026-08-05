@@ -25,9 +25,12 @@ import { PARCOURS, etapesDuParcours } from './parcours.js'
 import { findBannedTerms } from '../engine/guards/banned-terms.js'
 import { Visite } from './visite.js'
 import { hashDe, hashDesParametres, hashDeLEditeur, hashDuFrigo } from './router.js'
-import { catalogueDeTest, reinitialiserBase, sessionDeTest } from './test-socle.js'
+import { catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from './test-socle.js'
 
-vi.mock('./catalog-source.js', () => ({ chargerCatalogue: () => Promise.resolve(catalogueDeTest()) }))
+vi.mock('./catalog-source.js', () => ({
+  chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
+  chargerConfiance: () => Promise.resolve(confianceDeTest()),
+}))
 vi.mock('./user-source.js', () => ({
   ouvrirUserDb: () => Promise.resolve(sessionDeTest()),
   surErreurDePersistance: () => undefined,

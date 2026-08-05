@@ -199,6 +199,20 @@ async function readYamlDir(dirPath) {
 // 4. Chargement des sources
 // ----------------------------------------------------------------------------
 
+/**
+ * Cotes de confiance Ciqual, fichier GENERE par `import-ciqual.mjs --write-confiance` (decision 33).
+ *
+ * Absent = build sans cotes, pas une erreur : la source ANSES n'est pas versionnee (69 Mo) et un
+ * poste qui ne l'a pas doit pouvoir construire le catalogue. Les colonnes valent alors NULL, et
+ * l'ecran n'affiche simplement aucune provenance.
+ */
+async function loadConfiance() {
+  const filePath = path.join(SOURCES_DIR, 'sources', 'ciqual-confiance.yaml')
+  if (!existsSync(filePath)) return {}
+  const data = await readYamlFile(filePath)
+  return data?.confiance ?? {}
+}
+
 async function loadFoods() {
   const filePath = path.join(SOURCES_DIR, 'sources', 'foods.yaml')
   const data = await readYamlFile(filePath)
@@ -788,6 +802,12 @@ CREATE TABLE food_nutrient (
   food_id TEXT NOT NULL REFERENCES food(id),
   nutrient_id TEXT NOT NULL REFERENCES nutrient(id),
   valeur_pour_100g REAL NOT NULL,
+  -- Cote de confiance ANSES de CETTE valeur (decision 33, 2026-08-05). A = dosee, source francaise
+  -- identifiee ; D = calculee, imputee ou empruntee a une table etrangere. NULL = l'ANSES n'en donne
+  -- pas, ou l'aliment n'est pas apparie a Ciqual (une recette perso, un aliment ajoute a la main).
+  -- ⛔ NE PONDERE AUCUN SCORE, et ce n'est pas un oubli : la decision 33 a ecarte cette piste. Sert
+  --    la tracabilite affichee (dire d'ou vient un chiffre), jamais a declasser un aliment.
+  code_confiance TEXT CHECK (code_confiance IS NULL OR code_confiance IN ('A','B','C','D')),
   PRIMARY KEY (food_id, nutrient_id)
 );
 
@@ -1006,7 +1026,7 @@ CREATE TABLE evidence_link (
 );
 `
 
-function buildDatabase({ foods, lexicon, recipes, tips, evidence }, outPath) {
+function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {} }, outPath) {
   if (existsSync(outPath)) rmSync(outPath, { force: true })
 
   const db = new DatabaseSync(outPath)
@@ -1027,7 +1047,7 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence }, outPath) {
       'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee, piquant, poids_piece_g, fond_de_placard, conditionnement_g, origine_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     const insertFoodNutrient = db.prepare(
-      'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g) VALUES (?, ?, ?)'
+      'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g, code_confiance) VALUES (?, ?, ?, ?)'
     )
     const insertFoodAllergen = db.prepare(
       'INSERT INTO food_allergen (food_id, allergen_id, certitude) VALUES (?, ?, ?)'
@@ -1050,8 +1070,9 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence }, outPath) {
         food.origine_animale ?? null,
         food.derive_de ?? null
       )
+      const cotesDeCetAliment = confiance[food.id] ?? {}
       for (const [key, valeur] of Object.entries(food.nutriments ?? {})) {
-        insertFoodNutrient.run(food.id, nutrientByKey.get(key), valeur)
+        insertFoodNutrient.run(food.id, nutrientByKey.get(key), valeur, cotesDeCetAliment[key] ?? null)
       }
       for (const allergene of food.allergenes ?? []) {
         insertFoodAllergen.run(food.id, allergene.code, allergene.certitude)
@@ -1241,12 +1262,13 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence }, outPath) {
 // ----------------------------------------------------------------------------
 
 async function main() {
-  const [foods, lexicon, recipes, tips, evidence] = await Promise.all([
+  const [foods, lexicon, recipes, tips, evidence, confiance] = await Promise.all([
     loadFoods(),
     loadLexicon(),
     loadRecipes(),
     loadTips(),
     loadEvidence(),
+    loadConfiance(),
   ])
 
   const errors = validateCatalog({ foods, lexicon, recipes, tips, evidence })
@@ -1263,7 +1285,7 @@ async function main() {
   }
 
   await mkdir(path.dirname(OUT_PATH), { recursive: true })
-  buildDatabase({ foods, lexicon, recipes, tips, evidence }, OUT_PATH)
+  buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance }, OUT_PATH)
 
   const positions = evidence.reduce((total, fiche) => total + (fiche.positions?.length ?? 0), 0)
   const etapesToutes = recipes.flatMap((r) => r.etapes ?? [])

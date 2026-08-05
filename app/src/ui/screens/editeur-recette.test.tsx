@@ -14,10 +14,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { readUserRecipes, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
-import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
+import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
 
 vi.mock('../catalog-source.js', () => ({
   chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
+  chargerConfiance: () => Promise.resolve(confianceDeTest()),
 }))
 vi.mock('../user-source.js', () => ({
   ouvrirUserDb: () => Promise.resolve(sessionDeTest()),

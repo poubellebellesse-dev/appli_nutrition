@@ -9,9 +9,9 @@ import type { Catalog, MealSlot, UserProfile } from '../engine/domain/index.js'
 import { createEngine, type Engine } from '../engine/api/index.js'
 import type { UserDb } from '../data/user-db.js'
 import { readProfile, writeProfile } from '../data/user-store.js'
-import { avecRecettesSupplementaires } from '../data/catalog-loader.js'
+import { avecRecettesSupplementaires, type ConfianceParAliment } from '../data/catalog-loader.js'
 import { readUserRecipes, versRecette } from '../data/user-recipe.js'
-import { chargerCatalogue } from './catalog-source.js'
+import { chargerCatalogue, chargerConfiance } from './catalog-source.js'
 import { ouvrirUserDb, type Stockage } from './user-source.js'
 
 /**
@@ -51,6 +51,16 @@ export interface Socle {
    * « les recettes du catalogue » et « les miennes » restent distinguables partout où ça compte.
    */
   readonly catalogueSource: Catalog
+  /**
+   * Cotes de confiance ANSES des valeurs nutritionnelles (décision 33, tranchée le 2026-08-05).
+   *
+   * ⚠️ SUR LE SOCLE, PAS SUR LE CATALOGUE, et c'est structurel. Le moteur ne doit pas pouvoir les
+   * lire : la décision a écarté toute pondération du score par la confiance. Les poser ici, dans la
+   * couche UI, rend la pondération inexprimable côté moteur au lieu de l'interdire par convention.
+   *
+   * Aliment absent = aucune cote connue, ce qui n'est PAS un mauvais score (§5.1 bis ENGINE).
+   */
+  readonly confiance: ConfianceParAliment
   readonly moteur: Engine
   readonly db: UserDb
   /** `'memoire'` = OPFS indisponible : tout est perdu au rechargement. À dire clairement. */
@@ -71,8 +81,12 @@ export function chargerSocle(): Promise<Socle> {
 }
 
 async function chargerVraiment(): Promise<Socle> {
-  const [catalogueSource, session] = await Promise.all([chargerCatalogue(), ouvrirUserDb()])
-  return assembler(catalogueSource, session.db, session.stockage, session.persistant)
+  const [catalogueSource, confiance, session] = await Promise.all([
+    chargerCatalogue(),
+    chargerConfiance(),
+    ouvrirUserDb(),
+  ])
+  return assembler(catalogueSource, confiance, session.db, session.stockage, session.persistant)
 }
 
 /**
@@ -86,6 +100,7 @@ async function chargerVraiment(): Promise<Socle> {
  */
 function assembler(
   catalogueSource: Catalog,
+  confiance: ConfianceParAliment,
   db: UserDb,
   stockage: Stockage,
   persistant: boolean
@@ -96,7 +111,7 @@ function assembler(
   // `moteur.catalogue` est le catalogue ENRICHI que `createEngine` a construit (§6.5 précision 8),
   // pas `brut` : l'exposer via le moteur garantit par construction que `catalogue` porte les index
   // dérivés — plus une histoire de convention qu'il faudrait se souvenir de respecter à chaque appel.
-  return { catalogue: moteur.catalogue, catalogueSource, moteur, db, stockage, persistant }
+  return { catalogue: moteur.catalogue, catalogueSource, confiance, moteur, db, stockage, persistant }
 }
 
 /**
@@ -112,7 +127,13 @@ function assembler(
  */
 export async function rebatirCatalogue(): Promise<Socle> {
   const actuel = await chargerSocle()
-  const suivant = assembler(actuel.catalogueSource, actuel.db, actuel.stockage, actuel.persistant)
+  const suivant = assembler(
+    actuel.catalogueSource,
+    actuel.confiance,
+    actuel.db,
+    actuel.stockage,
+    actuel.persistant
+  )
   cache = Promise.resolve(suivant)
   return suivant
 }

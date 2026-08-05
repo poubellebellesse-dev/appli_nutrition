@@ -23,7 +23,8 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Catalog } from '../engine/domain/index.js'
-import { loadCatalog } from '../data/catalog-loader-node.js'
+import type { ConfianceParAliment } from '../data/catalog-loader.js'
+import { loadCatalog, loadConfiance } from '../data/catalog-loader-node.js'
 import { openUserDb } from '../data/user-store-node.js'
 import type { UserDb } from '../data/user-db.js'
 
@@ -36,6 +37,20 @@ let catalogue: Catalog | undefined
 export function catalogueDeTest(): Catalog {
   catalogue ??= loadCatalog(CATALOGUE)
   return catalogue
+}
+
+/**
+ * Cotes de confiance ANSES du catalogue de test (décision 33).
+ *
+ * ⚠️ CHARGÉES DEPUIS LE MÊME `catalog.db`, pas inventées. Une table vide ferait passer tous les
+ * tests d'affichage de provenance sans rien prouver — exactement la panne que ce projet cherche
+ * partout ailleurs : un test vert parce qu'il n'y a rien à vérifier.
+ */
+let confiance: ConfianceParAliment | undefined
+
+export function confianceDeTest(): ConfianceParAliment {
+  confiance ??= loadConfiance(CATALOGUE)
+  return confiance
 }
 
 /**

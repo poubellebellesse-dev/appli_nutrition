@@ -1,0 +1,466 @@
+# ============================================================================
+# Cotes de confiance ANSES (A → D) des valeurs Ciqual, par aliment et nutriment.
+#
+# ⚠️ FICHIER GÉNÉRÉ — ne pas éditer à la main.
+#     node catalog/import-ciqual.mjs --write-confiance
+#
+# A = valeur dosée, source française identifiée · D = valeur calculée, imputée ou empruntée.
+# Une cote C ou D ne veut PAS dire « douteuse » : mesuré le 2026-08-05, la première source des
+# valeurs C/D est la table USDA (451 occurrences) et la deuxième un calcul interne Ciqual (368).
+#
+# ⛔ NE SERT À AUCUNE PONDÉRATION DE SCORE (décision 33). Sert la traçabilité affichée : dire
+#    d’où vient un chiffre, pas le déclasser. L’énergie est omise à l’affichage — elle est
+#    434 D sur 449 par construction, l’afficher serait du bruit et non de la provenance.
+# ============================================================================
+
+confiance:
+  abricot: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  agar_agar: { proteines_g: C, lipides_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  agneau_cotelette: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D }
+  agneau_epaule: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: C, fer_mg: A, calcium_mg: C, sodium_mg: A, vitamine_c_mg: C }
+  agneau_gigot: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: C, fer_mg: A, calcium_mg: C, sodium_mg: A, vitamine_c_mg: C }
+  ail: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  amande_effilee: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  amarante: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  ananas: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  anchois_frais: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  anchois_huile: { energie_kcal: B, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, sodium_mg: A }
+  andouille: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, sodium_mg: D }
+  aneth_frais: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  artichaut: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  asperge_verte: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  aubergine: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  avocat: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  avoine: { energie_kcal: D, proteines_g: C, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  bacon: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: B, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  banane: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  banane_plantain: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: B, vitamine_c_mg: B }
+  bar: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  basilic_frais: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: C, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  beaufort: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: D, calcium_mg: A, sodium_mg: A }
+  betterave: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  beurre_cacahuete: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  beurre_demi_sel: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  beurre_doux: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  biere: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: B, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  bigorneau: { lipides_g: D, glucides_g: B, fibres_g: B }
+  biscotte: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  blanc_oeuf: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  blette: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, vitamine_c_mg: A }
+  bleu_auvergne: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: D, calcium_mg: D, sodium_mg: C }
+  boeuf_bavette: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: C, fer_mg: A, calcium_mg: C, sodium_mg: A, vitamine_c_mg: C }
+  boeuf_entrecote: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: C, fer_mg: A, calcium_mg: C, sodium_mg: A, vitamine_c_mg: C }
+  boeuf_hache_5: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: C, fer_mg: A, calcium_mg: C, sodium_mg: A, vitamine_c_mg: C }
+  boeuf_paleron: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: C, fer_mg: A, calcium_mg: C, sodium_mg: A, vitamine_c_mg: C }
+  boeuf_steak: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: A, vitamine_c_mg: C }
+  boisson_amande: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  boisson_avoine: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  boisson_soja: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  boudin_blanc: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, sodium_mg: D }
+  boudin_noir: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  bouillon_boeuf: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: C, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  bouillon_legumes: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: C, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  bouillon_volaille: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, sodium_mg: C }
+  boulgour: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  brie: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: D, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  brocoli: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: B, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: B }
+  brousse: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: B, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  bulot: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  cabillaud: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  cacahuete: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  cacao_poudre: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  caille_viande: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  calamar: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  camembert: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: D, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  canard_cuisse: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: C, fibres_g: B, sodium_mg: D }
+  canard_magret: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, calcium_mg: D, sodium_mg: D }
+  cancoillotte: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: D, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  cannelle: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  cantal: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: B, fibres_g: B, calcium_mg: D, sodium_mg: D }
+  capre: { proteines_g: C, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: B }
+  carambole: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  cardamome: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  cardon: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  carotte: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  carrelet: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  carvi: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  cassis: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: D, fer_mg: B, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  celeri_branche: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  celeri_rave: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  cepe: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  cerise: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  champignon_noir: { proteines_g: C, lipides_g: D, sodium_mg: C }
+  champignon_paris: { energie_kcal: D, proteines_g: B, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: B, calcium_mg: B, sodium_mg: A, vitamine_c_mg: D }
+  chaource: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  chapelure: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  cheddar: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  chevre_affine: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  chevre_frais: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  chevreuil: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D }
+  chocolat_blanc: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: D, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  chocolat_lait: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  chocolat_noir: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  chorizo: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, sodium_mg: A }
+  chou_bruxelles: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: B, vitamine_c_mg: C }
+  chou_chinois: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  chou_fleur: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  chou_kale: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  chou_rave: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  chou_romanesco: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  chou_rouge: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  chou_vert: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  ciboulette: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: B, vitamine_c_mg: C }
+  cidre: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  citron: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  citron_vert: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  clementine: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  clou_girofle: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  cognac: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  coing: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  compote_pomme: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  comte_rape: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: D, calcium_mg: A, sodium_mg: A }
+  concentre_tomate: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  concombre: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  confit_canard: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  congre: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  coppa: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: C, sodium_mg: D }
+  coquille_saint_jacques: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  coriandre_fraiche: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  coriandre_graine: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  cornichon: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  courge_butternut: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  courge_spaghetti: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  courgette: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  couscous: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  crabe: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  cranberry_seche: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  creme_fraiche: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  creme_liquide: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: B, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  creme_marron: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: A, fer_mg: D, calcium_mg: D, sodium_mg: A, vitamine_c_mg: A }
+  cresson: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  crevette: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  cumin_graine: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  curcuma: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  curry_poudre: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: B }
+  datte: { energie_kcal: D, proteines_g: B, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: B, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  dinde_viande: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  dorade: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  echalote: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  ecrevisse: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  eglefin: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  endive: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  epeautre: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  eperlan: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: B, fibres_g: D, sodium_mg: D, vitamine_c_mg: D }
+  epinard: { energie_kcal: D, proteines_g: C, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: B }
+  epoisses: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  escalope_dinde: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  espadon: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  estragon_frais: { proteines_g: D, glucides_g: D, fibres_g: D }
+  farine_ble: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  farine_chataigne: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, vitamine_c_mg: A }
+  farine_complete: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  farine_millet: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  farine_pois_chiche: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  farine_riz: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  farine_sarrasin: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: C, vitamine_c_mg: A }
+  fenouil: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  fenugrec: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: B, vitamine_c_mg: B }
+  feta: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  feve: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  figue: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  figue_seche: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  flageolet: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  fletan: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  flocons_avoine: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: C, sodium_mg: A, vitamine_c_mg: B }
+  foie_agneau: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: C, fer_mg: A, calcium_mg: C, sodium_mg: A, vitamine_c_mg: C }
+  foie_genisse: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: C, fibres_g: D, fer_mg: A, calcium_mg: D, sodium_mg: A, vitamine_c_mg: D }
+  foie_gras: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  fraise: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  framboise: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  fromage_blanc: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  fromage_emmental_rape: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  fruit_passion: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  galette_riz: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  gelatine: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  germe_ble: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  gesier_poulet: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: B }
+  gingembre_frais: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  gingembre_poudre: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  girolle: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: D }
+  gnocchi: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, sodium_mg: A }
+  gouda: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: C, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  goyave: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  graine_chia: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: C, fer_mg: C, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  graine_courge: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  graine_lin: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  graine_pavot: { energie_kcal: D, proteines_g: C, lipides_g: B, glucides_g: D, fibres_g: D, fer_mg: B, calcium_mg: C, sodium_mg: B, vitamine_c_mg: C }
+  graine_tournesol: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  graisse_canard: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  grenade: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  grondin: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: B }
+  groseille: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  gruyere: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: C, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  guimauve: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: B }
+  haddock: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  hareng: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  haricot_beurre: { energie_kcal: D, proteines_g: C, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: B }
+  haricot_blanc: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: A, fer_mg: D, calcium_mg: D, sodium_mg: C, vitamine_c_mg: D }
+  haricot_mungo: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  haricot_rouge: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: B }
+  haricot_vert: { energie_kcal: D, proteines_g: C, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: B }
+  harissa: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  herbes_provence: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  homard: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  huile_arachide: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  huile_coco: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: B, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  huile_colza: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  huile_noisette: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  huile_noix: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  huile_olive: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  huile_pepins_raisin: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  huile_sesame: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  huile_tournesol: { energie_kcal: D, proteines_g: A, lipides_g: C, glucides_g: A, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  huitre: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  jambon_blanc: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  jambon_cru: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, sodium_mg: A }
+  jaune_oeuf: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  julienne: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: B, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  kaki: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  kefir: { energie_kcal: D, proteines_g: D, lipides_g: C, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  ketchup: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: C, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  kiwi: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  kumquat: { proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  lait_coco: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  lait_concentre_sucre: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  lait_demi_ecreme: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  lait_ecreme: { energie_kcal: D, proteines_g: A, lipides_g: D, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  lait_entier: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  lait_poudre: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  laitue: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: B, fer_mg: B, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  langoustine: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  lapin: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  laurier: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  lentilles_corail: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  lentilles_vertes: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  levure_biere: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  levure_boulangere: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  levure_chimique: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  lieu_colin: { energie_kcal: D, proteines_g: A, lipides_g: D, glucides_g: C, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  lieu_jaune: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  litchi: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  livarot: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  lotte: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: B, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  lupin: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  mache: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  mais_doux: { energie_kcal: D, proteines_g: C, lipides_g: A, glucides_g: C, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  maizena: { energie_kcal: D, proteines_g: B, lipides_g: C, glucides_g: B, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  mangue: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  manioc: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  maquereau: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  maquereau_tomate: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: C, fibres_g: C, fer_mg: D, calcium_mg: D, sodium_mg: C, vitamine_c_mg: D }
+  marjolaine_seche: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  maroilles: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  mascarpone: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  mayonnaise: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  melasse: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  melon: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  menthe_fraiche: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  merguez: { energie_kcal: D, proteines_g: D, lipides_g: D, fibres_g: D }
+  meringue: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  merlu: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  miel: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  mimolette: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A }
+  mirabelle: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  miso: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  morbier: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  morille: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: D, calcium_mg: B, sodium_mg: B, vitamine_c_mg: D }
+  moule: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  moutarde_ancienne: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  moutarde_dijon: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: D, calcium_mg: D, sodium_mg: C }
+  mouton: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: B, fibres_g: B, fer_mg: D, calcium_mg: D, sodium_mg: D }
+  mozzarella: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: B, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  muesli: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  mulet: { energie_kcal: D, proteines_g: A, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  munster: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: B, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  mure: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  muscade: { energie_kcal: D, proteines_g: B, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  myrtille: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  navet: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  nectarine: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  nefle: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  neufchatel: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  noisette: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  noix: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  noix_bresil: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  noix_cajou: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  noix_coco_rapee: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  noix_macadamia: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  noix_pecan: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  nori: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  nougat: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, sodium_mg: C }
+  nouilles_asiatiques: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, sodium_mg: C }
+  nuoc_mam: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, sodium_mg: D }
+  oeuf: { energie_kcal: D, proteines_g: C, lipides_g: A, glucides_g: B, fibres_g: C, fer_mg: B, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  oeuf_caille: { energie_kcal: D, proteines_g: C, lipides_g: B, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  oeufs_lump: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  oignon: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  oignon_rouge: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  olive_noire: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  olive_verte: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  orange: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  orge_perle: { energie_kcal: D, proteines_g: C, lipides_g: B, glucides_g: C, fibres_g: D, fer_mg: C, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  origan_seche: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  ossau_iraty: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  pain_azyme: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, sodium_mg: D }
+  pain_baguette: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  pain_complet: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  pain_mie: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  pain_pita: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  pain_seigle: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  palourde: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  pamplemousse: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  panais: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  papaye: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  paprika: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: C, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  parmesan: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  pasteque: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  patate_douce: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  pate_amande: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  pate_brisee: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, sodium_mg: C }
+  pate_feuilletee: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: D, sodium_mg: C, vitamine_c_mg: D }
+  pate_filo: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  pate_pizza: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, sodium_mg: D }
+  pates_spaghetti: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  peche: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  perche: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  persil: { energie_kcal: D, proteines_g: C, lipides_g: A, glucides_g: D, fibres_g: A, fer_mg: C, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  pesto: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  petit_pois: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  pignon_pin: { energie_kcal: D, proteines_g: A, lipides_g: B, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  piment_cayenne: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: B, vitamine_c_mg: C }
+  pintade: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  pissenlit: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  pistache: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: B, calcium_mg: B, sodium_mg: A, vitamine_c_mg: B }
+  pleurote: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: D }
+  poire: { energie_kcal: D, proteines_g: B, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  poireau: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  pois_casse: { energie_kcal: D, proteines_g: B, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  pois_chiches: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: A, sodium_mg: C, vitamine_c_mg: B }
+  pois_gourmand: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  poivre_blanc: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  poivre_noir: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: B, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  poivron_jaune: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  poivron_rouge: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  poivron_vert: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  polenta: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  pomme: { energie_kcal: D, proteines_g: B, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  pomme_de_terre: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  pont_leveque: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  porc_cote: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  porc_echine: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D }
+  porc_filet_mignon: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  porc_poitrine: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  porc_roti: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  potimarron: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  potiron: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  poulet_blanc: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: C, fibres_g: B, fer_mg: D, calcium_mg: D, sodium_mg: D }
+  poulet_cuisse: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  poulpe: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: A, vitamine_c_mg: C }
+  pourpier: { proteines_g: C, lipides_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  pousse_soja: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  prune: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  pruneau: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  quinoa: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B }
+  raclette: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, calcium_mg: A, sodium_mg: A }
+  radis: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  radis_noir: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  raie: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  raifort: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  raisin: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  raisin_sec: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  reblochon: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: D, calcium_mg: D, sodium_mg: A }
+  rhubarbe: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  rhum: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  ricotta: { proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  rillettes: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: D, sodium_mg: A }
+  riz_blanc: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: B, vitamine_c_mg: C }
+  riz_complet: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  riz_rouge: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  riz_sauvage: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  rognon_boeuf: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: C, fer_mg: A, calcium_mg: B, sodium_mg: A, vitamine_c_mg: B }
+  romarin_seche: { energie_kcal: D, proteines_g: C, lipides_g: B, glucides_g: B, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  roquefort: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  roquette: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  rouget: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  roussette: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  rutabaga: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  safran: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  saindoux: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  saint_nectaire: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: C, fer_mg: D, calcium_mg: D, sodium_mg: C }
+  saint_pierre: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: B, fibres_g: B, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  salade_frisee: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  salsifis: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  sandre: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  sanglier: { energie_kcal: D, proteines_g: C, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  sardine: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  sardine_huile: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  sarrasin: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: D, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  sarriette_seche: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  sauce_soja: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  saucisse_toulouse: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: A, sodium_mg: D }
+  saucisson_sec: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  sauge_seche: { energie_kcal: D, proteines_g: B, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  saumon: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  saumon_fume: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  scarole: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  sebaste: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  seiche: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: C }
+  seitan: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  sel_fin: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: B, fibres_g: C, fer_mg: C, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  semoule_ble: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  sesame_graine: { energie_kcal: D, proteines_g: C, lipides_g: D, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: A, sodium_mg: A, vitamine_c_mg: B }
+  shiitake: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  sirop_agave: { proteines_g: D, lipides_g: C, glucides_g: C, fibres_g: D, sodium_mg: D }
+  sirop_erable: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  soja_texture: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  sole: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  son_avoine: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  son_ble: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: C, vitamine_c_mg: C }
+  sorgho: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: B, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: B }
+  speculoos: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  spiruline: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  sucre_blanc: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  sucre_roux: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: B, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  sucre_vanille: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, sodium_mg: C }
+  sureau: { proteines_g: B, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  surimi: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  tacaud: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  tahin: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  tamarin: { proteines_g: C, lipides_g: C, glucides_g: D, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: B }
+  tapenade: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: D, sodium_mg: A, vitamine_c_mg: A }
+  tapioca: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  tempeh: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  thon_conserve: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: C, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: D }
+  thon_frais: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  thym_seche: { energie_kcal: D, proteines_g: B, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  tilapia: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: C }
+  tofu_nature: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  tomate: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  tomate_cerise: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  tomme: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, calcium_mg: A, sodium_mg: A }
+  topinambour: { energie_kcal: D, proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: C, calcium_mg: C, sodium_mg: C, vitamine_c_mg: C }
+  tripes: { energie_kcal: D, proteines_g: B, lipides_g: B, glucides_g: D, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: D }
+  truffe_noire: { proteines_g: D, lipides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  truite: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: B, fer_mg: A, calcium_mg: A, sodium_mg: A }
+  turbot: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  vanille_gousse: { fer_mg: D, sodium_mg: D, vitamine_c_mg: D }
+  veau_cote: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: D, fibres_g: C, fer_mg: A, calcium_mg: C, sodium_mg: A, vitamine_c_mg: C }
+  veau_escalope: { energie_kcal: D, proteines_g: D, lipides_g: D, glucides_g: A, fibres_g: D, fer_mg: D, calcium_mg: D, sodium_mg: A }
+  vin_blanc_cuisine: { energie_kcal: D, proteines_g: A, lipides_g: C, glucides_g: D, fibres_g: B, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  vin_rouge_cuisine: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  vinaigre_balsamique: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: C, fibres_g: C, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  vinaigre_cidre: { proteines_g: C, lipides_g: C, glucides_g: C, fibres_g: C, fer_mg: B, calcium_mg: B, sodium_mg: B, vitamine_c_mg: C }
+  vinaigre_vin_rouge: { energie_kcal: D, proteines_g: A, lipides_g: D, glucides_g: D, fibres_g: D, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  wakame: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  yaourt_grec: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: A, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }
+  yaourt_nature: { energie_kcal: D, proteines_g: A, lipides_g: A, glucides_g: B, fibres_g: A, fer_mg: A, calcium_mg: A, sodium_mg: A, vitamine_c_mg: A }

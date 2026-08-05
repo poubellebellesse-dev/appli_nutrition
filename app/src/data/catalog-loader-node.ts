@@ -11,13 +11,29 @@
 
 import { DatabaseSync } from 'node:sqlite'
 import type { Catalog } from '../engine/domain/index.js'
-import { loadCatalogFrom } from './catalog-loader.js'
+import { loadCatalogFrom, loadConfianceFrom, type ConfianceParAliment } from './catalog-loader.js'
 
 /** Ouvre `catalog.db` en lecture seule et rend le catalogue en mémoire. RÉSERVÉ À NODE. */
 export function loadCatalog(dbPath: string): Catalog {
   const db = new DatabaseSync(dbPath, { readOnly: true })
   try {
     return loadCatalogFrom({ all: <T,>(sql: string) => db.prepare(sql).all() as unknown as T[] })
+  } finally {
+    db.close()
+  }
+}
+
+/**
+ * Cotes de confiance ANSES des valeurs nutritionnelles (décision 33). RÉSERVÉ À NODE.
+ *
+ * ⚠️ SÉPARÉE DE `loadCatalog`, et pas par commodité : `Catalog` ne porte pas ces cotes, pour que
+ * le moteur ne puisse pas les lire (voir `loadConfianceFrom`). Les rendre par le même appel les y
+ * ferait entrer.
+ */
+export function loadConfiance(dbPath: string): ConfianceParAliment {
+  const db = new DatabaseSync(dbPath, { readOnly: true })
+  try {
+    return loadConfianceFrom({ all: <T,>(sql: string) => db.prepare(sql).all() as unknown as T[] })
   } finally {
     db.close()
   }

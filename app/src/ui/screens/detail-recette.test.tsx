@@ -26,7 +26,7 @@ import type { RecipeId } from '../../engine/domain/index.js'
 import { readDisplay, readFavorites, writeDisplay } from '../../data/user-store.js'
 import { AXES_PAR_DEFAUT, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
 import type { OrigineRecette } from '../router.js'
-import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
+import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
 
 /**
  * Catalogue servi par le mock de `catalog-source.js`. `undefined` = le catalogue réel de test
@@ -35,7 +35,10 @@ import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from 
  */
 let catalogueActif: import('../../engine/domain/index.js').Catalog | undefined
 
-vi.mock('../catalog-source.js', () => ({ chargerCatalogue: () => Promise.resolve(catalogueActif ?? catalogueDeTest()) }))
+vi.mock('../catalog-source.js', () => ({
+  chargerCatalogue: () => Promise.resolve(catalogueActif ?? catalogueDeTest()),
+  chargerConfiance: () => Promise.resolve(confianceDeTest()),
+}))
 vi.mock('../user-source.js', () => ({
   ouvrirUserDb: () => Promise.resolve(sessionDeTest()),
   surErreurDePersistance: () => undefined,

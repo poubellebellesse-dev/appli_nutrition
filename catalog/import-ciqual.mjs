@@ -25,6 +25,7 @@
 //   node catalog/import-ciqual.mjs --search "saumon"      → liste les aliments Ciqual correspondants
 //   node catalog/import-ciqual.mjs --check                → vérifie le mapping, n'écrit rien
 //   node catalog/import-ciqual.mjs --write                → réécrit les nutriments dans foods.yaml
+//   node catalog/import-ciqual.mjs --write-confiance      → écrit catalog/sources/ciqual-confiance.yaml
 //
 // La source ANSES n'est PAS versionnée (69 Mo, dont 67 pour compo). Télécharger l'export XML sur
 // https://ciqual.anses.fr/ et le placer dans le dossier passé par `--ciqual` (défaut ci-dessous).
@@ -40,6 +41,7 @@ const REPO_ROOT = path.join(__dirname, '..')
 const DEFAULT_CIQUAL_DIR = path.join(REPO_ROOT, 'documents Ciqual', '2025_11_03')
 const FOODS_PATH = path.join(REPO_ROOT, 'catalog', 'sources', 'foods.yaml')
 const MAPPING_PATH = path.join(REPO_ROOT, 'catalog', 'sources', 'ciqual-mapping.yaml')
+const CONFIANCE_PATH = path.join(REPO_ROOT, 'catalog', 'sources', 'ciqual-confiance.yaml')
 
 // ----------------------------------------------------------------------------
 // Les 9 nutriments retenus (décision 25, docs/ETAT.md §4) → code constituant Ciqual.
@@ -133,13 +135,22 @@ async function loadCiqual(ciqualDir) {
   // les 74 ferait 8 fois plus d'objets en mémoire pour rien.
   const wanted = new Set(Object.values(NUTRIENT_CONST_CODES))
   const compo = new Map() // alim_code → { const_code → teneur }
+  // Cotes de confiance ANSES (A→D), décision 33 tranchée le 2026-08-05. Elles étaient JETÉES ici
+  // même : la boucle ne retenait que `teneur`. Voir `--write-confiance` pour ce qu'on en fait, et
+  // surtout pour ce qu'on n'en fait PAS (aucune pondération de score).
+  const confiance = new Map() // alim_code → { const_code → 'A'|'B'|'C'|'D' }
   for (const row of parseRecords(await readFile(compoPath, 'utf8'), 'COMPO')) {
     if (!wanted.has(row.const_code)) continue
     if (!compo.has(row.alim_code)) compo.set(row.alim_code, {})
     compo.get(row.alim_code)[row.const_code] = parseTeneur(row.teneur)
+    const cote = (row.code_confiance ?? '').trim()
+    if (cote !== '') {
+      if (!confiance.has(row.alim_code)) confiance.set(row.alim_code, {})
+      confiance.get(row.alim_code)[row.const_code] = cote
+    }
   }
 
-  return { foodsByCode, compo }
+  return { foodsByCode, compo, confiance }
 }
 
 function findFile(dir, pattern) {
@@ -282,7 +293,7 @@ async function main(argv) {
   }
 
   const ciqualDir = args.get('ciqual') ?? DEFAULT_CIQUAL_DIR
-  const { foodsByCode, compo } = await loadCiqual(ciqualDir)
+  const { foodsByCode, compo, confiance } = await loadCiqual(ciqualDir)
 
   if (args.has('search')) {
     runSearch(foodsByCode, args.get('search'))
@@ -302,6 +313,14 @@ async function main(argv) {
     return 1
   }
 
+  if (flags.has('write-confiance')) {
+    const { text, count } = renderConfianceYaml(mapping, confiance)
+    await writeFile(CONFIANCE_PATH, text, 'utf8')
+    console.log(`
+✔ ciqual-confiance.yaml écrit : ${count} cote(s) sur ${Object.keys(mapping).length} aliment(s).`)
+    return 0
+  }
+
   if (!flags.has('write')) {
     console.log(`\n✔ Mapping valide : ${foods.length} aliment(s) appariés, ${warnings.length} avertissement(s).`)
     console.log('  (--check ne modifie rien ; relancer avec --write pour réécrire foods.yaml)')
@@ -313,6 +332,62 @@ async function main(argv) {
   await writeFile(FOODS_PATH, text, 'utf8')
   console.log(`\n✔ foods.yaml réécrit : ${replaced} aliment(s), valeurs Ciqual 2025.`)
   return 0
+}
+
+
+/**
+ * Rend `catalog/sources/ciqual-confiance.yaml` — décision 33, issue « importer sans pondérer ».
+ *
+ * ⚠️ UN FICHIER À PART, ET PAS DANS `foods.yaml`, pour deux raisons distinctes. La première est
+ * pratique : `foods.yaml` est le fichier le plus disputé du dépôt, et y injecter 4 000 lignes de
+ * cotes rendrait tout diff éditorial illisible. La seconde est de fond : une COTE n'est pas une
+ * VALEUR. `foods.yaml` dit ce que contient un aliment ; ce fichier-ci dit ce que l'ANSES sait de la
+ * façon dont ce chiffre a été obtenu. Les mélanger inviterait à les faire diverger d'un seul côté.
+ *
+ * ⚠️ GÉNÉRÉ, JAMAIS ÉDITÉ À LA MAIN — contrairement à `ciqual-mapping.yaml`, qui est un jugement
+ * humain relu. Ici il n'y a rien à juger : la cote est celle de l'ANSES, on la recopie.
+ *
+ * ⛔ CE QUE CES COTES NE SERVENT PAS À FAIRE : pondérer un score. La décision 33 a explicitement
+ * écarté cette piste. Mesuré le 2026-08-05 sur les 449 aliments appariés — 39 % des valeurs hors
+ * énergie sont cotées C ou D, et l'ÉNERGIE est à 434 D sur 449 **par construction** (« Energie,
+ * Règlement UE N° 1169/2011 » est calculée depuis les macros, jamais dosée). Pondérer naïvement
+ * sortirait l'énergie du scoring pour tout le catalogue, et ferait scorer un aliment plus bas pour
+ * une raison de DOCUMENTATION, invisible à l'utilisateur et incontestable par lui.
+ */
+function renderConfianceYaml(mapping, confiance) {
+  const parNutriment = Object.entries(NUTRIENT_CONST_CODES)
+  const lignes = [
+    '# ============================================================================',
+    '# Cotes de confiance ANSES (A → D) des valeurs Ciqual, par aliment et nutriment.',
+    '#',
+    '# ⚠️ FICHIER GÉNÉRÉ — ne pas éditer à la main.',
+    '#     node catalog/import-ciqual.mjs --write-confiance',
+    '#',
+    '# A = valeur dosée, source française identifiée · D = valeur calculée, imputée ou empruntée.',
+    '# Une cote C ou D ne veut PAS dire « douteuse » : mesuré le 2026-08-05, la première source des',
+    '# valeurs C/D est la table USDA (451 occurrences) et la deuxième un calcul interne Ciqual (368).',
+    '#',
+    '# ⛔ NE SERT À AUCUNE PONDÉRATION DE SCORE (décision 33). Sert la traçabilité affichée : dire',
+    '#    d’où vient un chiffre, pas le déclasser. L’énergie est omise à l’affichage — elle est',
+    '#    434 D sur 449 par construction, l’afficher serait du bruit et non de la provenance.',
+    '# ============================================================================',
+    '',
+    'confiance:',
+  ]
+
+  let count = 0
+  for (const [foodId, alimCode] of Object.entries(mapping).sort((a, b) => a[0].localeCompare(b[0]))) {
+    const cotes = confiance.get(String(alimCode))
+    if (cotes === undefined) continue
+    const paires = parNutriment
+      .filter(([, constCode]) => cotes[constCode] !== undefined)
+      .map(([nom, constCode]) => `${nom}: ${cotes[constCode]}`)
+    if (paires.length === 0) continue
+    lignes.push(`  ${foodId}: { ${paires.join(', ')} }`)
+    count += paires.length
+  }
+
+  return { text: lignes.join('\n') + '\n', count }
 }
 
 /**

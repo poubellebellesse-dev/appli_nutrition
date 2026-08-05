@@ -14,13 +14,18 @@
 // et les tests. Dupliquer une seule ligne de mapping pour le navigateur créerait deux vérités.
 
 import type { Catalog } from '../engine/domain/index.js'
-import { loadCatalogFrom, type SqlSource } from '../data/catalog-loader.js'
+import {
+  loadCatalogFrom,
+  loadConfianceFrom,
+  type ConfianceParAliment,
+  type SqlSource,
+} from '../data/catalog-loader.js'
 import { initSqlite } from './sqlite-wasm.js'
 
 /** Où le `.db` est servi. `app/public/` est copié tel quel à la racine du site par Vite. */
 const CATALOG_URL = '/catalog/catalog.db'
 
-let cache: Promise<Catalog> | undefined
+let cache: Promise<{ catalogue: Catalog; confiance: ConfianceParAliment }> | undefined
 
 /**
  * Charge le catalogue. Le résultat est mémorisé : `createEngine` calcule ses index dérivés à
@@ -31,10 +36,23 @@ let cache: Promise<Catalog> | undefined
  */
 export function chargerCatalogue(): Promise<Catalog> {
   cache ??= chargerVraiment()
-  return cache
+  return cache.then((r) => r.catalogue)
 }
 
-async function chargerVraiment(): Promise<Catalog> {
+/**
+ * Cotes de confiance ANSES des valeurs nutritionnelles (décision 33).
+ *
+ * ⚠️ MÊME CHARGEMENT, DEUXIÈME SORTIE — pas un second téléchargement. La base est désérialisée une
+ * fois puis FERMÉE ; lire les cotes plus tard exigerait de la rouvrir. Elles sortent donc du même
+ * passage que le catalogue, mais dans un objet SÉPARÉ : `Catalog` ne les porte pas, pour qu'aucune
+ * couche du moteur ne puisse les lire (voir `loadConfianceFrom`).
+ */
+export function chargerConfiance(): Promise<ConfianceParAliment> {
+  cache ??= chargerVraiment()
+  return cache.then((r) => r.confiance)
+}
+
+async function chargerVraiment(): Promise<{ catalogue: Catalog; confiance: ConfianceParAliment }> {
   const [sqlite3, reponse] = await Promise.all([initSqlite(), fetch(CATALOG_URL)])
 
   if (!reponse.ok) {
@@ -64,7 +82,7 @@ async function chargerVraiment(): Promise<Catalog> {
   }
 
   try {
-    return loadCatalogFrom(source)
+    return { catalogue: loadCatalogFrom(source), confiance: loadConfianceFrom(source) }
   } finally {
     db.close()
   }

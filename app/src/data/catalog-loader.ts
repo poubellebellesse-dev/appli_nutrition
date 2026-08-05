@@ -616,6 +616,50 @@ function buildIndexes(recipes: ReadonlyMap<RecipeId, Recipe>, foods: ReadonlyMap
  * Construit le `Catalog` depuis n'importe quelle source SQL — c'est la fonction que le navigateur
  * appelle, avec une base SQLite WASM. Ne ferme pas la source : elle ne l'a pas ouverte.
  */
+
+// --- Cotes de confiance ANSES (décision 33, tranchée le 2026-08-05) -----------------------------
+//
+// ⚠️ RENDUES À CÔTÉ DU `Catalog`, JAMAIS DEDANS, et c'est le cœur de la décision. Le moteur ne doit
+// pas voir ces cotes : la décision 33 a explicitement écarté la pondération du score par la
+// confiance. Une donnée que `Catalog` porterait « pour plus tard » finirait lue par une couche —
+// et un aliment scorerait alors plus bas pour une raison de DOCUMENTATION, invisible à
+// l'utilisateur et incontestable par lui. La séparation est structurelle, pas disciplinaire :
+// `Catalog` ne porte pas le champ, donc aucune couche ne peut le lire.
+//
+// ⚠️ CE QUE `null` VEUT DIRE ICI : l'ANSES ne cote pas cette valeur, OU l'aliment n'est pas apparié
+// à Ciqual (recette perso, aliment ajouté à la main). L'absence d'information n'est pas une
+// information (§5.1 bis ENGINE) — un aliment sans cote n'est pas « mal coté », il est muet.
+
+export type CoteConfiance = 'A' | 'B' | 'C' | 'D'
+
+/** Aliment → nutriment → cote. Un aliment absent de la table n'a AUCUNE cote, ce n'est pas un D. */
+export type ConfianceParAliment = ReadonlyMap<FoodId, ReadonlyMap<NutrientId, CoteConfiance>>
+
+const COTES: ReadonlySet<string> = new Set(['A', 'B', 'C', 'D'])
+
+export function loadConfianceFrom(db: SqlSource): ConfianceParAliment {
+  const lignes = queryAll<{
+    readonly food_id: string
+    readonly nutrient_id: string
+    readonly code_confiance: string | null
+  }>(db, 'SELECT food_id, nutrient_id, code_confiance FROM food_nutrient WHERE code_confiance IS NOT NULL')
+
+  const table = new Map<FoodId, Map<NutrientId, CoteConfiance>>()
+  for (const ligne of lignes) {
+    // Une valeur hors A–D est ignorée plutôt que propagée : la colonne porte un CHECK côté build,
+    // mais ce chemin lit un fichier téléchargé et ne peut pas en faire l'hypothèse.
+    if (ligne.code_confiance === null || !COTES.has(ligne.code_confiance)) continue
+    const id = ligne.food_id as FoodId
+    let parNutriment = table.get(id)
+    if (parNutriment === undefined) {
+      parNutriment = new Map<NutrientId, CoteConfiance>()
+      table.set(id, parNutriment)
+    }
+    parNutriment.set(ligne.nutrient_id as NutrientId, ligne.code_confiance as CoteConfiance)
+  }
+  return table
+}
+
 export function loadCatalogFrom(db: SqlSource): Catalog {
   const foods = loadFoods(db)
   const recipes = loadRecipes(db)

@@ -42,10 +42,10 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-03** : `npm test` → **1 253 passed
-(77 fichiers)** en 33,9 s · typecheck propre · `node catalog/build.mjs` → 200 aliments,
-241 recettes, 62 gestes, 73 tips, 8 fiches. ⚠️ Ce compte bougera : **la sortie réelle fait foi, pas
-cette ligne.**
+Dernier relevé, **suite réellement exécutée le 2026-08-05** : `npm test` → **1 492 passed
+(84 fichiers)** en 38,8 s · typecheck propre · `vite build` ✓ · `engine:plan-stress` 20/20 ·
+`node catalog/build.mjs` → 450 aliments, 241 recettes, 62 gestes, 73 tips, 8 fiches. ⚠️ Ce compte
+bougera : **la sortie réelle fait foi, pas cette ligne.**
 
 **Une tâche n'est finie que quand ces quatre-là sont verts et que la sortie est collée dans la
 réponse.** Pas « ça devrait passer ». La sortie, ou ce n'est pas fini.

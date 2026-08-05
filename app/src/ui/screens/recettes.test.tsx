@@ -15,7 +15,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
+import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
 import type { AllergenId, FacetteKind, RecipeId } from '../../engine/domain/index.js'
 import { valeursDeEnvergure, valeursDeFacette, valeursDeService } from '../../engine/search/index.js'
 import { writeAllergies, writeDiet } from '../../data/user-store.js'
@@ -28,7 +28,10 @@ import {
 } from '../../data/user-recipe.js'
 import { hashDeLEditeur, hashDeRecette } from '../router.js'
 
-vi.mock('../catalog-source.js', () => ({ chargerCatalogue: () => Promise.resolve(catalogueDeTest()) }))
+vi.mock('../catalog-source.js', () => ({
+  chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
+  chargerConfiance: () => Promise.resolve(confianceDeTest()),
+}))
 vi.mock('../user-source.js', () => ({
   ouvrirUserDb: () => Promise.resolve(sessionDeTest()),
   surErreurDePersistance: () => undefined,

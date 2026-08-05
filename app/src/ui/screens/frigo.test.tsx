@@ -23,9 +23,12 @@ import {
   writePantry,
 } from '../../data/user-store.js'
 import { aujourdhuiIso } from '../socle.js'
-import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
+import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
 
-vi.mock('../catalog-source.js', () => ({ chargerCatalogue: () => Promise.resolve(catalogueDeTest()) }))
+vi.mock('../catalog-source.js', () => ({
+  chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
+  chargerConfiance: () => Promise.resolve(confianceDeTest()),
+}))
 vi.mock('../user-source.js', () => ({
   ouvrirUserDb: () => Promise.resolve(sessionDeTest()),
   surErreurDePersistance: () => undefined,
