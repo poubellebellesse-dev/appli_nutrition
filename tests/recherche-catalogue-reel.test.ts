@@ -466,11 +466,17 @@ describe('chercherParNom — synonymes d’aliments sur le catalogue réel', () 
   it('la très grande majorité des aliments n’a AUCUN synonyme — ce n’est pas une passe exhaustive', () => {
     // Verrouille la portée décidée : trois termes mesurés, pas une liste écrite à la main sur 450
     // aliments qui pourrirait sans que personne ne la relise.
+    // ⚠️ CETTE LISTE EST UN VERROU DE PORTÉE, pas un inventaire à rallonger sans réfléchir. Elle a
+    // déjà rougi une fois, à l'ajout de `thon_conserve` — et c'était son travail. Chaque entrée
+    // doit venir d'une saisie MESURÉE qui échouait, jamais d'une intuition sur ce que les gens
+    // tapent : sans télémétrie (principe 2), on n'aura jamais d'autre signal que nos propres
+    // mesures. Une liste devinée pourrirait.
     const porteurs = [...catalogue.foods.values()].filter((f) => f.synonymes.length > 0)
     expect(porteurs.map((f) => f.id as string).sort()).toEqual([
       'crevette',
       'porc_poitrine',
       'saucisse_toulouse',
+      'thon_conserve',
     ])
   })
 })
@@ -504,18 +510,30 @@ describe('chercherParNom — les 33 saisies du langage courant, sur le catalogue
     expect(muettes).toEqual([])
   })
 
+  it('« thon en boîte » rend la conserve EN PREMIER — le synonyme a réglé ce cas', () => {
+    // Le catalogue dit « conserve », le panier dit « boîte » : aucun nom ne contient « boîte », donc
+    // « Thon albacore, cru » et la conserve n'appariaient que « thon » et se départageaient sur la
+    // longueur du nom. Un nom d'usage suffisait — ce n'était pas un défaut de classement.
+    expect(surLEcran('thon en boite')[0]?.nom).toBe('Thon, conserve au naturel, égoutté')
+    expect(surLEcran('thon en boîte')[0]?.nom).toBe('Thon, conserve au naturel, égoutté')
+  })
+
   // ⚠️ CE QUI SUIT N'EST PAS UNE VALIDATION DU CLASSEMENT — c'est la cause (4), consignée.
-  // Ces cinq saisies rendent un FAUX AMI en PREMIER : « sauce tomate » propose une conserve de
-  // maquereau, « fromage rape » un fromage blanc. On n'assertionne PAS le premier rang, qui est
-  // faux et qu'on ne veut pas verrouiller ; on assertionne ce qui compte pour l'utilisateur et
-  // reste vrai — le bon aliment est DANS les six affichés, donc atteignable. Si un jour cette
-  // assertion casse, ce n'est plus un défaut de confort : l'aliment est sorti de l'écran.
+  // Ces saisies rendent un FAUX AMI en PREMIER : « sauce tomate » propose une conserve de maquereau,
+  // « fromage rape » un fromage blanc. On n'assertionne PAS le premier rang, qui est faux et qu'on
+  // ne veut pas verrouiller ; on assertionne ce qui compte pour l'utilisateur et reste vrai — le bon
+  // aliment est DANS les six affichés, donc atteignable. Si un jour cette assertion casse, ce n'est
+  // plus un défaut de confort : l'aliment est sorti de l'écran.
+  //
+  // ⛔ « jambon blanc » N'EST PAS DANS CETTE LISTE, ET C'EST DÉLIBÉRÉ. On ne peut pas lui désigner
+  // de bon aliment : `jambon_blanc` porte le code Ciqual 28700, « Jambon de porc à cuire ou jambon à
+  // rôtir/cuire au four » — un rôti CRU, pas du jambon blanc. Le jambon blanc est 28900/28925
+  // (« Jambon cuit, supérieur », « Jambon cuit, de Paris ») et n'est PAS au catalogue. Lui poser un
+  // synonyme désignerait le mauvais produit ; c'est un manque de contenu, cause (3).
   it.each([
     ['sauce tomate', 'Concentré de tomate'],
     ['fromage rape', 'Emmental râpé'],
-    ['jambon blanc', 'Jambon à cuire'],
     ['pate a tarte', 'Pâte brisée, crue'],
-    ['thon en boite', 'Thon, conserve au naturel, égoutté'],
   ])('« %s » classe mal, mais « %s » reste dans les six affichés', (saisie, attendu) => {
     expect(surLEcran(saisie).map((f) => f.nom)).toContain(attendu)
   })

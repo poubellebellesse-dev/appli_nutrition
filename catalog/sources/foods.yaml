@@ -1110,6 +1110,11 @@ foods:
   - id: thon_conserve
     code_ciqual: "26039"
     nom: "Thon, conserve au naturel, égoutté"
+    # Le catalogue dit « conserve », le panier dit « boîte ». Sans ce mot, « thon en boîte » rendait
+    # « Thon albacore, cru » en premier — les deux n'apparient que « thon », et le départage tombait
+    # sur la longueur du nom (décision 58, cause 4).
+    synonymes:
+      - thon en boîte
     groupe: "poissons"
     conditionnement_g: 140
     origine_animale: poisson
