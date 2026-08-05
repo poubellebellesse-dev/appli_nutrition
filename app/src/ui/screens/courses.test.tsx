@@ -499,7 +499,10 @@ describe('courses — les repas couverts par un reste', () => {
         a.slot.creneau === avecAccompagnement[0]!.slot.creneau
     )!
     const nom = socle.catalogue.recipes.get(accompagnement.recipeId!)!.nom
-    expect(within(section).getByText(new RegExp(`avec ${nom} — à acheter`))).toBeDefined()
+    // `getAllByText` et non `getByText` : deux créneaux couverts par un reste peuvent partager le
+    // MÊME accompagnement, et c'est légitime. L'unicité n'a jamais été l'objet de ce test — elle
+    // n'était qu'une propriété accidentelle du catalogue d'alors, tombée en passant à 450 aliments.
+    expect(within(section).getAllByText(new RegExp(`avec ${nom} — à acheter`)).length).toBeGreaterThan(0)
     // Et la promesse fausse ne doit pas revenir par une reformulation.
     expect(section.textContent).not.toMatch(/[Rr]ien à acheter/)
   })

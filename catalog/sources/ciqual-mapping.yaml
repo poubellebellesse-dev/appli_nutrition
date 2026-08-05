@@ -701,3 +701,60 @@ mapping:
   raifort: 11016                 # Raifort, frais
   sarriette_seche: 11062         # Sarriette, séchée
   marjolaine_seche: 11034        # Marjolaine, séchée
+
+  # ==========================================================================
+  # Sixième lot (2026-08-04). 31 aliments. Algues, charcuteries, conserves de poisson, pâtes et
+  # pains du monde, confiserie.
+  #
+  # ⚠️ `mandarine` ÉCARTÉE : Ciqual la range sous 13024 « Clémentine ou mandarine », qui est
+  # DÉJÀ le code de `clementine`. L'ajouter aurait fait pointer deux ids sur la même ligne.
+  # ⚠️ `lieu_jaune` (26129) n'est PAS un doublon de `lieu_colin` (26006) : le premier est le
+  # lieu jaune, le second le colin d'Alaska — deux espèces, deux lignes Ciqual.
+  #
+  # NON TROUVÉS : ortie, nigelle, poutargue, chou de Milan, sucre complet, levure maltée,
+  # caramel nature, corn flakes. `merlan` et `feuille de brick` n'existent que CUITS — écartés
+  # par la convention, comme coque et tourteau.
+  # ==========================================================================
+
+  # Algues
+  nori: 20987                    # Nori (Porphyra sp., Pyropia), séchée
+  wakame: 20999                  # Wakamé atlantique (Alaria esculenta), séché
+  spiruline: 11086               # Spiruline (Spirulina sp.), séchée
+
+  # Poissons et œufs de poisson
+  lieu_jaune: 26129              # Lieu jaune ou colin, cru — PAS le colin d'Alaska, voir ci-dessus
+  roussette: 26074               # Roussette ou saumonette, crue
+  anchois_frais: 26079           # Anchois, cru — jumeau de `anchois_huile`
+  eperlan: 26083                 # Éperlan, cru
+  oeufs_lump: 26004              # Oeufs de lompe ou oeufs de lump, semi-conserve
+  sardine_huile: 26040           # Sardine, à l'huile d'olive, appertisée, égouttée
+  maquereau_tomate: 26086        # Maquereau, filet sauce tomate, appertisé, égoutté
+
+  # Charcuteries et canard
+  rillettes: 8000                # Rillettes traditionnelles de porc
+  andouille: 8500                # Andouille (8501 est celle de Guéméné, typée)
+  boudin_blanc: 8801             # Boudin blanc, à cuire
+  bacon: 28727                   # Filet de bacon
+  coppa: 28850                   # Coppa
+  foie_gras: 8321                # Foie gras, canard, entier, cuit
+  confit_canard: 8110            # Confit de canard, appertisé
+
+  # Pâtes, pains et céréales du petit-déjeuner
+  pate_pizza: 37001              # Pâte à pizza, préemballée, crue
+  pate_filo: 23445               # Pâte phyllo ou pâte filo, crue
+  pain_azyme: 7114               # Pain azyme, préemballé
+  pain_pita: 7180                # Pain pita
+  muesli: 32004                  # Muesli (aliment moyen)
+
+  # Légumes
+  haricot_beurre: 20195          # Haricot beurre, cru — jumeau de `haricot_vert`
+  pissenlit: 20038               # Pissenlit, cru
+  radis_noir: 20089              # Radis noir, cru — jumeau de `radis`
+  truffe_noire: 20106            # Champignon, truffe noire, crue
+
+  # Condiments et confiserie
+  fenugrec: 11077                # Fenugrec, graine
+  speculoos: 24009               # Spéculoos
+  meringue: 24520                # Meringue
+  nougat: 31127                  # Nougat tendre
+  guimauve: 31050                # Guimauve ou marshmallow — ⚠️ GÉLATINE, voir foods.yaml
