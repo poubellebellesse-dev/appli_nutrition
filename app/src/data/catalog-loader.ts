@@ -69,6 +69,7 @@ import type {
   RecipeIngredient,
   RecipeSource,
   RecipeStep,
+  StepNature,
   TimerType,
 } from '../engine/domain/index.js'
 import { g, min } from '../engine/domain/index.js'
@@ -114,6 +115,11 @@ interface FoodNutrientRow {
   readonly food_id: string
   readonly nutrient_id: string
   readonly valeur_pour_100g: number
+}
+
+interface FoodSynonymRow {
+  readonly food_id: string
+  readonly terme: string
 }
 
 interface FoodAllergenRow {
@@ -170,6 +176,7 @@ interface RecipeStepRow {
   readonly lexicon_ids: string
   readonly timer_s: number | null
   readonly timer_type: string | null
+  readonly nature: string
 }
 
 interface RecipeFacetRow {
@@ -326,6 +333,7 @@ function loadFoods(db: SqlSource): Map<FoodId, Food> {
   const foodRows = queryAll<FoodRow>(db, 'SELECT * FROM food')
   const nutrientsByFood = groupByKey(queryAll<FoodNutrientRow>(db, 'SELECT * FROM food_nutrient'), (r) => r.food_id)
   const allergensByFood = groupByKey(queryAll<FoodAllergenRow>(db, 'SELECT * FROM food_allergen'), (r) => r.food_id)
+  const synonymsByFood = groupByKey(queryAll<FoodSynonymRow>(db, 'SELECT * FROM food_synonym'), (r) => r.food_id)
 
   const map = new Map<FoodId, Food>()
   for (const row of foodRows) {
@@ -345,6 +353,7 @@ function loadFoods(db: SqlSource): Map<FoodId, Food> {
       id,
       codeCiqual: row.code_ciqual,
       nom: row.nom,
+      synonymes: (synonymsByFood.get(row.id) ?? []).map((s) => s.terme),
       groupe: row.groupe,
       sousFamille: row.sous_famille,
     piquant: (row.piquant as PiquantLevel | null) ?? null,
@@ -480,6 +489,10 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
       lexiconIds: parseJsonArray<string>(s.lexicon_ids),
       timerS: s.timer_s,
       timerType: s.timer_type as TimerType | null,
+      // La colonne est NOT NULL DEFAULT 'geste' et sa valeur est verrouillée par un CHECK côté
+      // build : le repli n'existe que pour un `catalog.db` d'avant la colonne, jamais pour du
+      // contenu neuf.
+      nature: (s.nature ?? 'geste') as StepNature,
     }))
 
     const facettes: RecipeFacet[] = (facetsByRecipe.get(row.id) ?? []).map((f) => ({

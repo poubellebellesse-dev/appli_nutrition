@@ -169,7 +169,9 @@ recipe(id, nom, description, temps_prep_min, temps_cuisson_min, difficulte,
     -- envergure ∈ {'quotidien','convivial','fete'}
     -- temps total = dérivé, JAMAIS une facette saisie (pas de désynchronisation possible)
 recipe_ingredient(recipe_id, food_id, quantite_g, unite_affichage, optionnel)
-recipe_step(recipe_id, ordre, texte, lexicon_ids[], timer_s, timer_type)   -- geste illustré ; timer_type ∈ {'cuisson','repos'} optionnel (mode cuisine §5bis)
+recipe_step(recipe_id, ordre, texte, lexicon_ids[], timer_s, timer_type, nature)   -- timer_type ∈ {'cuisson','repos'} optionnel (mode cuisine §5bis)
+    -- nature ∈ {'geste','avertissement'}, défaut 'geste'. Un avertissement se lit, ne se fait pas :
+    -- hors de tout compteur d'étapes, et TOUJOURS en dernier (le build refuse l'inverse).
 recipe_facet(recipe_id, facette, valeur)          -- cuisine | regime | occasion | style — vocabulaire fermé ('style' inclut 'loufoque')
 recipe_equipment(recipe_id, equipment_id, niveau)  -- 'requis' (→ exclusion) | 'accelere' (→ score) | 'informatif' (ustensile, jamais chargé par le moteur)
 
@@ -548,9 +550,12 @@ problème d'ordonnancement à part entière (`CONCEPTION_B_VIN_REPAS.md` §5).
   `poivron_rouge`, et « saler » ne rapproche rien du tout. Un rapprochement automatique
   silencieusement incomplet est pire que pas de rapprochement. Plan de montée :
   `CONCEPTION_MODE_CUISINE.md`.
-- ⚠️ **Toutes les `recipe_step` ne sont pas des gestes.** `chakchouka` finit sur un avertissement
-  ANSES compté comme 6ᵉ étape : « 6 sur 6 » promet un geste alors que le plat est servi. Un
-  avertissement doit sortir du flux des étapes, ou porter une marque qui l'en distingue.
+- ✅ **Toutes les `recipe_step` ne sont pas des gestes — RÉSOLU le 2026-08-05 (lot L0).**
+  `chakchouka` finissait sur un avertissement ANSES compté comme 6ᵉ étape : « 6 sur 6 » promettait un
+  geste alors que le plat est servi. `recipe_step.nature` porte désormais la distinction, sur les
+  **18 recettes** concernées ; le build refuse une nature inconnue **et** un avertissement ailleurs
+  qu'en dernière position. La fiche recette numérote les 1 101 gestes et sort l'avertissement de la
+  liste, dans un bloc `alerte-*`.
 
 #### Hors périmètre, et pourquoi
 

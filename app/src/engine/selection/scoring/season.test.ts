@@ -16,6 +16,7 @@ function makeFood(id: string, opts: { readonly touteAnnee: boolean; readonly sai
     id: id as FoodId,
     codeCiqual: `TEST-${id}`,
     nom: id,
+    synonymes: [],
     groupe: 'test',
     sousFamille: null,
     nutrimentsPour100g: new Map(),

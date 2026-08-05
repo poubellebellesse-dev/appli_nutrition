@@ -59,6 +59,7 @@ export function makeFood(
     id: id as FoodId,
     codeCiqual: `TEST-${id}`,
     nom: id,
+    synonymes: [],
     groupe: "test",
     sousFamille: opts.sousFamille ?? null,
     nutrimentsPour100g: nutrientMap,

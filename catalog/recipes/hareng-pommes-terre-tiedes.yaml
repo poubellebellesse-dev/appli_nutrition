@@ -86,6 +86,7 @@ etapes:
     timer_type: null
   - ordre: 7
     texte: "Le ministère de l'Agriculture recommande aux femmes enceintes, aux personnes âgées, aux jeunes enfants et aux personnes immunodéprimées d'éviter les poissons crus, crustacés et mollusques crus ou simplement marinés."
+    nature: avertissement
     lexicon_ids: []
     timer_s: null
     timer_type: null

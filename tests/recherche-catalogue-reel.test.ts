@@ -17,7 +17,13 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadCatalog } from '../app/src/data/catalog-loader-node.js'
 import { createEngine, type Engine } from '../app/src/engine/api/index.js'
-import { normaliser, valeursDeEnvergure, valeursDeFacette, valeursDeService } from '../app/src/engine/search/index.js'
+import {
+  chercherParNom,
+  normaliser,
+  valeursDeEnvergure,
+  valeursDeFacette,
+  valeursDeService,
+} from '../app/src/engine/search/index.js'
 import type { AllergenId, Catalog, CourseKind, FacetteKind, FoodId, RecipeId } from '../app/src/engine/domain/index.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -416,5 +422,55 @@ describe('searchByPantry — « vider le frigo » sur le catalogue réel', () =>
     // `scorePantry` rend NEUTRAL_SCORE quand rien n'est déclaré (l'absence d'information n'est pas
     // une information) — l'écran, lui, n'appelle pas tant que le garde-manger est vide.
     expect(resultat.matches.every((m) => m.manquants.length > 0)).toBe(true)
+  })
+})
+
+// --- Synonymes d'aliments (décision 58, cause 2) -----------------------------------------------
+//
+// ⚠️ CE BLOC EST LA PREUVE DE CÂBLAGE, et c'est pour ça qu'il vit ICI plutôt qu'en test unitaire.
+// Il traverse la chaîne ENTIÈRE — `synonymes:` dans foods.yaml → validation de build.mjs → table
+// `food_synonym` → `catalog-loader` → `chercherParNom`. Un test sur fixture prouverait que la
+// fonction sait lire un champ ; il ne prouverait PAS que le champ est rempli, ni qu'il arrive
+// jusqu'à elle. C'est exactement le défaut que ce projet a payé quatre fois : un champ déclaré et
+// jamais lu ne rougit ni au type, ni au test, ni à l'écran.
+
+describe('chercherParNom — synonymes d’aliments sur le catalogue réel', () => {
+  const chercher = (saisie: string) =>
+    chercherParNom([...catalogue.foods.values()], saisie, 6).map((f) => f.id as string)
+
+  it.each([
+    ['lardon', 'porc_poitrine', 'Porc, poitrine crue'],
+    ['gambas', 'crevette', 'Crevette, crue'],
+    ['chipolata', 'saucisse_toulouse', 'Saucisse de Toulouse, crue'],
+  ])('« %s » rend %s — le mot du panier, pas celui du CIQUAL', (saisie, attendu, _nom) => {
+    expect(chercher(saisie)[0]).toBe(attendu)
+  })
+
+  it('un synonyme NE CRÉE AUCUN ALIMENT — « lardon » n’est l’id de rien', () => {
+    // La garantie centrale du champ. Un synonyme nomme une ligne existante ; s'il pouvait créer un
+    // aliment, celui-ci arriverait sans nutriments NI ALLERGÈNES, et le garde-fou §5.2 tomberait.
+    for (const terme of ['lardon', 'gambas', 'chipolata']) {
+      expect(catalogue.foods.has(terme as FoodId)).toBe(false)
+    }
+  })
+
+  it('l’aliment nommé garde SES allergènes et SES nutriments — on ne fait que le nommer autrement', () => {
+    const crevette = catalogue.foods.get('crevette' as FoodId)
+    expect(crevette).toBeDefined()
+    expect(crevette!.synonymes).toContain('gambas')
+    // La crevette reste un crustacé : le synonyme n'a rien déplacé.
+    expect(crevette!.allergenes.map((a) => a.allergenId as string)).toContain('crustaces')
+    expect(crevette!.nutrimentsPour100g.size).toBeGreaterThan(0)
+  })
+
+  it('la très grande majorité des aliments n’a AUCUN synonyme — ce n’est pas une passe exhaustive', () => {
+    // Verrouille la portée décidée : trois termes mesurés, pas une liste écrite à la main sur 450
+    // aliments qui pourrirait sans que personne ne la relise.
+    const porteurs = [...catalogue.foods.values()].filter((f) => f.synonymes.length > 0)
+    expect(porteurs.map((f) => f.id as string).sort()).toEqual([
+      'crevette',
+      'porc_poitrine',
+      'saucisse_toulouse',
+    ])
   })
 })

@@ -324,11 +324,29 @@ export function DetailRecette({
       </ul>
 
       <h2 className="mt-8 text-[1.5rem] text-texte">Préparation</h2>
+      {/* ⚠️ SEULS LES GESTES SONT NUMÉROTÉS. Les 18 mentions sanitaires vivent dans `etapes` faute
+          d'un autre endroit où les écrire, mais les numéroter promettait une action de plus alors
+          que le plat est déjà servi — chakchouka annonçait « 6 » pour cinq gestes. */}
       <ol className="mt-3 space-y-4">
-        {recette.etapes.map((etape, index) => (
-          <Etape key={index} numero={index + 1} etape={etape} catalogue={vue.catalogue} />
-        ))}
+        {recette.etapes
+          .filter((etape) => etape.nature === 'geste')
+          .map((etape, index) => (
+            <Etape key={etape.ordre} numero={index + 1} etape={etape} catalogue={vue.catalogue} />
+          ))}
       </ol>
+
+      {/* Après la préparation, jamais dedans : ce n'est pas une chose à faire, c'est une chose à
+          savoir. Jetons `alerte-*` — ambre, jamais rouge (§6.5 : prévenir sans juger). */}
+      {recette.etapes
+        .filter((etape) => etape.nature === 'avertissement')
+        .map((etape) => (
+          <p
+            key={etape.ordre}
+            className="mt-4 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-[1.02rem] leading-relaxed text-alerte-texte"
+          >
+            {etape.texte}
+          </p>
+        ))}
 
       <ValeursNutritionnelles
         affiche={vue.afficherMacros}

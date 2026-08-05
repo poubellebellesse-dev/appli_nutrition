@@ -171,3 +171,49 @@ describe('search/chercherParNom — ordre total', () => {
     expect(chercherParNom(inverse, 'tomate', 6).map((e) => e.nom)).toEqual(noms('tomate'))
   })
 })
+
+// --- Synonymes (décision 58, cause 2) ---------------------------------------------------------
+//
+// Ce que ces tests verrouillent n'est PAS « le synonyme marche » — c'est qu'il n'a rien coûté aux
+// entrées qui n'en ont pas. Le classement de `chercherParNom` a déjà été cassé une fois par un
+// départage mal choisi ; élargir l'appariement est exactement le genre de changement qui le
+// recasse sans qu'aucun test existant ne rougisse.
+
+const PORC = { nom: 'Porc, poitrine crue', synonymes: ['lardon'] }
+const CREVETTE = { nom: 'Crevette, crue', synonymes: ['gambas'] }
+
+describe('search/chercherParNom — synonymes', () => {
+  it('trouve par un nom d’usage que le nom éditorial ne contient pas', () => {
+    expect(chercherParNom([PORC, CREVETTE], 'lardon', 6).map((e) => e.nom)).toEqual([
+      'Porc, poitrine crue',
+    ])
+  })
+
+  it('… et sans le synonyme, la même saisie ne rend RIEN — c’est bien lui qui travaille', () => {
+    expect(chercherParNom([{ nom: PORC.nom }, { nom: CREVETTE.nom }], 'lardon', 6)).toEqual([])
+  })
+
+  it('le pluriel vaut pour un synonyme comme pour un nom : « gambas » puis « gamba »', () => {
+    expect(chercherParNom([PORC, CREVETTE], 'gamba', 6).map((e) => e.nom)).toEqual(['Crevette, crue'])
+  })
+
+  it('NE CRÉE AUCUNE ENTRÉE : une saisie appariée rend l’aliment porteur, jamais le synonyme', () => {
+    const trouve = chercherParNom([PORC, CREVETTE], 'lardon', 6)
+    expect(trouve).toHaveLength(1)
+    expect(trouve[0]).toBe(PORC)
+  })
+
+  it('une entrée dont AUCUN synonyme ne s’apparie est classée exactement comme sans eux', () => {
+    // La non-régression du classement, verrouillée sur les six saisies déjà couvertes plus haut.
+    const avecDuBruit = CATALOGUE_REEL.map((e) => ({ ...e, synonymes: ['xyzzy', 'plugh'] }))
+    for (const saisie of ['tomate', 'riz', 'sauce tomate', 'tomate cerise', 'oeuf', 'poulet blanc']) {
+      expect(chercherParNom(avecDuBruit, saisie, 6).map((e) => e.nom)).toEqual(noms(saisie))
+    }
+  })
+
+  it('accepte encore une entrée SANS champ synonymes — les recettes n’en ont pas', () => {
+    // `synonymes` est optionnel dans la contrainte générique, et requis sur `Food` : les deux
+    // appelants coexistent. Si ce test cesse de compiler, la contrainte a été resserrée à tort.
+    expect(chercherParNom([{ nom: 'Tomate, crue' }], 'tomate', 6)).toHaveLength(1)
+  })
+})

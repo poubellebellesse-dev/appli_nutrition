@@ -87,6 +87,45 @@ const RANG_SOUS_CHAINE = 0
 const RANG_TOUS_LES_MOTS = 1
 const RANG_UN_MOT = 2
 
+/** Ce qu'on retient d'un appariement : les trois clés de tri, sans l'entrée qui les porte. */
+interface Classement {
+  readonly rang: number
+  readonly poids: number
+  readonly position: number
+}
+
+/**
+ * Ordre des appariements — négatif si `a` est meilleur. Sert DEUX fois : à départager les
+ * appellations d'une même entrée, puis à trier les entrées entre elles. Une seule définition, sinon
+ * le meilleur synonyme d'un aliment pourrait ne pas être celui qui le classe le mieux.
+ */
+function comparerClassement(a: Classement, b: Classement): number {
+  return a.rang - b.rang || b.poids - a.poids || a.position - b.position
+}
+
+/**
+ * Classe une entrée sur UNE de ses appellations — son nom, ou l'un de ses synonymes. `null` si
+ * cette appellation ne s'apparie à rien.
+ */
+function classerAppellation(appellation: string, litteral: string, mots: readonly string[]): Classement | null {
+  const normalise = normaliser(appellation)
+  const motsDeLAppellation = motsDe(appellation)
+  // Un mot de la saisie est apparié si un mot de l'appellation COMMENCE par lui : « tomat » trouve
+  // « tomate », ce qu'exige une autocomplétion où l'on tape au fur et à mesure.
+  const apparies = mots.filter((mot) => motsDeLAppellation.some((m) => m.startsWith(mot)))
+  if (apparies.length === 0) return null
+
+  return {
+    rang: normalise.includes(litteral)
+      ? RANG_SOUS_CHAINE
+      : apparies.length === mots.length
+        ? RANG_TOUS_LES_MOTS
+        : RANG_UN_MOT,
+    poids: apparies.reduce((somme, mot) => somme + mot.length, 0),
+    position: Math.min(...apparies.map((mot) => positionDe(normalise, mot))),
+  }
+}
+
 /**
  * Cherche des entrées par leur nom, du plus littéral au plus permissif.
  *
@@ -117,11 +156,18 @@ const RANG_UN_MOT = 2
  * « oeuf de poule ». Départager demanderait `Food.groupe` ou une sous-famille — donc de la DONNÉE,
  * pas une meilleure heuristique. Ne pas bricoler une exception ici.
  *
- * @param entrees source à parcourir — tout ce qui porte un `nom`, aliment comme recette
+ * ⚠️ LES SYNONYMES SONT DES NOMS CANDIDATS DE PLUS, rien d'autre : l'entrée est classée sur le
+ * MEILLEUR de `{nom, ...synonymes}`, ce qui laisse le classement d'une entrée sans synonyme
+ * strictement identique à ce qu'il était. C'est voulu — le départage par POSITION a déjà été cassé
+ * une fois, et une entrée qui n'a rien demandé ne doit pas bouger. Un synonyme exact sort donc en
+ * tête (rang sous-chaîne, position 0), ce qu'on attend en tapant « lardon ».
+ *
+ * @param entrees source à parcourir — tout ce qui porte un `nom`, aliment comme recette. Les
+ *                `synonymes` sont OPTIONNELS ici, et requis sur `Food` : une recette n'en a pas.
  * @param saisie  texte tapé par l'utilisateur, brut
  * @param limite  nombre maximum de résultats rendus
  */
-export function chercherParNom<T extends { readonly nom: string }>(
+export function chercherParNom<T extends { readonly nom: string; readonly synonymes?: readonly string[] }>(
   entrees: Iterable<T>,
   saisie: string,
   limite: number
@@ -130,45 +176,30 @@ export function chercherParNom<T extends { readonly nom: string }>(
   const mots = motsDe(saisie)
   if (litteral.length === 0 || mots.length === 0 || limite <= 0) return []
 
-  const classees: {
-    readonly entree: T
-    readonly rang: number
-    readonly poids: number
-    readonly position: number
-  }[] = []
+  const classees: { readonly entree: T; readonly classement: Classement }[] = []
 
   for (const entree of entrees) {
-    const nomNormalise = normaliser(entree.nom)
-    const motsDuNom = motsDe(entree.nom)
-    // Un mot de la saisie est apparié si un mot du nom COMMENCE par lui : « tomat » trouve
-    // « tomate », ce qu'exige une autocomplétion où l'on tape au fur et à mesure.
-    const apparies = mots.filter((mot) => motsDuNom.some((m) => m.startsWith(mot)))
-    if (apparies.length === 0) continue
-
-    const rang = nomNormalise.includes(litteral)
-      ? RANG_SOUS_CHAINE
-      : apparies.length === mots.length
-        ? RANG_TOUS_LES_MOTS
-        : RANG_UN_MOT
-    classees.push({
-      entree,
-      rang,
-      poids: apparies.reduce((somme, mot) => somme + mot.length, 0),
-      position: Math.min(...apparies.map((mot) => positionDe(nomNormalise, mot))),
-    })
+    let meilleur: Classement | null = null
+    for (const appellation of [entree.nom, ...(entree.synonymes ?? [])]) {
+      const candidat = classerAppellation(appellation, litteral, mots)
+      if (candidat === null) continue
+      if (meilleur === null || comparerClassement(candidat, meilleur) < 0) meilleur = candidat
+    }
+    if (meilleur === null) continue
+    classees.push({ entree, classement: meilleur })
   }
 
+  // Le NOM départage les ex æquo, jamais le synonyme qui a gagné : deux entrées appariées par des
+  // appellations différentes doivent quand même s'ordonner de façon stable.
   classees.sort(
     (a, b) =>
-      a.rang - b.rang ||
-      b.poids - a.poids ||
-      a.position - b.position ||
+      comparerClassement(a.classement, b.classement) ||
       a.entree.nom.length - b.entree.nom.length ||
       a.entree.nom.localeCompare(b.entree.nom)
   )
 
   // Le rang le plus permissif ne complète que si les deux premiers n'ont pas rempli la liste.
-  const surs = classees.filter((c) => c.rang !== RANG_UN_MOT)
+  const surs = classees.filter((c) => c.classement.rang !== RANG_UN_MOT)
   const retenues = surs.length >= limite ? surs : classees
   return retenues.slice(0, limite).map((c) => c.entree)
 }

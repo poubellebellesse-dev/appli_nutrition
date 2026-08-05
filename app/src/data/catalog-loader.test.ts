@@ -113,6 +113,15 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     // 5 étapes depuis le 2026-08-03 : la mention ANSES « œufs crus ou peu cuits » a été ajoutée en
     // étape finale aux 15 recettes à œuf cru ou peu cuit (SOURCES_RECETTES.md §5 quinquies).
     expect(omelette?.etapes.map((e) => e.ordre)).toEqual([1, 2, 3, 4, 5])
+    // ⚠️ Cette mention OCCUPE une étape sans en être une. `nature` est ce qui permet aux écrans de
+    // ne pas la compter : sans elle, l'omelette annonce cinq gestes pour quatre.
+    expect(omelette?.etapes.map((e) => e.nature)).toEqual([
+      'geste',
+      'geste',
+      'geste',
+      'geste',
+      'avertissement',
+    ])
     expect(omelette?.facettes).toContainEqual({ facette: 'regime', valeur: 'vegetarien' })
     expect(omelette?.typesRepas).toEqual(['petit_dejeuner', 'dejeuner', 'diner'])
 

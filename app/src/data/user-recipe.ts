@@ -170,6 +170,9 @@ export function versRecette(stockee: StoredUserRecipe, foods: ReadonlyMap<FoodId
       lexiconIds: [],
       timerS: null,
       timerType: null,
+      // Toujours un geste : un avertissement sanitaire est adossé à une source citée (§3
+      // CONCEPTION_MODE_CUISINE), et une recette importée n'en apporte aucune.
+      nature: 'geste',
     })),
     // ⚠️ EXACTEMENT UNE facette `regime`, comme toute recette du catalogue (décision 28) : zéro la
     // rendrait invisible à tout filtre de régime, deux rouvriraient le mode de défaillance que

@@ -54,12 +54,13 @@ export function asScoringResult(result: LayerResult): ScoringLayerResult {
 export function makeFood(
   id: string,
   allergenes: readonly FoodAllergen[] = [],
-  opts: { readonly sousFamille?: string } = {}
+  opts: { readonly sousFamille?: string; readonly synonymes?: readonly string[] } = {}
 ): Food {
   return {
     id: id as FoodId,
     codeCiqual: `TEST-${id}`,
     nom: id,
+    synonymes: opts.synonymes ?? [],
     groupe: 'test',
     sousFamille: opts.sousFamille ?? null,
     nutrimentsPour100g: new Map(),

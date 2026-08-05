@@ -205,12 +205,37 @@ describe('detail-recette — les étapes', () => {
     const recette = recetteDeReference()
     await monter(recette.id)
 
+    // La référence ne porte que des gestes ; le filtre le dit plutôt que d'en dépendre en silence.
+    const gestes = recette.etapes.filter((e) => e.nature === 'geste')
     const lignes = [...document.querySelectorAll('ol li')]
-    expect(lignes).toHaveLength(recette.etapes.length)
+    expect(lignes).toHaveLength(gestes.length)
     lignes.forEach((ligne, index) => {
       expect(ligne.querySelector('span[aria-hidden="true"]')?.textContent).toBe(String(index + 1))
-      expect(ligne.textContent).toContain(recette.etapes[index]!.texte)
+      expect(ligne.textContent).toContain(gestes[index]!.texte)
     })
+  })
+
+  // ⚠️ LE COMPTEUR NE DOIT PAS PROMETTRE UNE ACTION DE PLUS. La chakchouka porte six lignes dans
+  // `etapes`, dont la dernière est la mention ANSES : elle s'affichait numérotée « 6 », après que
+  // le plat est servi. Ce test verrouille le §3 de docs/CONCEPTION_MODE_CUISINE.md — la mention
+  // reste visible, mais hors de la liste numérotée.
+  it('n’intègre PAS l’avertissement sanitaire à la liste numérotée, tout en l’affichant', async () => {
+    const chakchouka = catalogueDeTest().recipes.get('chakchouka' as RecipeId)
+    if (chakchouka === undefined) throw new Error('chakchouka absente du catalogue réel')
+    const avertissement = chakchouka.etapes.find((e) => e.nature === 'avertissement')
+    expect(avertissement).toBeDefined()
+
+    await monter(chakchouka.id)
+
+    const lignes = [...document.querySelectorAll('ol li')]
+    expect(lignes).toHaveLength(chakchouka.etapes.length - 1)
+    expect(lignes.map((l) => l.textContent)).not.toContainEqual(
+      expect.stringContaining(avertissement!.texte)
+    )
+
+    // Affiché quand même, et hors de tout <ol> : une mention à lire, pas une chose à faire.
+    const bloc = screen.getByText(avertissement!.texte)
+    expect(bloc.closest('ol')).toBeNull()
   })
 })
 

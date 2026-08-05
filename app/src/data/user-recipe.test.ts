@@ -34,6 +34,7 @@ function aliment(id: string, groupe: string, origine: Food['origineAnimale'], de
     id: id as FoodId,
     codeCiqual: `T-${id}`,
     nom: id,
+    synonymes: [],
     groupe,
     sousFamille: null,
     nutrimentsPour100g: new Map(),
@@ -170,7 +171,9 @@ function recetteDeBase(): Recipe {
       { foodId: 'boeuf' as FoodId, quantiteG: g(800), uniteAffichage: '800 g', optionnel: false },
       { foodId: 'lait' as FoodId, quantiteG: g(200), uniteAffichage: '20 cl', optionnel: false },
     ],
-    etapes: [{ ordre: 1, texte: 'Saisir la viande.', lexiconIds: ['saisir'], timerS: 600, timerType: 'cuisson' }],
+    etapes: [
+      { ordre: 1, texte: 'Saisir la viande.', lexiconIds: ['saisir'], timerS: 600, timerType: 'cuisson', nature: 'geste' },
+    ],
     facettes: [
       { facette: 'cuisine', valeur: 'francaise' },
       { facette: 'regime', valeur: 'omnivore' },

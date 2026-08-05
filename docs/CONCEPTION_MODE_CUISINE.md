@@ -14,7 +14,7 @@ pas en arrière-plan**, et la reprise remplace la notification (§5).
 
 | Brique | État | Preuve |
 |---|---|---|
-| `recipe_step.timer_s` / `timer_type` | ✅ écrits, buildés, chargés | 512 étapes sur 1 118, dans 203 recettes sur 241 |
+| `recipe_step.timer_s` / `timer_type` | ✅ écrits, buildés, chargés | 512 étapes sur 1 119, dans 203 recettes sur 241 |
 | `RecipeStep.timerS` côté app | ✅ chargé jusqu'en mémoire | `catalog-loader.ts:481-482` |
 | Affichage d'un minuteur | ❌ **zéro** | `detail-recette.tsx:328` rend `texte` + gestes, rien d'autre |
 | Gestes du lexique dépliés sur place | ✅ codé | `detail-recette.tsx:524-570` |
@@ -23,7 +23,7 @@ pas en arrière-plan**, et la reprise remplace la notification (§5).
 | Reprise d'une cuisson | ❌ rien en base | schéma **v9** à écrire, §4.0 |
 | Notifications programmées | ✅ **mais calibrées pour les repas** | `notifications.ts:78` — `allowWhileIdle`, donc ±9 min en Doze : voir §5 |
 | Lien étape → ingrédient | ❌ **n'existe pas** | prérequis A, §2 |
-| Distinction geste / avertissement | ❌ **n'existe pas** | prérequis B, §3 |
+| Distinction geste / avertissement | ✅ **faite le 2026-08-05** (L0) | `recipe_step.nature`, §3 |
 
 **Le fait structurant : 512 minuteurs sont payés et invisibles.** C'est ce qui justifie de livrer
 l'écran avant les prérequis, et non l'inverse (§4).
@@ -92,9 +92,13 @@ faites rendrait le build rouge en permanence, donc inutile comme signal.
 
 | Mesure | Valeur |
 |---|---|
-| Étapes à annoter | **1 118** |
+| Étapes, toutes natures | 1 119 |
+| **Gestes à annoter** | **1 101** — les 18 avertissements n'ont pas d'ingrédient |
 | Recettes | 241 (4,6 étapes en moyenne) |
 | Ingrédients candidats par recette | **7,1 en moyenne** |
+
+*(Relevé du 2026-08-05, `node catalog/build.mjs`. Le document annonçait 1 118 : une étape avait été
+ajoutée depuis. Le build sort désormais le compte à chaque passage — plus de chiffre à recopier.)*
 
 Le second chiffre est celui qui rend le travail faisable : annoter une étape, ce n'est pas écrire
 des identifiants de mémoire, c'est **cocher dans une liste de sept**.
@@ -115,40 +119,51 @@ lignes · X/241 recettes annotées` et sort en erreur sur toute violation des r�
 
 ---
 
-## 3. Prérequis B — l'étape qui n'est pas une étape
+## 3. Prérequis B — l'étape qui n'est pas une étape ✅ FAIT (L0, 2026-08-05)
 
-**18 recettes portent une étape qui n'est pas un geste** : un avertissement sanitaire (ANSES sur les
-œufs peu cuits, déconseillés à certains publics). Sur `chakchouka`, il occupe l'étape 6 — le mode
-cuisine annonce donc « 6 sur 6 » et promet un geste alors que le plat est déjà servi.
+**18 recettes portaient une étape qui n'est pas un geste** : un avertissement sanitaire (ANSES sur
+les œufs peu cuits, ministère de l'Agriculture sur les produits de la mer crus). Sur `chakchouka`, il
+occupait l'étape 6 — la fiche annonçait « 6 » et promettait un geste alors que le plat est servi.
 
 ```sql
 -- sur recipe_step
 nature TEXT NOT NULL DEFAULT 'geste' CHECK (nature IN ('geste', 'avertissement'))
 ```
 
-Conséquences, toutes portées par l'UI :
+**Deux règles rouges au build**, et la seconde est la moins évidente :
 
-- Le compteur et les jalons ne comptent **que** les `nature = 'geste'` — chakchouka devient « 5 étapes ».
-- L'avertissement s'affiche **après** la dernière étape, dans son propre bloc (jetons `alerte-*`,
-  déjà définis dans `theme.css`), et jamais comme une chose à faire.
-- ⚠️ **`detail-recette.tsx` doit continuer à l'afficher** : l'avertissement ne disparaît pas de la
-  fiche recette, il change seulement de statut.
+1. `nature` hors du vocabulaire fermé → build rouge.
+2. **Un avertissement ailleurs qu'en DERNIÈRE position → build rouge.** Un avertissement au milieu
+   passerait tout contrôle de forme, puis ferait annoncer au mode cuisine un nombre d'étapes juste
+   pour un déroulé faux. La règle porte sur la position, pas sur `ordre`.
 
-Coût : un champ, une valeur par défaut, **18 lignes de YAML**. C'est le prérequis le moins cher et
-celui qui rend le compteur honnête — donc le premier.
+Le champ est **facultatif en YAML** : absent = `geste`, ce qui est le cas de 223 recettes. Le rendre
+obligatoire n'aurait rien ajouté qu'un bruit sur 1 101 lignes.
+
+Conséquences côté écrans :
+
+- Le compteur et les jalons ne comptent **que** les `nature = 'geste'` — chakchouka fait 5 étapes.
+- L'avertissement s'affiche **après** la dernière étape, dans son propre bloc (jetons `alerte-*`),
+  et jamais comme une chose à faire.
+- ✅ **`detail-recette.tsx` continue de l'afficher** : il n'a pas disparu de la fiche recette, il a
+  changé de statut. Verrouillé par un test sur `chakchouka` — 5 `<li>` numérotés, et la mention
+  présente mais hors de tout `<ol>`.
+
+Coût réel : le champ, 18 lignes de YAML, la chaîne de lecture (`StepNature` → `catalog-loader` →
+`user-recipe`), et 5 tests.
 
 ---
 
 ## 4. Ordre des lots
 
 L'ordre suit une règle : **livrer ce qui est utile seul avant ce qui coûte cher.** L1 rend visibles
-512 minuteurs sans dépendre du prérequis A et de ses 1 118 annotations.
+512 minuteurs sans dépendre du prérequis A et de ses 1 101 annotations.
 
 | Lot | Contenu | Dépend de | Nature |
 |---|---|---|---|
-| **L0** | Prérequis B — `recipe_step.nature`, 18 recettes marquées | — | schéma + contenu |
+| ~~**L0**~~ | ✅ **Fait le 2026-08-05** — prérequis B, `recipe_step.nature`, 18 recettes marquées | — | schéma + contenu |
 | **L1** | **Écran mono-recette** : écran allumé, étape courante, minuteurs parallèles, **alarme au premier plan**, **reprise (schéma v9 + bandeau)** | L0 | code |
-| **L2** | Prérequis A — `food_ids` sur 1 118 étapes, 3 passes du §2.4 | — (parallélisable avec L1) | contenu |
+| **L2** | Prérequis A — `food_ids` sur 1 101 gestes, 3 passes du §2.4 | — (parallélisable avec L1) | contenu |
 | **L3** | Quantité au tap sur un ingrédient de l'étape | L1 + L2 | code |
 | **L4** | v1.5 — synchronisation multi-recettes, bascule de service | L1 | code |
 
@@ -209,7 +224,8 @@ lot qui est faux.
 2. **Un minuteur survit au changement d'étape** — lancer à l'étape 2, aller en 4, le décompte est
    toujours là et étiqueté « étape 2 ».
 3. **Plusieurs décomptes coexistent** — deux minuteurs lancés, deux décomptes distincts.
-4. **Le compteur ignore les avertissements** — chakchouka annonce 5 étapes, pas 6 (dépend de L0).
+4. **Le compteur ignore les avertissements** — chakchouka annonce 5 étapes, pas 6. ✅ La donnée est
+   là (L0) et la fiche recette le vérifie déjà ; il reste à le vérifier sur l'écran cuisine.
 5. **L'absence de Wake Lock ne casse rien** — `navigator.wakeLock` absent : l'écran fonctionne, seule
    la mention change.
 6. **Aucun score affiché** — filet du principe 6, comme sur les autres écrans.

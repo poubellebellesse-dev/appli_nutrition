@@ -82,10 +82,11 @@ réglage du moteur n'invente du contenu. Chantier en cours côté utilisateur.
 côté utilisateur)**, lexique illustré, 27 tips pour la centaine visée, 8 fiches sur les 60-100 de
 §8.2. Rien de tout cela n'est un problème de code.
 
-▶ **UN CHANTIER DE CODE EST PRÊT : le mode cuisine** (décision 8 fermée le 2026-08-04). Spec :
-`ARCHITECTURE.md` §5bis · lots : **[CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md)**.
-Commencer par **L0** (un champ, 18 lignes de YAML), puis **L1** — l'écran, qui n'attend PAS les
-1 118 annotations du prérequis A. Motif : **512 minuteurs buildés, chargés, affichés nulle part.**
+▶ **LE MODE CUISINE EST EN COURS** (décision 8 fermée le 2026-08-04). Spec : `ARCHITECTURE.md`
+§5bis · lots : **[CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md)**. ✅ **L0 fait le
+2026-08-05** — `recipe_step.nature`, 18 recettes, deux règles rouges au build. ▶ **Au suivant :
+L1**, l'écran, qui n'attend PAS les 1 101 annotations du prérequis A. Motif : **512 minuteurs
+buildés, chargés, affichés nulle part.**
 
 ✅ **La vérification sanitaire des recettes est terminée** (2026-08-03) : viandes et volailles
 (§5 bis), poissons, œufs et coquillages (§5 quater), puis crus et œufs peu cuits (§5 quinquies —

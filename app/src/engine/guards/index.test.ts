@@ -44,6 +44,7 @@ function food(id: string, allergenId: string | null): Food {
     id: id as FoodId,
     codeCiqual: `TEST-${id}`,
     nom: id,
+    synonymes: [],
     groupe: "test",
     sousFamille: null,
     nutrimentsPour100g: new Map(),

@@ -1505,6 +1505,10 @@ foods:
   - id: crevette
     code_ciqual: "10021"
     nom: "Crevette, crue"
+    # « gambas » désigne la grosse crevette au rayon. Le CIQUAL n'a qu'une ligne « Crevette » :
+    # c'est elle qu'on nomme, pas un aliment de plus.
+    synonymes:
+      - gambas
     groupe: "fruits de mer"
     origine_animale: fruit_de_mer
     # Majoritairement importée/élevage (aquaculture) — pas de saisonnalité de pêche
@@ -2603,6 +2607,10 @@ foods:
   - id: porc_poitrine
     code_ciqual: "28002"
     nom: "Porc, poitrine crue"
+    # « lardon » est le mot du panier ; « Porc, poitrine crue » est le mot du CIQUAL. Personne ne
+    # tape le second. Un lardon EST de la poitrine de porc taillée — même produit, autre nom.
+    synonymes:
+      - lardon
     groupe: "viandes"
     origine_animale: mammifere
     sous_famille: "porc"
@@ -4301,6 +4309,12 @@ foods:
   - id: saucisse_toulouse
     code_ciqual: "30110"
     nom: "Saucisse de Toulouse, crue"
+    # ⚠️ APPROXIMATION ASSUMÉE : une chipolata est plus fine et son hachage diffère. Mais c'est la
+    # SEULE saucisse fraîche de porc du catalogue, et « chipolata » est le mot courant pour elle —
+    # le critère est celui du panier, pas celui du boucher. Le jour où une ligne chipolata entre au
+    # catalogue, ce synonyme se déplace dessus.
+    synonymes:
+      - chipolata
     groupe: "viandes"
     poids_piece_g: 100
     origine_animale: mammifere

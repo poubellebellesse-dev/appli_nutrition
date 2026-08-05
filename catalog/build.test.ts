@@ -57,6 +57,41 @@ function writeMinimalFixture(dir: string): void {
   writeFileSync(path.join(dir, 'sources', 'foods.yaml'), MINIMAL_FOODS_YAML, 'utf8')
 }
 
+/**
+ * Recette de fixture valide, dont SEUL le bloc `etapes` varie — le reste est du remplissage qui
+ * n'apprend rien au lecteur. `etapesYaml` s'insère tel quel sous `etapes:` et porte donc son
+ * indentation (deux espaces avant le tiret).
+ */
+function recetteFixture(etapesYaml: string): string {
+  return `
+id: recette_fixture
+nom: "Recette de test"
+origine: maison
+description: "Une recette de fixture."
+temps_prep_min: 5
+temps_cuisson_min: 5
+difficulte: 1
+portions_base: 1
+image_path: null
+types_repas: [dejeuner]
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0
+  leger_consistant: 0
+  chaud_froid: 0
+  texture: ferme
+ingredients:
+  - food_id: fixture_food
+    quantite_g: 100
+    unite_affichage: "100 g"
+    optionnel: false
+etapes:${etapesYaml}
+facettes: []
+`
+}
+
 /** Écrit une fixture foods.yaml isolée avec un seul aliment personnalisé (P1b-1 : saisonnalité). */
 function writeFoodsFixture(dir: string, foodYamlBody: string): void {
   mkdirSync(path.join(dir, 'sources'), { recursive: true })
@@ -298,6 +333,109 @@ facettes: []
 
       expect(result.status).not.toBe(0)
       expect(result.stderr).toContain('vocabulaire banni')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  // --- `recipe_step.nature` (docs/CONCEPTION_MODE_CUISINE.md §3) ---------------------------------
+  //
+  // Deux règles, deux modes de défaillance distincts. La seconde est la moins évidente et la plus
+  // coûteuse : un avertissement placé au milieu passerait tous les contrôles de forme, puis ferait
+  // annoncer au mode cuisine un nombre d'étapes juste pour un déroulé faux.
+
+  it('échoue (exit != 0) sur une nature d’étape hors du vocabulaire fermé', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-nature-inconnue-'))
+    try {
+      writeMinimalFixture(fixtureDir)
+      writeFileSync(
+        path.join(fixtureDir, 'recipes', 'invalide.yaml'),
+        recetteFixture(`
+  - ordre: 1
+    texte: "Préparer l'aliment."
+    nature: remarque
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null`),
+        'utf8'
+      )
+
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+
+      expect(result.status).not.toBe(0)
+      expect(result.stderr).toContain("nature 'remarque' inconnue")
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('échoue (exit != 0) quand un avertissement n’est pas la DERNIÈRE étape', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-avertissement-milieu-'))
+    try {
+      writeMinimalFixture(fixtureDir)
+      writeFileSync(
+        path.join(fixtureDir, 'recipes', 'invalide.yaml'),
+        recetteFixture(`
+  - ordre: 1
+    texte: "Un avertissement égaré au milieu du déroulé."
+    nature: avertissement
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Préparer l'aliment."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null`),
+        'utf8'
+      )
+
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+
+      expect(result.status).not.toBe(0)
+      expect(result.stderr).toContain('doit être la DERNIÈRE étape')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('accepte l’absence de `nature` et la replie sur `geste` — 223 recettes sont dans ce cas', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-nature-absente-'))
+    const dbPath = path.join(fixtureDir, 'catalog.db')
+    try {
+      writeMinimalFixture(fixtureDir)
+      writeFileSync(
+        path.join(fixtureDir, 'recipes', 'valide.yaml'),
+        recetteFixture(`
+  - ordre: 1
+    texte: "Préparer l'aliment."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Une mention à lire, pas un geste à faire."
+    nature: avertissement
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null`),
+        'utf8'
+      )
+
+      const result = runBuild(['--sources', fixtureDir, '--out', dbPath])
+      expect(result.status).toBe(0)
+
+      const db = new DatabaseSync(dbPath, { readOnly: true })
+      try {
+        const lignes = db
+          .prepare('SELECT ordre, nature FROM recipe_step ORDER BY ordre')
+          .all() as { ordre: number; nature: string }[]
+        expect(lignes).toEqual([
+          { ordre: 1, nature: 'geste' },
+          { ordre: 2, nature: 'avertissement' },
+        ])
+      } finally {
+        db.close()
+      }
     } finally {
       rmSync(fixtureDir, { recursive: true, force: true })
     }
@@ -1041,6 +1179,172 @@ describe('catalog/build.mjs — tips : la source est obligatoire (§4.2, §8.4)'
       const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
       expect(result.status).not.toBe(0)
       expect(result.stderr).toContain('URL http(s)')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('catalog/build.mjs — synonymes d’aliments (décision 58, cause 2)', () => {
+  it('écrit food_synonym, relisible depuis la base — un aliment, N noms d’usage', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-synonyme-ok-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_poitrine
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Porc, poitrine crue"
+    groupe: "test"
+    synonymes:
+      - lardon
+      - poitrine fumée
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+  - id: fixture_sans_synonyme
+    code_ciqual: "PROV-FIXTURE-2"
+    nom: "Aliment sans nom d'usage"
+    groupe: "test"
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+`
+      )
+
+      const dbPath = path.join(fixtureDir, 'catalog.db')
+      const result = runBuild(['--sources', fixtureDir, '--out', dbPath])
+      expect(result.status, result.stderr).toBe(0)
+
+      const db = new DatabaseSync(dbPath, { readOnly: true })
+      try {
+        const termes = db
+          .prepare('SELECT terme FROM food_synonym WHERE food_id = ? ORDER BY terme')
+          .all('fixture_poitrine') as { terme: string }[]
+        expect(termes.map((t) => t.terme)).toEqual(['lardon', 'poitrine fumée'])
+
+        // Le défaut neutre est l'absence de ligne, pas une ligne vide : un aliment sans nom d'usage
+        // n'en fabrique aucun.
+        const aucun = db.prepare('SELECT COUNT(*) AS n FROM food_synonym WHERE food_id = ?').get(
+          'fixture_sans_synonyme'
+        ) as { n: number }
+        expect(aucun.n).toBe(0)
+      } finally {
+        db.close()
+      }
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('ÉCHOUE sur une entrée MORTE — un synonyme que le nom de l’aliment trouve déjà', () => {
+    // Le cas `steak` que la décision 58 demandait de vérifier : « Bœuf, steak cru » est déjà rendu
+    // par la saisie « steak ». Un synonyme qui n'ajoute rien est du bruit qu'on relira un jour en
+    // croyant qu'il sert.
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-synonyme-mort-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_steak
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Bœuf, steak cru"
+    groupe: "test"
+    synonymes:
+      - steak
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status).not.toBe(0)
+      expect(`${result.stdout}${result.stderr}`).toContain('entrée morte')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('ACCEPTE un synonyme dont un seul mot manque au nom — « steak haché » n’est pas « steak »', () => {
+    // Le pendant du test précédent : la règle refuse ce qui est déjà couvert, pas ce qui précise.
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-synonyme-precise-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_hache
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Bœuf, haché 5% MG cru"
+    groupe: "test"
+    synonymes:
+      - steak haché
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status, result.stderr).toBe(0)
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('ÉCHOUE quand DEUX aliments revendiquent le même synonyme', () => {
+    // Sans ce refus, la recherche rend l'un des deux sans que rien n'explique lequel ni pourquoi.
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-synonyme-double-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_boeuf
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Bœuf, tranche crue"
+    groupe: "test"
+    synonymes:
+      - grillade
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+  - id: fixture_thon
+    code_ciqual: "PROV-FIXTURE-2"
+    nom: "Thon, darne crue"
+    groupe: "test"
+    synonymes:
+      - grillade
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status).not.toBe(0)
+      expect(`${result.stdout}${result.stderr}`).toContain('revendiqué par deux aliments')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('ÉCHOUE sur un synonyme vide — une ligne blanche apparierait n’importe quoi', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-synonyme-vide-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_vide
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Aliment de test"
+    groupe: "test"
+    synonymes:
+      - "  "
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status).not.toBe(0)
+      expect(`${result.stdout}${result.stderr}`).toContain('synonyme vide')
     } finally {
       rmSync(fixtureDir, { recursive: true, force: true })
     }

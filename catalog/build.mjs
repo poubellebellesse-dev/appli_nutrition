@@ -137,6 +137,39 @@ function findBannedTerms(text) {
   return NORMALIZED_BANNED.filter(({ normalized: n }) => normalized.includes(n)).map((m) => m.term)
 }
 
+// --- Synonymes d'aliments : miroir de `engine/search/index.ts` -------------------------------
+//
+// ⚠️ DUPLICATION DÉLIBÉRÉE, ET SON RISQUE EST CONNU. `build.mjs` ne peut pas importer le TypeScript
+// du moteur ; les mêmes règles de découpage sont donc réécrites ici, comme `normalize` l'est déjà
+// vis-à-vis de `guards/banned-terms.ts`. Si les deux dérivent, un synonyme MORT passerait le build
+// sans que rien ne le signale. Ce n'est pas un risque de sécurité — l'aliment garde ses allergènes,
+// le garde-fou §5.2 n'est pas traversé — mais du bruit au catalogue. Toucher `motsDe` dans le
+// moteur oblige à repasser ici.
+const MOTS_VIDES_SYNONYME = new Set(['a', 'au', 'aux', 'd', 'de', 'des', 'du', 'en', 'et', 'l', 'la', 'le', 'les', 'un', 'une'])
+
+/** Découpe en mots comparables — même règle que `motsDe` : normalisé, sans mots vides, singularisé. */
+function motsDeTerme(texte) {
+  return normalize(texte)
+    .replace(/œ/g, 'oe')
+    .replace(/æ/g, 'ae')
+    .split(/[^a-z0-9]+/)
+    .filter((mot) => mot.length > 0 && !MOTS_VIDES_SYNONYME.has(mot))
+    .map((mot) => (mot.length >= 4 && (mot.endsWith('s') || mot.endsWith('x')) ? mot.slice(0, -1) : mot))
+}
+
+/**
+ * Un synonyme est MORT si le nom de son propre aliment le trouve déjà : `chercherParNom` apparie un
+ * mot saisi dès qu'un mot du nom COMMENCE par lui, donc « steak » sur « Bœuf, steak cru » n'ajoute
+ * rien. Généralise « identique au nom » — c'est le cas `steak` que la décision 58 demandait de
+ * vérifier. « steak haché » sur « Bœuf, haché 5% MG cru » resterait valide : « steak » n'y est pas.
+ */
+function synonymeDejaCouvertParLeNom(terme, nom) {
+  const motsDuTerme = motsDeTerme(terme)
+  if (motsDuTerme.length === 0) return false
+  const motsDuNom = motsDeTerme(nom)
+  return motsDuTerme.every((mot) => motsDuNom.some((m) => m.startsWith(mot)))
+}
+
 async function readYamlFile(filePath) {
   const raw = await readFile(filePath, 'utf8')
   return parseYaml(raw)
@@ -286,6 +319,12 @@ const SOURCE_TYPES = new Set(['provenance', 'reference'])
 // CIQUAL) — distinct de `SOURCE_TYPES` qui dit pourquoi une source est citee. Ferme, meme raison
 // que SOURCE_TYPES : une valeur inventee laisserait croire a une provenance qui n'existe pas.
 const RECIPE_ORIGINES = new Set(['maison', 'domaine_public', 'libre'])
+
+// Ce qu'une etape EST, pas ce qu'elle dit (docs/CONCEPTION_MODE_CUISINE.md §3). Un avertissement
+// sanitaire occupe une ligne d'etape sans etre un geste : le mode cuisine annoncerait « 6 sur 6 »
+// et promettrait une action alors que le plat est deja servi. Absent = 'geste', qui est le cas des
+// 223 recettes qui n'en portent pas — l'omission n'est donc pas une erreur.
+const STEP_NATURES = new Set(['geste', 'avertissement'])
 
 const CUISINES = new Set([
   'francaise', 'provencale', 'bretonne', 'italienne', 'espagnole', 'portugaise', 'grecque',
@@ -437,6 +476,8 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
 
   // --- Aliments ---
   const foodIds = new Set()
+  // Quel aliment revendique déjà quel synonyme — un terme, un seul aliment (voir plus bas).
+  const proprietaireDuSynonyme = new Map()
   for (const food of foods) {
     if (!food?.id) {
       errors.push(`Aliment sans id : ${JSON.stringify(food)}`)
@@ -456,6 +497,37 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
       }
       if (!['contient', 'traces'].includes(allergene.certitude)) {
         errors.push(`Aliment '${food.id}' : certitude d'allergène invalide '${allergene.certitude}'`)
+      }
+    }
+
+    // Synonymes — noms d'usage du MÊME aliment (décision 58, cause 2).
+    //
+    // ⚠️ LE REFUS « foodId INEXISTANT » N'EST PAS ÉCRIT, PARCE QU'IL EST INEXPRIMABLE. Le synonyme
+    // vit SUR l'aliment (`synonymes:` dans son entrée YAML), pas dans une table d'associations à
+    // côté : il n'y a pas de `food_id` à se tromper. Même geste que `requiredFoodIds` placé dans
+    // `MealContext` plutôt que dans `HardConstraints` — la garantie vient de la forme, pas d'un
+    // contrôle. La clé étrangère de `food_synonym` la redouble en base.
+    for (const terme of food.synonymes ?? []) {
+      if (typeof terme !== 'string' || terme.trim().length === 0) {
+        errors.push(`Aliment '${food.id}' : synonyme vide ou non textuel (${JSON.stringify(terme)})`)
+        continue
+      }
+      // 1. Entrée morte : le nom de l'aliment le trouve déjà, le synonyme n'ajoute rien.
+      if (synonymeDejaCouvertParLeNom(terme, food.nom ?? '')) {
+        errors.push(
+          `Aliment '${food.id}' : synonyme '${terme}' déjà couvert par son propre nom '${food.nom}' — entrée morte`
+        )
+      }
+      // 2. Doublon : deux aliments qui revendiquent le même mot rendent la recherche
+      //    indépartageable, et l'utilisateur reçoit l'un des deux sans savoir pourquoi. REFUS sec
+      //    plutôt qu'un départage arbitraire — si le mot désigne vraiment deux produits, c'est
+      //    qu'il faut le préciser des deux côtés (« steak de bœuf », « steak de thon »).
+      const cle = motsDeTerme(terme).join(' ')
+      const deja = proprietaireDuSynonyme.get(cle)
+      if (deja !== undefined && deja !== food.id) {
+        errors.push(`Synonyme '${terme}' revendiqué par deux aliments : '${deja}' et '${food.id}'`)
+      } else {
+        proprietaireDuSynonyme.set(cle, food.id)
       }
     }
 
@@ -523,7 +595,8 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
       }
     }
 
-    for (const etape of recipe.etapes ?? []) {
+    const etapes = recipe.etapes ?? []
+    for (const etape of etapes) {
       const hits = findBannedTerms(etape.texte)
       if (hits.length > 0) {
         errors.push(`Recette '${recipe.id}', étape ${etape.ordre} : vocabulaire banni détecté (${hits.join(', ')})`)
@@ -533,6 +606,22 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
           errors.push(`Recette '${recipe.id}', étape ${etape.ordre} : geste de lexique inconnu '${code}'`)
         }
       }
+      if (!STEP_NATURES.has(etape.nature ?? 'geste')) {
+        errors.push(
+          `Recette '${recipe.id}', étape ${etape.ordre} : nature '${etape.nature}' inconnue (attendu : geste | avertissement)`
+        )
+      }
+    }
+
+    // Un avertissement AILLEURS QU'EN DERNIERE POSITION casserait le compteur du mode cuisine, qui
+    // annonce « N etapes » en ne comptant que les gestes, puis affiche l'avertissement une fois la
+    // derniere faite. La regle est verifiee sur la POSITION, pas sur `ordre` : elle tient meme si
+    // une recette numerote ses etapes autrement.
+    const premierAvertissement = etapes.findIndex((e) => e?.nature === 'avertissement')
+    if (premierAvertissement !== -1 && premierAvertissement !== etapes.length - 1) {
+      errors.push(
+        `Recette '${recipe.id}', étape ${etapes[premierAvertissement].ordre} : un avertissement doit être la DERNIÈRE étape (docs/CONCEPTION_MODE_CUISINE.md §3)`
+      )
     }
 
     for (const facette of recipe.facettes ?? []) {
@@ -705,6 +794,18 @@ CREATE TABLE food_allergen (
   PRIMARY KEY (food_id, allergen_id)
 );
 
+-- Noms d'usage supplementaires d'un aliment : « lardon » -> porc_poitrine (decision 58, cause 2).
+--
+-- ⚠️ CE N'EST NI UN ALIMENT NI UNE SUBSTITUTION. Un synonyme ne porte ni code CIQUAL, ni
+-- nutriment, ni allergene : il NOMME une ligne de food qui existe deja et garde les siens. Dire
+-- « lardon » ne dit pas « remplace le porc par autre chose », ca dit « c'est le meme produit ».
+-- Une equivalence entre deux aliments differents est un tout autre objet — table substitution.
+CREATE TABLE food_synonym (
+  food_id TEXT NOT NULL REFERENCES food(id),
+  terme TEXT NOT NULL,
+  PRIMARY KEY (food_id, terme)
+);
+
 CREATE TABLE recipe (
   id TEXT PRIMARY KEY,
   nom TEXT NOT NULL,
@@ -756,6 +857,9 @@ CREATE TABLE recipe_step (
   lexicon_ids TEXT NOT NULL,
   timer_s INTEGER,
   timer_type TEXT CHECK (timer_type IN ('cuisson', 'repos') OR timer_type IS NULL),
+  -- Un geste se fait ; un avertissement se lit. Les 18 mentions ANSES / ministere de l'Agriculture
+  -- occupent une ligne d'etape sans en etre une. Voir docs/CONCEPTION_MODE_CUISINE.md §3.
+  nature TEXT NOT NULL DEFAULT 'geste' CHECK (nature IN ('geste', 'avertissement')),
   PRIMARY KEY (recipe_id, ordre)
 );
 
@@ -918,6 +1022,7 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence }, outPath) {
     const insertFoodAllergen = db.prepare(
       'INSERT INTO food_allergen (food_id, allergen_id, certitude) VALUES (?, ?, ?)'
     )
+    const insertFoodSynonym = db.prepare('INSERT INTO food_synonym (food_id, terme) VALUES (?, ?)')
     const nutrientByKey = new Map(NUTRIENTS.map((n) => [n.key, n.id]))
     for (const food of foods) {
       insertFood.run(
@@ -940,6 +1045,9 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence }, outPath) {
       }
       for (const allergene of food.allergenes ?? []) {
         insertFoodAllergen.run(food.id, allergene.code, allergene.certitude)
+      }
+      for (const terme of food.synonymes ?? []) {
+        insertFoodSynonym.run(food.id, terme)
       }
     }
 
@@ -980,8 +1088,8 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence }, outPath) {
       VALUES (?, ?, ?, ?, ?)
     `)
     const insertStep = db.prepare(`
-      INSERT INTO recipe_step (recipe_id, ordre, texte, lexicon_ids, timer_s, timer_type)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO recipe_step (recipe_id, ordre, texte, lexicon_ids, timer_s, timer_type, nature)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `)
     const insertFacet = db.prepare('INSERT INTO recipe_facet (recipe_id, facette, valeur) VALUES (?, ?, ?)')
 
@@ -1029,7 +1137,8 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence }, outPath) {
           etape.texte,
           JSON.stringify(etape.lexicon_ids ?? []),
           etape.timer_s ?? null,
-          etape.timer_type ?? null
+          etape.timer_type ?? null,
+          etape.nature ?? 'geste'
         )
       }
       for (const facette of recipe.facettes ?? []) {
@@ -1147,8 +1256,15 @@ async function main() {
   buildDatabase({ foods, lexicon, recipes, tips, evidence }, OUT_PATH)
 
   const positions = evidence.reduce((total, fiche) => total + (fiche.positions?.length ?? 0), 0)
+  const etapesToutes = recipes.flatMap((r) => r.etapes ?? [])
+  const avertissements = etapesToutes.filter((e) => e?.nature === 'avertissement').length
   console.log(
     `catalog.db généré : ${foods.length} aliments, ${recipes.length} recettes, ${lexicon.length} gestes de lexique, ${tips.length} tips, ${evidence.length} fiches (${positions} positions).`
+  )
+  // Le detail des etapes est sorti a part : c'est le compteur qui rendra visible la montee du
+  // prerequis A (docs/CONCEPTION_MODE_CUISINE.md §2.4), et deja celle de `nature`.
+  console.log(
+    `recipe_step : ${etapesToutes.length} étapes dont ${etapesToutes.length - avertissements} gestes et ${avertissements} avertissements.`
   )
   console.log(`→ ${OUT_PATH}`)
 }

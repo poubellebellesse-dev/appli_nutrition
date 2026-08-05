@@ -98,6 +98,24 @@ export interface Food {
   readonly id: FoodId
   readonly codeCiqual: string
   readonly nom: string
+  /**
+   * Noms d'USAGE supplémentaires du même aliment — « lardon » pour « Porc, poitrine crue »,
+   * « gambas » pour « Crevette, crue ». Vide pour la très grande majorité.
+   *
+   * ⚠️ UN SYNONYME NE CRÉE JAMAIS D'ALIMENT et ne dit PAS qu'on peut remplacer A par B. C'est un
+   * alias de recherche sur CET aliment, qui garde ses propres nutriments et ses propres allergènes
+   * (le garde-fou §5.2 n'est pas traversé : on ne fait que le nommer autrement). Une substitution
+   * est un tout autre objet — voir `Substitution`.
+   *
+   * ⚠️ AUCUNE SOURCE N'EST EXIGÉE, et c'est délibéré. Le critère est « quelqu'un qui a ce produit
+   * dans son panier le désignerait-il par ce mot », pas « une institution l'a écrit » : la
+   * décision 48 a brûlé trois passes de recherche sourcée pour rendre ZÉRO couple en exigeant une
+   * source sur des équivalences culinaires. Ne pas rejouer ça ici.
+   *
+   * Requis, jamais optionnel : un champ optionnel s'omet sans erreur — ni au type, ni au test, ni
+   * à l'écran. C'est le défaut signature de ce projet, quatre occurrences déjà payées.
+   */
+  readonly synonymes: readonly string[]
   readonly groupe: string
   /**
    * Sous-famille facultative — regroupe les aliments qui sont le MÊME produit de base
@@ -288,6 +306,15 @@ export interface RecipeIngredient {
 
 export type TimerType = 'cuisson' | 'repos'
 
+/**
+ * Ce qu'une étape EST, pas ce qu'elle dit (docs/CONCEPTION_MODE_CUISINE.md §3).
+ *
+ * ⚠️ Un `avertissement` ne se fait pas, il se lit : il n'entre dans aucun compteur d'étapes et ne
+ * s'affiche jamais comme une action restante. Il est TOUJOURS la dernière étape — le build refuse
+ * l'inverse, parce qu'un avertissement au milieu casserait la numérotation du mode cuisine.
+ */
+export type StepNature = 'geste' | 'avertissement'
+
 export interface RecipeStep {
   readonly ordre: number
   readonly texte: string
@@ -295,6 +322,7 @@ export interface RecipeStep {
   readonly lexiconIds: readonly string[]
   readonly timerS: number | null
   readonly timerType: TimerType | null
+  readonly nature: StepNature
 }
 
 export type FacetteKind = 'cuisine' | 'regime' | 'occasion' | 'style'

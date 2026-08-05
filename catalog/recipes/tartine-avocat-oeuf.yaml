@@ -81,6 +81,7 @@ etapes:
     timer_type: null
   - ordre: 6
     texte: "L'ANSES recommande aux personnes âgées, aux personnes immunodéprimées, aux jeunes enfants et aux femmes enceintes de ne pas consommer d'œufs crus ou peu cuits."
+    nature: avertissement
     lexicon_ids: []
     timer_s: null
     timer_type: null
