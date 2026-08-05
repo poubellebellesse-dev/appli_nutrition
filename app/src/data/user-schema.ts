@@ -507,7 +507,10 @@ const V8_STATEMENTS: readonly string[] = [
  * aux valeurs CIQUAL dans les mêmes totaux sans marque de provenance (principe 3, traçabilité).
  * N'ajouter cette colonne « puisqu'on y est » rouvrirait la décision en passant.
  */
-const V9_STATEMENTS: readonly string[]
+const V9_STATEMENTS: readonly string[] = [
+  `ALTER TABLE meal_plan_entry
+     ADD COLUMN hors_catalogue TEXT CHECK (recipe_id IS NULL OR hors_catalogue IS NULL)`,
+]
 
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
