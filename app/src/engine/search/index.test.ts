@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { makeCatalog, makeRecipe } from '../selection/test-fixtures.js'
-import { construireIndex, filtrerRecettes, type CritereRecherche } from './index.js'
+import { chercherParNom, construireIndex, filtrerRecettes, type CritereRecherche } from './index.js'
 import type { RecipeId } from '../domain/index.js'
 
 const entree = makeRecipe('entree', { service: 'entree' })
@@ -66,5 +66,108 @@ describe('search/filtrerRecettes — service ET envergure combinés (ET entre ax
 
   it('rend vide quand aucune recette ne satisfait les deux à la fois', () => {
     expect(filtrer({ services: ['entree'], envergures: ['fete'] })).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// `chercherParNom` — décision 58. Les fixtures reprennent les NOMS ÉDITORIAUX RÉELS du catalogue :
+// c'est leur forme (« Coquille Saint-Jacques, crue », « Œuf de poule, entier, cru ») qui a fait
+// échouer la recherche par sous-chaîne, pas un cas inventé pour le test.
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+
+const CATALOGUE_REEL = [
+  { nom: 'Tomate, crue' },
+  { nom: 'Tomate cerise, crue' },
+  { nom: 'Concentré de tomate' },
+  { nom: 'Sauce soja' },
+  { nom: 'Coquille Saint-Jacques, crue' },
+  { nom: 'Noix, cerneau' },
+  { nom: 'Blanc de poulet, cru' },
+  { nom: 'Œuf de poule, entier, cru' },
+  { nom: 'Riz blanc, cru' },
+  { nom: 'Farine de riz' },
+  { nom: 'Maïs doux, en conserve' },
+]
+
+const noms = (saisie: string, limite = 6): readonly string[] =>
+  chercherParNom(CATALOGUE_REEL, saisie, limite).map((e) => e.nom)
+
+describe('search/chercherParNom — ce que la sous-chaîne seule ne trouvait pas', () => {
+  it('une saisie PLUS LONGUE que le nom trouve quand même — le cas qui rendait une liste vide', () => {
+    // « noix de saint-jacques » n'est pas une sous-chaîne de « Coquille Saint-Jacques, crue ».
+    expect(noms('noix de saint-jacques')[0]).toBe('Coquille Saint-Jacques, crue')
+  })
+
+  it('un pluriel trouve le singulier — on tape ce qu’on a rapporté, pas le nom de la fiche', () => {
+    expect(noms('tomates')).toContain('Tomate, crue')
+  })
+
+  it('l’ordre des mots n’a pas à être celui du nom éditorial', () => {
+    expect(noms('poulet blanc')).toContain('Blanc de poulet, cru')
+  })
+
+  it('rend vide quand l’aliment est vraiment absent — on ne rapproche pas à tout prix', () => {
+    expect(noms('coppa')).toEqual([])
+  })
+})
+
+describe('search/chercherParNom — le littéral passe devant l’approximatif', () => {
+  it('une sous-chaîne exacte est classée avant un appariement par mots', () => {
+    const resultat = noms('tomate')
+    expect(resultat[0]).toBe('Tomate, crue')
+    expect(resultat).not.toContain('Sauce soja')
+  })
+
+  it('le rang permissif ne s’invite PAS quand le littéral a rempli la liste', () => {
+    // « tomate cerise » est une sous-chaîne d’un seul nom. Une place, une réponse : les entrées qui
+    // ne partagent que « tomate » restent dehors.
+    expect(noms('tomate cerise', 1)).toEqual(['Tomate cerise, crue'])
+  })
+
+  it('… et complète bien dès qu’il reste de la place, sans jamais passer devant', () => {
+    const resultat = noms('tomate cerise', 3)
+    expect(resultat[0]).toBe('Tomate cerise, crue')
+    expect(resultat).toHaveLength(3)
+  })
+
+  it('un mot long l’emporte sur un mot court, plus discriminant à saisie égale', () => {
+    // « tomate » (6 lettres) pèse plus que « sauce » (5) : la tomate passe devant la sauce soja.
+    const resultat = noms('sauce tomate')
+    expect(resultat.indexOf('Tomate, crue')).toBeLessThan(resultat.indexOf('Sauce soja'))
+  })
+
+  it('respecte la limite demandée', () => {
+    expect(noms('tomate', 2)).toHaveLength(2)
+  })
+
+  it('un nom qui COMMENCE par la saisie passe devant un nom qui la porte au milieu', () => {
+    // Verrouille le départage par POSITION. Sur la seule longueur du nom, « Farine de riz » (13)
+    // passait devant « Riz blanc, cru » (14) : taper « riz » rendait de la farine.
+    expect(noms('riz')[0]).toBe('Riz blanc, cru')
+  })
+})
+
+describe('search/chercherParNom — les pièges de la normalisation française', () => {
+  it('« oeuf » trouve « Œuf » — la ligature, que NFD ne décompose PAS', () => {
+    expect(noms('oeuf')).toContain('Œuf de poule, entier, cru')
+  })
+
+  it('un mot court finissant par -s n’est pas amputé : « riz » reste « riz »', () => {
+    expect(noms('riz')).toContain('Riz blanc, cru')
+  })
+
+  it('le pluriel grossier est SYMÉTRIQUE, donc inoffensif : « mais » trouve « Maïs »', () => {
+    expect(noms('mais')).toContain('Maïs doux, en conserve')
+  })
+
+  it('un mot vide seul ne rapproche rien — sinon « de » rendrait la moitié du catalogue', () => {
+    expect(noms('de')).toEqual([])
+  })
+})
+
+describe('search/chercherParNom — ordre total', () => {
+  it('l’ordre ne dépend pas de celui de la source : deux sources permutées rendent le même ordre', () => {
+    const inverse = [...CATALOGUE_REEL].reverse()
+    expect(chercherParNom(inverse, 'tomate', 6).map((e) => e.nom)).toEqual(noms('tomate'))
   })
 })

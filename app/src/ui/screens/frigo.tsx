@@ -23,7 +23,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Catalog, FacetteKind, FoodId, RecipeId } from '../../engine/domain/index.js'
 import type { Engine, PantryMatch, PantryResult } from '../../engine/api/index.js'
-import { normaliser } from '../../engine/search/index.js'
+import { chercherParNom, normaliser } from '../../engine/search/index.js'
 import { readPantryEntries, readUserState, writePantry } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import { hashDe, hashDeRecette } from '../router.js'
@@ -377,6 +377,11 @@ export function Frigo() {
  * récupérer le `FoodId` choisi, pas un texte. Un `<datalist>` ne rend que la chaîne saisie, et
  * retrouver l'aliment par son nom réintroduirait une correspondance approximative là où on a déjà
  * l'identifiant.
+ *
+ * ⚠️ L'APPARIEMENT VIT DANS LE MOTEUR (`chercherParNom`), PAS ICI. C'était une sous-chaîne écrite sur
+ * place, et elle rendait une liste VIDE dès que la saisie était plus longue que le nom éditorial —
+ * « noix de saint-jacques » ne trouvait pas « Coquille Saint-Jacques », pourtant au catalogue.
+ * Sur cet écran une liste vide se lit « cet aliment n'existe pas » (décision 58).
  */
 function Recherche({
   catalogue,
@@ -392,11 +397,9 @@ function Recherche({
   readonly onChoisir: (foodId: FoodId) => void
 }) {
   const propositions = useMemo(() => {
-    const cherche = normaliser(valeur.trim())
-    if (cherche.length < 2) return []
-    return [...catalogue.foods.values()]
-      .filter((aliment) => !deja.includes(aliment.id) && normaliser(aliment.nom).includes(cherche))
-      .slice(0, 6)
+    if (normaliser(valeur.trim()).length < 2) return []
+    const candidats = [...catalogue.foods.values()].filter((aliment) => !deja.includes(aliment.id))
+    return chercherParNom(candidats, valeur, 6)
   }, [catalogue, valeur, deja])
 
   return (
