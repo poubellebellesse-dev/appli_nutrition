@@ -19,7 +19,7 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
 
 **Suite réexécutée le 2026-08-06, après les lots « sauvegarde » et « unités d'achat »** : `npm test`
 → **1 556 passed (85 fichiers)** en 44,8 s · `npm run typecheck` propre · `npx vite build` ✓ ·
-`npm run engine:plan-stress` → **20/20** · `node catalog/build.mjs` → **450 aliments, 266 recettes,
+`npm run engine:plan-stress` → **20/20** · `node catalog/build.mjs` → **450 aliments, 282 recettes,
 62 gestes, 73 tips, 8 fiches**.
 ⚠️ Ces nombres bougent à chaque commit : **la sortie réelle fait foi, jamais cette ligne.**
 
@@ -31,18 +31,19 @@ qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
 suivant. Au **2026-08-06**, `main` porte les trois pistes du 2026-08-05 : « gardes & décisions »,
 « recherche d'aliments » et **le mode cuisine** (`2c10db4`, L0 + L1).
 
-⛔ **DEUX CHANTIERS SONT EN VOL DANS L'ARBRE DE TRAVAIL AU 2026-08-06, NON COMMITÉS, ET ILS NE SE
-RECOUVRENT PAS.** (a) **La sauvegarde (décision 59) et les unités d'achat (décision 41)** —
-`app/src/ui/sauvegarde.ts`, `quantites.ts`, `user-source.ts`, `socle.ts`, `main.tsx`,
-`parametres.tsx`, `screens/courses.tsx`, `test-socle.ts`, `data/user-store.ts` et leurs tests.
-(b) **Un lot de contenu ET d'écran côté utilisateur** — `catalog/build.mjs`, `build.test.ts`,
-`foods.yaml`, des recettes d'accompagnement non suivies (le catalogue est passé de 241 à
-**266 recettes**), plus `router.tsx`, `cuisine.tsx`, `detail-recette.tsx` et le nouveau
-`ui/ingredients-recette.tsx`.
+✅ **TOUT EST COMMITÉ AU 2026-08-06 — `main` est en avance de 3 commits, RIEN N'EST EN VOL.**
+`b16b16e` mode cuisine + 41 accompagnements (piste parallèle) · `1a79159` sauvegarde (décision 59) ·
+`04e2b92` unités d'achat (décision 41). **Reste à POUSSER** — Claude committe, l'utilisateur pousse.
 
-⚠️ **LES DEUX PISTES SE CROISENT SUR CINQ FICHIERS** (`main.tsx`, `user-store.ts`, `user-schema.ts`,
-`test-socle.ts`, `quantites.ts` via son nouvel appelant `ingredients-recette.tsx`). Rien n'a été perdu
-— vérifié — mais c'est exactement la configuration qui a poussé `main` rouge le 2026-08-05.
+⛔ **DEUX PISTES ONT ÉCRIT EN MÊME TEMPS, ET LE DÉCOUPAGE A FAILLI COÛTER CHER.** Elles se croisaient
+sur quatre fichiers (`main.tsx`, `user-store.ts`, `ETAT.md`, `ARCHITECTURE.md`). Découper l'index par
+hunks avec **`git apply --unidiff-zero` a produit un commit qui NE COMPILAIT PAS** : sans contexte,
+git pose les hunks aux numéros de ligne littéraux, et retirer un hunk décale tous les suivants —
+`user-store.ts` est ressorti syntaxiquement invalide. **C'est la vérification sur le commit qui l'a
+attrapé, pas la relecture.** Méthode saine, à réemployer : ne pas sélectionner les hunks à garder,
+mais **retirer les siens du fichier complet** (`git apply --reverse` avec contexte 3), indexer, puis
+restaurer l'arbre. ⚠️ **Et deux hunks distants de moins de 3 lignes sont INSÉPARABLES** — les
+décisions 59 et 60 d'`ETAT.md` sont dans ce cas, d'où le fichier parti en entier avec `04e2b92`.
 
 ⛔ **TROIS EXÉCUTIONS DE `npm test` ONT ROUGI PENDANT CETTE SESSION, POUR DEUX CAUSES DISTINCTES.**
 Deux ont attrapé le lot (b) **à mi-écriture** (geste de lexique introuvable, collision de nom de
@@ -51,6 +52,12 @@ avec une durée totale passée de 38 s à 64 s : de la **contention machine**, d
 même temps. **Aucune n'était une régression** — isolation verte, puis suite complète verte
 (1 556 passed). ⚠️ **Ne pas conclure « flaky » sans faire cette vérification** : les deux premières
 n'étaient PAS du flaky, elles lisaient un dépôt incohérent.
+
+✅ **Vérifié SUR LE COMMIT le 2026-08-06, les TROIS, dans un worktree isolé** (jonction
+`node_modules`, catalogue rebâti à chaque fois) : `b16b16e` → **1 512 passed (84 fichiers)** ·
+`1a79159` → **1 546 passed** · `04e2b92` → **1 556 passed (85 fichiers)**, typecheck propre,
+`vite build` ✓, `engine:plan-stress` **20/20**, `catalog/build.mjs` → **450 aliments, 282 recettes**.
+**Aucun commit intermédiaire n'est rouge** — c'est ce contrôle-là qui a rattrapé le découpage raté.
 
 ✅ **Vérifié SUR LE COMMIT, pas sur l'arbre de travail** — `2c10db4` sorti dans un worktree isolé,
 catalogue rebâti, puis `vitest` / `tsc` / `vite build` : **1 492 passed (84 fichiers)**, typecheck

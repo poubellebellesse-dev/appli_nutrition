@@ -47,6 +47,20 @@
   l'écran, parce que les deux portaient sur l'arbre. → **vérifier le COMMIT lui-même**
   (`git worktree add --detach .verif <sha>`, puis `node catalog/build.mjs` et les quatre commandes
   dedans), pas l'arbre dont il est censé sortir.
+- ⛔ **`git apply --unidiff-zero` POSE LES HUNKS AUX NUMÉROS DE LIGNE LITTÉRAUX.** Payé le
+  2026-08-06, en séparant deux pistes qui avaient édité les mêmes fichiers. Sans contexte, git n'a
+  **rien à quoi reconnaître l'emplacement** : il applique où le patch le dit. Or retirer un hunk
+  décale tous les suivants — mes 48 lignes retirées de `user-store.ts` ont fait atterrir les quatre
+  hunks de l'autre piste 48 lignes trop bas, et le fichier est ressorti **syntaxiquement invalide**.
+  `git apply` n'a pas bronché, `git diff --cached` avait l'air juste, et le commit ne compilait pas.
+  ⚠️ **Le contexte 0 était pourtant NÉCESSAIRE pour sélectionner** : avec le contexte par défaut,
+  deux hunks distants de moins de 3 lignes FUSIONNENT — les décisions 59 et 60 d'`ETAT.md` sont à
+  2 lignes l'une de l'autre, donc inséparables. Les deux contraintes se contredisent.
+  → **Ne pas SÉLECTIONNER les hunks à garder ; RETIRER les siens du fichier complet** :
+  `git apply --reverse` avec contexte 3 (git retrouve l'emplacement par le texte, le décalage ne
+  compte plus), `git add`, puis restaurer l'arbre depuis une copie. Et pour un fichier dont les
+  hunks sont inséparables — un document, jamais du code — l'envoyer **entier** dans l'un des deux
+  commits, en le disant dans le message.
 - ⚠️ **Un arbre neuf n'a pas de `catalog.db`** : il est gitignoré. Une suite lancée dans un worktree
   frais rend ~168 échecs « unable to open database file » qui ne sont **pas** des régressions. Faire
   `node catalog/build.mjs` d'abord, sinon on diagnostique un fantôme.
