@@ -573,6 +573,53 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
     // de docs/ENGINE.md §6.5 précision 3 : exclu du calcul de saison.
   }
 
+  // --- Origine animale : le champ doit être REMPLI partout où un allergène le prouve ---
+  //
+  // ⛔ DÉFAUT TROUVÉ LE 2026-08-06, SUR LA COUCHE 🔒 CRITIQUE `regime`. Dix aliments — dont
+  // `nuoc_mam` (sauce de POISSON), `lait_ecreme`, `mayonnaise`, `pesto`, `ossau_iraty` — n'avaient
+  // ni `origine_animale` ni `derive_de`. `resolveAnimalOrigin` rendait donc `null` et
+  // `regimeExigePar` les déclarait VÉGÉTALIENS. Aucune recette du catalogue ne les employait, mais
+  // `regimeExigeParIngredients` est du code de PRODUCTION pour les recettes composées par
+  // l'utilisateur (voir l'en-tête de engine/selection/regime.ts) : un plat au nuoc-mâm aurait été
+  // proposé à un végétalien.
+  //
+  // ⚠️ POURQUOI AUCUN TEST NE POUVAIT LE VOIR, et c'est la vraie leçon.
+  // `tests/regime-coherence.test.ts` confronte l'étiquette écrite à la main à `regimeExigePar` —
+  // qui lit LE MÊME champ manquant. Quand l'origine est absente, les deux côtés répondent
+  // « vegetalien » et le test reste vert. Un oracle qui partage la donnée du sujet qu'il vérifie
+  // ne vérifie rien. C'est le défaut signature du projet (« un champ déclaré n'est pas un champ
+  // rempli ») transposé à l'ORACLE.
+  //
+  // La règle ci-dessous ne partage pas cette donnée : elle confronte l'origine à l'ALLERGÈNE, qui
+  // est écrit indépendamment. `certitude` fait le départ, et c'est elle qui rend la règle sûre
+  // sans liste d'exemptions : les algues (`nori`, `wakame`) déclarent `crustaces` en TRACES —
+  // contamination à la récolte, pas un ingrédient — et restent végétaliennes, tout comme
+  // `chocolat_noir` avec ses traces de lait. Une exemption écrite à la main aurait pourri ; la
+  // certitude, elle, est déjà relue pour d'autres raisons.
+  const ALLERGENES_STRICTEMENT_ANIMAUX = new Set(['lait', 'oeufs', 'poissons', 'crustaces', 'mollusques'])
+  const foodsParId = new Map(foods.filter((f) => f?.id).map((f) => [f.id, f]))
+  /** Miroir de `resolveAnimalOrigin` (engine/domain/) : remonte la chaîne `derive_de`. */
+  const origineAnimaleResolue = (food, vus = new Set()) => {
+    if (!food || vus.has(food.id)) return null
+    vus.add(food.id)
+    if (food.origine_animale) return food.origine_animale
+    if (food.derive_de) return origineAnimaleResolue(foodsParId.get(food.derive_de), vus)
+    return null
+  }
+  for (const food of foods) {
+    if (!food?.id) continue
+    if (origineAnimaleResolue(food) !== null) continue
+    for (const allergene of food.allergenes ?? []) {
+      if (!ALLERGENES_STRICTEMENT_ANIMAUX.has(allergene.code)) continue
+      if (allergene.certitude !== 'contient') continue
+      errors.push(
+        `Aliment '${food.id}' : contient l'allergène '${allergene.code}', d'origine strictement ` +
+          'animale, mais aucune origine ne se résout — ni `origine_animale`, ni la chaîne ' +
+          '`derive_de`. La couche `regime` le déclarerait VÉGÉTALIEN (docs/ARCHITECTURE.md §5.2)'
+      )
+    }
+  }
+
   // --- Lexique ---
   const lexiconCodes = new Set()
   for (const entry of lexicon) {

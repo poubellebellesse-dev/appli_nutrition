@@ -31,7 +31,7 @@ import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.
 import type { OrigineRecette } from '../router.js'
 import { hashDe, hashDeLEditeur, hashDeLaCuisine, hashDuFrigo } from '../router.js'
 import { estRecettePerso, readUserRecipe } from '../../data/user-recipe.js'
-import { quantiteAffichee } from '../quantites.js'
+import { ListeIngredients, SelecteurPortions } from '../ingredients-recette.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
 
@@ -288,48 +288,31 @@ export function DetailRecette({
       />
 
       <h2 className="mt-8 text-[1.5rem] text-texte">Ingrédients</h2>
-      <ul className="mt-3 space-y-1">
-        {recette.ingredients.map((ingredient) => {
-          const foodId = ingredient.foodId as string
-          const quantite = quantiteAffichee({
-            libelle: ingredient.uniteAffichage,
-            facteur,
-            fondDePlacard: vue.estFondDePlacard(foodId),
-            grammes: quantites.get(foodId) ?? ingredient.quantiteG,
-          })
-          return (
-            <li key={foodId} className="flex flex-wrap items-baseline gap-x-2 py-1 text-[1.08rem] text-texte">
-              {/* Le LIBELLÉ est mis à l'échelle, pas converti en grammes : il porte déjà la bonne
-                  unité (pièces, cuillères, centilitres), que le catalogue, lui, ignore. Voir
-                  ui/quantites.ts pour la règle et ses limites. */}
-              <span className="tabular-nums text-texte-doux">{quantite.texte}</span>
-              <span>{vue.nomAliment(foodId)}</span>
-              {ingredient.optionnel && <span className="text-[0.9rem] text-attenue">(facultatif)</span>}
-              {/* Dire QUAND une quantité ne suit pas les portions, sinon on croit à un bug — c'est
-                  précisément ce qui a été signalé quand tout partait en grammes. */}
-              {quantite.fige && (
-                <span className="text-[0.85rem] text-attenue">· quantité au goût, non ajustée</span>
-              )}
-              {/* « Absents du garde-manger signalés DISCRÈTEMENT » (§4.6) : une mention, pas un
-                  avertissement — ne rien avoir chez soi est le cas normal, pas un problème.
-                  ⚠️ SEULEMENT SI LE GARDE-MANGER EST RENSEIGNÉ. Sans ce test, un garde-manger vide
-                  — le cas de presque tout le monde — marquait CHAQUE ligne « à acheter », ce qui
-                  n'informe plus de rien et noie la liste. */}
-              {vue.gardeManger && vue.manquants.has(foodId) && (
-                <span className="text-[0.85rem] text-attenue">· à acheter</span>
-              )}
-            </li>
-          )
-        })}
-      </ul>
+      {/* ⚠️ `manquants` À `null` QUAND LE GARDE-MANGER EST VIDE, et ce n'est pas un raccourci. Sans
+          ce test, un garde-manger vide — le cas de presque tout le monde — marquait CHAQUE ligne
+          « à acheter », ce qui n'informe plus de rien et noie la liste. */}
+      <ListeIngredients
+        ingredients={recette.ingredients}
+        quantites={quantites}
+        facteur={facteur}
+        nomAliment={vue.nomAliment}
+        estFondDePlacard={vue.estFondDePlacard}
+        manquants={vue.gardeManger ? vue.manquants : null}
+      />
 
       <h2 className="mt-8 text-[1.5rem] text-texte">Préparation</h2>
 
       {/* L'entrée du mode cuisine (§5bis). Ici et pas en tête de fiche : on le lance au moment de
-          se mettre aux fourneaux, après avoir lu les ingrédients. */}
+          se mettre aux fourneaux, après avoir lu les ingrédients.
+
+          ⚠️ LES PORTIONS RÉGLÉES ICI VOYAGENT AVEC LE LIEN. Sans elles, régler 6 portions puis
+          appuyer sur ce bouton rouvrait la recette à 4 : l'état React de cette fiche meurt au
+          démontage, et un hash ne transporte qu'un identifiant. Le mode cuisine les recopie ensuite
+          dans sa session (v11), où elles survivent à la fermeture — ce lien ne sert qu'au premier
+          lancement, jamais à la reprise. */}
       {recette.etapes.some((e) => e.nature === 'geste') && (
         <a
-          href={hashDeLaCuisine(recette.id)}
+          href={hashDeLaCuisine(recette.id, portionsAffichees)}
           className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] bg-accent-plein px-4 text-[1.08rem] font-semibold text-white"
         >
           Cuisiner pas à pas
@@ -493,53 +476,6 @@ function Origines({ recette }: { readonly recette: Recipe }) {
         )
       })}
     </p>
-  )
-}
-
-/**
- * Sélecteur de portions qui recalcule EN DIRECT (§4.6).
- *
- * ⚠️ Ce n'est pas le même réglage que `convives` de l'écran Semaine ni que `facteurPortion` du
- * profil. Ici on demande « pour combien de personnes je cuisine CE plat, maintenant » — un ajustement
- * ponctuel de lecture, qui n'est pas persisté et n'influence aucune suggestion.
- */
-function SelecteurPortions({
-  portions,
-  base,
-  onChange,
-}: {
-  readonly portions: number
-  readonly base: number
-  readonly onChange: (portions: number) => void
-}) {
-  return (
-    <div className="mt-6 flex items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface p-3">
-      <span className="text-[1.05rem] text-texte-doux">Pour</span>
-      <button
-        type="button"
-        onClick={() => onChange(Math.max(1, portions - 1))}
-        disabled={portions <= 1}
-        aria-label="Une portion de moins"
-        className="flex min-h-tactile w-12 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-[1.4rem] text-texte disabled:opacity-40"
-      >
-        −
-      </button>
-      <span className="min-w-[3ch] text-center text-[1.5rem] font-semibold tabular-nums text-texte">
-        {portions}
-      </span>
-      <button
-        type="button"
-        onClick={() => onChange(portions + 1)}
-        aria-label="Une portion de plus"
-        className="flex min-h-tactile w-12 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-[1.4rem] text-texte"
-      >
-        +
-      </button>
-      <span className="text-[1.05rem] text-texte-doux">
-        portion{portions > 1 ? 's' : ''}
-        {portions !== base && <span className="text-attenue"> (recette pour {base})</span>}
-      </span>
-    </div>
   )
 }
 

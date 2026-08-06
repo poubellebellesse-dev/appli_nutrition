@@ -1,0 +1,73 @@
+id: porridge_quinoa_banane_cacao
+nom: "Porridge de quinoa à la banane et au cacao"
+origine: maison
+description: >
+  Du quinoa cuit dans une boisson de soja avec du cacao en poudre, écrasé de
+  rondelles de banane et d'un filet de sirop d'érable.
+temps_prep_min: 8
+temps_cuisson_min: 18
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.5
+  leger_consistant: 0.2
+  chaud_froid: 0.7
+  texture: creme
+
+ingredients:
+  - food_id: quinoa
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: boisson_soja
+    quantite_g: 600
+    unite_affichage: "60 cl"
+    optionnel: false
+  - food_id: banane
+    quantite_g: 240
+    unite_affichage: "2 bananes"
+    optionnel: false
+  - food_id: cacao_poudre
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: sirop_erable
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le quinoa jusqu'à ce que l'eau soit claire."
+    lexicon_ids: [rincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser le quinoa et la boisson de soja dans une casserole, porter à frémissement."
+    lexicon_ids: [fremir]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Incorporer le cacao en poudre et laisser mijoter jusqu'à absorption du liquide."
+    lexicon_ids: [incorporer, mijoter]
+    timer_s: 1080
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Répartir dans les bols, garnir de rondelles de banane et arroser de sirop d'érable."
+    lexicon_ids: [dresser, arroser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: gourmand

@@ -1,0 +1,77 @@
+id: riz_pilaf_oignon_persil
+nom: "Riz pilaf à l'oignon et au persil"
+origine: maison
+description: >
+  Du riz doré à l'huile d'olive avec de l'oignon fondu, cuit dans un bouillon de légumes
+  et parsemé de persil ciselé au moment de servir.
+temps_prep_min: 10
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.2
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: riz_blanc
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 120
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et le faire suer dans l'huile d'olive jusqu'à ce qu'il devienne translucide."
+    lexicon_ids: [emincer, suer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ajouter le riz et le remuer pour l'enrober d'huile jusqu'à ce qu'il devienne nacré."
+    lexicon_ids: [sauter]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Mouiller avec le bouillon et laisser cuire à couvert jusqu'à absorption complète du liquide."
+    lexicon_ids: [mouiller]
+    timer_s: 1080
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ciseler le persil et le parsemer sur le riz avant de servir."
+    lexicon_ids: [ciseler, parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

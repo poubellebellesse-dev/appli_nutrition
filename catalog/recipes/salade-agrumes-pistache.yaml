@@ -1,0 +1,77 @@
+id: salade_agrumes_pistache
+nom: "Salade d'agrumes aux pistaches et à la menthe"
+origine: maison
+description: >
+  Des quartiers d'orange, de pamplemousse et de clémentine, servis froids avec
+  un filet de sirop d'agave, des pistaches concassées et des feuilles de menthe.
+temps_prep_min: 15
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.5
+  leger_consistant: -0.6
+  chaud_froid: -0.6
+  texture: fondant
+
+ingredients:
+  - food_id: orange
+    quantite_g: 400
+    unite_affichage: "3 oranges"
+    optionnel: false
+  - food_id: pamplemousse
+    quantite_g: 300
+    unite_affichage: "1 pamplemousse"
+    optionnel: false
+  - food_id: clementine
+    quantite_g: 200
+    unite_affichage: "4 clémentines"
+    optionnel: false
+  - food_id: pistache
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 5
+    unite_affichage: "quelques feuilles"
+    optionnel: true
+  - food_id: sirop_agave
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les oranges, le pamplemousse et les clémentines à vif."
+    lexicon_ids: [eplucher]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Détailler les fruits en quartiers et les disposer dans un saladier."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Arroser de sirop d'agave et ciseler les feuilles de menthe par-dessus."
+    lexicon_ids: [arroser, ciseler]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Parsemer de pistaches concassées et réserver au frais avant de servir."
+    lexicon_ids: [parsemer, reserver]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

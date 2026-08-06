@@ -1,0 +1,90 @@
+id: tempeh_saute_legumes_gingembre
+nom: "Tempeh sauté aux légumes et au gingembre"
+origine: maison
+description: >
+  Du tempeh doré à la poêle avec brocoli, carotte et pousses de soja, relevé de
+  gingembre frais et d'huile de sésame.
+temps_prep_min: 15
+temps_cuisson_min: 20
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.4
+  chaud_froid: 0.6
+  texture: ferme
+
+ingredients:
+  - food_id: tempeh
+    quantite_g: 550
+    unite_affichage: "550 g"
+    optionnel: false
+  - food_id: brocoli
+    quantite_g: 300
+    unite_affichage: "1 brocoli"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 200
+    unite_affichage: "2 carottes"
+    optionnel: false
+  - food_id: pousse_soja
+    quantite_g: 150
+    unite_affichage: "1 sachet"
+    optionnel: false
+  - food_id: gingembre_frais
+    quantite_g: 12
+    unite_affichage: "1 morceau de 3 cm"
+    optionnel: false
+  - food_id: huile_sesame
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_colza
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Détailler le tempeh en tranches, râper le gingembre et couper les carottes et le brocoli en petits morceaux."
+    lexicon_ids: [tailler_des, raper]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Saisir le tempeh dans l'huile de colza jusqu'à ce qu'il soit doré des deux côtés, puis réserver."
+    lexicon_ids: [saisir, dorer, reserver]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire sauter le brocoli et la carotte dans l'huile de sésame avec le gingembre."
+    lexicon_ids: [sauter]
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter les pousses de soja et le tempeh, mélanger et chauffer encore quelques minutes."
+    lexicon_ids: [sauter]
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Saler et servir bien chaud."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: asiatique
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: rapide

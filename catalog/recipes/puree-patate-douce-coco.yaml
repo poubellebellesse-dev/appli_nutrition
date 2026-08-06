@@ -1,0 +1,67 @@
+id: puree_patate_douce_coco
+nom: "Purée de patate douce au lait de coco"
+origine: maison
+description: >
+  Une purée de patate douce cuite à l'eau puis écrasée avec du lait de coco et une pointe de muscade.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.2
+  leger_consistant: 0.5
+  chaud_froid: 0.8
+  texture: creme
+
+ingredients:
+  - food_id: patate_douce
+    quantite_g: 800
+    unite_affichage: "2 grosses patates douces"
+    optionnel: false
+  - food_id: lait_coco
+    quantite_g: 200
+    unite_affichage: "2/3 de boîte"
+    optionnel: false
+  - food_id: muscade
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les patates douces et les couper en morceaux réguliers."
+    lexicon_ids: [eplucher, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Cuire les morceaux à l'eau bouillante jusqu'à ce qu'ils soient tendres."
+    lexicon_ids: [pocher]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Égoutter et écraser avec le lait de coco, l'huile, la muscade et le sel jusqu'à obtenir une texture lisse."
+    lexicon_ids: [egoutter, ecraser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

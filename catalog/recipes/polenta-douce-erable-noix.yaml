@@ -1,0 +1,73 @@
+id: polenta_douce_erable_noix
+nom: "Polenta douce au sirop d'érable et aux noix"
+origine: maison
+description: >
+  Une polenta cuite dans une boisson à l'amande, sucrée au sirop d'érable et
+  parsemée de noix concassées et d'une pointe de cannelle.
+temps_prep_min: 5
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.6
+  leger_consistant: 0.3
+  chaud_froid: 0.7
+  texture: creme
+
+ingredients:
+  - food_id: polenta
+    quantite_g: 160
+    unite_affichage: "160 g"
+    optionnel: false
+  - food_id: boisson_amande
+    quantite_g: 700
+    unite_affichage: "70 cl"
+    optionnel: false
+  - food_id: sirop_erable
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Porter la boisson à l'amande à frémissement dans une casserole."
+    lexicon_ids: [fremir]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser la polenta en pluie tout en fouettant pour éviter les grumeaux."
+    lexicon_ids: [fouetter]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Laisser cuire à feu doux en remuant jusqu'à ce que la polenta épaississe."
+    lexicon_ids: [reduire]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Incorporer le sirop d'érable, répartir dans les bols et parsemer de noix concassées et de cannelle."
+    lexicon_ids: [incorporer, parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

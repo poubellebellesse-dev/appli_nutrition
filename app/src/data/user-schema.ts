@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 10
+export const USER_SCHEMA_VERSION = 11
 
 export interface Migration {
   readonly version: number
@@ -559,6 +559,28 @@ const V10_STATEMENTS: readonly string[] = [
    )`,
 ]
 
+/**
+ * v11 — LES PORTIONS SUIVENT LA CUISSON.
+ *
+ * Régler 6 portions sur la fiche puis lancer le mode cuisine rouvrait le plat à 4 : l'état React de
+ * la fiche meurt au démontage, un hash ne transporte qu'un identifiant, et la session v10 n'avait
+ * pas de colonne où poser la valeur. On redemandait donc la même chose deux fois, la seconde les
+ * mains dans la farine.
+ *
+ * ⚠️ NULLABLE, ET C'EST LE SENS DE LA COLONNE. `NULL` = « aucun choix exprimé », pas « 4 » : c'est
+ * l'état des sessions ouvertes AVANT cette migration, et celui d'une reprise dont le lien ne porte
+ * rien. L'écran retombe alors sur le `portionsBase` de la recette. Écrire un nombre par défaut ici
+ * aurait inventé un choix que personne n'a fait — et un `ALTER TABLE … NOT NULL` l'aurait exigé,
+ * puisque SQLite réclame une valeur par défaut, forcément la même pour toutes les recettes.
+ *
+ * Le `CHECK` refuse 0 et le négatif : `portions = 0` ferait disparaître la recette de sa propre
+ * mise à l'échelle. Le routeur filtre déjà (`portionsDepuisRequete`), la base ne s'en remet pas à lui.
+ */
+const V11_STATEMENTS: readonly string[] = [
+  `ALTER TABLE user_cuisine_session
+     ADD COLUMN portions INTEGER CHECK (portions IS NULL OR portions >= 1)`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -570,6 +592,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 8, statements: V8_STATEMENTS },
   { version: 9, statements: V9_STATEMENTS },
   { version: 10, statements: V10_STATEMENTS },
+  { version: 11, statements: V11_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

@@ -1,0 +1,72 @@
+id: polenta_cremeuse_romarin
+nom: "Polenta crémeuse au romarin"
+origine: maison
+description: >
+  De la semoule de maïs cuite lentement dans un bouillon de légumes à l'huile d'olive,
+  parfumée au romarin, jusqu'à obtenir une texture onctueuse.
+temps_prep_min: 5
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.1
+  chaud_froid: 0.7
+  texture: creme
+
+ingredients:
+  - food_id: polenta
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 12
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: romarin_seche
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Porter le bouillon à frémissement et y verser la polenta en pluie, sans cesser de fouetter."
+    lexicon_ids: [fremir, fouetter]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Laisser mijoter à feu doux en remuant régulièrement, jusqu'à ce que la polenta épaississe."
+    lexicon_ids: [mijoter]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Incorporer l'huile d'olive et le romarin, saler et poivrer, puis dresser aussitôt."
+    lexicon_ids: [incorporer, dresser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: reconfortant

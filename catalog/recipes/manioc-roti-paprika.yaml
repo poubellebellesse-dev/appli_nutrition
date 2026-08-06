@@ -1,0 +1,82 @@
+id: manioc_roti_paprika
+nom: "Manioc rôti au paprika"
+origine: maison
+description: >
+  Des bâtonnets de manioc cuits à l'eau puis passés au four jusqu'à ce qu'ils dorent, relevés
+  de paprika et d'ail.
+temps_prep_min: 15
+temps_cuisson_min: 40
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.5
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: manioc
+    quantite_g: 800
+    unite_affichage: "800 g"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: paprika
+    quantite_g: 5
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: coriandre_fraiche
+    quantite_g: 8
+    unite_affichage: "quelques brins"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher le manioc, retirer la fibre centrale et le détailler en bâtonnets réguliers."
+    lexicon_ids: [eplucher, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Le cuire à l'eau salée jusqu'à ce qu'une pointe de couteau entre sans résistance, puis l'égoutter."
+    lexicon_ids: [egoutter]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Préchauffer le four à 220 °C."
+    lexicon_ids: [prechauffer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mélanger les bâtonnets avec l'huile, le paprika et l'ail écrasé, les étaler en une seule couche et enfourner jusqu'à ce qu'ils dorent."
+    lexicon_ids: [ecraser, etaler, enfourner, dorer]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Saler à la sortie du four et parsemer de coriandre."
+    lexicon_ids: [assaisonner, parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: africaine
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

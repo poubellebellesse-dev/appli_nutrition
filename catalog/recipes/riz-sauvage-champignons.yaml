@@ -1,0 +1,85 @@
+id: riz_sauvage_champignons
+nom: "Riz sauvage aux champignons"
+origine: maison
+description: >
+  Un mélange de riz sauvage et de champignons poêlés à l'échalote, servi chaud à côté d'un plat.
+temps_prep_min: 10
+temps_cuisson_min: 40
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.4
+  chaud_froid: 0.7
+  texture: ferme
+
+ingredients:
+  - food_id: riz_sauvage
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: champignon_paris
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 60
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "au goût"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le riz sauvage à l'eau froide, puis le cuire à grande eau salée jusqu'à ce que les grains s'ouvrent."
+    lexicon_ids: [rincer]
+    timer_s: 2100
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Détailler les champignons en lamelles et ciseler l'échalote."
+    lexicon_ids: [detailler, ciseler]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire sauter les champignons à feu vif dans l'huile d'olive, sans les remuer au début, pour qu'ils dorent au lieu de rendre leur eau."
+    lexicon_ids: [sauter, dorer]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter l'échalote, laisser suer une minute, puis mélanger au riz égoutté."
+    lexicon_ids: [suer, egoutter]
+    timer_s: 60
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Saler, poivrer et parsemer de persil."
+    lexicon_ids: [assaisonner, parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

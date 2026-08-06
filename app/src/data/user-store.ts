@@ -911,6 +911,14 @@ export interface StoredCuisineSession {
   readonly ordreCourant: number
   /** ms epoch. Sert à périmer une session oubliée ; voir `ui/cuisine-session.ts`. */
   readonly ouverteLe: number
+  /**
+   * Portions choisies pour CETTE cuisson (v11), ou `null` = aucun choix exprimé.
+   *
+   * ⚠️ `null` N'EST PAS UNE VALEUR PAR DÉFAUT DÉGUISÉE. C'est l'état d'une session ouverte avant la
+   * v11, ou reprise par un lien qui ne portait rien. L'écran retombe alors sur le `portionsBase` de
+   * la recette — que ce fichier ne connaît pas et n'a pas à connaître.
+   */
+  readonly portions: number | null
   readonly minuteurs: readonly StoredCuisineTimer[]
 }
 
@@ -919,7 +927,8 @@ export function readCuisineSession(db: UserDb): StoredCuisineSession | null {
     readonly recette_id: string
     readonly ordre_courant: number
     readonly ouverte_le: number
-  }>('SELECT recette_id, ordre_courant, ouverte_le FROM user_cuisine_session WHERE id = 1')[0]
+    readonly portions: number | null
+  }>('SELECT recette_id, ordre_courant, ouverte_le, portions FROM user_cuisine_session WHERE id = 1')[0]
   if (!row) return null
 
   const minuteurs = db
@@ -934,6 +943,7 @@ export function readCuisineSession(db: UserDb): StoredCuisineSession | null {
     recetteId: row.recette_id,
     ordreCourant: row.ordre_courant,
     ouverteLe: row.ouverte_le,
+    portions: row.portions,
     minuteurs,
   }
 }
@@ -952,13 +962,14 @@ export function readCuisineSession(db: UserDb): StoredCuisineSession | null {
 export function writeCuisineSession(db: UserDb, session: StoredCuisineSession): void {
   withTransaction(db, () => {
     db.run(
-      `INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le)
-       VALUES (1, ?, ?, ?)
+      `INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le, portions)
+       VALUES (1, ?, ?, ?, ?)
        ON CONFLICT (id) DO UPDATE SET
          recette_id = excluded.recette_id,
          ordre_courant = excluded.ordre_courant,
-         ouverte_le = excluded.ouverte_le`,
-      [session.recetteId, session.ordreCourant, session.ouverteLe]
+         ouverte_le = excluded.ouverte_le,
+         portions = excluded.portions`,
+      [session.recetteId, session.ordreCourant, session.ouverteLe, session.portions]
     )
     db.run('DELETE FROM user_cuisine_timer WHERE session_id = 1')
     for (const t of session.minuteurs) {

@@ -22,8 +22,9 @@ pas en arrière-plan**, et la reprise remplace la notification (§5).
 | Alarme au premier plan | ✅ **fait** (L1) | `ui/alarme.ts` |
 | Reprise d'une cuisson | ✅ **faite** (L1) | schéma **v10**, §4.0 · `ui/reprise-cuisine.tsx` |
 | Notifications programmées | ✅ **mais calibrées pour les repas** | `notifications.ts:78` — `allowWhileIdle`, donc ±9 min en Doze : voir §5 |
-| Lien étape → ingrédient | ❌ **n'existe pas** | prérequis A, §2 |
+| Lien étape → ingrédient | ❌ **n'existe pas** — et **n'est plus bloquant**, voir L1bis | prérequis A, §2 |
 | Distinction geste / avertissement | ✅ **faite le 2026-08-05** (L0) | `recipe_step.nature`, §3 |
+| **Ingrédients et quantités en cuisine** | ✅ **faits le 2026-08-06** (L1bis) | `ui/ingredients-recette.tsx`, schéma **v11** |
 
 **Le fait structurant était : 512 minuteurs payés et invisibles.** C'est ce qui a justifié de livrer
 l'écran avant les prérequis, et non l'inverse (§4). ✅ **Ils sont visibles depuis le 2026-08-05.**
@@ -33,6 +34,24 @@ l'écran avant les prérequis, et non l'inverse (§4). ✅ **Ils sont visibles d
 ## 2. Prérequis A — le lien étape → ingrédient
 
 ### 2.1 Pourquoi la dérivation automatique est écartée
+
+> ⛔ **CE PARAGRAPHE EST INVALIDÉ LE 2026-08-06 — décision 60 d'`ETAT.md` §4.** Il est conservé
+> parce qu'il explique ce qui a été cru et pourquoi ; il ne fait plus autorité. **Deux défauts,
+> indépendants l'un de l'autre :**
+>
+> 1. **Sa prémisse est fausse depuis le 2026-08-05.** « `food` n'a ni synonyme ni alias » — le champ
+>    `synonymes` existe, ajouté par la décision 58 le LENDEMAIN de la rédaction de ce paragraphe,
+>    dans une piste parallèle. Personne n'est revenu relire ce qu'il portait.
+> 2. **Le tableau ci-dessous mesure le mauvais problème.** Il rapproche le texte des **450 aliments
+>    du catalogue**, alors que le problème réel est FERMÉ : choisir un sous-ensemble parmi les
+>    **7,1 ingrédients de LA recette**. Remis dans ce cadre, il s'effondre — « les poivrons » n'a
+>    qu'un candidat en `poivron_*`, « l'huile » n'est ambigu que si la recette porte deux huiles (ce
+>    qui **se détecte**), « les tomates » marchait déjà. Seul « saler » résiste, et c'est une table
+>    verbe → aliment d'une douzaine d'entrées.
+>
+> ✅ **Ce qui reste vrai, et qui n'est pas balayé** : un rapprochement à moitié juste produit un
+> écran qui **ment par omission**. Cela impose de ne jamais poser un lien incertain — pas de faire
+> confirmer les 1 101 à la main.
 
 Elle a été envisagée, et elle ne tient pas. `food` n'a **ni synonyme ni alias** (`build.mjs`, schéma
 `food`) et le texte des étapes n'emploie pas les identifiants du catalogue. Sur la seule chakchouka :
@@ -163,8 +182,9 @@ L'ordre suit une règle : **livrer ce qui est utile seul avant ce qui coûte che
 |---|---|---|---|
 | ~~**L0**~~ | ✅ **Fait le 2026-08-05** — prérequis B, `recipe_step.nature`, 18 recettes marquées | — | schéma + contenu |
 | ~~**L1**~~ | ✅ **Fait le 2026-08-05** — écran mono-recette : écran allumé, étape courante, minuteurs parallèles, alarme au premier plan, reprise (schéma **v10** + bandeau) | L0 | code |
-| **L2** | Prérequis A — `food_ids` sur 1 101 gestes, 3 passes du §2.4 | — (parallélisable avec L1) | contenu |
-| **L3** | Quantité au tap sur un ingrédient de l'étape | L1 + L2 | code |
+| ~~**L1bis**~~ | ✅ **Fait le 2026-08-06, NON PRÉVU AU PLAN** — la liste complète des ingrédients et leurs quantités, en fenêtre, depuis n'importe quelle étape (schéma **v11** pour les portions) | L1 | code |
+| **L2** | Prérequis A — `food_ids` sur 1 101 gestes, 3 passes du §2.4 | — | contenu, ⛔ **suspendu** : décision 60 |
+| **L3** | ~~Quantité au tap~~ → n'afficher QUE les ingrédients de l'étape courante | L1bis + L2 | code, **raffinement** |
 | **L4** | v1.5 — synchronisation multi-recettes, bascule de service | L1 | code |
 
 ### 4.0 Le schéma v10 — reprise et minuteurs ✅ ÉCRIT
@@ -234,6 +254,42 @@ plutôt que laissé à refaire. Ce qui la rouvrirait vraiment : une route qui en
 
 ⚠️ **Rien dans `engine/`.** Le mode cuisine ne calcule rien ; si un lot demande d'y toucher, c'est le
 lot qui est faux. Vérifié : L1 n'a ajouté aucun import dans `engine/`.
+
+### 4.1 bis — L1bis, les ingrédients en cuisine (2026-08-06, hors plan)
+
+**Le lot n'était pas prévu, et il a été fait avant L2 pour une raison qui tient en une mesure :**
+`cuisine.tsx` tenait déjà l'objet `Recipe` complet — ingrédients et quantités compris — et
+n'en affichait **aucun**. Le besoin réel du mode cuisine (« c'était combien d'ail ? ») ne demandait
+donc **aucune donnée nouvelle**, juste de montrer ce qui était là. Le prérequis A, lui, en demande
+1 101.
+
+| Fichier | Rôle |
+|---|---|
+| `app/src/ui/ingredients-recette.tsx` *(nouveau)* | `ListeIngredients` + `SelecteurPortions`, **extraits** de `detail-recette.tsx`. ⚠️ Extraits et non recopiés : la règle de `ui/quantites.ts` (le libellé se met à l'échelle, pas les grammes) est trop subtile pour deux exemplaires — c'est le motif que `7040c33` a dû réunir |
+| `app/src/data/user-schema.ts` | Migration **v11** : `portions` sur `user_cuisine_session`, **nullable** |
+| `app/src/data/user-store.ts` | `portions` en lecture/écriture sur la session |
+| `app/src/ui/router.tsx` | `#/cuisine/<id>?portions=<n>` — même motif que le `?de=` de la fiche |
+| `app/src/ui/screens/cuisine.tsx` | Le déclencheur, la fenêtre, le report des portions dans la session |
+| `app/src/ui/screens/detail-recette.tsx` | Passe ses portions au lien « Cuisiner pas à pas » ; utilise le composant extrait |
+| `app/src/ui/main.tsx` | Passe `portionsDemandees` à l'écran |
+
+⚠️ **`NULL` = « aucun choix exprimé », jamais « les portions de base ».** La distinction traverse les
+trois couches — routeur, store, écran — et c'est **l'écran seul** qui retombe sur `portionsBase`,
+parce qu'il est le seul à le connaître. Combler plus tôt aurait écrit en base un choix que personne
+n'a fait.
+
+⚠️ **Le lien ne porte les portions QU'AU PREMIER LANCEMENT.** Le bandeau de reprise produit un hash
+nu, et c'est voulu : une cuisson commencée porte déjà son nombre, un lien ne doit pas l'écraser.
+
+⚠️ **La sonnerie ferme la fenêtre.** `Panneau` est un portail posé après l'écran ; restée ouverte,
+elle recouvrirait la surface « appuyez n'importe où » et l'arrêt de l'alarme deviendrait
+introuvable.
+
+⚠️ **Rien dans `engine/`** ici non plus — `scaleRecipe` était déjà appelé depuis la fiche.
+
+**Conséquence sur la suite : L2 n'est plus un prérequis** (décision 60 d'`ETAT.md` §4). Le besoin est
+couvert sans annotation ; le lien étape → ingrédient ne servirait plus qu'à **restreindre** la liste
+à l'étape courante.
 
 ### 4.2 Les tests qui font foi pour L1 — ✅ les huit sont écrits et verts
 

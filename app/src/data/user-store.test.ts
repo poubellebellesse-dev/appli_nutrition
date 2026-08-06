@@ -963,11 +963,12 @@ describe('user-store — réglages d’affichage (v4)', () => {
   })
 })
 
-describe('user-store — la cuisson en cours (v10)', () => {
+describe('user-store — la cuisson en cours (v10, portions en v11)', () => {
   const SESSION = {
     recetteId: 'chakchouka',
     ordreCourant: 3,
     ouverteLe: 1_770_000_000_000,
+    portions: 6,
     minuteurs: [
       { ordre: 2, finMs: 1_770_000_600_000, pauseRestantS: null },
       { ordre: 3, finMs: null, pauseRestantS: 120 },
@@ -1037,6 +1038,44 @@ describe('user-store — la cuisson en cours (v10)', () => {
         'omelette_fines_herbes',
       ])
     ).toThrow()
+  })
+
+  // --- v11 — les portions suivent la cuisson ----------------------------------------------------
+
+  it('les portions font l’aller-retour', () => {
+    writeCuisineSession(db, SESSION)
+    expect(readCuisineSession(db)?.portions).toBe(6)
+  })
+
+  // ⚠️ `null` = AUCUN CHOIX EXPRIMÉ, jamais « les portions de base ». C'est l'état d'une cuisson
+  // ouverte AVANT la v11, et c'est l'écran — seul à connaître `portionsBase` — qui tranche alors.
+  // Combler ici écrirait dans la base un choix que personne n'a fait.
+  it('⛔ `null` reste `null` — le store n’invente aucun nombre de portions', () => {
+    writeCuisineSession(db, { ...SESSION, portions: null })
+    expect(readCuisineSession(db)?.portions).toBeNull()
+  })
+
+  // La garantie vient de la FORME, pas du code appelant : `portions = 0` ferait disparaître la
+  // recette de sa propre mise à l'échelle. Le routeur filtre déjà, la base ne s'en remet pas à lui.
+  it('⛔ la base refuse zéro portion', () => {
+    expect(() =>
+      db.run(
+        'INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le, portions) VALUES (1, ?, 1, 0, 0)',
+        ['chakchouka']
+      )
+    ).toThrow()
+  })
+
+  // ⚠️ MÊME PIÈGE QUE LES MINUTEURS, sur une autre colonne : réécrire la session doit mettre les
+  // portions à jour SANS emporter les minuteurs au passage (`ON CONFLICT DO UPDATE`, jamais
+  // `INSERT OR REPLACE`).
+  it('changer les portions ne perd pas les minuteurs', () => {
+    writeCuisineSession(db, SESSION)
+    writeCuisineSession(db, { ...SESSION, portions: 2 })
+
+    const relue = readCuisineSession(db)
+    expect(relue?.portions).toBe(2)
+    expect(relue?.minuteurs).toHaveLength(2)
   })
 })
 

@@ -305,9 +305,20 @@ shopping_list(id, plan_id, genere_le)
 shopping_list_item(list_id, food_id, quantite_totale, unite, coche, prix_estime)
 
 -- Cuisson en cours — AJOUT v10 (mode cuisine §5bis, lot L1, 2026-08-05). CODÉ.
-user_cuisine_session(id, recette_id, ordre_courant, ouverte_le)
+user_cuisine_session(id, recette_id, ordre_courant, ouverte_le, portions)
     -- id = 1 : UNE seule cuisson. La v1 est mono-recette ; la v1.5 fera sauter la contrainte.
     -- ouverte_le en ms epoch — la péremption du bandeau de reprise (12 h) est une soustraction.
+    -- portions : AJOUT v11 (2026-08-06). CODÉ. Régler 6 portions sur la fiche puis lancer la
+    --   cuisson rouvrait le plat à 4 : l'état React de la fiche meurt au démontage et un hash ne
+    --   transporte qu'un identifiant. On redemandait donc la même chose deux fois, la seconde
+    --   les mains dans la farine.
+    -- ⚠️ NULLABLE, ET C'EST LE SENS DE LA COLONNE : NULL = « aucun choix exprimé », JAMAIS « 4 ».
+    --   C'est l'état des sessions ouvertes avant la v11 et d'une reprise dont le lien ne porte
+    --   rien ; l'écran retombe alors sur le portions_base de la recette, seul endroit qui le
+    --   connaisse. Un défaut en base aurait écrit un choix que personne n'a fait — et SQLite
+    --   l'aurait exigé pour un ALTER TABLE … NOT NULL, forcément le même pour toutes les recettes.
+    -- CHECK (portions IS NULL OR portions >= 1) : portions = 0 ferait disparaître la recette de sa
+    --   propre mise à l'échelle. Le routeur filtre déjà, la base ne s'en remet pas à lui.
 user_cuisine_timer(session_id, ordre, fin_ms, pause_restant_s)
     -- ⚠️ fin_ms est une ÉCHÉANCE ABSOLUE, JAMAIS un temps restant. Un restant se fige quand
     --   l'application est fermée ; la casserole, elle, ne fait pas de pause. Au retour, un

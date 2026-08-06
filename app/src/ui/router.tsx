@@ -39,8 +39,9 @@ export type SousVue =
   | { readonly type: 'parametres' }
   /** Éditeur de recette. `baseId` non nul = on adapte une recette existante. */
   | { readonly type: 'editeur'; readonly baseId: string | null }
-  /** Mode cuisine, plein écran, sur UNE recette (§5bis ARCHITECTURE). */
-  | { readonly type: 'cuisine'; readonly id: string }
+  /** Mode cuisine, plein écran, sur UNE recette (§5bis ARCHITECTURE). `portions` : voir
+   *  `portionsDepuisRequete` — `null` veut dire « aucun choix exprimé », jamais « 4 ». */
+  | { readonly type: 'cuisine'; readonly id: string; readonly portions: number | null }
 
 /**
  * D'où l'on arrive sur une fiche recette — porte le retour contextuel (« ← Aujourd'hui »,
@@ -167,8 +168,17 @@ export function routeDepuisHash(hash: string): Route {
     // Même précaution que les deux autres routes paramétrées : `decodeURIComponent` lève sur un `%`
     // isolé. Un fragment illisible ramène à la liste, jamais un écran blanc.
     try {
-      const id = decodeURIComponent(hash.slice(PREFIXE_CUISINE.length))
-      if (id !== '') return { onglet: 'recettes', sousVue: { type: 'cuisine', id } }
+      // Les portions voyagent APRÈS l'id, en `?portions=<n>` — même motif que `?de=` sur la fiche,
+      // et même précaution : un id peut légitimement contenir un `?` encodé (`%3F`), d'où le split
+      // sur le fragment BRUT, avant décodage de l'id.
+      const [idBrut, requete] = hash.slice(PREFIXE_CUISINE.length).split('?')
+      const id = decodeURIComponent(idBrut ?? '')
+      if (id !== '') {
+        return {
+          onglet: 'recettes',
+          sousVue: { type: 'cuisine', id, portions: portionsDepuisRequete(requete) },
+        }
+      }
     } catch {
       /* fragment illisible → liste des recettes */
     }
@@ -193,6 +203,24 @@ export function routeDepuisHash(hash: string): Route {
 }
 
 const ORIGINES_CONNUES: ReadonlySet<string> = new Set(['aujourdhui', 'recettes', 'semaine', 'frigo'])
+
+/**
+ * Portions demandées au lancement de la cuisson, ou `null`.
+ *
+ * ⚠️ `null` NE VEUT PAS DIRE « 4 ». Il veut dire « aucun choix exprimé » — hash de reprise, lien
+ * collé, signet antérieur à cette fonctionnalité. C'est alors le mode cuisine qui retombe sur le
+ * `portionsBase` de la recette. Substituer un nombre ICI inventerait un choix que personne n'a fait,
+ * et l'écrirait dans la session persistée comme s'il avait été voulu.
+ *
+ * Tout ce qui n'est pas un entier ≥ 1 est rejeté : `portions=0` supprimerait la recette, et une
+ * valeur fractionnaire passerait ensuite dans `scaleRecipe` sans que rien ne l'arrête.
+ */
+function portionsDepuisRequete(requete: string | undefined): number | null {
+  const brut = new URLSearchParams(requete ?? '').get('portions')
+  if (brut === null) return null
+  const n = Number(brut)
+  return Number.isInteger(n) && n >= 1 ? n : null
+}
 
 /** Origine inconnue ou absente → repli sur `ORIGINE_PAR_DEFAUT` (lien collé, favori, rechargement
  * d'un hash antérieur à cette fonctionnalité) — comportement actuel, jamais un plantage. */
@@ -243,8 +271,16 @@ export function hashDuFrigo(): string {
   return HASH_FRIGO
 }
 
-export function hashDeLaCuisine(id: string): string {
-  return `${PREFIXE_CUISINE}${encodeURIComponent(id)}`
+/**
+ * `portions` omise → hash nu, sans suffixe.
+ *
+ * C'est le lien de REPRISE : il laisse la session décider, parce qu'une cuisson déjà commencée porte
+ * déjà son nombre de portions et qu'un lien ne doit pas l'écraser. Seule la fiche recette, au premier
+ * lancement, a une valeur à transmettre.
+ */
+export function hashDeLaCuisine(id: string, portions?: number): string {
+  const base = `${PREFIXE_CUISINE}${encodeURIComponent(id)}`
+  return portions === undefined ? base : `${base}?portions=${portions}`
 }
 
 export function hashDesParametres(): string {

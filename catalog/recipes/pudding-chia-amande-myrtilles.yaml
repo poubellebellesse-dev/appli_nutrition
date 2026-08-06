@@ -1,0 +1,69 @@
+id: pudding_chia_amande_myrtilles
+nom: "Pudding de chia à la boisson d'amande et aux myrtilles"
+origine: maison
+description: >
+  Des graines de chia gonflées toute une nuit dans une boisson d'amande, servies
+  froides avec des myrtilles et un filet de sirop d'agave.
+temps_prep_min: 10
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.5
+  leger_consistant: -0.3
+  chaud_froid: -0.6
+  texture: creme
+
+ingredients:
+  - food_id: graine_chia
+    quantite_g: 80
+    unite_affichage: "8 cuillères à soupe"
+    optionnel: false
+  - food_id: boisson_amande
+    quantite_g: 600
+    unite_affichage: "60 cl"
+    optionnel: false
+  - food_id: myrtille
+    quantite_g: 200
+    unite_affichage: "1 barquette"
+    optionnel: false
+  - food_id: sirop_agave
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Mélanger les graines de chia, la boisson d'amande et le sirop d'agave dans un saladier."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Fouetter légèrement puis répartir dans des bols ou des bocaux."
+    lexicon_ids: [fouetter]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Laisser reposer au frais jusqu'à ce que le mélange épaississe."
+    lexicon_ids: []
+    timer_s: 21600
+    timer_type: repos
+  - ordre: 4
+    texte: "Garnir de myrtilles fraîches au moment de servir."
+    lexicon_ids: [dresser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

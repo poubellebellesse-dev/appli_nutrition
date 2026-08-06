@@ -1380,3 +1380,129 @@ describe('catalog/build.mjs — synonymes d’aliments (décision 58, cause 2)',
     }
   })
 })
+
+describe('catalog/build.mjs — origine animale exigée par l’allergène (couche 🔒 regime)', () => {
+  // ⛔ CE QUE CES TESTS EMPÊCHENT DE REVENIR, mesuré le 2026-08-06 : dix aliments — `nuoc_mam`
+  // (sauce de POISSON), `lait_ecreme`, `mayonnaise`, `pesto`, `ossau_iraty`, `chevre_affine`,
+  // `meringue`, `nouilles_asiatiques`, `chocolat_lait`, `chocolat_blanc` — n'avaient ni
+  // `origine_animale` ni `derive_de`. `regimeExigePar` les déclarait donc VÉGÉTALIENS.
+  //
+  // ⚠️ `tests/regime-coherence.test.ts` NE POUVAIT PAS L'ATTRAPER : il compare l'étiquette écrite à
+  // la main à une règle qui lit LE MÊME champ manquant — les deux côtés répondaient « vegetalien ».
+  // La règle testée ici confronte l'origine à l'ALLERGÈNE, écrit indépendamment. C'est ce qui la
+  // rend capable de voir ce que l'autre ne voit pas ; ne pas la « simplifier » en la faisant relire
+  // l'origine.
+
+  it('REFUSE un aliment qui CONTIENT un allergène animal sans origine résoluble', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-origine-absente-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_nuoc_mam
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Sauce de poisson"
+    groupe: "condiments"
+    nutriments:
+      energie_kcal: 81
+    allergenes:
+      - code: poissons
+        certitude: contient
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status).not.toBe(0)
+      expect(`${result.stdout}${result.stderr}`).toContain('VÉGÉTALIEN')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('ACCEPTE le même aliment dès que `origine_animale` est posée', () => {
+    // Variante à UNE SEULE différence près : c'est ce qui prouve que le refus ci-dessus vient bien
+    // de l'origine manquante, et non d'un défaut de la fixture.
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-origine-posee-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_nuoc_mam
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Sauce de poisson"
+    groupe: "condiments"
+    origine_animale: poisson
+    nutriments:
+      energie_kcal: 81
+    allergenes:
+      - code: poissons
+        certitude: contient
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status, result.stderr).toBe(0)
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('ACCEPTE une origine héritée par la chaîne `derive_de` (beurre → lait)', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-origine-derivee-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_lait
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Lait entier"
+    groupe: "lait et produits laitiers"
+    origine_animale: mammifere
+    nutriments:
+      energie_kcal: 65
+    allergenes:
+      - code: lait
+        certitude: contient
+  - id: fixture_beurre
+    code_ciqual: "PROV-FIXTURE-2"
+    nom: "Beurre doux"
+    groupe: "matières grasses"
+    derive_de: fixture_lait
+    nutriments:
+      energie_kcal: 750
+    allergenes:
+      - code: lait
+        certitude: contient
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status, result.stderr).toBe(0)
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('ACCEPTE des TRACES sans origine — les algues et le chocolat noir restent végétaliens', () => {
+    // `certitude` est ce qui rend la règle utilisable sans liste d'exemptions écrite à la main.
+    // `nori` et `wakame` déclarent `crustaces` par contamination à la récolte : ce sont des algues.
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-origine-traces-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_nori
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Nori séchée"
+    groupe: "légumes"
+    nutriments:
+      energie_kcal: 257
+    allergenes:
+      - code: crustaces
+        certitude: traces
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status, result.stderr).toBe(0)
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+})

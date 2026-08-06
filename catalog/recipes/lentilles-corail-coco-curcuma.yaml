@@ -1,0 +1,76 @@
+id: lentilles_corail_coco_curcuma
+nom: "Lentilles corail au lait de coco et au curcuma"
+origine: maison
+description: >
+  Des lentilles corail mijotées dans le lait de coco avec du curcuma et de l'oignon, jusqu'à texture fondante.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: lentilles_corail
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: lait_coco
+    quantite_g: 300
+    unite_affichage: "1 boîte"
+    optionnel: false
+  - food_id: curcuma
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: huile_colza
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et le faire revenir dans l'huile jusqu'à ce qu'il devienne translucide."
+    lexicon_ids: [emincer, revenir]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Ajouter le curcuma et mélanger une minute pour le faire torréfier légèrement."
+    lexicon_ids: []
+    timer_s: 60
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Rincer les lentilles, les ajouter avec le lait de coco et un volume d'eau équivalent."
+    lexicon_ids: [rincer, mouiller]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Saler et laisser mijoter jusqu'à ce que les lentilles se défassent."
+    lexicon_ids: [mijoter]
+    timer_s: 900
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: indienne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

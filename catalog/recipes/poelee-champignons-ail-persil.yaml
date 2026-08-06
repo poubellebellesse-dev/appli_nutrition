@@ -1,0 +1,72 @@
+id: poelee_champignons_ail_persil
+nom: "Poêlée de champignons à l'ail et au persil"
+origine: maison
+description: >
+  Des champignons de Paris sautés à feu vif dans l'huile d'olive jusqu'à évaporation
+  de leur eau, puis relevés d'ail et de persil.
+temps_prep_min: 10
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.2
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: champignon_paris
+    quantite_g: 700
+    unite_affichage: "700 g"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 12
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Éponger les champignons et les tailler en quartiers."
+    lexicon_ids: [eponger, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les faire sauter à feu vif dans l'huile d'olive jusqu'à évaporation de l'eau de végétation."
+    lexicon_ids: [sauter]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Hacher l'ail et le persil, les ajouter en fin de cuisson avec le sel et le poivre."
+    lexicon_ids: [hacher]
+    timer_s: 120
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

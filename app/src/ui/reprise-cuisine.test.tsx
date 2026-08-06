@@ -13,7 +13,14 @@ import { anciennete, resumeDeSession } from './reprise-cuisine.js'
 const T0 = 1_770_000_000_000
 
 function session(partiel: Partial<StoredCuisineSession> = {}): StoredCuisineSession {
-  return { recetteId: 'chakchouka', ordreCourant: 2, ouverteLe: T0, minuteurs: [], ...partiel }
+  return {
+    recetteId: 'chakchouka',
+    ordreCourant: 2,
+    ouverteLe: T0,
+    portions: null,
+    minuteurs: [],
+    ...partiel,
+  }
 }
 
 describe('reprise-cuisine — quand le bandeau existe', () => {

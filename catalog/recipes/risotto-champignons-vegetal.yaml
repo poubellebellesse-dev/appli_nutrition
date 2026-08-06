@@ -1,0 +1,95 @@
+id: risotto_champignons_vegetal
+nom: "Risotto aux champignons à l'huile d'olive"
+origine: maison
+description: >
+  Un risotto crémeux aux champignons de Paris, mouillé au bouillon et relevé
+  d'un filet de vin blanc.
+temps_prep_min: 15
+temps_cuisson_min: 30
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.6
+  texture: creme
+
+ingredients:
+  - food_id: riz_blanc
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: champignon_paris
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: vin_blanc_cuisine
+    quantite_g: 80
+    unite_affichage: "8 cl"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 12
+    unite_affichage: "1 cube"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et tailler les champignons en lamelles."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire suer l'oignon dans l'huile d'olive jusqu'à ce qu'il devienne translucide."
+    lexicon_ids: [suer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter le riz et le faire nacrer quelques minutes en remuant."
+    lexicon_ids: []
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Déglacer au vin blanc puis mouiller progressivement avec le bouillon chaud, sans cesser de remuer."
+    lexicon_ids: [deglacer, mouiller]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Incorporer les champignons en fin de cuisson et laisser fondre quelques minutes."
+    lexicon_ids: [incorporer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 6
+    texte: "Parsemer de persil ciselé avant de servir."
+    lexicon_ids: [parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

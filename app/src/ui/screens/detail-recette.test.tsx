@@ -201,6 +201,25 @@ describe('detail-recette — le sélecteur de portions', () => {
     await waitFor(() => expect(ligneSel()?.textContent).toMatch(/non ajustée/))
     expect(ligneSel()?.textContent).toContain('au goût')
   })
+
+  // ⛔ SANS CE PASSAGE DE RELAIS, régler 6 portions puis appuyer sur « Cuisiner pas à pas » rouvrait
+  // le plat à 4 : l'état React de cette fiche meurt au démontage, et un hash ne transporte qu'un
+  // identifiant. Le mode cuisine les recopie ensuite dans sa session (v11).
+  it('⛔ les portions réglées ici VOYAGENT vers le mode cuisine', async () => {
+    const recette = recetteDeReference()
+    await monter(recette.id)
+
+    const lien = () =>
+      [...document.querySelectorAll('a')].find((a) => a.textContent === 'Cuisiner pas à pas')
+    expect(lien()?.getAttribute('href')).toContain(`portions=${recette.portionsBase}`)
+
+    const boutonPlus = document.querySelector('button[aria-label="Une portion de plus"]') as HTMLButtonElement
+    fireEvent.click(boutonPlus)
+
+    await waitFor(() =>
+      expect(lien()?.getAttribute('href')).toContain(`portions=${recette.portionsBase + 1}`)
+    )
+  })
 })
 
 describe('detail-recette — les étapes', () => {

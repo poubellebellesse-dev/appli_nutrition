@@ -1,0 +1,86 @@
+id: patate_douce_farcie_haricots_rouges
+nom: "Patates douces farcies aux haricots rouges"
+origine: maison
+description: >
+  Des patates douces rôties entières puis garnies d'une poêlée de haricots rouges,
+  maïs doux, oignon et paprika.
+temps_prep_min: 15
+temps_cuisson_min: 45
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.7
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: patate_douce
+    quantite_g: 800
+    unite_affichage: "4 patates douces"
+    optionnel: false
+  - food_id: haricot_rouge
+    quantite_g: 400
+    unite_affichage: "1 grande boîte"
+    optionnel: false
+  - food_id: mais_doux
+    quantite_g: 150
+    unite_affichage: "1 petite boîte"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: paprika
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four et piquer les patates douces avant de les enfourner entières."
+    lexicon_ids: [prechauffer, piquer, enfourner]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Laisser rôtir les patates douces jusqu'à ce qu'un couteau les traverse sans résistance."
+    lexicon_ids: [rotir]
+    timer_s: 2700
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Émincer l'oignon et le faire revenir dans l'huile d'olive."
+    lexicon_ids: [emincer, revenir]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter les haricots rouges égouttés, le maïs et le paprika, puis chauffer quelques minutes en remuant."
+    lexicon_ids: [egoutter, sauter]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Fendre les patates douces en deux et les garnir de la poêlée de haricots rouges et maïs, saler."
+    lexicon_ids: [dresser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: tex_mex
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

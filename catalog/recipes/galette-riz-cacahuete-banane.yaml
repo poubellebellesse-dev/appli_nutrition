@@ -1,0 +1,64 @@
+id: galette_riz_cacahuete_banane
+nom: "Galettes de riz au beurre de cacahuète et à la banane"
+origine: maison
+description: >
+  Des galettes de riz soufflé tartinées de beurre de cacahuète, recouvertes de
+  rondelles de banane et de graines de chia.
+temps_prep_min: 8
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.4
+  leger_consistant: -0.4
+  chaud_froid: -0.2
+  texture: croquant
+
+ingredients:
+  - food_id: galette_riz
+    quantite_g: 60
+    unite_affichage: "4 galettes"
+    optionnel: false
+  - food_id: beurre_cacahuete
+    quantite_g: 80
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: banane
+    quantite_g: 240
+    unite_affichage: "2 bananes"
+    optionnel: false
+  - food_id: graine_chia
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les bananes et les couper en rondelles."
+    lexicon_ids: [eplucher, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Tartiner chaque galette de riz de beurre de cacahuète."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Disposer les rondelles de banane sur les galettes et parsemer de graines de chia."
+    lexicon_ids: [dresser, parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: rapide

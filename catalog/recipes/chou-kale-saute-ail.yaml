@@ -1,0 +1,71 @@
+id: chou_kale_saute_ail
+nom: "Chou kale sauté à l'ail et aux graines de tournesol"
+origine: maison
+description: >
+  Du chou kale sauté à l'ail, relevé de citron et parsemé de graines de tournesol pour le croquant.
+temps_prep_min: 10
+temps_cuisson_min: 10
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.4
+  chaud_froid: 0.5
+  texture: fondant
+
+ingredients:
+  - food_id: chou_kale
+    quantite_g: 500
+    unite_affichage: "500 g"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "3 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 20
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: graine_tournesol
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Effeuiller le chou kale et retirer les côtes épaisses, puis émincer l'ail."
+    lexicon_ids: [effeuiller, emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir l'ail dans l'huile d'olive, puis ajouter le chou kale et sauter à feu vif jusqu'à ce qu'il tombe."
+    lexicon_ids: [revenir, sauter]
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter le jus de citron, saler et parsemer de graines de tournesol avant de dresser."
+    lexicon_ids: [assaisonner, parsemer, dresser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: rapide

@@ -1,0 +1,68 @@
+id: smoothie_fraise_banane_courge
+nom: "Smoothie fraise-banane aux graines de courge"
+origine: maison
+description: >
+  Un smoothie mixé à base de fraises, de banane et de boisson au soja, servi
+  froid avec des graines de courge et de lin.
+temps_prep_min: 8
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.5
+  leger_consistant: -0.5
+  chaud_froid: -0.7
+  texture: liquide
+
+ingredients:
+  - food_id: fraise
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: banane
+    quantite_g: 240
+    unite_affichage: "2 bananes"
+    optionnel: false
+  - food_id: boisson_soja
+    quantite_g: 400
+    unite_affichage: "40 cl"
+    optionnel: false
+  - food_id: graine_courge
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: graine_lin
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Équeuter les fraises et éplucher les bananes."
+    lexicon_ids: [equeuter, eplucher]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mixer les fraises, les bananes et la boisson au soja jusqu'à obtenir une texture lisse."
+    lexicon_ids: [mixer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Verser dans des verres et parsemer de graines de courge et de lin."
+    lexicon_ids: [parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: rapide

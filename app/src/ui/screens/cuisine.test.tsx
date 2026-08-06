@@ -16,8 +16,8 @@
 // appareil, §7 du document de conception.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { writeCuisineSession } from '../../data/user-store.js'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { readCuisineSession, writeCuisineSession } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 
 vi.mock('../catalog-source.js', () => ({
@@ -45,9 +45,9 @@ afterEach(() => {
 
 const CHAKCHOUKA = 'chakchouka'
 
-async function monter(recetteId = CHAKCHOUKA) {
+async function monter(recetteId = CHAKCHOUKA, portionsDemandees: number | null = null) {
   const { Cuisine } = await import('./cuisine.js')
-  const rendu = render(<Cuisine recetteId={recetteId} />)
+  const rendu = render(<Cuisine recetteId={recetteId} portionsDemandees={portionsDemandees} />)
   await screen.findByRole('heading', { level: 1 })
   return rendu
 }
@@ -167,6 +167,7 @@ describe('cuisine — reprendre une cuisson', () => {
       recetteId: CHAKCHOUKA,
       ordreCourant: 2,
       ouverteLe: Date.now() - 40 * 60 * 1000,
+      portions: null,
       minuteurs: [{ ordre: 2, finMs: Date.now() - 38 * 60 * 1000, pauseRestantS: null }],
     })
 
@@ -181,6 +182,7 @@ describe('cuisine — reprendre une cuisson', () => {
       recetteId: CHAKCHOUKA,
       ordreCourant: 4,
       ouverteLe: Date.now(),
+      portions: null,
       minuteurs: [],
     })
 
@@ -195,6 +197,7 @@ describe('cuisine — reprendre une cuisson', () => {
       recetteId: CHAKCHOUKA,
       ordreCourant: 2,
       ouverteLe: Date.now() - 60 * 60 * 1000,
+      portions: null,
       minuteurs: [{ ordre: 2, finMs: Date.now() - 55 * 60 * 1000, pauseRestantS: null }],
     })
 
@@ -207,6 +210,7 @@ describe('cuisine — reprendre une cuisson', () => {
       recetteId: 'omelette_fines_herbes',
       ordreCourant: 3,
       ouverteLe: Date.now(),
+      portions: null,
       minuteurs: [],
     })
 
@@ -254,7 +258,109 @@ describe('cuisine — garde-fous', () => {
 
   it('une recette inconnue ne casse pas l’écran', async () => {
     const { Cuisine } = await import('./cuisine.js')
-    render(<Cuisine recetteId="recette_qui_n_existe_pas" />)
+    render(<Cuisine recetteId="recette_qui_n_existe_pas" portionsDemandees={null} />)
     expect(await screen.findByText('Cette recette est introuvable.')).toBeTruthy()
+  })
+})
+
+// ⚠️ `Panneau` PASSE PAR UN PORTAIL : `screen.getByText` le voit, `container.querySelector` non.
+// D'où le `within(screen.getByRole('dialog'))` systématique ci-dessous — piège déjà payé, listé dans
+// `docs/reference/PIEGES.md`.
+describe('cuisine — les ingrédients sous la main', () => {
+  // ⛔ LE MANQUE QUE CE LOT COMBLE. Avant lui, « c'était combien d'ail ? » en pleine cuisson
+  // obligeait à QUITTER le mode cuisine pour rouvrir la fiche, en perdant l'étape courante de vue —
+  // alors que la recette et ses quantités étaient DÉJÀ chargées dans cet écran.
+  it('la fenêtre montre les quantités SANS quitter l’étape courante', async () => {
+    await monter()
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: /Voir les ingrédients/ }))
+
+    const fenetre = within(screen.getByRole('dialog'))
+    expect(fenetre.getByText('6 œufs')).toBeTruthy()
+    expect(fenetre.getByText('2 gousses')).toBeTruthy()
+    // L'étape n'a pas bougé : une fenêtre recouvre, elle ne navigue pas.
+    expect(screen.getByText(/Étape 1 sur 5/)).toBeTruthy()
+  })
+
+  // ⚠️ `aria-haspopup="dialog"`, JAMAIS `aria-expanded` : ce bouton n'agrandit rien EN PLACE, il
+  // ouvre une fenêtre. Même règle que les filtres et « Parcourir tous les aliments ».
+  it('le déclencheur annonce une fenêtre, pas un dépliant', async () => {
+    await monter()
+    const bouton = screen.getByRole('button', { name: /Voir les ingrédients/ })
+
+    expect(bouton.getAttribute('aria-haspopup')).toBe('dialog')
+    expect(bouton.hasAttribute('aria-expanded')).toBe(false)
+  })
+
+  it('les portions réglées sur la fiche arrivent avec le lien', async () => {
+    await monter(CHAKCHOUKA, 8)
+    expect(screen.getByRole('button', { name: /pour 8 portions/ })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: /Voir les ingrédients/ }))
+    // 6 œufs pour 4 portions → 12 pour 8. C'est le LIBELLÉ qui est mis à l'échelle, pas une
+    // conversion en grammes (`ui/quantites.ts`).
+    expect(within(screen.getByRole('dialog')).getByText('12 œufs')).toBeTruthy()
+  })
+
+  // ⛔ LE TEST QUI JUSTIFIE LA MIGRATION v11. Sans colonne, ce réglage mourait avec l'écran : on
+  // répondait « pour combien ? » à chaque reprise, les mains dans la farine.
+  it('⛔ changer les portions en cuisine est ÉCRIT dans la session', async () => {
+    await monter()
+    fireEvent.click(screen.getByRole('button', { name: /Voir les ingrédients/ }))
+    fireEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Une portion de plus' })
+    )
+
+    expect(readCuisineSession(baseCourante())?.portions).toBe(5)
+    expect(screen.getByRole('button', { name: /pour 5 portions/ })).toBeTruthy()
+  })
+
+  it('⛔ reprendre une cuisson ne RAMÈNE PAS les portions à la valeur de base', async () => {
+    writeCuisineSession(baseCourante(), {
+      recetteId: CHAKCHOUKA,
+      ordreCourant: 2,
+      ouverteLe: Date.now(),
+      portions: 8,
+      minuteurs: [],
+    })
+
+    // Hash NU, sans `?portions=` : exactement ce que produit le bandeau de reprise.
+    await monter()
+    expect(screen.getByRole('button', { name: /pour 8 portions/ })).toBeTruthy()
+  })
+
+  // `portions = null` est l'état d'une cuisson ouverte AVANT la v11. L'écran ne doit pas afficher un
+  // nombre inventé : il retombe sur celui de la recette, seul endroit qui le connaisse.
+  it('une cuisson d’avant la v11 retombe sur les portions de la recette', async () => {
+    writeCuisineSession(baseCourante(), {
+      recetteId: CHAKCHOUKA,
+      ordreCourant: 2,
+      ouverteLe: Date.now(),
+      portions: null,
+      minuteurs: [],
+    })
+
+    await monter()
+    expect(screen.getByRole('button', { name: /pour 4 portions/ })).toBeTruthy()
+  })
+
+  // ⛔ `Panneau` porte un portail posé APRÈS cet écran dans le DOM. Restée ouverte, la fenêtre
+  // recouvrirait la surface « appuyez n'importe où » et l'arrêt de l'alarme deviendrait
+  // introuvable — une casserole qui sonne prime sur une liste qu'on lit.
+  it('⛔ la sonnerie FERME la fenêtre des ingrédients', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await monter()
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+    fireEvent.click(screen.getByRole('button', { name: /Voir les ingrédients/ }))
+    expect(screen.getByRole('dialog')).toBeTruthy()
+
+    await act(async () => {
+      vi.advanceTimersByTime(13 * 60 * 1000)
+    })
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Arrêter l’alarme' })).toBeTruthy()
   })
 })

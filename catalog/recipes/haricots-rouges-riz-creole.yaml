@@ -1,0 +1,90 @@
+id: haricots_rouges_riz_creole
+nom: "Haricots rouges et riz à la créole"
+origine: maison
+description: >
+  Des haricots rouges mijotés avec poivron rouge, oignon, thym et piment de Cayenne,
+  servis sur un riz blanc à la créole.
+temps_prep_min: 10
+temps_cuisson_min: 30
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: haricot_rouge
+    quantite_g: 500
+    unite_affichage: "1 grande boîte et demie"
+    optionnel: false
+  - food_id: riz_blanc
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 200
+    unite_affichage: "2 poivrons"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: piment_cayenne
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: huile_colza
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et détailler le poivron rouge en dés."
+    lexicon_ids: [emincer, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir l'oignon et le poivron dans l'huile de colza jusqu'à ce qu'ils ramollissent."
+    lexicon_ids: [revenir]
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les haricots rouges égouttés, le thym et le piment de Cayenne, puis laisser mijoter."
+    lexicon_ids: [egoutter, mijoter]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Cuire le riz blanc dans l'eau bouillante salée jusqu'à ce qu'il soit tendre, puis l'égoutter."
+    lexicon_ids: [egoutter]
+    timer_s: 720
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Dresser le riz dans les assiettes et napper des haricots rouges."
+    lexicon_ids: [dresser, napper]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: tex_mex
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

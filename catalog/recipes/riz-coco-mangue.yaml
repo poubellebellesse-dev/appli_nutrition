@@ -1,0 +1,73 @@
+id: riz_coco_mangue
+nom: "Riz au lait de coco et à la mangue"
+origine: maison
+description: >
+  Du riz complet mijoté dans du lait de coco et du sucre roux, servi tiède avec
+  des dés de mangue et de la noix de coco râpée.
+temps_prep_min: 10
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.6
+  leger_consistant: 0.3
+  chaud_froid: 0.3
+  texture: creme
+
+ingredients:
+  - food_id: riz_complet
+    quantite_g: 180
+    unite_affichage: "180 g"
+    optionnel: false
+  - food_id: lait_coco
+    quantite_g: 400
+    unite_affichage: "40 cl"
+    optionnel: false
+  - food_id: mangue
+    quantite_g: 300
+    unite_affichage: "1 mangue"
+    optionnel: false
+  - food_id: noix_coco_rapee
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+  - food_id: sucre_roux
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le riz complet."
+    lexicon_ids: [rincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser le riz, le lait de coco et le sucre roux dans une casserole, porter à frémissement."
+    lexicon_ids: [fremir]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Laisser mijoter à couvert jusqu'à ce que le riz soit tendre et le mélange onctueux."
+    lexicon_ids: [mijoter]
+    timer_s: 2100
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Couper la mangue en dés et répartir sur le riz avec la noix de coco râpée."
+    lexicon_ids: [detailler, dresser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: asiatique
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: gourmand

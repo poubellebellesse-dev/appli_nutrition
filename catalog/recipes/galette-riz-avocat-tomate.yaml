@@ -1,0 +1,81 @@
+id: galette_riz_avocat_tomate
+nom: "Galettes de riz à l'avocat et à la tomate cerise"
+origine: maison
+description: >
+  Des galettes de riz soufflé garnies d'avocat écrasé au citron, de tomates
+  cerise coupées en deux, d'un filet d'huile d'olive et d'un tour de poivre.
+temps_prep_min: 10
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.6
+  leger_consistant: -0.5
+  chaud_froid: -0.2
+  texture: croquant
+
+ingredients:
+  - food_id: galette_riz
+    quantite_g: 60
+    unite_affichage: "4 galettes"
+    optionnel: false
+  - food_id: avocat
+    quantite_g: 200
+    unite_affichage: "1 avocat"
+    optionnel: false
+  - food_id: tomate_cerise
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 20
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Écraser la chair de l'avocat à la fourchette avec le jus de citron."
+    lexicon_ids: [ecraser]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Couper les tomates cerise en deux."
+    lexicon_ids: [tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Étaler l'avocat écrasé sur les galettes de riz."
+    lexicon_ids: [etaler]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Répartir les tomates cerise, arroser d'huile d'olive, saler et poivrer."
+    lexicon_ids: [arroser, assaisonner]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: rapide

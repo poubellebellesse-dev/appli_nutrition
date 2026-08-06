@@ -1,0 +1,69 @@
+id: tapioca_coco_ananas
+nom: "Perles de tapioca au lait de coco et à l'ananas"
+origine: maison
+description: >
+  Des perles de tapioca cuites dans du lait de coco sucré, servies avec des dés
+  d'ananas frais.
+temps_prep_min: 8
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.6
+  leger_consistant: 0.1
+  chaud_froid: 0.2
+  texture: creme
+
+ingredients:
+  - food_id: tapioca
+    quantite_g: 120
+    unite_affichage: "120 g"
+    optionnel: false
+  - food_id: lait_coco
+    quantite_g: 400
+    unite_affichage: "40 cl"
+    optionnel: false
+  - food_id: ananas
+    quantite_g: 300
+    unite_affichage: "1/4 d'ananas"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Couper l'ananas en petits dés."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser le tapioca, le lait de coco et le sucre roux dans une casserole, porter à frémissement en remuant."
+    lexicon_ids: [fremir]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Laisser mijoter en remuant régulièrement jusqu'à ce que les perles deviennent translucides."
+    lexicon_ids: [mijoter]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Répartir dans les bols et garnir de dés d'ananas."
+    lexicon_ids: [dresser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: asiatique
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: gourmand

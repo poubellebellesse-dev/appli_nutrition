@@ -1,0 +1,73 @@
+id: pudding_chia_mangue_coco
+nom: "Pudding de chia à la mangue et à la noix de coco"
+origine: maison
+description: >
+  Des graines de chia gonflées dans du lait de coco, surmontées de dés de mangue,
+  de noix de coco râpée et d'un trait de citron vert.
+temps_prep_min: 12
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.5
+  leger_consistant: -0.2
+  chaud_froid: -0.6
+  texture: creme
+
+ingredients:
+  - food_id: graine_chia
+    quantite_g: 80
+    unite_affichage: "8 cuillères à soupe"
+    optionnel: false
+  - food_id: lait_coco
+    quantite_g: 400
+    unite_affichage: "40 cl"
+    optionnel: false
+  - food_id: mangue
+    quantite_g: 300
+    unite_affichage: "1 mangue"
+    optionnel: false
+  - food_id: noix_coco_rapee
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+  - food_id: citron_vert
+    quantite_g: 15
+    unite_affichage: "1/2 citron vert"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Mélanger les graines de chia et le lait de coco dans un saladier."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Laisser reposer au frais jusqu'à ce que le mélange épaississe."
+    lexicon_ids: []
+    timer_s: 14400
+    timer_type: repos
+  - ordre: 3
+    texte: "Couper la mangue en dés et presser le citron vert."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Répartir le pudding dans des bols, garnir de mangue, de noix de coco râpée et d'un filet de citron vert."
+    lexicon_ids: [dresser, arroser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: asiatique
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

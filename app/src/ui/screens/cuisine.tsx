@@ -21,7 +21,7 @@
 // composant, ce qui n'est pas dans les sept points).
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Recipe, RecipeId, RecipeStep } from '../../engine/domain/index.js'
+import type { Catalog, Recipe, RecipeId, RecipeStep } from '../../engine/domain/index.js'
 import type { UserDb } from '../../data/user-db.js'
 import {
   clearCuisineSession,
@@ -35,23 +35,42 @@ import { hashDeRecette } from '../router.js'
 import { creerAlarme, type Alarme } from '../alarme.js'
 import { garderEcranAllume, veillePossible } from '../ecran-allume.js'
 import { etatMinuteur, formaterDuree, libelleMinuteur } from '../cuisine-session.js'
+import { ListeIngredients, SelecteurPortions } from '../ingredients-recette.js'
+import { Panneau } from '../panneau.js'
 
 type Etat =
   | { readonly phase: 'chargement' }
   | { readonly phase: 'introuvable' }
-  | { readonly phase: 'pret'; readonly recette: Recipe; readonly db: UserDb }
+  | {
+      readonly phase: 'pret'
+      readonly recette: Recipe
+      readonly db: UserDb
+      readonly catalogue: Catalog
+      /** Grammes mis à l'échelle, par `foodId`. Fermeture sur `scaleRecipe` — voir §4.6 et
+       *  `ui/quantites.ts` : c'est le moteur qui calcule, jamais cet écran. */
+      readonly quantitePour: (portions: number) => ReadonlyMap<string, number>
+    }
 
 /** Les étapes qu'on FAIT. Les avertissements se lisent à la fin, ils ne comptent pas (L0). */
 function gestesDe(recette: Recipe): readonly RecipeStep[] {
   return recette.etapes.filter((e) => e.nature === 'geste')
 }
 
-export function Cuisine({ recetteId }: { readonly recetteId: string }) {
+export function Cuisine({
+  recetteId,
+  portionsDemandees,
+}: {
+  readonly recetteId: string
+  /** Portions portées par le lien (`?portions=`), ou `null` = aucun choix exprimé. Voir
+   *  `router.tsx#portionsDepuisRequete` : `null` n'est PAS une valeur par défaut déguisée. */
+  readonly portionsDemandees: number | null
+}) {
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [session, setSession] = useState<StoredCuisineSession | null>(null)
   const [maintenant, setMaintenant] = useState(() => Date.now())
   const [ecranTenu, setEcranTenu] = useState(false)
   const [alarmeSur, setAlarmeSur] = useState<number | null>(null)
+  const [ingredientsOuverts, setIngredientsOuverts] = useState(false)
 
   // L'alarme survit aux rendus : la recréer relâcherait le contexte audio déverrouillé sur le geste.
   const alarme = useRef<Alarme | null>(null)
@@ -81,23 +100,47 @@ export function Cuisine({ recetteId }: { readonly recetteId: string }) {
         // ⚠️ UNE SEULE CUISSON À LA FOIS (v1 mono-recette, `user_cuisine_session.id = 1`). Ouvrir le
         // mode sur une AUTRE recette remplace la précédente. La v1.5 fera sauter la contrainte.
         const reprise = existante !== null && existante.recetteId === recetteId
+        // ⚠️ LE LIEN GAGNE SUR LA SESSION, MAIS SEULEMENT S'IL PORTE UNE VALEUR. La fiche recette
+        // n'en met une qu'au moment où l'on appuie sur « Cuisiner pas à pas » — c'est un choix qu'on
+        // vient de faire, il doit primer. Le bandeau de reprise, lui, produit un hash NU : la session
+        // garde alors son nombre, sinon reprendre une cuisson la ramènerait aux portions de base et
+        // effacerait en silence un réglage fait la veille.
         const courante: StoredCuisineSession = reprise
-          ? existante
+          ? { ...existante, portions: portionsDemandees ?? existante.portions }
           : {
               recetteId,
               ordreCourant: gestes[0]?.ordre ?? 1,
               ouverteLe: Date.now(),
+              portions: portionsDemandees,
               minuteurs: [],
             }
         if (reprise) {
           for (const t of courante.minuteurs) {
             if (etatMinuteur(t, Date.now()).mode === 'termine') dejaSonnes.current.add(t.ordre)
           }
-        } else {
+        }
+        // Une session neuve s'écrit toujours ; une reprise SEULEMENT si le lien a changé les
+        // portions. Réécrire à chaque ouverture ferait repasser les minuteurs par un DELETE/INSERT
+        // sans aucune raison.
+        if (!reprise || courante.portions !== existante?.portions) {
           writeCuisineSession(socle.db, courante)
         }
         setSession(courante)
-        setEtat({ phase: 'pret', recette, db: socle.db })
+        setEtat({
+          phase: 'pret',
+          recette,
+          db: socle.db,
+          catalogue: socle.catalogue,
+          // ⚠️ ON LIT `quantiteG`, PAS `uniteAffichage` : `scaleRecipe` recalcule les grammes et
+          // laisse le libellé verbatim, à dessein. Même fermeture que sur la fiche recette, et le
+          // rendu est le même composant — voir `ui/ingredients-recette.tsx`.
+          quantitePour: (n) =>
+            new Map(
+              socle.moteur
+                .scaleRecipe(recetteId as RecipeId, n)
+                .ingredients.map((i) => [i.foodId as string, i.quantiteG])
+            ),
+        })
       })
       .catch(() => {
         if (vivant) setEtat({ phase: 'introuvable' })
@@ -105,7 +148,7 @@ export function Cuisine({ recetteId }: { readonly recetteId: string }) {
     return () => {
       vivant = false
     }
-  }, [recetteId])
+  }, [recetteId, portionsDemandees])
 
   // Le battement de seconde ne fait QUE rafraîchir l'affichage des décomptes. Il ne touche jamais à
   // l'étape courante — c'est ce que vérifie le test « les étapes n'avancent jamais seules ».
@@ -142,6 +185,10 @@ export function Cuisine({ recetteId }: { readonly recetteId: string }) {
       if (dejaSonnes.current.has(t.ordre)) continue
       if (etatMinuteur(t, maintenant).mode !== 'termine') continue
       dejaSonnes.current.add(t.ordre)
+      // ⚠️ LA FENÊTRE DES INGRÉDIENTS SE FERME À LA SONNERIE. `Panneau` passe par un portail posé
+      // après cet écran : ouverte, elle recouvrirait la surface « appuyez n'importe où » et l'arrêt
+      // de l'alarme deviendrait introuvable. Une casserole qui sonne prime sur une liste qu'on lit.
+      setIngredientsOuverts(false)
       setAlarmeSur(t.ordre)
       alarme.current.sonner(() => setAlarmeSur(null))
     }
@@ -159,9 +206,20 @@ export function Cuisine({ recetteId }: { readonly recetteId: string }) {
     )
   }
 
-  const { recette } = etat
+  const { recette, catalogue, quantitePour } = etat
   const gestes = gestesDe(recette)
   const avertissements = recette.etapes.filter((e) => e.nature === 'avertissement')
+
+  // `null` en session = AUCUN CHOIX EXPRIMÉ (schéma v11), pas « 4 » : on retombe alors sur les
+  // portions de la recette. C'est ici, et seulement ici, que la recette a le dernier mot — ni le
+  // routeur ni le store ne connaissent `portionsBase`.
+  const portions = session?.portions ?? recette.portionsBase
+  const facteur = portions / (recette.portionsBase > 0 ? recette.portionsBase : 1)
+
+  const changerPortions = (n: number): void => {
+    if (session === null) return
+    enregistrer({ ...session, portions: n })
+  }
   const rang = Math.max(
     0,
     gestes.findIndex((e) => e.ordre === (session?.ordreCourant ?? gestes[0]?.ordre))
@@ -236,6 +294,49 @@ export function Cuisine({ recetteId }: { readonly recetteId: string }) {
             ? "L'écran peut s'éteindre : cet appareil n'a pas accordé le maintien."
             : "L'écran peut s'éteindre : cet appareil ne sait pas le maintenir allumé."}
       </p>
+
+      {/* ⚠️ LES INGRÉDIENTS SONT ICI, ET C'EST TOUT L'OBJET DE CE LOT. Sans eux, « c'était combien
+          d'ail ? » en pleine cuisson obligeait à QUITTER le mode cuisine pour rouvrir la fiche, en
+          perdant l'étape courante de vue. La donnée était pourtant déjà chargée dans cet écran.
+
+          Une FENÊTRE et pas un dépliant : elle recouvre, on revient, l'écran n'a pas bougé — un
+          dépliant aurait poussé l'étape et les minuteurs vers le bas (`ui/panneau.tsx`).
+
+          ⚠️ `aria-haspopup="dialog"`, JAMAIS `aria-expanded` : ce bouton n'agrandit rien en place. */}
+      <button
+        type="button"
+        onClick={() => setIngredientsOuverts(true)}
+        aria-haspopup="dialog"
+        className="mt-4 flex min-h-tactile w-full items-center justify-between gap-3 rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-left text-[1.05rem] font-semibold text-accent-texte"
+      >
+        <span>Voir les ingrédients</span>
+        {/* La valeur courante sur la ligne, comme `LigneOuvrante` : sans elle, connaître le nombre de
+            portions demanderait d'ouvrir la fenêtre rien que pour le lire. */}
+        <span className="text-[0.95rem] font-normal text-attenue">
+          pour {portions} portion{portions > 1 ? 's' : ''}
+        </span>
+      </button>
+
+      {ingredientsOuverts && (
+        <Panneau titre={`Ingrédients — ${recette.nom}`} onFermer={() => setIngredientsOuverts(false)}>
+          <SelecteurPortions
+            portions={portions}
+            base={recette.portionsBase}
+            onChange={changerPortions}
+          />
+          {/* ⚠️ `manquants` À `null`, DÉLIBÉRÉMENT. On ne dit pas « à acheter » à quelqu'un qui a
+              déjà la poêle sur le feu : la mention appartient à la fiche, où l'on décide de
+              cuisiner, pas au fourneau où il est trop tard pour en tenir compte. */}
+          <ListeIngredients
+            ingredients={recette.ingredients}
+            quantites={quantitePour(portions)}
+            facteur={facteur}
+            nomAliment={(foodId) => catalogue.foods.get(foodId as never)?.nom ?? foodId}
+            estFondDePlacard={(foodId) => catalogue.foods.get(foodId as never)?.fondDePlacard === true}
+            manquants={null}
+          />
+        </Panneau>
+      )}
 
       {etape !== undefined && (
         <section className="mt-6 rounded-[--radius-carte] border border-bordure bg-surface p-5">

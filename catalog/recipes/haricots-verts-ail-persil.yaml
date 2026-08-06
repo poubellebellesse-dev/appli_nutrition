@@ -1,0 +1,73 @@
+id: haricots_verts_ail_persil
+nom: "Haricots verts à l'ail et au persil"
+origine: maison
+description: >
+  Des haricots verts blanchis puis sautés à l'huile d'olive avec de l'ail et du persil,
+  pour garder leur croquant.
+temps_prep_min: 10
+temps_cuisson_min: 12
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.3
+  chaud_froid: 0.5
+  texture: croquant
+
+ingredients:
+  - food_id: haricot_vert
+    quantite_g: 700
+    unite_affichage: "700 g"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 12
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Équeuter les haricots verts et les blanchir à l'eau bouillante salée."
+    lexicon_ids: [equeuter, blanchir]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Égoutter les haricots et hacher l'ail et le persil."
+    lexicon_ids: [egoutter, hacher]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire sauter les haricots dans l'huile d'olive avec l'ail jusqu'à ce qu'ils soient dorés par endroits."
+    lexicon_ids: [sauter, dorer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Parsemer de persil et de sel avant de servir."
+    lexicon_ids: [parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

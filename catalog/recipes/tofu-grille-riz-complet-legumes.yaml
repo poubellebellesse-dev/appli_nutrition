@@ -1,0 +1,91 @@
+id: tofu_grille_riz_complet_legumes
+nom: "Tofu grillé, riz complet et légumes"
+origine: maison
+description: >
+  Du tofu saisi à la poêle, servi avec du riz complet et une poêlée de
+  courgette et poivron.
+temps_prep_min: 15
+temps_cuisson_min: 30
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.5
+  texture: ferme
+
+ingredients:
+  - food_id: tofu_nature
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: riz_complet
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: courgette
+    quantite_g: 300
+    unite_affichage: "1 courgette"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 200
+    unite_affichage: "1 poivron"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Égoutter le tofu, l'éponger et le tailler en tranches épaisses."
+    lexicon_ids: [egoutter, eponger, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Laver et couper la courgette et le poivron en dés."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Cuire le riz complet dans un grand volume d'eau salée."
+    lexicon_ids: []
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Saisir les tranches de tofu dans l'huile d'olive jusqu'à ce qu'elles dorent des deux côtés."
+    lexicon_ids: [saisir, dorer]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Faire sauter la courgette, le poivron et l'ail émincé dans la même poêle."
+    lexicon_ids: [sauter, emincer]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 6
+    texte: "Dresser le riz avec les légumes et le tofu, saler à volonté."
+    lexicon_ids: [dresser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

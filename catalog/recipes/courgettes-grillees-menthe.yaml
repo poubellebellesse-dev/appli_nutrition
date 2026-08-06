@@ -1,0 +1,76 @@
+id: courgettes_grillees_menthe
+nom: "Courgettes grillées à la menthe"
+origine: maison
+description: >
+  Des lamelles de courgette saisies à la poêle, relevées d'ail, de citron et de menthe fraîche ciselée.
+temps_prep_min: 10
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: -0.3
+  chaud_froid: 0.4
+  texture: fondant
+
+ingredients:
+  - food_id: courgette
+    quantite_g: 800
+    unite_affichage: "3 courgettes"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 8
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 25
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 8
+    unite_affichage: "2 gousses"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Détailler les courgettes en lamelles fines et ciseler la menthe."
+    lexicon_ids: [tailler_des, ciseler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Saisir les lamelles de courgette dans l'huile d'olive à feu vif jusqu'à ce qu'elles soient dorées."
+    lexicon_ids: [saisir, dorer]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Écraser l'ail et l'ajouter en fin de cuisson avec le jus de citron."
+    lexicon_ids: [ecraser]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Saler, parsemer de menthe et dresser aussitôt."
+    lexicon_ids: [assaisonner, parsemer, dresser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: provencale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

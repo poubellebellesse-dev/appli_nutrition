@@ -1,0 +1,77 @@
+id: porridge_sarrasin_pomme_cannelle
+nom: "Porridge de sarrasin à la pomme et à la cannelle"
+origine: maison
+description: >
+  Du sarrasin cuit doucement dans une boisson d'amande, avec des dés de pomme et
+  une pointe de cannelle, adouci d'un filet de sirop d'érable.
+temps_prep_min: 10
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.6
+  leger_consistant: 0.2
+  chaud_froid: 0.7
+  texture: creme
+
+ingredients:
+  - food_id: sarrasin
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: boisson_amande
+    quantite_g: 600
+    unite_affichage: "60 cl"
+    optionnel: false
+  - food_id: pomme
+    quantite_g: 300
+    unite_affichage: "2 pommes"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 3
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: sirop_erable
+    quantite_g: 40
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: graine_lin
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le sarrasin et couper la pomme en petits dés."
+    lexicon_ids: [rincer, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser le sarrasin et la boisson d'amande dans une casserole, porter à frémissement."
+    lexicon_ids: [fremir]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter les dés de pomme et la cannelle, laisser mijoter jusqu'à ce que le sarrasin soit tendre et crémeux."
+    lexicon_ids: [mijoter]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Répartir dans les bols, arroser de sirop d'érable et parsemer de graines de lin."
+    lexicon_ids: [arroser, parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

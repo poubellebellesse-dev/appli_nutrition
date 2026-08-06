@@ -1,0 +1,76 @@
+id: flageolets_ail_persil
+nom: "Flageolets à l'ail et au persil"
+origine: maison
+description: >
+  Des flageolets mijotés avec échalote et ail, relevés de persil ciselé au moment de servir.
+temps_prep_min: 10
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: flageolet
+    quantite_g: 700
+    unite_affichage: "2 conserves égouttées"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 12
+    unite_affichage: "1/2 bouquet"
+    optionnel: true
+  - food_id: echalote
+    quantite_g: 40
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer les flageolets et les laisser s'égoutter."
+    lexicon_ids: [rincer, egoutter]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'échalote et l'ail, les faire revenir dans l'huile sans les colorer."
+    lexicon_ids: [emincer, revenir]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Ajouter les flageolets, saler et laisser mijoter à feu doux."
+    lexicon_ids: [mijoter]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ciseler le persil et le parsemer sur les flageolets au moment de servir."
+    lexicon_ids: [ciseler, parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

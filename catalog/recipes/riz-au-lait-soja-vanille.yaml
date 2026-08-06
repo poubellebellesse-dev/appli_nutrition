@@ -1,0 +1,73 @@
+id: riz_au_lait_soja_vanille
+nom: "Riz au lait de soja à la vanille et aux raisins"
+origine: maison
+description: >
+  Du riz blanc mijoté dans une boisson de soja parfumée à la vanille, avec des
+  raisins secs et du sucre roux, servi tiède.
+temps_prep_min: 10
+temps_cuisson_min: 40
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.6
+  leger_consistant: 0.3
+  chaud_froid: 0.3
+  texture: creme
+
+ingredients:
+  - food_id: riz_blanc
+    quantite_g: 180
+    unite_affichage: "180 g"
+    optionnel: false
+  - food_id: boisson_soja
+    quantite_g: 700
+    unite_affichage: "70 cl"
+    optionnel: false
+  - food_id: vanille_gousse
+    quantite_g: 1
+    unite_affichage: "1 gousse"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: raisin_sec
+    quantite_g: 60
+    unite_affichage: "1 petite poignée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Fendre la gousse de vanille et gratter les graines."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser le riz, la boisson de soja, la vanille et le sucre roux dans une casserole, porter à frémissement."
+    lexicon_ids: [fremir]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Laisser mijoter à couvert en remuant de temps en temps jusqu'à ce que le riz soit fondant."
+    lexicon_ids: [mijoter]
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Incorporer les raisins secs hors du feu et laisser tiédir avant de servir."
+    lexicon_ids: [incorporer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: gourmand

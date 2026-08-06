@@ -156,6 +156,17 @@ describe('semaine — changer un plat', () => {
 
     const premier = readLatestPlan(baseCourante())!.entries.find((e) => e.service !== 'accompagnement')!
     const cleCible = cle(premier)
+    // ⚠️ L'EXEMPTION PORTE SUR LE CRÉNEAU ENTIER, PAS SUR LA SEULE ENTRÉE VISÉE. « Changer » rejoue
+    // le plat ET son accompagnement (décision 54) : reproposer le poulet en laissant la purée à côté
+    // laisserait une garniture sans rapport avec le plat. L'accompagnement du créneau visé a donc
+    // TOUJOURS le droit de changer.
+    //
+    // ⛔ CE TEST PASSAIT PAR CHANCE, et il l'a avoué le 2026-08-06. En exemptant la seule clé
+    // (date, créneau, SERVICE), il exigeait que l'accompagnement du créneau visé reste identique —
+    // l'inverse de ce que `rerollSlot` promet. Il restait vert parce qu'avec 21 accompagnements au
+    // catalogue le tirage retombait souvent sur le même ; passé à 39, il tombe sur un autre. Un test
+    // dont le résultat dépend de la TAILLE du catalogue ne vérifiait pas ce qu'il annonçait.
+    const creneauCible = `${premier.slot.date}|${premier.slot.creneau}|`
 
     fireEvent.click(screen.getAllByText('Changer')[0]!)
 
@@ -166,7 +177,7 @@ describe('semaine — changer un plat', () => {
 
     const apres = new Map(readLatestPlan(baseCourante())!.entries.map((e) => [cle(e), e.recipeId]))
     for (const [k, recipeId] of avant) {
-      if (k === cleCible) continue
+      if (k.startsWith(creneauCible)) continue
       expect(apres.get(k)).toBe(recipeId)
     }
   })

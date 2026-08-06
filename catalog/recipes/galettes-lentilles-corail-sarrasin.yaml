@@ -1,0 +1,91 @@
+id: galettes_lentilles_corail_sarrasin
+nom: "Galettes de lentilles corail et de sarrasin"
+origine: maison
+description: >
+  Des galettes fondantes de lentilles corail et de sarrasin, parfumées au
+  cumin et dorées à la poêle.
+temps_prep_min: 20
+temps_cuisson_min: 25
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.4
+  chaud_froid: 0.5
+  texture: fondant
+
+ingredients:
+  - food_id: lentilles_corail
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: sarrasin
+    quantite_g: 100
+    unite_affichage: "100 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 3
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer les lentilles corail et le sarrasin."
+    lexicon_ids: [rincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Cuire les lentilles et le sarrasin ensemble dans l'eau jusqu'à ce qu'ils forment une purée épaisse."
+    lexicon_ids: [mijoter]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Émincer l'oignon et le faire revenir dans un peu d'huile d'olive."
+    lexicon_ids: [emincer, revenir]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Incorporer l'oignon, le cumin et le persil ciselé à la purée de lentilles et de sarrasin, saler et laisser tiédir."
+    lexicon_ids: [incorporer, ciseler]
+    timer_s: 600
+    timer_type: repos
+  - ordre: 5
+    texte: "Façonner des galettes avec les mains humides."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Dorer les galettes des deux côtés dans le reste d'huile d'olive."
+    lexicon_ids: [dorer, poeler]
+    timer_s: 480
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

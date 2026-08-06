@@ -1,0 +1,81 @@
+id: quinoa_legumes_grilles_amandes
+nom: "Quinoa aux légumes grillés et aux amandes"
+origine: maison
+description: >
+  Du quinoa servi avec courgette, poivron jaune et aubergine rôtis au four, parsemé
+  d'amandes effilées.
+temps_prep_min: 15
+temps_cuisson_min: 30
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.4
+  chaud_froid: 0.3
+  texture: ferme
+
+ingredients:
+  - food_id: quinoa
+    quantite_g: 260
+    unite_affichage: "260 g"
+    optionnel: false
+  - food_id: courgette
+    quantite_g: 300
+    unite_affichage: "2 courgettes"
+    optionnel: false
+  - food_id: poivron_jaune
+    quantite_g: 200
+    unite_affichage: "2 poivrons"
+    optionnel: false
+  - food_id: aubergine
+    quantite_g: 250
+    unite_affichage: "1 aubergine"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four et détailler la courgette, le poivron et l'aubergine en morceaux."
+    lexicon_ids: [prechauffer, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Enrober les légumes d'huile d'olive et de sel, puis enfourner jusqu'à ce qu'ils soient tendres et légèrement dorés."
+    lexicon_ids: [enfourner, dorer]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Rincer le quinoa et le cuire dans deux fois son volume d'eau jusqu'à absorption complète."
+    lexicon_ids: [rincer]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Mélanger le quinoa et les légumes grillés, parsemer d'amandes effilées."
+    lexicon_ids: [parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

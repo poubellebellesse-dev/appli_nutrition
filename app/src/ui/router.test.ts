@@ -121,7 +121,7 @@ describe('ui/router — mode cuisine', () => {
   it('porte l’identifiant de la recette qu’on cuisine', () => {
     expect(routeDepuisHash(hashDeLaCuisine('chakchouka'))).toEqual({
       onglet: 'recettes',
-      sousVue: { type: 'cuisine', id: 'chakchouka' },
+      sousVue: { type: 'cuisine', id: 'chakchouka', portions: null },
     })
   })
 
@@ -129,7 +129,50 @@ describe('ui/router — mode cuisine', () => {
     const id = 'recette perso/2026'
     expect(routeDepuisHash(hashDeLaCuisine(id))).toEqual({
       onglet: 'recettes',
-      sousVue: { type: 'cuisine', id },
+      sousVue: { type: 'cuisine', id, portions: null },
+    })
+  })
+
+  // --- Les portions au lancement (v11) ---------------------------------------------------------
+  //
+  // ⚠️ `null` N'EST PAS « 4 ». Il veut dire « aucun choix exprimé », et c'est l'écran de cuisine —
+  // seul à connaître `portionsBase` — qui décide alors. Ces tests verrouillent la distinction : un
+  // repli silencieux vers un nombre écrirait dans la session persistée un choix que personne n'a
+  // fait.
+  it('porte les portions réglées sur la fiche', () => {
+    expect(routeDepuisHash(hashDeLaCuisine('chakchouka', 6))).toEqual({
+      onglet: 'recettes',
+      sousVue: { type: 'cuisine', id: 'chakchouka', portions: 6 },
+    })
+  })
+
+  it('un hash NU ne demande aucune portion — c’est le lien de reprise', () => {
+    expect(hashDeLaCuisine('chakchouka')).not.toContain('portions')
+    expect(routeDepuisHash('#/cuisine/chakchouka').sousVue).toEqual({
+      type: 'cuisine',
+      id: 'chakchouka',
+      portions: null,
+    })
+  })
+
+  // ⛔ `portions=0` ferait disparaître la recette de sa propre mise à l'échelle, et une valeur
+  // fractionnaire passerait ensuite dans `scaleRecipe` sans que rien ne l'arrête. Tout ce qui n'est
+  // pas un entier ≥ 1 retombe sur « aucun choix exprimé », jamais sur un plantage.
+  it('⛔ refuse zéro, le négatif, le fractionnaire et le non-numérique', () => {
+    for (const brut of ['0', '-2', '2.5', 'beaucoup', '']) {
+      const route = routeDepuisHash(`#/cuisine/chakchouka?portions=${brut}`)
+      expect(route.sousVue).toEqual({ type: 'cuisine', id: 'chakchouka', portions: null })
+    }
+  })
+
+  // Un identifiant peut légitimement contenir un `?` encodé : le découpage se fait sur le fragment
+  // BRUT, avant décodage — même précaution que `?de=` sur la fiche recette.
+  it('un identifiant contenant un « ? » encodé survit au découpage de la requête', () => {
+    const id = 'quoi? du riz'
+    expect(routeDepuisHash(hashDeLaCuisine(id, 3)).sousVue).toEqual({
+      type: 'cuisine',
+      id,
+      portions: 3,
     })
   })
 

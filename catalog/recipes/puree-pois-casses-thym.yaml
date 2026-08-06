@@ -1,0 +1,76 @@
+id: puree_pois_casses_thym
+nom: "Purée de pois cassés au thym"
+origine: maison
+description: >
+  Des pois cassés mijotés avec oignon, thym et laurier, puis écrasés en purée épaisse.
+temps_prep_min: 10
+temps_cuisson_min: 45
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.6
+  leger_consistant: 0.6
+  chaud_froid: 0.7
+  texture: creme
+
+ingredients:
+  - food_id: pois_casse
+    quantite_g: 300
+    unite_affichage: "300 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 2
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'oignon et le faire revenir dans l'huile d'olive jusqu'à ce qu'il devienne translucide."
+    lexicon_ids: [emincer, revenir]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ajouter les pois cassés, le thym, le laurier et couvrir d'eau. Laisser mijoter."
+    lexicon_ids: [mijoter]
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Retirer le laurier, saler puis écraser à la fourchette jusqu'à obtenir une purée lisse."
+    lexicon_ids: [ecraser, assaisonner]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Réserver au chaud jusqu'au service."
+    lexicon_ids: [reserver]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: reconfortant

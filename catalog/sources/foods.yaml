@@ -5375,6 +5375,7 @@ foods:
     nom: "Lait écrémé"
     groupe: "lait et produits laitiers"
     conditionnement_g: 1000
+    origine_animale: mammifere
     sous_famille: "lait"
     toute_annee: true
     nutriments:
@@ -5906,6 +5907,7 @@ foods:
     nom: "Mayonnaise"
     groupe: "condiments"
     conditionnement_g: 250
+    origine_animale: volaille
     toute_annee: true
     nutriments:
       energie_kcal: 692
@@ -5966,6 +5968,7 @@ foods:
     nom: "Sauce nuoc-mâm"
     groupe: "condiments"
     conditionnement_g: 200
+    origine_animale: poisson
     toute_annee: true
     nutriments:
       energie_kcal: 81.2
@@ -6059,6 +6062,7 @@ foods:
     nom: "Chocolat au lait"
     groupe: "produits sucrés"
     conditionnement_g: 100
+    origine_animale: mammifere
     sous_famille: "chocolat"
     toute_annee: true
     nutriments:
@@ -6084,6 +6088,7 @@ foods:
     nom: "Chocolat blanc"
     groupe: "produits sucrés"
     conditionnement_g: 100
+    origine_animale: mammifere
     sous_famille: "chocolat"
     toute_annee: true
     nutriments:
@@ -6337,6 +6342,7 @@ foods:
     nom: "Chèvre affiné"
     groupe: "lait et produits laitiers"
     conditionnement_g: 100
+    origine_animale: mammifere
     sous_famille: "chevre"
     toute_annee: true
     nutriments:
@@ -6569,6 +6575,7 @@ foods:
     nom: "Nouilles asiatiques sèches, aux œufs"
     groupe: "céréales et dérivés"
     conditionnement_g: 250
+    origine_animale: volaille
     toute_annee: true
     nutriments:
       energie_kcal: 371
@@ -7189,6 +7196,7 @@ foods:
     nom: "Ossau-Iraty (brebis)"
     groupe: "lait et produits laitiers"
     conditionnement_g: 200
+    origine_animale: mammifere
     toute_annee: true
     nutriments:
       energie_kcal: 423
@@ -7508,6 +7516,7 @@ foods:
     nom: "Sauce pesto"
     groupe: "condiments"
     conditionnement_g: 190
+    origine_animale: mammifere
     toute_annee: true
     nutriments:
       energie_kcal: 370
@@ -8927,6 +8936,7 @@ foods:
     nom: "Meringue"
     groupe: "produits sucrés"
     conditionnement_g: 100
+    origine_animale: volaille
     toute_annee: true
     nutriments:
       energie_kcal: 396
