@@ -26,19 +26,31 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import type { AllergenId, RecipeId } from '../../engine/domain/index.js'
 import { readAllergies, readDisplay, readMealTimes, writeAllergies } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
+import { remplacerLeFichier } from '../user-source.js'
 
 vi.mock('../catalog-source.js', () => ({
   chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
   chargerConfiance: () => Promise.resolve(confianceDeTest()),
 }))
+/**
+ * Le verrou d'onglet, rendu pilotable par test. Un objet et non une variable : le corps d'un
+ * `vi.mock` est hissé au-dessus des déclarations du fichier, seule une référence stable survit.
+ */
+const verrouDeTest = vi.hoisted(() => ({ courant: 'exclusif' as 'exclusif' | 'partage' | 'indisponible' }))
+
 vi.mock('../user-source.js', () => ({
-  ouvrirUserDb: () => Promise.resolve(sessionDeTest()),
+  ouvrirUserDb: () => Promise.resolve({ ...sessionDeTest(), verrou: verrouDeTest.courant }),
   surErreurDePersistance: () => undefined,
+  octetsDeLaBase: vi.fn(),
+  remplacerLeFichier: vi.fn(),
+  verifierSauvegarde: vi.fn(),
 }))
 
 beforeEach(() => {
   vi.resetModules()
   reinitialiserBase()
+  // Un seul onglet : le cas nominal. Les tests qui parlent du verrou le disent explicitement.
+  verrouDeTest.courant = 'exclusif'
 })
 afterEach(cleanup)
 
@@ -275,5 +287,83 @@ describe('parametres — les sous-menus sont des fenêtres en superposition, pas
     // La ligne reflète maintenant ce qui a été déclaré, sans qu'on rouvre le panneau.
     expect(screen.getByText('Gluten')).toBeDefined()
     expect(screen.queryByText('Aucune')).toBeNull()
+  })
+})
+
+describe('Sauvegarde', () => {
+  it('la ligne ouvrante dit « Jamais sauvegardé » sur une base neuve', async () => {
+    await monter()
+    expect(screen.getByText('Jamais sauvegardé')).toBeDefined()
+  })
+
+  it('le panneau ouvert propose de créer une sauvegarde et de restaurer un fichier', async () => {
+    await monter()
+    const panneau = ouvrir('Sauvegarder mes données')
+    expect(panneau.getByRole('button', { name: 'Créer une sauvegarde' })).toBeDefined()
+    expect(panneau.getByLabelText('Restaurer une sauvegarde (.nutri-backup)')).toBeDefined()
+  })
+
+  it('⛔ CHOISIR UN FICHIER N’ÉCRASE RIEN TOUT SEUL — la confirmation s’interpose', async () => {
+    await monter()
+    const panneau = ouvrir('Sauvegarder mes données')
+    const champ = panneau.getByLabelText('Restaurer une sauvegarde (.nutri-backup)')
+    const fichier = new File([new Uint8Array([1, 2, 3])], 'ma-sauvegarde.nutri-backup')
+
+    fireEvent.change(champ, { target: { files: [fichier] } })
+
+    await panneau.findByText('Restaurer remplacera toutes vos données actuelles.')
+    expect(remplacerLeFichier).not.toHaveBeenCalled()
+  })
+
+  it('« Annuler » depuis la confirmation revient aux deux commandes sans rien appeler', async () => {
+    await monter()
+    const panneau = ouvrir('Sauvegarder mes données')
+    const champ = panneau.getByLabelText('Restaurer une sauvegarde (.nutri-backup)')
+    const fichier = new File([new Uint8Array([1, 2, 3])], 'ma-sauvegarde.nutri-backup')
+    fireEvent.change(champ, { target: { files: [fichier] } })
+    await panneau.findByText('Restaurer remplacera toutes vos données actuelles.')
+
+    fireEvent.click(panneau.getByText('Annuler'))
+
+    expect(panneau.getByRole('button', { name: 'Créer une sauvegarde' })).toBeDefined()
+    expect(panneau.getByLabelText('Restaurer une sauvegarde (.nutri-backup)')).toBeDefined()
+    expect(remplacerLeFichier).not.toHaveBeenCalled()
+  })
+
+  it('la confirmation nomme le fichier choisi', async () => {
+    await monter()
+    const panneau = ouvrir('Sauvegarder mes données')
+    const champ = panneau.getByLabelText('Restaurer une sauvegarde (.nutri-backup)')
+    const fichier = new File([new Uint8Array([1, 2, 3])], 'ma-sauvegarde.nutri-backup')
+
+    fireEvent.change(champ, { target: { files: [fichier] } })
+
+    await panneau.findByText(/ma-sauvegarde\.nutri-backup/)
+  })
+})
+
+// ⚠️ AJOUTÉ APRÈS RELECTURE (2026-08-06), ET CE N'EST PAS DU CONFORT D'AFFICHAGE. Un onglet qui n'a
+// pas le verrou n'enregistre plus rien : sa base en mémoire est vivante, mais elle ne descend plus
+// sur OPFS. S'il pouvait restaurer, l'écriture aurait bien lieu — puis l'onglet DÉTENTEUR, qui
+// n'en sait rien, écraserait le fichier restauré à sa modification suivante avec SA propre base.
+// La restauration aurait paru marcher, puis se serait défaite toute seule, sans erreur. Le refus
+// dur vit dans `user-source.ts` ; ce test verrouille qu'on le DISE avant le geste, et non après la
+// fenêtre de confirmation.
+describe('Sauvegarde — un onglet qui n’enregistre pas ne restaure pas', () => {
+  it('⛔ n’offre AUCUN champ de restauration quand un autre onglet détient le verrou', async () => {
+    verrouDeTest.courant = 'partage'
+    await monter()
+    const panneau = ouvrir('Sauvegarder mes données')
+
+    expect(panneau.queryByLabelText('Restaurer une sauvegarde (.nutri-backup)')).toBeNull()
+    expect(panneau.getByText(/ouverte dans un autre onglet/i)).toBeDefined()
+  })
+
+  it('laisse en revanche CRÉER une sauvegarde — exporter ne fait que lire', async () => {
+    verrouDeTest.courant = 'partage'
+    await monter()
+    const panneau = ouvrir('Sauvegarder mes données')
+
+    expect(panneau.getByRole('button', { name: 'Créer une sauvegarde' })).toBeDefined()
   })
 })

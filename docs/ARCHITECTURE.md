@@ -923,15 +923,32 @@ La frontière est structurelle, pas affaire de ton :
 Safari efface les données web après 7 jours d'inactivité — **sauf si la PWA est installée sur
 l'écran d'accueil**. Stratégie défensive obligatoire :
 
-| Mesure | Détail |
-|---|---|
-| 1. Persistance | `navigator.storage.persist()` réclamé au premier lancement |
-| 2. Installation avant saisie | Onboarding bloqué tant que l'app n'est pas installée (ou avertissement explicite si l'utilisateur refuse) |
-| 3. Export manuel | Fichier `.nutri-backup` téléchargeable à tout moment |
-| 4. Rappel automatique | Invite à sauvegarder si `dernier_export_le` > 14 jours |
-| 5. Import | Restauration complète depuis un fichier de sauvegarde |
-| 6. Détection | Bandeau d'alerte permanent si la persistance a été refusée |
-| 7. Quota | Surveillance via `navigator.storage.estimate()` |
+| Mesure | Détail | État |
+|---|---|---|
+| 1. Persistance | `navigator.storage.persist()` réclamé au premier lancement | ✅ `ui/user-source.ts` |
+| 2. Installation avant saisie | Onboarding bloqué tant que l'app n'est pas installée (ou avertissement explicite si l'utilisateur refuse) | ⚠️ non faite |
+| 3. Export manuel | Fichier `.nutri-backup` téléchargeable à tout moment | ✅ 2026-08-06 |
+| 4. Rappel automatique | Invite à sauvegarder si `dernier_export_le` > 14 jours | ✅ 2026-08-06, **dans Paramètres seulement** |
+| 5. Import | Restauration complète depuis un fichier de sauvegarde | ✅ 2026-08-06 |
+| 6. Détection | Bandeau d'alerte permanent si la persistance a été refusée | ✅ `ui/main.tsx` |
+| 7. Quota | Surveillance via `navigator.storage.estimate()` | ⚠️ non faite |
+
+**Précisions sur 3, 4 et 5, livrées le 2026-08-06** (décision 59 d'`ETAT.md` §4, où vit le raisonnement
+complet — ne pas le redupliquer ici) :
+
+- Le `.nutri-backup` contient les **octets SQLite** de `user.db`, pas du JSON. Une liste de tables
+  écrite à la main serait fausse au premier ajout de table, et son échec serait muet.
+- La restauration **valide avant de remplacer** : le fichier est ouvert dans une base jetable et migré
+  là, et seuls des octets déjà éprouvés écrasent celui de l'utilisateur. Une sauvegarde d'une version
+  de schéma **plus récente est refusée**, jamais tentée.
+- Le rappel de la mesure 4 n'apparaît **que sur la ligne « Sauvegarder mes données » des Paramètres** :
+  ni bandeau d'accueil, ni notification, ni badge. Faute d'export, l'ancienneté se compte depuis
+  `user_profile.cree_le` — « jamais sauvegardé » n'est pas « il y a longtemps », et réclamer une
+  sauvegarde devant une base vide serait du bruit.
+
+⚠️ **Un verrou d'onglet a été ajouté au même endroit** (`navigator.locks`, `ui/user-source.ts`) : deux
+onglets tenaient chacun leur copie de `user.db` et le dernier qui écrivait gagnait, sans erreur.
+L'onglet qui n'obtient pas le verrou n'écrit plus et l'affiche. Détail : `ETAT.md` §8.
 
 ### 7.1 Stratégie de cache — deux étages (option B)
 

@@ -12,7 +12,7 @@ import { readProfile, writeProfile } from '../data/user-store.js'
 import { avecRecettesSupplementaires, type ConfianceParAliment } from '../data/catalog-loader.js'
 import { readUserRecipes, versRecette } from '../data/user-recipe.js'
 import { chargerCatalogue, chargerConfiance } from './catalog-source.js'
-import { ouvrirUserDb, type Stockage } from './user-source.js'
+import { ouvrirUserDb, type EtatVerrou, type Stockage } from './user-source.js'
 
 /**
  * Profil semé au tout premier lancement, quand `user.db` est vide.
@@ -67,6 +67,11 @@ export interface Socle {
   readonly stockage: Stockage
   /** §7 mesure 6 — `false` impose un bandeau permanent, la base est effaçable par le navigateur. */
   readonly persistant: boolean
+  /**
+   * `'partage'` = un autre onglet détient le verrou d'écriture, celui-ci n'enregistre plus rien.
+   * À dire, au même titre que `stockage: 'memoire'` : l'application a l'air de marcher.
+   */
+  readonly verrou: EtatVerrou
 }
 
 let cache: Promise<Socle> | undefined
@@ -86,7 +91,14 @@ async function chargerVraiment(): Promise<Socle> {
     chargerConfiance(),
     ouvrirUserDb(),
   ])
-  return assembler(catalogueSource, confiance, session.db, session.stockage, session.persistant)
+  return assembler(
+    catalogueSource,
+    confiance,
+    session.db,
+    session.stockage,
+    session.persistant,
+    session.verrou
+  )
 }
 
 /**
@@ -103,7 +115,8 @@ function assembler(
   confiance: ConfianceParAliment,
   db: UserDb,
   stockage: Stockage,
-  persistant: boolean
+  persistant: boolean,
+  verrou: EtatVerrou
 ): Socle {
   const perso = readUserRecipes(db).map((stockee) => versRecette(stockee, catalogueSource.foods))
   const brut = avecRecettesSupplementaires(catalogueSource, perso)
@@ -111,7 +124,7 @@ function assembler(
   // `moteur.catalogue` est le catalogue ENRICHI que `createEngine` a construit (§6.5 précision 8),
   // pas `brut` : l'exposer via le moteur garantit par construction que `catalogue` porte les index
   // dérivés — plus une histoire de convention qu'il faudrait se souvenir de respecter à chaque appel.
-  return { catalogue: moteur.catalogue, catalogueSource, confiance, moteur, db, stockage, persistant }
+  return { catalogue: moteur.catalogue, catalogueSource, confiance, moteur, db, stockage, persistant, verrou }
 }
 
 /**
@@ -132,7 +145,8 @@ export async function rebatirCatalogue(): Promise<Socle> {
     actuel.confiance,
     actuel.db,
     actuel.stockage,
-    actuel.persistant
+    actuel.persistant,
+    actuel.verrou
   )
   cache = Promise.resolve(suivant)
   return suivant

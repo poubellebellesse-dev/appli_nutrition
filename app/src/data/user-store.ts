@@ -836,6 +836,54 @@ export function writeDisplay(db: UserDb, display: StoredDisplay): void {
   )
 }
 
+// --- Sauvegarde (app_meta) --------------------------------------------------------------------
+
+/**
+ * Date ISO du dernier export de sauvegarde, `null` si l'utilisateur n'en a jamais fait.
+ *
+ * ⚠️ `app_meta.dernier_export_le` ÉTAIT DÉCLARÉ AU SCHÉMA DEPUIS LA v1 ET ÉCRIT PAR PERSONNE.
+ * La mesure 4 de §7 ARCHITECTURE — « invite à sauvegarder si `dernier_export_le` > 14 jours » —
+ * reposait donc sur une colonne vide : le rappel ne pouvait pas se déclencher, et rien ne le disait.
+ * C'est la classe de défaut que ce projet paie en boucle (`note_allergene`, `Recipe.service`,
+ * `ratio`/`contexte`) ; elle est fermée ici en branchant l'écriture ET son lecteur dans le même lot.
+ *
+ * ⚠️ `null` n'est PAS « il y a longtemps ». Une base neuve n'a jamais été exportée parce qu'elle ne
+ * contient rien à perdre ; réclamer une sauvegarde au premier lancement serait du bruit. C'est
+ * `doitRappeler` (`ui/sauvegarde.ts`) qui tranche, pas cette lecture.
+ */
+export function readDernierExport(db: UserDb): string | null {
+  const row = db.all<{ readonly dernier_export_le: string | null }>(
+    'SELECT dernier_export_le FROM app_meta WHERE id = 1'
+  )[0]
+  return row?.dernier_export_le ?? null
+}
+
+/**
+ * Note qu'une sauvegarde vient d'être produite.
+ *
+ * ⚠️ APPELÉE APRÈS COUP, jamais avant : le partage peut être annulé par l'utilisateur au niveau du
+ * système, et dater un export qui n'a pas eu lieu ferait taire le rappel pendant 14 jours sur la foi
+ * d'un fichier qui n'existe pas.
+ */
+export function writeDernierExport(db: UserDb, dateIso: string): void {
+  db.run('UPDATE app_meta SET dernier_export_le = ? WHERE id = 1', [dateIso])
+}
+
+/**
+ * Date de création du profil, `null` s'il n'y en a pas encore.
+ *
+ * ⚠️ SÉPARÉE DE `readProfile`, exprès. `UserProfile` est un type de `engine/domain` : y ajouter une
+ * date de création ferait entrer une notion de stockage dans le domaine, que le moteur devrait alors
+ * ignorer à la main. `user_profile.cree_le` est une donnée de BASE, elle se lit à part.
+ *
+ * ⚠️ C'est bien une date de CRÉATION et pas de dernière modification : `writeProfile` n'est appelée
+ * qu'une fois, par `profilOuDefaut` (`ui/socle.ts`), et seulement quand aucun profil n'existe.
+ */
+export function readProfilCreeLe(db: UserDb): string | null {
+  const row = db.all<{ readonly cree_le: string | null }>('SELECT cree_le FROM user_profile WHERE id = 1')[0]
+  return row?.cree_le ?? null
+}
+
 // --- Lecture composée -------------------------------------------------------------------------
 
 /**

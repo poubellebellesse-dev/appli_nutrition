@@ -40,11 +40,13 @@ import './index.css'
  * Trois situations, de la plus grave à la plus bénigne, et elles ne se disent pas pareil : ne rien
  * conserver du tout, avoir perdu une écriture, ou dépendre du bon vouloir du navigateur.
  */
-type Alerte = 'aucune' | 'memoire' | 'echec_ecriture' | 'non_persistant'
+type Alerte = 'aucune' | 'memoire' | 'autre_onglet' | 'echec_ecriture' | 'non_persistant'
 
 const MESSAGE: Readonly<Record<Exclude<Alerte, 'aucune'>, string>> = {
   memoire:
     "Cet appareil ne permet pas d'enregistrer vos données : elles seront perdues en fermant l'onglet.",
+  autre_onglet:
+    "L'application est déjà ouverte dans un autre onglet, et c'est lui qui enregistre. Ce que vous ferez ici ne sera pas conservé — continuez dans l'autre onglet, ou fermez-le et rechargez cette page.",
   echec_ecriture:
     "Une modification n'a pas pu être enregistrée. L'espace de stockage est peut-être saturé.",
   non_persistant:
@@ -64,6 +66,9 @@ const MESSAGE: Readonly<Record<Exclude<Alerte, 'aucune'>, string>> = {
  */
 const ECARTABLE: Readonly<Record<Exclude<Alerte, 'aucune'>, boolean>> = {
   memoire: false,
+  // Même famille que `memoire` : cet onglet-ci n'enregistre rien. Le refermer laisserait quelqu'un
+  // travailler dans une page dont le travail sera perdu, sans plus rien à l'écran pour le dire.
+  autre_onglet: false,
   echec_ecriture: false,
   non_persistant: true,
 }
@@ -238,6 +243,9 @@ function Coquille() {
       (socle) => {
         if (annule) return
         if (socle.stockage === 'memoire') setAlerte('memoire')
+        // ⚠️ AVANT `non_persistant`, et l'ordre est le bon : « un autre onglet enregistre à ma place »
+        // décrit une perte EN COURS, `non_persistant` un risque futur. La plus grave se dit.
+        else if (socle.verrou === 'partage') setAlerte('autre_onglet')
         // Le bandeau écarté une fois ne revient pas — mais seulement celui-là (voir `ECARTABLE`).
         else if (!socle.persistant && !readDisplay(socle.db).bandeauStockageMasque) {
           setAlerte('non_persistant')

@@ -27,6 +27,7 @@ import type { ConfianceParAliment } from '../data/catalog-loader.js'
 import { loadCatalog, loadConfiance } from '../data/catalog-loader-node.js'
 import { openUserDb } from '../data/user-store-node.js'
 import type { UserDb } from '../data/user-db.js'
+import type { EtatVerrou } from './user-source.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CATALOGUE = path.join(__dirname, '..', '..', 'public', 'catalog', 'catalog.db')
@@ -72,7 +73,17 @@ export function baseCourante(): UserDb {
   return base
 }
 
-/** Ce que `user-source.ts` rend, en mémoire. `persistant: true` : pas de bandeau dans les tests. */
-export function sessionDeTest(): { db: UserDb; stockage: 'memoire'; persistant: boolean } {
-  return { db: baseCourante(), stockage: 'memoire', persistant: true }
+/**
+ * Ce que `user-source.ts` rend, en mémoire. `persistant: true` : pas de bandeau dans les tests.
+ *
+ * `verrou: 'exclusif'` pour la même raison — un test qui ne parle pas du verrou doit se dérouler
+ * dans le cas nominal, un seul onglet. Le cas `'partage'` se demande explicitement.
+ */
+export function sessionDeTest(): {
+  db: UserDb
+  stockage: 'memoire'
+  persistant: boolean
+  verrou: EtatVerrou
+} {
+  return { db: baseCourante(), stockage: 'memoire', persistant: true, verrou: 'exclusif' }
 }

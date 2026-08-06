@@ -36,7 +36,15 @@ import {
   type HeuresDeRepas,
   type StoredDisplay,
 } from '../../data/user-store.js'
-import { chargerSocle } from '../socle.js'
+import { chargerSocle, maintenantIso } from '../socle.js'
+import type { EtatVerrou } from '../user-source.js'
+import {
+  exporterSauvegarde,
+  lireEtatSauvegarde,
+  restaurerSauvegarde,
+  resumeSauvegarde,
+  type EtatSauvegarde,
+} from '../sauvegarde.js'
 import {
   Case,
   ChoixAllergenes,
@@ -65,6 +73,9 @@ interface Vue extends ChoixProfil {
   readonly catalogue: Catalog
   readonly affichage: StoredDisplay
   readonly heures: HeuresDeRepas
+  readonly sauvegarde: EtatSauvegarde
+  /** Un onglet en `'partage'` n'enregistre rien : il ne peut pas non plus restaurer. */
+  readonly verrou: EtatVerrou
 }
 
 type Etat =
@@ -73,7 +84,15 @@ type Etat =
   | { readonly phase: 'erreur'; readonly message: string }
 
 /** Le panneau actuellement ouvert, ou aucun. Un seul à la fois — c'est une fenêtre plein écran. */
-type PanneauId = 'allergies' | 'regime' | 'rythme' | 'affichage' | 'rappels' | 'tutoriels' | 'apropos'
+type PanneauId =
+  | 'allergies'
+  | 'regime'
+  | 'rythme'
+  | 'affichage'
+  | 'rappels'
+  | 'sauvegarde'
+  | 'tutoriels'
+  | 'apropos'
 
 async function lireVue(): Promise<Vue> {
   const socle = await chargerSocle()
@@ -82,6 +101,8 @@ async function lireVue(): Promise<Vue> {
     catalogue: socle.catalogue,
     affichage: readDisplay(socle.db),
     heures: readMealTimes(socle.db),
+    sauvegarde: lireEtatSauvegarde(socle.db),
+    verrou: socle.verrou,
   }
 }
 
@@ -232,6 +253,19 @@ export function Parametres() {
         </div>
       </Section>
 
+      {/* §7 ARCHITECTURE mesures 3, 4 et 5. Placée AVANT « Aide » : c'est un réglage de données,
+          pas de l'assistance. Le résumé porte le rappel des 14 jours — il n'existe nulle part
+          ailleurs, ni bandeau, ni notification, ni badge (décision du 2026-08-06). */}
+      <Section titre="Sauvegarde">
+        <div className="space-y-2">
+          <LigneOuvrante
+            libelle="Sauvegarder mes données"
+            valeur={resumeSauvegarde(vue.sauvegarde, maintenantIso())}
+            onOuvrir={() => setPanneauOuvert('sauvegarde')}
+          />
+        </div>
+      </Section>
+
       <Section titre="Aide">
         <div className="space-y-2">
           {/* Rejouable : `visite_proposee` ne dit que « on l'a déjà proposée une fois », jamais
@@ -359,6 +393,18 @@ export function Parametres() {
         </Panneau>
       )}
 
+      {panneauOuvert === 'sauvegarde' && (
+        <Panneau titre="Sauvegarder mes données" onFermer={fermer}>
+          <Sauvegarde
+            etat={vue.sauvegarde}
+            verrou={vue.verrou}
+            onExporte={(dateIso) =>
+              setEtat({ phase: 'pret', vue: { ...vue, sauvegarde: { ...vue.sauvegarde, dernierExport: dateIso } } })
+            }
+          />
+        </Panneau>
+      )}
+
       {panneauOuvert === 'apropos' && (
         <Panneau titre="À propos" onFermer={fermer}>
           <APropos />
@@ -476,6 +522,197 @@ function enMinutes(texte: string): number | null {
 }
 
 /** Un groupe de lignes ouvrantes, sous un même titre de thème. */
+/**
+ * La sauvegarde et la restauration — §7 ARCHITECTURE mesures 3 et 5.
+ *
+ * ⚠️ LA RESTAURATION EST LE SEUL GESTE DESTRUCTIF DE TOUTE L'APPLICATION. Partout ailleurs on ajoute,
+ * on décoche, on remplace une ligne ; ici on écrase l'intégralité de ce que la personne a saisi
+ * depuis le premier jour, sans corbeille et sans annulation — le fichier OPFS est réécrit. D'où les
+ * trois garde-fous, dans cet ordre : le fichier est ÉPROUVÉ avant que quoi que ce soit ne bouge
+ * (`restaurerSauvegarde`), la confirmation dit ce qui disparaît au lieu de demander « êtes-vous
+ * sûr ? », et l'export de l'état courant est proposé DANS l'écran de confirmation, à portée de doigt,
+ * plutôt que laissé à la prévoyance de qui est en train de restaurer.
+ *
+ * ⚠️ AUCUNE CONFIRMATION SUR L'EXPORT, et c'est volontaire : produire un fichier n'abîme rien.
+ * Multiplier les « êtes-vous sûr ? » sur les gestes inoffensifs apprend à les traverser sans lire,
+ * et le jour où il y en a un qui compte, il est traversé aussi.
+ */
+function Sauvegarde({
+  etat,
+  verrou,
+  onExporte,
+  onRestaure = () => window.location.reload(),
+}: {
+  readonly etat: EtatSauvegarde
+  /**
+   * ⚠️ LA RESTAURATION EST REFUSÉE DEPUIS UN ONGLET QUI N'ENREGISTRE PAS, et ce n'est pas une
+   * précaution de confort. `remplacerLeFichier` écrirait bel et bien le fichier — puis l'onglet
+   * détenteur du verrou, qui ne sait rien de cette restauration, l'écraserait à sa modification
+   * suivante avec SA base en mémoire. La restauration paraîtrait avoir marché, puis se déferait
+   * seule. Le refus dur vit dans `user-source.ts` ; ce qui suit ne fait que le dire AVANT le geste,
+   * plutôt qu'après la fenêtre de confirmation.
+   */
+  readonly verrou: EtatVerrou
+  readonly onExporte: (dateIso: string) => void
+  /**
+   * Ce qui suit une restauration réussie. Par défaut, un rechargement complet — les écrans tiennent
+   * des copies en état local, et un affichage à moitié à jour sur des ALLERGÈNES serait un défaut de
+   * sécurité, pas un défaut visuel. Injectable pour que le chemin nominal reste testable : jsdom ne
+   * sait pas naviguer.
+   */
+  readonly onRestaure?: () => void
+}) {
+  /**
+   * ⚠️ « CE QU'ON REGARDE » ET « UNE OPÉRATION EST EN COURS » SONT DEUX ÉTATS SÉPARÉS, et les avoir
+   * confondus était un défaut : « Sauvegarder d'abord ce qui est sur cet appareil » s'offre DEPUIS
+   * l'écran de confirmation. Un état unique faisait disparaître cette confirmation au premier clic —
+   * on proposait un filet de sécurité dont l'usage annulait la décision en cours.
+   */
+  const [phase, setPhase] = useState<
+    | { readonly type: 'repos' }
+    | { readonly type: 'confirmation'; readonly fichier: File }
+    | { readonly type: 'erreur'; readonly motif: string }
+  >({ type: 'repos' })
+  const [occupe, setOccupe] = useState(false)
+
+  const echouer = (erreur: unknown) => {
+    setOccupe(false)
+    setPhase({ type: 'erreur', motif: erreur instanceof Error ? erreur.message : String(erreur) })
+  }
+
+  const exporter = () => {
+    setOccupe(true)
+    const date = maintenantIso()
+    chargerSocle()
+      .then((socle) => exporterSauvegarde(socle.db, date))
+      .then(() => {
+        onExporte(date)
+        setOccupe(false)
+      })
+      .catch(echouer)
+  }
+
+  const restaurer = (fichier: File) => {
+    setOccupe(true)
+    restaurerSauvegarde(fichier)
+      .then((resultat) => {
+        // Pas de `setOccupe(false)` sur le succès : `onRestaure` recharge la page, et rendre les
+        // boutons à nouveau cliquables pendant ce laps inviterait à relancer une restauration.
+        if (resultat.ok) onRestaure()
+        else {
+          setOccupe(false)
+          setPhase({ type: 'erreur', motif: resultat.motif })
+        }
+      })
+      .catch(echouer)
+  }
+
+  if (phase.type === 'confirmation') {
+    return (
+      <div>
+        <p className="text-[1.05rem] font-semibold text-texte">
+          Restaurer remplacera toutes vos données actuelles.
+        </p>
+        {/* Ce qui disparaît est ÉNUMÉRÉ, pas résumé en « vos données » : personne ne peut évaluer un
+            risque qu'on lui décrit en deux mots. */}
+        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">
+          Votre profil, vos allergies, votre régime, vos goûts, votre semaine, vos courses et vos
+          recettes personnelles seront remplacés par ceux du fichier « {phase.fichier.name} ». Ce qui
+          est sur cet appareil aujourd'hui ne pourra pas être récupéré.
+        </p>
+        <div className="mt-5 space-y-2">
+          <button
+            type="button"
+            onClick={exporter}
+            disabled={occupe}
+            className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-texte-doux disabled:opacity-60"
+          >
+            Sauvegarder d'abord ce qui est sur cet appareil
+          </button>
+          <button
+            type="button"
+            onClick={() => restaurer(phase.fichier)}
+            disabled={occupe}
+            className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-texte disabled:opacity-60"
+          >
+            Remplacer mes données
+          </button>
+          <button
+            type="button"
+            onClick={() => setPhase({ type: 'repos' })}
+            className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-3 text-[0.95rem] font-medium text-attenue"
+          >
+            Annuler
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+        Vos données ne sont que sur cet appareil : aucun serveur n'en garde de copie. Une sauvegarde
+        est un fichier que vous rangez où vous voulez — elle contient tout, y compris vos allergies et
+        votre régime.
+      </p>
+      {etat.dernierExport === null && (
+        <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
+          Vous n'avez encore jamais sauvegardé.
+        </p>
+      )}
+
+      <div className="mt-5 space-y-2">
+        <button
+          type="button"
+          onClick={exporter}
+          disabled={occupe}
+          className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-texte disabled:opacity-60"
+        >
+          Créer une sauvegarde
+        </button>
+
+        {/* ⚠️ SAUVEGARDER RESTE POSSIBLE DEPUIS UN ONGLET QUI N'ENREGISTRE PAS, restaurer non. Ce
+            n'est pas une inconséquence : exporter ne fait que LIRE la base en mémoire, qui est
+            valide — c'est même le geste qu'on veut laisser à portée dans cette situation. */}
+        {verrou === 'partage' ? (
+          <p className="rounded-[0.7rem] border border-bordure bg-surface px-3 py-3 text-[0.95rem] leading-relaxed text-texte-doux">
+            Restaurer une sauvegarde n'est pas possible depuis cet onglet : l'application est ouverte
+            dans un autre onglet, et c'est lui qui enregistre. Fermez-le, rechargez cette page, puis
+            recommencez.
+          </p>
+        ) : (
+          /* Le champ de fichier natif est masqué et porté par un `label` : c'est le motif déjà
+             employé par l'import de recette (`recettes.tsx`), et le seul qui donne une cible tactile
+             correcte sans réimplémenter un sélecteur de fichiers. */
+          <label className="flex min-h-tactile w-full cursor-pointer items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-texte-doux">
+            Restaurer une sauvegarde
+            <input
+              type="file"
+              accept=".nutri-backup,application/octet-stream"
+              aria-label="Restaurer une sauvegarde (.nutri-backup)"
+              className="sr-only"
+              onChange={(e) => {
+                const fichier = e.target.files?.[0]
+                // Vidé tout de suite : sans ça, rechoisir LE MÊME fichier après une erreur ne
+                // déclencherait aucun `change`.
+                e.target.value = ''
+                if (fichier !== undefined) setPhase({ type: 'confirmation', fichier })
+              }}
+            />
+          </label>
+        )}
+      </div>
+
+      {phase.type === 'erreur' && (
+        <p role="alert" className="mt-4 text-[0.95rem] leading-relaxed text-texte">
+          {phase.motif}
+        </p>
+      )}
+    </div>
+  )
+}
+
 function Section({ titre, children }: { readonly titre: string; readonly children: React.ReactNode }) {
   return (
     <section className="mt-8">
