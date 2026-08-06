@@ -43,6 +43,7 @@ import {
   type StoredShoppingList,
 } from '../../data/user-store.js'
 import { LIBELLE_COURT } from '../champs-profil.js'
+import { formaterQuantiteAchat } from '../quantites.js'
 import {
   LIBELLE_CRENEAU,
   aujourdhuiIso,
@@ -122,6 +123,16 @@ interface Vue {
   readonly socle: Socle
   readonly enregistree: StoredShoppingList
   readonly nomAliment: (id: FoodId) => string
+  /**
+   * La quantité telle qu'elle se lit en rayon — « 3 pièces », « 1 kg », « 500 g (2 × 250 g) ».
+   *
+   * ⚠️ PORTÉE PAR LA VUE, ET C'EST LE POINT. Trois endroits affichent une quantité : la ligne
+   * cochable, « Déjà chez vous » et l'EXPORT TEXTE. Les trois concaténaient `${quantiteTotale}
+   * ${unite}` chacun de leur côté — trois copies d'une même règle, donc trois occasions de diverger
+   * au premier correctif. Le format vit ici, une fois, et l'export texte dit la même chose que
+   * l'écran (décision 41).
+   */
+  readonly quantiteDe: (item: ShoppingListItem) => string
   readonly platDuCreneau: (slot: SlotRef) => string | null
   /** Le catalogue des aliments, pour la complétion de `FormulaireAjout` et le rayon qu'elle en déduit. */
   readonly foods: ReadonlyMap<FoodId, Food>
@@ -234,6 +245,12 @@ async function calculerVue(): Promise<Etat> {
       socle,
       enregistree,
       nomAliment: (id) => socle.catalogue.foods.get(id)?.nom ?? id,
+      quantiteDe: (item) =>
+        formaterQuantiteAchat(
+          item.quantiteTotale,
+          item.unite,
+          socle.catalogue.foods.get(item.foodId)?.conditionnementG ?? null
+        ),
       platDuCreneau: (slot) => platParCreneau.get(cleCreneau(slot.date, slot.creneau)) ?? null,
       foods: socle.catalogue.foods,
       noteAllergeneDe: (food) => noteAllergene(food, allergiesDeclarees, socle.catalogue.allergens),
@@ -519,7 +536,7 @@ export function Courses() {
                 <Ligne
                   key={item.foodId}
                   libelle={vue.nomAliment(item.foodId)}
-                  quantite={`${item.quantiteTotale} ${item.unite}`}
+                  quantite={vue.quantiteDe(item)}
                   coche={coches.has(item.foodId)}
                   onBasculer={() => basculer(item.foodId, !coches.has(item.foodId))}
                 />
@@ -541,7 +558,7 @@ export function Courses() {
       {vue.couvertsParUnReste.length > 0 && <CouvertsParUnReste creneaux={vue.couvertsParUnReste} />}
 
       {vue.dejaChezVous.length > 0 && (
-        <DejaChezVous items={vue.dejaChezVous} nomAliment={vue.nomAliment} />
+        <DejaChezVous items={vue.dejaChezVous} nomAliment={vue.nomAliment} quantiteDe={vue.quantiteDe} />
       )}
     </section>
   )
@@ -615,9 +632,12 @@ function CouvertsParUnReste({ creneaux }: { readonly creneaux: readonly CreneauC
 function DejaChezVous({
   items,
   nomAliment,
+  quantiteDe,
 }: {
   readonly items: readonly ShoppingListItem[]
   readonly nomAliment: (id: FoodId) => string
+  /** Le même formatage que la liste à acheter — voir `Vue.quantiteDe`. */
+  readonly quantiteDe: (item: ShoppingListItem) => string
 }) {
   return (
     <section className="mt-6">
@@ -636,7 +656,7 @@ function DejaChezVous({
           <li key={item.foodId} className="flex items-center gap-3 px-3 py-2">
             <span className="flex-1 text-[1rem] text-texte-doux">{nomAliment(item.foodId)}</span>
             <span className="shrink-0 text-[0.9rem] tabular-nums text-attenue">
-              {item.quantiteTotale} {item.unite}
+              {quantiteDe(item)}
             </span>
           </li>
         ))}
@@ -945,7 +965,7 @@ function BoutonPartager({ vue, coches }: { readonly vue: Vue; readonly coches: R
   const texte = useMemo(() => {
     const lignes = vue.liste.items
       .filter((item) => !coches.has(item.foodId))
-      .map((item) => `- ${vue.nomAliment(item.foodId)} : ${item.quantiteTotale} ${item.unite}`)
+      .map((item) => `- ${vue.nomAliment(item.foodId)} : ${vue.quantiteDe(item)}`)
     const ajouts = vue.enregistree.extras.filter((e) => !e.coche).map((e) => `- ${e.libelle}`)
     return ['Mes courses', ...lignes, ...ajouts].join('\n')
   }, [vue, coches])

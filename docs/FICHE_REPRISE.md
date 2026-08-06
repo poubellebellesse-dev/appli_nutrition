@@ -17,9 +17,10 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
                                                                                           ⬅ ICI
 ```
 
-**Suite réexécutée le 2026-08-06** : `npm test` → **1 492 passed (84 fichiers)** en 38,7 s ·
-`npm run typecheck` propre · `npx vite build` ✓ · `npm run engine:plan-stress` → **20/20** ·
-`node catalog/build.mjs` → **450 aliments, 241 recettes, 62 gestes, 73 tips, 8 fiches**.
+**Suite réexécutée le 2026-08-06, après les lots « sauvegarde » et « unités d'achat »** : `npm test`
+→ **1 556 passed (85 fichiers)** en 44,8 s · `npm run typecheck` propre · `npx vite build` ✓ ·
+`npm run engine:plan-stress` → **20/20** · `node catalog/build.mjs` → **450 aliments, 266 recettes,
+62 gestes, 73 tips, 8 fiches**.
 ⚠️ Ces nombres bougent à chaque commit : **la sortie réelle fait foi, jamais cette ligne.**
 
 **L'application fait sa boucle complète** : s'installer → déclarer ses allergies → voir une
@@ -28,7 +29,28 @@ qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** Un nombre écrit ici est faux dès le commit
 suivant. Au **2026-08-06**, `main` porte les trois pistes du 2026-08-05 : « gardes & décisions »,
-« recherche d'aliments » et **le mode cuisine** (`2c10db4`, L0 + L1). **Rien n'est en vol.**
+« recherche d'aliments » et **le mode cuisine** (`2c10db4`, L0 + L1).
+
+⛔ **DEUX CHANTIERS SONT EN VOL DANS L'ARBRE DE TRAVAIL AU 2026-08-06, NON COMMITÉS, ET ILS NE SE
+RECOUVRENT PAS.** (a) **La sauvegarde (décision 59) et les unités d'achat (décision 41)** —
+`app/src/ui/sauvegarde.ts`, `quantites.ts`, `user-source.ts`, `socle.ts`, `main.tsx`,
+`parametres.tsx`, `screens/courses.tsx`, `test-socle.ts`, `data/user-store.ts` et leurs tests.
+(b) **Un lot de contenu ET d'écran côté utilisateur** — `catalog/build.mjs`, `build.test.ts`,
+`foods.yaml`, des recettes d'accompagnement non suivies (le catalogue est passé de 241 à
+**266 recettes**), plus `router.tsx`, `cuisine.tsx`, `detail-recette.tsx` et le nouveau
+`ui/ingredients-recette.tsx`.
+
+⚠️ **LES DEUX PISTES SE CROISENT SUR CINQ FICHIERS** (`main.tsx`, `user-store.ts`, `user-schema.ts`,
+`test-socle.ts`, `quantites.ts` via son nouvel appelant `ingredients-recette.tsx`). Rien n'a été perdu
+— vérifié — mais c'est exactement la configuration qui a poussé `main` rouge le 2026-08-05.
+
+⛔ **TROIS EXÉCUTIONS DE `npm test` ONT ROUGI PENDANT CETTE SESSION, POUR DEUX CAUSES DISTINCTES.**
+Deux ont attrapé le lot (b) **à mi-écriture** (geste de lexique introuvable, collision de nom de
+recette). La troisième était un **timeout à 5 000 ms** qui changeait de fichier à chaque passage,
+avec une durée totale passée de 38 s à 64 s : de la **contention machine**, deux suites tournant en
+même temps. **Aucune n'était une régression** — isolation verte, puis suite complète verte
+(1 556 passed). ⚠️ **Ne pas conclure « flaky » sans faire cette vérification** : les deux premières
+n'étaient PAS du flaky, elles lisaient un dépôt incohérent.
 
 ✅ **Vérifié SUR LE COMMIT, pas sur l'arbre de travail** — `2c10db4` sorti dans un worktree isolé,
 catalogue rebâti, puis `vitest` / `tsc` / `vite build` : **1 492 passed (84 fichiers)**, typecheck
@@ -87,6 +109,28 @@ d'accompagnements (18 posés sur 28 attendus, 11 sur 56). **Écrire des accompag
 sans gluten fait tomber ces deux chiffres**, et c'est la seule chose qui les fera tomber — aucun
 réglage du moteur n'invente du contenu. Chantier en cours côté utilisateur.
 
+✅ **LA SAUVEGARDE EXISTE — décision 59, 2026-08-06.** §7 ARCHITECTURE annonçait « le point faible
+identifié de la PWA, à traiter en v1 » et posait sept mesures : **3, 4 et 5 n'étaient pas codées.**
+Une appli sans compte ni serveur n'avait **aucun** chemin de récupération. Livré : fichier
+`.nutri-backup` (les octets SQLite, **pas** du JSON — une liste de 24 tables écrite à la main serait
+fausse au premier ajout, et muette), restauration **validée dans une base jetable avant de remplacer
+quoi que ce soit**, rappel passé 14 jours **dans Paramètres seulement**. Au passage, deux colonnes
+déclarées et jamais écrites sont branchées (`app_meta.dernier_export_le`, `user_profile.cree_le`), et
+**le verrou multi-onglets est posé** (`navigator.locks`) : deux onglets s'écrasaient en silence.
+⚠️ **La relecture a trouvé deux pertes SILENCIEUSES dans mon propre code**, corrigées le même jour —
+un drapeau de gel jamais levé après échec d'écriture, et la restauration qui ne vérifiait pas le
+verrou. **Les deux étaient des chemins d'écriture non gardés** : voir décision 59.
+⚠️ **Mesures 2 (installation avant saisie) et 7 (quota) restent NON faites.**
+
+✅ **LA LISTE DE COURSES PARLE ENFIN COMME UN RAYON — décision 41, 2026-08-06.** « 3 pièce » →
+« 3 pièces », « 1000 g » → « 1 kg », et « 500 g » de beurre dit désormais « (2 × 250 g) ».
+⚠️ **Le diagnostic de départ était FAUX et c'est la leçon du lot** : `poidsPieceG` était déjà converti
+par le moteur depuis le premier jour ; seul `conditionnementG` manquait à l'affichage. **Vérifier ce
+que le code fait avant d'annoncer ce qui manque.** Le format vivait en trois copies — dont l'export
+texte de « Partager » — et vit maintenant dans `Vue.quantiteDe`, une seule fois. ⚠️ **« 2 × 250 g » et
+non « 2 plaquettes »** : le catalogue porte un nombre, aucun nom d'emballage — nommer les 226
+conditionnements serait un lot de contenu, pas d'affichage.
+
 **Ce qui reste n'est plus du code d'écran.** Trois chantiers, par ordre de dépendance :
 
 1. **⛔ Relecture par un tiers du contenu Savoir** (§8.2 bis) — bloquante avant publication. Les
@@ -114,8 +158,17 @@ lots : **[CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md)** · récit 
 **[archive/…_mode-cuisine.md](./archive/RECAP_SESSION_2026-08-05_mode-cuisine.md)**. ✅ **L0 et L1
 faits** — `recipe_step.nature`, puis l'écran `#/cuisine/<id>` : écran allumé, une étape à la fois qui
 **n'avance jamais seule**, minuteurs parallèles, alarme au premier plan, reprise (schéma **v10**).
-Les 512 minuteurs sont enfin visibles. ▶ **Au suivant : L2**, le prérequis A — `food_ids` sur
-**1 101 gestes**, du contenu, pas du code.
+Les 512 minuteurs sont enfin visibles. ✅ **L1bis fait le 2026-08-06** — les **ingrédients et leurs
+quantités** s'ouvrent en fenêtre depuis n'importe quelle étape, et les portions réglées sur la fiche
+suivent la cuisson (schéma **v11**). L'écran tenait la recette entière en mémoire et n'en montrait
+aucun ingrédient.
+⛔ **L2 N'EST PLUS LA SUITE — il est SUSPENDU, décision 60 d'`ETAT.md` §4.** Sa justification reposait
+sur « `food` n'a ni synonyme ni alias », **faux depuis le 2026-08-05** (décision 58, piste
+parallèle), et sur un rapprochement mesuré contre **450 aliments** au lieu des **7 de la recette**.
+Le besoin qu'il servait est couvert par L1bis, sans une seule des 1 101 annotations. ▶ **Ce qui
+décide de la suite : se servir du panneau en cuisinant.** S'il suffit, L2 meurt ; sinon, **mesurer
+d'abord** le pré-remplissage automatique (certain / ambigu / rien trouvé) avant de construire quoi
+que ce soit.
 ⚠️ **L1 n'a pas d'entrée de visite guidée** (`parcours.ts`) : à trancher.
 ⛔ **L'alarme ne sonne PAS quand l'appli est fermée — c'est une décision instruite, pas un oubli** :
 les quatre voies Android coûtent toutes plus qu'elles ne rapportent. Ne pas la rouvrir sans lire

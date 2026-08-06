@@ -805,3 +805,55 @@ describe('courses — la complétion ne dépend plus de l’ordre ni de la longu
     expect(await screen.findByText(/Contient un allergène que vous avez déclaré : Gluten/)).toBeDefined()
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// Décision 41, `ETAT.md` §4. L'écran concaténait `${quantiteTotale} ${unite}` à trois endroits
+// (la ligne cochable, « Déjà chez vous », le texte partagé) : « 3 pièce » sans accord, « 1000 g »
+// au lieu d'un kilo, et aucune mention des paquets. `formaterQuantiteAchat` (`ui/quantites.ts`)
+// centralise désormais la règle — ces tests vérifient qu'elle est bien celle qu'on lit à l'écran
+// et dans le texte partagé, pas une règle qu'on réimplémente ici pour se comparer à elle-même.
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+
+describe('courses — l’accord des quantités à la pièce', () => {
+  it('aucune quantité au pluriel ne s’affiche « pièce » au singulier', async () => {
+    const { socle, plan } = await avecUnPlan()
+    const liste = socle.moteur.buildShoppingList(plan)
+    const auPluriel = liste.items.filter((i) => i.unite === 'pièce' && i.quantiteTotale >= 2)
+    // Sans au moins une ligne en pièces au pluriel, ce test passerait sans rien vérifier.
+    expect(auPluriel.length).toBeGreaterThan(0)
+
+    await monter()
+
+    const texte = lignesAffichees().join(' | ')
+    expect(texte).toMatch(/\d+\s+pièces\b/)
+    // « 1 pièce » est le singulier correct — seul un nombre ≥ 2 suivi du singulier est fautif.
+    const fautifs = [...texte.matchAll(/(\d+)\s+pièce(?!s)/g)].filter((m) => Number(m[1]) >= 2)
+    expect(fautifs).toEqual([])
+  })
+})
+
+describe('courses — la quantité affichée et celle du texte partagé s’accordent', () => {
+  it('le texte de « Partager » cite la même quantité que la ligne à l’écran', async () => {
+    const { socle, plan } = await avecUnPlan()
+    const ecrire = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: ecrire }, configurable: true })
+
+    await monter()
+    const liste = socle.moteur.buildShoppingList(plan)
+    const item = liste.items[0]!
+    const nom = socle.catalogue.foods.get(item.foodId)!.nom
+
+    const ligne = screen.getByText(nom).closest('button') as HTMLButtonElement
+    const quantiteEcran = within(ligne).getByText(
+      (_, el) => el?.className.includes('tabular-nums') ?? false
+    ).textContent
+
+    fireEvent.click(screen.getByText('Partager'))
+    await waitFor(() => expect(ecrire).toHaveBeenCalledTimes(1))
+    const texte = ecrire.mock.calls[0]![0] as string
+
+    expect(texte).toContain(`- ${nom} : ${quantiteEcran}`)
+
+    Reflect.deleteProperty(navigator, 'clipboard')
+  })
+})

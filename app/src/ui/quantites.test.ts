@@ -6,7 +6,7 @@
 // d'après l'implémentation.
 
 import { describe, expect, it } from 'vitest'
-import { formaterMasse, quantiteAffichee } from './quantites.js'
+import { formaterMasse, formaterQuantiteAchat, quantiteAffichee } from './quantites.js'
 
 const base = {
   facteur: 2,
@@ -203,5 +203,46 @@ describe('ui/quantites — ce qui se COMPTE s’arrondit au quart', () => {
     expect(quantiteAffichee({ ...base, facteur: 2, libelle: '4 artichauts' }).texte).toBe(
       '8 artichauts'
     )
+  })
+})
+
+describe('formaterQuantiteAchat', () => {
+  it('accorde au pluriel ce qui se compte à partir de deux', () => {
+    expect(formaterQuantiteAchat(3, 'pièce', null)).toBe('3 pièces')
+  })
+
+  it('garde le singulier à un — le cas que l’ancien affichage brut ratait', () => {
+    expect(formaterQuantiteAchat(1, 'pièce', null)).toBe('1 pièce')
+  })
+
+  it('affiche une masse simple sans conditionnement en grammes', () => {
+    expect(formaterQuantiteAchat(350, 'g', null)).toBe('350 g')
+  })
+
+  it('bascule en kilos au-delà de mille grammes', () => {
+    const texte = formaterQuantiteAchat(1000, 'g', 1000)
+    expect(texte).toContain('1 kg')
+    expect(texte).not.toContain('1000 g')
+  })
+
+  it('annonce le nombre de paquets à partir de deux conditionnements', () => {
+    expect(formaterQuantiteAchat(500, 'g', 250)).toBe('500 g (2 × 250 g)')
+  })
+
+  it('un seul paquet ne s’annonce pas — « 1 × 250 g » n’apprendrait rien', () => {
+    const texte = formaterQuantiteAchat(250, 'g', 250)
+    expect(texte).toBe('250 g')
+    expect(texte).not.toContain('×')
+  })
+
+  it('combine kilos et nombre de paquets', () => {
+    const texte = formaterQuantiteAchat(1500, 'g', 750)
+    expect(texte).toContain('1,5 kg')
+    expect(texte).toContain('2 × 750 g')
+  })
+
+  it('un conditionnement nul ou négatif n’ajoute aucune parenthèse et ne divise jamais par zéro', () => {
+    expect(formaterQuantiteAchat(500, 'g', 0)).toBe('500 g')
+    expect(formaterQuantiteAchat(500, 'g', -250)).toBe('500 g')
   })
 })

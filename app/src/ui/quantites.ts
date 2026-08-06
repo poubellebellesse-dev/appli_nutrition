@@ -229,3 +229,50 @@ export function formaterMasse(grammes: number): string {
   // Un dixième de gramme n'a aucun sens en cuisine — l'arrondi évite « 83,3 g ».
   return `${Math.round(grammes)} g`
 }
+
+/**
+ * Une quantité de la LISTE DE COURSES, telle qu'elle se lit dans un rayon (décision 41).
+ *
+ * ⚠️ CE N'EST PAS UNE CONVERSION, et la distinction décide de où vit ce code. `buildShoppingList`
+ * a DÉJÀ converti (`quantiteAffichee`, §7.4 ENGINE) : il rend un nombre de pièces ou une masse
+ * arrondie au conditionnement. Ici on ne recalcule rien — on NOMME ce que le moteur a décidé. C'est
+ * la répartition posée par la décision 40 : « le moteur donne la quantité, pas sa formulation ».
+ * La réserve de `formaterMasse` ci-dessus — « extraire la conversion du domaine avant de rendre des
+ * pièces » — ne s'applique donc PAS : rien n'est converti deux fois.
+ *
+ * Trois corrections, toutes mesurées sur le catalogue du 2026-08-06 :
+ *
+ *  1. **L'accord** — l'écran concaténait `${quantiteTotale} ${unite}` et affichait « 3 pièce ».
+ *     88 aliments sur 450 portent `poidsPieceG`, donc sortent en pièces.
+ *  2. **Le kilo** — la farine s'affichait « 1000 g ». `formaterMasse` existait et n'était appelée
+ *     de nulle part.
+ *  3. **Le nombre de paquets** — « 500 g » de beurre ne disait pas que c'étaient DEUX plaquettes
+ *     de 250. 228 aliments sont conditionnés.
+ *
+ * ⚠️ « 2 × 250 g » ET NON « 2 plaquettes » : le catalogue porte un NOMBRE (`conditionnementG`) et
+ * aucun nom d'emballage. Écrire « 2 paquets » pour 1,5 kg d'huile d'olive serait faux, et inventer
+ * le mot par aliment serait un lot de contenu sur 228 entrées. La multiplication est vraie pour une
+ * plaquette, une brique et une bouteille à la fois.
+ *
+ * ⚠️ AFFICHÉ SEULEMENT À PARTIR DE DEUX. « 1 × 250 g » répète la ligne sans rien apprendre.
+ */
+export function formaterQuantiteAchat(
+  quantiteTotale: number,
+  unite: string,
+  conditionnementG: number | null
+): string {
+  // Tout ce qui se COMPTE : le nombre, puis le nom compté accordé. `accorder` est déjà la règle de
+  // ce fichier pour les libellés de recette — une seconde règle d'accord divergerait.
+  if (unite !== 'g') {
+    return `${formaterNombre(quantiteTotale)}${accorder(` ${unite}`, quantiteTotale)}`
+  }
+
+  const masse = formaterMasse(quantiteTotale)
+  if (conditionnementG === null || conditionnementG <= 0) return masse
+
+  // `quantiteTotale` est un multiple exact du conditionnement (`arrondiAchat`) : l'arrondi ne
+  // corrige rien ici, il protège d'un flottant qui rendrait « 1,9999 ».
+  const paquets = Math.round(quantiteTotale / conditionnementG)
+  if (paquets < 2) return masse
+  return `${masse} (${paquets} × ${formaterMasse(conditionnementG)})`
+}
