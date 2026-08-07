@@ -26,6 +26,7 @@ function makePlanRequest(overrides: Partial<WeekPlanRequest> = {}): WeekPlanRequ
     slots: ['diner'] as readonly MealSlot[],
     history: { windowDays: 21, entries: [] },
     activeTopics: [],
+  tolerancePiquant: null,
     seed: 1,
     ...overrides,
   }
@@ -303,6 +304,7 @@ describe('planning/reroll-slot — l’accompagnement suit le plat qu’on rempl
   const CONTEXTE = {
     profile: makePlanRequest().profile,
     constraints: makePlanRequest().constraints,
+    tolerancePiquant: null,
     history: { windowDays: 21, entries: [] },
     activeTopics: [],
     seed: 1,
@@ -371,6 +373,7 @@ describe('planning/setSlotRecipe — POSER un plat choisi, ce qui n’est pas le
   const CONTEXTE = {
     profile: makePlanRequest().profile,
     constraints: makePlanRequest().constraints,
+    tolerancePiquant: null,
     history: { windowDays: 21, entries: [] },
     activeTopics: [],
     seed: 1,

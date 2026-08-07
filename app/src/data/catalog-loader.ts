@@ -179,6 +179,12 @@ interface RecipeStepRow {
   readonly nature: string
 }
 
+interface RecipeStepIngredientRow {
+  readonly recipe_id: string
+  readonly ordre: number
+  readonly food_id: string
+}
+
 interface RecipeFacetRow {
   readonly recipe_id: string
   readonly facette: string
@@ -466,6 +472,16 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
     queryAll<RecipeStepRow>(db, 'SELECT * FROM recipe_step ORDER BY recipe_id, ordre'),
     (r) => r.recipe_id
   )
+  // ⚠️ CLÉ COMPOSITE `recipe|ordre` — un `groupByKey` sur `recipe_id` seul mélangerait les
+  // ingrédients de toutes les étapes d'une même recette, ce qui ne se verrait sur aucun écran :
+  // la liste resterait plausible, simplement fausse étape par étape.
+  const stepFoodsByStep = groupByKey(
+    queryAll<RecipeStepIngredientRow>(
+      db,
+      'SELECT recipe_id, ordre, food_id FROM recipe_step_ingredient ORDER BY recipe_id, ordre, food_id'
+    ),
+    (r) => `${r.recipe_id}|${r.ordre}`
+  )
   const facetsByRecipe = groupByKey(queryAll<RecipeFacetRow>(db, 'SELECT * FROM recipe_facet'), (r) => r.recipe_id)
   const sourcesByRecipe = groupByKey(
     queryAll<RecipeSourceRow>(db, 'SELECT * FROM recipe_source ORDER BY recipe_id, titre'),
@@ -493,6 +509,7 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
       // build : le repli n'existe que pour un `catalog.db` d'avant la colonne, jamais pour du
       // contenu neuf.
       nature: (s.nature ?? 'geste') as StepNature,
+      foodIds: (stepFoodsByStep.get(`${row.id}|${s.ordre}`) ?? []).map((l) => l.food_id as FoodId),
     }))
 
     const facettes: RecipeFacet[] = (facetsByRecipe.get(row.id) ?? []).map((f) => ({

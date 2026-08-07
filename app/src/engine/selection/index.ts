@@ -138,6 +138,9 @@ export const LAYER_DESCRIPTORS: readonly LayerDescriptor[] = [
   { id: 'speed', kind: 'scoring', critical: false, defaultWeight: 0 },
   { id: 'topic', kind: 'scoring', critical: false, defaultWeight: 0 }, // nul tant qu'aucune thématique n'est active (v2)
   { id: 'cost', kind: 'scoring', critical: false, defaultWeight: 0.05 }, // v3
+  // Poids 0 par défaut, relevé à PIQUANT_DYNAMIC_WEIGHT dès qu'une tolérance est DÉCLARÉE
+  // (décision 35) — sans quoi la couche tournerait pour tout le monde et diluerait les autres.
+  { id: 'piquant', kind: 'scoring', critical: false, defaultWeight: 0 },
 ]
 
 // ------------------------------------------------------------------------------------------
@@ -184,6 +187,7 @@ export type { VarietyLayerConfig } from './scoring/variety.js'
 export { habitLayer } from './scoring/habit.js'
 export type { HabitLayerConfig } from './scoring/habit.js'
 export { scoreSpeed, speedLayer } from './scoring/speed.js'
+export { scorePiquant, piquantLayer } from './scoring/piquant.js'
 export type { SpeedLayerConfig } from './scoring/speed.js'
 export {
   SCORING_LAYERS,

@@ -42,6 +42,12 @@ export type SousVue =
   /** Mode cuisine, plein écran, sur UNE recette (§5bis ARCHITECTURE). `portions` : voir
    *  `portionsDepuisRequete` — `null` veut dire « aucun choix exprimé », jamais « 4 ». */
   | { readonly type: 'cuisine'; readonly id: string; readonly portions: number | null }
+  /**
+   * Détail d'un ALIMENT (décision 33). `retour` : le hash d'où l'on vient, `''` quand on ne le sait
+   * pas (lien collé, signet). Voir `retourDepuisRequete` — c'est un HASH, pas un mot-clé, et
+   * `hashDeLAliment` dit pourquoi.
+   */
+  | { readonly type: 'aliment'; readonly id: string; readonly retour: string }
 
 /**
  * D'où l'on arrive sur une fiche recette — porte le retour contextuel (« ← Aujourd'hui »,
@@ -118,6 +124,23 @@ const PREFIXE_EDITEUR = '#/composer'
 const PREFIXE_CUISINE = '#/cuisine/'
 
 /**
+ * Le détail d'un aliment — QUATRIÈME route paramétrée (décision 33).
+ *
+ * ⚠️ LA QUESTION DE LA BIBLIOTHÈQUE NE SE ROUVRE PAS ICI, et il faut le dire plutôt que de laisser
+ * croire à un oubli. `PREFIXE_CUISINE` a posé le critère, et ce n'est PAS le nombre de routes : ce
+ * qui rouvrirait vraiment, c'est « une route qui en imbrique une autre, ou un besoin de
+ * transition/garde de navigation ». Ni l'un ni l'autre ici — c'est le quatrième cas du même patron
+ * (un préfixe, un identifiant encodé, aucun imbriquement), pour six lignes.
+ *
+ * ⚠️ SON RETOUR EST UN HASH, PAS UN MOT-CLÉ, et c'est la seule vraie différence avec les trois
+ * autres. `OrigineRecette` énumère quatre écrans parce qu'on n'arrive sur une fiche que depuis un
+ * écran ; on arrive sur un aliment depuis une recette **précise**, et un mot-clé ne sait pas dire
+ * laquelle. Élargir `OrigineRecette` avec un `recette:<id>` reviendrait à transporter un hash dans
+ * un mot-clé, en moins lisible.
+ */
+const PREFIXE_ALIMENT = '#/aliment/'
+
+/**
  * « Vider le frigo » N'EST PAS UN ONGLET. §4.5 DESIGN et la maquette le disent accessible « depuis
  * Aujourd'hui et Recettes » ; la barre reste à cinq onglets stables v1 → v2 (§2 DESIGN). Une barre
  * qui gagnerait un sixième onglet changerait de forme sous les doigts de l'utilisateur.
@@ -185,6 +208,21 @@ export function routeDepuisHash(hash: string): Route {
     return { onglet: 'recettes', sousVue: LISTE }
   }
 
+  if (hash.startsWith(PREFIXE_ALIMENT)) {
+    // Mêmes précautions que les trois autres routes paramétrées : `decodeURIComponent` lève sur un
+    // `%` isolé, et le split se fait sur le fragment BRUT parce qu'un id peut contenir un `?` encodé.
+    try {
+      const [idBrut, requete] = hash.slice(PREFIXE_ALIMENT.length).split('?')
+      const id = decodeURIComponent(idBrut ?? '')
+      if (id !== '') {
+        return { onglet: 'recettes', sousVue: { type: 'aliment', id, retour: retourDepuisRequete(requete) } }
+      }
+    } catch {
+      /* fragment illisible → liste des recettes */
+    }
+    return { onglet: 'recettes', sousVue: LISTE }
+  }
+
   if (hash.startsWith(PREFIXE_RECETTE)) {
     // `decodeURIComponent` peut lever sur un `%` isolé, qu'un signet tronqué produit facilement.
     // Une URL malformée doit ramener à la liste, jamais faire planter l'application.
@@ -220,6 +258,22 @@ function portionsDepuisRequete(requete: string | undefined): number | null {
   if (brut === null) return null
   const n = Number(brut)
   return Number.isInteger(n) && n >= 1 ? n : null
+}
+
+/**
+ * Le hash de retour porté par `?de=` sur une fiche aliment. `''` = on ne sait pas d'où l'on vient.
+ *
+ * ⚠️ VALIDÉ, PAS SEULEMENT DÉCODÉ. Tout ce qui ne commence pas par `#/` est jeté, pour deux raisons
+ * distinctes : une valeur tronquée ou inventée poserait un lien « ← » qui ne mène nulle part, et
+ * surtout ce hash finit dans un `href`. Sans ce filtre, `?de=https://…` produirait un lien SORTANT
+ * depuis une valeur venue de l'URL — le retour d'une page interne doit rester interne, par
+ * construction et pas par confiance dans l'appelant.
+ *
+ * `URLSearchParams` décode déjà : le hash arrive tel qu'il a été écrit par `hashDeLAliment`.
+ */
+function retourDepuisRequete(requete: string | undefined): string {
+  const brut = new URLSearchParams(requete ?? '').get('de')
+  return brut !== null && brut.startsWith('#/') ? brut : ''
 }
 
 /** Origine inconnue ou absente → repli sur `ORIGINE_PAR_DEFAUT` (lien collé, favori, rechargement
@@ -281,6 +335,15 @@ export function hashDuFrigo(): string {
 export function hashDeLaCuisine(id: string, portions?: number): string {
   const base = `${PREFIXE_CUISINE}${encodeURIComponent(id)}`
   return portions === undefined ? base : `${base}?portions=${portions}`
+}
+
+/**
+ * `retour` omis ou vide → hash nu : la fiche retombera sur un lien d'accueil plutôt que d'annoncer
+ * une provenance qu'elle ignore. Passer le hash COMPLET d'où l'on vient, `hashDeRecette(id)` inclus.
+ */
+export function hashDeLAliment(id: string, retour?: string): string {
+  const base = `${PREFIXE_ALIMENT}${encodeURIComponent(id)}`
+  return retour === undefined || retour === '' ? base : `${base}?de=${encodeURIComponent(retour)}`
 }
 
 export function hashDesParametres(): string {

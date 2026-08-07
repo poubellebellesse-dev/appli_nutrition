@@ -119,6 +119,7 @@ function construireRequete(
   return {
     profile,
     constraints: etat.constraints,
+    tolerancePiquant: etat.tolerancePiquant,
     context: {
       date,
       creneau,

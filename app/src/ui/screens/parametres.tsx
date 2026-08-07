@@ -24,12 +24,20 @@
 // de l'en-tête, présent sur tous les écrans. Voir `router.tsx`.
 
 import { useCallback, useEffect, useState } from 'react'
-import type { AllergenId, Catalog, DietCode, MealSlot } from '../../engine/domain/index.js'
+import type {
+  AllergenId,
+  Catalog,
+  DietCode,
+  MealSlot,
+  PiquantTolerance,
+} from '../../engine/domain/index.js'
 import {
   readDisplay,
   readMealTimes,
   writeAllergies,
   writeDiet,
+  writeTolerancePiquant,
+  readTolerancePiquant,
   writeDisplay,
   writeMealTime,
   writeRythme,
@@ -59,6 +67,7 @@ import { creneauxDuRythme } from '../creneau.js'
 import { demanderAutorisation, etatNotifications, type EtatNotifications } from '../notifications.js'
 import type { StoredRythme } from '../../data/user-store.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
+import { ChoixPiquant } from '../champs-profil.js'
 import { PARCOURS } from '../parcours.js'
 import { useLancerParcours } from '../lancer-parcours.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
@@ -73,6 +82,8 @@ interface Vue extends ChoixProfil {
   readonly catalogue: Catalog
   readonly affichage: StoredDisplay
   readonly heures: HeuresDeRepas
+  /** Décision 35. `null` = jamais déclarée — la couche `piquant` du moteur reste alors inerte. */
+  readonly tolerancePiquant: PiquantTolerance | null
   readonly sauvegarde: EtatSauvegarde
   /** Un onglet en `'partage'` n'enregistre rien : il ne peut pas non plus restaurer. */
   readonly verrou: EtatVerrou
@@ -87,6 +98,7 @@ type Etat =
 type PanneauId =
   | 'allergies'
   | 'regime'
+  | 'piquant'
   | 'rythme'
   | 'affichage'
   | 'rappels'
@@ -98,6 +110,7 @@ async function lireVue(): Promise<Vue> {
   const socle = await chargerSocle()
   return {
     ...lireChoixProfil(socle.db),
+    tolerancePiquant: readTolerancePiquant(socle.db),
     catalogue: socle.catalogue,
     affichage: readDisplay(socle.db),
     heures: readMealTimes(socle.db),
@@ -128,6 +141,18 @@ function resumeRegime(regime: DietCode | null): string {
 
 function resumeRythme(rythme: StoredRythme): string {
   return `${rythme.repasParJour} repas par jour`
+}
+
+/**
+ * ⚠️ « Non renseigné » ET NON « J'aime le piquant ». Les deux se comportent pareil pour le moteur,
+ * mais afficher une position que personne n'a choisie prêterait un choix à l'utilisateur — c'est la
+ * même règle que `Recipe.piquant`, dont l'absence ne vaut jamais « doux ».
+ */
+function resumePiquant(tolerance: PiquantTolerance | null): string {
+  if (tolerance === 'aucun') return "Je n'en mange pas"
+  if (tolerance === 'un_peu') return 'Un peu, ça va'
+  if (tolerance === 'tout') return "J'aime le piquant"
+  return 'Non renseigné'
 }
 
 function resumeAffichage(affichage: StoredDisplay): string {
@@ -225,6 +250,11 @@ export function Parametres() {
             onOuvrir={() => setPanneauOuvert('regime')}
           />
           <LigneOuvrante
+            libelle="Le piquant"
+            valeur={resumePiquant(vue.tolerancePiquant)}
+            onOuvrir={() => setPanneauOuvert('piquant')}
+          />
+          <LigneOuvrante
             libelle="Mon rythme"
             valeur={resumeRythme(vue.rythme)}
             onOuvrir={() => setPanneauOuvert('rythme')}
@@ -309,6 +339,17 @@ export function Parametres() {
             catalogue={vue.catalogue}
             choisi={vue.regime}
             onChange={(regime) => appliquer({ ...vue, regime }, (db) => writeDiet(db, regime))}
+          />
+        </Panneau>
+      )}
+
+      {panneauOuvert === 'piquant' && (
+        <Panneau titre="Le piquant" onFermer={fermer}>
+          <ChoixPiquant
+            choisi={vue.tolerancePiquant}
+            onChange={(tolerancePiquant) =>
+              appliquer({ ...vue, tolerancePiquant }, (db) => writeTolerancePiquant(db, tolerancePiquant))
+            }
           />
         </Panneau>
       )}

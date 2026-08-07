@@ -40,6 +40,7 @@ const req: WeekPlanRequest = {
   slots: SLOTS,
   history: { windowDays: 21, entries: [] },
   activeTopics: [],
+  tolerancePiquant: null,
   seed: 1,
 }
 

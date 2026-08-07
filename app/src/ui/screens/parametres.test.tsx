@@ -103,6 +103,7 @@ async function suggestions(): Promise<readonly RecipeId[]> {
     .suggestMeals({
       profile: { trancheAge: '30_49', sexe: 'NP', tailleCm: null, poidsKg: null, niveauActivite: 'actif', facteurPortion: 1 },
       constraints: etat.constraints,
+      tolerancePiquant: null,
       context: {
         date: '2026-08-01',
         creneau: 'diner',

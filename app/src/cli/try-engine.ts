@@ -49,6 +49,7 @@ import type {
   ScoringLayerId,
   SuggestionRequest,
   UserProfile,
+  PiquantTolerance,
   VarietyMode,
 } from '../engine/domain/index.js'
 import { NoViableRecipeError, min } from '../engine/domain/index.js'
@@ -112,6 +113,7 @@ const SCORING_LAYER_LABELS: Partial<Record<ScoringLayerId, string>> = {
   season: 'saison',
   habit: 'habitudes',
   speed: 'rapidité',
+  piquant: 'piquant',
 }
 
 function scoringLayerLabel(id: ScoringLayerId): string {
@@ -137,6 +139,8 @@ const KNOWN_VALUE_FLAGS = [
   'pref',
   'favoris',
   'variete',
+  'historique',
+  'piquant',
   'limit',
   'seed',
   'lambda',
@@ -332,6 +336,69 @@ function parseRecipeIdList(raw: string | undefined, catalog: Catalog, flagName: 
   return ids as RecipeId[]
 }
 
+/**
+ * `--historique r1,r2,…` → repas récents, du plus récent au plus ancien, un par jour en remontant
+ * depuis la veille de `--date`.
+ *
+ * ⚠️ CE DRAPEAU EXISTE POUR UNE DETTE PRÉCISE (§8 ETAT) : « `varietyMode` n'est pas observable au
+ * banc, et le contenu n'y change RIEN — la cause est un historique de repas VIDE, pas un catalogue
+ * pauvre. Toutes les recettes ont donc la même récence et l'override les décale identiquement. Il
+ * faut injecter un historique, pas des recettes. » C'est exactement ce que fait cette fonction.
+ * Sans elle, comparer `--variete surprise` à `--variete classiques` rend deux fois la même liste,
+ * et le banc ne peut rien dire de la couche `variety`.
+ *
+ * ⚠️ `origine: 'choisi'`, ET CE N'EST PAS NEUTRE. C'est l'acquis n°1 du projet : `habit` ne compte
+ * QUE les entrées `choisi` (un reste n'est pas une préférence), tandis que `variety` lit TOUTES les
+ * origines (un reste lasse quand même). `choisi` est donc la seule valeur qui exerce les deux
+ * couches à la fois — ce qu'on veut d'un banc. Pour n'exercer que `variety`, il faudra un second
+ * drapeau, pas une valeur par défaut différente.
+ *
+ * ⚠️ UN REPAS PAR JOUR EN REMONTANT, jamais plusieurs le même jour : `variety` pondère par la
+ * RÉCENCE, et empiler trois recettes sur la même date les rendrait indistinguables — on
+ * reproduirait le défaut qu'on cherche à corriger.
+ */
+function parseHistorique(
+  raw: string | undefined,
+  dateReference: string,
+  creneau: MealSlot,
+  catalog: Catalog
+): MealHistory {
+  const ids = parseRecipeIdList(raw, catalog, 'historique')
+  if (ids.length === 0) return EMPTY_HISTORY
+  if (ids.length > FENETRE_HISTORIQUE_JOURS) {
+    throw new CliUsageError(
+      `--historique : ${ids.length} recettes pour une fenêtre de ${FENETRE_HISTORIQUE_JOURS} jours — ` +
+        'les plus anciennes sortiraient de la fenêtre et ne compteraient pour rien.'
+    )
+  }
+  const reference = new Date(`${dateReference}T00:00:00Z`)
+  const entries = ids.map((recipeId, rang) => {
+    const jour = new Date(reference)
+    jour.setUTCDate(jour.getUTCDate() - (rang + 1))
+    return {
+      recipeId,
+      date: jour.toISOString().slice(0, 10),
+      creneau,
+      origine: 'choisi' as const,
+    }
+  })
+  return { windowDays: FENETRE_HISTORIQUE_JOURS, entries }
+}
+
+/**
+ * `--piquant` → `PiquantTolerance` (décision 35). Absent → `null`, JAMAIS `'tout'`.
+ *
+ * ⚠️ Le repli est `null` et pas la position la plus permissive : c'est ce qui garde la couche
+ * `piquant` à poids nul (`PIQUANT_DYNAMIC_WEIGHT`), donc le banc sans ce drapeau mesure exactement
+ * ce que voit quelqu'un qui n'a rien déclaré. Un repli sur `'tout'` ferait tourner la couche pour
+ * rien et diluerait les autres poids à la normalisation — le banc mentirait sur le cas nominal.
+ */
+function parseTolerancePiquant(raw: string | undefined): PiquantTolerance | null {
+  if (raw === undefined) return null
+  if (raw === 'aucun' || raw === 'un_peu' || raw === 'tout') return raw
+  throw new CliUsageError(`--piquant invalide '${raw}' — attendu : aucun | un_peu | tout`)
+}
+
 /** `--variete` → `VarietyMode` (§8.1 ENGINE), union fermée à trois positions. */
 function parseVarietyMode(raw: string | undefined): VarietyMode {
   if (raw === undefined) return 'auto'
@@ -414,6 +481,10 @@ interface CliOptions {
   readonly onlyFavoris: boolean
   /** `--variete` : override explicite de la couche `variety` (§8.1 ENGINE). */
   readonly varietyMode: VarietyMode
+  /** `--piquant` : tolerance declaree. `null` = rien declare, la couche `piquant` reste inerte. */
+  readonly tolerancePiquant: PiquantTolerance | null
+  /** `--historique` : repas récents injectés, sans quoi `variety` et `habit` sont inertes au banc. */
+  readonly history: MealHistory
   readonly limit: number
   readonly seed: number
   /** §6.6 ENGINE — poids de la pénalité de redondance dans la diversification MMR. Sans effet si `noMmr`. */
@@ -425,10 +496,14 @@ interface CliOptions {
 function parseOptions(argv: readonly string[], catalog: Catalog): CliOptions {
   const raw = readRawArgs(argv)
   const { envie, tokens: envieTokens } = parseEnvie(raw.values.get('envie'))
+  // Sortis du littéral : `parseHistorique` a besoin des deux pour dater et créneauter les entrées
+  // qu'il fabrique, et un littéral d'objet ne peut pas se lire lui-même.
+  const slot = parseSlot(raw.values.get('slot'))
+  const date = parseDate(raw.values.get('date'))
 
   return {
-    slot: parseSlot(raw.values.get('slot')),
-    date: parseDate(raw.values.get('date')),
+    slot,
+    date,
     tempsDisponibleMin: parseTemps(raw.values.get('temps')),
     envieTokens,
     envie,
@@ -441,6 +516,8 @@ function parseOptions(argv: readonly string[], catalog: Catalog): CliOptions {
     favoris: parseRecipeIdList(raw.values.get('favoris'), catalog, 'favoris'),
     onlyFavoris: raw.flags.has('only-favoris'),
     varietyMode: parseVarietyMode(raw.values.get('variete')),
+    tolerancePiquant: parseTolerancePiquant(raw.values.get('piquant')),
+    history: parseHistorique(raw.values.get('historique'), date, slot, catalog),
     limit: parseLimit(raw.values.get('limit')),
     seed: parseSeed(raw.values.get('seed')),
     lambda: parseLambda(raw.values.get('lambda')),
@@ -468,9 +545,12 @@ const BENCH_PROFILE: UserProfile = {
   facteurPortion: 1,
 }
 
+/** Fenêtre glissante par défaut, §13 ENGINE. */
+const FENETRE_HISTORIQUE_JOURS = 21
+
 /** Historique vide — démarrage à froid (§7.5 ENGINE) : `habit` neutre, `variety` sans récence à
- * pénaliser. Fenêtre 21 jours = le défaut documenté §13 ENGINE, même si aucune entrée n'y vit ici. */
-const EMPTY_HISTORY: MealHistory = { windowDays: 21, entries: [] }
+ * pénaliser. C'est le défaut du banc ; `--historique` le remplace (voir `parseHistorique`). */
+const EMPTY_HISTORY: MealHistory = { windowDays: FENETRE_HISTORIQUE_JOURS, entries: [] }
 
 function buildRequest(opts: CliOptions): SuggestionRequest {
   return {
@@ -488,7 +568,8 @@ function buildRequest(opts: CliOptions): SuggestionRequest {
       pantryFoodIds: [],
       requiredFoodIds: opts.requis,
     },
-    history: EMPTY_HISTORY,
+    history: opts.history,
+    tolerancePiquant: opts.tolerancePiquant,
     preferences: opts.preferences,
     favoriteRecipeIds: new Set(opts.favoris),
     onlyFavorites: opts.onlyFavoris,
@@ -535,6 +616,13 @@ function buildReplayCommand(opts: CliOptions): string {
   if (opts.favoris.length > 0) parts.push(`--favoris ${opts.favoris.join(',')}`)
   if (opts.onlyFavoris) parts.push('--only-favoris')
   if (opts.varietyMode !== 'auto') parts.push(`--variete ${opts.varietyMode}`)
+  if (opts.tolerancePiquant !== null) parts.push(`--piquant ${opts.tolerancePiquant}`)
+  // ⚠️ SANS CETTE LIGNE, LA COMMANDE DE REJEU MENTIRAIT. L'historique décale `variety` et `habit` :
+  // l'omettre rendrait une commande qui produit un AUTRE classement que celui qu'on vient de lire.
+  // Les entrées sont datées relativement à `--date`, déjà présente, donc les identifiants suffisent.
+  if (opts.history.entries.length > 0) {
+    parts.push(`--historique ${opts.history.entries.map((e) => e.recipeId).join(',')}`)
+  }
   if (opts.noMmr) parts.push('--no-mmr')
   else if (opts.lambda !== DEFAULT_MMR_LAMBDA) parts.push(`--lambda ${opts.lambda}`)
   parts.push(`--limit ${opts.limit}`, `--seed ${opts.seed}`)
@@ -574,7 +662,22 @@ function printHeader(opts: CliOptions, catalog: Catalog, engineVersion: string, 
       opts.onlyFavoris ? ' — RESTREINT aux favoris (--only-favoris)' : ''
     }`
   )
+  console.log(
+    `Piquant      : ${opts.tolerancePiquant === null ? '(non déclaré — la couche piquant reste INERTE)' : `tolérance ${opts.tolerancePiquant}`}`
+  )
   console.log(`Variété      : ${opts.varietyMode}${opts.varietyMode === 'auto' ? ' (modulée par habit)' : ' — override explicite'}`)
+  // ⚠️ ANNONCER L'HISTORIQUE VIDE PLUTÔT QUE DE SE TAIRE : c'est lui qui rend `variety` et `habit`
+  // inertes, et son silence a fait conclure pendant des semaines que le CATALOGUE était trop pauvre
+  // pour observer `--variete` (§8 ETAT). Une ligne qui dit « aucun » aurait désigné la cause.
+  console.log(
+    `Historique   : ${
+      opts.history.entries.length === 0
+        ? '(vide — variety et habit sont INERTES, voir --historique)'
+        : `${opts.history.entries.length} repas sur ${opts.history.windowDays} j · ${opts.history.entries
+            .map((e) => `${catalog.recipes.get(e.recipeId)?.nom ?? e.recipeId} (${e.date})`)
+            .join(', ')}`
+    }`
+  )
   console.log(`Limit / seed : ${opts.limit} / ${opts.seed}`)
   console.log(
     `Diversif.    : ${

@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 11
+export const USER_SCHEMA_VERSION = 12
 
 export interface Migration {
   readonly version: number
@@ -581,6 +581,34 @@ const V11_STATEMENTS: readonly string[] = [
      ADD COLUMN portions INTEGER CHECK (portions IS NULL OR portions >= 1)`,
 ]
 
+/**
+ * v12 — `user_profile.tolerance_piquant` (décision 35, tranchée le 2026-08-07).
+ *
+ * ⚠️ DANS `user_profile` ET PAS DANS `user_display`, malgré l'apparence : ce n'est pas un réglage
+ * d'affichage mais un GOÛT durable, et `facteur_portion` — « je mange un peu plus / un peu moins » —
+ * est le précédent exact d'une préférence personnelle logée dans cette table.
+ *
+ * ⚠️ ELLE N'ENTRE PAS DANS `UserProfile` (engine/domain/profile.ts), qui décrit une PHYSIOLOGIE. La
+ * tolérance voyage sur `SuggestionRequest.tolerancePiquant`, à côté de `varietyMode`. Une colonne
+ * de `user_profile` qui ne fait pas partie du type `UserProfile` n'est pas une anomalie : `cree_le`
+ * est déjà dans ce cas, et se lit par un accesseur dédié.
+ *
+ * ⚠️ NULLABLE, ET C'EST LE SENS DE LA COLONNE. `NULL` = « jamais déclaré », PAS « tout ». Les deux
+ * se comportent pareil pour le moteur — aucune pénalité — mais afficher « J'aime le piquant » à
+ * quelqu'un qui n'a rien dit lui prêterait un choix qu'il n'a pas fait. Même règle que
+ * `recipe.piquant`, dont l'absence ne vaut jamais « doux ». C'est aussi ce qui garde la couche
+ * `piquant` à poids nul tant que personne n'a répondu.
+ *
+ * Le `CHECK` ferme le vocabulaire aux trois positions de `PiquantTolerance`. Il ne stocke PAS le
+ * nombre 0-4 de l'échelle catalogue : le seuil se déduit de la position (voir `SEUIL_PAR_TOLERANCE`),
+ * et écrire un chiffre ici figerait en base une correspondance qui appartient au moteur.
+ */
+const V12_STATEMENTS: readonly string[] = [
+  `ALTER TABLE user_profile
+     ADD COLUMN tolerance_piquant TEXT
+     CHECK (tolerance_piquant IS NULL OR tolerance_piquant IN ('aucun','un_peu','tout'))`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -593,6 +621,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 9, statements: V9_STATEMENTS },
   { version: 10, statements: V10_STATEMENTS },
   { version: 11, statements: V11_STATEMENTS },
+  { version: 12, statements: V12_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

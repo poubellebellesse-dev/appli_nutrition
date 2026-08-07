@@ -172,7 +172,15 @@ function recetteDeBase(): Recipe {
       { foodId: 'lait' as FoodId, quantiteG: g(200), uniteAffichage: '20 cl', optionnel: false },
     ],
     etapes: [
-      { ordre: 1, texte: 'Saisir la viande.', lexiconIds: ['saisir'], timerS: 600, timerType: 'cuisson', nature: 'geste' },
+      {
+        ordre: 1,
+        texte: 'Saisir la viande.',
+        lexiconIds: ['saisir'],
+        timerS: 600,
+        timerType: 'cuisson',
+        nature: 'geste',
+        foodIds: [],
+      },
     ],
     facettes: [
       { facette: 'cuisine', valeur: 'francaise' },

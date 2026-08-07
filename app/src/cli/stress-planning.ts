@@ -67,6 +67,7 @@ function req(o: Partial<WeekPlanRequest> = {}): WeekPlanRequest {
     slots: ['petit_dejeuner', 'dejeuner', 'diner'],
     history: { windowDays: 21, entries: [] },
     activeTopics: [],
+  tolerancePiquant: null,
     seed: 1,
     ...o,
   }

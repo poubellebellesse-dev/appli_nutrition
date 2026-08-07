@@ -1,0 +1,294 @@
+// catalog/lien-etape-ingredient.mjs — quels ingrédients de la recette une étape emploie-t-elle ?
+//
+// ⚠️ CE MODULE EXISTE EN UN SEUL EXEMPLAIRE, ET C'EST LE POINT. Il est appelé par `build.mjs` (qui
+// remplit `recipe_step_ingredient`) et par `atelier/mesure-liens-etapes.mjs` (qui compte). Deux
+// copies divergeraient, et le chiffre mesuré cesserait de décrire ce que le build produit — c'est
+// le motif que `7040c33` a dû réunir côté écrans, on ne le rouvre pas côté catalogue.
+//
+// ---------------------------------------------------------------------------------------------
+// POURQUOI UNE DÉRIVATION, ALORS QUE LE PLAN D'ORIGINE PRÉVOYAIT 1 101 ANNOTATIONS À LA MAIN
+//
+// La décision 8 (2026-08-04) posait le lien comme « écrit à la main, pas dérivé », au motif que
+// « `food` n'a ni synonyme ni alias ». Deux défauts, tous deux mesurés depuis (décision 60) :
+//
+//   1. La prémisse est fausse depuis le 2026-08-05 — `food.synonymes` existe (décision 58).
+//   2. Le tableau qui écartait la dérivation la mesurait contre les 450 ALIMENTS DU CATALOGUE. Le
+//      problème réel est FERMÉ : choisir parmi les ~7 ingrédients de LA recette. « Découper les
+//      tomates » n'a jamais risqué de désigner l'ail — l'ail n'est pas candidat sur cette phrase.
+//
+// Relevé du 2026-08-07 sur 292 recettes et 1 317 gestes : **94,0 % des étapes trouvent au moins un
+// ingrédient, 2,0 % portent une ambiguïté, 6,0 % ne trouvent rien.** Les 6 % sont massivement des
+// étapes qui n'emploient réellement aucun ingrédient (« Préchauffer le four », « Enfourner »,
+// « Couvrir et laisser braiser »). Rejouer la mesure : `node atelier/mesure-liens-etapes.mjs`.
+//
+// ⚠️ CE QUE CE MODULE NE DOIT JAMAIS SERVIR À FAIRE : masquer des ingrédients. Un lien manqué doit
+// rester sans conséquence, donc l'écran AJOUTE une information et n'en retranche aucune — la liste
+// complète reste accessible en permanence (L1bis). Le jour où quelqu'un s'en servira pour FILTRER,
+// une étape sur seize affichera une liste vide et 4 % des ingrédients n'apparaîtront nulle part.
+// C'est l'écran qui « ment par omission », la seule objection de la décision 60 qui tenait debout.
+
+/**
+ * Les verbes qui DÉSIGNENT un ingrédient sans le nommer. Le seul cas que le §2.1 du document de
+ * conception appelait à juste titre résistant : « saler » ne contient pas « sel », aucun
+ * rapprochement de chaîne ne les rapprochera jamais.
+ *
+ * ⚠️ Douze entrées, et la liste est fermée par la LANGUE, pas par le catalogue : ajouter un aliment
+ * n'oblige pas à revenir ici.
+ */
+const VERBES = new Map([
+  ['sal', 'sel'],
+  ['poivr', 'poivre'],
+  ['beurr', 'beurre'],
+  ['huil', 'huile'],
+  ['sucr', 'sucre'],
+  ['farin', 'farine'],
+  ['citronn', 'citron'],
+  ['vinaigr', 'vinaigre'],
+  ['persill', 'persil'],
+  ['safran', 'safran'],
+  ['gratin', 'fromage'],
+  ['paner', 'chapelure'],
+])
+
+/**
+ * L'HYPERONYME — le mot générique qui désigne plusieurs ingrédients sans en nommer aucun.
+ *
+ * ⚠️ C'ÉTAIT LE SEUL CAS OÙ L'ANNOTATION MANUELLE BATTAIT VRAIMENT LA MACHINE, et il se résout sans
+ * elle. `bol_fruits_graines` porte pomme, orange et banane ; son étape 1 dit « couper LES FRUITS ».
+ * Aucun rapprochement de chaîne n'y arrivera — mais chaque aliment porte un `groupe`, et l'ensemble
+ * reste fermé aux ingrédients de la recette : « les fruits » ne peut désigner que les fruits DE
+ * CETTE recette-là.
+ */
+const HYPERONYMES = new Map([
+  ['fruit', 'fruits'],
+  ['legume', 'légumes'],
+  ['viande', 'viandes'],
+  ['poisson', 'poissons'],
+  ['epice', 'condiments'],
+  ['aromate', 'condiments'],
+  ['herbe', 'condiments'],
+  ['legumineuse', 'légumineuses'],
+  ['agrume', 'fruits'],
+])
+
+/** Mots qui ne discriminent rien — articles, et qualificatifs d'état des noms CIQUAL. */
+const VIDES = new Set([
+  'de', 'du', 'des', 'la', 'le', 'les', 'au', 'aux', 'a', 'en', 'et', 'ou', 'un', 'une',
+  'cru', 'crue', 'cuit', 'cuite', 'nature', 'entier', 'entiere', 'frais', 'fraiche', 'sec', 'seche',
+])
+
+/**
+ * Les infinitifs sont la forme verbale des recettes (« Émincer », « Blanchir »). C'est ce qui permet
+ * de distinguer le PRONOM de l'ARTICLE, et la distinction n'est pas cosmétique :
+ *
+ *   « LES blanchir trois minutes »  → pronom : reprend l'ingrédient de l'étape précédente
+ *   « LE four à 190 °C »            → article : ne reprend rien du tout
+ *
+ * Sans elle, « Préchauffer le four » hériterait des ingrédients précédents.
+ */
+const estInfinitif = (mot) => /(er|ir|re)$/.test(mot) && mot.length > 3
+
+/**
+ * Minuscules, sans accents, ponctuation en espaces.
+ *
+ * ⚠️ LA LIGATURE `œ` N'EST PAS DÉCOMPOSÉE PAR NFD. Sans la ligne qui la traite, « œufs » devient
+ * « ufs » et aucune recette au monde ne relie plus un œuf à un œuf. Défaut trouvé dans la sonde
+ * elle-même, et il coûtait à lui seul deux points de couverture.
+ */
+export function normaliser(s) {
+  return s
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/œ/g, 'oe')
+    .replace(/æ/g, 'ae')
+    .replace(/['’]/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+}
+
+/**
+ * Les formes sous lesquelles un aliment peut apparaître dans une phrase de recette.
+ *
+ * ⚠️ LE `nom` DU CATALOGUE EST UN NOM CIQUAL, PAS UN MOT DE CUISINE : « Tomate, crue », « Thon,
+ * conserve au naturel, égoutté ». On coupe à la première virgule — ce qui suit qualifie l'état de
+ * l'aliment, jamais la façon dont une recette le nomme.
+ */
+function formesDe(aliment) {
+  const brutes = [
+    aliment.nom.split(',')[0],
+    ...(aliment.synonymes ?? []),
+    aliment.sous_famille ?? '',
+    aliment.id.replace(/_/g, ' '),
+  ]
+  const formes = []
+  for (const brute of brutes) {
+    const mots = normaliser(brute)
+      .split(' ')
+      .filter((m) => m.length > 1 && !VIDES.has(m))
+    if (mots.length > 0) formes.push(mots)
+  }
+  return formes
+}
+
+/**
+ * Tolérance au pluriel des DEUX côtés (« tomate » ↔ « tomates », « poireaux » ↔ « poireau »), et
+ * rien de plus : pas de racinisation, qui produirait des rapprochements qu'on ne saurait pas
+ * justifier devant un utilisateur.
+ */
+function memeMot(a, b) {
+  if (a === b) return true
+  const sansPluriel = (m) => m.replace(/(s|x)$/, '')
+  return sansPluriel(a) === sansPluriel(b) && sansPluriel(a).length > 2
+}
+
+/** `forme` (suite de mots) apparaît-elle dans `motsTexte` ? */
+function formePresente(motsTexte, forme) {
+  for (let i = 0; i + forme.length <= motsTexte.length; i++) {
+    let ok = true
+    for (let j = 0; j < forme.length; j++) {
+      if (!memeMot(motsTexte[i + j], forme[j])) {
+        ok = false
+        break
+      }
+    }
+    if (ok) return true
+  }
+  return false
+}
+
+/** L'étape reprend-elle un ingrédient déjà nommé sans le renommer ? Déterminant + infinitif. */
+function aUnPronom(mots) {
+  for (let i = 0; i + 1 < mots.length; i++) {
+    if (['les', 'le', 'la', 'l', 'en', 'y'].includes(mots[i]) && estInfinitif(mots[i + 1])) return true
+  }
+  return false
+}
+
+/**
+ * Le rapprochement, sur UNE étape et les ingrédients de SA recette.
+ *
+ * Quatre verdicts par ingrédient trouvé :
+ *   - `complet` : une forme entière est dans le texte (« poivron rouge »)
+ *   - `tete`    : un des deux premiers mots de la forme y est (« les poivrons »)
+ *   - `verbe`   : désigné par un verbe (« saler » → `sel_fin`)
+ *   - `groupe`  : désigné par un hyperonyme (« les fruits » → tous les fruits DE LA RECETTE)
+ *
+ * L'AMBIGUÏTÉ est le cas où deux ingrédients ne sont attrapés que par le même mot de tête — deux
+ * huiles, deux poivrons. Elle est RENDUE, jamais avalée : l'appelant décide de se taire plutôt que
+ * d'affirmer à moitié.
+ */
+export function rapprocherEtape(texte, candidats) {
+  const mots = normaliser(texte).split(' ').filter(Boolean)
+  const trouves = []
+
+  for (const aliment of candidats) {
+    let verdict = null
+    let tete = null
+    for (const forme of formesDe(aliment)) {
+      if (forme.length > 1 && formePresente(mots, forme)) {
+        verdict = 'complet'
+        break
+      }
+      // ⚠️ LE MOT DE TÊTE N'EST PAS TOUJOURS LE MOT DE CUISINE. Le nom CIQUAL met le règne devant :
+      // « Veau, escalope », « Lieu, colin » — or la recette dit « les escalopes », « le colin ». On
+      // essaie donc les DEUX premiers mots.
+      for (const mot of forme.slice(0, 2)) {
+        if (formePresente(mots, [mot])) {
+          verdict ??= 'tete'
+          tete ??= mot
+          break
+        }
+      }
+    }
+    if (verdict === null) {
+      for (const [racine, cible] of VERBES) {
+        if (!mots.some((m) => m.startsWith(racine))) continue
+        if (formesDe(aliment).some((f) => memeMot(f[0], cible))) {
+          verdict = 'verbe'
+          break
+        }
+      }
+    }
+    if (verdict !== null) trouves.push({ id: aliment.id, verdict, tete })
+  }
+
+  // L'hyperonyme ne se déclenche QUE si rien n'a été nommé directement : « couper les légumes et
+  // l'oignon » nomme l'oignon, on n'y ajoute pas tous les légumes de la recette par-dessus.
+  if (trouves.length === 0) {
+    for (const [mot, groupe] of HYPERONYMES) {
+      if (!mots.some((m) => memeMot(m, mot))) continue
+      for (const aliment of candidats) {
+        if (aliment.groupe === groupe) trouves.push({ id: aliment.id, verdict: 'groupe', tete: null })
+      }
+    }
+  }
+
+  const parTete = new Map()
+  for (const t of trouves.filter((t) => t.verdict === 'tete' && t.tete !== null)) {
+    parTete.set(t.tete, (parTete.get(t.tete) ?? 0) + 1)
+  }
+
+  return {
+    trouves,
+    ambigus: [...parTete.entries()].filter(([, n]) => n > 1).map(([tete]) => tete),
+    pronom: aUnPronom(mots),
+  }
+}
+
+/**
+ * Les liens d'une recette entière, étape par étape.
+ *
+ * @param recette  l'objet YAML de la recette (ingredients, etapes)
+ * @param aliments Map<id, aliment> du catalogue
+ * @returns Map<ordre, { ids: string[], origine: 'declare' | 'derive' | 'herite' }>
+ *
+ * ⚠️ `food_ids` DÉCLARÉ DANS LE YAML GAGNE TOUJOURS, et la dérivation n'est même pas tentée. C'est
+ * la soupape : là où la machine se trompe ou ne trouve rien, un humain tranche, et son verdict n'est
+ * jamais discuté. Le champ reste FACULTATIF pour toujours — le rendre obligatoire sur 1 350 gestes
+ * remettrait exactement la corvée que la dérivation existe pour supprimer.
+ */
+export function liensDeLaRecette(recette, aliments) {
+  const candidats = (recette.ingredients ?? [])
+    .map((i) => aliments.get(i.food_id))
+    .filter((a) => a !== undefined)
+
+  const liens = new Map()
+  // Le dernier ensemble RÉELLEMENT nommé, pour résoudre « les blanchir » en « blanchir les
+  // brocolis ». ⚠️ On n'hérite JAMAIS d'un héritage : deux étapes de pronom d'affilée ne repoussent
+  // pas la référence plus loin, elles la perdent. Une chaîne d'approximations n'est plus une donnée.
+  let precedent = []
+
+  for (const etape of recette.etapes ?? []) {
+    if ((etape.nature ?? 'geste') !== 'geste') {
+      // Un avertissement se lit, il ne se fait pas : il n'emploie aucun ingrédient.
+      liens.set(etape.ordre, { ids: [], origine: 'derive' })
+      continue
+    }
+
+    if (Array.isArray(etape.food_ids)) {
+      liens.set(etape.ordre, { ids: [...etape.food_ids], origine: 'declare' })
+      precedent = [...etape.food_ids]
+      continue
+    }
+
+    const { trouves, ambigus, pronom } = rapprocherEtape(etape.texte, candidats)
+
+    // ⚠️ UNE AMBIGUÏTÉ FAIT TAIRE L'INGRÉDIENT CONCERNÉ, elle ne le devine pas. Deux huiles dans la
+    // recette et « l'huile » dans l'étape : on ne sait pas laquelle, donc on n'en nomme aucune.
+    const retenus = trouves.filter((t) => !(t.verdict === 'tete' && ambigus.includes(t.tete)))
+
+    if (retenus.length > 0) {
+      const ids = retenus.map((t) => t.id)
+      liens.set(etape.ordre, { ids, origine: 'derive' })
+      precedent = ids
+    } else if (pronom && precedent.length > 0) {
+      liens.set(etape.ordre, { ids: [...precedent], origine: 'herite' })
+      precedent = []
+    } else {
+      liens.set(etape.ordre, { ids: [], origine: 'derive' })
+    }
+  }
+
+  return liens
+}

@@ -24,6 +24,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 import { DatabaseSync } from 'node:sqlite'
+import { liensDeLaRecette } from './lien-etape-ingredient.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -667,6 +668,8 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
     }
 
     const etapes = recipe.etapes ?? []
+    // Les ingrédients de CETTE recette : le seul ensemble dans lequel une étape a le droit de puiser.
+    const ingredientsDeLaRecette = new Set((recipe.ingredients ?? []).map((i) => i.food_id))
     for (const etape of etapes) {
       const hits = findBannedTerms(etape.texte)
       if (hits.length > 0) {
@@ -675,6 +678,25 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
       for (const code of etape.lexicon_ids ?? []) {
         if (!lexiconCodes.has(code)) {
           errors.push(`Recette '${recipe.id}', étape ${etape.ordre} : geste de lexique inconnu '${code}'`)
+        }
+      }
+      // ⚠️ `food_ids` EST FACULTATIF ET LE RESTERA. Il ne sert qu'à corriger la dérivation là où elle
+      // se trompe (~6 % des gestes) ; l'exiger partout remettrait la corvée de 1 350 annotations que
+      // la dérivation existe précisément pour supprimer. Voir décision 60 d'ETAT.md §4.
+      //
+      // Deux règles quand il EST écrit, et c'est la seconde qui compte : elle garantit qu'une
+      // quantité est TOUJOURS résolvable depuis l'étape. Sans elle, l'écran pourrait citer un
+      // aliment dont il n'a ni `unite_affichage` ni `quantite_g`.
+      if (etape.food_ids !== undefined && !Array.isArray(etape.food_ids)) {
+        errors.push(`Recette '${recipe.id}', étape ${etape.ordre} : 'food_ids' doit être une liste`)
+      }
+      for (const foodId of Array.isArray(etape.food_ids) ? etape.food_ids : []) {
+        if (!foodIds.has(foodId)) {
+          errors.push(`Recette '${recipe.id}', étape ${etape.ordre} : aliment inconnu '${foodId}' dans food_ids`)
+        } else if (!ingredientsDeLaRecette.has(foodId)) {
+          errors.push(
+            `Recette '${recipe.id}', étape ${etape.ordre} : '${foodId}' n'est pas un ingrédient de cette recette`
+          )
         }
       }
       if (!STEP_NATURES.has(etape.nature ?? 'geste')) {
@@ -940,6 +962,24 @@ CREATE TABLE recipe_step (
   PRIMARY KEY (recipe_id, ordre)
 );
 
+-- Quels ingredients une etape emploie-t-elle. DERIVE du texte au build, jamais saisi a la main :
+-- voir catalog/lien-etape-ingredient.mjs pour le pourquoi et les 94 % mesures.
+--
+-- La colonne origine dit D'OU vient chaque lien, et ce n'est pas de la decoration : les trois
+-- valeurs n'ont pas la meme force. « declare » est un humain qui a tranche ; « derive » est un
+-- rapprochement dans la phrase meme ; « herite » reprend l'etape precedente sur un pronom (« les
+-- blanchir ») et c'est le seul des trois qui peut SUR-ATTRIBUER — l'etape d'avant nommait trois
+-- aliments, celle-ci n'en concerne peut-etre qu'un. Un ecran qui ne voudrait afficher que du sur
+-- doit pouvoir l'ecarter.
+CREATE TABLE recipe_step_ingredient (
+  recipe_id TEXT NOT NULL,
+  ordre     INTEGER NOT NULL,
+  food_id   TEXT NOT NULL REFERENCES food(id),
+  origine   TEXT NOT NULL CHECK (origine IN ('declare', 'derive', 'herite')),
+  PRIMARY KEY (recipe_id, ordre, food_id),
+  FOREIGN KEY (recipe_id, ordre) REFERENCES recipe_step(recipe_id, ordre)
+);
+
 CREATE TABLE recipe_facet (
   recipe_id TEXT NOT NULL REFERENCES recipe(id),
   facette TEXT NOT NULL CHECK (facette IN ('cuisine', 'regime', 'occasion', 'style')),
@@ -1170,6 +1210,11 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {}
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `)
     const insertFacet = db.prepare('INSERT INTO recipe_facet (recipe_id, facette, valeur) VALUES (?, ?, ?)')
+    const insertStepIngredient = db.prepare(`
+      INSERT INTO recipe_step_ingredient (recipe_id, ordre, food_id, origine) VALUES (?, ?, ?, ?)
+    `)
+    // La dérivation lit `groupe` et `synonymes` : elle a besoin de l'aliment ENTIER, pas de son id.
+    const alimentsParId = new Map(foods.map((f) => [f.id, f]))
 
     for (const recipe of recipes) {
       insertRecipe.run(
@@ -1218,6 +1263,13 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {}
           etape.timer_type ?? null,
           etape.nature ?? 'geste'
         )
+      }
+      // ⚠️ APRÈS `recipe_step`, jamais avant : la clé étrangère (recipe_id, ordre) vise une ligne
+      // qui doit déjà exister.
+      for (const [ordre, lien] of liensDeLaRecette(recipe, alimentsParId)) {
+        for (const foodId of lien.ids) {
+          insertStepIngredient.run(recipe.id, ordre, foodId, lien.origine)
+        }
       }
       for (const facette of recipe.facettes ?? []) {
         insertFacet.run(recipe.id, facette.facette, facette.valeur)
@@ -1344,6 +1396,30 @@ async function main() {
   // prerequis A (docs/CONCEPTION_MODE_CUISINE.md §2.4), et deja celle de `nature`.
   console.log(
     `recipe_step : ${etapesToutes.length} étapes dont ${etapesToutes.length - avertissements} gestes et ${avertissements} avertissements.`
+  )
+
+  // ⚠️ CE COMPTEUR EST LE SEUL GARDE-FOU DE LA DÉRIVATION, et il ne peut pas être un test. Aucune
+  // vérité de terrain n'existe : personne n'a annoté les 1 350 gestes à la main, c'est justement ce
+  // qu'on a refusé de faire. Un test ne saurait donc pas dire si un lien est JUSTE. Ce qu'un humain
+  // voit, lui, c'est une couverture qui CHUTE — le signe qu'une recette vient d'être écrite d'une
+  // façon que le rapprochement ne sait pas lire. Relevé du 2026-08-07 : 94,0 %.
+  const gestesToutes = etapesToutes.length - avertissements
+  const parOrigine = { declare: 0, derive: 0, herite: 0 }
+  let gestesLies = 0
+  let lignes = 0
+  for (const recipe of recipes) {
+    const naturesParOrdre = new Map((recipe.etapes ?? []).map((e) => [e.ordre, e.nature ?? 'geste']))
+    for (const [ordre, lien] of liensDeLaRecette(recipe, new Map(foods.map((f) => [f.id, f])))) {
+      if (naturesParOrdre.get(ordre) !== 'geste' || lien.ids.length === 0) continue
+      gestesLies++
+      lignes += lien.ids.length
+      parOrigine[lien.origine] += lien.ids.length
+    }
+  }
+  const pourcent = gestesToutes > 0 ? ((gestesLies / gestesToutes) * 100).toFixed(1) : '0.0'
+  console.log(
+    `recipe_step_ingredient : ${lignes} liens sur ${gestesLies}/${gestesToutes} gestes (${pourcent} %) — ` +
+      `${parOrigine.declare} déclarés, ${parOrigine.derive} dérivés, ${parOrigine.herite} hérités.`
   )
   console.log(`→ ${OUT_PATH}`)
 }

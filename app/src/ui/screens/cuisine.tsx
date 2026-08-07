@@ -16,9 +16,11 @@
 // que l'écran ne ment pas au retour.
 //
 // PÉRIMÈTRE — ce qui n'est PAS ici et où c'est écrit : la quantité au tap sur un ingrédient (lot L3,
-// il manque le lien étape → ingrédient), la synchronisation multi-recettes (L4/v1.5), les gestes du
-// lexique dépliés (ils vivent sur la fiche recette ; les dupliquer ici demanderait d'extraire le
-// composant, ce qui n'est pas dans les sept points).
+// il manque le lien étape → ingrédient), la synchronisation multi-recettes (L4/v1.5).
+//
+// ✅ LES GESTES DU LEXIQUE Y SONT DEPUIS L1ter. Ils en étaient exclus « parce que les dupliquer
+// demanderait d'extraire le composant » — l'extraction a été faite (`ui/gestes-etape.tsx`), le motif
+// tombe. C'était le dernier manque de cet écran qui ne réclamait AUCUNE donnée nouvelle.
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Catalog, Recipe, RecipeId, RecipeStep } from '../../engine/domain/index.js'
@@ -35,7 +37,8 @@ import { hashDeRecette } from '../router.js'
 import { creerAlarme, type Alarme } from '../alarme.js'
 import { garderEcranAllume, veillePossible } from '../ecran-allume.js'
 import { etatMinuteur, formaterDuree, libelleMinuteur } from '../cuisine-session.js'
-import { ListeIngredients, SelecteurPortions } from '../ingredients-recette.js'
+import { GestesDeLEtape } from '../gestes-etape.js'
+import { ListeIngredients, QuantitesDeLEtape, SelecteurPortions } from '../ingredients-recette.js'
 import { Panneau } from '../panneau.js'
 
 type Etat =
@@ -344,6 +347,33 @@ export function Cuisine({
             Étape {rang + 1} sur {gestes.length}
           </p>
           <p className="mt-3 text-[1.35rem] leading-relaxed text-texte">{etape.texte}</p>
+
+          {/* ⚠️ LA QUANTITÉ LÀ OÙ ON SE LA DEMANDE. « C'était combien d'ail ? » n'ouvre plus rien :
+              c'est déjà sous la phrase, mis à l'échelle des portions courantes. La fenêtre reste,
+              et c'est ce qui rend la chose sûre — voir l'en-tête de `QuantitesDeLEtape`.
+
+              ⚠️ `foodIds` EST DÉRIVÉ AU BUILD (93,7 % des gestes), jamais saisi à la main. Une étape
+              qui n'emploie aucun ingrédient — « Préchauffer le four » — ne rend rien du tout. */}
+          <QuantitesDeLEtape
+            ingredients={recette.ingredients}
+            foodIds={etape.foodIds}
+            quantites={quantitePour(portions)}
+            facteur={facteur}
+            nomAliment={(foodId) => catalogue.foods.get(foodId as never)?.nom ?? foodId}
+            estFondDePlacard={(foodId) => catalogue.foods.get(foodId as never)?.fondDePlacard === true}
+          />
+
+          {/* ⚠️ SUR PLACE ET SOUS L'ÉTAPE, pas en fenêtre — l'inverse du choix fait pour les
+              ingrédients, et pour la raison inverse : une définition se lit DANS l'étape, une
+              fenêtre la recouvrirait. Le raisonnement complet est en tête de `ui/gestes-etape.tsx`.
+
+              ⚠️ CELUI-CI NE SE FERME PAS À LA SONNERIE, contrairement à la fenêtre des ingrédients.
+              Il n'a pas à le faire : il ne passe par aucun portail, donc la surface « appuyez
+              n'importe où » (`fixed inset-0 z-50`) le recouvre au lieu d'être recouverte par lui.
+
+              ⚠️ `key={etape.ordre}` — sinon un geste ouvert resterait déplié en changeant d'étape
+              dès que deux étapes consécutives citent le même terme. */}
+          <GestesDeLEtape key={etape.ordre} etape={etape} catalogue={catalogue} />
 
           {etape.timerS !== null && (
             <CarteMinuteur

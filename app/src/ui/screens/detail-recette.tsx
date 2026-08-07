@@ -17,20 +17,14 @@
 // une `SuggestionRequest` complète pour que les substitutions repassent les filtres d'allergènes —
 // un lot, pas un bouton), les notes locales, la roue des goûts, et « Ajouter à ma semaine ».
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import type {
-  Catalog,
-  LexiconEntry,
-  Recipe,
-  RecipeId,
-  RecipeSource,
-  RecipeStep,
-} from '../../engine/domain/index.js'
+import { useCallback, useEffect, useState } from 'react'
+import type { Catalog, Recipe, RecipeId, RecipeSource, RecipeStep } from '../../engine/domain/index.js'
 import { readDisplay, readUserState, setFavorite, writeDisplay } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import type { OrigineRecette } from '../router.js'
-import { hashDe, hashDeLEditeur, hashDeLaCuisine, hashDuFrigo } from '../router.js'
+import { hashDe, hashDeLAliment, hashDeLEditeur, hashDeLaCuisine, hashDeRecette, hashDuFrigo } from '../router.js'
 import { estRecettePerso, readUserRecipe } from '../../data/user-recipe.js'
+import { GestesDeLEtape } from '../gestes-etape.js'
 import { ListeIngredients, SelecteurPortions } from '../ingredients-recette.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
@@ -298,6 +292,10 @@ export function DetailRecette({
         nomAliment={vue.nomAliment}
         estFondDePlacard={vue.estFondDePlacard}
         manquants={vue.gardeManger ? vue.manquants : null}
+        // Le retour porte le hash COMPLET de cette fiche, origine comprise : revenir depuis
+        // l'aliment doit ramener ici, et le « ← » d'ici doit continuer de désigner la bonne
+        // provenance. Un mot-clé ne saurait pas dire de QUELLE recette on vient.
+        lienAliment={(foodId) => hashDeLAliment(foodId, hashDeRecette(recetteId, origine))}
       />
 
       <h2 className="mt-8 text-[1.5rem] text-texte">Préparation</h2>
@@ -482,10 +480,11 @@ function Origines({ recette }: { readonly recette: Recipe }) {
 /**
  * Une étape, en GROS BLOC NUMÉROTÉ, avec ses gestes techniques ouvrables (§4.6).
  *
- * ⚠️ LE GESTE EST DÉPLIÉ SUR PLACE, pas dans une autre page. Quelqu'un qui a les mains dans la pâte
- * et qui veut savoir ce que « chemiser » veut dire ne doit pas perdre l'étape qu'il est en train de
- * lire. §4.6 prévoit une animation ; il n'y a pour l'instant que du texte (les 62 fiches du lexique
- * sont écrites, les illustrations promises par §8.5 n'existent pas).
+ * ⚠️ LE DÉPLIANT LUI-MÊME A ÉMIGRÉ vers `ui/gestes-etape.tsx` — le mode cuisine en a besoin à
+ * l'identique. Sa raison d'être (déplié sur place et non en fenêtre, sous peine de faire perdre
+ * l'étape qu'on est en train de lire) est écrite là-bas, avec le reste. §4.6 prévoit une animation ;
+ * il n'y a pour l'instant que du texte — les 62 fiches du lexique sont écrites, les illustrations
+ * promises par §8.5 n'existent pas.
  */
 function Etape({
   numero,
@@ -496,16 +495,6 @@ function Etape({
   readonly etape: RecipeStep
   readonly catalogue: Catalog
 }) {
-  const [ouvert, setOuvert] = useState<string | null>(null)
-
-  const gestes = useMemo(
-    () =>
-      etape.lexiconIds
-        .map((id) => catalogue.lexicon.get(id as never))
-        .filter((entree): entree is LexiconEntry => entree !== undefined),
-    [etape, catalogue]
-  )
-
   return (
     <li className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
       <div className="flex gap-3">
@@ -518,32 +507,12 @@ function Etape({
         <p className="text-[1.12rem] leading-relaxed text-texte">{etape.texte}</p>
       </div>
 
-      {gestes.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2 pl-12">
-          {gestes.map((geste) => (
-            <button
-              key={geste.id}
-              type="button"
-              onClick={() => setOuvert(ouvert === geste.id ? null : geste.id)}
-              aria-expanded={ouvert === geste.id}
-              className="flex min-h-tactile items-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[0.95rem] font-semibold text-accent-texte underline"
-            >
-              {geste.terme}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {gestes
-        .filter((geste) => geste.id === ouvert)
-        .map((geste) => (
-          <p
-            key={geste.id}
-            className="mt-3 ml-12 rounded-[--radius-carte] border border-bordure bg-fond p-3 text-[1rem] leading-relaxed text-texte-doux"
-          >
-            <span className="font-semibold text-texte">{geste.terme}</span> — {geste.definition}
-          </p>
-        ))}
+      {/* Le retrait aligne les pastilles sur le TEXTE de l'étape, pas sur son numéro. Il appartient
+          à cette fiche seule : le mode cuisine, qui ne porte pas de pastille numérotée, n'en veut
+          pas — c'est pourquoi il est ici et non dans le composant partagé. */}
+      <div className="pl-12">
+        <GestesDeLEtape etape={etape} catalogue={catalogue} />
+      </div>
     </li>
   )
 }

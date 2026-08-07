@@ -10,6 +10,7 @@ portions_base: 4
 image_path: null
 types_repas: [dejeuner, diner]
 service: plat
+piquant: 0
 saison_mois: []
 envergure: fete
 conservation_jours: 1

@@ -202,10 +202,21 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     expect(accompagnements.some((r) => r.typesRepas.includes('diner'))).toBe(true)
   })
 
-  it('`piquant` vaut `null` partout tant que rien n’est annoté — jamais 0 par défaut', () => {
-    // `null` ≠ 0 : l'absence d'information n'est pas « doux ». Ce test échouera utilement le jour
-    // où on annotera le piquant, forçant à le mettre à jour sciemment.
-    expect([...catalog.recipes.values()].every((r) => r.piquant === null)).toBe(true)
+  // ⚠️ CE TEST A CHANGÉ DE SENS LE 2026-08-07, ET C'EST CE QU'IL DEMANDAIT. Il disait « `piquant`
+  // vaut `null` partout tant que rien n'est annoté » et portait sa propre condition de sortie :
+  // « ce test échouera utilement le jour où on annotera le piquant, forçant à le mettre à jour
+  // sciemment ». Le jour est venu (décision 35) — les 297 recettes sont annotées. Ce qu'il garde,
+  // c'est la règle qui n'a PAS changé : `null` n'est jamais remplacé par `0` faute d'information.
+  it('les recettes sont annotées, et l’échelle reste celle du catalogue', () => {
+    const recettes = [...catalog.recipes.values()]
+    expect(recettes.every((r) => r.piquant === null || (r.piquant >= 0 && r.piquant <= 4))).toBe(true)
+    // Au moins une recette porte un niveau > 0, sinon l'annotation serait un remplissage à zéro.
+    expect(recettes.some((r) => (r.piquant ?? 0) > 0)).toBe(true)
+  })
+
+  // ⚠️ LES ALIMENTS, EUX, NE SONT TOUJOURS PAS ANNOTÉS — `foods.yaml` était en cours d'édition par
+  // une autre piste au moment de la décision 35. `null` y reste « non renseigné », JAMAIS « doux ».
+  it('`Food.piquant` vaut encore `null` partout — non renseigné, jamais 0 par défaut', () => {
     expect([...catalog.foods.values()].every((f) => f.piquant === null)).toBe(true)
   })
 

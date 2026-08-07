@@ -173,6 +173,11 @@ export function versRecette(stockee: StoredUserRecipe, foods: ReadonlyMap<FoodId
       // Toujours un geste : un avertissement sanitaire est adossé à une source citée (§3
       // CONCEPTION_MODE_CUISINE), et une recette importée n'en apporte aucune.
       nature: 'geste',
+      // ⚠️ VIDE, ET C'EST UN CHOIX. La dérivation étape → ingrédient tourne au BUILD du catalogue
+      // (`catalog/lien-etape-ingredient.mjs`) ; la rejouer ici demanderait de porter ses cinq
+      // mécanismes dans le bundle pour un gain de confort sur les recettes qu'on a écrites soi-même,
+      // et dont on connaît donc déjà les quantités. Vide est un état normal, l'écran le gère.
+      foodIds: [],
     })),
     // ⚠️ EXACTEMENT UNE facette `regime`, comme toute recette du catalogue (décision 28) : zéro la
     // rendrait invisible à tout filtre de régime, deux rouvriraient le mode de défaillance que

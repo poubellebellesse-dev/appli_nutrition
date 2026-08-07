@@ -4,13 +4,25 @@
 # ⚠️ FICHIER GÉNÉRÉ — ne pas éditer à la main.
 #     node catalog/import-ciqual.mjs --write-confiance
 #
-# A = valeur dosée, source française identifiée · D = valeur calculée, imputée ou empruntée.
-# Une cote C ou D ne veut PAS dire « douteuse » : mesuré le 2026-08-05, la première source des
-# valeurs C/D est la table USDA (451 occurrences) et la deuxième un calcul interne Ciqual (368).
+# Définition officielle, CITÉE VERBATIM — ANSES, « Table de composition nutritionnelle des
+# aliments Ciqual 2025 — Documentation » (19/11/2025), tableau 6, champ `code_confiance` :
+#     « code de confiance, qui indique la fiabilité de la teneur moyenne
+#       (de A=très fiable à D=moins fiable) »
+# https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20Ciqual%202025%20doc%20FR_2025_11_19.pdf
+#
+# ⚠️ CET EN-TÊTE A ÉTÉ CORRIGÉ LE 2026-08-07, APRÈS OUVERTURE DE LA SOURCE. Il affirmait
+#    « A = valeur dosée … D = valeur calculée, imputée ou empruntée » et « une cote C ou D ne
+#    veut PAS dire douteuse ». Ces phrases n’étaient sourcées nulle part et contredisent la
+#    documentation : le code annonce une FIABILITÉ, pas une provenance. Ce qui reste vrai est
+#    l’observation faite le 2026-08-05 — les valeurs C/D viennent surtout de la table USDA (451
+#    occurrences) et d’un calcul interne Ciqual (368) — mais elle décrit D’OÙ VIENNENT ces
+#    valeurs, pas ce que le code SIGNIFIE. ⛔ L’ANSES ne définit QUE les deux bornes : B et C ne
+#    doivent recevoir aucun libellé, sous peine d’inventer une source.
 #
 # ⛔ NE SERT À AUCUNE PONDÉRATION DE SCORE (décision 33). Sert la traçabilité affichée : dire
-#    d’où vient un chiffre, pas le déclasser. L’énergie est omise à l’affichage — elle est
-#    434 D sur 449 par construction, l’afficher serait du bruit et non de la provenance.
+#    ce que l’ANSES dit de la solidité d’un chiffre, sans le transformer en note ni en couleur.
+#    L’énergie porte sa cote comme les autres (434 D sur 449) : elle n’est jamais dosée mais
+#    calculée selon le règlement UE n° 1169/2011, et l’écran l’explique au lieu de la masquer.
 # ============================================================================
 
 confiance:

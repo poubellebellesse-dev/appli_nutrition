@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   hashDe,
+  hashDeLAliment,
   hashDeLaCuisine,
   hashDeRecette,
   hashDesParametres,
@@ -208,5 +209,90 @@ describe('ui/router — paramètres', () => {
   it('a un fragment distinct de toutes les autres destinations', () => {
     const fragments = [...TOUS.map(hashDe), hashDuFrigo(), hashDeRecette('x'), hashDesParametres()]
     expect(new Set(fragments).size).toBe(fragments.length)
+  })
+})
+
+describe('ui/router — fiche aliment', () => {
+  it('porte l’identifiant de l’aliment', () => {
+    expect(routeDepuisHash(hashDeLAliment('carotte'))).toEqual({
+      onglet: 'recettes',
+      sousVue: { type: 'aliment', id: 'carotte', retour: '' },
+    })
+  })
+
+  it('survit à un identifiant qui a besoin d’être encodé', () => {
+    const hash = hashDeLAliment('crème/fraîche 30 %')
+    expect(hash).not.toContain(' ')
+    expect(routeDepuisHash(hash).sousVue).toEqual({
+      type: 'aliment',
+      id: 'crème/fraîche 30 %',
+      retour: '',
+    })
+  })
+
+  it('rattache la fiche à l’onglet Recettes, même arrivée depuis les Courses', () => {
+    // Même règle que la fiche recette et le frigo : la barre désigne une SECTION stable, pas le
+    // chemin parcouru. Une barre qui change d'onglet actif selon la provenance bouge sous les doigts.
+    expect(routeDepuisHash(hashDeLAliment('carotte', hashDe('courses'))).onglet).toBe('recettes')
+  })
+
+  it('ramène à la liste sur un fragment malformé, jamais un écran blanc', () => {
+    expect(routeDepuisHash('#/aliment/%E0%A4%A').sousVue.type).toBe('liste')
+    expect(routeDepuisHash('#/aliment/').sousVue.type).toBe('liste')
+  })
+
+  it('un identifiant contenant un « ? » encodé survit au découpage de la requête', () => {
+    const hash = hashDeLAliment('a?b', hashDe('courses'))
+    expect(routeDepuisHash(hash).sousVue).toEqual({
+      type: 'aliment',
+      id: 'a?b',
+      retour: '#/courses',
+    })
+  })
+})
+
+describe('ui/router — retour depuis une fiche aliment', () => {
+  // Le retour est un HASH et non un mot-clé : on arrive sur un aliment depuis une recette PRÉCISE,
+  // ce qu'une énumération façon `OrigineRecette` ne sait pas exprimer.
+  it('porte le hash complet d’une recette, identifiant compris', () => {
+    const retour = hashDeRecette('poulet-basquaise', 'semaine')
+    expect(routeDepuisHash(hashDeLAliment('poulet_blanc', retour)).sousVue).toEqual({
+      type: 'aliment',
+      id: 'poulet_blanc',
+      retour,
+    })
+  })
+
+  it('hash SANS retour → chaîne vide, jamais une provenance inventée', () => {
+    expect(routeDepuisHash('#/aliment/carotte').sousVue).toEqual({
+      type: 'aliment',
+      id: 'carotte',
+      retour: '',
+    })
+  })
+
+  // ⛔ Ce hash finit dans un `href`. Sans le filtre `#/`, une valeur venue de l'URL produirait un
+  // lien SORTANT depuis une page interne.
+  it('⛔ jette tout retour qui n’est pas un fragment interne', () => {
+    for (const de of [
+      'https://exemple.invalide',
+      '//exemple.invalide',
+      'javascript:alert(1)',
+      '/courses',
+      '#courses',
+      '',
+    ]) {
+      const route = routeDepuisHash(`#/aliment/carotte?de=${encodeURIComponent(de)}`)
+      expect(route.sousVue).toEqual({ type: 'aliment', id: 'carotte', retour: '' })
+    }
+  })
+
+  it('ne se confond ni avec la fiche recette ni avec le mode cuisine du même identifiant', () => {
+    const types = ['x'].flatMap((id) => [
+      routeDepuisHash(hashDeLAliment(id)).sousVue.type,
+      routeDepuisHash(hashDeRecette(id)).sousVue.type,
+      routeDepuisHash(hashDeLaCuisine(id)).sousVue.type,
+    ])
+    expect(new Set(types).size).toBe(3)
   })
 })

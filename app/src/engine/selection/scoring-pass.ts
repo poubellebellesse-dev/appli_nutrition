@@ -76,6 +76,7 @@ import { varietyLayer } from './scoring/variety.js'
 import { habitLayer } from './scoring/habit.js'
 import { speedLayer } from './scoring/speed.js'
 import { pantryLayer } from './scoring/pantry.js'
+import { piquantLayer } from './scoring/piquant.js'
 import { archetypeWeightOverride } from './archetypes.js'
 import { assertScoringLayersNeverExclude } from '../guards/index.js'
 
@@ -95,6 +96,7 @@ export const SCORING_LAYERS: readonly SelectionLayer[] = [
   habitLayer as SelectionLayer,
   speedLayer as SelectionLayer,
   pantryLayer as SelectionLayer,
+  piquantLayer as SelectionLayer,
 ]
 
 /**
@@ -105,6 +107,21 @@ export const SCORING_LAYERS: readonly SelectionLayer[] = [
  * que `craving` devient le poids le plus élevé, pas qu'il vaut exactement 0.40.
  */
 export const CRAVING_DYNAMIC_WEIGHT = 0.5
+
+/**
+ * Poids brut de `piquant` quand une tolérance a été DÉCLARÉE (décision 35).
+ *
+ * ⚠️ MÊME MÉCANISME QUE `craving`, ET POUR UNE RAISON PLUS FORTE ENCORE. `piquant` porte
+ * `defaultWeight: 0`, donc la règle 2 ci-dessous ne l'exécute même pas tant que ce poids ne se lève
+ * pas. Un poids fixe non nul l'aurait fait tourner pour TOUT LE MONDE : les poids étant normalisés
+ * à Σ = 1 (règle 3), ajouter une couche permanente aurait dilué toutes les autres et **déplacé le
+ * classement de gens qui n'ont jamais parlé de piquant**. Ici, ne rien déclarer ne coûte rien.
+ *
+ * 0.25 brut — le rang de `nutri` et `preference`, et c'est voulu : ce que quelqu'un supporte de
+ * manger pèse autant que ce qu'il aime. Reste sous `CRAVING_DYNAMIC_WEIGHT` : une envie exprimée
+ * pour ce repas-ci est plus spécifique qu'un réglage de fond.
+ */
+export const PIQUANT_DYNAMIC_WEIGHT = 0.25
 
 /**
  * §6.5 ENGINE, « Poids dynamiques » : une envie est RÉELLEMENT exprimée quand `envie` n'est pas
@@ -155,8 +172,16 @@ export function runScoringPass(
     const id = layer.id as ScoringLayerId
     const cravingDynamicWeight =
       id === 'craving' && isCravingReallyExpressed(req.context.envie) ? CRAVING_DYNAMIC_WEIGHT : undefined
+    // ⚠️ `!== null` et non « truthy » : les trois positions sont des chaînes non vides, mais un
+    // futur `'aucun'` mal typé passerait un test de véracité. La question est « a-t-il répondu ? ».
+    const piquantDynamicWeight =
+      id === 'piquant' && req.tolerancePiquant !== null ? PIQUANT_DYNAMIC_WEIGHT : undefined
     const effectiveWeight =
-      req.weights?.[id] ?? cravingDynamicWeight ?? archetypeWeightOverride(req.archetype, id) ?? layer.defaultWeight
+      req.weights?.[id] ??
+      cravingDynamicWeight ??
+      piquantDynamicWeight ??
+      archetypeWeightOverride(req.archetype, id) ??
+      layer.defaultWeight
     if (effectiveWeight > 0) activeLayers.push({ layer, weight: effectiveWeight })
   }
 

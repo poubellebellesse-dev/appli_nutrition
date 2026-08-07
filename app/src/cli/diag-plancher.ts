@@ -47,6 +47,7 @@ const req: WeekPlanRequest = {
   slots: CRENEAUX,
   history: { windowDays: 21, entries: [] },
   activeTopics: [],
+  tolerancePiquant: null,
   seed: 1,
 }
 

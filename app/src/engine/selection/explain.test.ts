@@ -210,7 +210,9 @@ describe('selection/explain — gabarits de phrase (ton neutre et descriptif, §
   it('la table couvre les onze couches de score du registre, et les deux cas sont peuplés', () => {
     // Sans cette garde, `it.each([])` ne lèverait pas : un `it.each` sur une liste vide ne produit
     // AUCUN test et la suite resterait verte en n'ayant rien vérifié du tout.
-    expect(COUCHES).toHaveLength(11)
+    // 12 depuis la décision 35. `piquant` y figure avec un libellé `null` : elle ne PÉNALISE que,
+    // donc elle ne peut jamais être la raison qu'un plat ait été retenu (acquis n°3).
+    expect(COUCHES).toHaveLength(12)
     expect(CITABLES.length).toBeGreaterThan(0)
     expect(MUETTES.length).toBeGreaterThan(0)
   })

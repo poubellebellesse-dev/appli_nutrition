@@ -27,6 +27,7 @@ import type {
   MealOrigin,
   MealPlanEntry,
   MealSlot,
+  PiquantTolerance,
   RecipeId,
   TopicId,
   ShoppingList,
@@ -82,6 +83,15 @@ export interface StoredUserState {
   readonly history: MealHistory
   readonly activeTopics: readonly TopicId[]
   readonly pantryFoodIds: readonly FoodId[]
+  /**
+   * Tolérance au piquant déclarée (décision 35). `null` = jamais déclarée.
+   *
+   * ⚠️ PORTÉE ICI PLUTÔT QUE LUE ÉCRAN PAR ÉCRAN, et c'est le point de la ligne. Trois écrans
+   * construisent une requête pour le moteur ; un réglage lu séparément par chacun est un réglage
+   * qu'un quatrième écran oubliera, sans qu'aucune erreur ne le dise. Un seul point de lecture,
+   * un seul point d'oubli possible — et le champ requis sur `SuggestionRequest` ferme celui-là.
+   */
+  readonly tolerancePiquant: PiquantTolerance | null
 }
 
 // --- Profil -----------------------------------------------------------------------------------
@@ -884,6 +894,31 @@ export function readProfilCreeLe(db: UserDb): string | null {
   return row?.cree_le ?? null
 }
 
+/**
+ * Tolérance au piquant déclarée (décision 35). `null` = jamais déclarée.
+ *
+ * ⚠️ SÉPARÉE DE `readProfile`, pour la même raison que `readProfilCreeLe` juste au-dessus :
+ * `UserProfile` est un type de `engine/domain` et décrit une PHYSIOLOGIE. La tolérance est un goût ;
+ * elle voyage sur `SuggestionRequest.tolerancePiquant`, à côté de `varietyMode`, pas dans le profil.
+ *
+ * ⚠️ UNE VALEUR INCONNUE EST TRAITÉE COMME `null`, jamais propagée telle quelle. Le `CHECK` de la
+ * migration v12 ferme déjà le vocabulaire, mais une base restaurée depuis un `.nutri-backup` plus
+ * ancien ou bricolée à la main peut porter autre chose : rendre une chaîne inconnue au moteur y
+ * lèverait le seuil à `?? 4` sans que rien ne le dise.
+ */
+export function readTolerancePiquant(db: UserDb): PiquantTolerance | null {
+  const row = db.all<{ readonly tolerance_piquant: string | null }>(
+    'SELECT tolerance_piquant FROM user_profile WHERE id = 1'
+  )[0]
+  const brut = row?.tolerance_piquant ?? null
+  return brut === 'aucun' || brut === 'un_peu' || brut === 'tout' ? brut : null
+}
+
+/** `null` efface la déclaration — « je préfère ne pas dire » doit rester atteignable. */
+export function writeTolerancePiquant(db: UserDb, tolerance: PiquantTolerance | null): void {
+  db.run('UPDATE user_profile SET tolerance_piquant = ? WHERE id = 1', [tolerance])
+}
+
 // --- Lecture composée -------------------------------------------------------------------------
 
 /**
@@ -901,6 +936,7 @@ export function readUserState(db: UserDb, window: HistoryWindow): StoredUserStat
     history: readHistory(db, window),
     activeTopics: readActiveTopics(db),
     pantryFoodIds: readPantryFoodIds(db),
+    tolerancePiquant: readTolerancePiquant(db),
   }
 }
 

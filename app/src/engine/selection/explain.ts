@@ -113,6 +113,12 @@ export function discriminatingScoringLayers(
 export const EXPLANATION_LABELS: Readonly<Record<ScoringLayerId, string | null>> = {
   // `nutri` pèse toujours dans le classement ; seule sa formulation est retirée de l'affichage.
   nutri: null,
+  // ⚠️ `piquant` NE SE CITE JAMAIS, et ce n'est pas un oubli de formulation. La couche ne fait que
+  // PÉNALISER ce qui dépasse la tolérance déclarée : elle rend `NEUTRAL_SCORE` à tout ce qui
+  // convient, donc elle ne peut JAMAIS être la raison qu'un plat ait été retenu. La citer
+  // reviendrait à nommer une couche qui n'a pas discriminé — l'acquis n°3 du projet l'interdit,
+  // et « convient à votre tolérance au piquant » sonnerait comme un compliment fait à une carotte.
+  piquant: null,
   preference: 'proche de vos goûts',
   craving: "correspond à l'envie exprimée",
   season: 'ingrédients de saison',

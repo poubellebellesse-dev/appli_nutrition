@@ -56,6 +56,7 @@ export type ScoringLayerId =
   | 'speed'
   | 'topic'
   | 'cost'
+  | 'piquant'
 
 export type LayerId = ExclusionLayerId | ScoringLayerId
 

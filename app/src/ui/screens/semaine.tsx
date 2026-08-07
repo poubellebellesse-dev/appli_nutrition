@@ -129,6 +129,7 @@ function planifier(socle: Socle, reglages: Reglages, verrous: readonly MealPlanE
   const brut = socle.moteur.planWeek({
     profile: profil,
     constraints: etat.constraints,
+    tolerancePiquant: etat.tolerancePiquant,
     startDate: date,
     days: reglages.jours,
     slots: creneauxDuRythme(reglages.repasParJour),
@@ -309,6 +310,7 @@ export function Semaine() {
             {
               profile: profil,
               constraints: etatUtilisateur.constraints,
+              tolerancePiquant: etatUtilisateur.tolerancePiquant,
               history: etatUtilisateur.history,
               activeTopics: etatUtilisateur.activeTopics,
               seed: plan.seed,
@@ -348,6 +350,7 @@ export function Semaine() {
           const suivant = socle.moteur.setSlotRecipe(plan, slot, recipeId, {
             profile: profil,
             constraints: etatUtilisateur.constraints,
+            tolerancePiquant: etatUtilisateur.tolerancePiquant,
             history: etatUtilisateur.history,
             activeTopics: etatUtilisateur.activeTopics,
             seed: plan.seed,

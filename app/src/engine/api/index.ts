@@ -620,6 +620,12 @@ function requeteDeParcours(constraints: HardConstraints): SuggestionRequest {
   return {
     profile: PROFIL_NEUTRE,
     constraints,
+    // ⚠️ `null` ET NON LA TOLÉRANCE DE L'UTILISATEUR, comme tout le reste de cette requête.
+    // « Parcourir n'est pas juger » : chercher et lire une recette piquante doit rester possible
+    // même pour qui a déclaré ne pas en supporter — c'est exactement la règle tranchée par la
+    // décision 53, où la contrainte ne vaut QUE pour le placement automatique. La couche `piquant`
+    // reste donc à poids nul ici, et ne réordonne pas les résultats de navigation.
+    tolerancePiquant: null,
     context: {
       date: '1970-01-01',
       creneau: 'diner',

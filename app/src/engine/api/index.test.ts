@@ -217,7 +217,8 @@ describe("engine/api — createEngine (§8 ENGINE)", () => {
   it("layers expose les 18 descripteurs du registre (LAYER_DESCRIPTORS)", () => {
     const engine = createEngine(makeCatalog());
     expect(engine.layers).toBe(LAYER_DESCRIPTORS);
-    expect(engine.layers).toHaveLength(18);
+    // 19 depuis la décision 35 (`piquant`, 12ᵉ couche de score).
+    expect(engine.layers).toHaveLength(19);
   });
 
   it("layer('nutri') retourne la couche implémentée correspondante", () => {
@@ -277,6 +278,7 @@ describe("engine/api — createEngine (§8 ENGINE)", () => {
       constraints: { allergies: [], diet: null, excludedFoodIds: [] },
       history: { windowDays: 21, entries: [] },
       activeTopics: [],
+  tolerancePiquant: null,
       seed: 1,
     };
     expect(engine.rerollSlot(plan as never, { date: "2026-08-03", creneau: "diner" }, contexte as never)).toBe(plan);
@@ -457,6 +459,7 @@ function ferRequest(
   } = {},
 ): SuggestionRequest {
   return {
+    tolerancePiquant: null,
     profile: {
       trancheAge: "30_49",
       sexe: "NP",
@@ -648,7 +651,7 @@ describe("engine/api — suggestMeals bout-en-bout (§6.4, §8 ENGINE)", () => {
     );
   });
 
-  it("EngineDiagnostics.weights est complet : les 11 ScoringLayerId, zéros compris pour les couches non implémentées", () => {
+  it("EngineDiagnostics.weights est complet : les 12 ScoringLayerId, zéros compris pour les couches non implémentées", () => {
     const { catalog } = makeFerFixture();
     const engine = createEngine(catalog);
 
@@ -671,6 +674,9 @@ describe("engine/api — suggestMeals bout-en-bout (§6.4, §8 ENGINE)", () => {
         "speed",
         "topic",
         "cost",
+        // Décision 35 — `piquant` a `defaultWeight: 0` et ne se relève qu'avec une tolérance
+        // DÉCLARÉE ; `ferRequest()` n'en déclare aucune, elle est donc ici à zéro comme les autres.
+        "piquant",
       ].sort(),
     );
     // Jamais implémentées (P2/v2/v3) : forcément à zéro, quel que soit le reste de la requête.
@@ -862,6 +868,7 @@ describe("engine/api — avertissements d'un plan (§6.5)", () => {
       { date: "2026-08-03", creneau: "diner" },
       {
         profile: PROFIL_TEST,
+        tolerancePiquant: null,
         constraints: { allergies: [], diet: null, excludedFoodIds: [] },
         history: { windowDays: 21, entries: [] },
         activeTopics: [],

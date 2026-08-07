@@ -99,6 +99,8 @@ export function makeRecipe(
     readonly axes?: Recipe['axes']
     readonly service?: CourseKind | null
     readonly envergure?: RecipeEnvergure
+    /** Decision 35 — `null` = non renseigne, JAMAIS « doux ». */
+    readonly piquant?: Recipe['piquant']
   } = {}
 ): Recipe {
   return {
@@ -120,7 +122,7 @@ export function makeRecipe(
     etapes: [],
     facettes: overrides.facettes ?? [],
     service: overrides.service ?? null,
-    piquant: null,
+    piquant: overrides.piquant ?? null,
     sources: [],
     testeLe: null,
   }
@@ -264,6 +266,7 @@ export function makeRequest(
     ...(overrides.onlyFavorites === undefined ? {} : { onlyFavorites: overrides.onlyFavorites }),
     ...(overrides.varietyMode === undefined ? {} : { varietyMode: overrides.varietyMode }),
     activeTopics: [],
+  tolerancePiquant: null,
     seed: 1,
   }
 }

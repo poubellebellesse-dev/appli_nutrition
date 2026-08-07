@@ -54,6 +54,7 @@ async function avecUnPlan({ restes = true }: { restes?: boolean } = {}) {
   const profil = profilCourant(socle.db, date)
   const brut = socle.moteur.planWeek({
     profile: profil,
+    tolerancePiquant: null,
     constraints: { allergies: [], diet: null, excludedFoodIds: [] },
     startDate: date,
     days: 7,

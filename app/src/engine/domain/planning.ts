@@ -6,7 +6,7 @@
 import type { FoodId, RecipeId, TopicId } from './ids.js'
 import type { CourseKind, MealSlot, RecipeIngredient } from './catalog.js'
 import type { UserProfile } from './profile.js'
-import type { HardConstraints, MealHistory } from './request.js'
+import type { HardConstraints, MealHistory, PiquantTolerance } from './request.js'
 import type { ScoreWeights } from './result.js'
 
 export interface SlotRef {
@@ -24,6 +24,15 @@ export interface WeekPlanRequest {
   readonly slots: readonly MealSlot[]
   readonly history: MealHistory
   readonly activeTopics: readonly TopicId[]
+  /**
+   * Tolérance au piquant déclarée (décision 35), transmise TELLE QUELLE aux requêtes de créneau que
+   * `planWeek` et `rerollSlot` construisent en interne.
+   *
+   * ⚠️ REQUIS, pour la même raison que sur `SuggestionRequest` — et ici le risque est plus grand
+   * encore : sans ce champ, le réglage aurait fonctionné sur l'écran Aujourd'hui et **pas du tout**
+   * sur la semaine, ce qui se serait lu comme un caprice de l'application plutôt que comme un bug.
+   */
+  readonly tolerancePiquant: PiquantTolerance | null
   readonly weights?: Partial<ScoreWeights>
   /**
    * Nombre de personnes à table, pour le calcul des RESTES (§7.3). Défaut 1.

@@ -10,6 +10,7 @@ portions_base: 2
 image_path: null
 types_repas: [petit_dejeuner]
 service: plat
+piquant: 0
 saison_mois: []
 envergure: quotidien
 conservation_jours: 1

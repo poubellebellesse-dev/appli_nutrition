@@ -1506,3 +1506,164 @@ describe('catalog/build.mjs — origine animale exigée par l’allergène (couc
     }
   })
 })
+
+/**
+ * Le lien étape → ingrédient (`recipe_step_ingredient`), DÉRIVÉ au build.
+ *
+ * ⚠️ CE QU'AUCUN TEST NE PEUT VÉRIFIER ICI : que la dérivation soit JUSTE sur les 1 350 gestes. Il
+ * n'existe aucune vérité de terrain — la fabriquer, c'est exactement l'annotation manuelle que la
+ * décision 60 a refusée. Ce qui est testable, et qui l'est ci-dessous : que la chaîne écrive
+ * réellement en base, que `food_ids` déclaré l'emporte, et que le build rougisse sur un identifiant
+ * faux. La QUALITÉ, elle, se surveille par le compteur du build et se remesure avec
+ * `node atelier/mesure-liens-etapes.mjs`.
+ */
+describe('catalog/build.mjs — lien étape → ingrédient', () => {
+  // ⛔ LE TEST QUI JUSTIFIE TOUT LE LOT. Ces cinq identifiants sont EXACTEMENT ceux que le §2.2 de
+  // docs/CONCEPTION_MODE_CUISINE.md avait écrits À LA MAIN comme exemple de ce qu'il faudrait saisir
+  // sur 1 101 étapes. La dérivation les retrouve seule, y compris `sel_fin` que la phrase ne nomme
+  // pas — elle dit « saler ».
+  it('⛔ retrouve seule les cinq ingrédients que le plan comptait saisir à la main', () => {
+    const livre = path.join(REPO_ROOT, 'app', 'public', 'catalog', 'catalog.db')
+    const db = new DatabaseSync(livre, { readOnly: true })
+    try {
+      const liens = db
+        .prepare('SELECT food_id FROM recipe_step_ingredient WHERE recipe_id = ? AND ordre = 3 ORDER BY food_id')
+        .all('chakchouka') as { food_id: string }[]
+      expect(liens.map((l) => l.food_id)).toEqual(['ail', 'cumin_graine', 'paprika', 'sel_fin', 'tomate'])
+    } finally {
+      db.close()
+    }
+  })
+
+  // Un avertissement se LIT, il ne se fait pas : il n'emploie aucun ingrédient, et lui en attribuer
+  // un ferait citer des aliments sous une mention sanitaire.
+  it('n’attribue aucun ingrédient à un avertissement sanitaire', () => {
+    const livre = path.join(REPO_ROOT, 'app', 'public', 'catalog', 'catalog.db')
+    const db = new DatabaseSync(livre, { readOnly: true })
+    try {
+      const avertissements = db
+        .prepare(
+          `SELECT COUNT(*) AS n FROM recipe_step_ingredient l
+             JOIN recipe_step s ON s.recipe_id = l.recipe_id AND s.ordre = l.ordre
+            WHERE s.nature = 'avertissement'`
+        )
+        .get() as { n: number }
+      expect(avertissements.n).toBe(0)
+    } finally {
+      db.close()
+    }
+  })
+
+  // ⛔ LA SOUPAPE. Là où la machine ne trouve rien — ici le texte ne nomme aucun aliment —, un humain
+  // tranche et son verdict n'est jamais rediscuté. C'est ce qui rend la dérivation acceptable : elle
+  // n'a pas le dernier mot.
+  it('⛔ `food_ids` écrit à la main l’emporte, et il est marqué « declare »', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-food-ids-declare-'))
+    const dbPath = path.join(fixtureDir, 'catalog.db')
+    try {
+      writeMinimalFixture(fixtureDir)
+      writeFileSync(
+        path.join(fixtureDir, 'recipes', 'declare.yaml'),
+        recetteFixture(`
+  - ordre: 1
+    texte: "Mélanger et servir aussitôt."
+    lexicon_ids: []
+    food_ids: [fixture_food]
+    timer_s: null
+    timer_type: null`),
+        'utf8'
+      )
+
+      const result = runBuild(['--sources', fixtureDir, '--out', dbPath])
+      expect(result.status, result.stderr).toBe(0)
+
+      const db = new DatabaseSync(dbPath, { readOnly: true })
+      try {
+        const lien = db
+          .prepare('SELECT food_id, origine FROM recipe_step_ingredient WHERE recipe_id = ? AND ordre = 1')
+          .get('recette_fixture') as { food_id: string; origine: string } | undefined
+        expect(lien).toEqual({ food_id: 'fixture_food', origine: 'declare' })
+      } finally {
+        db.close()
+      }
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('échoue (exit != 0) sur un `food_ids` inconnu du catalogue', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-food-ids-inconnu-'))
+    try {
+      writeMinimalFixture(fixtureDir)
+      writeFileSync(
+        path.join(fixtureDir, 'recipes', 'invalide.yaml'),
+        recetteFixture(`
+  - ordre: 1
+    texte: "Mélanger et servir."
+    lexicon_ids: []
+    food_ids: [aliment_qui_nexiste_pas]
+    timer_s: null
+    timer_type: null`),
+        'utf8'
+      )
+
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status).not.toBe(0)
+      expect(result.stderr).toContain('aliment inconnu')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  // ⛔ LA RÈGLE QUI COMPTE, et elle n'est pas la précédente. Elle garantit qu'une quantité est
+  // TOUJOURS résolvable depuis l'étape : citer un aliment absent des ingrédients de la recette
+  // ferait afficher un nom sans `unite_affichage` ni `quantite_g` derrière.
+  it('⛔ échoue (exit != 0) sur un `food_ids` qui n’est pas un ingrédient de la recette', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-food-ids-hors-recette-'))
+    try {
+      mkdirSync(path.join(fixtureDir, 'sources'), { recursive: true })
+      mkdirSync(path.join(fixtureDir, 'lexicon'), { recursive: true })
+      mkdirSync(path.join(fixtureDir, 'recipes'), { recursive: true })
+      // Deux aliments au catalogue, UN SEUL dans la recette : `fixture_autre` existe donc bel et
+      // bien, ce qui fait porter l'échec sur la seconde règle et non sur la première.
+      writeFileSync(
+        path.join(fixtureDir, 'sources', 'foods.yaml'),
+        `
+foods:
+  - id: fixture_food
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Aliment de test"
+    groupe: "test"
+    nutriments:
+      energie_kcal: 100
+    allergenes: []
+  - id: fixture_autre
+    code_ciqual: "PROV-FIXTURE-2"
+    nom: "Autre aliment de test"
+    groupe: "test"
+    nutriments:
+      energie_kcal: 50
+    allergenes: []
+`,
+        'utf8'
+      )
+      writeFileSync(
+        path.join(fixtureDir, 'recipes', 'invalide.yaml'),
+        recetteFixture(`
+  - ordre: 1
+    texte: "Mélanger et servir."
+    lexicon_ids: []
+    food_ids: [fixture_autre]
+    timer_s: null
+    timer_type: null`),
+        'utf8'
+      )
+
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status).not.toBe(0)
+      expect(result.stderr).toContain("n'est pas un ingrédient de cette recette")
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+})

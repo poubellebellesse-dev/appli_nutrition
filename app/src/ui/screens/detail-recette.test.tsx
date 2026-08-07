@@ -259,6 +259,25 @@ describe('detail-recette — les étapes', () => {
     const bloc = screen.getByText(avertissement!.texte)
     expect(bloc.closest('ol')).toBeNull()
   })
+
+  // ⚠️ CE TEST N'EXISTAIT PAS AVANT L1ter, ET C'EST CE QUI L'A RENDU NÉCESSAIRE. Le dépliant des
+  // gestes est parti dans `ui/gestes-etape.tsx` pour être partagé avec le mode cuisine ; rien ici ne
+  // couvrait la fiche, donc rien n'aurait signalé une extraction qui la casse. Il vérifie aussi que
+  // le geste reste DANS son étape (`li`) : hors d'elle, on perdrait ce qu'on est en train de lire.
+  it('déplie un geste du lexique SUR PLACE, dans l’étape qui le cite', async () => {
+    await monter('chakchouka' as RecipeId)
+    const definition = /en tranches ou en lamelles fines/
+
+    expect(screen.queryByText(definition)).toBeNull()
+    const bouton = screen.getByRole('button', { name: 'Émincer' })
+    expect(bouton.getAttribute('aria-expanded')).toBe('false')
+
+    fireEvent.click(bouton)
+
+    const texte = screen.getByText(definition)
+    expect(texte.closest('li')).toBe(bouton.closest('li'))
+    expect(bouton.getAttribute('aria-expanded')).toBe('true')
+  })
 })
 
 describe('detail-recette — les origines', () => {
@@ -481,5 +500,33 @@ describe('detail-recette — le favori', () => {
 
     await waitFor(() => expect(readFavorites(baseCourante()).has(recette.id)).toBe(true))
     expect(document.querySelector('button[aria-label="Retirer des favoris"]')).not.toBeNull()
+  })
+})
+
+describe('detail-recette — l’ingrédient ouvre la fiche de l’aliment (décision 33)', () => {
+  // ⚠️ CE TEST GARDE UN CHAMP BRANCHÉ, PAS UN CHAMP DÉCLARÉ. `ListeIngredients.lienAliment` est
+  // OPTIONNELLE : l'omettre ne produit aucune erreur — ni au type, ni au test, ni à l'écran. C'est
+  // le défaut signature de ce projet, quatre occurrences déjà payées. Sans cette assertion sur
+  // l'ÉCRAN RÉEL, la prop pourrait exister et n'être jamais passée.
+  it('pose un lien vers l’aliment sur le nom de chaque ingrédient', async () => {
+    const recette = recetteDeReference()
+    await monter(recette.id)
+    const premier = recette.ingredients[0]
+    expect(premier).toBeDefined()
+    const lien = document.querySelector(
+      `a[href^="#/aliment/${encodeURIComponent(premier?.foodId ?? '')}"]`
+    )
+    expect(lien).not.toBeNull()
+  })
+
+  // Le retour porte le hash COMPLET de la fiche, origine comprise : sans lui, revenir de l'aliment
+  // ramènerait à la liste des recettes, et le « ← » de la fiche aurait perdu sa provenance.
+  it('emporte l’origine dans le retour, pour que l’aller-retour reste cohérent', async () => {
+    const recette = recetteDeReference()
+    await monter(recette.id, 'semaine')
+    const lien = document.querySelector('a[href^="#/aliment/"]') as HTMLAnchorElement | null
+    expect(lien).not.toBeNull()
+    const retour = new URLSearchParams((lien?.getAttribute('href') ?? '').split('?')[1]).get('de')
+    expect(retour).toBe(`#/recette/${encodeURIComponent(recette.id)}?de=semaine`)
   })
 })

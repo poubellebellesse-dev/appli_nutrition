@@ -109,6 +109,9 @@ function slotRequest(
     // fixe du créneau » (nutri.ts : `req.nutrientTarget ?? defaultSlotTarget(...)`). Une clé
     // présente valant `undefined` dirait la même chose à l'exécution, mais par accident.
     ...(nutrientTarget === undefined ? {} : { nutrientTarget }),
+    // Transmise TELLE QUELLE : sans cette ligne, la tolérance jouerait sur Aujourd'hui et pas sur
+    // la semaine — un écart que l'utilisateur lirait comme un caprice de l'application.
+    tolerancePiquant: req.tolerancePiquant,
     profile: req.profile,
     constraints: req.constraints,
     context: {

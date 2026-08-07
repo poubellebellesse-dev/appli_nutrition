@@ -168,6 +168,20 @@ describe('parcours — identité de la table', () => {
     const ecrans = PARCOURS.map((p) => p.ecran).filter((e): e is string => e !== null)
     expect(new Set(ecrans).size).toBe(ecrans.length)
   })
+
+  /**
+   * ⛔ CE TEST ENCODE UN REFUS, et aucun autre invariant ne l'attraperait : un parcours « cuisine »
+   * muni d'un `data-visite="titre-cuisine"` passerait la règle 1 sans broncher.
+   *
+   * Ce qui le disqualifie est ailleurs. `lancerParcours` navigue vers `parcours.ecran` quand on
+   * choisit un tutoriel depuis Réglages ; pour le mode cuisine ce serait un `#/cuisine/<id>` en
+   * dur, et OUVRIR CET ÉCRAN ÉCRIT `user_cuisine_session` — qui ne tient qu'une ligne. Revoir un
+   * tutoriel effacerait la cuisson en cours. Le raisonnement complet est au-dessus de `PARCOURS`.
+   */
+  it('⛔ aucun parcours ne pointe vers le mode cuisine — ouvrir cet écran ÉCRIT en base', () => {
+    const cuisine = PARCOURS.filter((p) => p.ecran?.startsWith('#/cuisine/') === true)
+    expect(cuisine.map((p) => p.id)).toEqual([])
+  })
 })
 
 describe('parcours — etapesDuParcours sur un id inconnu', () => {

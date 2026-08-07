@@ -11,7 +11,7 @@
 // contrôles — c'est la seule ligne de partage qui tienne pour les deux.
 
 import { useState } from 'react'
-import type { Catalog, DietCode } from '../engine/domain/index.js'
+import type { Catalog, DietCode, PiquantTolerance } from '../engine/domain/index.js'
 import type { StoredRythme } from '../data/user-store.js'
 
 /**
@@ -341,6 +341,70 @@ export function ChoixRythme({
           />
         ))}
       </div>
+    </>
+  )
+}
+
+/**
+ * Ce que l'utilisateur supporte comme piquant (décision 35).
+ *
+ * ⚠️ TROIS POSITIONS EN TOUTES LETTRES, PAS UN CURSEUR 0→4. L'échelle du catalogue reste interne :
+ * un chiffre à côté d'un plat se lit comme une note, et c'est ce que le principe 6 interdit. Le
+ * produit vise « toutes les tranches d'âge, y compris peu à l'aise avec le numérique » — trois
+ * phrases se choisissent sans mode d'emploi.
+ *
+ * ⚠️ « Je préfère ne pas dire » N'EST PAS UNE QUATRIÈME POSITION DÉCORATIVE. C'est le retour à
+ * `null`, l'état de qui n'a jamais répondu, et il DOIT rester atteignable : sans lui, ouvrir cette
+ * fenêtre une fois par curiosité enfermerait dans un choix qu'on ne pourrait plus retirer. `null`
+ * laisse la couche `piquant` inerte — voir `PiquantTolerance`.
+ *
+ * ⚠️ AUCUN LIBELLÉ NE JUGE UN PLAT. « Je n'en mange pas » parle de la personne ; « pas de plats
+ * forts » aurait fait de la force du plat un défaut.
+ */
+export function ChoixPiquant({
+  choisi,
+  onChange,
+}: {
+  readonly choisi: PiquantTolerance | null
+  readonly onChange: (tolerance: PiquantTolerance | null) => void
+}) {
+  const positions: readonly { readonly valeur: PiquantTolerance; readonly libelle: string }[] = [
+    { valeur: 'aucun', libelle: "Je n'en mange pas" },
+    { valeur: 'un_peu', libelle: 'Un peu, ça va' },
+    { valeur: 'tout', libelle: "J'aime le piquant" },
+  ]
+
+  return (
+    <>
+      <p className="text-[0.95rem] text-attenue">Supportez-vous les plats piquants ?</p>
+      <div className="mt-2 flex flex-col gap-2">
+        {positions.map((position) => (
+          <Segment
+            key={position.valeur}
+            libelle={position.libelle}
+            actif={choisi === position.valeur}
+            onChoisir={() => onChange(position.valeur)}
+          />
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onChange(null)}
+        className="mt-4 flex min-h-tactile items-center text-[0.95rem] font-semibold text-accent-texte"
+      >
+        Je préfère ne pas répondre
+      </button>
+
+      {/* ⚠️ CETTE PHRASE EST LA CONDITION DU RÉGLAGE, pas un ornement. Il ne PEUT PAS promettre
+          mieux : `Recipe.piquant` est renseigné sur les recettes que quelqu'un a annotées, et un
+          plat non annoté n'est jamais écarté. Taire cette limite ferait croire à un filtre. */}
+      <p className="mt-5 text-[0.9rem] leading-relaxed text-attenue">
+        Ce réglage change ce que l'application vous PROPOSE : les plats plus forts que ce que vous
+        avez indiqué passent après les autres. Il n'en cache aucun — vous pouvez toujours les
+        chercher et les cuisiner — et il ne peut rien dire des recettes dont le piquant n'a pas été
+        renseigné.
+      </p>
     </>
   )
 }

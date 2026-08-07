@@ -34,6 +34,7 @@ function makePlanRequest(profile: WeekPlanRequest['profile'], seed: number): Wee
     slots: ['petit_dejeuner', 'dejeuner', 'diner'] as readonly MealSlot[],
     history: { windowDays: 21, entries: [] },
     activeTopics: [],
+  tolerancePiquant: null,
     seed,
   }
 }

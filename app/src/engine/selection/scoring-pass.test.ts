@@ -416,11 +416,12 @@ describe('selection/scoring-pass — garde-fou §6.1 (assertScoringLayersNeverEx
 })
 
 describe('selection/scoring-pass — câblage des vraies couches (SCORING_LAYERS)', () => {
-  it('SCORING_LAYERS contient exactement les 8 couches de score implémentées', () => {
-    // `pantry` a rejoint la liste le 2026-07-28 (§10.2 ①, « vider le frigo »). Restent déclarées
-    // mais non implémentées : `occasion`, `topic`, `cost` (P2).
+  it('SCORING_LAYERS contient exactement les 9 couches de score implémentées', () => {
+    // `pantry` a rejoint la liste le 2026-07-28 (§10.2 ①, « vider le frigo »), `piquant` le
+    // 2026-08-07 (décision 35). Restent déclarées mais non implémentées : `occasion`, `topic`,
+    // `cost` (P2).
     expect(SCORING_LAYERS.map((layer) => layer.id).sort()).toEqual(
-      ['craving', 'habit', 'nutri', 'pantry', 'preference', 'season', 'speed', 'variety'].sort()
+      ['craving', 'habit', 'nutri', 'pantry', 'piquant', 'preference', 'season', 'speed', 'variety'].sort()
     )
   })
 
@@ -464,6 +465,9 @@ describe('selection/scoring-pass — archétypes (§6.3 bis ENGINE)', () => {
     speed: 0,
     topic: 0,
     cost: 0,
+    // `piquant` a `defaultWeight: 0` : sa couche ne tourne que si une tolerance est DECLAREE,
+    // par le poids dynamique `PIQUANT_DYNAMIC_WEIGHT` (decision 35). Aucun archetype ne la releve.
+    piquant: 0,
   }
 
   /** Poids normalisés attendus (Σ = 1 sur les couches à poids > 0 seulement) pour `overrides`. */

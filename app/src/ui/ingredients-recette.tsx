@@ -30,6 +30,7 @@ export function ListeIngredients({
   nomAliment,
   estFondDePlacard,
   manquants,
+  lienAliment,
 }: {
   readonly ingredients: Recipe['ingredients']
   /** Grammes DÉJÀ mis à l'échelle, par `foodId`. Repli sur `quantiteG` quand la clé manque. */
@@ -46,6 +47,15 @@ export function ListeIngredients({
    * ligne serait marquée « à acheter », ce qui n'informe plus de rien et noie la liste (§4.6).
    */
   readonly manquants: ReadonlySet<string> | null
+  /**
+   * Hash de la fiche de l'aliment, ou `undefined` pour n'en poser aucun.
+   *
+   * ⚠️ OPTIONNELLE, ET LE MODE CUISINE NE LA PASSE PAS — c'est tout l'intérêt de la faire décider
+   * par l'appelant. Sur la fiche, ouvrir un ingrédient est une consultation ; en pleine cuisson,
+   * c'est un lien plein écran sous un doigt couvert de farine, qui ferait quitter les étapes en
+   * cours. Le même composant, deux lectures, comme pour `manquants`.
+   */
+  readonly lienAliment?: (foodId: string) => string
 }) {
   return (
     <ul className="mt-3 space-y-1">
@@ -63,7 +73,16 @@ export function ListeIngredients({
                 unité (pièces, cuillères, centilitres), que le catalogue, lui, ignore. Voir
                 ui/quantites.ts pour la règle et ses limites. */}
             <span className="tabular-nums text-texte-doux">{quantite.texte}</span>
-            <span>{nomAliment(foodId)}</span>
+            {/* Le nom porte le lien, pas la ligne entière : « à acheter » et « non ajustée » sont
+                des mentions du contexte, pas de l'aliment, et les inclure dans la zone cliquable
+                ferait un lien dont le libellé lu à voix haute ne désigne plus sa destination. */}
+            {lienAliment === undefined ? (
+              <span>{nomAliment(foodId)}</span>
+            ) : (
+              <a href={lienAliment(foodId)} className="text-accent-texte no-underline">
+                {nomAliment(foodId)}
+              </a>
+            )}
             {ingredient.optionnel && <span className="text-[0.9rem] text-attenue">(facultatif)</span>}
             {/* Dire QUAND une quantité ne suit pas les portions, sinon on croit à un bug — c'est
                 précisément ce qui a été signalé quand tout partait en grammes. */}
@@ -79,6 +98,67 @@ export function ListeIngredients({
         )
       })}
     </ul>
+  )
+}
+
+/**
+ * Les quantités des ingrédients employés par UNE étape, sous son texte, en mode cuisine.
+ *
+ * ⚠️ ELLE AJOUTE, ELLE NE FILTRE PAS. C'est la condition qui rend la dérivation acceptable : la
+ * liste complète reste à un tap, donc un ingrédient manqué par le rapprochement ne disparaît de
+ * nulle part. Le jour où quelqu'un voudra en faire un filtre, qu'il relise la décision 60 — une
+ * étape sur seize afficherait une liste vide, et 5 % des ingrédients ne s'afficheraient jamais.
+ *
+ * ⚠️ RIEN N'EST RENDU QUAND L'ÉTAPE N'EMPLOIE AUCUN INGRÉDIENT, et c'est fréquent : « Préchauffer
+ * le four », « Enfourner », « Couvrir et laisser mijoter ». Un bandeau vide ou un « — » occuperait
+ * de la place pour ne rien dire, sur l'écran qui a le moins de place et le plus besoin d'air.
+ *
+ * ⚠️ PAS DE MENTION « quantité au goût, non ajustée » ICI, contrairement à la liste. Elle y sert à
+ * expliquer pourquoi un nombre n'a pas bougé quand on change les portions ; ici il n'y a pas de
+ * sélecteur sous les yeux, et « au goût » se suffit. La mention appartient à l'endroit où l'on règle.
+ */
+export function QuantitesDeLEtape({
+  ingredients,
+  foodIds,
+  quantites,
+  facteur,
+  nomAliment,
+  estFondDePlacard,
+}: {
+  readonly ingredients: Recipe['ingredients']
+  /** `RecipeStep.foodIds` — dérivé au build, sous-ensemble garanti de `ingredients`. */
+  readonly foodIds: readonly string[]
+  /** Grammes DÉJÀ mis à l'échelle, par `foodId`. */
+  readonly quantites: ReadonlyMap<string, number>
+  readonly facteur: number
+  readonly nomAliment: (foodId: string) => string
+  readonly estFondDePlacard: (foodId: string) => boolean
+}) {
+  const vises = new Set(foodIds)
+  // ⚠️ ON PARCOURT `ingredients`, PAS `foodIds` : l'ordre affiché reste celui de la recette, le même
+  // que dans la fenêtre. Suivre l'ordre des `foodIds` ferait changer la place d'un ingrédient d'une
+  // étape à l'autre, et l'œil devrait le rechercher à chaque fois.
+  const employes = ingredients.filter((i) => vises.has(i.foodId as string))
+  if (employes.length === 0) return null
+
+  return (
+    <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[1.02rem] text-texte-doux">
+      {employes.map((ingredient) => {
+        const foodId = ingredient.foodId as string
+        const quantite = quantiteAffichee({
+          libelle: ingredient.uniteAffichage,
+          facteur,
+          fondDePlacard: estFondDePlacard(foodId),
+          grammes: quantites.get(foodId) ?? ingredient.quantiteG,
+        })
+        return (
+          <span key={foodId} className="whitespace-nowrap">
+            <span className="tabular-nums font-semibold text-texte">{quantite.texte}</span>{' '}
+            {nomAliment(foodId)}
+          </span>
+        )
+      })}
+    </p>
   )
 }
 

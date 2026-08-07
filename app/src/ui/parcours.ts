@@ -452,6 +452,25 @@ const ETAPES_REGLAGES: readonly EtapeVisite[] = [
  * plat du jour, puis la semaine qu'il alimente, puis les courses qui en découlent. C'est aussi
  * l'ordre dans lequel Réglages les liste — une liste triée par autre chose demanderait à
  * l'utilisateur de savoir par où commencer.
+ *
+ * ⛔ LE MODE CUISINE N'EN A PAS, ET C'EST UNE DÉCISION, PAS UN OUBLI (tranchée le 2026-08-07 ;
+ * `CONCEPTION_MODE_CUISINE.md` §4.1 la portait comme « à trancher » depuis L1). La raison n'est pas
+ * esthétique, elle est mécanique :
+ *
+ *   `lancerParcours` (main.tsx) NAVIGUE vers `parcours.ecran` quand on choisit un tutoriel depuis la
+ *   fenêtre « Revoir un tutoriel » de Réglages. Pour le mode cuisine, `ecran` devrait être un
+ *   `#/cuisine/<id>` en dur — et OUVRIR CET ÉCRAN ÉCRIT EN BASE : `user_cuisine_session` ne tient
+ *   qu'une ligne (`id = 1`), donc une cuisson en cours sur une autre recette serait REMPLACÉE. Un
+ *   tutoriel qui détruit une cuisson en cours est disqualifié, quel que soit son contenu.
+ *
+ * Et `ecran: null` (la forme de « menus ») ne sauve rien : la cible de la première étape ne
+ * résoudrait alors sur aucun écran, toutes les étapes seraient sautées, et l'on obtiendrait
+ * exactement le tutoriel fantôme que la règle 1 de l'en-tête existe pour empêcher.
+ *
+ * La ligne qui en découle, et qui vaut aussi pour la fiche recette : **un parcours par écran
+ * atteignable depuis la barre d'onglets.** La fiche recette et le mode cuisine s'atteignent depuis
+ * un contenu, pas depuis la barre — ni l'une ni l'autre n'a de parcours, pour le même motif. Le mode
+ * cuisine se découvre là où l'on y entre : le bouton « Cuisiner pas à pas » de la fiche.
  */
 export const PARCOURS: readonly Parcours[] = [
   { id: 'menus', titre: 'Découvrir les menus', ecran: null, etapes: ETAPES_MENUS },

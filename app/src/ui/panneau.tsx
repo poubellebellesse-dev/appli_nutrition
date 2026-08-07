@@ -44,9 +44,56 @@ export function Panneau({
 
   // Échap ferme. Le clavier n'est pas l'usage principal du produit, mais c'est trois lignes et ça
   // évite le piège classique d'une modale dont on ne sort qu'à la souris.
+  //
+  // ⚠️ ET `Tab` EST BORNÉ À LA FENÊTRE — corrigé le 2026-08-07, ce ne l'était pas. `aria-modal="true"`
+  // (ci-dessous) PROMET aux technologies d'assistance que le reste de la page est inerte ; sans
+  // bornage, on sortait de la fenêtre par le haut et on tabulait dans l'écran qu'elle recouvre.
+  // L'attribut mentait. Un contournement était en place — `.sr-only:focus` remonté en `z-index: 60`
+  // pour que le lien d'évitement reste visible quand on l'atteignait ainsi — il reste utile, mais il
+  // rendait le symptôme supportable, pas la promesse vraie.
   useEffect(() => {
     const surTouche = (evenement: KeyboardEvent) => {
-      if (evenement.key === 'Escape') onFermer()
+      if (evenement.key === 'Escape') {
+        onFermer()
+        return
+      }
+      if (evenement.key !== 'Tab') return
+      const boite = contenu.current
+      if (boite === null) return
+
+      // ⚠️ AUCUN CRITÈRE DE VISIBILITÉ CALCULÉE ICI (`offsetParent`, `getBoundingClientRect`) : jsdom
+      // ne fait pas de mise en page et les rendrait tous invisibles, ce qui ferait passer le test
+      // sans que le piège fonctionne dans un navigateur. On s'en tient aux attributs.
+      const focusables = [
+        ...boite.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ),
+      ].filter((element) => !element.hasAttribute('hidden') && element.getAttribute('aria-hidden') !== 'true')
+
+      // Fenêtre sans rien de focusable : le focus reste sur le conteneur plutôt que de partir dans
+      // la page derrière. N'arrive pas aujourd'hui — le bouton « Retour » est toujours là — mais
+      // laisser `Tab` s'échapper dans ce cas serait le seul trou restant.
+      if (focusables.length === 0) {
+        evenement.preventDefault()
+        boite.focus()
+        return
+      }
+
+      const premier = focusables[0] as HTMLElement
+      const dernier = focusables[focusables.length - 1] as HTMLElement
+      const actif = document.activeElement
+
+      // Le conteneur lui-même porte `tabIndex={-1}` et reçoit le focus à l'ouverture : `Tab` doit
+      // alors entrer normalement (le navigateur le fait), mais `Shift+Tab` en sortirait par le haut.
+      if (evenement.shiftKey && (actif === premier || actif === boite)) {
+        evenement.preventDefault()
+        dernier.focus()
+        return
+      }
+      if (!evenement.shiftKey && actif === dernier) {
+        evenement.preventDefault()
+        premier.focus()
+      }
     }
     document.addEventListener('keydown', surTouche)
     return () => document.removeEventListener('keydown', surTouche)

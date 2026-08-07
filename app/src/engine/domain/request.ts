@@ -77,6 +77,23 @@ export interface MealHistory {
  */
 export type VarietyMode = 'auto' | 'surprise' | 'classiques'
 
+/**
+ * Ce que l'utilisateur déclare supporter comme piquant (décision 35).
+ *
+ * ⚠️ `null` = JAMAIS DÉCLARÉ, et ce n'est PAS `'tout'`. Les deux se comportent pareil pour le
+ * moteur — aucune pénalité — mais afficher « J'aime le piquant » à quelqu'un qui n'a rien dit lui
+ * prêterait un choix qu'il n'a pas fait. Même règle que `Recipe.piquant`, dont l'absence ne vaut
+ * jamais « doux ». C'est aussi ce qui rend la couche `piquant` inerte par défaut : son poids ne se
+ * lève que si ce champ est renseigné (voir `PIQUANT_DYNAMIC_WEIGHT`, selection/scoring-pass.ts).
+ *
+ * ⚠️ ICI ET PAS DANS `UserProfile` : le profil décrit une physiologie (âge, taille, activité), le
+ * piquant est un GOÛT. Le précédent est `varietyMode`, juste en dessous — même nature, même place.
+ *
+ * Trois positions, pas un nombre : « aucun » / « un peu » / « tout ». L'échelle 0→4 reste interne
+ * au catalogue ; un chiffre à côté d'un plat se lirait comme une note (principe 6).
+ */
+export type PiquantTolerance = 'aucun' | 'un_peu' | 'tout'
+
 export interface SuggestionRequest {
   readonly profile: UserProfile
   readonly constraints: HardConstraints
@@ -116,6 +133,18 @@ export interface SuggestionRequest {
    * (`variety` reste modulée par `habit`). Voir `VarietyMode` ci-dessus.
    */
   readonly varietyMode?: VarietyMode
+  /**
+   * Tolérance au piquant déclarée par l'utilisateur (décision 35). `null` = jamais déclarée, la
+   * couche `piquant` reste alors inerte — voir `PiquantTolerance`.
+   *
+   * ⚠️ REQUIS, ET NON OPTIONNEL COMME SES VOISINS. C'est délibéré et ça coûte : le compilateur
+   * désigne les sites de construction au lieu de les laisser l'omettre en silence. Un champ
+   * optionnel oublié ici produirait exactement le défaut signature du projet — le réglage serait
+   * écrit en base, lu par les Paramètres, affiché à l'écran, et **n'atteindrait jamais le moteur**,
+   * sans erreur ni au type, ni au test, ni à l'écran. Cinq occurrences déjà payées
+   * (`note_allergene`, `Recipe.service`, `ratio`/`contexte`, `dernier_export_le`, `code_confiance`).
+   */
+  readonly tolerancePiquant: PiquantTolerance | null
   /** [] par défaut — tant qu'aucune thématique n'est active, `topic` reste à poids nul. */
   readonly activeTopics: readonly TopicId[]
   readonly weights?: Partial<ScoreWeights>

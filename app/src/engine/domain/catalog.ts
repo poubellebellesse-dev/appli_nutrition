@@ -323,6 +323,22 @@ export interface RecipeStep {
   readonly timerS: number | null
   readonly timerType: TimerType | null
   readonly nature: StepNature
+  /**
+   * Les ingrédients que cette étape emploie — un sous-ensemble de `Recipe.ingredients`, garanti par
+   * une règle de build.
+   *
+   * ⚠️ DÉRIVÉ DU TEXTE AU BUILD, pas saisi à la main : `catalog/lien-etape-ingredient.mjs` porte le
+   * pourquoi et les 93,7 % mesurés. Un `food_ids` écrit dans le YAML l'emporte quand il est là.
+   *
+   * ⚠️ CE CHAMP NE DOIT JAMAIS SERVIR À MASQUER. Il AJOUTE une information (la quantité, à l'endroit
+   * où on la cherche) ; il ne retranche rien. S'en servir pour n'afficher QUE ces ingrédients ferait
+   * apparaître une liste vide sur une étape sur seize, et 5 % des ingrédients n'apparaîtraient
+   * nulle part — l'écran qui « ment par omission » de la décision 60.
+   *
+   * Vide est un cas NORMAL et fréquent : « Préchauffer le four », « Enfourner », « Couvrir et
+   * laisser mijoter » n'emploient réellement aucun ingrédient.
+   */
+  readonly foodIds: readonly FoodId[]
 }
 
 export type FacetteKind = 'cuisine' | 'regime' | 'occasion' | 'style'

@@ -22,6 +22,7 @@ import { Accueil, VERSION_CONSENTEMENT } from './screens/accueil.js'
 import { Parametres } from './screens/parametres.js'
 import { EditeurRecette } from './screens/editeur-recette.js'
 import { Cuisine } from './screens/cuisine.js'
+import { Aliment } from './screens/aliment.js'
 import { Navigation } from './navigation.js'
 import { Panneau } from './panneau.js'
 import { Visite } from './visite.js'
@@ -90,6 +91,8 @@ function Ecran({
   if (sousVue.type === 'editeur') return <EditeurRecette baseId={sousVue.baseId} />
   if (sousVue.type === 'cuisine')
     return <Cuisine recetteId={sousVue.id} portionsDemandees={sousVue.portions} />
+  if (sousVue.type === 'aliment')
+    return <Aliment alimentId={sousVue.id} retour={sousVue.retour} />
   if (onglet === 'aujourdhui') return <Aujourdhui />
   if (onglet === 'semaine') return <Semaine />
   if (onglet === 'courses') return <Courses />

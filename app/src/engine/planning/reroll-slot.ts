@@ -35,6 +35,12 @@ export interface RerollContext {
   readonly profile: UserProfile
   readonly constraints: SuggestionRequest['constraints']
   readonly history: MealHistory
+  /**
+   * Tolérance au piquant déclarée (décision 35). REQUISE, comme sur `WeekPlanRequest` : « Changer »
+   * doit écarter ce que la tolérance écarte, sinon le réglage ne tiendrait qu'au premier tirage et
+   * se perdrait au premier reroll — sans erreur nulle part.
+   */
+  readonly tolerancePiquant: SuggestionRequest['tolerancePiquant']
   readonly activeTopics: readonly SuggestionRequest['activeTopics'][number][]
   readonly seed: number
 }
@@ -75,6 +81,9 @@ export function rerollSlot(
   for (const entree of plan.entries) if (entree.recipeId !== null) exclus.add(entree.recipeId)
 
   const requete: SuggestionRequest = {
+    // Même transmission que `planWeek` : « Changer » ne doit pas reproposer ce que la tolérance
+    // déclarée écarte, sinon le réglage ne tiendrait qu'au premier tirage.
+    tolerancePiquant: contexte.tolerancePiquant,
     profile: contexte.profile,
     constraints: contexte.constraints,
     context: {
@@ -152,6 +161,9 @@ export function setSlotRecipe(
   if (cible.locked) return plan
 
   const requete: SuggestionRequest = {
+    // Même transmission que `planWeek` : « Changer » ne doit pas reproposer ce que la tolérance
+    // déclarée écarte, sinon le réglage ne tiendrait qu'au premier tirage.
+    tolerancePiquant: contexte.tolerancePiquant,
     profile: contexte.profile,
     constraints: contexte.constraints,
     context: {
