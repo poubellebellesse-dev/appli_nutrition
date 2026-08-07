@@ -87,11 +87,12 @@ changement de structure du lot : il n'appelle plus `runExclusionPass`/`runScorin
 `explainSuggestion` à la main, et ne re-dérive plus son propre catalogue enrichi via
 `attachDerivedIndexes` (§8). Entonnoir, poids, classement et explications viennent tous du
 `SuggestionResult` retourné par `suggestMeals` ; la « limite d'API » précédemment documentée en §8
-est levée par ce même changement. Une information affichée par l'ancienne version n'a pas survécu à
-ce changement : la similarité maximale de chaque recette retenue avec les précédentes
-(`DiversifiedCandidate.maxSimilarityToRetained`, `engine/selection/diversify.ts`) — `ScoredSuggestion`
-(§8.2) n'a pas de champ de diagnostic MMR, et élargir ce contrat public pour ce seul besoin de
-diagnostic n'a pas été retenu ; à rétablir le jour où `λ` sera calibré (§6.6). Date par défaut
+est levée par ce même changement. ✅ **La similarité est revenue au banc le 2026-08-07** — elle avait
+disparu de cet affichage, et ce paragraphe annonçait qu'elle attendrait la calibration de λ. La
+piste qu'il proposait était mauvaise : le champ ne va PAS sur `ScoredSuggestion` (§8.2), qui est ce
+que l'interface rend et où un nombre de similarité finirait affiché à côté d'un plat. Il vit sur
+**`EngineDiagnostics.diversification`**, canal de diagnostic déjà existant que l'UI ne lit pas — et
+`diversify` produisait la valeur depuis toujours, `suggestMeals` la jetait. Date par défaut
 **fixe en dur** (`2026-06-15`), jamais l'horloge système, pour rester reproductible d'un run à
 l'autre (§1) — notamment vis-à-vis de la couche `season`, sensible au mois.
 
@@ -134,7 +135,7 @@ gantt
 |---|---|---|
 | **P0** Fondations | Repo, Vite, TS strict, Vitest, `build.mjs`, import CIQUAL | `catalog.db` généré depuis 10 recettes de test ; le build échoue sur une recette invalide |
 | **P1** Domaine & nutrition | L1 + L2 + guards | Besoins énergétiques conformes à Mifflin-St Jeor sur 20 cas de référence ; 4 garde-fous couverts à 100 % |
-| **P2** Sélection | Registre de **18** couches + banc CLI | Banc CLI **outillé** (`engine:try`, CODÉ — §11.3), qui passe désormais par `suggestMeals` (§8). Diversification (§6.6) et explication (§6.7) sont **CODÉES et câblées bout-en-bout** (P1c) : le pipeline produit mécaniquement des suggestions diversifiées et expliquées, démontré par le banc CLI et par les tests (**572 tests verts, 44 fichiers** au 2026-07-29). Le critère littéral (« 5 suggestions expliquées et diversifiées ») est rempli. `DEFAULT_MMR_LAMBDA` (§6.6) reste NON CALIBRÉ, mais ce n'est plus le catalogue qui l'empêche : il compte 241 recettes et la distribution de similarité a été mesurée ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
+| **P2** Sélection | Registre de **18** couches + banc CLI | Banc CLI **outillé** (`engine:try`, CODÉ — §11.3), qui passe désormais par `suggestMeals` (§8). Diversification (§6.6) et explication (§6.7) sont **CODÉES et câblées bout-en-bout** (P1c) : le pipeline produit mécaniquement des suggestions diversifiées et expliquées, démontré par le banc CLI et par les tests (**572 tests verts, 44 fichiers** au 2026-07-29). Le critère littéral (« 5 suggestions expliquées et diversifiées ») est rempli. `DEFAULT_MMR_LAMBDA` (§6.6) **est CALIBRÉ depuis le 2026-08-07** — 0,4 → 0,3, banc `engine:calibrate-lambda`, 288 configurations sur 305 recettes ; chaque couche s'exécute et se teste seule ; les tests de propriété passent |
 | **P3** Planning & API ✅ | L4 + L5 + restes + courses | **REMPLI (2026-07-29)** — `planWeek`, `rerollSlot`, `planLeftovers`, `buildShoppingList`, `scaleRecipe`, `suggestAlternatives` codés et jouables en CLI (`engine:plan`, `engine:plan-stress` → 20/20 configurations saines). Restent non câblées : `analyzeWeek` (pas de type `NutritionReport`) et `suggestSubstitutions` (table vide, décision 27) |
 | **P4** Coquille PWA ▓▓ | React, routage, SQLite/OPFS, consentement, sauvegarde | **ENTAMÉE** — React 19 + Vite 7 + Tailwind 4 + SQLite WASM ; `catalog.db` chargé et lu dans le navigateur, écran « Aujourd'hui » branché sur le vrai moteur. ⛔ Restent : **`user.db` / OPFS** (rien n'est persisté), le routage, le consentement, la sauvegarde. Le critère (« données conservées après 8 jours ») n'est pas approché |
 | **P5** Parcours principal | Onboarding, suggestions, planning, courses, tips | Un utilisateur non accompagné planifie sa semaine et obtient sa liste |

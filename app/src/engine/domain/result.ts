@@ -68,6 +68,32 @@ export interface RejectionSummary {
   readonly entries: readonly RejectionEntry[]
 }
 
+/**
+ * Ce que la diversification MMR a réellement fait (§6.6 ENGINE) — `null` quand elle n'a pas tourné
+ * (`skipDiversification`).
+ *
+ * ⛔ CE DIAGNOSTIC VIT ICI ET NON SUR `ScoredSuggestion`, ET LE CHOIX N'EST PAS UN DÉTAIL DE
+ * RANGEMENT. `ScoredSuggestion` est ce que l'interface REND ; une similarité posée dessus finirait
+ * tôt ou tard affichée à côté d'un plat, et un nombre à côté d'un plat se lit comme une note
+ * nutritionnelle — le jugement qu'interdit le principe 6, exactement le piège « ne jamais afficher
+ * le score du moteur ». `EngineDiagnostics` n'est lu que par les bancs et les tests.
+ *
+ * ⚠️ RIEN N'EST CALCULÉ POUR CE CHAMP : `diversify` produit déjà `maxSimilarityToRetained` sur
+ * chaque candidat retenu, et `suggestMeals` le jetait en retypant le résultat. On cesse de jeter,
+ * on ne mesure pas en plus.
+ */
+export interface DiversificationDiagnostics {
+  /** λ effectivement appliqué à cette passe — `req.mmrLambda` ou `DEFAULT_MMR_LAMBDA`. */
+  readonly lambda: number
+  /**
+   * Similarité MAXIMALE de chaque retenue avec celles déjà retenues AU MOMENT où elle a été prise —
+   * dans l'ordre de sélection. Le premier élément vaut toujours 0 (ensemble retenu vide) : c'est
+   * une convention de `diversify`, pas une mesure, et il ne faut pas le compter dans une moyenne
+   * de redondance sans le dire.
+   */
+  readonly maxSimilarities: readonly number[]
+}
+
 export interface EngineDiagnostics {
   readonly engineVersion: string
   readonly catalogVersion: string
@@ -77,6 +103,8 @@ export interface EngineDiagnostics {
   readonly candidatsInitiaux: number
   readonly candidatsApresFiltrage: number
   readonly dureeMs: number
+  /** `null` = la diversification n'a pas tourné (`skipDiversification`), PAS « aucune similarité ». */
+  readonly diversification: DiversificationDiagnostics | null
 }
 
 export interface SuggestionResult {

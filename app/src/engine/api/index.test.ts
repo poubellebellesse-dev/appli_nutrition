@@ -26,7 +26,7 @@ import type {
   UserProfile,
 } from "../domain/index.js";
 import { NoViableRecipeError, g, min } from "../domain/index.js";
-import { LAYER_DESCRIPTORS, nutriLayer } from "../selection/index.js";
+import { DEFAULT_MMR_LAMBDA, LAYER_DESCRIPTORS, nutriLayer } from "../selection/index.js";
 import { createEngine } from "./index.js";
 
 // ------------------------------------------------------------------------------------------
@@ -730,6 +730,63 @@ describe("engine/api — suggestMeals bout-en-bout (§6.4, §8 ENGINE)", () => {
     );
 
     expect(result.diagnostics.dureeMs).toBe(42);
+  });
+
+  it("diagnostics.diversification n'est pas null sur une suggestion nominale, λ vaut DEFAULT_MMR_LAMBDA sans mmrLambda", () => {
+    const { catalog } = makeFerFixture();
+    const engine = createEngine(catalog);
+
+    // Aucun `mmrLambda` dans la requête (`ferRequest` ne le porte pas) : `suggestMeals` doit
+    // retomber sur DEFAULT_MMR_LAMBDA, pas sur une valeur codée en dur ici qui divergerait
+    // silencieusement si le calibrage change encore.
+    const result = engine.suggestMeals(ferRequest({ weights: ISOLATE_NUTRI_WEIGHTS }));
+
+    expect(result.diagnostics.diversification).not.toBeNull();
+    expect(result.diagnostics.diversification?.lambda).toBe(DEFAULT_MMR_LAMBDA);
+  });
+
+  it("diagnostics.diversification.lambda reflète request.mmrLambda quand il est fourni", () => {
+    const { catalog } = makeFerFixture();
+    const engine = createEngine(catalog);
+
+    const result = engine.suggestMeals({
+      ...ferRequest({ weights: ISOLATE_NUTRI_WEIGHTS }),
+      mmrLambda: 0.7,
+    });
+
+    expect(result.diagnostics.diversification?.lambda).toBe(0.7);
+  });
+
+  it("diagnostics.diversification.maxSimilarities : une valeur par suggestion, dans [0, 1], la première à 0", () => {
+    const { catalog } = makeFerFixture();
+    const engine = createEngine(catalog);
+
+    const result = engine.suggestMeals(ferRequest({ weights: ISOLATE_NUTRI_WEIGHTS }));
+    const similarities = result.diagnostics.diversification?.maxSimilarities;
+
+    // Convention de `diversify` : l'ensemble des retenues est VIDE au premier tour, donc la
+    // première valeur vaut 0 par construction — ce n'est pas une mesure de similarité.
+    expect(similarities).toHaveLength(result.suggestions.length);
+    expect(similarities?.[0]).toBe(0);
+    for (const s of similarities ?? []) {
+      expect(s).toBeGreaterThanOrEqual(0);
+      expect(s).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("diagnostics.diversification vaut null quand skipDiversification est vrai", () => {
+    // `null` signifie ICI « la diversification n'a pas tourné », PAS « aucune similarité mesurée » :
+    // avec `skipDiversification`, `diversify` n'est jamais appelé, il n'existe donc aucun
+    // `maxSimilarityToRetained` à rapporter — un tableau vide aurait laissé croire au contraire
+    // qu'on avait mesuré et trouvé zéro similarité partout.
+    const { catalog } = makeFerFixture();
+    const engine = createEngine(catalog);
+
+    const result = engine.suggestMeals(
+      ferRequest({ weights: ISOLATE_NUTRI_WEIGHTS, skipDiversification: true }),
+    );
+
+    expect(result.diagnostics.diversification).toBeNull();
   });
 });
 

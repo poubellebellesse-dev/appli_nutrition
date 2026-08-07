@@ -456,9 +456,20 @@ function runSuggestMeals(catalog: Catalog, req: SuggestionRequest, now: (() => n
   const ranked = rankScoredCandidates(scoringResult.scores, alea, DEFAULT_VARIETY_TOLERANCE)
   const limit = req.limit ?? 5
 
-  const selected: readonly { readonly recipeId: RecipeId; readonly score: number }[] = req.skipDiversification
+  // ⚠️ CE TYPE A LONGTEMPS ÉTÉ `{ recipeId, score }`, ET CE RÉTRÉCISSEMENT JETAIT LA SEULE MESURE
+  // QUI MANQUAIT POUR CALIBRER λ. `diversify` renvoie des `DiversifiedCandidate` qui PORTENT DÉJÀ
+  // `maxSimilarityToRetained` ; la ligne d'affectation en faisait des `{ recipeId, score }` et
+  // l'information mourait ici, à un pas de la sortie. On garde le champ optionnel — la branche
+  // `skipDiversification` ne peut structurellement pas le produire, il n'y a pas de retenues contre
+  // quoi mesurer une proximité.
+  const lambda = req.mmrLambda ?? DEFAULT_MMR_LAMBDA
+  const selected: readonly {
+    readonly recipeId: RecipeId
+    readonly score: number
+    readonly maxSimilarityToRetained?: number
+  }[] = req.skipDiversification
     ? ranked.slice(0, limit)
-    : diversify(ranked, limit, req.mmrLambda ?? DEFAULT_MMR_LAMBDA, buildSimilarityAccessor(catalog), alea, DEFAULT_DIVERSIFY_TOLERANCE)
+    : diversify(ranked, limit, lambda, buildSimilarityAccessor(catalog), alea, DEFAULT_DIVERSIFY_TOLERANCE)
 
   // (g)
   const suggestions: ScoredSuggestion[] = selected.map(({ recipeId, score }) => {
@@ -500,6 +511,12 @@ function runSuggestMeals(catalog: Catalog, req: SuggestionRequest, now: (() => n
     // Horloge injectée UNIQUEMENT (§3 ENGINE — jamais `Date.now()`) : absente → 0, voir
     // `CreateEngineOptions.now` sur `createEngine` ci-dessous pour le pourquoi.
     dureeMs: startedAt === null ? 0 : Math.max(0, now!() - startedAt),
+    // `null` quand la diversification n'a pas tourné — à ne pas confondre avec « aucune
+    // similarité ». Voir `DiversificationDiagnostics` pour pourquoi ceci ne vit PAS sur
+    // `ScoredSuggestion`.
+    diversification: req.skipDiversification
+      ? null
+      : { lambda, maxSimilarities: selected.map((c) => c.maxSimilarityToRetained ?? 0) },
   }
 
   return { suggestions, rejected, diagnostics }

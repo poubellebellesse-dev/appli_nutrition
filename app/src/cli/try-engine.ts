@@ -15,14 +15,13 @@
 // « brut » suffit pour les lookups d'affichage : noms de recettes/aliments/allergènes ne sont pas
 // affectés par l'enrichissement, seul `catalog.indexes` l'est).
 //
-// Une information affichée par l'ancienne version n'a PAS survécu à ce changement : la similarité
-// maximale de chaque recette retenue avec les précédentes (`DiversifiedCandidate.
-// maxSimilarityToRetained`, engine/selection/diversify.ts). `ScoredSuggestion` (domain/result.ts,
-// §8.2 ENGINE) n'a que les 6 champs listés par la doc — recipeId/score/breakdown/explanations/
-// portions/nutrition — aucun champ de diagnostic MMR. Plutôt que de rappeler `diversify` ici en
-// doublon pour le retrouver (exactement la dette qu'on solde), cette ligne d'affichage a été
-// retirée ; voir le rapport de lot pour la décision et la piste (l'ajouter à `ScoredSuggestion`
-// serait un changement de contrat public, hors périmètre de ce fichier).
+// ✅ LA SIMILARITÉ EST DE RETOUR — 2026-08-07, et par une autre porte que celle qu'on croyait.
+// Cet en-tête a longtemps dit qu'elle était perdue : `ScoredSuggestion` n'a que ses 6 champs, et
+// l'y ajouter aurait été un changement de contrat public. La piste était mauvaise. Le bon domicile
+// est `EngineDiagnostics.diversification` (domain/result.ts) — un canal de diagnostic qui existait
+// déjà, que l'interface ne rend PAS, et c'est ce qui compte : une similarité posée sur
+// `ScoredSuggestion` aurait fini affichée à côté d'un plat, soit le score du moteur à l'écran.
+// ⚠️ RIEN N'EST RECALCULÉ ICI. `diversify` produisait déjà la valeur ; `suggestMeals` la jetait.
 //
 // Exécution : `npm run engine:try -- [options]` (tsx, comme `catalog:list` — voir package.json).
 // Nécessite `catalog.db` généré (`npm run build`).
@@ -732,7 +731,8 @@ function printSuggestions(
   suggestions: readonly ScoredSuggestion[],
   catalog: Catalog,
   opts: CliOptions,
-  candidatsApresFiltrage: number
+  candidatsApresFiltrage: number,
+  maxSimilarities: readonly number[] | null
 ): void {
   console.log(
     opts.noMmr
@@ -743,7 +743,12 @@ function printSuggestions(
   suggestions.forEach((suggestion, index) => {
     const recipe = catalog.recipes.get(suggestion.recipeId)
     const nom = recipe?.nom ?? suggestion.recipeId
-    console.log(`#${index + 1}  ${nom} — ${suggestion.score.toFixed(1)}/100`)
+    // ⚠️ « — » AU PREMIER RANG, JAMAIS « 0 % ». La valeur vaut bien 0 dans les diagnostics, mais
+    // par CONVENTION (aucune retenue à comparer au premier tour), pas par mesure. L'afficher comme
+    // un zéro ferait lire « ce plat ne ressemble à rien » là où il n'y a rien à ressembler.
+    const proximite =
+      maxSimilarities === null ? '' : index === 0 ? '   [proximité —]' : `   [proximité ${((maxSimilarities[index] ?? 0) * 100).toFixed(0)} %]`
+    console.log(`#${index + 1}  ${nom} — ${suggestion.score.toFixed(1)}/100${proximite}`)
 
     const contributions = (Object.entries(suggestion.breakdown) as Array<[ScoringLayerId, number]>).sort(
       (a, b) => b[1] - a[1]
@@ -837,7 +842,13 @@ function run(argv: readonly string[]): void {
   ) as Partial<ScoreWeights>
   printWeights(activeWeights)
 
-  printSuggestions(result.suggestions, catalog, opts, result.diagnostics.candidatsApresFiltrage)
+  printSuggestions(
+    result.suggestions,
+    catalog,
+    opts,
+    result.diagnostics.candidatsApresFiltrage,
+    result.diagnostics.diversification?.maxSimilarities ?? null
+  )
 }
 
 function main(): void {
