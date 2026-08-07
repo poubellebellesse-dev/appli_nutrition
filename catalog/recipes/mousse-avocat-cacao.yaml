@@ -1,0 +1,68 @@
+id: mousse_avocat_cacao
+nom: "Mousse d'avocat au cacao"
+origine: maison
+description: >
+  Une mousse onctueuse obtenue en mixant avocat, cacao et sirop d'érable,
+  à laisser reposer au frais avant de servir.
+temps_prep_min: 10
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+service: dessert
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.5
+  leger_consistant: -0.3
+  chaud_froid: -0.4
+  texture: creme
+
+ingredients:
+  - food_id: avocat
+    quantite_g: 400
+    unite_affichage: "2 avocats"
+    optionnel: false
+  - food_id: cacao_poudre
+    quantite_g: 30
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: sirop_erable
+    quantite_g: 70
+    unite_affichage: "5 c. à soupe"
+    optionnel: false
+  - food_id: boisson_amande
+    quantite_g: 80
+    unite_affichage: "8 c. à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Couper les avocats en deux, retirer le noyau et prélever la chair."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mixer la chair d'avocat avec le cacao, le sirop d'érable, la boisson amande et le sel jusqu'à obtenir une texture lisse."
+    lexicon_ids: [mixer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Répartir la mousse dans des verrines et réserver au frais."
+    lexicon_ids: [dresser, reserver]
+    timer_s: 3600
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: gourmand

@@ -1,0 +1,86 @@
+id: plantains_sautes_haricots_rouges
+nom: "Bananes plantain sautées aux haricots rouges"
+origine: maison
+description: >
+  Des bananes plantain sautées à l'huile d'arachide avec oignon, poivron rouge et piment,
+  servies avec des haricots rouges.
+temps_prep_min: 15
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.3
+  leger_consistant: 0.6
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: banane_plantain
+    quantite_g: 700
+    unite_affichage: "3 bananes plantain"
+    optionnel: false
+  - food_id: haricot_rouge
+    quantite_g: 400
+    unite_affichage: "1 grand bol"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 150
+    unite_affichage: "1 poivron"
+    optionnel: false
+  - food_id: piment_cayenne
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: huile_arachide
+    quantite_g: 25
+    unite_affichage: "2 c. à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les bananes plantain et les tailler en rondelles épaisses."
+    lexicon_ids: [eplucher, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'oignon et le poivron."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire sauter les rondelles de plantain dans l'huile d'arachide jusqu'à ce qu'elles soient dorées."
+    lexicon_ids: [sauter, dorer]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter l'oignon, le poivron et le piment, poursuivre la cuisson quelques minutes."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Réchauffer les haricots rouges et dresser avec les plantains sautés."
+    lexicon_ids: [dresser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: africaine
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

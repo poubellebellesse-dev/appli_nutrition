@@ -1,0 +1,94 @@
+id: aubergines_farcies_quinoa_pignons
+nom: "Aubergines farcies au quinoa et aux pignons"
+origine: maison
+description: >
+  Des aubergines évidées et rôties, garnies d'un quinoa aux tomates, à l'ail et aux pignons
+  torréfiés, parfumées au basilic frais.
+temps_prep_min: 20
+temps_cuisson_min: 40
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.5
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: aubergine
+    quantite_g: 900
+    unite_affichage: "4 aubergines"
+    optionnel: false
+  - food_id: quinoa
+    quantite_g: 180
+    unite_affichage: "180 g"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 250
+    unite_affichage: "2 tomates"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: pignon_pin
+    quantite_g: 40
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 8
+    unite_affichage: "quelques feuilles"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Couper les aubergines en deux, entailler la chair et arroser d'un filet d'huile d'olive."
+    lexicon_ids: [detailler, filet]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Enfourner les demi-aubergines jusqu'à ce que la chair soit tendre, puis l'évider."
+    lexicon_ids: [enfourner]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Émincer l'oignon et l'ail, les faire suer avec la chair d'aubergine et les tomates concassées."
+    lexicon_ids: [emincer, suer, concasser]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Cuire le quinoa, l'incorporer à la préparation et garnir les demi-aubergines."
+    lexicon_ids: [incorporer]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Parsemer de pignons torréfiés et de basilic ciselé avant de servir."
+    lexicon_ids: [parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

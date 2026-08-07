@@ -1,0 +1,86 @@
+id: butternut_rotie_riz_sauvage_noix
+nom: "Courge butternut rôtie, riz sauvage et noix"
+origine: maison
+description: >
+  De la courge butternut rôtie au four servie sur un riz sauvage à l'échalote, parsemée de noix
+  et de sauge.
+temps_prep_min: 15
+temps_cuisson_min: 45
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: courge_butternut
+    quantite_g: 900
+    unite_affichage: "1 courge butternut"
+    optionnel: false
+  - food_id: riz_sauvage
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 60
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 60
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: sauge_seche
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher la courge et la tailler en dés réguliers."
+    lexicon_ids: [eplucher, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Arroser les dés de courge d'huile d'olive et enfourner jusqu'à ce qu'ils soient tendres."
+    lexicon_ids: [arroser, enfourner]
+    timer_s: 1800
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Émincer les échalotes et les faire revenir avant d'ajouter le riz sauvage."
+    lexicon_ids: [emincer, revenir]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mouiller le riz et laisser cuire jusqu'à absorption complète."
+    lexicon_ids: [mouiller]
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Dresser le riz avec la courge rôtie, parsemer de noix concassées et de sauge."
+    lexicon_ids: [dresser, parsemer, concasser]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

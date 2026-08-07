@@ -1,0 +1,98 @@
+id: soupe_haricots_blancs_chou_kale
+nom: "Soupe de haricots blancs au chou kale"
+origine: maison
+description: >
+  Une soupe épaisse de haricots blancs et de pommes de terre, mijotée avec chou kale, carotte,
+  céleri et tomate, parfumée au thym.
+temps_prep_min: 15
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 4
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.2
+  chaud_froid: 0.7
+  texture: liquide
+
+ingredients:
+  - food_id: haricot_blanc
+    quantite_g: 800
+    unite_affichage: "2 boîtes égouttées"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 350
+    unite_affichage: "3 pommes de terre"
+    optionnel: false
+  - food_id: chou_kale
+    quantite_g: 200
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 200
+    unite_affichage: "2 carottes"
+    optionnel: false
+  - food_id: celeri_branche
+    quantite_g: 100
+    unite_affichage: "1 branche"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 250
+    unite_affichage: "2 tomates"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer l'ail, tailler la carotte, le céleri et les pommes de terre en petits dés."
+    lexicon_ids: [emincer, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire suer la carotte, le céleri et l'ail dans l'huile d'olive."
+    lexicon_ids: [suer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter les pommes de terre, les haricots blancs, les tomates concassées et le thym, puis mouiller à hauteur."
+    lexicon_ids: [concasser, mouiller]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser mijoter jusqu'à ce que les légumes soient tendres."
+    lexicon_ids: [mijoter]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter le chou kale ciselé en fin de cuisson et laisser fondre quelques minutes."
+    lexicon_ids: [ciseler]
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: reconfortant

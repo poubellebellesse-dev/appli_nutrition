@@ -1,0 +1,69 @@
+id: ananas_roti_coco_citron_vert
+nom: "Ananas rôti à la noix de coco et au citron vert"
+origine: maison
+description: >
+  Des tranches d'ananas rôties au four jusqu'à ce qu'elles dorent, arrosées de sirop
+  d'érable et de jus de citron vert, puis parsemées de noix de coco râpée.
+temps_prep_min: 10
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+service: dessert
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.6
+  leger_consistant: -0.2
+  chaud_froid: 0.3
+  texture: fondant
+
+ingredients:
+  - food_id: ananas
+    quantite_g: 700
+    unite_affichage: "1 ananas"
+    optionnel: false
+  - food_id: sirop_erable
+    quantite_g: 40
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: noix_coco_rapee
+    quantite_g: 25
+    unite_affichage: "3 c. à soupe"
+    optionnel: true
+  - food_id: citron_vert
+    quantite_g: 20
+    unite_affichage: "le jus d'1 citron vert"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four et couper l'ananas en tranches épaisses."
+    lexicon_ids: [prechauffer, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Disposer les tranches sur une plaque, arroser de sirop d'érable et de jus de citron vert."
+    lexicon_ids: [arroser]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Enfourner jusqu'à ce que l'ananas dore."
+    lexicon_ids: [enfourner, dorer]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Parsemer de noix de coco râpée avant de servir."
+    lexicon_ids: [parsemer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: gourmand

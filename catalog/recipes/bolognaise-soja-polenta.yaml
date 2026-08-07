@@ -1,0 +1,98 @@
+id: bolognaise_soja_polenta
+nom: "Bolognaise de soja texturé sur polenta"
+origine: maison
+description: >
+  Une sauce tomate mijotée au soja texturé, à l'oignon, à la carotte et à l'origan, servie sur
+  une polenta crémeuse.
+temps_prep_min: 15
+temps_cuisson_min: 35
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.7
+  texture: creme
+
+ingredients:
+  - food_id: soja_texture
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 500
+    unite_affichage: "4 tomates"
+    optionnel: false
+  - food_id: concentre_tomate
+    quantite_g: 60
+    unite_affichage: "4 c. à soupe"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 100
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 150
+    unite_affichage: "2 carottes"
+    optionnel: false
+  - food_id: polenta
+    quantite_g: 180
+    unite_affichage: "180 g"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "3 c. à soupe"
+    optionnel: false
+  - food_id: origan_seche
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Réhydrater le soja texturé selon les indications, puis l'égoutter."
+    lexicon_ids: [egoutter]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'oignon et l'ail, tailler la carotte en petits dés, faire revenir le tout."
+    lexicon_ids: [emincer, tailler_des, revenir]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter le soja, les tomates concassées, le concentré et l'origan, puis laisser mijoter."
+    lexicon_ids: [concasser, mijoter]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Préparer la polenta en la mouillant progressivement jusqu'à obtenir une texture crémeuse."
+    lexicon_ids: [mouiller]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Dresser la polenta et napper de sauce bolognaise."
+    lexicon_ids: [dresser, napper]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: reconfortant

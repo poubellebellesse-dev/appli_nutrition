@@ -1,0 +1,69 @@
+id: poires_pochees_vanille
+nom: "Poires pochées à la vanille"
+origine: maison
+description: >
+  Des poires entières pochées dans un sirop léger parfumé à la vanille et au citron,
+  servies tièdes ou froides, nappées de leur sirop.
+temps_prep_min: 10
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+service: dessert
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.6
+  leger_consistant: -0.5
+  chaud_froid: -0.2
+  texture: fondant
+
+ingredients:
+  - food_id: poire
+    quantite_g: 800
+    unite_affichage: "4 poires"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 60
+    unite_affichage: "6 c. à soupe"
+    optionnel: false
+  - food_id: vanille_gousse
+    quantite_g: 1
+    unite_affichage: "1 gousse"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 20
+    unite_affichage: "le jus d'1/2 citron"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les poires en laissant la queue, sans les couper."
+    lexicon_ids: [eplucher]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Porter à frémissement de l'eau avec le sucre, la gousse de vanille fendue et le jus de citron."
+    lexicon_ids: [fremir]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Pocher les poires dans ce sirop jusqu'à ce qu'elles soient tendres."
+    lexicon_ids: [pocher]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Réserver les poires et laisser tiédir dans le sirop avant de servir."
+    lexicon_ids: [reserver]
+    timer_s: null
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien
