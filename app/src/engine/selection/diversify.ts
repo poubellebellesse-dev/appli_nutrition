@@ -47,11 +47,40 @@
 import type { RecipeId } from '../domain/index.js'
 import type { RankedCandidate } from './scoring-pass.js'
 
-/** λ de référence (§6.6 ENGINE, « λ ≈ 0.4 par défaut ») — À CALIBRER sur le catalogue réel : la
- * spec le dit elle-même, cette valeur n'est pas issue d'une mesure sur le catalogue de production,
- * seulement d'une intuition de conception. Voir le rapport de lot pour l'observation faite sur le
- * catalogue de test (10 recettes) — insuffisant pour trancher la calibration définitivement. */
-export const DEFAULT_MMR_LAMBDA = 0.4
+/**
+ * λ de référence (§6.6 ENGINE) — **CALIBRÉ le 2026-08-07**, `npm run engine:calibrate-lambda`,
+ * sur 288 configurations × 305 recettes (4 créneaux × 3 archétypes × 3 régimes × 8 graines).
+ *
+ * ⚠️ CETTE VALEUR A VALU 0,4 SANS AUCUNE MESURE JUSQU'À CETTE DATE — une intuition de conception,
+ * dernier nombre du moteur posé au jugé. Ne pas la redéplacer sans rejouer le banc.
+ *
+ * Deux courbes opposées : monter λ fait TOUJOURS baisser la redondance et TOUJOURS baisser la
+ * pertinence. Il n'y a pas d'optimum, seulement un échange.
+ *
+ * ⛔ LE GENOU NE POINTE PAS UNE VALEUR — IL LA BORNE, et une relecture adverse l'a montré le jour
+ * même de la calibration. Le critère (distance au point idéal, normalisée min-max) se recale sur les
+ * bornes RÉELLEMENT balayées, donc sa réponse suit la fenêtre : 0,2 en balayant jusqu'à 0,6 · 0,3
+ * jusqu'à 1,0 et 2,0 · **0,5 jusqu'à 5,0**. La première rédaction de ce commentaire annonçait « 0,3,
+ * stable » sur la foi d'un balayage arrêté à 2,0 — la borne fabriquait une part de la réponse.
+ * **Ce que la mesure établit : λ ∈ [0,2 ; 0,5].**
+ *
+ * D'où vient le 0,3, alors : du **seul repère que la méthode ne fabrique pas** — le plus petit λ qui
+ * vide TOUTES les listes servies de leurs doublons (similarité interne > 60 %) vaut **0,2**, aux
+ * quatre créneaux, petit-déjeuner (43 recettes) comme dîner (197). On prend un pas de marge au-dessus
+ * parce que ce seuil est mesuré sur CE catalogue, et qu'il grossit.
+ *
+ * ⚠️ LA MESURE N'EXCLUT PAS 0,4 — elle ne le désigne jamais, ce qui n'est pas la même chose, et
+ * 0,4 tombe d'ailleurs dans l'intervalle [0,2 ; 0,5]. Il coûte 0,19 point de score de plus pour
+ * 1,7 point de redondance de moins. **Ce qui change n'est pas la qualité des suggestions.**
+ * ⚠️ MAIS L'IMPACT EN SURFACE EST TOUT SAUF PETIT, et l'écrire évite de croire le contraire :
+ * comparées graine à graine, **89,9 % des 288 configurations rendent une LISTE différente entre 0,3
+ * et 0,4**. Petit en score agrégé, massif en composition.
+ * ⚠️ L'écart 0,3/0,4 N'EST PAS du bruit de tirage : test apparié à graines égales, t = 5,4 sur la
+ * redondance et t = 6,0 sur le score.
+ * ⚠️ LE BANC MESURE À HISTORIQUE VIDE, ce qui SOUS-ESTIME la redondance d'environ 1 à 2 points pour
+ * quelqu'un dont les habitudes sont concentrées (mesuré). L'ordre entre les λ, lui, ne s'inverse pas.
+ */
+export const DEFAULT_MMR_LAMBDA = 0.3
 
 /** Largeur de la bande de tolérance de `diversify` (tirage seedé, même correctif « variété »
  * que `DEFAULT_VARIETY_TOLERANCE` de scoring-pass.ts). ⚠️ Valeur ABSOLUE, PAS relative comme

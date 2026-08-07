@@ -231,14 +231,58 @@ trois axes numériques, pas fondue dedans.
 > pour la facette `cuisine` : deux recettes sans cuisine renseignée ne sont pas « de la même
 > famille ».
 
-`DEFAULT_MMR_LAMBDA = 0.4` (`engine/selection/diversify.ts`) — valeur de référence issue d'une
-intuition de conception, **pas d'une mesure**, **toujours à calibrer**.
+`DEFAULT_MMR_LAMBDA = 0.3` (`engine/selection/diversify.ts`) — ✅ **CALIBRÉ le 2026-08-07**,
+`npm run engine:calibrate-lambda` (`app/src/cli/calibre-lambda.ts`). Il a valu **0,4 sans aucune
+mesure** jusqu'à cette date : c'était le dernier nombre du moteur posé au jugé.
 
-> **Le blocage est levé** (2026-07-27). Cette calibration était hors de portée tant que le catalogue
-> de test comptait 10 recettes composées à la main. Il en compte **212**, et le modèle de similarité
-> a été corrigé (§6.6 bis) puis repondéré par mesure (§6.6 ter). Distribution mesurée sur
-> 22 366 paires : max 94,2 % · p99 38,2 % · médiane 9,5 %, avec 30 paires au-dessus de 60 % contre
-> 81 avant correction. La base est saine ; λ reste au défaut faute d'avoir été mesuré, pas faute de
-> pouvoir l'être.
+> **Ce que le banc mesure est un ÉCHANGE, pas une qualité.** Monter λ fait *toujours* baisser la
+> redondance et *toujours* baisser la pertinence — une seule courbe ne pourrait donc recommander que
+> λ = +∞ ou λ = 0. Plan : 288 configurations (4 créneaux × 3 archétypes × 3 régimes × 8 graines) sur
+> 305 recettes, listes de 5, × 11 valeurs de λ.
+>
+> | λ | redondance max | listes avec doublon | score moyen | coût vs λ=0 |
+> |---|---|---|---|---|
+> | 0,0 | 41,3 % | 18,4 % | 60,17 | — |
+> | 0,2 | 23,5 % | **0,0 %** | 59,88 | 0,30 |
+> | **0,3** | **19,6 %** | 0,0 % | 59,77 | **0,41** |
+> | 0,4 | 17,9 % | 0,0 % | 59,58 | 0,60 |
+> | 2,0 | 12,4 % | 0,0 % | 57,87 | 2,31 |
+>
+> ⛔ **Le genou ne pointe pas une valeur, il la BORNE — et c'est une relecture adverse qui l'a
+> montré, le jour même.** Le critère (distance au point idéal, normalisée min-max) se recale sur les
+> bornes réellement balayées, donc sa réponse suit la fenêtre : **0,2** en balayant jusqu'à 0,6 ·
+> **0,3** jusqu'à 1,0 et 2,0 · **0,5** jusqu'à 5,0. La première version de ce paragraphe annonçait
+> « 0,3, stable », sur la foi d'un balayage arrêté à 2,0 — et la borne justifiait son propre
+> résultat. **Ce que la mesure établit est λ ∈ [0,2 ; 0,5].** Le banc balaie désormais jusqu'à 5,0
+> et affiche les quatre fenêtres, pour que la dépendance soit dans la sortie et non en note.
+>
+> **Le repère qui tranche est ailleurs, et c'est le seul que la méthode ne fabrique pas** : le plus
+> petit λ qui vide *toutes* les listes servies de leurs doublons (> 60 %) vaut **0,2**, aux quatre
+> créneaux — petit-déjeuner (43 recettes) comme dîner (197). **0,3 est ce seuil plus un pas de
+> marge**, parce qu'il est mesuré sur *ce* catalogue et que le catalogue grossit.
+>
+> ⛔ **Un critère écarté, et le dire compte** : « le dernier λ dont le pas d'échange reste rentable »
+> (points de redondance gagnés par point de score payé, seuil 1) **ne peut pas trancher**. Les deux
+> échelles ne sont pas commensurables — la redondance bouge de ~29 points sur le balayage, le score
+> de ~2 — donc le rapport dépasse 1 partout et le critère désigne mécaniquement la plus grande valeur
+> balayée. Il est resté affiché, à titre indicatif seulement.
+>
+> ⚠️ **La mesure n'EXCLUT pas 0,4** — elle ne le désigne jamais, ce qui n'est pas la même chose, et
+> 0,4 tombe d'ailleurs dans [0,2 ; 0,5]. Il coûtait 0,19 point de score de plus pour 1,7 point de
+> redondance de moins. **Ce qui change n'est pas la qualité des suggestions, c'est qu'une constante
+> non mesurée est devenue mesurée.**
+>
+> ⚠️ **Trois nuances établies par la relecture adverse, à ne pas perdre :**
+> **(a)** l'écart 0,3/0,4 **n'est pas du bruit de tirage** — test apparié à graines égales, t = 5,4
+> sur la redondance, t = 6,0 sur le score ; **(b)** l'impact en score est petit mais **la surface ne
+> l'est pas** : comparées graine à graine, **89,9 % des 288 configurations rendent une liste
+> différente** entre 0,3 et 0,4 ; **(c)** le banc mesure à **historique vide**, ce qui **sous-estime
+> la redondance d'environ 1 à 2 points** pour quelqu'un dont les habitudes sont concentrées —
+> l'ordre entre les λ, lui, ne s'inverse pas.
+>
+> *Distribution de similarité du catalogue, socle de cette calibration : mesurée à 212, 282 puis
+> 305 recettes (`engine:similarity`) — 0,134 % → 0,129 % → 0,125 % de paires au-dessus de 60 %.
+> Elle ne bouge pas avec les lots de contenu, donc ce socle ne se rejoue pas à chaque recette
+> ajoutée.*
 
 ---

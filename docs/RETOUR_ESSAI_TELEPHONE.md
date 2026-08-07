@@ -367,9 +367,12 @@ existant est relu au montage (`lireChoixProfil`), donc retraverser l'accueil n'e
   désormais les positions dans le document, pas les seules présences.
 - **« Dans le même esprit » ne tient pas ses promesses.** Verbatim : « pizza gratin tarte aux tomates
   sardine boulettes ??? le même esprit ??? ».
-  ⚠️ **Ce n'est pas un bug, c'est un réglage jamais fait** : λ (diversification) n'est pas calibré
-  (`ETAT.md` §8). Sa mesure date de 212 recettes, le catalogue en compte 241, et le banc n'affiche
-  plus la similarité par recette — **à rétablir AVANT de calibrer**, sinon la mesure est aveugle.
+  ⚠️ **La cause avancée ici est tombée le 2026-08-07, et elle n'était probablement pas la bonne.**
+  Cette ligne disait « ce n'est pas un bug, c'est un réglage jamais fait : λ n'est pas calibré ».
+  λ **est calibré** depuis cette date (0,4 → 0,3, `ETAT.md` §8), et le banc réaffiche la similarité.
+  ⛔ **Mais λ pilote la DIVERSIFICATION d'une liste de suggestions, pas « Dans le même esprit », qui
+  est `suggestAlternatives`** — deux chemins de code distincts. L'attribution n'a jamais été
+  vérifiée. **À réinstruire à partir du verbatim, pas à partir de cette ligne.**
 - **Un menu pour les choix extravagants.**
 - ✅ **Changer de créneau** et **« Vider le frigo » en haut** — fait (§1, point 9).
 

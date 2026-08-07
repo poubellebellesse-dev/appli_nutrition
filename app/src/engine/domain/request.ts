@@ -179,7 +179,7 @@ export interface SuggestionRequest {
   readonly seed: number
   /**
    * §6.6 ENGINE — poids de la pénalité de redondance en diversification MMR (`diversify`,
-   * `engine/selection/diversify.ts`). Absent → `DEFAULT_MMR_LAMBDA` (0.4). Sans effet si
+   * `engine/selection/diversify.ts`). Absent → `DEFAULT_MMR_LAMBDA` (0.3, calibré). Sans effet si
    * `skipDiversification` est vrai. Ajouté pour que `suggestMeals` (§8 ENGINE) puisse piloter le
    * banc CLI (`--lambda`) sans que l'appelant ait à rappeler `diversify` lui-même.
    */

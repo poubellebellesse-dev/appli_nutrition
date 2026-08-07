@@ -123,8 +123,12 @@ describe('selection/diversify — diversify (§6.6 ENGINE)', () => {
     expect(result).toHaveLength(2)
   })
 
-  it('DEFAULT_MMR_LAMBDA vaut 0.4 (§6.6 ENGINE, à calibrer sur le catalogue réel)', () => {
-    expect(DEFAULT_MMR_LAMBDA).toBe(0.4)
+  // ⚠️ CE TEST A ASSERTÉ 0.4 « À CALIBRER » PENDANT TOUTE LA VIE DU PROJET. Il verrouille désormais
+  // une valeur MESURÉE (`npm run engine:calibrate-lambda`, 288 configurations le 2026-08-07) : le
+  // genou des deux courbes tombe à 0,3, et jamais à 0,4 sur aucune fenêtre de balayage. Le faire
+  // rougir doit obliger à rejouer le banc, pas à réécrire le nombre attendu.
+  it('DEFAULT_MMR_LAMBDA vaut 0.3 — calibré, plus une intuition (§6.6 ENGINE)', () => {
+    expect(DEFAULT_MMR_LAMBDA).toBe(0.3)
   })
 
   it('expose la similarité maximale avec les précédentes retenues, pas une moyenne', () => {

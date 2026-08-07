@@ -16,6 +16,7 @@
     "engine:plan-stress": "tsx app/src/cli/stress-planning.ts",
     "engine:plancher": "tsx app/src/cli/diag-plancher.ts",
     "engine:couverture": "tsx app/src/cli/diag-couverture.ts",
+    "engine:calibrate-lambda": "tsx app/src/cli/calibre-lambda.ts",
     "dev": "vite",
     "preview": "vite preview",
     "icons:build": "node catalog/build-icons.mjs"

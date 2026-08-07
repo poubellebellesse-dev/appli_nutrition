@@ -71,7 +71,10 @@ le compte `Tests N failed`, jamais `$?`.
 réponse.** Pas « ça devrait passer ». La sortie, ou ce n'est pas fini.
 
 Autres commandes utiles : `npm run build` (catalogue), `npm run dev`, `npm run engine:try`,
-`engine:plan`, `engine:couverture`, `catalog:list`.
+`engine:plan`, `engine:couverture`, `engine:similarity`, `catalog:list` — et
+`engine:calibrate-lambda`, **le banc qui a fixé λ** (0,4 → 0,3 le 2026-08-07). ⚠️ Ne pas redéplacer
+`DEFAULT_MMR_LAMBDA` sans le rejouer : c'était le dernier nombre du moteur posé au jugé, il ne doit
+pas y retourner.
 
 ## Où est quoi
 

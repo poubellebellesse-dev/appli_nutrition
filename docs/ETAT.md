@@ -403,11 +403,12 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 > en attente qu'il n'y en a. **Barrer est un geste d'index, pas de contenu** — aucune décision n'a
 > été rouverte ni refermée à cette occasion.
 >
-> **Réellement ouvertes au 2026-08-07 (fin de journée) : 2, 3, 5, 6, 11, 52, 61 — SEPT.** Parmi
-> elles, **cinq** ne demandent pas un arbitrage mais un élément extérieur — 2 et 5 attendent une
-> maquette, 3 un libellé, 6 un hébergeur, 11 un jeton de l'utilisateur. **Il n'en reste que DEUX qui
+> **Réellement ouvertes au 2026-08-07 (fin de journée) : 2, 5, 6, 11, 52, 61 — SIX.** Parmi
+> elles, **quatre** ne demandent pas un arbitrage mais un élément extérieur — 2 et 5 attendent une
+> maquette, 6 un hébergeur, 11 un jeton de l'utilisateur. **Il n'en reste que DEUX qui
 > demandent une décision, 52 et 61**, et la 52 est elle-même bloquée par la maquette et par les
-> 0 photo. La **35 est sortie de cette liste** le 2026-08-07 : tranchée, codée, mesurée. La **62 y
+> 0 photo. La **3 est sortie de cette liste** le 2026-08-07 : l'utilisateur a confirmé « Savoir »,
+> le libellé n'a jamais eu besoin d'autre chose que d'être confirmé. La **35 est sortie de cette liste** le 2026-08-07 : tranchée, codée, mesurée. La **62 y
 > est entrée ET ressortie le même jour** — ouverte le matin, fermée le soir par l'issue (a).
 >
 > ⚠️ **LA 60 EST SORTIE le 2026-08-07 EN FIN DE JOURNÉE, et cette ligne l'a annoncée ouverte alors
@@ -432,7 +433,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 |---|---|---|
 | ~~1~~ | Restes en v1 ou v2 ? | **Tranché — v1**, structurant et coûteux à greffer après. **CODÉ** : `planLeftovers` (§7.3 ENGINE) ; l'affichage côté Courses est la décision 50 |
 | 2 | Choix final du badge de preuve | Variantes maquettées, à trancher à l'intégration |
-| 3 | Libellé onglet « Savoir » | Provisoire (« Apprendre » ? « Comprendre » ?) |
+| ~~3~~ | Libellé onglet « Savoir » | ✅ **FERMÉE le 2026-08-07 — c'est « Savoir », et ça le reste.** Le libellé n'était provisoire que parce que personne ne l'avait confirmé ; « Apprendre » et « Comprendre » sont écartés. ⚠️ **Rien à coder : le code dit déjà « Savoir » partout** — cette ligne ne demandait qu'un arbitrage, pas un chantier |
 | ~~4~~ | Nb de recettes et d'aliments v1 | **Revu à la hausse (2026-07-27)** — **200-300 recettes** (au lieu de 150-200) et **~200 aliments**. **Les deux cibles sont DÉPASSÉES** : 199 aliments, 241 recettes (2026-07-29). Conséquence à surveiller : le poids du `.db` et le critère de sortie P6 « bundle < 15 Mo » — 300 recettes sans média restent légères, ce sont les photos qui pèseront |
 | 5 | Écran d'humeur → envie | Principe validé, pas maquetté |
 | 6 | Hébergement PWA | Cloudflare / Netlify / GitHub Pages (statique, indifférent) |
@@ -642,8 +643,43 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 
 ### Calibrations non faites (pas des bugs)
 
-- **λ (diversification) n'est pas calibré.** `DEFAULT_MMR_LAMBDA = 0,4` vient d'une intuition de
-  conception. Reste à faire, plus à débloquer.
+- ✅ **λ EST CALIBRÉ — 2026-08-07. `DEFAULT_MMR_LAMBDA` passe de 0,4 à 0,3.** C'était le dernier
+  nombre du moteur posé au jugé : tout le reste (signature, pondération de similarité, récence,
+  couverture nutritionnelle) avait été corrigé par mesure, celui-là venait d'une intuition de
+  conception. Banc : `npm run engine:calibrate-lambda`, 288 configurations (4 créneaux × 3
+  archétypes × 3 régimes × 8 graines) × 11 valeurs de λ, listes de 5, sur 305 recettes.
+  ⛔ **LE GENOU NE POINTE PAS λ, IL LE BORNE — ET C'EST UNE RELECTURE ADVERSE QUI L'A ÉTABLI, LE
+  JOUR MÊME.** Le critère (distance au point idéal, normalisée min-max) se recale sur les bornes
+  réellement balayées : 0,2 en balayant jusqu'à 0,6 · 0,3 jusqu'à 1,0 et 2,0 · **0,5 jusqu'à 5,0**.
+  La première rédaction annonçait « 0,3, stable » sur la foi d'un balayage arrêté à 2,0, et
+  justifiait cette borne par « à 2,0 la pénalité peut annuler un score parfait » — vrai, mais vrai
+  aussi dès 1,0 : **l'argument aurait légitimé n'importe quelle borne.** Le banc balaie désormais
+  jusqu'à 5,0 et affiche les quatre fenêtres, pour que la dépendance soit dans la SORTIE.
+  **Ce que la mesure établit : λ ∈ [0,2 ; 0,5].**
+  **Le repère qui tranche est le seul que la méthode ne fabrique pas** : le plus petit λ qui vide
+  TOUTES les listes servies de leurs doublons (> 60 %) vaut **0,2**, aux quatre créneaux —
+  petit-déjeuner (43 recettes) compris, ce pour quoi les quatre créneaux étaient au plan.
+  **0,3 est ce seuil plus un pas de marge**, le catalogue sur lequel il est mesuré étant appelé à
+  grossir.
+  ⛔ **UN CRITÈRE A ÉTÉ ÉCRIT, PUIS RÉFUTÉ, ET C'EST LE PLUS INSTRUCTIF DU LOT.** La première
+  version du banc retenait « le dernier λ dont le pas d'échange reste rentable », rentable voulant
+  dire plus d'un point de redondance gagné par point de score payé. Ce seuil compare deux échelles
+  non commensurables — la redondance bouge de ~29 points sur le balayage, le score de ~2 — donc le
+  rapport dépasse 1 PARTOUT et le critère désignait mécaniquement la plus grande valeur balayée. Il
+  aurait dit λ = 10 si on avait balayé jusqu'à 10. **Un critère qui ne peut rendre qu'une seule
+  réponse n'est pas une mesure** ; il reste affiché à titre indicatif, il ne tranche plus rien.
+  ⚠️ **LA MESURE N'EXCLUT PAS 0,4** — elle ne le désigne jamais, ce qui n'est pas la même chose, et
+  0,4 tombe dans [0,2 ; 0,5]. Il coûtait 0,19 point de score de plus pour 1,7 point de redondance de
+  moins. **Ce qui change n'est pas la qualité des suggestions — c'est qu'une constante non mesurée
+  est devenue mesurée.**
+  ⚠️ **Trois nuances de la relecture adverse, à ne pas perdre.** **(a)** L'écart 0,3/0,4 **n'est pas
+  du bruit de tirage** : test apparié à graines égales, t = 5,4 sur la redondance, t = 6,0 sur le
+  score — l'objection « 8 graines ne suffisent pas » est réfutée, pas écartée. **(b)** L'impact en
+  score est petit, **la surface ne l'est pas** : **89,9 % des 288 configurations rendent une LISTE
+  différente** entre 0,3 et 0,4. Dire « l'écart est petit » sans cela laisserait croire que presque
+  rien ne bouge. **(c)** Le banc mesure à **historique vide**, donc il **sous-estime la redondance
+  d'environ 1 à 2 points** pour quelqu'un aux habitudes concentrées ; l'ordre entre les λ ne
+  s'inverse pas pour autant.
   ✅ **REMESURÉ le 2026-08-07 sur les 282 recettes** (`npm run engine:similarity`) — la mesure
   précédente datait de **212** et cette ligne demandait de la rejouer avant de figer λ, c'est fait :
   **39 621 paires · max 94,2 % · p99 36,5 % · médiane 9,0 % · moyenne 10,2 % · 51 paires > 60 %.**
@@ -738,15 +774,20 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   de liste restent verts, seul le nouveau rougit).
 - **L'explication distingue peu** : les cinq suggestions affichent souvent les mêmes trois phrases,
   seul l'ordre change. Honnête, mais peu utile pour choisir (sujet UI, P5).
-- ⛔ **Le banc n'affiche plus la similarité** de chaque recette retenue (`ScoredSuggestion` ne porte
-  pas cette information). À rétablir **avant** de calibrer λ.
-  ⚠️ **VÉRIFIÉ ENCORE VRAI le 2026-08-07, et NON CORRIGÉ VOLONTAIREMENT.** `ScoredSuggestion`
-  (`domain/result.ts`) porte toujours ses 6 champs, sans diagnostic MMR ; `DiversifiedCandidate.
-  maxSimilarityToRetained` existe mais meurt dans `diversify`. **Les deux issues touchent un type
-  PUBLIC** — l'ajouter à `ScoredSuggestion` (contrat documenté §8.2 ENGINE) ou à `EngineDiagnostics`
-  (qui est plat, alors que l'information est par suggestion). L'en-tête de `try-engine.ts` dit
-  lui-même que c'est « hors périmètre de ce fichier ». **C'est une décision d'API, elle revient à
-  l'utilisateur** — la prendre en passant pour débloquer une calibration serait le mauvais ordre.
+- ✅ **Le banc réaffiche la similarité — 2026-08-07, et l'arbitrage annoncé n'a pas eu lieu parce
+  qu'il n'était pas nécessaire.** Cette entrée posait un choix entre deux types publics et le
+  renvoyait à l'utilisateur : `ScoredSuggestion` (« contrat documenté §8.2 ») ou `EngineDiagnostics`
+  (« qui est plat, alors que l'information est par suggestion »). **Les deux prémisses étaient
+  fausses.** `EngineDiagnostics` n'a pas à rester plat — il porte désormais
+  `diversification: { lambda, maxSimilarities } | null` — et surtout le choix n'était pas ouvert :
+  poser une similarité sur `ScoredSuggestion`, c'est-à-dire sur **ce que l'interface rend**, finit
+  en nombre affiché à côté d'un plat, soit exactement le piège « ne jamais afficher le score du
+  moteur » (principe 6). Une seule des deux issues était admissible.
+  ⚠️ **Et rien n'a été calculé pour ça** : `diversify` produisait `maxSimilarityToRetained` depuis
+  toujours, `suggestMeals` le jetait en retypant son résultat en `{ recipeId, score }`. Le coût réel
+  était **une ligne de retypage**, pas un arbitrage d'API. ⚠️ **`try-engine.ts` réaffiche la
+  proximité** — « — » au premier rang et jamais « 0 % » : le zéro y est une convention, pas une
+  mesure.
 - ⚠️ **`roquefort` porte l'allergène `lait` mais pas `sulfites`** — vérifié encore exact le
   2026-08-07 (`catalog/sources/foods.yaml`, un seul allergène déclaré).
   ⛔ **MAIS CETTE LIGNE N'EST PAS SOURCÉE, et après la leçon du même jour sur les cotes de confiance
