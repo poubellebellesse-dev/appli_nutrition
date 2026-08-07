@@ -51,6 +51,8 @@ etapes:
     timer_type: null
 
 facettes:
+  - facette: cuisine
+    valeur: suisse
   - facette: regime
     valeur: vegetalien
   - facette: style
