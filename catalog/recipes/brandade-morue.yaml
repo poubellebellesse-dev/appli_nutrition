@@ -1,0 +1,104 @@
+id: brandade_morue
+nom: "Brandade de morue"
+origine: maison
+description: >
+  Du cabillaud poché, mis en pâte à la spatule dans l'huile chaude avec de l'ail, puis
+  monté à l'huile d'olive et détendu au lait chaud, lié à la pomme de terre.
+temps_prep_min: 25
+temps_cuisson_min: 30
+difficulte: 3
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: convivial
+conservation_jours: 2
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.6
+  texture: creme
+
+ingredients:
+  - food_id: cabillaud
+    quantite_g: 700
+    unite_affichage: "700 g"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 500
+    unite_affichage: "500 g"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 120
+    unite_affichage: "12 cl"
+    optionnel: false
+  - food_id: lait_entier
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 15
+    unite_affichage: "3 gousses"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 20
+    unite_affichage: "quelques gouttes"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "quelques tours de moulin"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher et cuire les pommes de terre à l'eau jusqu'à ce qu'elles soient tendres, puis les écraser."
+    lexicon_ids: [eplucher, ecraser]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Pocher le cabillaud dans un bouillon frémissant en le tenant légèrement en deçà de la cuisson complète."
+    lexicon_ids: [pocher, fremir]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Égoutter le poisson, retirer peau et arêtes, puis l'émietter."
+    lexicon_ids: [egoutter, emietter]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Chauffer une part de l'huile d'olive jusqu'à ce qu'elle fume, y jeter le poisson et l'ail écrasé, puis broyer à la spatule pour le mettre en pâte."
+    lexicon_ids: [ecraser]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Hors du feu, incorporer le reste de l'huile d'olive en filet en travaillant vigoureusement, comme pour une mayonnaise."
+    lexicon_ids: [incorporer, filet]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Détendre avec le lait bouillant ajouté quelques cuillerées à la fois, puis incorporer la purée de pommes de terre."
+    lexicon_ids: [detendre, incorporer]
+    timer_s: null
+    timer_type: null
+  - ordre: 7
+    texte: "Rectifier l'assaisonnement avec le sel, le poivre et un filet de citron, parsemer de persil ciselé."
+    lexicon_ids: [parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: convivial

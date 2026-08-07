@@ -1,0 +1,95 @@
+id: quiche_lorraine
+nom: "Quiche lorraine"
+origine: maison
+description: >
+  Une pâte brisée garnie de lardons dorés et d'un appareil aux œufs et à la crème,
+  cuite au four jusqu'à ce que le dessus soit doré.
+temps_prep_min: 20
+temps_cuisson_min: 35
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.5
+  texture: fondant
+
+ingredients:
+  - food_id: pate_brisee
+    quantite_g: 250
+    unite_affichage: "1 pâte"
+    optionnel: false
+  - food_id: porc_poitrine
+    quantite_g: 200
+    unite_affichage: "200 g de lardons"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 200
+    unite_affichage: "4 œufs"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: lait_entier
+    quantite_g: 150
+    unite_affichage: "15 cl"
+    optionnel: false
+  - food_id: muscade
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "quelques tours de moulin"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four et foncer un moule avec la pâte brisée."
+    lexicon_ids: [prechauffer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire revenir les lardons à sec jusqu'à ce qu'ils dorent."
+    lexicon_ids: [revenir, dorer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Fouetter les œufs avec la crème et le lait, saler légèrement, poivrer et muscader."
+    lexicon_ids: [fouetter]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Répartir les lardons sur le fond de pâte."
+    lexicon_ids: [parsemer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Verser l'appareil aux œufs sur les lardons."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Enfourner jusqu'à ce que la quiche soit prise et dorée sur le dessus."
+    lexicon_ids: [enfourner, dorer]
+    timer_s: 2100
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien

@@ -1,0 +1,112 @@
+id: pot_au_feu
+nom: "Pot-au-feu"
+origine: maison
+description: >
+  Du paleron de bœuf parti à l'eau froide et frémi longuement avec carottes, poireaux,
+  navets et céleri, servi avec son bouillon.
+temps_prep_min: 25
+temps_cuisson_min: 180
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.7
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: boeuf_paleron
+    quantite_g: 900
+    unite_affichage: "900 g"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 400
+    unite_affichage: "4 carottes"
+    optionnel: false
+  - food_id: poireau
+    quantite_g: 300
+    unite_affichage: "2 poireaux"
+    optionnel: false
+  - food_id: navet
+    quantite_g: 300
+    unite_affichage: "3 navets"
+    optionnel: false
+  - food_id: celeri_branche
+    quantite_g: 150
+    unite_affichage: "2 branches"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: clou_girofle
+    quantite_g: 2
+    unite_affichage: "2 clous"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 8
+    unite_affichage: "1 c. à café"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "quelques tours de moulin"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Piquer l'oignon des clous de girofle."
+    lexicon_ids: [piquer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Mettre la viande dans une grande marmite d'eau froide et porter doucement à ébullition."
+    lexicon_ids: [mouiller]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Écumer jusqu'à ce que le bouillon soit clair, puis ajouter l'oignon piqué, le laurier et le thym."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Laisser frémir à couvert sans bouillir jusqu'à ce que la viande soit tendre."
+    lexicon_ids: [fremir]
+    timer_s: 9000
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Éplucher et tailler carottes, navets, poireaux et céleri, puis les ajouter au bouillon."
+    lexicon_ids: [eplucher, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Poursuivre la cuisson jusqu'à ce que les légumes soient fondants."
+    lexicon_ids: [mijoter]
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 7
+    texte: "Saler, poivrer et servir la viande et les légumes avec le bouillon."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

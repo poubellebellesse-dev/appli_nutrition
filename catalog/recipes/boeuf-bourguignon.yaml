@@ -1,0 +1,124 @@
+id: boeuf_bourguignon
+nom: "Bœuf bourguignon"
+origine: maison
+description: >
+  Du paleron de bœuf mijoté longuement au vin rouge avec carottes, oignon et champignons,
+  la sauce épaissie par une pointe de farine.
+temps_prep_min: 30
+temps_cuisson_min: 180
+difficulte: 3
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.8
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: boeuf_paleron
+    quantite_g: 800
+    unite_affichage: "800 g en cubes"
+    optionnel: false
+  - food_id: porc_poitrine
+    quantite_g: 150
+    unite_affichage: "150 g de lardons"
+    optionnel: false
+  - food_id: vin_rouge_cuisine
+    quantite_g: 500
+    unite_affichage: "50 cl"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 250
+    unite_affichage: "3 carottes"
+    optionnel: false
+  - food_id: champignon_paris
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: farine_ble
+    quantite_g: 30
+    unite_affichage: "2 c. à soupe"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 30
+    unite_affichage: "1 noix"
+    optionnel: false
+  - food_id: concentre_tomate
+    quantite_g: 30
+    unite_affichage: "2 c. à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: laurier
+    quantite_g: 1
+    unite_affichage: "1 feuille"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "quelques tours de moulin"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Couper la viande en cubes, l'éponger, puis la saisir par petites quantités dans le beurre chaud pour qu'elle colore sans bouillir."
+    lexicon_ids: [eponger, tailler_des, saisir]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer l'oignon et l'ail, les ajouter à la viande et saupoudrer de farine en remuant pour l'enrober."
+    lexicon_ids: [emincer, saupoudrer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Mouiller au vin rouge, ajouter le concentré de tomate, le laurier et le thym, puis porter à frémissement."
+    lexicon_ids: [mouiller, fremir]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Couvrir et laisser mijoter à feu doux jusqu'à ce que la viande soit fondante."
+    lexicon_ids: [mijoter]
+    timer_s: 9000
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter les carottes coupées en rondelles à mi-cuisson."
+    lexicon_ids: [tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Dans une poêle à part, faire revenir les lardons et les champignons émincés jusqu'à coloration."
+    lexicon_ids: [revenir, emincer]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 7
+    texte: "Incorporer lardons et champignons en fin de cuisson, rectifier l'assaisonnement et servir."
+    lexicon_ids: [incorporer]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: convivial

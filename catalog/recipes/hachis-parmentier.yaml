@@ -1,0 +1,107 @@
+id: hachis_parmentier
+nom: "Hachis parmentier"
+origine: maison
+description: >
+  Une couche de bœuf haché mijoté à l'oignon et à l'ail, recouverte d'une purée de pommes
+  de terre au beurre et gratinée à l'emmental.
+temps_prep_min: 25
+temps_cuisson_min: 40
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: boeuf_hache_5
+    quantite_g: 500
+    unite_affichage: "500 g"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 900
+    unite_affichage: "900 g"
+    optionnel: false
+  - food_id: lait_entier
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 50
+    unite_affichage: "50 g"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 oignon"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: fromage_emmental_rape
+    quantite_g: 60
+    unite_affichage: "60 g"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: muscade
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 2
+    unite_affichage: "quelques tours de moulin"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les pommes de terre et les cuire à l'eau bouillante jusqu'à ce qu'elles soient tendres."
+    lexicon_ids: [eplucher]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Émincer l'oignon et l'ail, les faire revenir avec le bœuf haché jusqu'à coloration."
+    lexicon_ids: [emincer, revenir]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Saler, poivrer et parsemer de persil ciselé, puis étaler la viande au fond d'un plat à gratin."
+    lexicon_ids: [parsemer, ciseler, etaler]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Écraser les pommes de terre en purée avec le beurre et le lait chaud, muscader."
+    lexicon_ids: [ecraser]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Napper la viande de purée et lisser la surface."
+    lexicon_ids: [napper]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Parsemer d'emmental râpé et enfourner jusqu'à ce que le dessus soit gratiné."
+    lexicon_ids: [parsemer, enfourner, gratiner]
+    timer_s: 1200
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: quotidien
