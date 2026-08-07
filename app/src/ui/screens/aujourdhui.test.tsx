@@ -54,6 +54,38 @@ async function monter() {
 const platAffiche = (): string => document.querySelector('article h2')!.textContent!
 const compteur = (): string => screen.getByText(/^\d+ sur \d+$/).textContent!
 const bouton = (texte: string | RegExp) => screen.getByText(texte).closest('button') as HTMLButtonElement
+const encart = () => screen.queryByText(/Rien n'est obligatoire/)
+/** Nombre de suggestions annoncé par « X sur N ». */
+const tailleListe = (): number => Number(compteur().split(' sur ')[1])
+
+/**
+ * Clique « Suivant » jusqu'à ce que l'encart d'aide s'ouvre, et échoue s'il ne s'ouvre pas.
+ *
+ * ⛔ NE PAS REVENIR À UN NOMBRE FIXE DE CLICS — c'est le défaut que ce helper corrige, et il a
+ * fait rougir `main` le 2026-08-07. L'encart s'ouvre à `vues.size - 1 >= SEUIL_INDECISION`, donc
+ * il faut **11 recettes DISTINCTES** ; la liste en compte **12**. Écrire « 10 clics » ne laissait
+ * qu'**UNE recette de marge**, et un simple lot de contenu (`e3bc94c`, cinq recettes classiques)
+ * l'a mangée : le classement a changé, et après un choix il fallait 11 clics au lieu de 10.
+ *
+ * ⚠️ Le test échouait alors qu'AUCUN comportement n'avait bougé. Un test d'écran doit **piloter
+ * jusqu'à l'état qu'il veut vérifier**, jamais parier sur la taille du catalogue — celui-ci est
+ * un chantier explicitement en cours (§8.2). Même famille que l'exemption de `semaine.test.tsx`.
+ */
+async function ouvrirEncartParIndecision() {
+  const plafond = tailleListe() * 2 // un tour complet de la liste suffit largement
+  for (let i = 0; i < plafond && encart() === null; i++) fireEvent.click(bouton(/Suivant/))
+  await screen.findByText(/Rien n'est obligatoire/)
+}
+
+/** Parcourt la liste du créneau courant en entier et rend les plats dans l'ordre affiché. */
+function listeDuCreneau(): readonly string[] {
+  const plats = [platAffiche()]
+  for (let i = 1; i < tailleListe(); i++) {
+    fireEvent.click(bouton(/Suivant/))
+    plats.push(platAffiche())
+  }
+  return plats
+}
 
 describe('aujourdhui — la carte', () => {
   it('titre l’écran d’après l’heure et le rythme, jamais « Ce soir » en dur', async () => {
@@ -101,10 +133,9 @@ describe('aujourdhui — l’encart d’aide', () => {
     expect(screen.queryByText(/Rien n'est obligatoire/)).toBeNull()
   })
 
-  it('s’ouvre après dix changements sans choix', async () => {
+  it('s’ouvre quand on a vu assez de plats distincts sans en choisir aucun', async () => {
     await monter()
-    for (let i = 0; i < 10; i++) fireEvent.click(bouton(/Suivant/))
-    await screen.findByText(/Rien n'est obligatoire/)
+    await ouvrirEncartParIndecision()
     expect(screen.getByText('Plutôt léger ou consistant ?')).toBeDefined()
   })
 
@@ -113,8 +144,7 @@ describe('aujourdhui — l’encart d’aide', () => {
     // qui rendait la condition d'affichage de l'encart fausse : il disparaissait entre la première
     // pastille et la deuxième.
     await monter()
-    for (let i = 0; i < 10; i++) fireEvent.click(bouton(/Suivant/))
-    await screen.findByText(/Rien n'est obligatoire/)
+    await ouvrirEncartParIndecision()
 
     fireEvent.click(screen.getByText('Léger'))
     await waitFor(() => expect(screen.getByText('Léger').getAttribute('aria-pressed')).toBe('true'))
@@ -143,16 +173,14 @@ describe('aujourdhui — l’encart d’aide', () => {
 
   it('choisir un plat remet le compteur d’indécision à zéro', async () => {
     await monter()
-    for (let i = 0; i < 10; i++) fireEvent.click(bouton(/Suivant/))
-    await screen.findByText(/Rien n'est obligatoire/)
+    await ouvrirEncartParIndecision()
 
     fireEvent.click(bouton(/J'ai choisi ce plat/))
-    await waitFor(() => expect(screen.queryByText(/Rien n'est obligatoire/)).toBeNull())
+    await waitFor(() => expect(encart()).toBeNull())
 
-    // Dix nouveaux plats distincts après le choix redéclenchent l'encart : la remise à zéro n'est
-    // pas définitive.
-    for (let i = 0; i < 10; i++) fireEvent.click(bouton(/Suivant/))
-    await screen.findByText(/Rien n'est obligatoire/)
+    // Revoir assez de plats distincts après le choix redéclenche l'encart : la remise à zéro
+    // n'est pas définitive.
+    await ouvrirEncartParIndecision()
   })
 
   it('ne propose QUE des axes que le moteur sait lire', async () => {
@@ -251,18 +279,23 @@ describe('aujourdhui — changer de créneau', () => {
   })
 
   it('choisir un autre créneau change les suggestions et remet la position à 1 sur N', async () => {
+    // ⛔ CE TEST COMPARAIT LE PLAT N°1 DU NOUVEAU CRÉNEAU AU PLAT N°2 DE L'ANCIEN — deux positions
+    // différentes, donc une comparaison qui ne prouvait rien. Elle a tenu par coïncidence de
+    // classement jusqu'au 2026-08-07, où « Pizza maison tomate-mozzarella » s'est retrouvée en
+    // tête d'un créneau et en deuxième de l'autre. ⚠️ Et « le plat du midi diffère de celui du
+    // soir » N'EST PAS une promesse du produit : presque tous les plats portent
+    // `types_repas: [dejeuner, diner]`, rien n'interdit au moteur de classer le même en tête.
+    // Ce qui EST vrai et vérifiable, c'est que la LISTE change : mesuré le 2026-08-07, les deux
+    // créneaux partagent 1 plat sur 12. On compare donc les listes, pas un plat contre un autre.
     await monter()
-    fireEvent.click(bouton(/Suivant/))
-    await waitFor(() => expect(compteur()).toMatch(/^2 sur /))
-
     const titreDepart = screen.getByRole('heading', { level: 1 }).textContent
     const autre = titreDepart === 'Ce midi' ? 'Ce soir' : 'Ce midi'
-    const platAvant = platAffiche()
+    const listeAvant = listeDuCreneau()
 
     fireEvent.click(screen.getByRole('button', { name: autre }))
     await waitFor(() => expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(autre))
     expect(compteur()).toMatch(/^1 sur /)
-    expect(platAffiche()).not.toBe(platAvant)
     expect(screen.getByRole('button', { name: autre }).getAttribute('aria-pressed')).toBe('true')
+    expect(listeDuCreneau()).not.toEqual(listeAvant)
   })
 })
