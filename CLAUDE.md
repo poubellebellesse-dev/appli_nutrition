@@ -42,17 +42,27 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-07 (fin de journée)** : `npm test` →
-**1 645 passed / 2 failed (1 647, 91 fichiers)** en 50,8 s · typecheck propre · `vite build` ✓ ·
-`engine:plan-stress` **20/20 avec 1 SIGNAL** · `node catalog/build.mjs` → **451 aliments,
-297 recettes, 1 368 étapes, 62 gestes, 73 tips, 8 fiches**.
+Dernier relevé, **suite réellement exécutée le 2026-08-07, arbre COMPLET — lot mode cuisine et
+facettes `cuisine` inclus** : `npm test` → **1 669 passed / 0 failed (91 fichiers)** en 50,2 s ·
+typecheck propre · `vite build` ✓ (2,9 s) · `engine:plan-stress` **20/20, PLUS AUCUN SIGNAL** ·
+`node catalog/build.mjs` → **451 aliments, 305 recettes, 1 415 étapes, 62 gestes, 73 tips,
+8 fiches**.
+⚠️ **1 669 et non 1 647** — les trois documents qui portent ce compte ont annoncé 1 647 pendant que
+l'arbre en contenait déjà 22 de plus : ils avaient été mis à jour dans le même lot que le code
+qu'ils ne comptaient pas encore. **Un relevé se prend sur l'arbre qu'on commite, pas sur celui d'où
+l'on est parti.**
 ⚠️ **451 et non 450** — recompté dans l'arbre le 2026-08-07 après `11687d4` (`chou_blanc`).
+✅ **LE DERNIER SIGNAL DU BANC EST ÉTEINT** (lot « 8 plats végétaliens sans gluten ») — « végétalien
++ sans gluten » passe de **27/28 à 28/28 accompagnements**, plancher 1 302 → 1 530 kcal. La cause
+mesurée n'était pas « il manque 1 plat » mais **marge zéro** : le catalogue portait exactement
+28 plats végétaliens ET sans gluten utilisables au déjeuner ou au dîner pour exactement 28 créneaux,
+si bien qu'une seule exclusion par une autre contrainte suffisait à vider un créneau. Ils sont **36**.
 ⚠️ **Une cinquième commande, qu'aucun test ne remplacera** : `node catalog/audit-mapping.mjs`, à
 lancer À LA MAIN après chaque lot de contenu et **uniquement dans le dépôt principal** —
 `documents Ciqual/` est gitignoré, donc absent de tout worktree.
-⚠️ **LES 2 ÉCHECS SONT CONNUS, LOCALISÉS ET NON RÉSOLUS** — `ui/screens/aujourdhui.test.tsx`, causés
-par un lot de contenu (une recette domine deux créneaux) et **pas** par le code : vérifié par
-falsification, pas déduit. Détail et arbitrage en attente dans `docs/FICHE_REPRISE.md`.
+✅ **LES 2 ÉCHECS D'`aujourdhui.test.tsx` SONT FERMÉS** (`70e2493`) — quatre tests pariaient sur la
+taille du catalogue, un lot de contenu les a cassés. **La suite est verte en entier.** Ne pas
+recopier d'ancienne mention « 2 failed » : elle a survécu deux jours de plus que le défaut.
 ⚠️ **Piège de relevé** : `npm test 2>&1 | tail -25` rend le code de sortie du **pipe**, donc 0. Lire
 le compte `Tests N failed`, jamais `$?`.
 ⚠️ Ce compte bougera : **la sortie réelle fait foi, pas cette ligne.**

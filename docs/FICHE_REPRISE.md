@@ -3,14 +3,16 @@
 > **Une page, jamais plus — plafond dur : 100 lignes.** État vérifié + prochaine étape, rien d'autre.
 > Avancement détaillé, décisions et dette : [ETAT.md](./ETAT.md) · Index : [README.md](./README.md).
 > Font foi : [ENGINE.md](./ENGINE.md) (moteur), [ARCHITECTURE.md](./ARCHITECTURE.md) (le reste).
-> *Dégonflée deux fois : 341 → ~95 lignes le 2026-08-03, puis **285 → 193** le 2026-08-07. Rien
-> n'est perdu — les blocs sortis sont recopiés verbatim dans
+> *Dégonflée trois fois : 341 → ~95 lignes le 2026-08-03, puis **285 → 193**, puis **193 → 169** le
+> 2026-08-07. Rien n'est perdu — les blocs sortis sont recopiés verbatim dans
 > [archive/FICHE_REPRISE_extraits_2026-08-07.md](./archive/FICHE_REPRISE_extraits_2026-08-07.md),
 > qui dit aussi, bloc par bloc, où le fait durable vit désormais.*
-> ⛔ **193 LIGNES : LE PLAFOND EST TOUJOURS DÉPASSÉ, ET C'EST DÉLIBÉRÉ.** N'ont été retirés que les
-> blocs faisant DOUBLON avec `ETAT.md`, `PIEGES.md` ou un document de chantier. Ce qui reste décrit
-> des chantiers EN COURS (photos, lots non commités, 2 tests rouges) : ça n'a pas encore d'autre
-> domicile. **Chacun de ces blocs part le jour où son chantier se ferme.**
+> ⛔ **169 LIGNES : LE PLAFOND EST TOUJOURS DÉPASSÉ, ET C'EST DÉLIBÉRÉ.** N'ont été retirés que les
+> blocs faisant DOUBLON avec `ETAT.md`, `PIEGES.md` ou un document de chantier — **plus, le
+> 2026-08-07, ceux dont le chantier s'est fermé** : les lots non commités et les 2 tests rouges,
+> exactement comme la règle ci-dessous l'exige. Ce qui reste décrit des chantiers EN COURS (photos,
+> essai sur appareil, empaquetage) : ça n'a pas encore d'autre domicile. **Chacun de ces blocs part
+> le jour où son chantier se ferme.**
 > ⚠️ **Le glissement est structurel** : chaque lot livré ajoute son récit ici et aucun n'en repart.
 > Quand un lot est fini, son fait va dans `ETAT.md` ou son document de chantier — pas sur cette page.
 
@@ -26,25 +28,17 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
                                                                                           ⬅ ICI
 ```
 
-✅ **SUITE RÉEXÉCUTÉE LE 2026-08-07, EN FIN DE JOURNÉE, SUR L'ARBRE DE TRAVAIL.**
-`npm test` → **1 645 passed / 2 failed (1 647)**, **1 fichier rouge sur 91**, en 50,8 s ·
-`npm run typecheck` propre · `npx vite build` ✓ (2,9 s) · `npm run engine:plan-stress` → **20/20**
-avec **1 SIGNAL** (végétalien + sans gluten — le moteur est correct, c'est le catalogue qui manque) ·
-`node catalog/build.mjs` → **450 aliments, 297 recettes, 1 368 étapes, 62 gestes, 73 tips, 8 fiches**.
+✅ **SUITE VERTE EN ENTIER — RÉEXÉCUTÉE LE 2026-08-07 SUR L'ARBRE COMPLET**, lot mode cuisine et
+facettes `cuisine` inclus.
+`npm test` → **1 669 passed / 0 failed**, **91 fichiers**, en 50,2 s · `npm run typecheck` propre ·
+`npx vite build` ✓ (2,9 s) · `npm run engine:plan-stress` → **20/20, PLUS AUCUN SIGNAL** ·
+`node catalog/build.mjs` → **451 aliments, 305 recettes, 1 415 étapes, 62 gestes, 73 tips,
+8 fiches**.
 
-⚠️ **LES 2 ÉCHECS RESTANTS NE VIENNENT PAS DE LA COUCHE `piquant`, ET C'EST VÉRIFIÉ, PAS SUPPOSÉ.**
-Une version antérieure de cette page attribuait **9** échecs à la décision 35 ; sept l'étaient
-bien — des tables de recensement qui attendaient les anciens comptes (`LAYER_DESCRIPTORS` 18 → 19,
-couches de score 11 → 12, `SCORING_LAYERS` 8 → 9, `piquant` partout `null`) — **et sont corrigés.**
-Les deux qui restent sont dans `ui/screens/aujourdhui.test.tsx` : *« choisir un autre créneau change
-les suggestions »* et *« choisir un plat remet le compteur d'indécision à zéro »*.
-**Falsification faite** : la couche `piquant` retirée de `SCORING_LAYERS`, ces deux tests **restent
-rouges à l'identique**. Cause réelle : le lot de contenu `e3bc94c` (« cinq classiques français ») a
-fait entrer *Pizza maison tomate-mozzarella*, qui domine désormais **deux créneaux à la fois** — et
-le test compare UN plat affiché pour prouver que la liste change.
-⛔ **NE PAS « CORRIGER » EN CHANGEANT L'ASSERTION SANS DÉCIDER** : le produit n'a jamais promis que
-deux créneaux proposent des plats différents. C'est l'assertion qui est trop forte, pas le moteur
-qui régresse — mais c'est un arbitrage, pas un ajustement.
+✅ **LES 2 ÉCHECS D'`aujourdhui.test.tsx` SONT FERMÉS** (`70e2493`) — l'arbitrage attendu ici a été
+rendu : les assertions étaient trop fortes, elles pariaient sur la taille du catalogue. Le récit de
+la bissection et la falsification qui a écarté la couche `piquant` restent dans
+[archive/RECAP_SESSION_2026-08-07_recettes-aliments.md](./archive/RECAP_SESSION_2026-08-07_recettes-aliments.md) §5.
 
 ⚠️ **Piège de relevé, déjà payé le 2026-08-07** : `npm test 2>&1 | tail -25` rend le code de sortie
 du **pipe**, donc 0. Lire le compte `Tests N failed`, jamais `$?`.
@@ -57,38 +51,20 @@ qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** Un nombre écrit ici est faux dès le commit
 suivant.
 
-✅ **Mesuré aussi SUR LE COMMIT `11687d4`** (branche `recette-aliments`, worktree détaché, arbre
-propre), pour séparer ce qui est committé de ce qui traîne dans l'arbre : `catalog/build.mjs` →
-**451 aliments, 297 recettes, 62 gestes, 73 tips, 8 fiches** · `npm test` → **2 failed / 1 554 passed
-(1 556)** · typecheck propre · `vite build` ✓ · `plan-stress` **20/20 + 1 SIGNAL**.
-⚠️ **Dans un worktree neuf, `node catalog/build.mjs` passe AVANT tout le reste** : `catalog.db` est
-un artefact gitignoré, et son absence rend **203 échecs** qui ne veulent rien dire.
+✅ **L'ARBRE EST PROPRE — PLUS AUCUN LOT EN VOL, 2026-08-07.** Les trois lots qui traînaient sont
+commités (décisions 33 et 35 et dette §8 dans `5b63e5f`, rouge d'`aujourdhui.test.tsx` fermé par
+`70e2493`, branche `recette-aliments` disparue), **et les deux derniers lots en vol le sont aussi** :
+les 8 plats végétaliens sans gluten, puis le lot mode cuisine + facettes `cuisine`.
+**Le découpage à trois pistes qui bloquait tout commit n'existe plus.**
+⚠️ **HEAD est EN AVANCE sur `origin/main` — les commits attendent d'être poussés.** Claude committe,
+l'utilisateur pousse.
+⚠️ **`git status -sb` avant de committer quoi que ce soit ; ne jamais committer `-a`** — les sessions
+parallèles continuent d'écrire dans le même arbre.
 
-⛔ **RIEN N'EST COMMITÉ AU 2026-08-07, ET TROIS PISTES PARTAGENT LE MÊME ARBRE DE TRAVAIL.**
-HEAD est sur **`recette-aliments`**, pas sur `main` ni sur `dev-features`. ⚠️ **Cette branche a été
-créée par la piste CONTENU** (recettes & aliments, 4 commits, `4550cad` → `11687d4`) **et les deux
-autres pistes travaillent dessus sans l'avoir choisie** — c'est un partage de fait, pas une
-convention. Au 2026-08-07, **355 fichiers modifiés dans l'arbre** n'appartiennent PAS à la piste
-contenu, dont un champ `piquant` ajouté aux 297 recettes.
-L'arbre mélange **trois lots non commités** :
-  1. **décision 33** — fiche aliment `#/aliment/<id>`, cotes ANSES affichées, `ui/saison.ts` ;
-  2. **décision 35** — piquant : 297 fiches annotées, migration **v12**, couche de score `piquant` ;
-  3. **dette §8** — `tests/engine-version-consistency.test.mjs`, `--historique` au banc, piège à
-     focus de `Panneau`, plus la piste parallèle (`gestes-etape.tsx`, liens étape → ingrédient).
-⚠️ **Le découpage est à faire AVANT tout commit**, et `reference/PIEGES.md` dit comment — pas avec
-`git apply --unidiff-zero`, qui a déjà produit un commit qui ne compilait pas.
-**Claude committe, l'utilisateur pousse.**
-
-⛔ **VÉRIFIER UN SOUS-ENSEMBLE DE FICHIERS N'EST PAS VÉRIFIER UN COMMIT — c'est comme ça que le rouge
-ci-dessus est passé.** `e3bc94c` a été committé après une vérification en worktree isolé **ne
-contenant que les deux fichiers du dernier lot**, posés sur `main` : les 15 recettes des deux commits
-précédents n'y étaient pas. **Le worktree se détache sur la RÉFÉRENCE**, pas sur une sélection de
-fichiers. Bissection et mesures :
-[archive/RECAP_SESSION_2026-08-07_recettes-aliments.md](./archive/RECAP_SESSION_2026-08-07_recettes-aliments.md) §5.
-
-⚠️ **Le travail à deux dans un même dépôt a déjà coûté cher trois fois** — un `main` poussé rouge, un
-commit qui ne compilait pas, un lot emporté par la session voisine. Méthode, découpage et
-contre-exemples : **[reference/PIEGES.md](./reference/PIEGES.md)** et
+⚠️ **Le travail à deux dans un même dépôt a déjà coûté cher quatre fois** — un `main` poussé rouge,
+un commit qui ne compilait pas, un lot emporté par la session voisine, et un rouge passé parce
+qu'un worktree de vérification ne contenait qu'une SÉLECTION DE FICHIERS au lieu de la référence.
+Méthode, découpage et contre-exemples : **[reference/PIEGES.md](./reference/PIEGES.md)** et
 [archive/FICHE_REPRISE_extraits_2026-08-07.md](./archive/FICHE_REPRISE_extraits_2026-08-07.md).
 **Claude committe, l'utilisateur pousse** — le shell agent ne peut pas s'authentifier auprès de
 GitHub.
@@ -108,11 +84,18 @@ Premier passage le 2026-08-05 : **deux mappings faux**, `canard_magret` (× 4,9 
 un identifiant qui contredit sa ligne Ciqual ne fait rougir personne.
 Au 2026-08-07 : **9 candidats, tous des écarts de forme**, aucun mauvais aliment.
 
-⚠️ **LE MANQUE DE CONTENU EST DANS LES PLATS, JAMAIS DANS LES ACCOMPAGNEMENTS** — mesuré le
-2026-08-06, contre le diagnostic que cette page portait. Tripler les accompagnements végétaliens
-(11 → 29) n'a pas bougé le compteur d'une unité ; écrire **10 plats** l'a porté de 18 à 28 sur 28.
-`pickAccompagnement` sort si la recette posée n'est pas `service: 'plat'`. **Le SIGNAL restant du
-banc se lit donc « il manque des PLATS ».** Détail :
+✅ **LE DERNIER SIGNAL DU BANC EST ÉTEINT — 2026-08-07, lot « 8 plats végétaliens sans gluten ».**
+« végétalien + sans gluten, 14 j × 4 » passe de **27/28 à 28/28 accompagnements**, plancher
+**1 302 → 1 530 kcal**. ⚠️ **La cause mesurée n'était pas celle que cette page annonçait.** Elle
+disait « il manque des plats » ; le compte exact dit **marge zéro** : le catalogue portait
+**exactement 28** plats végétaliens ET sans gluten portant `dejeuner` ou `diner`, pour **exactement
+28 créneaux** (14 j × 2). Il suffisait qu'un seul soit écarté par une autre contrainte pour qu'un
+créneau reçoive un non-plat — et `pickAccompagnement` sort dès que la recette posée n'est pas
+`service: 'plat'`. Ils sont **36**. **Un catalogue qui suffit tout juste ne suffit pas** : c'est le
+fait à retenir, pas le nombre.
+⚠️ **Reste vrai, et c'est ce qui a guidé le lot** : le manque est dans les PLATS, jamais dans les
+accompagnements — tripler les accompagnements végétaliens (11 → 29) n'avait pas bougé le compteur
+d'une unité. Détail :
 [archive/RECAP_SESSION_2026-08-07_recettes-aliments.md](./archive/RECAP_SESSION_2026-08-07_recettes-aliments.md) §2.
 
 **Ce qui reste n'est plus du code d'écran.** Trois chantiers, par ordre de dépendance :
@@ -127,6 +110,14 @@ banc se lit donc « il manque des PLATS ».** Détail :
    `rem` à 150 % NON MESURÉ** — le seul dont l'échec toucherait les neuf écrans. ⚠️ **L'instrument a
    changé** : l'écran réel existe, l'essai se refait sur `#/cuisine/chakchouka` — **en HTTPS**, car
    `http://` fait disparaître `navigator.wakeLock` et l'échec ressemble à un défaut d'appareil.
+   ▶ **TROISIÈME RELEVÉ À FAIRE DANS LE MÊME PASSAGE, ET C'EST LA CONDITION DE LA DÉCISION 61** :
+   ouvrir **`#/recettes`** et chronométrer l'apparition de la liste. C'est le seul chiffre qui
+   manque pour clore la 61, la piste (c) l'exige explicitement, et **personne ne l'a jamais pris**.
+   ⚠️ **Ne pas le remplacer par la mesure jsdom du 2026-08-07** (3,60 ms/carte, 1 098 ms à
+   305 recettes) : jsdom ne fait **ni mise en page ni peinture**, donc il ne mesure pas ce qui fait
+   attendre l'utilisateur. Ce qui se transpose est **6,9 nœuds DOM par carte**, soit ~3 450 nœuds à
+   500 recettes — a priori sans gravité, **et c'est justement l'a priori qu'il s'agit de vérifier**.
+   **Zéro dépendance à installer** : pas de Playwright, contrairement au lot C d'accessibilité.
 3. **Empaquetage Capacitor, puis Play.** ⚠️ **La cible n'est plus TWA/Bubblewrap** — décision du
    2026-08-01, `archive/RECAP_SESSION_8.md` §3. `capacitor.config.ts` et `@capacitor/*` sont en
    place ; `npx cap add android` n'a jamais été lancé (pas de SDK sur la machine). **Ni origine
@@ -153,7 +144,10 @@ plus** : le fichier
 `recettes-appli.csv` (224 recettes, vérifié) attend dans `G:\Claude\Dessinateur\recettes\`, et
 **c'est à l'utilisateur de le lancer** — réseau et clés API.
 
-▶ **LE MODE CUISINE TOURNE** — L0, L1, L1bis et L1ter faits ; **L2 est SUSPENDU** (décision 60).
+▶ **LE MODE CUISINE TOURNE** — L0, L1, L1bis, L1ter **et L2** faits. ✅ **L2 n'est plus suspendu** :
+la décision 60 est fermée le 2026-08-07, le lien étape → ingrédient est **dérivé au build** et
+n'a demandé **aucune** des 1 350 annotations prévues (2 715 liens, 93,7 % des gestes couverts).
+⛔ **Ce qui survit et ne doit pas être défait : la table AJOUTE, elle ne FILTRE JAMAIS.**
 Spec : `ARCHITECTURE.md` §5bis · état et ordre des lots :
 **[CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md)** · récit :
 [archive/…_mode-cuisine.md](./archive/RECAP_SESSION_2026-08-05_mode-cuisine.md) · le détail des lots

@@ -30,7 +30,22 @@ export default defineConfig({
     // NE PAGINE NI NE VIRTUALISE (en-tête de `recettes.tsx`) : il rend TOUT le catalogue dans le
     // DOM, donc le coût de montage croît linéairement avec lui — 241 → 282 recettes le 2026-08-06,
     // soit +17 % d'un coup. À 500 recettes la question se posera sur un TÉLÉPHONE, pas dans jsdom.
-    // Décision ouverte 59 d'`ETAT.md` §4. Ne pas la refermer en remontant encore ce nombre.
+    // Décision ouverte **61** d'`ETAT.md` §4. Ne pas la refermer en remontant encore ce nombre.
+    //
+    // ⚠️ CE COMMENTAIRE A RENVOYÉ À LA « DÉCISION 59 » JUSQU'AU 2026-08-07 — la dérive d'index de
+    // §4 avait atteint le code. La 59 est l'écrasement entre deux onglets, sans rapport.
+    //
+    // MESURÉ À TROIS POINTS le 2026-08-07 (305 recettes), ce que la ligne de 2026-08-06 n'avait
+    // pas : montage de l'écran à 305 / 220 / 126 cartes = 1 098 / 812 / 455 ms, soit
+    // **3,60 ms par carte, pente constante à 2,5 % près et ordonnée à l'origine +3 ms**. Le temps
+    // de montage EST le rendu des cartes ; il n'y a pas de coût fixe à aller chercher ailleurs.
+    // ⛔ ET CE N'EST PAS LE MOTEUR : les 7 requêtes que `comptes` refait à chaque rendu
+    // (`recettes.tsx:183-197`) coûtent **4,1 ms au total, 0,4 % du montage**. L'hypothèse
+    // « ce sont les compteurs de pastilles » est réfutée, pas écartée au jugé.
+    // ⚠️ CES MILLISECONDES SONT DU jsdom, QUI NE FAIT NI MISE EN PAGE NI PEINTURE — elles ne se
+    // transposent pas à un téléphone. Ce qui se transpose : la linéarité, et **6,9 nœuds DOM par
+    // carte** (2 104 pour 305). À 500 recettes cela fait ~3 450 nœuds, ce qui n'est PAS un DOM
+    // lourd pour un navigateur — l'ordre de grandeur redouté par la 61 n'est pas au rendez-vous.
     testTimeout: 15_000,
   },
 })
