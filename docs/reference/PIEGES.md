@@ -103,6 +103,49 @@
   masquer une alerte de sécurité (décision 45). → `npm run engine:plancher` balaie vingt graines et
   affiche la dispersion. **Le classement est reproductible à graine égale, pas déterministe d'une
   graine à l'autre** — une seule mesure ne dit rien de la propriété.
+- ⛔ **LE MÊME PIÈGE A RESSERVI LE 2026-08-06, ET IL A COÛTÉ UNE SESSION.** Le banc affichait
+  « 20/20 configurations saines » pendant que le végétalien tournait à **18 accompagnements posés
+  sur 28** et que « végétalien + sans gluten » laissait **17 créneaux VIDES sur 56**. Les deux
+  nombres étaient à l'écran, dans la colonne detail ; ils ne faisaient rien rougir, et la consigne
+  « lire la colonne remplis, pas le verdict » du point ci-dessus n'a pas suffi — **une consigne qui
+  demande de se méfier d'un outil ne remplace pas l'outil.** ✅ Corrigé : `plan-stress` a désormais
+  **trois états**. `KO` = le moteur est faux (plantage, doublon, non-déterminisme) et bloque ;
+  **`SIGNAL`** = le moteur est correct mais le CATALOGUE ne suit pas (créneaux vides,
+  accompagnements manquants), affiché avec ses chiffres, **exit 0**. ⚠️ **SIGNAL NE FAIT PAS ÉCHOUER
+  EXPRÈS** : `engine:plan-stress` est l'une des quatre commandes qui font foi ; le rendre rouge sur
+  un manque de contenu connu bloquerait des tâches sans rapport et on apprendrait à le contourner.
+  **Un signal qu'on ne peut pas rater vaut mieux qu'un rouge qu'on apprend à ignorer.**
+- ⛔ **« IL MANQUE DES ACCOMPAGNEMENTS » EST UN CONTRESENS — compter les PLATS d'abord.** Le compte
+  d'accompagnements posés ne mesure PAS les accompagnements. `pickAccompagnement` sort aussi quand la
+  recette du créneau n'est pas un `plat`, ce qui arrive dès que la seconde passe de `pickForSlot` se
+  rabat sur une entrée faute de plats DISTINCTS (`placedRecipeIds` interdit le doublon, sans quoi le
+  planning rendrait sept fois le même dîner). Le végétalien avait **18 plats de repas principal pour
+  28 créneaux** et posait exactement **18** accompagnements : le même nombre compté deux fois.
+  **Preuve par la mesure** : porter les accompagnements végétaliens de 11 à 29 n'a pas déplacé le
+  compteur d'une unité ; écrire **10 plats** l'a porté à 28/28 et les 5 avertissements à 0.
+  ⚠️ `FICHE_REPRISE.md` a porté la consigne inverse — « écrire des accompagnements est la seule
+  chose qui les fera tomber » — pendant deux jours.
+- ⛔ **UN ORACLE QUI PARTAGE LA DONNÉE DU SUJET QU'IL VÉRIFIE NE VÉRIFIE RIEN.** C'est le défaut
+  signature du projet (« un champ déclaré n'est pas un champ rempli ») transposé au TEST lui-même,
+  et il est plus difficile à voir que tous les autres parce que le test est VERT.
+  `tests/regime-coherence.test.ts` confronte l'étiquette `regime` écrite à la main à
+  `regimeExigePar` — qui lit `origine_animale`. Le 2026-08-06, **dix aliments d'origine animale**
+  n'avaient ni `origine_animale` ni `derive_de` : `nuoc_mam` (sauce de POISSON), `lait_ecreme`,
+  `mayonnaise`, `pesto`, `ossau_iraty`, `chevre_affine`, `meringue`, `nouilles_asiatiques`,
+  `chocolat_lait`, `chocolat_blanc`. Les deux côtés du test répondaient « vegetalien » sur le même
+  champ manquant, et il restait vert — alors que son en-tête dit exister pour attraper « du miel
+  dans un plat végétalien ». ✅ La règle ajoutée à `build.mjs` ne partage pas cette donnée : elle
+  confronte l'origine à l'**allergène**, écrit indépendamment, et `certitude` (`contient` vs
+  `traces`) fait le départ sans liste d'exemptions — les algues et le chocolat noir déclarent en
+  traces et restent végétaliens. **Quand un test est vert, demander sur QUOI il s'appuie pour le
+  dire, et si le sujet ne lui fournit pas lui-même sa réponse.**
+- ⚠️ **UN TEST DONT LE RÉSULTAT DÉPEND DE LA TAILLE DU CATALOGUE est vert par chance.**
+  `semaine.test.tsx` exemptait la seule clé `(date, créneau, SERVICE)` du plat visé, exigeant donc
+  que l'accompagnement du créneau visé survive à « Changer » — l'inverse de ce que la décision 54
+  promet. Il passait parce qu'avec 21 accompagnements le tirage retombait souvent sur le même ; à
+  39, il tombe sur un autre. **Le catalogue a grandi et le test a avoué.** L'exemption porte
+  désormais sur le CRÉNEAU entier — et le fait que cela suffise prouve qu'aucun autre créneau ne
+  bouge, ce que l'ancienne version ne prouvait pas.
 
 **Navigateur**
 
@@ -250,6 +293,22 @@
 a fait retirer trois affirmations déjà livrées (miel/tombes égyptiennes, oignon/réfrigérateur,
 piment/matière grasse — voir [archive/RECAP_SESSION_6.md](../archive/RECAP_SESSION_6.md) §2).
 
+- ⛔ **UN COMMENTAIRE DU DÉPÔT N'EST PAS UNE SOURCE — ET IL EN A TOUTE L'APPARENCE.** Payé le
+  2026-08-07 sur les cotes de confiance Ciqual. L'en-tête de `catalog/sources/ciqual-confiance.yaml`
+  affirmait « A = valeur dosée, source française identifiée · D = valeur calculée, imputée ou
+  empruntée » et « une cote C ou D ne veut PAS dire douteuse ». Repris tel quel par la décision 33
+  d'`ETAT.md`, puis par un écran, **la phrase a circulé trois fois sans que personne n'ouvre le
+  document ANSES.** La documentation officielle de l'export réellement importé dit l'inverse :
+  « code de confiance, qui indique la **fiabilité** de la teneur moyenne (de A=très fiable à
+  D=moins fiable) ». **Le format d'un fichier généré, le ton d'un en-tête et la reprise par un
+  document d'état ne créent aucune vérification** — ils ne font que rendre l'affirmation plus
+  difficile à mettre en doute à chaque copie. ⚠️ **Et l'ANSES ne définit que ses deux bornes** : B
+  et C n'ont aucune définition publiée, un premier jet d'écran leur en avait inventé une.
+  → **Avant de RÉAFFIRMER un fait déjà écrit dans le dépôt, remonter à la source primaire.** Le
+  coût est de dix minutes ; ici, trois emplacements portaient la même erreur.
+  → **Lire un PDF quand `WebFetch` échoue** (polices sous-ensemblées, rendu binaire) : le
+  télécharger et inflater ses flux (`zlib.inflateSync`) pour en extraire les chaînes littérales.
+  Six essais de fetch avaient échoué là où un `curl` + inflate a rendu le paragraphe.
 - ⚠️ **Le build ne vérifie que la FORME** d'une source : présence et format http(s). Il ne saura
   jamais si la page dit ce que le texte prétend. **Aucun automatisme ne remplace la relecture.**
 - ⚠️ **La liste blanche de domaines filtre l'HÉBERGEUR, jamais la NATURE du contenu.**

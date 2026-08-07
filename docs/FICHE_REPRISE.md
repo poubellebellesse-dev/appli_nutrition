@@ -110,11 +110,28 @@ Premier passage le 2026-08-05 : **deux mappings faux**, `canard_magret` (× 4,9 
 `jambon_blanc` (un rôti CRU au lieu de jambon cuit), sur 7 recettes. Aucun test ne pouvait les voir —
 un identifiant qui contredit sa ligne Ciqual ne fait rougir personne.
 
-▶ **LE CHANTIER SUIVANT, ET IL EST DE CONTENU.** Le banc rend encore **5 avertissements en
-végétalien 14 j et 9 en « végétalien + sans gluten »** : ces régimes n'ont pas assez
-d'accompagnements (18 posés sur 28 attendus, 11 sur 56). **Écrire des accompagnements végétaliens et
-sans gluten fait tomber ces deux chiffres**, et c'est la seule chose qui les fera tomber — aucun
-réglage du moteur n'invente du contenu. Chantier en cours côté utilisateur.
+✅ **LE CHANTIER D'ACCOMPAGNEMENTS EST FAIT — ET SON DIAGNOSTIC ÉTAIT FAUX (2026-08-06).** Cette
+fiche annonçait : « ces régimes n'ont pas assez d'accompagnements (18 posés sur 28 attendus) —
+écrire des accompagnements végétaliens et sans gluten fait tomber ces deux chiffres, et c'est la
+seule chose qui les fera tomber ». **Mesuré faux.** Les accompagnements végétaliens sont passés de
+**11 à 29** et le compteur n'a pas bougé d'une unité : **18 posés sur 28, avant comme après**.
+
+⛔ **LA CAUSE EST DANS LES PLATS.** `pickAccompagnement` sort si la recette posée n'est pas
+`service: 'plat'`, et `placedRecipeIds` interdit de reposer un plat dans la fenêtre — sans quoi le
+planning rendrait sept fois le même dîner. Le végétalien n'avait que **18 plats de repas principal
+pour 28 créneaux** : les 10 autres tombaient sur une entrée via la seconde passe de `pickForSlot`,
+et n'obtenaient donc **aucun** accompagnement. **« 18 accompagnements posés » n'était pas une mesure
+des accompagnements — c'était le nombre de plats, compté sous un autre nom.** Écrire **10 plats** a
+porté le compte à **28/28** et les 5 avertissements à **0**.
+
+Lot livré : **41 recettes végétaliennes ET sans gluten** — 13 petits-déjeuners (il y en avait **1**
+sur 14 attendus), 18 accompagnements, 10 plats. Catalogue **241 → 282**. « sans gluten NI lait NI
+œuf » passe de 16/21 créneaux à **21/21**.
+
+⚠️ **CE QUI RESTE** : « végétalien + sans gluten » garde **3 créneaux vides sur 56** et 21
+accompagnements sur 28 — même cause, même correctif : **des plats**. ✅ **`engine:plan-stress` le
+dit désormais tout seul** (état `SIGNAL`) au lieu de l'enfouir derrière « 20/20 configurations
+saines », ce qu'il a fait pendant toute la durée du défaut.
 
 ✅ **LA SAUVEGARDE EXISTE — décision 59, 2026-08-06.** §7 ARCHITECTURE annonçait « le point faible
 identifié de la PWA, à traiter en v1 » et posait sept mesures : **3, 4 et 5 n'étaient pas codées.**
@@ -168,7 +185,9 @@ faits** — `recipe_step.nature`, puis l'écran `#/cuisine/<id>` : écran allum�
 Les 512 minuteurs sont enfin visibles. ✅ **L1bis fait le 2026-08-06** — les **ingrédients et leurs
 quantités** s'ouvrent en fenêtre depuis n'importe quelle étape, et les portions réglées sur la fiche
 suivent la cuisson (schéma **v11**). L'écran tenait la recette entière en mémoire et n'en montrait
-aucun ingrédient.
+aucun ingrédient. ✅ **L1ter fait le 2026-08-07** — les **gestes du lexique** se déplient sur place
+dans l'étape courante (`ui/gestes-etape.tsx`, partagé avec la fiche). Même motif : la donnée était
+déjà là. ▶ **Ces deux lots épuisent ce que le mode cuisine gagnait sans donnée nouvelle.**
 ⛔ **L2 N'EST PLUS LA SUITE — il est SUSPENDU, décision 60 d'`ETAT.md` §4.** Sa justification reposait
 sur « `food` n'a ni synonyme ni alias », **faux depuis le 2026-08-05** (décision 58, piste
 parallèle), et sur un rapprochement mesuré contre **450 aliments** au lieu des **7 de la recette**.
@@ -176,7 +195,9 @@ Le besoin qu'il servait est couvert par L1bis, sans une seule des 1 101 annotati
 décide de la suite : se servir du panneau en cuisinant.** S'il suffit, L2 meurt ; sinon, **mesurer
 d'abord** le pré-remplissage automatique (certain / ambigu / rien trouvé) avant de construire quoi
 que ce soit.
-⚠️ **L1 n'a pas d'entrée de visite guidée** (`parcours.ts`) : à trancher.
+✅ **Pas d'entrée de visite guidée pour la cuisine — tranché le 2026-08-07**, ce n'est plus une dette :
+la lancer depuis Réglages naviguerait vers un `#/cuisine/<id>` en dur, et ouvrir cet écran **écrit
+la session de cuisson** (une seule ligne) — le tutoriel effacerait la cuisson en cours.
 ⛔ **L'alarme ne sonne PAS quand l'appli est fermée — c'est une décision instruite, pas un oubli** :
 les quatre voies Android coûtent toutes plus qu'elles ne rapportent. Ne pas la rouvrir sans lire
 `CONCEPTION_MODE_CUISINE.md` §5.
