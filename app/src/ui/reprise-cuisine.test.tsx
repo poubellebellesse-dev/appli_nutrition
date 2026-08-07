@@ -5,10 +5,22 @@
 // La règle est pure (`resumeDeSession`) et testée comme telle : c'est elle qui décide si le bandeau
 // existe, et elle n'a besoin d'aucun DOM pour être vraie.
 
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import type { StoredCuisineSession } from '../data/user-store.js'
+import { writeCuisineSession } from '../data/user-store.js'
+import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from './test-socle.js'
 import { PEREMPTION_CUISINE_MS } from './cuisine-session.js'
 import { anciennete, resumeDeSession } from './reprise-cuisine.js'
+
+vi.mock('./catalog-source.js', () => ({
+  chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
+  chargerConfiance: () => Promise.resolve(new Map()),
+}))
+vi.mock('./user-source.js', () => ({
+  ouvrirUserDb: () => Promise.resolve(sessionDeTest()),
+  surErreurDePersistance: () => undefined,
+}))
 
 const T0 = 1_770_000_000_000
 
@@ -62,6 +74,50 @@ describe('reprise-cuisine — quand le bandeau existe', () => {
       T0 + 6 * 60 * 60 * 1000
     )
     expect(resume?.minuteursEchus).toBe(0)
+  })
+})
+
+describe('reprise-cuisine — le bandeau à l’écran', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    reinitialiserBase()
+  })
+  afterEach(() => {
+    cleanup()
+    vi.useRealTimers()
+  })
+
+  // ⛔ CE BANDEAU REMPLACE LA NOTIFICATION D'ARRIÈRE-PLAN, et il lisait l'heure UNE FOIS. Quelqu'un
+  // posé sur « Aujourd'hui » pendant que sa cuisson finit ne voyait donc jamais la mention arriver :
+  // le seul cas qui marchait était celui où l'on ouvrait l'écran après coup. C'est exactement le
+  // reproche que la décision de ne pas sonner en arrière-plan s'était engagée à ne pas mériter.
+  it('⛔ annonce un minuteur qui arrive à terme SOUS LES YEUX, sans changer d’écran', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    writeCuisineSession(baseCourante(), {
+      recetteId: 'chakchouka',
+      ordreCourant: 2,
+      ouverteLe: Date.now(),
+      portions: null,
+      minuteurs: [{ ordre: 2, finMs: Date.now() + 30_000, pauseRestantS: null }],
+    })
+
+    const { RepriseCuisine } = await import('./reprise-cuisine.js')
+    render(<RepriseCuisine />)
+    await screen.findByText(/Reprendre la cuisson/)
+    expect(screen.queryByText(/arrivé à terme/)).toBeNull()
+
+    // ⚠️ CE `act` VIDE N'EST PAS UN ORNEMENT, ET IL A COÛTÉ UNE MISE AU POINT. La session arrive
+    // d'une promesse, donc HORS de `act` : l'effet passif qui pose l'intervalle n'est rejoué qu'à la
+    // fermeture du prochain bloc `act`. Avancer l'horloge dans ce même bloc la faisait avancer AVANT
+    // que l'intervalle existe — rien ne se déclenchait, et l'échec ressemblait à un bandeau qui ne
+    // se rafraîchit pas. `cuisine.test.tsx` n'a pas ce piège : là, l'intervalle a des dépendances
+    // vides, donc il est posé pendant le montage, que `render` enveloppe déjà.
+    await act(async () => {})
+    await act(async () => {
+      vi.advanceTimersByTime(35_000)
+    })
+
+    expect(screen.getByText('Un minuteur est arrivé à terme.')).toBeTruthy()
   })
 })
 

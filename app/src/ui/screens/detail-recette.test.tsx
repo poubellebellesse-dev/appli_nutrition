@@ -280,6 +280,53 @@ describe('detail-recette — les étapes', () => {
   })
 })
 
+// ⚠️ LES TROIS TESTS CI-DESSOUS GARDENT LE PIÈGE MAISON « un champ déclaré n'est pas un champ
+// branché », déjà payé trois fois. `recipe_step_ingredient` était REMPLI au build (93,9 % des
+// gestes) et LU par le loader depuis `5b63e5f`, mais cette fiche ne l'affichait pas : seul le mode
+// cuisine le faisait. Rien n'était rouge — un écran qui n'affiche pas une donnée qu'il possède ne
+// casse aucun type et ne fait échouer aucun test.
+//
+// ⛔ LE TROISIÈME EST LE SEUL QUI PROUVE QUELQUE CHOSE. Les deux premiers passeraient encore si la
+// ligne affichait la quantité BRUTE du YAML au lieu de celle mise à l'échelle : c'est exactement la
+// forme qu'aurait le défaut, et elle est invisible tant qu'on lit la recette à ses portions de base.
+describe('detail-recette — la quantité sous chaque étape', () => {
+  it('affiche la quantité de l’ingrédient que l’étape emploie, sous la phrase', async () => {
+    const recette = recetteDeReference()
+    await monter(recette.id)
+
+    // §1 « Casser la queue des artichauts » — `artichaut` est dérivé du texte, pas déclaré.
+    const etape1 = document.querySelectorAll('ol li')[0]!
+    expect(etape1.textContent).toContain('4 artichauts')
+    expect(etape1.textContent).toContain('Artichaut, cru')
+  })
+
+  // ⚠️ CETTE LIGNE AJOUTE, ELLE NE FILTRE JAMAIS — la seule objection qui tenait contre la
+  // décision 60. Une étape sans ingrédient ne doit pas rendre une ligne vide : elle ne rend rien.
+  it('⛔ ne rend RIEN sur une étape qui n’emploie aucun ingrédient', async () => {
+    const recette = recetteDeReference()
+    await monter(recette.id)
+
+    // §3 « Cuire jusqu'à ce qu'une feuille de la base se détache » — aucun ingrédient nommé.
+    const etape3 = document.querySelectorAll('ol li')[2]!
+    expect(etape3.textContent).toContain('une feuille de la base se détache')
+    expect(etape3.querySelector('span.tabular-nums')).toBeNull()
+  })
+
+  it('⛔ suit les portions : doubler les portions double la quantité SOUS L’ÉTAPE, pas seulement dans la liste', async () => {
+    const recette = recetteDeReference()
+    await monter(recette.id)
+
+    const quantiteSousEtape1 = () =>
+      document.querySelectorAll('ol li')[0]!.querySelector('span.tabular-nums')?.textContent
+    expect(quantiteSousEtape1()).toBe('4 artichauts')
+
+    const boutonPlus = document.querySelector('button[aria-label="Une portion de plus"]') as HTMLButtonElement
+    for (let i = 0; i < recette.portionsBase; i++) fireEvent.click(boutonPlus)
+
+    await waitFor(() => expect(quantiteSousEtape1()).toBe('8 artichauts'))
+  })
+})
+
 describe('detail-recette — les origines', () => {
   it('affiche la cuisine d’origine d’une recette du catalogue, drapeau ET libellé ensemble', async () => {
     // §« Origines » l'exige : un drapeau seul est illisible sur Windows (pas de glyphe) et muet

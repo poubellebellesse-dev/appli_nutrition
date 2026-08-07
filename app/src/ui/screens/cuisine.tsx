@@ -22,7 +22,7 @@
 // demanderait d'extraire le composant » — l'extraction a été faite (`ui/gestes-etape.tsx`), le motif
 // tombe. C'était le dernier manque de cet écran qui ne réclamait AUCUNE donnée nouvelle.
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Catalog, Recipe, RecipeId, RecipeStep } from '../../engine/domain/index.js'
 import type { UserDb } from '../../data/user-db.js'
 import {
@@ -36,7 +36,12 @@ import { chargerSocle } from '../socle.js'
 import { hashDeRecette } from '../router.js'
 import { creerAlarme, type Alarme } from '../alarme.js'
 import { garderEcranAllume, veillePossible } from '../ecran-allume.js'
-import { etatMinuteur, formaterDuree, libelleMinuteur } from '../cuisine-session.js'
+import {
+  etatMinuteur,
+  formaterDuree,
+  libelleMinuteur,
+  sonnerieEncoreJuste,
+} from '../cuisine-session.js'
 import { GestesDeLEtape } from '../gestes-etape.js'
 import { ListeIngredients, QuantitesDeLEtape, SelecteurPortions } from '../ingredients-recette.js'
 import { Panneau } from '../panneau.js'
@@ -74,17 +79,20 @@ export function Cuisine({
   const [ecranTenu, setEcranTenu] = useState(false)
   const [alarmeSur, setAlarmeSur] = useState<number | null>(null)
   const [ingredientsOuverts, setIngredientsOuverts] = useState(false)
+  const [finAConfirmer, setFinAConfirmer] = useState(false)
 
   // L'alarme survit aux rendus : la recréer relâcherait le contexte audio déverrouillé sur le geste.
   const alarme = useRef<Alarme | null>(null)
   alarme.current ??= creerAlarme()
 
   /**
-   * Les minuteurs déjà échus au MOMENT DE L'OUVERTURE ne sonnent pas.
+   * Les minuteurs dont le sort est déjà réglé : ils ont sonné, ou il était trop tard pour sonner.
    *
-   * ⚠️ SANS CE GARDE-FOU, reprendre une cuisson déclencherait l'alarme pour un plat sorti du feu
-   * depuis quarante minutes — le mensonge exact que le point 7 existe pour empêcher, retourné en
-   * son contraire sonore.
+   * ⚠️ CE `Set` NE DÉCIDE PLUS DE RIEN, IL SE CONTENTE DE NE PAS RÉPÉTER. C'est `sonnerieEncoreJuste`
+   * qui tranche, sur l'ANCIENNETÉ de l'échéance et non sur le fait qu'on vienne de monter l'écran —
+   * un semis au montage ne voyait ni le retour d'arrière-plan sans démontage (ça sonnait pour un plat
+   * sorti du feu depuis quarante minutes) ni la réouverture trois secondes après l'échéance (ça se
+   * taisait alors que ça venait d'arriver). Le raisonnement complet est sur `sonnerieEncoreJuste`.
    */
   const dejaSonnes = useRef<Set<number>>(new Set())
 
@@ -117,11 +125,6 @@ export function Cuisine({
               portions: portionsDemandees,
               minuteurs: [],
             }
-        if (reprise) {
-          for (const t of courante.minuteurs) {
-            if (etatMinuteur(t, Date.now()).mode === 'termine') dejaSonnes.current.add(t.ordre)
-          }
-        }
         // Une session neuve s'écrit toujours ; une reprise SEULEMENT si le lien a changé les
         // portions. Réécrire à chaque ouverture ferait repasser les minuteurs par un DELETE/INSERT
         // sans aucune raison.
@@ -186,16 +189,47 @@ export function Cuisine({
     if (session === null || alarme.current === null) return
     for (const t of session.minuteurs) {
       if (dejaSonnes.current.has(t.ordre)) continue
-      if (etatMinuteur(t, maintenant).mode !== 'termine') continue
+      const etatT = etatMinuteur(t, maintenant)
+      if (etatT.mode !== 'termine') continue
+      // Marqué AVANT le tri : un minuteur trop vieux est réglé une fois pour toutes, il ne doit pas
+      // être réexaminé à chaque battement de seconde pendant toute la cuisson.
       dejaSonnes.current.add(t.ordre)
-      // ⚠️ LA FENÊTRE DES INGRÉDIENTS SE FERME À LA SONNERIE. `Panneau` passe par un portail posé
-      // après cet écran : ouverte, elle recouvrirait la surface « appuyez n'importe où » et l'arrêt
-      // de l'alarme deviendrait introuvable. Une casserole qui sonne prime sur une liste qu'on lit.
+      // ⛔ ON NE SONNE QUE POUR CE QUI VIENT D'ARRIVER. Reprendre une cuisson — ou revenir
+      // d'arrière-plan sans que l'écran ait été démonté — ne doit pas déclencher l'alarme pour un
+      // plat sorti du feu depuis quarante minutes. Le seuil et son raisonnement sont sur
+      // `sonnerieEncoreJuste` ; l'écran, lui, dit la vérité dans tous les cas (« terminé il y a N »).
+      if (!sonnerieEncoreJuste(etatT.depuisS)) continue
+      // ⚠️ TOUTE FENÊTRE SE FERME À LA SONNERIE. `Panneau` passe par un portail posé après cet
+      // écran : ouverte, elle recouvrirait la surface « appuyez n'importe où » et l'arrêt de
+      // l'alarme deviendrait introuvable. Une casserole qui sonne prime sur ce qu'on était en train
+      // de lire — et ça vaut pour la confirmation de fin autant que pour les ingrédients.
       setIngredientsOuverts(false)
+      setFinAConfirmer(false)
       setAlarmeSur(t.ordre)
       alarme.current.sonner(() => setAlarmeSur(null))
     }
   }, [maintenant, session])
+
+  // `null` en session = AUCUN CHOIX EXPRIMÉ (schéma v11), pas « 4 » : on retombe alors sur les
+  // portions de la recette. C'est ici, et seulement ici, que la recette a le dernier mot — ni le
+  // routeur ni le store ne connaissent `portionsBase`.
+  const portions = session?.portions ?? (etat.phase === 'pret' ? etat.recette.portionsBase : 0)
+
+  /**
+   * ⚠️ MÉMOÏSÉ, ET CE N'EST PAS UN CONFORT D'ÉCRITURE. `quantitePour` RAPPELLE `scaleRecipe` à chaque
+   * appel, il y en a deux par rendu (la ligne sous l'étape, la fenêtre), et le battement de seconde
+   * re-rend cet écran 3 600 fois par heure. Sur le seul écran de l'appli conçu pour rester allumé
+   * pendant toute une cuisson, c'était 7 200 passes moteur et 7 200 `Map` neuves par heure pour une
+   * valeur qui ne bouge qu'au changement de portions — et autant de rendus forcés chez les enfants,
+   * l'identité de la `Map` changeant à chaque seconde.
+   *
+   * ⚠️ AU-DESSUS DES RETOURS ANTICIPÉS, COMME TOUT HOOK. D'où le `portions` hissé juste avant et son
+   * repli à `0` hors de la phase `pret` : la valeur n'est alors lue par personne.
+   */
+  const quantites = useMemo(
+    () => (etat.phase === 'pret' ? etat.quantitePour(portions) : new Map<string, number>()),
+    [etat, portions]
+  )
 
   if (etat.phase === 'chargement') return <p className="p-6 text-texte-doux">Chargement…</p>
   if (etat.phase === 'introuvable') {
@@ -209,14 +243,9 @@ export function Cuisine({
     )
   }
 
-  const { recette, catalogue, quantitePour } = etat
+  const { recette, catalogue } = etat
   const gestes = gestesDe(recette)
   const avertissements = recette.etapes.filter((e) => e.nature === 'avertissement')
-
-  // `null` en session = AUCUN CHOIX EXPRIMÉ (schéma v11), pas « 4 » : on retombe alors sur les
-  // portions de la recette. C'est ici, et seulement ici, que la recette a le dernier mot — ni le
-  // routeur ni le store ne connaissent `portionsBase`.
-  const portions = session?.portions ?? recette.portionsBase
   const facteur = portions / (recette.portionsBase > 0 ? recette.portionsBase : 1)
 
   const changerPortions = (n: number): void => {
@@ -270,6 +299,25 @@ export function Cuisine({
     alarme.current?.arreter()
     clearCuisineSession(etat.db)
     window.location.hash = hashDeRecette(recetteId)
+  }
+
+  /**
+   * ⛔ « TERMINER » EFFAÇAIT DES MINUTEURS EN COURS SANS UN MOT, et le cas n'a rien d'exotique : la
+   * dernière étape d'un plat est souvent un repos (« laisser reposer 10 min »), on lance son
+   * minuteur, et le bouton qui clôt le déroulé est juste à côté. `clearCuisineSession` emporte la
+   * ligne et ses enfants — le décompte disparaît sans trace.
+   *
+   * ⚠️ ON NE DEMANDE RIEN QUAND IL N'Y A RIEN À PERDRE. Une confirmation systématique est une
+   * confirmation qu'on cesse de lire au troisième plat, et elle aurait alors coûté la seule chose
+   * qu'elle protège. Un minuteur `termine` ne compte pas : il n'a plus rien à décompter.
+   */
+  const minuteursVivants = (session?.minuteurs ?? []).filter(
+    (t) => etatMinuteur(t, maintenant).mode !== 'termine'
+  )
+
+  const demanderFin = (): void => {
+    if (minuteursVivants.length === 0) terminer()
+    else setFinAConfirmer(true)
   }
 
   const stopperAlarme = (): void => {
@@ -332,7 +380,7 @@ export function Cuisine({
               cuisiner, pas au fourneau où il est trop tard pour en tenir compte. */}
           <ListeIngredients
             ingredients={recette.ingredients}
-            quantites={quantitePour(portions)}
+            quantites={quantites}
             facteur={facteur}
             nomAliment={(foodId) => catalogue.foods.get(foodId as never)?.nom ?? foodId}
             estFondDePlacard={(foodId) => catalogue.foods.get(foodId as never)?.fondDePlacard === true}
@@ -357,7 +405,7 @@ export function Cuisine({
           <QuantitesDeLEtape
             ingredients={recette.ingredients}
             foodIds={etape.foodIds}
-            quantites={quantitePour(portions)}
+            quantites={quantites}
             facteur={facteur}
             nomAliment={(foodId) => catalogue.foods.get(foodId as never)?.nom ?? foodId}
             estFondDePlacard={(foodId) => catalogue.foods.get(foodId as never)?.fondDePlacard === true}
@@ -398,6 +446,11 @@ export function Cuisine({
             {session.minuteurs
               .filter((t) => t.ordre !== etape?.ordre)
               .map((t) => {
+                // ⚠️ `-1` EST POSSIBLE, ET IL AFFICHAIT « Étape 0 ». Une recette modifiée pendant sa
+                // cuisson — l'éditeur de recette existe — ou renumérotée par une mise à jour de
+                // catalogue laisse un minuteur qui ne pointe plus aucun geste. On préfère alors une
+                // ligne SANS numéro : le décompte reste là, il ne ment simplement plus sur son
+                // origine. Le faire disparaître serait pire — c'est un décompte qu'on oublie.
                 const rangT = gestes.findIndex((e) => e.ordre === t.ordre)
                 return (
                   <li
@@ -405,7 +458,8 @@ export function Cuisine({
                     className="flex items-center justify-between rounded-[--radius-carte] border border-bordure bg-surface px-4 py-2"
                   >
                     <span className="text-[1.02rem] text-texte">
-                      Étape {rangT + 1} — {libelleMinuteur(etatMinuteur(t, maintenant))}
+                      {rangT >= 0 && `Étape ${rangT + 1} — `}
+                      {libelleMinuteur(etatMinuteur(t, maintenant))}
                     </span>
                     <button
                       type="button"
@@ -443,7 +497,11 @@ export function Cuisine({
         {derniere ? (
           <button
             type="button"
-            onClick={terminer}
+            onClick={demanderFin}
+            // ⚠️ `aria-haspopup` CONDITIONNEL, et c'est la seule forme honnête : ce bouton n'ouvre une
+            // fenêtre que s'il y a un minuteur à perdre. L'annoncer toujours mentirait une fois sur
+            // deux, ne l'annoncer jamais mentirait l'autre fois.
+            aria-haspopup={minuteursVivants.length > 0 ? 'dialog' : undefined}
             className="min-h-tactile flex-1 rounded-[--radius-carte] bg-accent-plein px-4 text-[1.05rem] font-semibold text-white"
           >
             Terminer la cuisson
@@ -458,6 +516,35 @@ export function Cuisine({
           </button>
         )}
       </div>
+
+      {finAConfirmer && (
+        <Panneau titre="Terminer la cuisson ?" onFermer={() => setFinAConfirmer(false)}>
+          {/* On dit CE QU'ON PERD, pas « êtes-vous sûr ». La question générique n'apprend rien à
+              quelqu'un qui a les mains occupées ; le nombre de décomptes en cours, si. */}
+          <p className="text-[1.05rem] leading-relaxed text-texte">
+            {minuteursVivants.length === 1
+              ? 'Un minuteur tourne encore. Terminer la cuisson l’efface.'
+              : `${minuteursVivants.length} minuteurs tournent encore. Terminer la cuisson les efface.`}
+          </p>
+          <div className="mt-5 flex gap-3">
+            {/* Le retour en arrière d'abord, et en premier au clavier : c'est le choix sans risque. */}
+            <button
+              type="button"
+              onClick={() => setFinAConfirmer(false)}
+              className="min-h-tactile flex-1 rounded-[--radius-carte] border border-bordure-forte bg-fond px-4 text-[1.05rem] font-semibold text-accent-texte"
+            >
+              Continuer la cuisson
+            </button>
+            <button
+              type="button"
+              onClick={terminer}
+              className="min-h-tactile flex-1 rounded-[--radius-carte] bg-accent-plein px-4 text-[1.05rem] font-semibold text-white"
+            >
+              Terminer quand même
+            </button>
+          </div>
+        </Panneau>
+      )}
 
       {/* ⚠️ ARRÊT PAR APPUI N'IMPORTE OÙ, validé à l'essai. Un bouton précis à viser demande de
           regarder l'écran — c'est-à-dire exactement ce qu'on ne fait pas les mains occupées. */}

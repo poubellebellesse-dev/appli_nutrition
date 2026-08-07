@@ -226,8 +226,18 @@ CREATE TABLE user_cuisine_timer (
 - ⚠️ **`INSERT … ON CONFLICT DO UPDATE`, jamais `INSERT OR REPLACE`** — la session a des minuteurs
   enfants, c'est le piège déjà payé (`reference/PIEGES.md`). Verrouillé par un test qui réécrit la
   session et vérifie que ses minuteurs sont toujours là.
-- **Péremption : 12 h.** Le bandeau affiche l'ancienneté (« commencée il y a 2 h ») et se referme
-  seul au-delà. ⚠️ Seuil arbitraire, posé faute de mieux — à revoir au premier retour d'usage.
+- **Péremption : 12 h, comptées depuis la FIN DU DERNIER MINUTEUR** — et non depuis l'ouverture
+  (corrigé le 2026-08-07, question D de §8 fermée). Le bandeau affiche l'ancienneté (« commencée il y
+  a 2 h ») et se referme seul au-delà.
+  ⛔ **Mesurer depuis `ouverteLe` seul était un défaut, et c'est le CATALOGUE qui l'a prouvé** :
+  `coq-au-vin` marine **43 200 s — exactement le seuil**. Une marinade lancée à 20 h aboutissait à
+  8 h et la session était périmée à 8 h, **à la seconde même où elle avait quelque chose à
+  annoncer** ; le bandeau « un minuteur est arrivé à terme » était structurellement inatteignable
+  pour cette recette et pour `hareng-pommes-terre-tiedes`.
+  ⚠️ **Conséquence assumée, et c'est elle qu'on voulait : un minuteur qui n'a pas fini rend sa
+  session IMPÉRISSABLE**, quel que soit son âge — son échéance est dans l'avenir, l'écart est
+  négatif. ⚠️ **Une pause ne prolonge rien** : elle ne porte pas d'échéance, donc elle n'a rien à
+  repousser — sinon une cuisson mise en pause et oubliée resterait proposée pour toujours.
 
 ### 4.1 Ce qu'a touché L1 (relevé après coup)
 
@@ -433,7 +443,29 @@ Ils encodent les décisions plutôt que le rendu. Où ils vivent : **`screens/cu
 **Un neuvième s'est ajouté à l'écriture, et il n'était pas dans le plan :** ⛔ **l'alarme ne sonne
 PAS pour un minuteur déjà échu à l'ouverture.** Sans ce garde-fou, reprendre une cuisson déclenche
 la sonnerie pour un plat sorti du feu depuis quarante minutes — le mensonge du point 7 retourné en
-son contraire sonore. Le code le tient par un `Set` des minuteurs échus au montage.
+son contraire sonore.
+
+⚠️ **SA PREMIÈRE IMPLÉMENTATION ÉTAIT UN `Set` DES MINUTEURS ÉCHUS AU MONTAGE, ET ELLE VISAIT À CÔTÉ
+— corrigé le 2026-08-07.** Elle répondait à « l'écran vient-il d'être monté » là où la question est
+« est-ce encore vrai », d'où deux trous opposés qu'aucun test ne pouvait voir, `jsdom` ne sachant
+produire ni l'un ni l'autre :
+
+- **retour d'arrière-plan sans démontage** — téléphone en poche quarante minutes, le battement de
+  seconde reprend, le minuteur devient `termine` sans avoir été semé : **ça sonnait**, exactement
+  pour le plat que le garde-fou devait protéger ;
+- **réouverture trois secondes après l'échéance** — le semis l'attrapait et **supprimait la sonnerie
+  en silence**, alors qu'elle venait d'arriver.
+
+La règle est désormais `sonnerieEncoreJuste(depuisS)` dans `cuisine-session.ts`, appliquée à **chaque
+battement** et plus seulement au montage. ⚠️ **Son seuil n'est pas un nombre choisi : c'est
+`ARRET_AUTO_MS`, importé et non recopié.** Elle se lit « l'alarme serait-elle ENCORE en train de
+sonner si quelqu'un avait été là ? » — en deçà, sonner ne fait que reprendre ce qui aurait eu lieu ;
+au-delà, elle aurait déjà renoncé seule. Le `Set` subsiste, mais **il ne décide plus rien** : il
+empêche seulement de répéter.
+
+⚠️ **Ce que ça ne couvre pas, et c'est assumé** : l'acquittement n'est pas persisté. Quitter l'écran
+puis y revenir **dans les cinq minutes** suivant une échéance refait sonner. Le corriger demanderait
+une colonne de plus au schéma — hors de proportion avec la gêne.
 
 ⚠️ **Le déverrouillage audio n'est PAS testable en Vitest.** `jsdom` n'implémente pas la politique
 d'autoplay : un test vert ne prouverait rien. C'est un **point de vérification manuelle sur
@@ -523,7 +555,7 @@ Gradle de Capacitor 8, qui attend du 17 ou du 21.
 | # | Question | Piste |
 |---|---|---|
 | C | Entrée dans le mode depuis « Aujourd'hui » **autrement que pour reprendre** | Le bandeau de reprise couvre le retour ; démarrer une cuisson depuis l'accueil dépend de L4 |
-| D | Le seuil de péremption du bandeau (12 h) | Arbitraire, posé faute de mieux. À revoir au premier retour d'usage |
+| ~~D~~ | ~~Le seuil de péremption du bandeau (12 h)~~ | ✅ **Fermée le 2026-08-07 — le seuil n'était pas le problème, le POINT DE RÉFÉRENCE l'était.** Les 12 h sont inchangées ; elles se comptent depuis la fin du dernier minuteur (§4.0). Le retour d'usage qu'on attendait était dans le catalogue : `coq-au-vin` marine 43 200 s, **exactement le seuil** |
 | E | Cuisine partagée **sur plusieurs appareils** | ⚠️ **Pas interdit par le principe 2** — le partage `.nutri-recipe` fait déjà sortir des données à l'initiative de l'utilisateur. Bloqué par le coût : plugin Bluetooth natif, permissions à l'exécution, état distribué (qui gagne si deux personnes avancent l'étape ?). Et un téléphone posé au milieu absorbe l'essentiel du besoin. **v2** |
 
 ---

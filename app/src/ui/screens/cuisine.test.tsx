@@ -108,6 +108,18 @@ describe('cuisine — les minuteurs', () => {
     expect(screen.getByText('Lancer le minuteur (12:00)')).toBeTruthy()
   })
 
+  // ⛔ LE DÉFAUT SE LISAIT À L'ÉCRAN, SUR DU CONTENU COMMITÉ. `coq-au-vin` fait mariner 43 200 s
+  // (« la veille de préférence ») : en `mm:ss`, ce bouton annonçait « Lancer le minuteur (720:00) »
+  // et le décompte affichait « 719:59 » en 2,2 rem. 22 recettes du catalogue portent un minuteur de
+  // plus d'une heure — ce n'était pas un cas limite. La règle de format est testée à part dans
+  // `cuisine-session.test.ts` ; ici on vérifie qu'elle atteint bien l'écran, sur une vraie recette.
+  it('⛔ un minuteur de douze heures s’annonce en heures, jamais en « 720:00 »', async () => {
+    await monter('coq_au_vin')
+
+    expect(screen.getByText('Lancer le minuteur (12 h 00)')).toBeTruthy()
+    expect(screen.queryByText(/720:00/)).toBeNull()
+  })
+
   // ⛔ Un décompte qui disparaît quand on tourne la page est un décompte qu'on oublie — et il porte
   // le numéro de SON étape, sinon on ne sait plus ce qu'il compte.
   it('⛔ un minuteur SURVIT au changement d’étape, étiqueté par son étape', async () => {
@@ -205,6 +217,43 @@ describe('cuisine — reprendre une cuisson', () => {
     expect(screen.queryByRole('button', { name: 'Arrêter l’alarme' })).toBeNull()
   })
 
+  // ⛔ LE TROU SYMÉTRIQUE DU PRÉCÉDENT, ET IL ÉTAIT SILENCIEUX. Le garde-fou d'origine semait un
+  // `Set` des minuteurs échus AU MONTAGE : il supprimait donc la sonnerie de TOUT minuteur déjà
+  // échu, y compris celui qui venait d'aboutir pendant qu'on posait le téléphone. Le seuil qui
+  // sépare les deux cas est l'arrêt automatique de l'alarme (`sonnerieEncoreJuste`).
+  it('⛔ SONNE pour un minuteur qui vient d’aboutir, même à l’ouverture', async () => {
+    writeCuisineSession(baseCourante(), {
+      recetteId: CHAKCHOUKA,
+      ordreCourant: 2,
+      ouverteLe: Date.now() - 20 * 60 * 1000,
+      portions: null,
+      minuteurs: [{ ordre: 2, finMs: Date.now() - 30 * 1000, pauseRestantS: null }],
+    })
+
+    await monter()
+    expect(await screen.findByRole('button', { name: 'Arrêter l’alarme' })).toBeTruthy()
+  })
+
+  // ⛔ « ÉTAPE 0 » S'AFFICHAIT. Une recette modifiée pendant sa cuisson — l'éditeur de recette
+  // existe — ou renumérotée par une mise à jour de catalogue laisse un minuteur qui ne pointe plus
+  // aucun geste : `findIndex` rend `-1` et la ligne annonçait « Étape 0 — il reste 4:12 ».
+  // ⚠️ Le décompte doit RESTER : le faire disparaître serait pire, c'est un décompte qu'on oublie.
+  it('⛔ un minuteur dont l’étape a disparu perd son numéro, jamais son décompte', async () => {
+    writeCuisineSession(baseCourante(), {
+      recetteId: CHAKCHOUKA,
+      ordreCourant: 1,
+      ouverteLe: Date.now(),
+      portions: null,
+      minuteurs: [{ ordre: 99, finMs: Date.now() + 5 * 60 * 1000, pauseRestantS: null }],
+    })
+
+    await monter()
+
+    const encours = screen.getByRole('heading', { name: 'Minuteurs en cours' }).parentElement
+    expect(encours?.textContent).toMatch(/il reste/)
+    expect(encours?.textContent).not.toContain('Étape 0')
+  })
+
   it('une session d’une AUTRE recette ne se reprend pas ici', async () => {
     writeCuisineSession(baseCourante(), {
       recetteId: 'omelette_fines_herbes',
@@ -234,6 +283,49 @@ describe('cuisine — l’alarme', () => {
     const arret = screen.getByRole('button', { name: 'Arrêter l’alarme' })
     fireEvent.click(arret)
     expect(screen.queryByRole('button', { name: 'Arrêter l’alarme' })).toBeNull()
+  })
+})
+
+describe('cuisine — terminer', () => {
+  // ⛔ LE CAS N'A RIEN D'EXOTIQUE : la dernière étape d'un plat est souvent un repos, on lance son
+  // minuteur, et le bouton qui clôt le déroulé est juste à côté. `clearCuisineSession` emportait la
+  // ligne ET ses enfants, sans un mot.
+  it('⛔ ne jette pas un minuteur en cours sans le dire', async () => {
+    await monter()
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+    for (let i = 0; i < 3; i++) fireEvent.click(screen.getByText('Étape suivante →'))
+
+    fireEvent.click(screen.getByText('Terminer la cuisson'))
+
+    expect(within(screen.getByRole('dialog')).getByText(/minuteur tourne encore/)).toBeTruthy()
+    // ⚠️ CE QUI COMPTE : rien n'a encore été effacé. Une fenêtre qui s'ouvre APRÈS la destruction
+    // serait une politesse, pas un garde-fou.
+    expect(readCuisineSession(baseCourante())).not.toBeNull()
+  })
+
+  // ⚠️ Une confirmation systématique est une confirmation qu'on cesse de lire au troisième plat —
+  // elle aurait alors coûté la seule chose qu'elle protège.
+  it('sans minuteur en cours, termine sans rien demander', async () => {
+    await monter()
+    for (let i = 0; i < 4; i++) fireEvent.click(screen.getByText('Étape suivante →'))
+
+    fireEvent.click(screen.getByText('Terminer la cuisson'))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(readCuisineSession(baseCourante())).toBeNull()
+  })
+
+  it('« Terminer quand même » va au bout', async () => {
+    await monter()
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+    for (let i = 0; i < 3; i++) fireEvent.click(screen.getByText('Étape suivante →'))
+
+    fireEvent.click(screen.getByText('Terminer la cuisson'))
+    fireEvent.click(within(screen.getByRole('dialog')).getByText('Terminer quand même'))
+
+    expect(readCuisineSession(baseCourante())).toBeNull()
   })
 })
 

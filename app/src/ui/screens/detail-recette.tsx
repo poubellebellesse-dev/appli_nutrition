@@ -25,7 +25,7 @@ import type { OrigineRecette } from '../router.js'
 import { hashDe, hashDeLAliment, hashDeLEditeur, hashDeLaCuisine, hashDeRecette, hashDuFrigo } from '../router.js'
 import { estRecettePerso, readUserRecipe } from '../../data/user-recipe.js'
 import { GestesDeLEtape } from '../gestes-etape.js'
-import { ListeIngredients, SelecteurPortions } from '../ingredients-recette.js'
+import { ListeIngredients, QuantitesDeLEtape, SelecteurPortions } from '../ingredients-recette.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
 
@@ -324,7 +324,15 @@ export function DetailRecette({
         {recette.etapes
           .filter((etape) => etape.nature === 'geste')
           .map((etape, index) => (
-            <Etape key={etape.ordre} numero={index + 1} etape={etape} catalogue={vue.catalogue} />
+            <Etape
+              key={etape.ordre}
+              numero={index + 1}
+              etape={etape}
+              catalogue={vue.catalogue}
+              ingredients={recette.ingredients}
+              quantites={quantites}
+              facteur={facteur}
+            />
           ))}
       </ol>
 
@@ -490,10 +498,17 @@ function Etape({
   numero,
   etape,
   catalogue,
+  ingredients,
+  quantites,
+  facteur,
 }: {
   readonly numero: number
   readonly etape: RecipeStep
   readonly catalogue: Catalog
+  readonly ingredients: Recipe['ingredients']
+  /** Grammes DÉJÀ mis à l'échelle des portions affichées, par `foodId`. */
+  readonly quantites: ReadonlyMap<string, number>
+  readonly facteur: number
 }) {
   return (
     <li className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
@@ -511,6 +526,22 @@ function Etape({
           à cette fiche seule : le mode cuisine, qui ne porte pas de pastille numérotée, n'en veut
           pas — c'est pourquoi il est ici et non dans le composant partagé. */}
       <div className="pl-12">
+        {/* ⚠️ MÊME COMPOSANT QU'EN MODE CUISINE, pas une recopie — `ui/ingredients-recette.tsx`.
+            Ici la liste complète est déjà en haut de page : la ligne évite de remonter, elle ne
+            remplace rien. Elle est donc un AJOUT et jamais un filtre — un lien manqué par la
+            dérivation (6 % des gestes) laisse l'étape telle qu'elle était, il n'escamote aucun
+            ingrédient. C'est la seule objection qui tenait contre la décision 60.
+
+            ⚠️ `foodIds` EST DÉRIVÉ AU BUILD, jamais saisi dans le YAML : une étape qui n'emploie
+            aucun ingrédient — « Préchauffer le four » — ne rend rien du tout, pas une ligne vide. */}
+        <QuantitesDeLEtape
+          ingredients={ingredients}
+          foodIds={etape.foodIds}
+          quantites={quantites}
+          facteur={facteur}
+          nomAliment={(foodId) => catalogue.foods.get(foodId as never)?.nom ?? foodId}
+          estFondDePlacard={(foodId) => catalogue.foods.get(foodId as never)?.fondDePlacard === true}
+        />
         <GestesDeLEtape etape={etape} catalogue={catalogue} />
       </div>
     </li>

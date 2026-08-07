@@ -30,7 +30,10 @@ export function resumeDeSession(
   session: StoredCuisineSession | null,
   maintenant: number
 ): { readonly recetteId: string; readonly depuis: string | null; readonly minuteursEchus: number } | null {
-  if (session === null || sessionPerimee(session.ouverteLe, maintenant)) return null
+  // ⚠️ LA PÉREMPTION SE COMPTE DEPUIS LA FIN DU DERNIER MINUTEUR, pas depuis l'ouverture : une
+  // marinade de 12 h faisait autrement disparaître le bandeau à la seconde où elle aboutissait.
+  // Voir `fraicheurDe` dans `cuisine-session.ts`.
+  if (session === null || sessionPerimee(session, maintenant)) return null
   return {
     recetteId: session.recetteId,
     depuis: anciennete(session.ouverteLe, maintenant),
@@ -40,6 +43,7 @@ export function resumeDeSession(
 
 export function RepriseCuisine({ nomDeRecette }: { readonly nomDeRecette?: (id: string) => string }) {
   const [session, setSession] = useState<StoredCuisineSession | null>(null)
+  const [maintenant, setMaintenant] = useState(() => Date.now())
 
   useEffect(() => {
     let vivant = true
@@ -55,7 +59,23 @@ export function RepriseCuisine({ nomDeRecette }: { readonly nomDeRecette?: (id: 
     }
   }, [])
 
-  const resume = resumeDeSession(session, Date.now())
+  /**
+   * ⛔ SANS BATTEMENT, CE BANDEAU LISAIT L'HEURE UNE FOIS ET N'Y REVENAIT JAMAIS. Or c'est LUI qui
+   * remplace la notification d'arrière-plan (§5) : quelqu'un posé sur « Aujourd'hui » pendant que sa
+   * cuisson finit ne voyait jamais apparaître « un minuteur est arrivé à terme », et l'ancienneté
+   * restait figée à ce qu'elle valait en arrivant. Le seul cas qui marchait était celui où l'on
+   * ouvrait l'écran APRÈS coup.
+   *
+   * ⚠️ IL NE TOURNE QUE S'IL Y A UNE CUISSON — c'est-à-dire presque jamais. Un intervalle permanent
+   * sur l'écran d'accueil pour un bandeau qui n'existe pas serait payé par tout le monde.
+   */
+  useEffect(() => {
+    if (session === null) return undefined
+    const battement = setInterval(() => setMaintenant(Date.now()), 1000)
+    return () => clearInterval(battement)
+  }, [session])
+
+  const resume = resumeDeSession(session, maintenant)
   if (resume === null) return null
 
   const nom = nomDeRecette?.(resume.recetteId) ?? resume.recetteId
