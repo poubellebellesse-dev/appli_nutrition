@@ -2084,6 +2084,29 @@ foods:
       vitamine_c_mg: 10.7
     allergenes: []
 
+  - id: chou_blanc
+    code_ciqual: "20116"
+    nom: "Chou blanc, cru"
+    groupe: "légumes"
+    poids_piece_g: 1000
+    sous_famille: "chou"
+    # `toute_annee` ET `saison_mois` : deux dimensions indépendantes (voir build.mjs). Le chou blanc
+    # se garde des mois en cave ou en chambre froide — donc disponible toute l'année — mais sa
+    # pleine saison reste l'automne et l'hiver.
+    saison_mois: [10, 11, 12, 1, 2, 3]
+    toute_annee: true
+    nutriments:
+      energie_kcal: 35.2
+      proteines_g: 1.38
+      lipides_g: 0.6
+      glucides_g: 4.63
+      fibres_g: 3.5
+      fer_mg: 0.3
+      calcium_mg: 59
+      sodium_mg: 13
+      vitamine_c_mg: 8.88
+    allergenes: []
+
   - id: chou_vert
     code_ciqual: "20069"
     nom: "Chou vert, cru"
