@@ -1,0 +1,104 @@
+id: courge_spaghetti_tomate_olives
+nom: "Courge spaghetti à la tomate, aux olives et aux câpres"
+origine: maison
+description: >
+  La chair de la courge se détache en filaments sous la fourchette et se mêle à une tomate compotée
+  d'olives noires, de câpres et de pois chiches.
+temps_prep_min: 20
+temps_cuisson_min: 40
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.3
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: courge_spaghetti
+    quantite_g: 1400
+    unite_affichage: "1 courge spaghetti"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 400
+    unite_affichage: "4 tomates"
+    optionnel: false
+  - food_id: pois_chiches
+    quantite_g: 250
+    unite_affichage: "1 boîte égouttée"
+    optionnel: false
+  - food_id: olive_noire
+    quantite_g: 80
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: capre
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: pignon_pin
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 15
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Couper la courge spaghetti en deux dans la longueur et retirer les graines."
+    lexicon_ids: [prechauffer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Badigeonner les moitiés d'un filet d'huile d'olive, les poser face coupée contre la plaque et enfourner."
+    lexicon_ids: [badigeonner, enfourner]
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Pendant ce temps, concasser les tomates et les laisser compoter à feu doux avec l'ail haché et le reste d'huile."
+    lexicon_ids: [concasser, hacher]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter les olives dénoyautées, les câpres rincées et les pois chiches égouttés."
+    lexicon_ids: [denoyauter, rincer, egoutter]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Racler la chair de la courge à la fourchette pour en détacher les filaments, puis les mêler à la sauce chaude."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Faire dorer les pignons à sec dans une poêle et en parsemer le plat, avec le basilic ciselé."
+    lexicon_ids: [dorer, parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: provencale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

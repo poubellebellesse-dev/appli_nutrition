@@ -1,0 +1,112 @@
+id: goulash_legumes_paprika_carvi
+nom: "Goulash de légumes au paprika et au carvi"
+origine: maison
+description: >
+  Pommes de terre et poivrons mijotés longuement dans une base d'oignons au paprika, relevés de carvi
+  et complétés de haricots rouges.
+temps_prep_min: 20
+temps_cuisson_min: 55
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+piquant: 0
+saison_mois: []
+envergure: convivial
+conservation_jours: 4
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.7
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: pomme_de_terre
+    quantite_g: 700
+    unite_affichage: "5 pommes de terre"
+    optionnel: false
+  - food_id: poivron_rouge
+    quantite_g: 300
+    unite_affichage: "2 poivrons rouges"
+    optionnel: false
+  - food_id: poivron_jaune
+    quantite_g: 150
+    unite_affichage: "1 poivron jaune"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 300
+    unite_affichage: "3 tomates"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 220
+    unite_affichage: "2 oignons"
+    optionnel: false
+  - food_id: haricot_rouge
+    quantite_g: 400
+    unite_affichage: "1 boîte égouttée"
+    optionnel: false
+  - food_id: concentre_tomate
+    quantite_g: 40
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: paprika
+    quantite_g: 12
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: carvi
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_tournesol
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Émincer les oignons et les faire revenir doucement dans l'huile de tournesol, jusqu'à ce qu'ils blondissent."
+    lexicon_ids: [emincer, revenir]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Retirer la cocotte du feu avant d'ajouter le paprika et le carvi : la poudre brûle en quelques secondes sur un fond chaud."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter l'ail haché, le concentré de tomate, les tomates concassées, puis mouiller d'un grand verre d'eau."
+    lexicon_ids: [hacher, concasser, mouiller]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Éplucher les pommes de terre, les tailler en gros cubes et les verser avec les poivrons émincés en lanières."
+    lexicon_ids: [eplucher, tailler_des, emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Couvrir et laisser mijoter à feu doux, jusqu'à ce que les pommes de terre s'écrasent sous la cuillère."
+    lexicon_ids: [mijoter]
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 6
+    texte: "Ajouter les haricots rouges égouttés et rincés, assaisonner, et laisser chauffer encore cinq minutes."
+    lexicon_ids: [egoutter, rincer, assaisonner]
+    timer_s: 300
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: hongroise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: reconfortant

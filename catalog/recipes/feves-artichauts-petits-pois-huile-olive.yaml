@@ -1,0 +1,100 @@
+id: feves_artichauts_petits_pois_huile_olive
+nom: "Fèves, artichauts et petits pois à l'huile d'olive"
+origine: maison
+description: >
+  Trois légumes de printemps mijotés ensemble à l'huile d'olive avec des pommes de terre, finis au
+  jus de citron et à l'aneth.
+temps_prep_min: 30
+temps_cuisson_min: 35
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.4
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: feve
+    quantite_g: 500
+    unite_affichage: "500 g de fèves en gousses"
+    optionnel: false
+  - food_id: artichaut
+    quantite_g: 600
+    unite_affichage: "2 gros artichauts"
+    optionnel: false
+  - food_id: petit_pois
+    quantite_g: 300
+    unite_affichage: "300 g de petits pois"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 500
+    unite_affichage: "4 petites pommes de terre"
+    optionnel: false
+  - food_id: oignon_rouge
+    quantite_g: 150
+    unite_affichage: "1 oignon rouge"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: aneth_frais
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Retirer les feuilles dures des artichauts, couper les pointes, ôter le foin et frotter les cœurs avec la moitié du citron."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Écosser les fèves et les petits pois."
+    lexicon_ids: [ecosser]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire suer l'oignon rouge émincé dans l'huile d'olive, puis ajouter les cœurs d'artichaut détaillés en quartiers et les pommes de terre."
+    lexicon_ids: [suer, emincer, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Mouiller d'eau à hauteur, saler, couvrir et laisser mijoter à feu doux."
+    lexicon_ids: [mouiller, mijoter]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter les fèves et les petits pois, puis poursuivre à découvert jusqu'à ce que le jus soit court."
+    lexicon_ids: [reduire]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 6
+    texte: "Hors du feu, verser le jus du demi-citron restant et parsemer d'aneth ciselé."
+    lexicon_ids: [parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: grecque
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: simple

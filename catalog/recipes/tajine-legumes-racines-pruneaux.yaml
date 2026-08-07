@@ -1,0 +1,116 @@
+id: tajine_legumes_racines_pruneaux
+nom: "Tajine de légumes racines aux pruneaux"
+origine: maison
+description: >
+  Rutabaga, chou-rave et carotte fondus à petit feu avec des pruneaux, du safran et de la cannelle,
+  parsemés d'amandes effilées grillées.
+temps_prep_min: 25
+temps_cuisson_min: 45
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+piquant: 0
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.2
+  leger_consistant: 0.6
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: rutabaga
+    quantite_g: 400
+    unite_affichage: "1 petit rutabaga"
+    optionnel: false
+  - food_id: chou_rave
+    quantite_g: 300
+    unite_affichage: "2 choux-raves"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 360
+    unite_affichage: "3 carottes"
+    optionnel: false
+  - food_id: oignon_rouge
+    quantite_g: 220
+    unite_affichage: "2 oignons rouges"
+    optionnel: false
+  - food_id: pruneau
+    quantite_g: 150
+    unite_affichage: "une quinzaine de pruneaux"
+    optionnel: false
+  - food_id: pois_chiches
+    quantite_g: 250
+    unite_affichage: "1 boîte égouttée"
+    optionnel: false
+  - food_id: amande_effilee
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: cumin_graine
+    quantite_g: 5
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 3
+    unite_affichage: "1 demi-cuillère à café"
+    optionnel: false
+  - food_id: safran
+    quantite_g: 0.5
+    unite_affichage: "1 pincée"
+    optionnel: true
+  - food_id: coriandre_fraiche
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher le rutabaga, les choux-raves et les carottes, puis les tailler en gros cubes de trois centimètres."
+    lexicon_ids: [eplucher, tailler_des]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Émincer les oignons rouges et les faire suer dans l'huile d'olive au fond d'une cocotte, sans les colorer."
+    lexicon_ids: [emincer, suer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter le cumin, la cannelle et le safran, remuer une minute, verser les légumes racines et mouiller de 30 cl d'eau."
+    lexicon_ids: [mouiller]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Couvrir et laisser mijoter à petit feu, jusqu'à ce que la pointe d'un couteau traverse le rutabaga sans résistance."
+    lexicon_ids: [mijoter]
+    timer_s: 2400
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter les pruneaux et les pois chiches égouttés, puis poursuivre à découvert le temps que le jus épaississe."
+    lexicon_ids: [egoutter, reduire]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 6
+    texte: "Faire dorer les amandes effilées à sec dans une poêle, en parsemer le tajine avec la coriandre ciselée."
+    lexicon_ids: [dorer, parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: maghrebine
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: convivial

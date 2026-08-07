@@ -1,0 +1,116 @@
+id: riz_rouge_chou_chinois_pousses_soja
+nom: "Riz rouge sauté au chou chinois et aux pousses de soja"
+origine: maison
+description: >
+  Un riz rouge sauté à feu vif avec du chou chinois, des pousses de soja et des champignons noirs
+  réhydratés, parfumé au gingembre et à l'huile de sésame.
+temps_prep_min: 20
+temps_cuisson_min: 35
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+piquant: 1
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.5
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: riz_rouge
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: chou_chinois
+    quantite_g: 400
+    unite_affichage: "1 demi-chou chinois"
+    optionnel: false
+  - food_id: pousse_soja
+    quantite_g: 200
+    unite_affichage: "1 barquette"
+    optionnel: false
+  - food_id: pleurote
+    quantite_g: 200
+    unite_affichage: "200 g de pleurotes"
+    optionnel: false
+  - food_id: champignon_noir
+    quantite_g: 20
+    unite_affichage: "une petite poignée, séchés"
+    optionnel: false
+  - food_id: carotte
+    quantite_g: 120
+    unite_affichage: "1 carotte"
+    optionnel: false
+  - food_id: noix_cajou
+    quantite_g: 50
+    unite_affichage: "une poignée"
+    optionnel: false
+  - food_id: gingembre_frais
+    quantite_g: 20
+    unite_affichage: "1 morceau de 3 cm"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 10
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: huile_sesame
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_cidre
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: ciboulette
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le riz rouge et le cuire dans deux fois son volume d'eau salée, à couvert, jusqu'à absorption complète."
+    lexicon_ids: [rincer]
+    timer_s: 2100
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Tremper les champignons noirs dans de l'eau tiède, le temps qu'ils se déplient."
+    lexicon_ids: [tremper]
+    timer_s: 1200
+    timer_type: repos
+  - ordre: 3
+    texte: "Émincer le chou chinois, les pleurotes et la carotte en fines lanières, râper le gingembre et hacher l'ail."
+    lexicon_ids: [emincer, raper, hacher]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Saisir les légumes à feu vif dans l'huile de sésame, en commençant par la carotte et en finissant par le chou."
+    lexicon_ids: [saisir, sauter]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Ajouter les champignons noirs égouttés, les pousses de soja et le riz, puis faire sauter deux minutes de plus."
+    lexicon_ids: [egoutter, sauter]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Déglacer d'un trait de vinaigre de cidre, parsemer de noix de cajou concassées et de ciboulette ciselée."
+    lexicon_ids: [deglacer, concasser, parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: chinoise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

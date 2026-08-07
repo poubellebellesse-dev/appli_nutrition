@@ -1,0 +1,112 @@
+id: poivrons_farcis_riz_complet_pignons
+nom: "Poivrons farcis au riz complet, raisins secs et pignons"
+origine: maison
+description: >
+  Des poivrons rouges garnis d'un riz complet aux raisins secs, aux pignons et à la cannelle, cuits
+  au four dans un fond de tomate.
+temps_prep_min: 30
+temps_cuisson_min: 45
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+piquant: 0
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.2
+  leger_consistant: 0.6
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: poivron_rouge
+    quantite_g: 600
+    unite_affichage: "4 gros poivrons rouges"
+    optionnel: false
+  - food_id: riz_complet
+    quantite_g: 180
+    unite_affichage: "180 g"
+    optionnel: false
+  - food_id: raisin_sec
+    quantite_g: 60
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: pignon_pin
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: tomate
+    quantite_g: 250
+    unite_affichage: "2 tomates"
+    optionnel: false
+  - food_id: concentre_tomate
+    quantite_g: 30
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: menthe_fraiche
+    quantite_g: 12
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 2
+    unite_affichage: "1 demi-cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 190 °C. Découper un chapeau dans chaque poivron et en retirer les graines."
+    lexicon_ids: [prechauffer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Cuire le riz complet à moitié seulement, dans deux fois son volume d'eau salée, puis l'égoutter."
+    lexicon_ids: [egoutter]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Faire suer l'oignon ciselé dans l'huile d'olive, ajouter le concentré de tomate, la cannelle, les raisins secs et les pignons."
+    lexicon_ids: [suer, ciseler]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Incorporer cette garniture au riz avec la menthe et le persil ciselés, puis en farcir les poivrons sans tasser."
+    lexicon_ids: [incorporer, ciseler]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Poser les poivrons debout dans un plat, verser les tomates concassées au fond et remettre les chapeaux."
+    lexicon_ids: [concasser]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Couvrir et enfourner, jusqu'à ce que la pointe d'un couteau traverse la chair du poivron sans effort."
+    lexicon_ids: [enfourner]
+    timer_s: 2700
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: turque
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: convivial

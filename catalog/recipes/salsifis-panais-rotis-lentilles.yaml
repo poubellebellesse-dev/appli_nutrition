@@ -1,0 +1,104 @@
+id: salsifis_panais_rotis_lentilles
+nom: "Salsifis et panais rôtis, lentilles vertes à l'estragon"
+origine: maison
+description: >
+  Deux racines d'hiver rôties en bâtonnets, posées sur des lentilles vertes assaisonnées d'une
+  vinaigrette à la moutarde à l'ancienne et à l'estragon.
+temps_prep_min: 25
+temps_cuisson_min: 35
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.6
+  chaud_froid: 0.6
+  texture: fondant
+
+ingredients:
+  - food_id: salsifis
+    quantite_g: 500
+    unite_affichage: "500 g de salsifis"
+    optionnel: false
+  - food_id: panais
+    quantite_g: 450
+    unite_affichage: "3 panais"
+    optionnel: false
+  - food_id: lentilles_vertes
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 75
+    unite_affichage: "3 échalotes"
+    optionnel: false
+  - food_id: moutarde_ancienne
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: noisette
+    quantite_g: 30
+    unite_affichage: "une petite poignée"
+    optionnel: false
+  - food_id: huile_colza
+    quantite_g: 30
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: estragon_frais
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C. Éplucher les salsifis sous un filet d'eau et les panais, puis les détailler en bâtonnets."
+    lexicon_ids: [prechauffer, eplucher, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les mêler à la moitié de l'huile de colza et au sel, les étaler en une seule couche et enfourner."
+    lexicon_ids: [etaler, enfourner]
+    timer_s: 2100
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Rincer les lentilles, les couvrir de trois fois leur volume d'eau froide et les cuire à frémissement, sans sel."
+    lexicon_ids: [rincer, fremir]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ciseler les échalotes et les mêler à la moutarde à l'ancienne et au reste d'huile, pour en faire une vinaigrette."
+    lexicon_ids: [ciseler]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Égoutter les lentilles encore chaudes et les assaisonner de cette vinaigrette."
+    lexicon_ids: [egoutter, assaisonner]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Concasser les noisettes, dresser les racines rôties sur les lentilles et parsemer d'estragon et de persil ciselés."
+    lexicon_ids: [concasser, dresser, parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

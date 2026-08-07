@@ -1,0 +1,99 @@
+id: chou_blanc_pommes_terre_aneth
+nom: "Chou blanc et pommes de terre à l'aneth, haricots blancs"
+origine: maison
+description: >
+  Le chou blanc fondu à couvert avec des pommes de terre et des haricots blancs, réveillé d'un trait
+  de vinaigre de cidre, d'aneth et de graines de courge.
+temps_prep_min: 20
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.6
+  chaud_froid: 0.7
+  texture: fondant
+
+ingredients:
+  - food_id: chou_blanc
+    quantite_g: 700
+    unite_affichage: "1 demi-chou blanc"
+    optionnel: false
+  - food_id: pomme_de_terre
+    quantite_g: 600
+    unite_affichage: "4 pommes de terre"
+    optionnel: false
+  - food_id: haricot_blanc
+    quantite_g: 400
+    unite_affichage: "1 boîte égouttée"
+    optionnel: false
+  - food_id: oignon
+    quantite_g: 150
+    unite_affichage: "1 gros oignon"
+    optionnel: false
+  - food_id: graine_courge
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: aneth_frais
+    quantite_g: 15
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: huile_colza
+    quantite_g: 35
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: vinaigre_cidre
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 6
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "quelques tours de moulin"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les pommes de terre, les tailler en quartiers et les cuire à l'eau salée jusqu'à ce qu'elles cèdent sous la fourchette."
+    lexicon_ids: [eplucher, tailler_des]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Émincer le chou blanc en lanières fines et l'oignon en demi-lunes."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Faire revenir l'oignon dans l'huile de colza, ajouter le chou et le laisser fondre à couvert, en remuant de temps en temps."
+    lexicon_ids: [revenir]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Égoutter et rincer les haricots blancs, puis les ajouter au chou avec les pommes de terre."
+    lexicon_ids: [egoutter, rincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Verser le vinaigre de cidre, assaisonner de sel et de poivre, puis parsemer d'aneth ciselé et de graines de courge."
+    lexicon_ids: [assaisonner, parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+facettes:
+  - facette: cuisine
+    valeur: scandinave
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien
