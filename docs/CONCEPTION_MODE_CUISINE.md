@@ -16,15 +16,16 @@ pas en arrière-plan**, et la reprise remplace la notification (§5).
 |---|---|---|
 | `recipe_step.timer_s` / `timer_type` | ✅ écrits, buildés, chargés | 512 étapes sur 1 119, dans 203 recettes sur 241 |
 | `RecipeStep.timerS` côté app | ✅ chargé jusqu'en mémoire | `catalog-loader.ts:481-482` |
-| Gestes du lexique dépliés sur place | ✅ codé | `detail-recette.tsx` — **sur la fiche, pas en mode cuisine** |
+| Gestes du lexique dépliés sur place | ✅ **sur les DEUX écrans depuis le 2026-08-07** (L1ter) | `ui/gestes-etape.tsx`, partagé |
 | Affichage d'un minuteur | ✅ **fait le 2026-08-05** (L1) | `screens/cuisine.tsx` |
 | Écran allumé | ✅ **fait** (L1) | `ui/ecran-allume.ts` |
 | Alarme au premier plan | ✅ **fait** (L1) | `ui/alarme.ts` |
 | Reprise d'une cuisson | ✅ **faite** (L1) | schéma **v10**, §4.0 · `ui/reprise-cuisine.tsx` |
 | Notifications programmées | ✅ **mais calibrées pour les repas** | `notifications.ts:78` — `allowWhileIdle`, donc ±9 min en Doze : voir §5 |
-| Lien étape → ingrédient | ❌ **n'existe pas** — et **n'est plus bloquant**, voir L1bis | prérequis A, §2 |
+| Lien étape → ingrédient | ✅ **DÉRIVÉ au build le 2026-08-07** (L2), jamais saisi à la main | `catalog/lien-etape-ingredient.mjs` — 93,7 % |
 | Distinction geste / avertissement | ✅ **faite le 2026-08-05** (L0) | `recipe_step.nature`, §3 |
 | **Ingrédients et quantités en cuisine** | ✅ **faits le 2026-08-06** (L1bis) | `ui/ingredients-recette.tsx`, schéma **v11** |
+| **Gestes du lexique en cuisine** | ✅ **faits le 2026-08-07** (L1ter) | `ui/gestes-etape.tsx` — aucune donnée nouvelle |
 
 **Le fait structurant était : 512 minuteurs payés et invisibles.** C'est ce qui a justifié de livrer
 l'écran avant les prérequis, et non l'inverse (§4). ✅ **Ils sont visibles depuis le 2026-08-05.**
@@ -183,8 +184,9 @@ L'ordre suit une règle : **livrer ce qui est utile seul avant ce qui coûte che
 | ~~**L0**~~ | ✅ **Fait le 2026-08-05** — prérequis B, `recipe_step.nature`, 18 recettes marquées | — | schéma + contenu |
 | ~~**L1**~~ | ✅ **Fait le 2026-08-05** — écran mono-recette : écran allumé, étape courante, minuteurs parallèles, alarme au premier plan, reprise (schéma **v10** + bandeau) | L0 | code |
 | ~~**L1bis**~~ | ✅ **Fait le 2026-08-06, NON PRÉVU AU PLAN** — la liste complète des ingrédients et leurs quantités, en fenêtre, depuis n'importe quelle étape (schéma **v11** pour les portions) | L1 | code |
-| **L2** | Prérequis A — `food_ids` sur 1 101 gestes, 3 passes du §2.4 | — | contenu, ⛔ **suspendu** : décision 60 |
-| **L3** | ~~Quantité au tap~~ → n'afficher QUE les ingrédients de l'étape courante | L1bis + L2 | code, **raffinement** |
+| ~~**L1ter**~~ | ✅ **Fait le 2026-08-07, NON PRÉVU AU PLAN** — les gestes du lexique dépliés sur place, dans l'étape courante. Aucun schéma, aucune donnée | L1 | code |
+| ~~**L2**~~ | ✅ **Fait le 2026-08-07, MAIS PAS COMME PRÉVU** — le lien est **dérivé au build**, pas annoté. Les 1 101 (devenus 1 350) saisies n'ont jamais eu lieu. `food_ids` survit en correction facultative | — | code + schéma |
+| ~~**L3**~~ | ⛔ **ABANDONNÉ, remplacé** — « n'afficher QUE les ingrédients de l'étape » ferait mentir l'écran par omission. À la place : la **ligne de quantités sous l'étape**, qui ajoute sans retrancher | L1bis + L2 | code |
 | **L4** | v1.5 — synchronisation multi-recettes, bascule de service | L1 | code |
 
 ### 4.0 Le schéma v10 — reprise et minuteurs ✅ ÉCRIT
@@ -244,9 +246,20 @@ CREATE TABLE user_cuisine_timer (
 | `app/src/ui/screens/detail-recette.tsx` | Le bouton « Cuisiner pas à pas », sous « Préparation » |
 | `app/src/ui/screens/aujourdhui.tsx` | Le bandeau « Reprendre la cuisson », **avant le titre** |
 
-⚠️ **`parcours.ts` n'a PAS été touché** — le plan prévoyait une entrée de visite guidée. Elle n'a pas
-été faite : la visite guidée présente des écrans qu'on atteint depuis la barre d'onglets, et le mode
-cuisine s'ouvre depuis une fiche recette. À trancher, pas à oublier.
+✅ **`parcours.ts` n'aura PAS d'entrée — tranché le 2026-08-07.** Le plan en prévoyait une ; L1 ne
+l'avait pas faite et la question restait « à trancher ». L'intuition d'alors était la bonne, mais sa
+formulation (« la visite présente des écrans qu'on atteint depuis la barre d'onglets ») n'était qu'une
+observation. Le motif dur est mécanique : `lancerParcours` **navigue** vers `parcours.ecran` quand on
+choisit un tutoriel depuis Réglages ; pour le mode cuisine ce serait un `#/cuisine/<id>` en dur, et
+**ouvrir cet écran ÉCRIT `user_cuisine_session`** — une seule ligne, donc une cuisson en cours sur une
+autre recette serait remplacée. **Un tutoriel qui détruit une cuisson est disqualifié**, quel que soit
+son contenu. Et `ecran: null` ne sauve rien : aucune cible ne résoudrait, toutes les étapes seraient
+sautées, c'est le tutoriel fantôme que la règle 1 de `parcours.ts` existe pour empêcher.
+
+La ligne qui en découle vaut aussi pour la **fiche recette**, qui n'a pas de parcours non plus : *un
+parcours par écran atteignable depuis la barre d'onglets*. Le mode cuisine se découvre là où l'on y
+entre — le bouton « Cuisiner pas à pas ». Raisonnement dans le code (au-dessus de `PARCOURS`), test de
+non-régression dans `parcours.test.tsx`.
 
 ⚠️ **La question de la bibliothèque de routage a été ROUVERTE, comme `router.tsx` l'exigeait au
 troisième cas paramétré. Réponse : toujours non**, et le raisonnement est écrit dans le fichier
@@ -290,6 +303,109 @@ introuvable.
 **Conséquence sur la suite : L2 n'est plus un prérequis** (décision 60 d'`ETAT.md` §4). Le besoin est
 couvert sans annotation ; le lien étape → ingrédient ne servirait plus qu'à **restreindre** la liste
 à l'étape courante.
+
+### 4.1 ter — L1ter, les gestes du lexique en cuisine (2026-08-07, hors plan)
+
+**Même mesure que L1bis, un cran plus loin.** `cuisine.tsx` tenait déjà le `Catalog` et les
+`lexiconIds` de chaque étape, les 62 fiches du lexique sont écrites depuis longtemps, et l'écran
+n'en montrait aucune : « c'est quoi émincer ? » en pleine cuisson obligeait au même aller-retour vers
+la fiche que « c'était combien d'ail ? ». **Aucune donnée nouvelle, aucun schéma.**
+
+L'exclusion était écrite en tête de `cuisine.tsx` et elle était honnête : *« les dupliquer ici
+demanderait d'extraire le composant »*. L1bis ayant déjà tranché que la réponse est l'extraction,
+le motif tombait de lui-même.
+
+| Fichier | Rôle |
+|---|---|
+| `app/src/ui/gestes-etape.tsx` *(nouveau)* | `GestesDeLEtape`, **extrait** de `detail-recette.tsx`. Rend `null` quand l'étape ne cite aucun geste — les deux appelants l'appellent sans condition |
+| `app/src/ui/screens/detail-recette.tsx` | Utilise le composant extrait ; `Etape` perd son état et son `useMemo`. Le retrait `pl-12` reste sur la fiche, seul écran à numéroter ses étapes |
+| `app/src/ui/screens/cuisine.tsx` | Le dépliant sous le texte de l'étape courante |
+
+⚠️ **SUR PLACE, PAS EN FENÊTRE — et c'est l'INVERSE du choix de L1bis, délibérément.** Les deux
+décisions sont opposées parce que les deux besoins le sont : une liste d'ingrédients se consulte
+*à côté* de l'étape (la recouvrir ne coûte rien, on ne la lit plus pendant ce temps), une définition
+se lit *dans* l'étape. Une fenêtre recouvrirait exactement ce qu'on cherche à comprendre — c'est le
+motif que l'en-tête de `detail-recette.tsx` défend depuis l'origine. Deux tests miroirs
+(`aria-haspopup="dialog"` d'un côté, `aria-expanded` de l'autre) existent pour arrêter le relecteur
+qui « harmonisera » un jour.
+
+⚠️ **Ce dépliant ne se ferme PAS à la sonnerie**, contrairement à la fenêtre des ingrédients, et
+l'asymétrie n'est pas un oubli : il ne passe par aucun portail, donc la surface « appuyez n'importe
+où » (`fixed inset-0 z-50`) le recouvre au lieu d'être recouverte par lui.
+
+⚠️ **`key={etape.ordre}` sur le composant — vérifié en le retirant.** Sans lui, l'état « ouvert »
+survit au changement d'étape : la définition disparaît en apparence, puis **se rouvre toute seule**
+au retour. Sur l'écran dont le point 2 garantit que rien n'avance seul, c'était un comble. Un test le
+verrouille, et il a bien échoué avant qu'on remette le `key`.
+
+⚠️ **Le dépliant n'est pas un menu.** La règle « plus aucun menu déroulant hors de l'accueil » vise
+les menus, filtres et réglages, qui ouvrent une fenêtre. Ici le bouton agrandit un contenu **en
+place** : `aria-expanded` est l'attribut juste, et `aria-haspopup="dialog"` mentirait.
+
+⚠️ **La fiche recette n'était couverte par AUCUN test sur ce dépliant** — l'extraction aurait pu la
+casser en silence. Un test a été ajouté là aussi, et il vérifie que le geste reste **dans son `li`**.
+
+⚠️ **Rien dans `engine/`.**
+
+**Ce lot épuise ce que le mode cuisine pouvait gagner sans donnée nouvelle.** Tout ce qui reste (L2,
+L3, L4) demande soit du contenu, soit un lot entier.
+
+### 4.1 quater — L2, le lien DÉRIVÉ et la quantité sous l'étape (2026-08-07)
+
+**Le lot annoncé demandait 1 350 saisies à la main. Il en a demandé zéro.** Ce qui a changé n'est pas
+la volonté de travailler, c'est la mesure : le §2.1 écartait la dérivation en la testant contre les
+**450 aliments du catalogue**, alors que le problème est fermé — choisir parmi les ~7 ingrédients de
+LA recette. Remis dans ce cadre, il tombe.
+
+| Mesure du 2026-08-07 (`node catalog/mesure-liens-etapes.mjs`) | Valeur |
+|---|---|
+| Gestes analysés | 1 350 |
+| **Au moins un ingrédient trouvé** | **1 265 — 93,7 %** |
+| Aucun ingrédient trouvé | 85 — 6,3 %, très majoritairement des gestes qui n'en emploient **réellement** aucun (« Préchauffer le four », « Enfourner », « Couvrir et laisser braiser ») |
+| Étapes ambiguës | 26 — 1,9 % |
+| Ingrédients jamais cités | 104 / 2 069 — 5,0 %, dont beaucoup de sel, huile et poivre que le texte ne nomme jamais (règle 3 du §2.2) |
+
+**Cinq mécanismes**, dont trois n'étaient pas dans le plan :
+
+1. **Forme complète** — « poivron rouge » dans le texte.
+2. **Mot de tête**, sur les **deux** premiers mots : le nom CIQUAL met le règne devant (« Veau,
+   escalope », « Lieu, colin ») là où la recette dit « les escalopes », « le colin ».
+3. **Verbe** — « saler » → `sel_fin`. Douze entrées, fermées par la langue et non par le catalogue.
+   C'est le seul cas que le §2.1 avait raison de dire hors de portée d'un rapprochement de chaîne.
+4. **Hyperonyme → `groupe`** — « couper les fruits » → pomme, orange, banane *de cette recette*.
+   C'était le seul endroit où l'annotation manuelle battait vraiment la machine.
+5. **Héritage sur pronom** — « les blanchir » reprend l'étape précédente. Le déterminant est
+   distingué de l'article par l'infinitif qui suit : « **les** blanchir » oui, « **le** four » non.
+
+⚠️ **TROIS PRUDENCES, et ce sont elles qui rendent la dérivation acceptable :**
+
+- **Une ambiguïté fait TAIRE l'ingrédient.** Deux huiles dans la recette et « l'huile » dans le
+  texte : on n'en nomme aucune. Ça coûte un point de couverture et évite d'affirmer la mauvaise.
+- **On n'hérite jamais d'un héritage.** Deux pronoms d'affilée perdent la référence au lieu de la
+  propager : une chaîne d'approximations n'est plus une donnée.
+- **`origine` distingue `declare` / `derive` / `herite`** parce que les trois n'ont pas la même
+  force. `herite` est le seul qui peut SUR-ATTRIBUER — l'étape d'avant nommait trois aliments,
+  celle-ci n'en concerne peut-être qu'un. Un écran plus exigeant doit pouvoir l'écarter.
+
+⛔ **L'INTERDIT QUI ACCOMPAGNE LA TABLE, et il n'est pas négociable : on AJOUTE, on ne FILTRE pas.**
+La ligne de quantités s'ajoute sous l'étape ; la fenêtre continue de porter les 10 ingrédients de la
+recette. C'est ce qui rend 93,7 % suffisants — un lien manqué ne fait disparaître personne. Le L3
+d'origine (« n'afficher QUE les ingrédients de l'étape ») ferait l'inverse : **une étape sur seize
+afficherait une liste vide**, et **5 % des ingrédients n'apparaîtraient nulle part**. C'est
+exactement l'écran qui « ment par omission », la seule objection de la décision 60 qui tenait debout.
+
+| Fichier | Rôle |
+|---|---|
+| `catalog/lien-etape-ingredient.mjs` *(nouveau)* | La dérivation, **en un seul exemplaire** — appelée par le build ET par la sonde |
+| `catalog/mesure-liens-etapes.mjs` *(nouveau)* | La sonde. ⚠️ Elle vit ici et non dans `atelier/`, **qui est gitignoré** : une mesure qu'on ne committe pas ne prouve rien à personne d'autre |
+| `catalog/build.mjs` | La table, les deux règles rouges sur `food_ids`, l'insertion, le compteur de couverture |
+| `app/src/engine/domain/catalog.ts` | `RecipeStep.foodIds` |
+| `app/src/data/catalog-loader.ts` | Lecture, ⚠️ **clé composite `recipe|ordre`** — grouper sur `recipe_id` seul mélangerait les étapes sans que rien ne le montre |
+| `app/src/data/user-recipe.ts` | `foodIds: []` — la dérivation vit au build du catalogue, la porter dans le bundle pour des recettes qu'on a écrites soi-même ne vaut pas son poids |
+| `app/src/ui/ingredients-recette.tsx` | `QuantitesDeLEtape` |
+| `app/src/ui/screens/cuisine.tsx` | La ligne sous le texte de l'étape |
+
+⚠️ **Rien dans `engine/`** — hormis le champ de données `RecipeStep.foodIds`, qui n'importe rien.
 
 ### 4.2 Les tests qui font foi pour L1 — ✅ les huit sont écrits et verts
 

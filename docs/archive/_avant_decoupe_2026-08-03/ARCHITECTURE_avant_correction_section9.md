@@ -46,8 +46,7 @@ Six principes, par ordre de priorité. En cas de conflit, le plus haut gagne.
 - **Import d'une recette** (URL/collage, usage perso local — faits + lien source, §8.7) *(v1/v2 à confirmer)*
 - **Partage de recette** entre utilisateurs par fichier autonome (P2P, sans serveur, §8.7) *(v1/v2 à confirmer)*
 - **Favoris** · **commentaires locaux** par recette/étape, exportables avec le partage *(v1/v2 à confirmer)*
-- **Mode cuisine** : étape courante, minuteurs et écran allumé, **une recette à la fois** *(v1,
-  §5bis)* ; suivi **multi-recettes** et synchronisation du service *(v1.5, §5bis)*
+- **Mode cuisine** : suivi multi-recettes + timers par étape *(v1/v1.5 à trancher, §5bis)*
 
 > La fenêtre de planification descend à **2 jours** : un utilisateur qui part en week-end doit
 > pouvoir ne planifier que samedi et dimanche, sans attendre le lundi suivant.
@@ -169,10 +168,7 @@ recipe(id, nom, description, temps_prep_min, temps_cuisson_min, difficulte,
     -- envergure ∈ {'quotidien','convivial','fete'}
     -- temps total = dérivé, JAMAIS une facette saisie (pas de désynchronisation possible)
 recipe_ingredient(recipe_id, food_id, quantite_g, unite_affichage, optionnel)
-recipe_step(recipe_id, ordre, texte, lexicon_ids[], timer_s, timer_type, nature)   -- timer_type ∈ {'cuisson','repos'} optionnel (mode cuisine §5bis)
-recipe_step_ingredient(recipe_id, ordre, food_id, origine)                         -- DÉRIVÉ au build (93,7 %), jamais saisi ; origine ∈ {'declare','derive','herite'}
-    -- nature ∈ {'geste','avertissement'}, défaut 'geste'. Un avertissement se lit, ne se fait pas :
-    -- hors de tout compteur d'étapes, et TOUJOURS en dernier (le build refuse l'inverse).
+recipe_step(recipe_id, ordre, texte, lexicon_ids[], timer_s, timer_type)   -- geste illustré ; timer_type ∈ {'cuisson','repos'} optionnel (mode cuisine §5bis)
 recipe_facet(recipe_id, facette, valeur)          -- cuisine | regime | occasion | style — vocabulaire fermé ('style' inclut 'loufoque')
 recipe_equipment(recipe_id, equipment_id, niveau)  -- 'requis' (→ exclusion) | 'accelere' (→ score) | 'informatif' (ustensile, jamais chargé par le moteur)
 
@@ -239,17 +235,7 @@ tip(id, texte, categorie, source_url)             -- nutrition_humaine | nutriti
 
 ```sql
 user_profile(id, tranche_age, sexe, taille_cm, poids_kg, niveau_activite,
-             facteur_portion, cree_le, tolerance_piquant)
-    -- tolerance_piquant (migration v12, decision 35) : 'aucun' | 'un_peu' | 'tout', NULLABLE.
-    --   NULL = JAMAIS DECLAREE, et surtout PAS 'tout'. Les deux se comportent pareil pour le
-    --   moteur — aucune penalite — mais afficher « J'aime le piquant » a quelqu'un qui n'a rien dit
-    --   lui preterait un choix. Meme regle que recipe.piquant, dont l'absence ne vaut jamais
-    --   « doux ». C'est aussi ce qui garde la couche de score `piquant` a poids nul tant que
-    --   personne n'a repondu (PIQUANT_DYNAMIC_WEIGHT).
-    -- ⚠️ DANS user_profile MAIS PAS DANS LE TYPE UserProfile (engine/domain/profile.ts), qui decrit
-    --   une PHYSIOLOGIE. Le piquant est un GOUT : il voyage sur SuggestionRequest.tolerancePiquant,
-    --   a cote de varietyMode. Une colonne de cette table hors du type n'est pas une anomalie —
-    --   cree_le est deja dans ce cas. Precedent de la preference logee ici : facteur_portion.
+             facteur_portion, cree_le)
 user_allergy(allergen_id, severite)               -- contrainte d'éviction, pas une pathologie
     -- severite : texte LIBRE et NON LU par le moteur — engine/selection/allergenes.ts exclut dès
     --   qu'un allergène est déclaré, traces comprises, sans gradation (§5.2). Conservée pour
@@ -291,19 +277,7 @@ meal_history(date, creneau, recipe_id, origine)    -- AJOUT 2026-07-30 (CODÉ)
     --   (`data/user-store.ts`, readHistory) : aucune couche du moteur ne lit `windowDays`.
 
 meal_plan(id, date_debut)
-meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste,
-                hors_catalogue)
-    -- hors_catalogue : AJOUT v9 (décision 51, 2026-08-05). Libellé libre d'un plat que
-    --   l'application ne sait pas mesurer — plat préparé, traiteur, restaurant. Non-NULL =
-    --   « créneau REMPLI, apport INCONNU », l'état qu'aucune colonne ne savait dire ; vide reste
-    --   recipe_id NULL ET hors_catalogue NULL. Le libellé EST le marqueur : pas de booléen à
-    --   côté, qui pourrait le contredire.
-    -- ⚠️ CHECK (recipe_id IS NULL OR hors_catalogue IS NULL) — porter les deux est
-    --   structurellement inexprimable, pas seulement découragé.
-    -- ⚠️ AUCUNE COLONNE D'ÉNERGIE, et c'est l'arbitrage : l'issue (b) de la décision 51 a été
-    --   écartée, un nombre tapé par l'utilisateur se mêlerait aux valeurs CIQUAL sans provenance
-    --   (principe 3). La journée qui contient un tel créneau sort du contrôle §6.5 plutôt que
-    --   d'y entrer avec un chiffre inventé.
+meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste)
     -- service : NULL en mode recette (un plat unique), sinon 'entree' | 'plat' | 'dessert' |
     --   'accompagnement' (mode repas, §2.7 CONCEPTION_B_VIN_REPAS) ; la clé s'étend à
     --   (plan_id, date, creneau, service)
@@ -314,32 +288,6 @@ meal_plan_entry(plan_id, date, creneau, service, recipe_id, portions, verrouille
     --   de colonne ; un plan relu depuis la base aurait perdu la trace de ses restes.
 shopping_list(id, plan_id, genere_le)
 shopping_list_item(list_id, food_id, quantite_totale, unite, coche, prix_estime)
-
--- Cuisson en cours — AJOUT v10 (mode cuisine §5bis, lot L1, 2026-08-05). CODÉ.
-user_cuisine_session(id, recette_id, ordre_courant, ouverte_le, portions)
-    -- id = 1 : UNE seule cuisson. La v1 est mono-recette ; la v1.5 fera sauter la contrainte.
-    -- ouverte_le en ms epoch — la péremption du bandeau de reprise (12 h) est une soustraction.
-    -- portions : AJOUT v11 (2026-08-06). CODÉ. Régler 6 portions sur la fiche puis lancer la
-    --   cuisson rouvrait le plat à 4 : l'état React de la fiche meurt au démontage et un hash ne
-    --   transporte qu'un identifiant. On redemandait donc la même chose deux fois, la seconde
-    --   les mains dans la farine.
-    -- ⚠️ NULLABLE, ET C'EST LE SENS DE LA COLONNE : NULL = « aucun choix exprimé », JAMAIS « 4 ».
-    --   C'est l'état des sessions ouvertes avant la v11 et d'une reprise dont le lien ne porte
-    --   rien ; l'écran retombe alors sur le portions_base de la recette, seul endroit qui le
-    --   connaisse. Un défaut en base aurait écrit un choix que personne n'a fait — et SQLite
-    --   l'aurait exigé pour un ALTER TABLE … NOT NULL, forcément le même pour toutes les recettes.
-    -- CHECK (portions IS NULL OR portions >= 1) : portions = 0 ferait disparaître la recette de sa
-    --   propre mise à l'échelle. Le routeur filtre déjà, la base ne s'en remet pas à lui.
-user_cuisine_timer(session_id, ordre, fin_ms, pause_restant_s)
-    -- ⚠️ fin_ms est une ÉCHÉANCE ABSOLUE, JAMAIS un temps restant. Un restant se fige quand
-    --   l'application est fermée ; la casserole, elle, ne fait pas de pause. Au retour, un
-    --   restant figé afficherait « il reste 4 min » sur un plat qui cuit depuis quarante :
-    --   l'appli mentirait à propos de nourriture. Voir §5bis point 7.
-    -- ⚠️ CHECK ((fin_ms NOT NULL AND pause_restant_s NULL) OR (fin_ms NULL AND pause_restant_s
-    --   NOT NULL)) — en marche il n'existe qu'une échéance, en pause qu'un reste. Les deux à la
-    --   fois est structurellement inexprimable, comme hors_catalogue ci-dessus.
-    -- ON DELETE CASCADE depuis la session → écriture par INSERT … ON CONFLICT DO UPDATE, JAMAIS
-    --   INSERT OR REPLACE (reference/PIEGES.md : REPLACE supprime avant de réinsérer).
 
 -- Articles NON alimentaires (conçu session 2, PAS CODÉ — à créer quand buildShoppingList
 -- existera, P1c+). Table SÉPARÉE de food : aucun nutriment, aucun allergène structuré, jamais
@@ -528,130 +476,14 @@ rayon. Arrondi aux conditionnements courants (on n'achète pas 43 g de beurre).
 
 ### 5bis — Mode cuisine (couche UI, hors moteur)
 
-Écran de présentation par-dessus le moteur : il ne calcule rien, il montre une recette **déjà
-choisie** à quelqu'un qui a les mains occupées. **Découpé en deux livraisons** (décision 8 de
-`ETAT.md`, tranchée le 2026-08-04) :
+Fonctionnalité de présentation par-dessus le moteur, à spécifier comme écran propre *(v1/v1.5 à
+trancher)*. Trois besoins : **suivi de plusieurs recettes en parallèle** (entrée + plat + dessert,
+bascule et synchronisation du service), **suivi d'étape** (taper une étape marque où on en est) et
+**timers par étape** (`recipe_step.timer_s` / `timer_type`, plusieurs décomptes en parallèle).
 
-| | Périmètre | Statut |
-|---|---|---|
-| **v1** | Une recette à la fois : écran allumé, étape courante, minuteurs, quantité à la demande | À coder |
-| **v1.5** | Plusieurs recettes en parallèle — entrée + plat + dessert, bascule et **synchronisation du service** | Différé |
-
-Le découpage n'est pas un étalement du travail : la v1 ne demande **aucune donnée nouvelle du
-moteur** et rend visible ce qui est déjà buildé, tandis que la synchronisation de service est un
-problème d'ordonnancement à part entière (`CONCEPTION_B_VIN_REPAS.md` §5).
-
-#### Les sept points de la v1
-
-1. **L'écran ne s'éteint pas** — `navigator.wakeLock.request('screen')`, demandé à l'entrée dans
-   l'écran, relâché à la sortie et **re-demandé sur `visibilitychange`**. ⚠️ **Le verrou tombe quand
-   le document devient `hidden`, pas quand l'appli perd le focus** : en écran partagé ou sous une
-   fenêtre flottante, l'appli reste visible et le verrou tient. Ce qui le relâche, c'est d'être
-   entièrement recouverte, ou l'écran verrouillé. Dégradation silencieuse si l'API manque : l'écran
-   ne reste pas allumé, rien d'autre ne change.
-2. **Une étape à la fois, et l'utilisateur sait où il en est** — position affichée (« 3 sur 6 ») et
-   jalons. ⚠️ **Les étapes n'avancent que sur appui** : ni minuterie de défilement, ni carrousel.
-   C'est la règle déjà tranchée pour l'accueil (`RETOUR_ESSAI_TELEPHONE.md` §6.5), appliquée ici.
-3. **Le minuteur est dans l'étape qui le porte** — `recipe_step.timer_s` / `timer_type`, **plusieurs
-   décomptes en parallèle**, et un décompte **survit au changement d'étape**. Un minuteur lancé
-   ailleurs reste donc visible depuis l'étape courante, étiqueté par son étape d'origine.
-4. **La quantité se lit sans quitter l'étape** — appuyer sur un ingrédient cité par l'étape affiche
-   son `unite_affichage`. Même principe que les gestes du lexique, déjà dépliés sur place
-   (`detail-recette.tsx`) : personne ne doit perdre son étape pour savoir ce que « pocher » veut dire.
-5. **Le minuteur sonne quand l'appli est visible** — **essayé sur appareil le 2026-08-05**, détail
-   dans `CONCEPTION_MODE_CUISINE.md`. Trois règles en sont sorties :
-   - ⚠️ **L'audio se déverrouille sur l'appui « Lancer », pas à l'expiration.** La WebView refuse une
-     lecture sans geste utilisateur préalable et **ce refus ne lève aucune erreur** — un minuteur
-     muet en production, sans rien dans les logs. Vérifié : un contexte déverrouillé le reste, le son
-     sort bien plusieurs minutes après l'appui.
-   - **Le signal visuel est l'INVERSION de tout l'écran**, ~2 Hz. Retenu à l'essai contre quatre
-     autres (cadre, bandes latérales, plein écran, balayage) sur le seul critère qui compte : être vu
-     **du coin de l'œil**, téléphone posé de côté. La vision périphérique ne perçoit ni détail ni
-     couleur mais réagit aux écarts de luminance sur de grandes surfaces — l'inversion en donne le
-     maximum **sans masquer le contenu**, contrairement à l'aplat plein écran.
-   - **La vibration est un bonus, pas un canal sur lequel compter.** `navigator.vibrate` n'a rien
-     produit sur l'appareil d'essai, ni immédiatement ni en différé. La voie native
-     (`@capacitor/haptics`) est probablement la bonne, mais **elle n'est pas installée** et rien ne
-     doit dépendre d'elle. L'alarme reste correcte avec le son et l'inversion seuls.
-6. **L'alarme sonne jusqu'à ce qu'on l'arrête** — **un appui n'importe où sur l'écran**, pas
-   seulement sur un bouton : avec les mains grasses, viser une cible précise est le geste qu'on rate,
-   et le coût d'un arrêt accidentel est nul puisqu'on est devant. Garde-fou : **arrêt automatique à
-   5 minutes**, pour ne pas laisser un téléphone clignoter sur un plan de travail vide. ⚠️ Une alarme
-   qui s'éteint seule au bout de quelques secondes rate exactement la personne partie mettre la
-   table — c'est-à-dire son cas d'usage.
-7. **La cuisson se reprend** — l'étape atteinte et les minuteurs survivent à la fermeture de
-   l'appli, et un bandeau « Reprendre la cuisson » les ramène depuis « Aujourd'hui ».
-   ⚠️ **On stocke une ÉCHÉANCE ABSOLUE (`fin_ms`), jamais un temps restant.** Un restant suppose que
-   quelqu'un décompte ; appli fermée, personne ne décompte, et le nombre se fige — l'écran
-   annoncerait 8 minutes de pochage restantes sur des œufs trop cuits depuis un quart d'heure. La
-   casserole, elle, ne fait pas de pause. Au retour, `fin_ms - Date.now()` donne soit le reste réel,
-   soit « terminé il y a 4 min » — **jamais « ça vient de sonner »**. Seule la pause, déclenchée par
-   l'utilisateur, stocke un reste figé. Schéma : `CONCEPTION_MODE_CUISINE.md`.
-
-#### Ce que la v1 exige avant d'être codable
-
-- ✅ **Le lien étape → ingrédient existe — DÉRIVÉ au build depuis le 2026-08-07, jamais écrit à la
-  main.** Table `recipe_step_ingredient(recipe_id, ordre, food_id, origine)`, remplie par
-  `catalog/lien-etape-ingredient.mjs`. Mesure : **93,7 % des 1 350 gestes** trouvent au moins un
-  ingrédient, 1,9 % portent une ambiguïté (qui fait alors TAIRE l'ingrédient plutôt que de le
-  deviner). Le champ **`etapes[].food_ids`** subsiste en YAML mais **facultatif et réservé aux
-  corrections** — il l'emporte quand il est écrit, et le build rougit sur un identifiant inconnu ou
-  absent des ingrédients de la recette.
-
-  ⛔ **CE PARAGRAPHE DISAIT L'INVERSE, ET IL AVAIT TORT SUR DEUX POINTS** (décision 60) : sa prémisse
-  (« `food` n'a ni synonyme ni alias ») est fausse depuis la décision 58, et sa démonstration
-  mesurait le rapprochement contre les **450 aliments du catalogue** alors que le problème est
-  fermé — choisir parmi les ~7 ingrédients de LA recette. « Les poivrons » n'a qu'un candidat,
-  « saler » se règle par une table de douze verbes, « les fruits » par le `groupe` de l'aliment.
-
-  ⚠️ **CE QUI RESTAIT VRAI EST DEVENU LA RÈGLE DE CONCEPTION** : un rapprochement incomplet serait
-  pire que rien *s'il servait à masquer*. D'où l'interdit qui accompagne la table — le mode cuisine
-  **AJOUTE** la quantité sous l'étape et ne **filtre** jamais la liste complète, qui reste à un tap.
-  Un lien manqué ne coûte alors rien. Détail : `CONCEPTION_MODE_CUISINE.md`.
-- ✅ **Toutes les `recipe_step` ne sont pas des gestes — RÉSOLU le 2026-08-05 (lot L0).**
-  `chakchouka` finissait sur un avertissement ANSES compté comme 6ᵉ étape : « 6 sur 6 » promettait un
-  geste alors que le plat est servi. `recipe_step.nature` porte désormais la distinction, sur les
-  **18 recettes** concernées ; le build refuse une nature inconnue **et** un avertissement ailleurs
-  qu'en dernière position. La fiche recette numérote les 1 101 gestes et sort l'avertissement de la
-  liste, dans un bloc `alerte-*`.
-
-#### Hors périmètre, et pourquoi
-
-- **Pilotage vocal / mains libres.** C'est ce que les gens réclament spontanément, et c'est ce qui
-  échoue en cuisine réelle : neuf modes d'échec relevés sur douze foyers observés
-  ([arXiv 2306.09992](https://arxiv.org/abs/2306.09992)) — perte de la vue d'ensemble, surcharge,
-  fragmentation, « elle m'a ignoré ». S'y ajoute une raison propre au projet : une permission micro
-  fissure le principe 2 (souveraineté) même si tout reste local.
-- **Avancement automatique des étapes.** Interdit par le point 2 ci-dessus.
-- **Sonner quand l'appli n'est pas visible** — **reporté, pas enterré**. Un minuteur exact en
-  arrière-plan exige une alarme exacte Android, et les trois voies ont été vérifiées et coûtent
-  toutes cher : `SCHEDULE_EXACT_ALARM` impose un aller-retour dans les réglages système (ce n'est
-  **pas** une fenêtre d'autorisation), `USE_EXACT_ALARM` est réservée aux applis d'agenda et de
-  réveil et **Play refuse la publication** hors de ces catégories, et un service de premier plan
-  n'a **aucun `foregroundServiceType` adapté** (`shortService` plafonne à ~3 min) — il faudrait
-  `specialUse`, qui se justifie en Play Console **vidéo à l'appui, à chaque mise à jour**. Le point 7
-  couvre le besoin autrement : on ne sonne pas, mais au retour on dit la vérité. Comparatif des
-  applis existantes et les quatre voies en détail : `CONCEPTION_MODE_CUISINE.md`.
-- **Cuisine partagée sur plusieurs appareils** — deux cuisiniers, deux téléphones synchronisés.
-  ⚠️ **Ce n'est PAS interdit par le principe 2** : l'appli fait déjà sortir des données de l'appareil
-  à l'initiative de l'utilisateur (partage `.nutri-recipe`, §8.7, codé). La ligne est « pas de
-  serveur, pas de collecte, rien sans geste explicite », pas « aucune donnée ne sort ». C'est le
-  **coût** qui tranche : plugin natif Bluetooth, permissions à l'exécution, et surtout un problème
-  d'état distribué (qui gagne si deux personnes avancent l'étape en même temps ?) pour un cas rare.
-  Et le besoin est largement absorbé par un téléphone posé au milieu que tout le monde voit. **v2.**
-
-⚠️ **La cible empaquetée est Android** (décision 9, `ETAT.md`) — Capacitor, `LocalNotifications`
-déjà installé. Le web reste au plan pour iOS, où les timers en arrière-plan sont de toute façon non
-fiables. **Wake Lock n'est pas un argument pour Capacitor** : l'API est portée par Chromium depuis la
-version 84, donc par la WebView Android. ⚠️ **Non vérifié sur appareil**, et c'est la même famille
-que le risque n°1 de la décision 9 — un échec y serait SILENCIEUX. L'interdiction de `Date.now` ne
-vise que `engine/` ; l'UI utilise l'heure réelle, et le point 7 en dépend.
-
-> Maquette cliquable de l'écran v1 (chakchouka, minuteurs réels, Wake Lock actif) :
-> <https://claude.ai/code/artifact/00aae6df-f33d-4cb6-97cf-e11751419e0e>. Hors dépôt — elle illustre
-> la spec, elle ne la remplace pas. Elle couvre les points 1 à 6 — **c'est elle qui a servi à
-> l'essai du 2026-08-05** et qui a départagé les cinq signaux visuels. Seul le point 7 (la reprise)
-> ne s'y voit pas : il suppose une base.
+⚠️ Sur **iOS-PWA les timers en arrière-plan sont non fiables** : garder l'écran allumé (Wake Lock
+API), décompte in-app, notification best-effort. Argument de plus pour Capacitor si le mode cuisine
+devient central. L'interdiction de `Date.now` ne vise que `engine/` — l'UI utilise l'heure réelle.
 
 ### Fonctionnalités conçues en session 2 — état d'implémentation par point, voir docs/archive/RECAP_SESSION_2.md
 
@@ -867,35 +699,15 @@ n'est plus affiché par défaut ; il n'apparaît qu'en mode avancé.**
 > initiale de §6.5 jugeait nécessaire. La réserve a été posée avant la décision et écartée
 > explicitement — `ETAT.md` décision 45.
 
-**Ce qui borne la portée de l'amendement** — ⛔ **RÉÉCRIT LE 2026-08-04, la première version reposait
-sur un chiffre faux.** Le texte disait : « la décision 34 a mesuré le cas nominal à 1 208 kcal
-minimum, ZÉRO avertissement ; ce qui devient invisible par défaut est un cas rare ». Ce chiffre était
-**une mesure sur UNE graine**. Remesuré le 2026-08-03 sur vingt : **0 graine sur 20** y parvenait, et
-le cas nominal tournait à 830 kcal avec 4 avertissements sur 7 jours. **L'amendement a donc été
-justifié, pendant deux jours, par une propriété que le moteur n'avait pas.** La leçon est consignée
-dans `reference/PIEGES.md` : sur ce moteur, une mesure sur une graine ne prouve rien.
+**Ce qui borne la portée de l'amendement**, et qui a pesé dans la décision :
 
-Ce qui est vrai, **mesuré le 2026-08-04 sur 20 graines × 7 jours** (`npm run engine:plancher`) :
-
-- Le cas nominal ne déclenche **plus rien : 20/20 semaines sans aucun avertissement**, minimum
-  1 331 kcal — depuis que le planificateur pose un accompagnement en plus du plat (`ETAT.md` n°54).
-  La cause du déclenchement n'était pas le contenu : le plan comparait des **plats** à une
-  **journée**.
-- ⚠️ **Ça reste FAUX pour les régimes pauvres en accompagnements** : végétalien 14 j rend encore
-  **5 avertissements**, « végétalien + sans gluten » **9**. Ce sont les utilisateurs pour qui
-  l'information compte le plus, et ce sont eux qui ne la verront pas. **C'est une limite de CONTENU**,
-  et le masquage ne la traite pas.
+- La décision 34 a **mesuré** le cas nominal (7 jours × 3 créneaux) à **1 208 kcal minimum, ZÉRO
+  avertissement**. Ce qui devient invisible par défaut est un cas **rare**, pas l'ordinaire.
+- Les journées qui déclenchent encore l'alerte sont des **combinaisons extrêmes de régimes**
+  (« sans gluten NI lait NI œuf » : 16 créneaux remplis sur 21). ⚠️ **C'est une limite de CONTENU**,
+  et le masquage ne la traite pas — elle reste à combler, indépendamment de ce réglage.
 - Le plan a **toujours été rendu quand même** : l'avertissement n'a jamais bloqué personne. Le
   masquer retire une information, pas une possibilité.
-
-> ⚠️ **CE QUE L'AVERTISSEMENT MESURE, ET CE QU'IL NE MESURE PAS** (précisé le 2026-08-04). Il
-> additionne **les recettes posées au plan**, pas l'apport de la personne : ni le pain sur la table,
-> ni un yaourt, ni un repas pris dehors — ni le petit-déjeuner quand le plan n'a que deux créneaux,
-> **ce qui est le réglage par défaut de l'écran Semaine**. `PlanWarning.repasComptes` porte le nombre
-> de créneaux additionnés pour que l'écran puisse écrire « vos 2 repas prévus » plutôt que « votre
-> journée ». Et 1 200 kcal est un **seuil de vigilance**, jamais un apport de référence (≈ 2 000 pour
-> une femme active) : l'écran a écrit « pour une référence de 1 200 kcal » jusqu'à cette date, ce qui
-> présentait un plancher de sécurité comme une cible.
 
 ⚠️ **Ce que cet amendement N'AUTORISE PAS** : masquer les quatre autres garde-fous, masquer un
 allergène déclaré, ou étendre le raisonnement « par défaut c'est plus sobre » à un signal de
@@ -943,32 +755,15 @@ La frontière est structurelle, pas affaire de ton :
 Safari efface les données web après 7 jours d'inactivité — **sauf si la PWA est installée sur
 l'écran d'accueil**. Stratégie défensive obligatoire :
 
-| Mesure | Détail | État |
-|---|---|---|
-| 1. Persistance | `navigator.storage.persist()` réclamé au premier lancement | ✅ `ui/user-source.ts` |
-| 2. Installation avant saisie | Onboarding bloqué tant que l'app n'est pas installée (ou avertissement explicite si l'utilisateur refuse) | ⚠️ non faite |
-| 3. Export manuel | Fichier `.nutri-backup` téléchargeable à tout moment | ✅ 2026-08-06 |
-| 4. Rappel automatique | Invite à sauvegarder si `dernier_export_le` > 14 jours | ✅ 2026-08-06, **dans Paramètres seulement** |
-| 5. Import | Restauration complète depuis un fichier de sauvegarde | ✅ 2026-08-06 |
-| 6. Détection | Bandeau d'alerte permanent si la persistance a été refusée | ✅ `ui/main.tsx` |
-| 7. Quota | Surveillance via `navigator.storage.estimate()` | ⚠️ non faite |
-
-**Précisions sur 3, 4 et 5, livrées le 2026-08-06** (décision 59 d'`ETAT.md` §4, où vit le raisonnement
-complet — ne pas le redupliquer ici) :
-
-- Le `.nutri-backup` contient les **octets SQLite** de `user.db`, pas du JSON. Une liste de tables
-  écrite à la main serait fausse au premier ajout de table, et son échec serait muet.
-- La restauration **valide avant de remplacer** : le fichier est ouvert dans une base jetable et migré
-  là, et seuls des octets déjà éprouvés écrasent celui de l'utilisateur. Une sauvegarde d'une version
-  de schéma **plus récente est refusée**, jamais tentée.
-- Le rappel de la mesure 4 n'apparaît **que sur la ligne « Sauvegarder mes données » des Paramètres** :
-  ni bandeau d'accueil, ni notification, ni badge. Faute d'export, l'ancienneté se compte depuis
-  `user_profile.cree_le` — « jamais sauvegardé » n'est pas « il y a longtemps », et réclamer une
-  sauvegarde devant une base vide serait du bruit.
-
-⚠️ **Un verrou d'onglet a été ajouté au même endroit** (`navigator.locks`, `ui/user-source.ts`) : deux
-onglets tenaient chacun leur copie de `user.db` et le dernier qui écrivait gagnait, sans erreur.
-L'onglet qui n'obtient pas le verrou n'écrit plus et l'affiche. Détail : `ETAT.md` §8.
+| Mesure | Détail |
+|---|---|
+| 1. Persistance | `navigator.storage.persist()` réclamé au premier lancement |
+| 2. Installation avant saisie | Onboarding bloqué tant que l'app n'est pas installée (ou avertissement explicite si l'utilisateur refuse) |
+| 3. Export manuel | Fichier `.nutri-backup` téléchargeable à tout moment |
+| 4. Rappel automatique | Invite à sauvegarder si `dernier_export_le` > 14 jours |
+| 5. Import | Restauration complète depuis un fichier de sauvegarde |
+| 6. Détection | Bandeau d'alerte permanent si la persistance a été refusée |
+| 7. Quota | Surveillance via `navigator.storage.estimate()` |
 
 ### 7.1 Stratégie de cache — deux étages (option B)
 
@@ -1113,52 +908,37 @@ chantier de contenu différé — l'atout « zéro donnée » voyage, lui, parto
 
 ## 9. Structure du projet
 
-> ⚠️ **Rectifié le 2026-08-03 contre le disque.** La version précédente annonçait `app/src/safety/`
-> et `app/src/features/` — **ni l'un ni l'autre n'a jamais existé**. Le garde-fou de vocabulaire
-> vivait en réalité dans `engine/guards/`, et les écrans dans `ui/screens/`. Un agent qui lisait ce
-> paragraphe cherchait `features/`, ne le trouvait pas, et pouvait le créer.
-> L'arbre ci-dessous est relevé sur le dépôt, pas rédigé de mémoire.
-
 ```
 appli_nutrition/
-├─ CLAUDE.md                    ← chargé à chaque session : invariants, commandes, carte de docs/
-├─ docs/                        ← ARCHITECTURE · ENGINE (index) + reference/ · DESIGN · ETAT · FICHE_REPRISE
+├─ ARCHITECTURE.md              ← ce document
 ├─ app/
 │  ├─ src/
-│  │  ├─ engine/                ← TS pur, zéro dépendance UI/DB, ≥90 % de couverture
-│  │  │  ├─ domain/             ← types, ids, marques, catalogue, requête, résultat, planning (12 f.)
-│  │  │  ├─ nutrition/          ← L2 : agrégation, signatures, couverture, besoins, ingrédient caractéristique
-│  │  │  ├─ selection/          ← L3 : exclusions (allergènes, régime, temps, équipement), passe de score,
-│  │  │  │  │                      diversification, similarité, explication, archétypes, alternatives, PRNG
-│  │  │  │  └─ scoring/         ← les 8 couches de score CODÉES : craving · habit · nutri · pantry ·
-│  │  │  │                        preference · season · speed · variety  (occasion/topic/cost : déclarées, non codées)
-│  │  │  ├─ planning/           ← L4 : plan-week · plan-leftovers · reroll-slot · scale-recipe · shopping-list
-│  │  │  ├─ search/             ← recherche de recettes (normalisation accent-insensible)
-│  │  │  ├─ guards/             ← les 5 garde-fous · **banned-terms.ts** = le lint du vocabulaire banni §6.2
-│  │  │  └─ api/                ← L5 : la surface publique du moteur
-│  │  ├─ data/                  ← accès SQLite, migrations, export/import, sources catalogue et user
-│  │  ├─ ui/                    ← PWA : router, navigation, panneau (fenêtres), thème, visite guidée
-│  │  │  └─ screens/            ← les 10 écrans : accueil · aujourdhui · courses · detail-recette ·
-│  │  │                           editeur-recette · frigo · parametres · recettes · savoir · semaine
-│  │  └─ cli/                   ← bancs de mesure : try-engine · try-planning · stress-planning ·
-│  │                              mesure-similarite · diag-couverture · list-recipes
-│  └─ public/catalog/catalog.db ← base livrée avec l'app, produite par `npm run build`
+│  │  ├─ engine/                ← TS pur, zéro dépendance, ≥90 % de couverture
+│  │  │  ├─ types.ts
+│  │  │  ├─ filters.ts          ← contraintes dures (§5.2)
+│  │  │  ├─ scoring.ts          ← contraintes souples (§5.3)
+│  │  │  ├─ diversify.ts        ← (§5.4)
+│  │  │  ├─ explain.ts          ← (§5.5)
+│  │  │  ├─ planner.ts          ← planning 7 jours (§5.6)
+│  │  │  └─ shopping.ts         ← (§5.7)
+│  │  ├─ data/                  ← accès SQLite, migrations, export/import
+│  │  ├─ safety/                ← consentement, disclaimers, garde-fous §6.5
+│  │  │  └─ lint-contenu.test.ts ← échoue si le vocabulaire banni §6.2 apparaît
+│  │  ├─ features/              ← écrans
+│  │  └─ ui/                    ← composants
+│  └─ public/catalog/catalog.db
 ├─ catalog/                     ← sources éditables, versionnées en clair
-│  ├─ sources/                  ← foods.yaml · ciqual-mapping.yaml · CIQUAL 2025
-│  ├─ recipes/*.yaml            ← 241
-│  ├─ evidence/*.md             ← 8 fiches « Comprendre » — frontmatter = métadonnées, corps = résumé
-│  ├─ tips/*.yaml               ← 73
-│  ├─ lexicon/*.yaml + *.webp   ← 62 gestes de cuisine illustrés (§8.5)
+│  ├─ sources/ciqual/
+│  ├─ recipes/*.yaml
+│  ├─ evidence/*.md             ← frontmatter = métadonnées, corps = résumé
+│  ├─ tips/*.yaml
+│  ├─ topics/*.md               ← chapitres santé (§8.2 bis)
+│  ├─ lexicon/*.yaml + *.webp   ← gestes de cuisine illustrés (§8.5)
+│  ├─ occasions/dates.yaml      ← table figée sur 10 ans (§8.6)
 │  ├─ CREDITS.md
-│  ├─ build.mjs                 ← génère catalog.db · build-icons.mjs · import-ciqual.mjs
-│  └─ build.test.ts
-├─ tests/                       ← intégration : frontières engine/, catalogue réel, cohérence régime & lexique
-├─ vite.config.ts               ← build PWA (root: 'app', COOP/COEP pour OPFS)
-└─ vitest.config.ts             ← ⚠️ SÉPARÉ EXPRÈS — `root: 'app'` faisait disparaître 44 tests
+│  └─ build.mjs                 ← génère catalog.db
+└─ tests/
 ```
-
-> ⚠️ **`occasions/` et `topics/` sont annoncés au §8 mais n'existent pas encore sur le disque** —
-> cohérent avec les couches `occasion`/`topic` déclarées au registre et non codées.
 
 **Le catalogue est éditable en texte, compilé en binaire.** Les recettes et fiches vivent en
 YAML/Markdown (lisibles, versionnables, relisibles par un tiers) ; `build.mjs` produit le `.db`.
@@ -1199,8 +979,7 @@ YAML/Markdown (lisibles, versionnables, relisibles par un tiers) ; `build.mjs` p
 2. Liste définitive des 8-10 chapitres santé de la v2
 3. Revue juridique par un professionnel avant publication publique — recommandée, non bloquante
    pour le développement
-4. ~~**Mode cuisine** en v1 ou v1.5~~ — **tranché le 2026-08-04** : mono-recette en v1,
-   synchronisation multi-recettes en v1.5 (§5bis)
+4. **Mode cuisine** en v1 ou v1.5 (feature nouvelle, sizeable — après le socle P0, §5bis)
 5. **Multi-langue** : structure prévue dès le schéma (§8.8) ; 1ʳᵉ langue = français ; 2ᵉ langue et
    localisation du contenu santé (par marché, juridique) = v2+
 6. **Cible iOS** : **PWA** par défaut (gratuit, pas de Mac) ; Capacitor + App Store seulement si

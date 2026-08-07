@@ -489,6 +489,20 @@ un renvoi interne. **Télécharger le texte intégral une fois** (`archive.org/d
 seconde. URL exacte, revérifiée le 2026-08-05 :
 `https://archive.org/download/bnf-bpt6k65768837/bnf-bpt6k65768837_djvu.txt` — 1 984 936 octets.
 
+⛔ **`curl` SANS `-L` REND UN FICHIER DE ZÉRO OCTET, sans erreur et avec un code de sortie 0.**
+Mesuré le 2026-08-07 : cette URL répond **302**, jamais 200. `archive.org/download/` n'est qu'un
+aiguilleur — il renvoie vers le nœud qui détient l'exemplaire (`dn790008.ca.archive.org` ce jour-là,
+et ce nom **change**). D'où la seule forme fiable, et la vérification qui va avec :
+
+```bash
+curl -L -o escoffier.txt "https://archive.org/download/bnf-bpt6k65768837/bnf-bpt6k65768837_djvu.txt"
+wc -c escoffier.txt   # doit rendre 1984936 ; tout autre nombre = téléchargement à refaire
+```
+
+Ne pas coder en dur l'adresse du nœud pour économiser la redirection : elle sera périmée.
+Et ne jamais conclure « le plat est absent » d'un grep sur un fichier dont on n'a pas pesé la taille
+— un fichier vide répond zéro à toutes les questions.
+
 ⛔ **L'OCR SÉPARE LES MOTS PAR DEUX ESPACES, et c'est le piège le plus coûteux du fichier.**
 Le texte contient `haricots  verts`, jamais `haricots verts`. Un `grep "haricots verts"` naïf rend
 donc **0** là où `grep -E "haricots[[:space:]]+verts"` en rend **51**. Mesuré le 2026-08-05 : un

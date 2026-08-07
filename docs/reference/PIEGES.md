@@ -47,6 +47,25 @@
   l'écran, parce que les deux portaient sur l'arbre. → **vérifier le COMMIT lui-même**
   (`git worktree add --detach .verif <sha>`, puis `node catalog/build.mjs` et les quatre commandes
   dedans), pas l'arbre dont il est censé sortir.
+- ⛔ **VÉRIFIER UNE SÉLECTION DE FICHIERS N'EST PAS VÉRIFIER UN COMMIT — la variante qui a coûté
+  cher le 2026-08-07**, alors même que la parade ci-dessus était appliquée. Le worktree était bien
+  détaché et isolé, mais **on y avait copié les deux fichiers du dernier lot sur `main`** au lieu de
+  se détacher sur la référence. Les 15 recettes des deux commits précédents n'y étaient pas : la
+  suite est sortie verte, et la branche était rouge. Bissection après coup :
+  `main` 17/17 · `4550cad` 17/17 · `8cd7227` 17/17 · **`e3bc94c` 2 rouges**. → **`git worktree add
+  --detach <ref>`, jamais une copie de fichiers.** ⚠️ Le piège est d'autant plus traître qu'il
+  **ressemble** à la parade : worktree isolé, jonction `node_modules`, catalogue rebâti. Tout était
+  juste sauf ce qu'on y avait mis.
+- ⚠️ **UN LOT DE CONTENU PEUT FAIRE ROUGIR UN TEST D'ÉCRAN, ET CE N'EST PAS UNE RÉGRESSION.** Trois
+  occurrences en deux jours (`semaine.test.tsx` vert par chance, puis les deux de
+  `aujourdhui.test.tsx`). Le motif : **le test s'appuie sur une propriété du catalogue au lieu de la
+  construire.** Mesuré le 2026-08-07 : l'écran « Aujourd'hui » offre **12 suggestions**, l'encart
+  d'indécision s'ouvre à `vues.size - 1 >= 10` donc il faut **11 recettes distinctes**, et le test
+  n'en parcourt que 10 — **une recette de marge**, consommée par cinq plats de plus. L'autre exigeait
+  que le plat n° 1 du dîner diffère du n° 2 du déjeuner, **ce que rien n'a jamais promis** : presque
+  tous les plats portent `types_repas: [dejeuner, diner]`. ⛔ **Ne pas « corriger » en retirant du
+  contenu, ni en changeant l'assertion sans décider** — c'est un arbitrage sur ce que le produit
+  promet, pas un ajustement.
 - ⛔ **`git apply --unidiff-zero` POSE LES HUNKS AUX NUMÉROS DE LIGNE LITTÉRAUX.** Payé le
   2026-08-06, en séparant deux pistes qui avaient édité les mêmes fichiers. Sans contexte, git n'a
   **rien à quoi reconnaître l'emplacement** : il applique où le patch le dit. Or retirer un hunk
@@ -63,7 +82,13 @@
   commits, en le disant dans le message.
 - ⚠️ **Un arbre neuf n'a pas de `catalog.db`** : il est gitignoré. Une suite lancée dans un worktree
   frais rend ~168 échecs « unable to open database file » qui ne sont **pas** des régressions. Faire
-  `node catalog/build.mjs` d'abord, sinon on diagnostique un fantôme.
+  `node catalog/build.mjs` d'abord, sinon on diagnostique un fantôme. **Repayé le 2026-08-07 : 203
+  échecs**, et `engine:plan-stress` mort sur la même cause. Le nombre grandit avec le catalogue —
+  ce n'est pas une signature à mémoriser, c'est **l'ordre des commandes** qui l'est.
+- ⚠️ **`node catalog/audit-mapping.mjs` NE TOURNE PAS DANS UN WORKTREE** — il lit `documents
+  Ciqual/`, qui est gitignoré et n'existe donc que dans l'arbre principal. Il y meurt en `ENOENT`.
+  L'audit obligatoire après chaque lot de contenu se lance **dans le dépôt principal**, séparément
+  des quatre commandes.
 - ⚠️ **Découper un bloc de code par recherche de `]` ou `}` est faux dès qu'il y a une annotation de
   type.** Le premier `]` après `const X: readonly string[] = [` est celui de `string[]`, pas la
   fermeture du littéral. C'est exactement ce qui a tronqué la migration v9 en

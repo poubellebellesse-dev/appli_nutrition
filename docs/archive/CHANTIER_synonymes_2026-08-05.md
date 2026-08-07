@@ -84,3 +84,20 @@ Plus : taper « lardon », « gambas », « chipolata » dans l'écran Frigo ren
 
 Et mettre à jour ETAT.md décision 58 : la cause (1) est close (commits ci-dessus), la
 cause (2) devient close si ce lot passe, la cause (3) reste ouverte.
+
+---
+
+## ⚠️ ARCHIVÉ le 2026-08-07 — ce chantier est CLOS
+
+Ce fichier vivait à `docs/prompt-synonymes.md`, à la racine des documents, comme s'il décrivait un
+travail en cours. Il n'en décrivait plus : **la cause (2) de la décision 58 a été livrée le
+2026-08-05** — `food.synonymes` existe (`foods.yaml` → `food_synonym` → `catalog-loader` →
+`chercherParNom`), le build refuse une entrée morte, un terme revendiqué par deux aliments et un
+terme vide.
+
+⚠️ **Et sa fermeture a eu une conséquence que personne n'a vue pendant deux jours** : la décision 8
+justifiait le lien étape → ingrédient « écrit à la main » par *« `food` n'a ni synonyme ni alias »*.
+Cette prémisse est morte **le lendemain**, ici même. C'est la **décision 60**, rouverte le
+2026-08-06.
+
+**Conservé pour le raisonnement, pas pour l'état.** L'état vit dans [`../ETAT.md`](../ETAT.md).

@@ -42,10 +42,20 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-05** : `npm test` → **1 492 passed
-(84 fichiers)** en 38,8 s · typecheck propre · `vite build` ✓ · `engine:plan-stress` 20/20 ·
-`node catalog/build.mjs` → 450 aliments, 241 recettes, 62 gestes, 73 tips, 8 fiches. ⚠️ Ce compte
-bougera : **la sortie réelle fait foi, pas cette ligne.**
+Dernier relevé, **suite réellement exécutée le 2026-08-07 (fin de journée)** : `npm test` →
+**1 645 passed / 2 failed (1 647, 91 fichiers)** en 50,8 s · typecheck propre · `vite build` ✓ ·
+`engine:plan-stress` **20/20 avec 1 SIGNAL** · `node catalog/build.mjs` → **451 aliments,
+297 recettes, 1 368 étapes, 62 gestes, 73 tips, 8 fiches**.
+⚠️ **451 et non 450** — recompté dans l'arbre le 2026-08-07 après `11687d4` (`chou_blanc`).
+⚠️ **Une cinquième commande, qu'aucun test ne remplacera** : `node catalog/audit-mapping.mjs`, à
+lancer À LA MAIN après chaque lot de contenu et **uniquement dans le dépôt principal** —
+`documents Ciqual/` est gitignoré, donc absent de tout worktree.
+⚠️ **LES 2 ÉCHECS SONT CONNUS, LOCALISÉS ET NON RÉSOLUS** — `ui/screens/aujourdhui.test.tsx`, causés
+par un lot de contenu (une recette domine deux créneaux) et **pas** par le code : vérifié par
+falsification, pas déduit. Détail et arbitrage en attente dans `docs/FICHE_REPRISE.md`.
+⚠️ **Piège de relevé** : `npm test 2>&1 | tail -25` rend le code de sortie du **pipe**, donc 0. Lire
+le compte `Tests N failed`, jamais `$?`.
+⚠️ Ce compte bougera : **la sortie réelle fait foi, pas cette ligne.**
 
 **Une tâche n'est finie que quand ces quatre-là sont verts et que la sortie est collée dans la
 réponse.** Pas « ça devrait passer ». La sortie, ou ce n'est pas fini.
@@ -113,6 +123,15 @@ Liste complète dans **`docs/reference/PIEGES.md`**. Les plus chers :
   → `INSERT … ON CONFLICT DO UPDATE` dès qu'une ligne a des enfants.
 - **Le classement est « reproductible à graine égale », pas « déterministe ».** Ne pas réécrire
   l'en-tête dans l'autre sens.
+
+## Délégation
+
+**La table de routage et les règles de délégation vivent dans `~/.claude/CLAUDE.md` §6 — ne pas
+les redupliquer ici.** Les définitions d'agents sont dans `G:\Claude\.claude\agents\`,
+chargées par remontée d'arborescence.
+
+Spécifique à ce projet : `testeur` lit la section « Vérifier » ci-dessus et lance ces commandes
+**telles quelles** — les quatre, `npx vite build` compris. Il n'improvise pas d'équivalent.
 
 ## Avant de dire que c'est fini
 
