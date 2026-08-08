@@ -167,3 +167,53 @@ describe('les invariants d’origine, inchangés', () => {
     expect(ids(liens, 2)).toEqual(['artichaut'])
   })
 })
+
+describe('une racine de verbe n’est pas un préfixe de nom', () => {
+  // Mesuré sur le catalogue le 2026-08-08 : la racine « sal » attrapait `saladier`×10,
+  // `salade`×4 et `salsifis`×1 ; « poivr » attrapait `poivron`×22 et `poivrons`×13 ;
+  // « vinaigr » attrapait `vinaigrette`×17 ; « gratin » attrapait le NOM `gratin`×3.
+  const HUILE = A('huile_olive', "Huile d'olive", { groupe: 'matières grasses' })
+  const POIVRE = A('poivre_noir', 'Poivre noir', { groupe: 'condiments', fond_de_placard: true })
+  const VINAIGRE = A('vinaigre_vin_rouge', 'Vinaigre de vin rouge', { groupe: 'condiments' })
+  const EMMENTAL = A('fromage_emmental_rape', 'Emmental râpé', { groupe: 'lait et produits laitiers' })
+  const CITRON = A('citron', 'Citron, pulpe, cru', { groupe: 'fruits' })
+
+  it('« la vinaigrette » n’est pas « vinaigrer » — c’est la préparation, pas l’ingrédient', () => {
+    const liens = liensDeLaRecette(
+      recette([VINAIGRE], ['Verser la vinaigrette et mélanger.']),
+      carte(VINAIGRE)
+    )
+    expect(ids(liens, 1)).toEqual([])
+  })
+
+  it('« un plat à gratin » n’est pas « gratiner »', () => {
+    const liens = liensDeLaRecette(
+      recette([EMMENTAL], ['Étaler la viande au fond d’un plat à gratin.']),
+      carte(EMMENTAL)
+    )
+    expect(ids(liens, 1)).toEqual([])
+  })
+
+  it('« un saladier » et « une salade » ne salent rien', () => {
+    const liens = liensDeLaRecette(
+      recette([SEL], ['Verser la salade dans un saladier.']),
+      carte(SEL)
+    )
+    expect(ids(liens, 1)).toEqual([])
+  })
+
+  it('« les poivrons » ne sont pas du poivre', () => {
+    const liens = liensDeLaRecette(
+      recette([POIVRE], ['Émincer les poivrons en lanières.']),
+      carte(POIVRE)
+    )
+    expect(ids(liens, 1)).toEqual([])
+  })
+
+  it('le verbe, lui, continue de désigner son ingrédient — infinitif, participe, gérondif', () => {
+    for (const texte of ['Saler l’eau.', 'Poser dans une poêle huilée.', 'Terminer en citronnant.']) {
+      const liens = liensDeLaRecette(recette([SEL, HUILE, CITRON], [texte]), carte(SEL, HUILE, CITRON))
+      expect(ids(liens, 1).length, texte).toBe(1)
+    }
+  })
+})

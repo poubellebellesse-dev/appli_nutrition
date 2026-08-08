@@ -421,6 +421,34 @@ un test de non-régression ne l'attrape que si quelqu'un a d'abord vu la phrase.
 d'épinards ». Un libellé s'injecte dans TOUTES les étapes de la recette, y compris celles d'après
 cuisson : il ne peut donc porter aucun état.
 
+### UNE RACINE DE VERBE EST AUSSI UN PRÉFIXE DE NOM — `startsWith` ne les sépare pas
+
+La table `VERBES` de `lien-etape-ingredient.mjs` rattache un ingrédient qu'aucune chaîne ne peut
+retrouver : « saler » ne contient pas « sel ». Le test était `mot.startsWith(racine)`. Relevé mot à
+mot sur le catalogue le 2026-08-08 :
+
+```
+sal      → saler×123  salee×50   MAIS saladier×10  salade×4  salsifis×1
+poivr    → poivrer×24 poivre×17  MAIS poivron×22   poivrons×13
+vinaigr  → vinaigre×24           MAIS vinaigrette×17
+gratin   → gratiner×5 gratine×1  MAIS gratin×3     gratinage×1
+```
+
+« Verser la vinaigrette » rattachait le VINAIGRE, « un plat à gratin » le FROMAGE, « dans un
+saladier » le SEL. **16 liens faux, tous `derive`, tous plausibles** — et l'un d'eux bloquait un
+héritage juste, qui est réapparu une fois le faux retiré.
+
+→ La racine doit être suivie d'une **terminaison verbale**. Les recettes n'emploient que trois
+formes — infinitif, participe passé, gérondif — donc `['er', 'e', 'es', 'ee', 'ees', 'ant']`.
+⚠️ **`ons` et `ez` en sont volontairement absents** : aucune étape ne dit « nous poivrons », et les
+y mettre rendrait `poivrons` au poivre. Le reste vide n'est accepté que si la racine est elle-même
+un infinitif (`paner`), sans quoi le nom `gratin` repasserait pour `gratiner`.
+
+⚠️ **Le motif est le même que « la chair » lue comme un verbe et que les deux découpages de
+`texte-etape.ts` : une approximation de chaîne qui marche sur l'exemple qui l'a motivée et déraille
+sur le voisin.** Aucune des trois n'a été trouvée par un test — les trois sortent d'une relecture à
+la main du catalogue.
+
 ### UNE ÉTAPE SANS LIEN EST INVISIBLE POUR LE CHANTIER DE RÉÉCRITURE
 
 `atelier/extraire-a-reecrire.mjs` part des liens : il liste les étapes où le build a rattaché un

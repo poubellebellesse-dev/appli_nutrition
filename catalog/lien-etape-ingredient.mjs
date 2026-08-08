@@ -51,6 +51,37 @@ const VERBES = new Map([
 ])
 
 /**
+ * ⚠️ UNE RACINE DE VERBE EST AUSSI UN PRÉFIXE DE NOM, et `startsWith` ne fait pas la différence.
+ * Relevé sur le catalogue le 2026-08-08, mot à mot :
+ *
+ *   sal      → saler×123  salee×50   MAIS saladier×10  salade×4  salsifis×1
+ *   poivr    → poivrer×24 poivre×17  MAIS poivron×22   poivrons×13
+ *   vinaigr  → vinaigre×24           MAIS vinaigrette×17
+ *   gratin   → gratiner×5 gratine×1  MAIS gratin×3     gratinage×1
+ *
+ * « Verser la vinaigrette » rattachait donc le VINAIGRE, « un plat à gratin » le FROMAGE. Des liens
+ * plausibles et faux — la forme la plus chère, parce qu'aucune sonde ne les distingue des vrais.
+ *
+ * La parade : la racine doit être suivie d'une TERMINAISON VERBALE. Les recettes n'emploient que
+ * trois formes — infinitif, participe passé, gérondif — donc la liste est courte et fermée.
+ * ⚠️ `ons` et `ez` en sont volontairement ABSENTS : aucune étape ne dit « nous poivrons », et les
+ * y mettre rendrait `poivrons` au poivre.
+ */
+const TERMINAISONS_VERBALES = new Set(['er', 'e', 'es', 'ee', 'ees', 'ant'])
+
+/**
+ * Le mot est-il une forme verbale de cette racine, plutôt qu'un nom qui commence pareil ?
+ *
+ * Le reste vide n'est accepté que si la racine EST déjà un infinitif (`paner`) — sans quoi le nom
+ * `gratin` passerait pour le verbe `gratiner`.
+ */
+function estFormeVerbale(mot, racine) {
+  if (!mot.startsWith(racine)) return false
+  const reste = mot.slice(racine.length)
+  return reste === '' ? racine.endsWith('er') : TERMINAISONS_VERBALES.has(reste)
+}
+
+/**
  * L'HYPERONYME — le mot générique qui désigne plusieurs ingrédients sans en nommer aucun.
  *
  * ⚠️ C'ÉTAIT LE SEUL CAS OÙ L'ANNOTATION MANUELLE BATTAIT VRAIMENT LA MACHINE, et il se résout sans
@@ -237,7 +268,7 @@ export function rapprocherEtape(texte, candidats) {
     }
     if (verdict === null) {
       for (const [racine, cible] of VERBES) {
-        if (!mots.some((m) => m.startsWith(racine))) continue
+        if (!mots.some((m) => estFormeVerbale(m, racine))) continue
         if (formesDe(aliment).some((f) => memeMot(f[0], cible))) {
           verdict = 'verbe'
           break
