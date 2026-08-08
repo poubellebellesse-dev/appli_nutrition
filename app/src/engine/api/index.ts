@@ -63,7 +63,7 @@ import {
 } from '../planning/reroll-slot.js'
 import type { RerollContext } from '../planning/reroll-slot.js'
 import type { LayerId } from '../domain/index.js'
-import { NoViableRecipeError } from '../domain/index.js'
+import { NoViableRecipeError, proposerUneSauce, saucesProposees, toutesLesSauces } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
 import {
   DEFAULT_DIVERSIFY_TOLERANCE,
@@ -222,6 +222,20 @@ export interface Engine {
    * `scorePantry`.
    */
   searchByPantry(req: PantryRequest): PantryResult
+  /**
+   * Les sauces qu'on propose d'ajouter APRÈS coup à un plat (décision 62, 2026-08-08).
+   *
+   * ⚠️ CE N'EST PAS UNE SUGGESTION AU SENS DU MOTEUR. Aucun score, aucune couche de goût, aucun
+   * classement : les attachées viennent du catalogue, les autres sont alphabétiques. Une sauce ne
+   * peut faire monter ni descendre aucune recette — c'est le parti de `engine/domain/sauces.ts`.
+   *
+   * ⚠️ LES EXCLUSIONS S'APPLIQUENT, PAR LES MÊMES COUCHES. Une sauce est une recette avec des
+   * ingrédients, donc des allergènes et un régime : proposer une sauce au beurre à qui a déclaré
+   * une allergie aux produits laitiers serait exactement le trou que `browseRecipes` prend soin de
+   * ne pas ouvrir. Elles passent par `runExclusionPass` avec les sauces pour ensemble initial, puis
+   * par `assertNoDeclaredAllergen` qui REDÉRIVE — la ceinture ne fait pas confiance à la bretelle.
+   */
+  suggestSauces(req: SauceRequest): SauceResult
   analyzeWeek(plan: WeekPlan, profile: UserProfile): NutritionReport
   scaleRecipe(id: RecipeId, portions: number): ScaledRecipe
   suggestSubstitutions(id: RecipeId, missing: readonly FoodId[]): readonly Substitution[]
@@ -590,6 +604,34 @@ export interface PantryResult {
   readonly entonnoir: RejectionSummary
 }
 
+export interface SauceRequest {
+  /** Le plat auquel on cherche une sauce. Inconnu du catalogue → `RangeError`, comme `scaleRecipe`. */
+  readonly recipeId: RecipeId
+  /** Les mêmes couches d'exclusion que partout : un allergène déclaré exclut, même une sauce. */
+  readonly constraints: HardConstraints
+}
+
+export interface SauceResult {
+  /**
+   * Faux quand le plat n'a pas droit à une proposition — c'est une sauce, un dessert, ou il vient
+   * déjà avec la sienne (`engine/domain/sauces.ts`). Les deux listes sont alors vides.
+   *
+   * ⚠️ À DISTINGUER DE « proposer: true avec deux listes vides », qui veut dire tout autre chose :
+   * le plat y aurait droit, mais les contraintes de l'utilisateur ont écarté toutes les sauces.
+   * L'écran ne doit pas rendre le même texte dans les deux cas.
+   */
+  readonly proposer: boolean
+  /** Sauces ATTACHÉES à ce plat par le catalogue (`recipe_sauce`), dans l'ordre du YAML. */
+  readonly attachees: readonly RecipeId[]
+  /** Les autres sauces du catalogue, par ordre alphabétique — pour qui veut sortir du chemin balisé. */
+  readonly autres: readonly RecipeId[]
+  /**
+   * Combien de sauces les couches d'exclusion ont retirées. L'écran DOIT pouvoir le dire :
+   * une liste silencieusement raccourcie par une allergie se lit comme un catalogue pauvre.
+   */
+  readonly ecartees: number
+}
+
 export interface CreateEngineOptions {
   /**
    * Horloge injectée, pour `EngineDiagnostics.dureeMs` uniquement — jamais `Date.now()` en
@@ -657,6 +699,26 @@ function requeteDeParcours(constraints: HardConstraints): SuggestionRequest {
     activeTopics: [],
     seed: 0,
   }
+}
+
+/**
+ * Le catalogue MOINS les sauces — point de départ de `browseRecipes` et de `searchByPantry`.
+ *
+ * ⚠️ CE FILTRE N'EST PAS COSMÉTIQUE, IL BOUCHE UN TROU RÉEL. `types_repas: []` empêche une sauce
+ * d'entrer dans `catalog.indexes.recipesBySlot`, donc d'être suggérée par `suggestMeals` — c'est la
+ * garantie structurelle voulue. Mais ces deux écrans-ci ne partent PAS d'un créneau : ils partent de
+ * `catalog.recipes.keys()`, que rien ne filtre. Sans cette ligne, `ui/choisir-plat.tsx` afficherait
+ * « Vinaigrette à la moutarde » parmi les plats qu'on peut poser dans une case du dîner — et rien
+ * n'aurait été rouge, puisque aucune règle du moteur n'aurait été violée.
+ *
+ * ⚠️ Les sauces restent atteignables : `suggestSauces` les rend, et elles gardent leur fiche. Ce
+ * n'est pas une mise au placard, c'est un axe séparé — le même parti que `service`, qui ne retire
+ * personne d'un créneau (voir le test « axes INDÉPENDANTS » de catalog-loader.test.ts).
+ */
+function recettesHorsSauces(catalog: Catalog): ReadonlySet<RecipeId> {
+  const ids = new Set<RecipeId>()
+  for (const [id, recipe] of catalog.recipes) if (!recipe.estSauce) ids.add(id)
+  return ids
 }
 
 export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): Engine {
@@ -741,8 +803,8 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       // Un `onlyFavorites` sans favori rend une liste vide — c'est correct et lisible à l'écran,
       // à la différence de `suggestMeals` qui lève : ici l'utilisateur voit qu'il n'en a aucun.
       const favoris = req.favoriteRecipeIds ?? new Set<RecipeId>()
-      const depart: ReadonlySet<RecipeId> =
-        req.onlyFavorites === true ? favoris : new Set(enrichedCatalog.recipes.keys())
+      const horsSauces = recettesHorsSauces(enrichedCatalog)
+      const depart: ReadonlySet<RecipeId> = req.onlyFavorites === true ? favoris : horsSauces
 
       // ⚠️ LES MÊMES COUCHES QUE LA SUGGESTION, avec un ensemble initial fourni plutôt que déduit
       // d'un créneau. La requête ci-dessous n'est qu'un porteur de contraintes : `context.creneau`
@@ -766,7 +828,10 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       return {
         recipeIds,
         entonnoir: buildRejectionSummary(depart.size, exclusion),
-        totalCatalogue: enrichedCatalog.recipes.size,
+        // ⚠️ HORS SAUCES, comme le point de départ. Y laisser `recipes.size` ferait annoncer un
+        // total que ce même appel ne peut pas atteindre : « 12 sur 308 » quand seules 305 ont été
+        // regardées. Un entonnoir dont le premier nombre ment ne se remarque nulle part ailleurs.
+        totalCatalogue: horsSauces.size,
       }
     },
     // ⚠️ `convives` n'est pas dans `WeekPlan` — il vient de la REQUÊTE. `planLeftovers` étant
@@ -791,7 +856,7 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       ),
     searchByPantry: (req) => {
       const garde = new Set(req.pantryFoodIds)
-      const depart: ReadonlySet<RecipeId> = new Set(enrichedCatalog.recipes.keys())
+      const depart: ReadonlySet<RecipeId> = recettesHorsSauces(enrichedCatalog)
       const exclusion = runExclusionPass(
         enrichedCatalog,
         requeteDeParcours(req.constraints),
@@ -824,6 +889,39 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       matches.sort((a, b) => b.couverture - a.couverture)
 
       return { matches, entonnoir: buildRejectionSummary(depart.size, exclusion) }
+    },
+    suggestSauces: (req) => {
+      const recipe = enrichedCatalog.recipes.get(req.recipeId)
+      if (recipe === undefined) {
+        throw new RangeError(`suggestSauces : recette '${req.recipeId}' absente du catalogue.`)
+      }
+      if (!proposerUneSauce(recipe, enrichedCatalog)) {
+        return { proposer: false, attachees: [], autres: [], ecartees: 0 }
+      }
+
+      // ⚠️ ON PART DES SAUCES, PAS DU CATALOGUE. `runExclusionPass` accepte un ensemble initial
+      // exactement pour ça (voir son commentaire) : les couches critiques `allergenes` et `regime`
+      // s'appliquent telles quelles, sans qu'aucune ligne de filtrage ne soit réécrite ici. Une
+      // seconde implémentation des allergènes est précisément ce que l'app ne veut nulle part.
+      const toutes = toutesLesSauces(enrichedCatalog).map((s) => s.id)
+      const exclusion = runExclusionPass(
+        enrichedCatalog,
+        requeteDeParcours(req.constraints),
+        EXCLUSION_LAYERS,
+        new Set(toutes)
+      )
+      const gardees = exclusion.candidates
+      // La ceinture par-dessus la bretelle : elle redérive les allergènes depuis le catalogue au
+      // lieu de croire le verdict des couches (§5.2 ARCHITECTURE).
+      assertNoDeclaredAllergen(gardees, enrichedCatalog, req.constraints)
+
+      const attacheesIds = new Set(saucesProposees(recipe, enrichedCatalog).map((s) => s.id))
+      return {
+        proposer: true,
+        attachees: [...attacheesIds].filter((id) => gardees.has(id)),
+        autres: toutes.filter((id) => gardees.has(id) && !attacheesIds.has(id)),
+        ecartees: toutes.length - gardees.size,
+      }
     },
     analyzeWeek: () => notImplemented('analyzeWeek'),
     scaleRecipe: (id, portions) => runScaleRecipe(enrichedCatalog, id, portions),

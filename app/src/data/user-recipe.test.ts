@@ -37,6 +37,7 @@ function aliment(id: string, groupe: string, origine: Food['origineAnimale'], de
     synonymes: [],
     groupe,
     sousFamille: null,
+    sousGroupe: null,
     nutrimentsPour100g: new Map(),
     allergenes: [],
     saisonMois: [],
@@ -44,6 +45,7 @@ function aliment(id: string, groupe: string, origine: Food['origineAnimale'], de
     piquant: null,
     poidsPieceG: null,
     fondDePlacard: false,
+    quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: origine,
     deriveDe: deriveDe === null ? null : (deriveDe as FoodId),
@@ -190,6 +192,9 @@ function recetteDeBase(): Recipe {
     piquant: null,
     sources: [],
     testeLe: null,
+    estSauce: false,
+    porteDejaUneSauce: null,
+    sauceIds: [],
   }
 }
 

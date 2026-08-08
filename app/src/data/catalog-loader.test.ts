@@ -181,14 +181,29 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
 
   // --- service / piquant (CourseKind, 2026-07-28) ---------------------------------------------
 
-  it('charge `service` sur TOUTES les recettes — aucune ne reste sans rôle', () => {
-    expect([...catalog.recipes.values()].filter((r) => r.service === null)).toHaveLength(0)
+  // ⚠️ LES DEUX TESTS QUI SUIVENT EXCLUENT LES SAUCES, ET C'EST LA RÈGLE, PAS UNE TOLÉRANCE. Une
+  // sauce n'a pas de rang dans l'ordre du service français : elle n'est ni entrée, ni plat, ni
+  // accompagnement, ni dessert — elle accompagne l'un d'eux. Lui coller un `service` la ferait
+  // apparaître dans `COURSE_ORDER`, donc dans les écrans qui parcourent l'ordre du repas. Le champ
+  // reste `null` sur elles par construction (le build refuse une sauce portant un `service`).
+  // Ne pas « réparer » ces deux tests en annotant les sauces : c'est le contrat qui casserait.
+
+  it('charge `service` sur TOUTES les recettes SAUF les sauces — aucune autre ne reste sans rôle', () => {
+    const sansService = [...catalog.recipes.values()].filter((r) => !r.estSauce && r.service === null)
+    expect(sansService).toHaveLength(0)
   })
 
-  it('les cinq valeurs de CourseKind sont les seules employées', () => {
-    for (const service of new Set([...catalog.recipes.values()].map((r) => r.service))) {
+  it('les cinq valeurs de CourseKind sont les seules employées hors sauces', () => {
+    const services = [...catalog.recipes.values()].filter((r) => !r.estSauce).map((r) => r.service)
+    for (const service of new Set(services)) {
       expect(COURSE_ORDER).toContain(service)
     }
+  })
+
+  it('AUCUNE sauce ne porte de `service` — la garantie vient du build, pas de l\'écran', () => {
+    const sauces = [...catalog.recipes.values()].filter((r) => r.estSauce)
+    expect(sauces.length).toBeGreaterThan(0)
+    expect(sauces.filter((r) => r.service !== null)).toHaveLength(0)
   })
 
   it('`service` et `typesRepas` sont des axes INDÉPENDANTS — un accompagnement reste servi au dîner', () => {

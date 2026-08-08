@@ -41,6 +41,7 @@ function food(id: string, kcalPer100g: number): Food {
     synonymes: [],
     groupe: "test",
     sousFamille: null,
+    sousGroupe: null,
     nutrimentsPour100g: new Map([["kcal" as NutrientId, kcalPer100g]]),
     allergenes: [],
     saisonMois: [],
@@ -48,6 +49,7 @@ function food(id: string, kcalPer100g: number): Food {
     piquant: null,
     poidsPieceG: null,
     fondDePlacard: false,
+    quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
     deriveDe: null,
@@ -84,6 +86,9 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
     piquant: null,
     sources: [],
     testeLe: null,
+    estSauce: false,
+    porteDejaUneSauce: null,
+    sauceIds: [],
   };
 }
 
@@ -331,6 +336,7 @@ function ferFood(id: string, ferPer100g: number): Food {
     synonymes: [],
     groupe: "test",
     sousFamille: null,
+    sousGroupe: null,
     nutrimentsPour100g: new Map([[FER_ID, ferPer100g]]),
     allergenes: [],
     saisonMois: [],
@@ -338,6 +344,7 @@ function ferFood(id: string, ferPer100g: number): Food {
     piquant: null,
     poidsPieceG: null,
     fondDePlacard: false,
+    quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
     deriveDe: null,
@@ -380,6 +387,9 @@ function ferRecipe(id: string, foodId: string): Recipe {
     piquant: null,
     sources: [],
     testeLe: null,
+    estSauce: false,
+    porteDejaUneSauce: null,
+    sauceIds: [],
   };
 }
 

@@ -11,6 +11,7 @@ image_path: null
 types_repas: [dejeuner, diner]
 service: plat
 piquant: 1
+porte_deja_une_sauce: true
 saison_mois: []
 envergure: quotidien
 conservation_jours: 2

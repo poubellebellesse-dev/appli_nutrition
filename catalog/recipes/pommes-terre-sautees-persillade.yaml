@@ -11,6 +11,8 @@ image_path: null
 types_repas: [diner]
 service: accompagnement
 piquant: 0
+sauces:
+  - sauce_yaourt_citron_ciboulette
 saison_mois: []
 envergure: quotidien
 conservation_jours: 2

@@ -18,14 +18,29 @@
 // un lot, pas un bouton), les notes locales, la roue des goûts, et « Ajouter à ma semaine ».
 
 import { useCallback, useEffect, useState } from 'react'
-import type { Catalog, Recipe, RecipeId, RecipeSource, RecipeStep } from '../../engine/domain/index.js'
+import type {
+  Catalog,
+  HardConstraints,
+  Recipe,
+  RecipeId,
+  RecipeSource,
+  RecipeStep,
+} from '../../engine/domain/index.js'
 import { readDisplay, readUserState, setFavorite, writeDisplay } from '../../data/user-store.js'
+import type { Socle } from '../socle.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import type { OrigineRecette } from '../router.js'
 import { hashDe, hashDeLAliment, hashDeLEditeur, hashDeLaCuisine, hashDeRecette, hashDuFrigo } from '../router.js'
 import { estRecettePerso, readUserRecipe } from '../../data/user-recipe.js'
 import { GestesDeLEtape } from '../gestes-etape.js'
-import { ListeIngredients, QuantitesDeLEtape, SelecteurPortions } from '../ingredients-recette.js'
+import {
+  ListeIngredients,
+  QuantitesDeLEtape,
+  SelecteurPortions,
+  TexteEtape,
+  preparerTexteEtape,
+} from '../ingredients-recette.js'
+import { formesDeLAliment } from '../texte-etape.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
 
@@ -46,7 +61,7 @@ interface Vue {
   readonly recette: Recipe
   readonly catalogue: Catalog
   readonly nomAliment: (id: string) => string
-  readonly estFondDePlacard: (id: string) => boolean
+  readonly estQuantiteFigee: (id: string) => boolean
   readonly quantitePour: (portions: number) => ReadonlyMap<string, number>
   readonly favori: boolean
   readonly manquants: ReadonlySet<string>
@@ -57,6 +72,26 @@ interface Vue {
   /** `null` pour une recette du catalogue. Distingue le libellé de l'avertissement « non vérifié »
    *  (§8.7 ARCHITECTURE) : « Votre recette » mentirait sur un fichier reçu d'ailleurs. */
   readonly sourcePerso: 'perso' | 'variante' | 'importe' | null
+  readonly sauces: VueSauces
+}
+
+interface LigneSauce {
+  readonly id: RecipeId
+  readonly nom: string
+  readonly energiePortion: number | null
+}
+
+interface VueSauces {
+  /** Faux → la section entière ne s'affiche pas (dessert, sauce, ou plat qui vient déjà saucé). */
+  readonly proposer: boolean
+  readonly attachees: readonly LigneSauce[]
+  readonly autres: readonly LigneSauce[]
+  /**
+   * Sauces retirées par les couches d'exclusion. **Se dit à l'écran.** Une liste raccourcie en
+   * silence par une allergie se lit comme un catalogue pauvre, et l'utilisateur cherche alors un
+   * défaut là où l'application a fait exactement son travail (principe 6 : informer).
+   */
+  readonly ecartees: number
 }
 
 type Etat =
@@ -64,6 +99,29 @@ type Etat =
   | { readonly phase: 'introuvable' }
   | { readonly phase: 'pret'; readonly vue: Vue }
   | { readonly phase: 'erreur'; readonly message: string }
+
+/**
+ * Les sauces proposées avec ce plat, résolues en libellés affichables.
+ *
+ * ⚠️ TOUT LE FILTRAGE EST FAIT PAR LE MOTEUR, aucun ici. `suggestSauces` passe les sauces par les
+ * mêmes couches d'exclusion que n'importe quelle recette, allergènes et régime compris, puis les
+ * repasse au garde-fou. Refaire un tri à l'écran, c'est créer la seconde implémentation qui finira
+ * par diverger — et cette fois sur un allergène déclaré.
+ */
+function lireLesSauces(socle: Socle, id: RecipeId, constraints: HardConstraints): VueSauces {
+  const res = socle.moteur.suggestSauces({ recipeId: id, constraints })
+  const ligne = (sauceId: RecipeId): LigneSauce => ({
+    id: sauceId,
+    nom: socle.catalogue.recipes.get(sauceId)?.nom ?? sauceId,
+    energiePortion: energieParPortion(socle.catalogue, sauceId),
+  })
+  return {
+    proposer: res.proposer,
+    attachees: res.attachees.map(ligne),
+    autres: res.autres.map(ligne),
+    ecartees: res.ecartees,
+  }
+}
 
 /** Énergie d'UNE portion, ou `null` si le catalogue ne la connaît pas. */
 function energieParPortion(catalogue: Catalog, id: RecipeId): number | null {
@@ -104,8 +162,8 @@ export function DetailRecette({
             recette,
             catalogue: socle.catalogue,
             nomAliment: (foodId) => socle.catalogue.foods.get(foodId as never)?.nom ?? foodId,
-            estFondDePlacard: (foodId) =>
-              socle.catalogue.foods.get(foodId as never)?.fondDePlacard === true,
+            estQuantiteFigee: (foodId) =>
+              socle.catalogue.foods.get(foodId as never)?.quantiteFigee === true,
             // ⚠️ ON LIT `quantiteG`, PAS `uniteAffichage`. C'était le bug de la première version :
             // `scaleRecipe` recalcule les grammes mais laisse le libellé TEL QUEL, à dessein — « 2
             // carottes » ne se met pas à l'échelle sans réécrire du français, et « 1,5 pincée »
@@ -129,6 +187,7 @@ export function DetailRecette({
             afficherMacros: readDisplay(socle.db).afficherMacros,
             energiePortion: energieParPortion(socle.catalogue, id),
             sourcePerso: estRecettePerso(recetteId) ? (readUserRecipe(socle.db, recetteId)?.source ?? 'perso') : null,
+            sauces: lireLesSauces(socle, id, utilisateur.constraints),
           },
         })
         // ⚠️ RÉINITIALISÉ À CHAQUE RECETTE, et non conservé. Garder la valeur précédente faisait
@@ -290,7 +349,7 @@ export function DetailRecette({
         quantites={quantites}
         facteur={facteur}
         nomAliment={vue.nomAliment}
-        estFondDePlacard={vue.estFondDePlacard}
+        estQuantiteFigee={vue.estQuantiteFigee}
         manquants={vue.gardeManger ? vue.manquants : null}
         // Le retour porte le hash COMPLET de cette fiche, origine comprise : revenir depuis
         // l'aliment doit ramener ici, et le « ← » d'ici doit continuer de désigner la bonne
@@ -510,6 +569,18 @@ function Etape({
   readonly quantites: ReadonlyMap<string, number>
   readonly facteur: number
 }) {
+  // ⚠️ MÊME PRÉPARATION QU'EN MODE CUISINE, mêmes entrées — c'est ce qui garantit que la fiche et le
+  // fourneau annoncent le même nombre pour le même ingrédient. Voir `preparerTexteEtape`.
+  const redaction = preparerTexteEtape({
+    texte: etape.texte,
+    ingredients,
+    foodIds: etape.foodIds,
+    quantites,
+    facteur,
+    formesAliment: (foodId) => formesDeLAliment(catalogue.foods.get(foodId as never), foodId),
+    estQuantiteFigee: (foodId) => catalogue.foods.get(foodId as never)?.quantiteFigee === true,
+  })
+
   return (
     <li className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
       <div className="flex gap-3">
@@ -519,7 +590,10 @@ function Etape({
         >
           {numero}
         </span>
-        <p className="text-[1.12rem] leading-relaxed text-texte">{etape.texte}</p>
+        <TexteEtape
+          segments={redaction.segments}
+          className="text-[1.12rem] leading-relaxed text-texte"
+        />
       </div>
 
       {/* Le retrait aligne les pastilles sur le TEXTE de l'étape, pas sur son numéro. Il appartient
@@ -540,7 +614,8 @@ function Etape({
           quantites={quantites}
           facteur={facteur}
           nomAliment={(foodId) => catalogue.foods.get(foodId as never)?.nom ?? foodId}
-          estFondDePlacard={(foodId) => catalogue.foods.get(foodId as never)?.fondDePlacard === true}
+          estQuantiteFigee={(foodId) => catalogue.foods.get(foodId as never)?.quantiteFigee === true}
+          sauf={redaction.injectes}
         />
         <GestesDeLEtape etape={etape} catalogue={catalogue} />
       </div>
@@ -614,5 +689,122 @@ function ValeursNutritionnelles({
         </Panneau>
       )}
     </section>
+  )
+}
+
+/**
+ * « Une sauce avec ça ? » — décision 62 (2026-08-08).
+ *
+ * ⚠️ LA SECTION DISPARAÎT ENTIÈREMENT quand `proposer` est faux : un dessert, une sauce, ou un plat
+ * qui vient déjà avec la sienne n'affichent rien du tout. Ne pas la remplacer par un « aucune sauce
+ * proposée » — ce serait annoncer un manque là où il n'y a pas de question.
+ *
+ * ⚠️ LES CALORIES DES SAUCES SONT SUR LEUR PROPRE LIGNE, JAMAIS ADDITIONNÉES au plat. C'est la
+ * demande explicite de l'utilisateur (« ne pas prendre en compte les calories pour les sauces »),
+ * rendue de la seule façon compatible avec le principe 3 : on ne CACHE pas le chiffre, on refuse
+ * de le fondre dans un total. Une sauce ajoutée après coup n'est pas toujours mangée, et un total
+ * qui l'inclurait mentirait aussi souvent qu'il dirait vrai. Côté moteur, rien n'en descend dans
+ * `engine/planning` ni dans `checkCalorieFloor` : le plancher calorique continue de ne compter que
+ * les plats.
+ *
+ * ⚠️ AUCUNE SAUCE N'EST « RECOMMANDÉE ». Les attachées viennent du catalogue, les autres sont
+ * alphabétiques — pas de score, pas d'ordre de mérite (principe 6).
+ */
+function SaucesAAjouter({
+  sauces,
+  afficherEnergie,
+}: {
+  readonly sauces: VueSauces
+  readonly afficherEnergie: boolean
+}) {
+  const [ouvert, setOuvert] = useState(false)
+  if (!sauces.proposer) return null
+
+  const total = sauces.attachees.length + sauces.autres.length
+  const valeur =
+    total === 0
+      ? 'Aucune ne convient à vos réglages'
+      : sauces.attachees.length > 0
+        ? `${sauces.attachees.length} proposée${sauces.attachees.length > 1 ? 's' : ''} avec ce plat`
+        : `${total} au catalogue`
+
+  return (
+    <section className="mt-10 border-t border-bordure pt-5">
+      <LigneOuvrante libelle="Ajouter une sauce" valeur={valeur} onOuvrir={() => setOuvert(true)} />
+
+      {ouvert && (
+        <Panneau titre="Ajouter une sauce" onFermer={() => setOuvert(false)}>
+          <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+            À préparer à côté et à servir avec. Rien n'est ajouté à la recette ni à ses quantités.
+          </p>
+
+          {sauces.attachees.length > 0 && (
+            <>
+              <h3 className="mt-5 text-[0.85rem] font-semibold uppercase tracking-wide text-attenue">
+                Avec ce plat
+              </h3>
+              <ul className="mt-2">
+                {sauces.attachees.map((sauce) => (
+                  <LienSauce key={sauce.id} sauce={sauce} afficherEnergie={afficherEnergie} />
+                ))}
+              </ul>
+            </>
+          )}
+
+          {sauces.autres.length > 0 && (
+            <>
+              <h3 className="mt-5 text-[0.85rem] font-semibold uppercase tracking-wide text-attenue">
+                {sauces.attachees.length > 0 ? 'Autres sauces' : 'Toutes les sauces'}
+              </h3>
+              <ul className="mt-2">
+                {sauces.autres.map((sauce) => (
+                  <LienSauce key={sauce.id} sauce={sauce} afficherEnergie={afficherEnergie} />
+                ))}
+              </ul>
+            </>
+          )}
+
+          {total === 0 && (
+            <p className="mt-5 text-[1rem] leading-relaxed text-texte">
+              Aucune sauce du catalogue ne convient à vos allergies et à votre régime.
+            </p>
+          )}
+
+          {/* Le nombre écarté se dit TOUJOURS, y compris quand il reste des sauces à l'écran : sans
+              lui, une liste amputée par une allergie ressemble à un catalogue pauvre. */}
+          {sauces.ecartees > 0 && (
+            <p className="mt-4 text-[0.9rem] leading-relaxed text-attenue">
+              {sauces.ecartees} sauce{sauces.ecartees > 1 ? 's' : ''} écartée
+              {sauces.ecartees > 1 ? 's' : ''} par vos allergies, votre régime ou vos exclusions.
+            </p>
+          )}
+        </Panneau>
+      )}
+    </section>
+  )
+}
+
+/** Une sauce dans la liste : son nom, son énergie sur sa PROPRE ligne, et le lien vers sa fiche. */
+function LienSauce({
+  sauce,
+  afficherEnergie,
+}: {
+  readonly sauce: LigneSauce
+  readonly afficherEnergie: boolean
+}) {
+  return (
+    <li className="border-b border-bordure last:border-b-0">
+      <a
+        href={hashDeRecette(sauce.id, 'recettes')}
+        className="flex min-h-tactile items-center justify-between gap-3 py-2 text-[1.05rem] text-texte no-underline"
+      >
+        <span>{sauce.nom}</span>
+        {afficherEnergie && sauce.energiePortion !== null && (
+          <span className="shrink-0 tabular-nums text-[0.9rem] text-attenue">
+            {Math.round(sauce.energiePortion)} kcal / portion
+          </span>
+        )}
+      </a>
+    </li>
   )
 }

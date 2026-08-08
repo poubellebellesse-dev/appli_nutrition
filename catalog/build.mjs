@@ -640,6 +640,11 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
   }
 
   // --- Recettes ---
+  // Pre-passe : quelles recettes sont des sauces, et quels aliments sont des sauces du commerce.
+  // Necessaire AVANT la boucle parce qu'un plat peut attacher une sauce definie plus loin dans
+  // l'ordre de lecture des fichiers — la meme raison qui rend `derive_de` DEFERRABLE.
+  const idsDesSauces = new Set(recipes.filter((r) => r?.est_sauce).map((r) => r.id))
+
   const recipeIds = new Set()
   for (const recipe of recipes) {
     if (!recipe?.id) {
@@ -714,6 +719,52 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
     if (premierAvertissement !== -1 && premierAvertissement !== etapes.length - 1) {
       errors.push(
         `Recette '${recipe.id}', étape ${etapes[premierAvertissement].ordre} : un avertissement doit être la DERNIÈRE étape (docs/CONCEPTION_MODE_CUISINE.md §3)`
+      )
+    }
+
+    // --- Sauces ------------------------------------------------------------------------------
+    //
+    // Les trois regles ci-dessous rendent STRUCTURELLEMENT impossibles trois erreurs qu'aucun test
+    // d'ecran n'attraperait : une sauce proposee comme diner, une sauce rangee dans l'ordre de
+    // service, et une chaine de sauces qui s'attachent entre elles.
+    if (recipe.est_sauce) {
+      if ((recipe.types_repas ?? []).length > 0) {
+        errors.push(
+          `Recette '${recipe.id}' : une sauce doit porter 'types_repas: []' — sinon elle entre dans ` +
+            `recipesBySlot et le moteur peut la suggérer comme repas`
+        )
+      }
+      if (recipe.service != null) {
+        errors.push(
+          `Recette '${recipe.id}' : une sauce ne porte pas de 'service' (elle n'a aucun rang dans ` +
+            `l'ordre entrée → plat → accompagnement → fromage → dessert) — trouvé '${recipe.service}'`
+        )
+      }
+      if ((recipe.sauces ?? []).length > 0) {
+        errors.push(`Recette '${recipe.id}' : une sauce ne peut pas porter de sauces à son tour`)
+      }
+    }
+
+    const saucesVues = new Set()
+    for (const sauceId of recipe.sauces ?? []) {
+      if (saucesVues.has(sauceId)) {
+        errors.push(`Recette '${recipe.id}' : sauce '${sauceId}' attachée deux fois`)
+      }
+      saucesVues.add(sauceId)
+      if (sauceId === recipe.id) {
+        errors.push(`Recette '${recipe.id}' : une recette ne peut pas s'attacher elle-même comme sauce`)
+      } else if (!idsDesSauces.has(sauceId)) {
+        errors.push(
+          `Recette '${recipe.id}' : sauce '${sauceId}' inconnue ou non déclarée 'est_sauce: true'`
+        )
+      }
+    }
+
+    // Un plat qui déclare porter déjà sa sauce ET qui en attache une se contredit : l'écran ne
+    // saurait pas s'il doit proposer. Mieux vaut le refuser ici que trancher au hasard à l'affichage.
+    if (recipe.porte_deja_une_sauce === true && (recipe.sauces ?? []).length > 0) {
+      errors.push(
+        `Recette '${recipe.id}' : 'porte_deja_une_sauce: true' et des sauces attachées — contradictoire`
       )
     }
 
@@ -839,6 +890,17 @@ CREATE TABLE food (
   -- differents ne se rendent pas repetitifs. Ne PAS confondre avec groupe, trop large
   -- ('viandes' melange boeuf, poulet, porc et agneau).
   sous_famille TEXT,
+  -- Sous-categorie DE RAYON a l'interieur de groupe — premiere valeur : 'sauce' (ketchup,
+  -- mayonnaise, moutarde, pesto...), qui vit dans le groupe Ciqual 'condiments' au milieu du thym,
+  -- du laurier et de la levure chimique. Vocabulaire OUVERT, comme groupe.
+  --
+  -- ⚠️ NE PAS CONFONDRE AVEC sous_famille, ET C'EST LE PIEGE DE CE CHAMP. sous_famille regroupe le
+  -- MEME PRODUIT DE BASE (poulet_blanc + poulet_cuisse) et sert la RECENCE de variety/habit : y
+  -- mettre 'sauce' ferait traiter le ketchup et le pesto comme un seul produit, et un plat au pesto
+  -- serait declare repetitif apres un plat au ketchup. Regression silencieuse du scoring. Les deux
+  -- champs se ressemblent et ne repondent pas a la meme question : sous_famille dit « c'est le meme
+  -- aliment », sous_groupe dit « ca se range au meme endroit ».
+  sous_groupe TEXT,
   saison_mois TEXT NOT NULL,
   toute_annee INTEGER NOT NULL DEFAULT 0,
   -- piquant de l'ALIMENT lui-meme, 0 a 4. NULL = non renseigne. Le piquant d'une recette n'en est
@@ -854,6 +916,11 @@ CREATE TABLE food (
   -- fond_de_placard : sel, poivre, epices seches. Ecarte de la liste de courses PAR DEFAUT — on ne
   --   les rachete pas chaque semaine, et les lister noierait les vraies lignes.
   fond_de_placard INTEGER NOT NULL DEFAULT 0,
+  -- quantite_figee : le libellé de quantité reste fixe a l'affichage, il ne suit PAS les portions
+  --   (« une pincee de sel »). Distinct de fond_de_placard : l'eau sera hors courses (fond_de_placard)
+  --   mais sa quantite doit se mettre a l'echelle (quantite_figee = false). Les deux sont vrais a la
+  --   fois pour les herbes/epices, mais ce sont deux faits differents.
+  quantite_figee INTEGER NOT NULL DEFAULT 0,
   conditionnement_g INTEGER CHECK (conditionnement_g > 0),
   -- origine_animale : de quel animal l'aliment provient. FACTUEL, pas un regime — la chaine
   --   DIET_CHAIN en deduit ce qu'elle veut, un futur filtre halal/casher lira le meme champ.
@@ -938,7 +1005,42 @@ CREATE TABLE recipe (
   -- piquant : 0 pas piquant, 1 un peu, 2 moyen, 3 fort, 4 extreme. NULL = non renseigne, jamais
   --   « doux ». EDITORIAL : ne se derive PAS des ingredients (quantite, rapport au plat, mode de
   --   cuisson). NON CABLE — aucune couche ne le lit encore.
-  piquant INTEGER CHECK (piquant BETWEEN 0 AND 4)
+  piquant INTEGER CHECK (piquant BETWEEN 0 AND 4),
+  -- est_sauce : cette recette EST une sauce (bearnaise, vinaigrette), pas un plat qui en contient.
+  --
+  -- ⛔ AXE SEPARE DE service, VOLONTAIREMENT. Une sauce n'a AUCUN rang dans l'ordre de service
+  --    francais (entree -> plat -> accompagnement -> fromage -> dessert) : elle ne se sert pas
+  --    APRES l'accompagnement, elle accompagne. L'ajouter a l'union CourseKind l'aurait rendue soit
+  --    presente dans COURSE_ORDER (faux), soit sautee en silence par tout code qui itere cet ordre.
+  --    Une sauce porte donc service NULL — verifie plus bas.
+  --
+  -- ⚠️ LA GARANTIE « JAMAIS SUGGEREE COMME REPAS » VIENT DE LA FORME, PAS D'UN FILTRE : une sauce
+  --    doit porter types_repas vide, donc n'entre dans AUCUN creneau de recipesBySlot. Le moteur
+  --    ne peut pas la proposer au diner meme s'il le voulait. Meme parti que requiredFoodIds dans
+  --    MealContext (acquis 2 du CLAUDE.md). Verifie au build, plus bas.
+  est_sauce INTEGER NOT NULL DEFAULT 0 CHECK (est_sauce IN (0, 1)),
+  -- porte_deja_une_sauce : TRI-ETAT. 1 = le plat vient deja avec sa sauce (blanquette, bourguignon,
+  --   curry) ; 0 = non, meme si la derivation croit le contraire ; NULL = laisser deriver.
+  --
+  -- ⚠️ NULL N'EST PAS « NON », c'est « personne n'a tranche ». La derivation regarde si un
+  --    ingredient porte sous_groupe='sauce', ce qui attrape le ketchup mis dans la recette mais
+  --    RATE toutes les sauces cuisinees dans le plat — une blanquette nage dans sa sauce sans
+  --    qu'aucun ingredient ne soit une sauce. D'ou le tri-etat : le YAML l'emporte quand il est la,
+  --    exactement comme food_ids sur une etape (voir recipe_step_ingredient).
+  porte_deja_une_sauce INTEGER CHECK (porte_deja_une_sauce IS NULL OR porte_deja_une_sauce IN (0, 1))
+);
+
+-- Quelles sauces l'application PROPOSE avec ce plat. Editorial, une ligne par couple.
+--
+-- ⚠️ CETTE TABLE NE DIT PAS « ce plat contient cette sauce » — elle dit « ces sauces-la vont bien
+--    avec ». Un plat qui contient deja sa sauce se signale par porte_deja_une_sauce, pas ici.
+-- DEFERRABLE : un plat peut attacher une sauce definie PLUS LOIN dans l'ordre de lecture des
+-- fichiers (les recettes s'inserent une par une). Meme raison et meme remede que food.derive_de.
+-- La verification a lieu au COMMIT, ou toutes les recettes existent.
+CREATE TABLE recipe_sauce (
+  recipe_id       TEXT NOT NULL REFERENCES recipe(id) DEFERRABLE INITIALLY DEFERRED,
+  sauce_recipe_id TEXT NOT NULL REFERENCES recipe(id) DEFERRABLE INITIALLY DEFERRED,
+  PRIMARY KEY (recipe_id, sauce_recipe_id)
 );
 
 CREATE TABLE recipe_ingredient (
@@ -1131,7 +1233,7 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {}
     for (const a of ALLERGENS) insertAllergen.run(a.id, a.code, a.nom)
 
     const insertFood = db.prepare(
-      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, saison_mois, toute_annee, piquant, poids_piece_g, fond_de_placard, conditionnement_g, origine_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, sous_groupe, saison_mois, toute_annee, piquant, poids_piece_g, fond_de_placard, quantite_figee, conditionnement_g, origine_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     const insertFoodNutrient = db.prepare(
       'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g, code_confiance) VALUES (?, ?, ?, ?)'
@@ -1148,11 +1250,13 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {}
         food.nom,
         food.groupe,
         food.sous_famille ?? null,
+        food.sous_groupe ?? null,
         JSON.stringify(food.saison_mois ?? []),
         food.toute_annee ? 1 : 0,
         food.piquant ?? null,
         food.poids_piece_g ?? null,
         food.fond_de_placard ? 1 : 0,
+        food.quantite_figee ? 1 : 0,
         food.conditionnement_g ?? null,
         food.origine_animale ?? null,
         food.derive_de ?? null
@@ -1194,9 +1298,12 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {}
         id, nom, origine, description, temps_prep_min, temps_cuisson_min, difficulte,
         portions_base, image_path, teste_le, types_repas, saison_mois, envergure,
         conservation_jours, axe_sucre_sale, axe_leger_consistant, axe_chaud_froid, axe_texture,
-        service, piquant
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        service, piquant, est_sauce, porte_deja_une_sauce
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
+    const insertRecipeSauce = db.prepare(
+      'INSERT INTO recipe_sauce (recipe_id, sauce_recipe_id) VALUES (?, ?)'
+    )
     const insertRecipeSource = db.prepare(`
       INSERT INTO recipe_source (recipe_id, type, titre, url, consulte_le, licence, auteur)
       VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1237,8 +1344,18 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {}
         recipe.axes?.chaud_froid ?? 0,
         recipe.axes?.texture ?? '',
         recipe.service ?? null,
-        recipe.piquant ?? null
+        recipe.piquant ?? null,
+        recipe.est_sauce ? 1 : 0,
+        // `?? null` et pas `? 1 : 0` : le tri-etat perdrait son NULL (« personne n'a tranche »).
+        recipe.porte_deja_une_sauce === undefined || recipe.porte_deja_une_sauce === null
+          ? null
+          : recipe.porte_deja_une_sauce
+            ? 1
+            : 0
       )
+      for (const sauceId of recipe.sauces ?? []) {
+        insertRecipeSauce.run(recipe.id, sauceId)
+      }
       for (const ing of recipe.ingredients ?? []) {
         insertIngredient.run(recipe.id, ing.food_id, ing.quantite_g, ing.unite_affichage, ing.optionnel ? 1 : 0)
       }
@@ -1396,6 +1513,20 @@ async function main() {
   // prerequis A (docs/CONCEPTION_MODE_CUISINE.md §2.4), et deja celle de `nature`.
   console.log(
     `recipe_step : ${etapesToutes.length} étapes dont ${etapesToutes.length - avertissements} gestes et ${avertissements} avertissements.`
+  )
+
+  // Trois nombres, trois questions distinctes — et le troisième est celui qu'on regarde. Une sauce
+  // qui existe et qu'aucun plat n'attache n'est proposée nulle part : elle a coûté du contenu pour
+  // rien. C'est invisible autrement, aucun test ne peut le dire (ce n'est pas une faute).
+  const recettesSauce = recipes.filter((r) => r.est_sauce)
+  const alimentsSauce = foods.filter((f) => f.sous_groupe === 'sauce')
+  const attachements = recipes.reduce((total, r) => total + (r.sauces ?? []).length, 0)
+  const sauceOrphelines = recettesSauce.filter(
+    (s) => !recipes.some((r) => (r.sauces ?? []).includes(s.id))
+  ).length
+  console.log(
+    `sauces : ${alimentsSauce.length} aliments 'sous_groupe: sauce', ${recettesSauce.length} recettes de sauce, ` +
+      `${attachements} attachements plat→sauce${sauceOrphelines > 0 ? ` — ⚠ ${sauceOrphelines} sauce(s) attachée(s) à aucun plat` : ''}.`
   )
 
   // ⚠️ CE COMPTEUR EST LE SEUL GARDE-FOU DE LA DÉRIVATION, et il ne peut pas être un test. Aucune

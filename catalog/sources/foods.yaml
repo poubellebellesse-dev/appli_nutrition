@@ -203,6 +203,7 @@ foods:
     nom: "Sel fin"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     toute_annee: true
     nutriments:
       energie_kcal: 0
@@ -221,6 +222,7 @@ foods:
     nom: "Poivre noir moulu"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     sous_famille: "poivre"
     toute_annee: true
     nutriments:
@@ -1631,6 +1633,7 @@ foods:
     code_ciqual: "11013"
     nom: "Moutarde"
     groupe: "condiments"
+    sous_groupe: sauce
     conditionnement_g: 200
     sous_famille: "moutarde"
     toute_annee: true
@@ -1654,6 +1657,7 @@ foods:
     nom: "Thym séché"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 20
     toute_annee: true
     nutriments:
@@ -1673,6 +1677,7 @@ foods:
     nom: "Laurier, feuille"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 20
     toute_annee: true
     nutriments:
@@ -1712,6 +1717,7 @@ foods:
     nom: "Origan séché"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 20
     toute_annee: true
     nutriments:
@@ -1731,6 +1737,7 @@ foods:
     nom: "Romarin séché"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 20
     toute_annee: true
     nutriments:
@@ -1750,6 +1757,7 @@ foods:
     nom: "Cumin, graine"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 40
     toute_annee: true
     nutriments:
@@ -1769,6 +1777,7 @@ foods:
     nom: "Paprika en poudre"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 40
     toute_annee: true
     nutriments:
@@ -1788,6 +1797,7 @@ foods:
     nom: "Curry en poudre"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 40
     toute_annee: true
     nutriments:
@@ -1807,6 +1817,7 @@ foods:
     nom: "Gingembre en poudre"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 40
     sous_famille: "gingembre"
     toute_annee: true
@@ -1827,6 +1838,7 @@ foods:
     nom: "Cannelle en poudre"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 40
     toute_annee: true
     nutriments:
@@ -1845,6 +1857,7 @@ foods:
     code_ciqual: "11104"
     nom: "Sauce soja"
     groupe: "condiments"
+    sous_groupe: sauce
     conditionnement_g: 250
     # Gluten DÉCLARÉ, pas en traces : la sauce soja de fabrication traditionnelle
     # (shoyu) est brassée à parts égales de soja ET de blé. Les versions sans blé
@@ -3840,6 +3853,7 @@ foods:
     nom: "Curcuma en poudre"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 40
     toute_annee: true
     nutriments:
@@ -3859,6 +3873,7 @@ foods:
     nom: "Coriandre, graine"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 40
     sous_famille: "coriandre"
     toute_annee: true
@@ -4749,6 +4764,7 @@ foods:
     nom: "Noix de muscade"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 30
     toute_annee: true
     nutriments:
@@ -4768,6 +4784,7 @@ foods:
     nom: "Clou de girofle"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 20
     toute_annee: true
     nutriments:
@@ -4787,6 +4804,7 @@ foods:
     nom: "Sauge séchée"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 20
     toute_annee: true
     nutriments:
@@ -4806,6 +4824,7 @@ foods:
     nom: "Piment de Cayenne, poudre"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 30
     toute_annee: true
     nutriments:
@@ -4825,6 +4844,7 @@ foods:
     nom: "Vanille, gousse"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     toute_annee: true
     nutriments:
       fer_mg: 0
@@ -5911,6 +5931,7 @@ foods:
     code_ciqual: "11008"
     nom: "Ketchup"
     groupe: "condiments"
+    sous_groupe: sauce
     conditionnement_g: 300
     toute_annee: true
     nutriments:
@@ -5929,6 +5950,7 @@ foods:
     code_ciqual: "11054"
     nom: "Mayonnaise"
     groupe: "condiments"
+    sous_groupe: sauce
     conditionnement_g: 250
     origine_animale: volaille
     toute_annee: true
@@ -5972,6 +5994,7 @@ foods:
     code_ciqual: "11112"
     nom: "Harissa"
     groupe: "condiments"
+    sous_groupe: sauce
     conditionnement_g: 100
     toute_annee: true
     nutriments:
@@ -5990,6 +6013,7 @@ foods:
     code_ciqual: "11194"
     nom: "Sauce nuoc-mâm"
     groupe: "condiments"
+    sous_groupe: sauce
     conditionnement_g: 200
     origine_animale: poisson
     toute_annee: true
@@ -6009,6 +6033,7 @@ foods:
     nom: "Safran"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     toute_annee: true
     nutriments:
       energie_kcal: 352
@@ -6027,6 +6052,7 @@ foods:
     nom: "Cardamome, poudre"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 30
     toute_annee: true
     nutriments:
@@ -6464,6 +6490,7 @@ foods:
     nom: "Herbes de Provence séchées"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 30
     toute_annee: true
     nutriments:
@@ -7475,6 +7502,7 @@ foods:
     nom: "Poivre blanc, moulu"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 30
     sous_famille: "poivre"
     toute_annee: true
@@ -7495,6 +7523,7 @@ foods:
     nom: "Carvi, graine"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 30
     toute_annee: true
     nutriments:
@@ -7538,6 +7567,7 @@ foods:
     code_ciqual: "11179"
     nom: "Sauce pesto"
     groupe: "condiments"
+    sous_groupe: sauce
     conditionnement_g: 190
     origine_animale: mammifere
     toute_annee: true
@@ -7563,6 +7593,7 @@ foods:
     code_ciqual: "11043"
     nom: "Tapenade"
     groupe: "condiments"
+    sous_groupe: sauce
     conditionnement_g: 100
     toute_annee: true
     nutriments:
@@ -8318,6 +8349,7 @@ foods:
     code_ciqual: "11021"
     nom: "Moutarde à l'ancienne"
     groupe: "condiments"
+    sous_groupe: sauce
     conditionnement_g: 200
     sous_famille: "moutarde"
     toute_annee: true
@@ -8341,6 +8373,7 @@ foods:
     code_ciqual: "11016"
     nom: "Raifort, frais"
     groupe: "condiments"
+    sous_groupe: sauce
     toute_annee: true
     nutriments:
       energie_kcal: 73.2
@@ -8359,6 +8392,7 @@ foods:
     nom: "Sarriette séchée"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 20
     toute_annee: true
     nutriments:
@@ -8378,6 +8412,7 @@ foods:
     nom: "Marjolaine séchée"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 20
     toute_annee: true
     nutriments:
@@ -8916,6 +8951,7 @@ foods:
     nom: "Fenugrec, graine"
     groupe: "condiments"
     fond_de_placard: true
+    quantite_figee: true
     conditionnement_g: 30
     toute_annee: true
     nutriments:

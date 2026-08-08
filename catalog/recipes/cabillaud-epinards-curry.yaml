@@ -11,6 +11,7 @@ image_path: null
 types_repas: [diner]
 service: plat
 piquant: 1
+porte_deja_une_sauce: true
 saison_mois: []
 envergure: quotidien
 conservation_jours: 1
@@ -27,7 +28,9 @@ ingredients:
     optionnel: false
   - food_id: epinard
     quantite_g: 800
-    unite_affichage: "800 g frais"
+    # « 800 g frais » rendait « égoutter 800 g frais d'épinards » : l'adjectif se retrouve entre le
+    # poids et son complément. Un libellé est une quantité, pas une quantité plus un adjectif.
+    unite_affichage: "800 g"
     optionnel: false
   - food_id: creme_fraiche
     quantite_g: 120

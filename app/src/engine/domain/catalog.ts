@@ -128,6 +128,20 @@ export interface Food {
    * ce qui a été mesuré et écarté.
    */
   readonly sousFamille: string | null
+  /**
+   * Sous-catégorie DE RANGEMENT à l'intérieur de `groupe`. Première valeur : `'sauce'` (ketchup,
+   * mayonnaise, moutarde, pesto…), qui vivent dans le groupe Ciqual `condiments` au milieu du thym,
+   * du laurier et de la levure chimique. Vocabulaire ouvert, `null` pour la grande majorité.
+   *
+   * ⚠️ NE PAS CONFONDRE AVEC `sousFamille`, ET C'EST LE PIÈGE DE CE CHAMP. Les deux sont des
+   * chaînes libres nullables juste au-dessus l'une de l'autre, et elles ne répondent pas à la même
+   * question : `sousFamille` dit « c'est le MÊME aliment » (poulet_blanc + poulet_cuisse → poulet)
+   * et sert la RÉCENCE de `variety`/`habit` ; `sousGroupe` dit « ça se range au même endroit ».
+   * Poser `'sauce'` dans `sousFamille` ferait traiter le ketchup et le pesto comme un seul produit :
+   * un plat au pesto serait déclaré répétitif après un plat au ketchup. Régression silencieuse du
+   * scoring, sans aucun test rouge pour la signaler.
+   */
+  readonly sousGroupe: string | null
   /** `food_nutrient`, une ligne par nutriment — regroupé en Map propre, pas en lignes SQL. */
   readonly nutrimentsPour100g: ReadonlyMap<NutrientId, number>
   readonly allergenes: readonly FoodAllergen[]
@@ -167,6 +181,15 @@ export interface Food {
    * les vraies lignes sous du bruit. `ShoppingOptions.inclureFondDePlacard` le réaffiche.
    */
   readonly fondDePlacard: boolean
+  /**
+   * Le libellé de quantité reste FIGÉ à l'affichage, il ne suit pas les portions.
+   *
+   * ⚠️ CE N'EST PAS LE MÊME FAIT que `fondDePlacard` : « personne ne mesure 8 g de sel » (figé) n'est
+   * pas « on ne rachète pas de sel » (hors courses). Les deux sont vrais à la fois pour les herbes et
+   * épices, mais l'eau les sépare — hors liste de courses, et pourtant sa quantité (35 cl → 70 cl)
+   * doit se mettre à l'échelle comme n'importe quel ingrédient.
+   */
+  readonly quantiteFigee: boolean
   /**
    * Taille du CONDITIONNEMENT de vente, en grammes — plaquette de beurre 250 g, brique de lait
    * 1 000 g, œuf 60 g. `null` = vendu au poids (fruits, légumes, viande à la coupe).
@@ -428,6 +451,39 @@ export interface Recipe {
    * détruit plus sûrement que son absence.
    */
   readonly testeLe: string | null
+  /**
+   * Cette recette EST une sauce (béarnaise, vinaigrette), pas un plat qui en contient.
+   *
+   * ⛔ AXE SÉPARÉ DE `service`, VOLONTAIREMENT. Une sauce n'a aucun rang dans l'ordre de service
+   * français — elle ne se sert pas *après* l'accompagnement, elle accompagne. L'ajouter à
+   * `CourseKind` l'aurait rendue soit présente dans `COURSE_ORDER` (faux), soit sautée en silence
+   * par tout code qui itère cet ordre. Une sauce porte donc `service: null`, vérifié au build.
+   *
+   * ⚠️ « JAMAIS SUGGÉRÉE COMME REPAS » EST UNE GARANTIE DE FORME, PAS UN FILTRE : une sauce porte
+   * `typesRepas: []`, donc n'entre dans aucun créneau de `CatalogIndexes.recipesBySlot`. Le moteur
+   * ne peut pas la proposer au dîner même s'il le voulait — même parti que `requiredFoodIds` dans
+   * `MealContext`. Le build refuse une sauce qui déclarerait un créneau.
+   */
+  readonly estSauce: boolean
+  /**
+   * TRI-ÉTAT. `true` = le plat vient déjà avec sa sauce (blanquette, bourguignon, curry) ;
+   * `false` = non, même si la dérivation croit le contraire ; **`null` = personne n'a tranché**,
+   * il faut dériver.
+   *
+   * ⚠️ `null` N'EST PAS « NON ». La dérivation regarde si un ingrédient porte
+   * `sousGroupe === 'sauce'` : elle attrape le ketchup mis DANS la recette, et rate toutes les
+   * sauces cuisinées au fil du plat — une blanquette nage dans la sienne sans qu'aucun ingrédient
+   * ne soit une sauce. D'où le tri-état, et d'où le fait que le YAML l'emporte quand il est là :
+   * c'est exactement le motif de `food_ids` sur une étape.
+   */
+  readonly porteDejaUneSauce: boolean | null
+  /**
+   * Les sauces que l'application PROPOSE avec ce plat — éditorial, vide pour la majorité.
+   *
+   * ⚠️ NE DIT PAS « ce plat contient ces sauces ». Un plat qui vient avec la sienne se signale par
+   * `porteDejaUneSauce`, jamais ici. Le build refuse qu'une recette porte les deux à la fois.
+   */
+  readonly sauceIds: readonly RecipeId[]
 }
 
 /**

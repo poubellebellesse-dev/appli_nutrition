@@ -1,0 +1,74 @@
+id: vinaigrette_moutarde
+nom: "Vinaigrette à la moutarde"
+origine: maison
+description: >
+  La vinaigrette de tous les jours : moutarde, vinaigre et huile montés à la fourchette.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+# Une sauce ne porte AUCUN créneau : c'est ce qui l'empêche structurellement d'être suggérée
+# comme repas (elle n'entre dans aucune entrée de `recipesBySlot`). Le build refuse l'inverse.
+types_repas: []
+est_sauce: true
+piquant: 1
+saison_mois: []
+envergure: quotidien
+conservation_jours: 5
+axes:
+  sucre_sale: -0.6
+  leger_consistant: -0.8
+  chaud_froid: -0.6
+  texture: onctueux
+
+ingredients:
+  - food_id: moutarde_dijon
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: false
+  - food_id: vinaigre_vin_rouge
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: huile_colza
+    quantite_g: 60
+    unite_affichage: "6 cuillères à soupe"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 25
+    unite_affichage: "1 échalote"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 2
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Délayer la moutarde avec le vinaigre, le sel et le poivre jusqu'à ce que le sel soit dissous."
+    lexicon_ids: [detendre]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser l'huile en filet sans cesser de fouetter, pour que la sauce prenne du corps."
+    lexicon_ids: [filet, fouetter]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ajouter l'échalote ciselée et laisser reposer avant de servir : elle perd son mordant."
+    lexicon_ids: [ciseler, reserver]
+    timer_s: 600
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

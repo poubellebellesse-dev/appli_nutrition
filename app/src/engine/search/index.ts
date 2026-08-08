@@ -335,6 +335,7 @@ export function valeursDeFacette(
 ): readonly { readonly valeur: string; readonly nombre: number }[] {
   const compte = new Map<string, number>()
   for (const recette of catalog.recipes.values()) {
+    if (recette.estSauce) continue // voir COMPTER_HORS_SAUCES ci-dessous
     for (const f of recette.facettes) {
       if (f.facette === facette) compte.set(f.valeur, (compte.get(f.valeur) ?? 0) + 1)
     }
@@ -349,6 +350,20 @@ export function valeursDeFacette(
 const ORDRE_ENVERGURE: readonly RecipeEnvergure[] = ['quotidien', 'convivial', 'fete']
 
 /**
+ * COMPTER_HORS_SAUCES — les trois fonctions de comptage ci-dessus et ci-dessous IGNORENT les sauces.
+ *
+ * ⚠️ CE N'EST PAS UN DÉTAIL D'AFFICHAGE. Ces comptes sont les nombres entre parenthèses des
+ * pastilles de filtre (« De tous les jours (233) »), et l'utilisateur les lit comme une PROMESSE :
+ * cliquer doit rendre ce nombre de recettes. Or `browseRecipes` part du catalogue SANS les sauces
+ * (voir `recettesHorsSauces` dans engine/api/index.ts). Compter les sauces ici afficherait 236 sur
+ * la pastille pour 233 résultats — un écart de trois qu'aucune erreur ne signale, et que personne
+ * ne rapproche jamais de la bonne cause.
+ *
+ * `valeursDeService` y arrivait déjà, mais PAR ACCIDENT : elle saute `service === null`, ce qui se
+ * trouve exclure les sauces puisque le build leur refuse un `service`. Deux raisons empilées dont
+ * une seule est la bonne — si le `service` devenait un jour obligatoire, l'exclusion tomberait sans
+ * bruit. Le filtre explicite ci-dessous ne dépend de rien d'autre que du fait d'être une sauce.
+ *
  * Valeurs de `service` (`CourseKind`) et `envergure` (`RecipeEnvergure`) réellement présentes au
  * catalogue, avec leur compte — même garantie que `valeursDeFacette` : ni l'une ni l'autre n'écrit
  * de liste à la main, donc `fromage` (0 recette au catalogue réel) n'apparaît dans aucune des deux.
@@ -363,6 +378,7 @@ export function valeursDeService(
 ): readonly { readonly valeur: CourseKind; readonly nombre: number }[] {
   const compte = new Map<CourseKind, number>()
   for (const recette of catalog.recipes.values()) {
+    if (recette.estSauce) continue // COMPTER_HORS_SAUCES — explicite, pas déduit du `service` nul
     if (recette.service === null) continue
     compte.set(recette.service, (compte.get(recette.service) ?? 0) + 1)
   }
@@ -377,6 +393,7 @@ export function valeursDeEnvergure(
 ): readonly { readonly valeur: RecipeEnvergure; readonly nombre: number }[] {
   const compte = new Map<RecipeEnvergure, number>()
   for (const recette of catalog.recipes.values()) {
+    if (recette.estSauce) continue // COMPTER_HORS_SAUCES
     compte.set(recette.envergure, (compte.get(recette.envergure) ?? 0) + 1)
   }
   return ORDRE_ENVERGURE.filter((envergure) => (compte.get(envergure) ?? 0) > 0).map((valeur) => ({

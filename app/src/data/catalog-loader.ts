@@ -101,11 +101,13 @@ interface FoodRow {
   readonly nom: string
   readonly groupe: string
   readonly sous_famille: string | null
+  readonly sous_groupe: string | null
   readonly saison_mois: string
   readonly toute_annee: number
   readonly piquant: number | null
   readonly poids_piece_g: number | null
   readonly fond_de_placard: number
+  readonly quantite_figee: number
   readonly conditionnement_g: number | null
   readonly origine_animale: string | null
   readonly derive_de: string | null
@@ -149,6 +151,14 @@ interface RecipeRow {
   readonly service: string | null
   readonly piquant: number | null
   readonly teste_le: string | null
+  readonly est_sauce: number
+  /** Tri-état : `null` = à dériver, jamais « non ». Voir `Recipe.porteDejaUneSauce`. */
+  readonly porte_deja_une_sauce: number | null
+}
+
+interface RecipeSauceRow {
+  readonly recipe_id: string
+  readonly sauce_recipe_id: string
 }
 
 interface RecipeSourceRow {
@@ -362,9 +372,11 @@ function loadFoods(db: SqlSource): Map<FoodId, Food> {
       synonymes: (synonymsByFood.get(row.id) ?? []).map((s) => s.terme),
       groupe: row.groupe,
       sousFamille: row.sous_famille,
+      sousGroupe: row.sous_groupe,
     piquant: (row.piquant as PiquantLevel | null) ?? null,
       poidsPieceG: row.poids_piece_g ?? null,
       fondDePlacard: row.fond_de_placard !== 0,
+      quantiteFigee: row.quantite_figee !== 0,
       conditionnementG: row.conditionnement_g ?? null,
       origineAnimale: (row.origine_animale as AnimalOrigin | null) ?? null,
       deriveDe: (row.derive_de as FoodId | null) ?? null,
@@ -487,6 +499,10 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
     queryAll<RecipeSourceRow>(db, 'SELECT * FROM recipe_source ORDER BY recipe_id, titre'),
     (r) => r.recipe_id
   )
+  const saucesByRecipe = groupByKey(
+    queryAll<RecipeSauceRow>(db, 'SELECT * FROM recipe_sauce ORDER BY recipe_id, sauce_recipe_id'),
+    (r) => r.recipe_id
+  )
 
   const map = new Map<RecipeId, Recipe>()
   for (const row of recipeRows) {
@@ -551,6 +567,12 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
         auteur: s.auteur,
       })),
       testeLe: row.teste_le,
+      estSauce: row.est_sauce !== 0,
+      // ⚠️ `!== 0` SEUL SERAIT FAUX ICI : `null !== 0` vaut `true`, donc un plat dont personne n'a
+      // tranché serait lu « il a déjà sa sauce » et ne s'en verrait jamais proposer. Le tri-état se
+      // teste sur `null` d'abord — c'est tout l'intérêt d'avoir trois valeurs plutôt que deux.
+      porteDejaUneSauce: row.porte_deja_une_sauce === null ? null : row.porte_deja_une_sauce !== 0,
+      sauceIds: (saucesByRecipe.get(row.id) ?? []).map((s) => s.sauce_recipe_id as RecipeId),
     })
   }
   return map

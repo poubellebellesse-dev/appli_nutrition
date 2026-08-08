@@ -1,0 +1,72 @@
+id: sauce_yaourt_citron_ciboulette
+nom: "Sauce yaourt, citron et ciboulette"
+origine: maison
+description: >
+  Une sauce froide qui se fait à la cuillère, pour les crudités, les pommes de terre et les poissons.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: []
+est_sauce: true
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.6
+  chaud_froid: -0.8
+  texture: onctueux
+
+ingredients:
+  - food_id: yaourt_nature
+    quantite_g: 250
+    unite_affichage: "2 yaourts"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "1/2 citron"
+    optionnel: false
+  - food_id: ciboulette
+    quantite_g: 10
+    unite_affichage: "quelques brins"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 2
+    unite_affichage: "au goût"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Fouetter le yaourt avec le jus de citron, le sel et le poivre."
+    lexicon_ids: [fouetter]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ciseler la ciboulette et l'incorporer avec l'huile."
+    lexicon_ids: [ciseler, incorporer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Réserver au frais le temps que les herbes parfument la sauce."
+    lexicon_ids: [reserver]
+    timer_s: 1800
+    timer_type: repos
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

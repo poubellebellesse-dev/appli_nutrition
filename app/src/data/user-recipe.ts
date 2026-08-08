@@ -200,6 +200,13 @@ export function versRecette(stockee: StoredUserRecipe, foods: ReadonlyMap<FoodId
     // marque déjà « non vérifié » : c'est cette mention-là qui parle, pas une source empruntée.
     sources: [],
     testeLe: null,
+    // Une recette utilisateur n'est pas une sauce et n'en attache pas : l'éditeur n'expose aucun de
+    // ces deux champs. `porteDejaUneSauce: null` n'est PAS « non » — c'est « personne n'a tranché »,
+    // donc la dérivation par les ingrédients s'applique, et une recette perso au ketchup se verra
+    // correctement reconnue comme portant déjà sa sauce.
+    estSauce: false,
+    porteDejaUneSauce: null,
+    sauceIds: [],
   }
 }
 

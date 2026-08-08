@@ -42,16 +42,21 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-07, arbre COMPLET — lot mode cuisine et
-facettes `cuisine` inclus** : `npm test` → **1 669 passed / 0 failed (91 fichiers)** en 50,2 s ·
-typecheck propre · `vite build` ✓ (2,9 s) · `engine:plan-stress` **20/20, PLUS AUCUN SIGNAL** ·
-`node catalog/build.mjs` → **451 aliments, 305 recettes, 1 415 étapes, 62 gestes, 73 tips,
-8 fiches**.
-⚠️ **1 669 et non 1 647** — les trois documents qui portent ce compte ont annoncé 1 647 pendant que
-l'arbre en contenait déjà 22 de plus : ils avaient été mis à jour dans le même lot que le code
-qu'ils ne comptaient pas encore. **Un relevé se prend sur l'arbre qu'on commite, pas sur celui d'où
-l'on est parti.**
-⚠️ **451 et non 450** — recompté dans l'arbre le 2026-08-07 après `11687d4` (`chou_blanc`).
+Dernier relevé, **suite réellement exécutée le 2026-08-08, arbre COMPLET — lot « sauces »
+(décision 62) inclus** : `npm test` → **1 766 passed / 0 failed (95 fichiers)** en 29,7 s ·
+typecheck propre · `vite build` ✓ (2,9 s) · `engine:plan-stress` **20/20** ·
+`node catalog/build.mjs` → **451 aliments, 308 recettes, 1 425 étapes, 62 gestes, 73 tips,
+8 fiches** · `catalog/audit-mapping.mjs` → 451 mappings, 9 candidats à relire (inchangé).
+⚠️ **UN RUN SUR QUATRE A RENDU 1 754 AU LIEU DE 1 766, VERT DANS LES DEUX CAS.** Constaté le
+2026-08-08, arbre identique, aucun échec ni saut déclaré (`skipIf`/`runIf` : zéro occurrence dans le
+dépôt). Les trois runs suivants, dont deux en `--reporter=json`, ont tous rendu 1 766. **Cause non
+identifiée** ; piste la plus probable : plusieurs fichiers de test lancent `catalog/build.mjs` en
+parallèle et un `beforeAll` qui échoue fait disparaître les tests de son fichier du total au lieu de
+les compter en rouge. **Un compte qui bouge sans rouge est un signal** — si 1 754 réapparaît, c'est
+là qu'il faut chercher, pas dans le lot du jour.
+⚠️ **Un relevé se prend sur l'arbre qu'on commite, pas sur celui d'où l'on est parti.** Le
+2026-08-07, trois documents annonçaient 1 647 tests pendant que l'arbre en contenait 22 de plus :
+ils avaient été mis à jour dans le même lot que le code qu'ils ne comptaient pas encore.
 ✅ **LE DERNIER SIGNAL DU BANC EST ÉTEINT** (lot « 8 plats végétaliens sans gluten ») — « végétalien
 + sans gluten » passe de **27/28 à 28/28 accompagnements**, plancher 1 302 → 1 530 kcal. La cause
 mesurée n'était pas « il manque 1 plat » mais **marge zéro** : le catalogue portait exactement

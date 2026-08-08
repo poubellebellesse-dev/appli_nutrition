@@ -62,6 +62,7 @@ export function makeFood(
     synonymes: [],
     groupe: "test",
     sousFamille: opts.sousFamille ?? null,
+    sousGroupe: null,
     nutrimentsPour100g: nutrientMap,
     allergenes: [],
     saisonMois: [],
@@ -69,6 +70,7 @@ export function makeFood(
     piquant: null,
     poidsPieceG: null,
     fondDePlacard: false,
+    quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
     deriveDe: null,
@@ -116,6 +118,9 @@ export function makeRecipe(
     piquant: null,
     sources: [],
     testeLe: null,
+    estSauce: false,
+    porteDejaUneSauce: null,
+    sauceIds: [],
   };
 }
 

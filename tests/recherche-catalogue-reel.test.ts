@@ -34,6 +34,18 @@ let moteur: Engine
 
 const SANS_CONTRAINTE = { allergies: [], diet: null, excludedFoodIds: [] } as const
 
+/**
+ * Le catalogue TEL QUE `browseRecipes` et `searchByPantry` le voient : sans les sauces.
+ *
+ * ⚠️ CE N'EST PAS UN AJUSTEMENT DE COMPTE, C'EST LE CONTRAT. Ces deux écrans ne partent pas d'un
+ * créneau, donc `types_repas: []` ne les protège pas : sans le filtre côté moteur, une vinaigrette
+ * serait posable comme dîner depuis `ui/choisir-plat.tsx`. Écrire `catalogue.recipes.size` ici
+ * ramènerait le trou en faisant échouer le test qui le signale.
+ */
+function nbHorsSauces(): number {
+  return [...catalogue.recipes.values()].filter((r) => !r.estSauce).length
+}
+
 beforeAll(() => {
   const dossier = mkdtempSync(path.join(tmpdir(), 'nutri-recherche-'))
   const dbPath = path.join(dossier, 'catalog.db')
@@ -63,8 +75,8 @@ describe('search — normalisation française', () => {
 describe('browseRecipes — recherche sur le catalogue réel', () => {
   it('sans critère, rend TOUT le catalogue', () => {
     const resultat = moteur.browseRecipes({ constraints: SANS_CONTRAINTE })
-    expect(resultat.recipeIds.length).toBe(catalogue.recipes.size)
-    expect(resultat.totalCatalogue).toBe(catalogue.recipes.size)
+    expect(resultat.recipeIds.length).toBe(nbHorsSauces())
+    expect(resultat.totalCatalogue).toBe(nbHorsSauces())
     expect(resultat.entonnoir.totalRejected).toBe(0)
   })
 
@@ -242,7 +254,7 @@ describe('browseRecipes — l’entonnoir et la garantie de sécurité', () => {
 
   it('compte l’entonnoir : total, écartées, et par couche (§6.8)', () => {
     const resultat = moteur.browseRecipes({ constraints: AVEC_GLUTEN })
-    expect(resultat.entonnoir.totalInitial).toBe(catalogue.recipes.size)
+    expect(resultat.entonnoir.totalInitial).toBe(nbHorsSauces())
     expect(resultat.entonnoir.totalRejected).toBeGreaterThan(0)
     expect(resultat.recipeIds.length).toBe(
       resultat.entonnoir.totalInitial - resultat.entonnoir.totalRejected
@@ -307,7 +319,7 @@ describe('searchByPantry — « vider le frigo » sur le catalogue réel', () =>
 
   it('un garde-manger vide ne filtre RIEN — l’écran reste explorable avant toute saisie', () => {
     const resultat = moteur.searchByPantry({ constraints: SANS_CONTRAINTE, pantryFoodIds: [] })
-    expect(resultat.matches.length).toBe(catalogue.recipes.size)
+    expect(resultat.matches.length).toBe(nbHorsSauces())
   })
 
   it('un garde-manger réduit aux fonds de placard ne « correspond » à rien', () => {
@@ -418,7 +430,7 @@ describe('searchByPantry — « vider le frigo » sur le catalogue réel', () =>
 
   it('rend une couverture nulle et tout en manquant sur un garde-manger vide', () => {
     const resultat = moteur.searchByPantry({ constraints: SANS_CONTRAINTE, pantryFoodIds: [] })
-    expect(resultat.matches.length).toBe(catalogue.recipes.size)
+    expect(resultat.matches.length).toBe(nbHorsSauces())
     // `scorePantry` rend NEUTRAL_SCORE quand rien n'est déclaré (l'absence d'information n'est pas
     // une information) — l'écran, lui, n'appelle pas tant que le garde-manger est vide.
     expect(resultat.matches.every((m) => m.manquants.length > 0)).toBe(true)

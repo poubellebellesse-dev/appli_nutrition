@@ -1,0 +1,83 @@
+id: sauce_poivre
+nom: "Sauce au poivre"
+origine: maison
+description: >
+  Une sauce courte pour les viandes grillées : échalote, poivre concassé, bouillon réduit et crème.
+temps_prep_min: 5
+temps_cuisson_min: 12
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: []
+est_sauce: true
+piquant: 2
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.7
+  leger_consistant: 0.4
+  chaud_froid: 0.8
+  texture: onctueux
+
+ingredients:
+  - food_id: poivre_noir
+    quantite_g: 6
+    unite_affichage: "2 cuillères à café"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 50
+    unite_affichage: "2 échalotes"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 20
+    unite_affichage: "une noix"
+    optionnel: false
+  # bouillon de LÉGUMES, et ce n'est pas un choix de goût : `bouillon_boeuf` porte
+  # `origine_animale: mammifere` dans le groupe `condiments`, et `regimeExigePar` classe « mammifère
+  # hors groupe viandes » comme un produit laitier (vrai pour le beurre, faux pour un extrait de
+  # viande). La sauce serait alors étiquetable végétarienne tout en contenant du bœuf. Voir la dette
+  # ouverte dans docs/ETAT.md §8 — tant qu'elle n'est pas tranchée, aucune recette n'emploie ces
+  # deux bouillons de viande.
+  - food_id: bouillon_legumes
+    quantite_g: 200
+    unite_affichage: "20 cl"
+    optionnel: false
+  - food_id: creme_fraiche
+    quantite_g: 100
+    unite_affichage: "10 cl"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 2
+    unite_affichage: "au goût"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Concasser le poivre au fond d'une casserole plutôt que de le moudre : on veut des éclats, pas de la poudre."
+    lexicon_ids: [concasser]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Faire suer l'échalote ciselée dans le beurre sans la laisser colorer."
+    lexicon_ids: [ciseler, suer]
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Mouiller avec le bouillon et laisser réduire de moitié."
+    lexicon_ids: [mouiller, reduire]
+    timer_s: 420
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Ajouter la crème, saler, et laisser frémir jusqu'à ce que la sauce nappe la cuillère."
+    lexicon_ids: [fremir, napper]
+    timer_s: 180
+    timer_type: cuisson
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

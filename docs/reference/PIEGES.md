@@ -24,6 +24,19 @@
 
 ## Les pièges qui ne se voient pas
 
+**Garanties structurelles**
+
+- ⚠️ **Une garantie liée au CRÉNEAU ne protège que les écrans qui partent d'un créneau.** Payé le
+  2026-08-08 sur les sauces. `types_repas: []` les tient hors de `catalog.indexes.recipesBySlot`,
+  donc `suggestMeals` ne peut pas les proposer — c'est solide, et c'est la bonne façon de rendre une
+  chose inexprimable. Mais `browseRecipes` et `searchByPantry` **ne partent pas d'un créneau** : leur
+  ensemble initial est `catalog.recipes.keys()`. Résultat, une vinaigrette était posable comme dîner
+  depuis `ui/choisir-plat.tsx`, **sans qu'aucune règle du moteur soit violée** — donc sans rouge.
+  ⛔ **Avant de conclure qu'une exclusion structurelle couvre tout, énumérer les points d'entrée qui
+  ne passent pas par l'index concerné.** Ici il y en avait trois : les deux ci-dessus, plus les trois
+  fonctions de comptage de `engine/search/index.ts` qui alimentent les pastilles de filtre — un
+  compte non filtré y annonce 236 pour 233 résultats, écart que rien ne signale.
+
 **Chaîne de build**
 
 - ⚠️ **`catalog-loader.ts` et les `user-*.ts` ne doivent importer AUCUN module Node.** L'import est
@@ -310,6 +323,114 @@
   l'appareil ou du navigateur, et on part chercher au mauvais endroit. Même famille que la politique
   d'autoplay : **le refus est silencieux, il n'y a pas d'erreur à attraper.** ➡️ Tout essai du mode
   cuisine sur appareil se fait **en HTTPS**.
+
+- **DEUX `de` SE RESSEMBLENT ET UN SEUL S'EFFACE — 85 phrases produites fausses avant qu'on le
+  voie.** En injectant la quantité dans le texte d'une étape (`ui/texte-etape.ts`), le raisonnement
+  « le `de` suit un infinitif, donc il ouvre un complément d'objet remplaçable » paraît solide et
+  passe tous les tests qu'on pense à écrire. Il confond le `de` **avec article** — « Verser **de
+  la** crème » → « Verser 20 cl de crème », correct — et le `de` **nu, régi par le verbe** —
+  « Arroser **d'**huile », qui n'a aucun article à effacer. Le supprimer retourne la phrase :
+  « Arroser 3 c. à soupe d'huile » dit qu'on arrose l'huile. Et il casse la coordination qui suit —
+  « arroser d'huile et de citron » → « … d'huile **et de citron** », rattaché à plus rien.
+  ➡️ **Le signal est la présence d'un article, pas la nature du mot d'avant.** Le `de` nu se garde
+  et accueille la quantité (« Arroser **de** 3 cuillères à soupe d'huile ») ; comme il ne porte pas
+  d'article, **il ne se contracte jamais en `des`**, à l'inverse de `du` / `de la` qui donnent bien
+  « le reste **des** 50 g de beurre ». ⚠️ **Deux tests figeaient le comportement fautif** : les
+  réécrire ÉTAIT la correction. Un test qui n'a jamais été confronté au catalogue protège la faute
+  aussi bien que la règle — troisième occurrence de ce motif après le `[3600, '60:00']` des durées.
+
+- **UNE QUEUE DE NOM COMPOSÉ SE RETROUVE EN DOUBLE, ET ÇA PASSE POUR DU TEXTE ORDINAIRE.** Quand la
+  forme complète d'un aliment ne s'apparie pas — le nom CIQUAL porte une mention absente de la
+  phrase, « Chou chinois (pak-choï) » — le repli sur le mot de tête ne couvre qu'un mot, alors que
+  le libellé injecté, lui, redit le nom entier : « 1 demi-chou chinois **chinois** », « 1 filet
+  mignon **mignon** », « 4 jaunes d'œufs **d'œufs** ». ⚠️ **Aucun test ne tombe** et l'œil glisse
+  dessus. ➡️ Se relit en **vidant les phrases produites dans un fichier** et en cherchant le mot
+  répété — c'est comme ça que les trois sont sortis, pas en relisant le code.
+
+- **ÉTENDRE UN APPARIEMENT PEUT VOLER SON NOM AU VOISIN, et le symptôme est un COMPTE, pas une
+  phrase fausse.** La réparation ci-dessus (avaler les mots suivants qui appartiennent encore au nom
+  de l'aliment) traversait la ponctuation : dans « le concentré de tomate**, les tomates**
+  concassées », elle absorbait « les tomates », et l'ingrédient `tomate` — privé de sa place —
+  perdait son injection. La phrase restait plausible ; seul le total des liens bougeait, de 1 828 à
+  **1 827**. ➡️ **Une ponctuation et une coordination ferment le groupe nominal.** Et surtout :
+  **diffé la LISTE des liens `(recette, ordre, food_id)`, jamais deux totaux** — un total identique
+  peut cacher une perte et un gain qui se compensent, et c'est le diff ligne à ligne qui a désigné
+  la recette fautive en une seconde.
+
+### UN TEST DE TERMINAISON N'EST PAS UNE ANALYSE GRAMMATICALE — « la chair » lue comme un verbe
+
+`estInfinitif` vaut `/(er|ir|re)$/` et rien de plus. Il sert à distinguer l'article du pronom
+(« **les** égoutter » vs « **les** artichauts »), et c'est un choix raisonnable — mais il accepte
+tout nom qui finit pareil. **« la chair » déclenchait à lui seul 8 héritages faux**, tous des
+cuissons de poisson : « jusqu'à ce que la chair se détache de l'arête » se lisait « pronom + verbe »,
+et l'étape héritait des ingrédients de la précédente. Même piège avec « le beurre », « le sucre »,
+« le centre », « l'autre face », « la première eau ».
+
+⚠️ **Le symptôme n'est ni une erreur ni une phrase fausse : c'est un lien PLAUSIBLE.** Aucune sonde
+ne le voyait, aucun test ne rougissait, et le taux de couverture MONTAIT — c'est la relecture humaine
+des étapes qui l'a trouvé.
+
+**La parade qui a tenu** : une liste de noms à exclure, **relevée** sur les 143 mots que le catalogue
+place réellement derrière un pronom, jamais devinée. La compléter se fait de la même façon — mesurer
+d'abord. Et se méfier de la conclusion inverse : un taux de couverture qui monte n'est une bonne
+nouvelle que si ce qu'il compte est vrai.
+
+### CE QU'UNE ÉTAPE EMPLOIE N'EST PAS CE QUE SON PRONOM DÉSIGNERA
+
+« **Les** plonger dans une grande casserole d'eau bouillante salée et citronnée » emploie bel et bien
+le sel et le citron — mais « les », ce sont les artichauts, nommés deux étapes plus haut. Prendre les
+liens d'une étape pour l'antécédent du pronom suivant faisait **dériver la référence vers
+l'assaisonnement**, et l'erreur se propageait aux étapes d'après.
+
+Deux exclusions, chacune tirée d'un défaut mesuré, et **elles ne portent que sur l'antécédent — les
+liens de l'étape restent entiers** :
+
+- l'ingrédient attrapé **par un verbe** (« salée » → `sel_fin`) désigne un traitement, pas l'objet ;
+- le **fond de placard** est un accompagnement même nommé en toutes lettres : on n'enveloppe pas
+  « le thym », on enveloppe les betteraves.
+
+Si rien ne reste, **la référence précédente tient** : mieux vaut un antécédent un peu ancien qu'un
+antécédent faux.
+
+⚠️ **Là où le pronom tombait juste par accident, la soupape est `food_ids`**, pas un assouplissement
+de la règle. Quatre étapes en portent un. Un `food_ids` n'introduit **aucun nombre** dans le YAML,
+donc rien qui puisse se figer — c'est ce qui le distingue d'une quantité écrite à la main.
+
+### DEUX TABLES QUI SE COMPARENT MOT À MOT SE DÉCOUPENT AVEC LE MÊME SÉPARATEUR
+
+`texte-etape.ts` porte deux découpages : `formesEnMots` (le nom de l'aliment) coupait sur
+`[\s'’_-]`, `motsDuLibelle` (le libellé de quantité) sur `[\s'’]`. Un seul caractère d'écart, et
+tout aliment à trait d'union devenait incapable de se reconnaître dans son propre libellé. Le
+rendu recollait alors son nom derrière la quantité :
+
+```
+Détailler 1 chou-fleur DE CHOU-FLEUR en bouquets.
+Peler 1 céleri-rave DE CÉLERI-RAVE et le couper en tranches.
+Éplucher 1 petit rutabaga, 2 choux-raves DE CHOUX-RAVES et 3 carottes.
+```
+
+**Huit étapes s'affichaient ainsi, et aucune n'a été signalée par un test** : les deux fonctions
+étaient justes prises séparément, la faute n'existait qu'entre elles. Elle est sortie d'une
+relecture à la main du catalogue, pas du code.
+
+⚠️ Le défaut ne casse rien — il produit une phrase lisible et fausse. C'est la forme la plus chère :
+un test de non-régression ne l'attrape que si quelqu'un a d'abord vu la phrase.
+
+⚠️ **Le libellé est une quantité, pas une quantité plus un adjectif.** `"4 betteraves crues"` rendait
+« Peler 4 betteraves CRUES sortie du four » ; `"800 g frais"` rendait « égoutter 800 g FRAIS
+d'épinards ». Un libellé s'injecte dans TOUTES les étapes de la recette, y compris celles d'après
+cuisson : il ne peut donc porter aucun état.
+
+### UNE ÉTAPE SANS LIEN EST INVISIBLE POUR LE CHANTIER DE RÉÉCRITURE
+
+`atelier/extraire-a-reecrire.mjs` part des liens : il liste les étapes où le build a rattaché un
+ingrédient que la phrase ne nomme pas. **Une étape à laquelle rien n'est rattaché n'y figure
+jamais** — et c'est précisément là que se cache l'autre moitié du gisement. « Poser les filets dans
+un plat huilé » emploie le poisson sans qu'aucun lien ne le dise ; 18 gestes du catalogue sont dans
+ce cas (`filet`, `pavé`, `morceau`, `cuisse`).
+
+Un chantier bâti sur ce qui existe ne montre pas ce qui manque. Pour le second gisement il faut une
+sonde à l'envers : partir du VOCABULAIRE de la phrase, pas de la table.
 
 ## Contenu : la règle qui tient tout l'onglet Savoir
 

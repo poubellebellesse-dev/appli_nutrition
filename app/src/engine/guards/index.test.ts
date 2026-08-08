@@ -48,6 +48,7 @@ function food(id: string, allergenId: string | null): Food {
     synonymes: [],
     groupe: "test",
     sousFamille: null,
+    sousGroupe: null,
     nutrimentsPour100g: new Map(),
     allergenes: allergenId
       ? [{ allergenId: allergenId as AllergenId, certitude: "contient" }]
@@ -57,6 +58,7 @@ function food(id: string, allergenId: string | null): Food {
     piquant: null,
     poidsPieceG: null,
     fondDePlacard: false,
+    quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
     deriveDe: null,
@@ -93,6 +95,9 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
     piquant: null,
     sources: [],
     testeLe: null,
+    estSauce: false,
+    porteDejaUneSauce: null,
+    sauceIds: [],
   };
 }
 
