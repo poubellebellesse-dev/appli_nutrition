@@ -96,7 +96,15 @@ async function rendreCourses(Courses: () => JSX.Element) {
 async function monter() {
   const { Courses } = await import('./courses.js')
   await rendreCourses(Courses)
-  await screen.findByRole('heading', { name: 'Mes courses' })
+  // ⛔ PAS DE `findByRole('heading', { name })` POUR ATTENDRE UN MONTAGE — voir le raisonnement
+  // complet dans `recettes.test.tsx`. `getByRole` filtré par NOM recalcule le nom accessible de
+  // CHAQUE élément du document ; sur un écran chargé il coûte des centaines de ms par appel, et
+  // `findBy*` sonde au moins deux fois. Mesuré sur `recettes` : 480 ms l'appel contre 0,1 ms pour
+  // `querySelector('h1')`. Cette attente-ci ne vérifie rien — elle attend seulement la fin de la
+  // phase `chargement` ; les assertions de chaque test gardent leurs requêtes accessibles.
+  await waitFor(() => {
+    if (document.querySelector('h1') === null) throw new Error('écran pas encore monté')
+  })
   return Courses
 }
 

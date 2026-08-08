@@ -57,7 +57,25 @@ async function monter(): Promise<HTMLElement> {
       <Recettes />
     </ProvenanceLancerParcours>
   )
-  await screen.findByRole('heading', { name: 'Recettes' })
+  // ⛔ NE PAS REMETTRE `findByRole('heading', { name: 'Recettes' })` ICI. MESURÉ le 2026-08-07 sur
+  // cet écran monté (2 104 nœuds) : `getByRole` avec un filtre de NOM coûte **480 ms par appel** —
+  // il recalcule le nom accessible de chaque élément du document — quand `querySelector('h1')` coûte
+  // **0,1 ms**. `findBy*` sonde au moins deux fois, donc ce seul `await` pesait ~960 ms, répété
+  // 23 fois dans ce fichier : ~24 s des 29,8 s qu'il mettait.
+  //
+  // ⚠️ ET C'EST CE CHIFFRE QUI A FAIT CROIRE À UN PROBLÈME DE RENDU. La décision 61 d'`ETAT.md`
+  // concluait « le temps de montage EST le rendu des cartes, 3,60 ms par carte ». Le Profiler React
+  // dit **83 ms pour 2 commits** sur le même montage, soit 0,27 ms par carte — le plancher de jsdom.
+  // Les 3,60 ms mesuraient la croissance de `getByRole` avec la taille du DOM, une propriété du
+  // HARNAIS DE TEST qui n'existe pas dans un navigateur.
+  //
+  // ⚠️ CE HELPER N'ATTEND QU'UNE CHOSE : que la phase `chargement` soit passée. La garantie de cet
+  // écran n'est pas portée par cette attente mais par les assertions de chaque test, qui continuent
+  // d'interroger la liste RENDUE EN ENTIER (`idsAffiches`). On n'échange donc aucune couverture
+  // contre du temps — les requêtes coûteuses restent là où elles vérifient quelque chose.
+  await waitFor(() => {
+    if (container.querySelector('h1') === null) throw new Error('écran pas encore monté')
+  })
   return container
 }
 

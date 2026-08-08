@@ -65,7 +65,12 @@ async function monter(lancerParcours: (id: string) => void = () => undefined) {
       <Parametres />
     </ProvenanceLancerParcours>
   )
-  await screen.findByRole('heading', { name: 'Paramètres' })
+  // ⛔ PAS DE `findByRole('heading', { name })` pour attendre un montage — raisonnement complet et
+  // chiffres dans `recettes.test.tsx`. Le filtre par NOM recalcule le nom accessible de chaque
+  // élément du document, à chaque sonde.
+  await waitFor(() => {
+    if (document.querySelector('h1') === null) throw new Error('écran pas encore monté')
+  })
 }
 
 /** État `aria-pressed` d'un bouton, cherché DANS le scope donné (voir `ouvrir`). */

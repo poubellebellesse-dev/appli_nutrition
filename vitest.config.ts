@@ -26,26 +26,37 @@ export default defineConfig({
     // **1 453 ms en exécution isolée**, soit 29 % du budget d'origine. Aucun test du dépôt
     // n'approche 15 s seul ; ce plafond attrape encore une vraie boucle infinie.
     //
-    // ⛔ LA CAUSE DE FOND N'EST PAS ICI, et desserrer le délai ne la traite pas. L'écran Recettes
-    // NE PAGINE NI NE VIRTUALISE (en-tête de `recettes.tsx`) : il rend TOUT le catalogue dans le
-    // DOM, donc le coût de montage croît linéairement avec lui — 241 → 282 recettes le 2026-08-06,
-    // soit +17 % d'un coup. À 500 recettes la question se posera sur un TÉLÉPHONE, pas dans jsdom.
-    // Décision ouverte **61** d'`ETAT.md` §4. Ne pas la refermer en remontant encore ce nombre.
-    //
     // ⚠️ CE COMMENTAIRE A RENVOYÉ À LA « DÉCISION 59 » JUSQU'AU 2026-08-07 — la dérive d'index de
     // §4 avait atteint le code. La 59 est l'écrasement entre deux onglets, sans rapport.
     //
-    // MESURÉ À TROIS POINTS le 2026-08-07 (305 recettes), ce que la ligne de 2026-08-06 n'avait
-    // pas : montage de l'écran à 305 / 220 / 126 cartes = 1 098 / 812 / 455 ms, soit
-    // **3,60 ms par carte, pente constante à 2,5 % près et ordonnée à l'origine +3 ms**. Le temps
-    // de montage EST le rendu des cartes ; il n'y a pas de coût fixe à aller chercher ailleurs.
-    // ⛔ ET CE N'EST PAS LE MOTEUR : les 7 requêtes que `comptes` refait à chaque rendu
-    // (`recettes.tsx:183-197`) coûtent **4,1 ms au total, 0,4 % du montage**. L'hypothèse
-    // « ce sont les compteurs de pastilles » est réfutée, pas écartée au jugé.
-    // ⚠️ CES MILLISECONDES SONT DU jsdom, QUI NE FAIT NI MISE EN PAGE NI PEINTURE — elles ne se
-    // transposent pas à un téléphone. Ce qui se transpose : la linéarité, et **6,9 nœuds DOM par
-    // carte** (2 104 pour 305). À 500 recettes cela fait ~3 450 nœuds, ce qui n'est PAS un DOM
-    // lourd pour un navigateur — l'ordre de grandeur redouté par la 61 n'est pas au rendez-vous.
+    // ⛔ CE BLOC A DÉSIGNÉ LA MAUVAISE CAUSE PENDANT DEUX JOURS, ET LA MESURE QUI L'ACCUSAIT ÉTAIT
+    // BONNE — C'EST SON INTERPRÉTATION QUI NE L'ÉTAIT PAS. Il disait : « l'écran ne pagine ni ne
+    // virtualise, le temps de montage EST le rendu des cartes, 3,60 ms par carte, pente constante à
+    // 2,5 % près ». La pente existe bel et bien. Elle ne mesure simplement pas un rendu.
+    //
+    // DÉCOMPOSÉ le 2026-08-08 sur le même écran monté (305 cartes, 2 104 nœuds DOM) :
+    //   Profiler React, 2 commits ....................    83 ms   ← le rendu réel
+    //   `getByRole('heading', { name })` .............   480 ms   PAR APPEL
+    //   `getByText('Recettes')` ......................    79 ms   par appel
+    //   `querySelector('h1')` ........................   0,1 ms   par appel
+    //   montage bout en bout .........................  1 294 ms
+    //   305 <li> nues de structure équivalente .......    68 ms
+    //   `chargerSocle` / `createEngine` / `loadCatalog`  34 / 5 / 19 ms
+    //
+    // Le rendu d'une carte coûte 83/305 = **0,27 ms**, soit exactement le plancher de jsdom mesuré
+    // à part (0,28 ms). Les « 3,60 ms par carte » mesuraient la croissance de `getByRole` AVEC UN
+    // FILTRE DE NOM, qui recalcule le nom accessible de chaque élément du document à chaque sonde,
+    // et que `findBy*` appelle au moins deux fois. **C'est une propriété du HARNAIS DE TEST. Elle
+    // n'existe pas dans un navigateur** — aucun utilisateur n'exécute de requête accessible.
+    //
+    // ⇒ Conséquence pour la décision **61** d'`ETAT.md` §4 : l'extrapolation « à 500 recettes la
+    // question se posera sur un TÉLÉPHONE » s'appuyait sur un nombre qui n'a jamais décrit un
+    // téléphone. La mesure sur appareil reste due (piste (c)) ; la présomption qu'elle devait
+    // confirmer, non. ⛔ Ne pas refermer la 61 sur CE bloc non plus : jsdom ne fait ni mise en page
+    // ni peinture, et ce qui se transpose reste 6,9 nœuds par carte, ~3 450 à 500 recettes.
+    //
+    // ⛔ ET CE N'EST TOUJOURS PAS LE MOTEUR : les 7 requêtes que `comptes` refait à chaque rendu
+    // (`recettes.tsx:183-197`) coûtent 4,1 ms au total. Hypothèse réfutée, pas écartée au jugé.
     testTimeout: 15_000,
   },
 })
