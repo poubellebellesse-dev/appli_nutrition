@@ -64,7 +64,7 @@ import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle, rebatirCatalogue
 import { hashDeLEditeur, hashDeRecette, hashDuFrigo } from '../router.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { Panneau } from '../panneau.js'
-import { MesureMontage } from '../mesure-montage.js'
+import { MesureMontage, mesureDemandee } from '../mesure-montage.js'
 import { exporterRecette } from '../export-recette.js'
 import { importerRecette } from '../import-recette.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
@@ -213,6 +213,10 @@ export function Recettes() {
 
   const { socle } = etat
   const trouvees = resultat?.recipeIds ?? []
+  // Décision 61 : instant de DÉPART de CETTE passe de rendu, pour mesurer une reconstruction de la
+  // liste (changement de filtre) séparément du montage, qui paie en plus le chargement du catalogue.
+  // ⚠️ Derrière `mesureDemandee()` : sans le drapeau, l'écran ne lit même pas l'horloge.
+  const debutRendu = mesureDemandee() ? performance.now() : 0
 
   return (
     <section>
@@ -312,7 +316,7 @@ export function Recettes() {
       </p>
 
       {/* Décision 61 : n'apparaît QUE derrière `?perf` dans `location.search`. Rend `null` sinon. */}
-      <MesureMontage depuis={debutMontage} nbCartes={trouvees.length} />
+      <MesureMontage depuis={debutMontage} depuisRendu={debutRendu} nbCartes={trouvees.length} />
 
       <ul className="mt-3 space-y-2">
         {trouvees.map((id) => {

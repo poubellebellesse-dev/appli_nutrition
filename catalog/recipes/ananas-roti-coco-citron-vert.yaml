@@ -36,7 +36,7 @@ ingredients:
     optionnel: true
   - food_id: citron_vert
     quantite_g: 20
-    unite_affichage: "le jus d'1 citron vert"
+    unite_affichage: "1 citron vert"
     optionnel: false
 
 etapes:

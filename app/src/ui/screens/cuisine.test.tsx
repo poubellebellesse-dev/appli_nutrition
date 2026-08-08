@@ -65,7 +65,24 @@ describe('cuisine — le déroulé', () => {
     })
 
     expect(screen.getByText(/Étape 1 sur 5/)).toBeTruthy()
-    expect(screen.getByText(/Émincer l'oignon/)).toBeTruthy()
+    // ⚠️ « 1 gros oignon » ET NON « l'oignon » : la quantité est posée DANS la phrase au rendu
+    // (`ui/texte-etape.ts`), le YAML dit toujours « Émincer l'oignon ». Ce test ne parle pas de
+    // cette règle-là — il vérifie que l'étape n'a pas bougé — mais il en lit la sortie.
+    //
+    // ⚠️ `textContent` ET NON `getByText`, et ce n'est pas interchangeable ici : la quantité est
+    // dans un `<strong>`, or `getByText` ne lit que les nœuds texte DIRECTS d'un élément. La phrase
+    // entière n'appartient à aucun nœud unique — la chercher par `getByText` échoue toujours.
+    expect(document.body.textContent).toContain('Émincer 1 gros oignon')
+  })
+
+  // ⛔ LE TEST QUI PROTÈGE `sauf`. La quantité passe dans la phrase ET la ligne de badges existe
+  // toujours : sans le retrait, l'étape annoncerait « 1 gros oignon » deux fois à deux centimètres
+  // d'écart. C'est le seul endroit où le câblage des deux composants se vérifie — chacun pris
+  // isolément est correct.
+  it('⛔ ne répète PAS en badge la quantité déjà posée dans la phrase', async () => {
+    await monter()
+    const texte = document.body.textContent ?? ''
+    expect(texte.split('1 gros oignon')).toHaveLength(2)
   })
 
   // Dépend de L0 : `chakchouka` porte SIX lignes dans `etapes`, dont la dernière est la mention

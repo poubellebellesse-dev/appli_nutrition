@@ -23,7 +23,9 @@ axes:
 ingredients:
   - food_id: betterave
     quantite_g: 800
-    unite_affichage: "4 betteraves crues"
+    # Pas « 4 betteraves CRUES » : le libellé s'injecte dans les étapes, dont celles d'après cuisson
+    # (« Peler les betteraves sortie du four »). L'aliment s'appelle déjà « Betterave rouge, crue ».
+    unite_affichage: "4 betteraves"
     optionnel: false
   - food_id: chevre_frais
     quantite_g: 180

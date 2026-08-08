@@ -10,7 +10,7 @@ import { formaterMasse, formaterQuantiteAchat, quantiteAffichee } from './quanti
 
 const base = {
   facteur: 2,
-  fondDePlacard: false,
+  quantiteFigee: false,
   grammes: 1000,
 }
 
@@ -31,10 +31,16 @@ describe('ui/quantites — les quatre cas signalés à l’usage', () => {
   })
 
   it('le sel ne bouge PAS — personne ne mesure 8 g de sel', () => {
-    const sel = quantiteAffichee({ ...base, libelle: '1 pincée de sel', fondDePlacard: true })
+    const sel = quantiteAffichee({ ...base, libelle: '1 pincée de sel', quantiteFigee: true })
     expect(sel.texte).toBe('1 pincée de sel')
     // `fige` permet à l'écran de le dire, au lieu de laisser croire à un bug d'affichage.
     expect(sel.fige).toBe(true)
+  })
+
+  it('fond de placard mais quantité NON figée — elle suit quand même les portions (cas de l’eau)', () => {
+    const eau = quantiteAffichee({ ...base, libelle: '35 cl d’eau', quantiteFigee: false })
+    expect(eau.texte).toBe('70 cl d’eau')
+    expect(eau.fige).toBe(false)
   })
 })
 

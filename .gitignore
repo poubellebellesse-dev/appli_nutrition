@@ -29,6 +29,10 @@ documents Ciqual/
 
 # PWA — sortie de `vite build`, reconstructible
 dist/
+# Les trois bundles de la mesure de la décision 61 (`catalog/preparer-mesure-61.mjs`). HORS de
+# `dist/` exprès : `emptyOutDir: true` y ferait effacer les trois bundles par le premier
+# `npx vite build`, sous les serveurs qui les servent.
+dist-mesure/
 
 # Dossiers de TRAVAIL, jamais versionnés — trois `git add` les ont embarqués par accident
 # (2026-08-04) avant que cette section existe.

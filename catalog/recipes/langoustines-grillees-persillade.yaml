@@ -64,6 +64,9 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Passer sous le gril du four, chair vers le haut, jusqu'à ce que la chair devienne ferme et opaque — quelques minutes suffisent."
+    # Ce qui passe sous le gril, ce sont les langoustines. Le beurre persillé n'est PAS repris ici :
+    # il a été réparti à l'étape 3, et une étape ne cite que ce qu'elle emploie.
+    food_ids: [langoustine]
     lexicon_ids: []
     timer_s: 300
     timer_type: cuisson

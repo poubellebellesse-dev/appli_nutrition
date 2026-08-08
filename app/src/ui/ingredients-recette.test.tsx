@@ -28,7 +28,7 @@ function rendre(lienAliment?: (foodId: string) => string) {
       quantites={new Map([['carotte', 120]])}
       facteur={1}
       nomAliment={(id) => NOMS[id] ?? id}
-      estFondDePlacard={(id) => id === 'sel_fin'}
+      estQuantiteFigee={(id) => id === 'sel_fin'}
       manquants={null}
       {...(lienAliment === undefined ? {} : { lienAliment })}
     />
@@ -58,7 +58,11 @@ describe('ui/ingredients-recette — le lien vers la fiche aliment', () => {
     expect(screen.getByRole('link', { name: 'Carotte, crue' }).textContent).toBe('Carotte, crue')
   })
 
-  it('lie aussi les ingrédients facultatifs et de fond de placard', () => {
+  // ⚠️ `estQuantiteFigee` ET NON `estFondDePlacard` — la prop a changé de FAIT, pas seulement de nom.
+  // `Food.fondDePlacard` (« on ne le rachète pas chaque semaine ») existe toujours et sert la liste
+  // de courses ; `Food.quantiteFigee` (« personne ne mesure 8 g de sel ») sert l'affichage. L'eau les
+  // sépare : hors courses, mais sa quantité se met bien à l'échelle. Voir `engine/domain/catalog.ts`.
+  it('lie aussi les ingrédients facultatifs et ceux à quantité figée', () => {
     rendre((foodId) => `#/aliment/${foodId}`)
     expect(screen.getByRole('link', { name: 'Sel fin' }).getAttribute('href')).toBe('#/aliment/sel_fin')
   })

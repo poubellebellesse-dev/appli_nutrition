@@ -62,6 +62,8 @@ etapes:
     timer_type: cuisson
   - ordre: 2
     texte: "Récupérer la chair en vérifiant à la main qu'il ne reste aucun éclat de carapace."
+    # « la chair », c'est le crabe, et aucune règle de chaîne ne le dira jamais.
+    food_ids: [crabe]
     lexicon_ids: []
     timer_s: null
     timer_type: null

@@ -43,7 +43,14 @@ import {
   sonnerieEncoreJuste,
 } from '../cuisine-session.js'
 import { GestesDeLEtape } from '../gestes-etape.js'
-import { ListeIngredients, QuantitesDeLEtape, SelecteurPortions } from '../ingredients-recette.js'
+import {
+  ListeIngredients,
+  QuantitesDeLEtape,
+  SelecteurPortions,
+  TexteEtape,
+  preparerTexteEtape,
+} from '../ingredients-recette.js'
+import { formesDeLAliment } from '../texte-etape.js'
 import { Panneau } from '../panneau.js'
 
 type Etat =
@@ -259,6 +266,21 @@ export function Cuisine({
   const etape = gestes[rang]
   const derniere = rang >= gestes.length - 1
 
+  // La quantité DANS la phrase, et la liste de ce qu'elle a servi — pour ne pas le répéter en badge
+  // juste en dessous. Les deux sortent du même appel : voir `preparerTexteEtape`.
+  const redaction =
+    etape === undefined
+      ? null
+      : preparerTexteEtape({
+          texte: etape.texte,
+          ingredients: recette.ingredients,
+          foodIds: etape.foodIds,
+          quantites,
+          facteur,
+          formesAliment: (foodId) => formesDeLAliment(catalogue.foods.get(foodId as never), foodId),
+          estQuantiteFigee: (foodId) => catalogue.foods.get(foodId as never)?.quantiteFigee === true,
+        })
+
   const allerA = (nouveauRang: number): void => {
     const cible = gestes[nouveauRang]
     if (cible === undefined || session === null) return
@@ -383,7 +405,7 @@ export function Cuisine({
             quantites={quantites}
             facteur={facteur}
             nomAliment={(foodId) => catalogue.foods.get(foodId as never)?.nom ?? foodId}
-            estFondDePlacard={(foodId) => catalogue.foods.get(foodId as never)?.fondDePlacard === true}
+            estQuantiteFigee={(foodId) => catalogue.foods.get(foodId as never)?.quantiteFigee === true}
             manquants={null}
           />
         </Panneau>
@@ -394,11 +416,21 @@ export function Cuisine({
           <p className="text-[0.95rem] font-semibold uppercase tracking-wide text-attenue">
             Étape {rang + 1} sur {gestes.length}
           </p>
-          <p className="mt-3 text-[1.35rem] leading-relaxed text-texte">{etape.texte}</p>
+          {/* ⚠️ LA QUANTITÉ EST DANS LA PHRASE, PAS SEULEMENT SOUS ELLE : « Faire fondre 50 g de
+              beurre ». Le nombre suit le sélecteur de portions parce qu'il vient de
+              `quantiteAffichee` — le YAML, lui, n'est pas touché. Voir `ui/texte-etape.ts`. */}
+          <TexteEtape
+            segments={redaction?.segments ?? [{ type: 'texte', contenu: etape.texte }]}
+            className="mt-3 text-[1.35rem] leading-relaxed text-texte"
+          />
 
           {/* ⚠️ LA QUANTITÉ LÀ OÙ ON SE LA DEMANDE. « C'était combien d'ail ? » n'ouvre plus rien :
               c'est déjà sous la phrase, mis à l'échelle des portions courantes. La fenêtre reste,
               et c'est ce qui rend la chose sûre — voir l'en-tête de `QuantitesDeLEtape`.
+
+              ⚠️ `sauf` RETIRE CE QUE LA PHRASE VIENT DE DIRE, et rien d'autre : trois quarts des
+              gestes n'y laissent plus de badge, le quart restant (pronoms, hyperonymes, « au
+              goût ») le garde. L'union des deux couvre toujours `foodIds`.
 
               ⚠️ `foodIds` EST DÉRIVÉ AU BUILD (93,7 % des gestes), jamais saisi à la main. Une étape
               qui n'emploie aucun ingrédient — « Préchauffer le four » — ne rend rien du tout. */}
@@ -408,7 +440,8 @@ export function Cuisine({
             quantites={quantites}
             facteur={facteur}
             nomAliment={(foodId) => catalogue.foods.get(foodId as never)?.nom ?? foodId}
-            estFondDePlacard={(foodId) => catalogue.foods.get(foodId as never)?.fondDePlacard === true}
+            estQuantiteFigee={(foodId) => catalogue.foods.get(foodId as never)?.quantiteFigee === true}
+            sauf={redaction?.injectes}
           />
 
           {/* ⚠️ SUR PLACE ET SOUS L'ÉTAPE, pas en fenêtre — l'inverse du choix fait pour les

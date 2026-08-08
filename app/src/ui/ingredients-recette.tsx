@@ -11,8 +11,10 @@
 // cette décision au même endroit — la fiche dans un état React éphémère, le mode cuisine dans la
 // session persistée (schéma v11).
 
+import { Fragment } from 'react'
 import type { Recipe } from '../engine/domain/index.js'
 import { quantiteAffichee } from './quantites.js'
+import { injecterQuantites, type EtapeInjectee, type SegmentEtape } from './texte-etape.js'
 
 /**
  * Les ingrédients d'une recette, avec leurs quantités mises à l'échelle des portions demandées.
@@ -28,7 +30,7 @@ export function ListeIngredients({
   quantites,
   facteur,
   nomAliment,
-  estFondDePlacard,
+  estQuantiteFigee,
   manquants,
   lienAliment,
 }: {
@@ -38,7 +40,7 @@ export function ListeIngredients({
   /** Portions demandées / portions de la recette. */
   readonly facteur: number
   readonly nomAliment: (foodId: string) => string
-  readonly estFondDePlacard: (foodId: string) => boolean
+  readonly estQuantiteFigee: (foodId: string) => boolean
   /**
    * `null` = NE RIEN SIGNALER.
    *
@@ -64,7 +66,7 @@ export function ListeIngredients({
         const quantite = quantiteAffichee({
           libelle: ingredient.uniteAffichage,
           facteur,
-          fondDePlacard: estFondDePlacard(foodId),
+          quantiteFigee: estQuantiteFigee(foodId),
           grammes: quantites.get(foodId) ?? ingredient.quantiteG,
         })
         return (
@@ -123,7 +125,8 @@ export function QuantitesDeLEtape({
   quantites,
   facteur,
   nomAliment,
-  estFondDePlacard,
+  estQuantiteFigee,
+  sauf,
 }: {
   readonly ingredients: Recipe['ingredients']
   /** `RecipeStep.foodIds` — dérivé au build, sous-ensemble garanti de `ingredients`. */
@@ -132,9 +135,19 @@ export function QuantitesDeLEtape({
   readonly quantites: ReadonlyMap<string, number>
   readonly facteur: number
   readonly nomAliment: (foodId: string) => string
-  readonly estFondDePlacard: (foodId: string) => boolean
+  readonly estQuantiteFigee: (foodId: string) => boolean
+  /**
+   * Les ingrédients dont la quantité est DÉJÀ dans la phrase — `EtapeInjectee.injectes`.
+   *
+   * ⚠️ CE N'EST PAS UN FILTRE, ET LA NUANCE DÉCIDE DE LA DÉCISION 60. On ne retire d'ici que ce qui
+   * est affiché ailleurs À L'ÉCRAN, dans la même étape, à deux centimètres. L'union « phrase +
+   * badges » reste exactement égale à `foodIds` : aucun ingrédient ne disparaît, il change de
+   * place. Le jour où quelqu'un passera ici un ensemble qui ne vient pas de la phrase rendue
+   * juste au-dessus, l'écran se remettra à mentir par omission.
+   */
+  readonly sauf?: ReadonlySet<string> | undefined
 }) {
-  const vises = new Set(foodIds)
+  const vises = new Set([...foodIds].filter((id) => sauf?.has(id) !== true))
   // ⚠️ ON PARCOURT `ingredients`, PAS `foodIds` : l'ordre affiché reste celui de la recette, le même
   // que dans la fenêtre. Suivre l'ordre des `foodIds` ferait changer la place d'un ingrédient d'une
   // étape à l'autre, et l'œil devrait le rechercher à chaque fois.
@@ -148,7 +161,7 @@ export function QuantitesDeLEtape({
         const quantite = quantiteAffichee({
           libelle: ingredient.uniteAffichage,
           facteur,
-          fondDePlacard: estFondDePlacard(foodId),
+          quantiteFigee: estQuantiteFigee(foodId),
           grammes: quantites.get(foodId) ?? ingredient.quantiteG,
         })
         return (
@@ -158,6 +171,96 @@ export function QuantitesDeLEtape({
           </span>
         )
       })}
+    </p>
+  )
+}
+
+/**
+ * Prépare le texte d'une étape avec ses quantités posées dedans.
+ *
+ * ⚠️ APPELÉE PAR L'ÉCRAN, PAS PAR UN COMPOSANT, et ce n'est pas un détail de style : elle rend DEUX
+ * choses dont l'écran a besoin séparément — les segments à écrire, et l'ensemble des ingrédients
+ * ainsi servis, qu'il faut passer en `sauf` à `QuantitesDeLEtape` pour ne pas dire deux fois la
+ * même quantité à dix pixels d'écart. Un composant ne peut pas rendre les deux.
+ *
+ * ⚠️ MÊME ENTRÉE QUE `QuantitesDeLEtape`, À LA VIRGULE PRÈS. Les deux doivent voir les mêmes
+ * quantités : c'est ce qui garantit que leur union couvre `foodIds`. Si un appelant met à l'échelle
+ * d'un côté et pas de l'autre, l'écran affichera deux nombres différents pour le même ingrédient.
+ */
+export function preparerTexteEtape({
+  texte,
+  ingredients,
+  foodIds,
+  quantites,
+  facteur,
+  formesAliment,
+  estQuantiteFigee,
+}: {
+  readonly texte: string
+  readonly ingredients: Recipe['ingredients']
+  readonly foodIds: readonly string[]
+  readonly quantites: ReadonlyMap<string, number>
+  readonly facteur: number
+  /** `Food.nom` + `Food.synonymes` + identifiant — les mots sous lesquels la phrase peut le nommer. */
+  readonly formesAliment: (foodId: string) => readonly string[]
+  readonly estQuantiteFigee: (foodId: string) => boolean
+}): EtapeInjectee {
+  const vises = new Set(foodIds)
+  // On parcourt `ingredients` et non `foodIds` : l'ordre de la recette tranche les conflits de
+  // façon stable d'une étape à l'autre — voir l'en-tête de `injecterQuantites`.
+  const employes = ingredients
+    .filter((i) => vises.has(i.foodId as string))
+    .map((i) => {
+      const foodId = i.foodId as string
+      return {
+        foodId,
+        formes: formesAliment(foodId),
+        quantite: quantiteAffichee({
+          libelle: i.uniteAffichage,
+          facteur,
+          quantiteFigee: estQuantiteFigee(foodId),
+          grammes: quantites.get(foodId) ?? i.quantiteG,
+        }).texte,
+      }
+    })
+  return injecterQuantites(texte, employes)
+}
+
+/**
+ * Le texte d'une étape, quantités comprises — « Faire fondre **50 g** de beurre ».
+ *
+ * ⚠️ LE NOMBRE EST MIS EN VALEUR, LE MOT DE LA RECETTE NE L'EST PAS. C'est ce qu'on cherche des
+ * yeux les mains dans la farine, et c'est la seule différence typographique : pas de couleur, pas
+ * de pastille. Un jeton visuel de plus dans une phrase la rend plus lente à lire, pas plus claire.
+ *
+ * ⚠️ AUCUNE RECETTE N'EST MODIFIÉE EN BASE. Le YAML garde « Faire fondre le beurre » ; la quantité
+ * est posée au rendu, donc elle suit le sélecteur de portions. L'écrire dans le catalogue figerait
+ * un nombre qui doit bouger — c'est la raison pour laquelle la substitution vit ici.
+ *
+ * ⚠️ LE TEXTE ORDINAIRE N'EST ENVELOPPÉ DANS RIEN, ET C'EST UNE CONTRAINTE DE TEST, PAS UN GOÛT.
+ * `getByText` de Testing Library ne lit que les nœuds texte DIRECTS d'un élément : un `<span>`
+ * autour de chaque morceau rendrait la phrase introuvable par toutes les requêtes existantes. Le
+ * `<strong>` de la quantité la coupe déjà en deux — un test qui cherche la phrase ENTIÈRE doit
+ * passer par `textContent`, et c'est ce que fait `cuisine.test.tsx`.
+ */
+export function TexteEtape({
+  segments,
+  className,
+}: {
+  readonly segments: readonly SegmentEtape[]
+  readonly className: string
+}) {
+  return (
+    <p className={className}>
+      {segments.map((segment, i) =>
+        segment.type === 'quantite' ? (
+          <strong key={i} className="font-semibold tabular-nums text-texte">
+            {segment.contenu}
+          </strong>
+        ) : (
+          <Fragment key={i}>{segment.contenu}</Fragment>
+        )
+      )}
     </p>
   )
 }

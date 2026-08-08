@@ -157,10 +157,44 @@ function formePresente(motsTexte, forme) {
   return false
 }
 
+/**
+ * ⚠️ LES NOMS QUI FINISSENT COMME DES INFINITIFS. `estInfinitif` n'est qu'un test de terminaison :
+ * tout mot de plus de trois lettres en -er/-ir/-re passe. « la chair », « le beurre », « le sucre »
+ * étaient donc lus comme pronom + verbe, et l'étape héritait des ingrédients de la précédente.
+ *
+ * « la chair » à lui seul déclenchait 8 héritages faux — toutes des cuissons de poisson
+ * (« jusqu'à ce que la chair se détache de l'arête »).
+ *
+ * Cette liste est MESURÉE, pas devinée : elle vient du dépouillement des 143 mots que le catalogue
+ * place réellement derrière un pronom. La compléter se fait de la même façon — relever, puis
+ * ajouter. Aucun de ces mots n'est un infinitif français, et aucun ne peut le devenir.
+ */
+const NOMS_EN_APPARENCE_INFINITIFS = new Set([
+  'chair', 'beurre', 'laurier', 'sucre', 'vinaigre', 'gingembre', 'concentre', 'cuillere',
+  'chapelure', 'poivre', 'concombre', 'ventre', 'levure', 'chevre', 'coriandre', 'centre',
+  'texture', 'poudre', 'panier', 'temperature', 'charniere', 'fibre', 'terre', 'blessure',
+  'poire', 'boulangere', 'ministere', 'agriculture',
+  // Déterminants, adjectifs et numéraux pris au même piège : « l'autre face », « la première eau ».
+  'autre', 'premiere', 'derniere', 'dernier', 'quatre', 'moindre',
+  // Non relevés à ce jour, mais de la même famille et sans ambiguïté possible.
+  'litre', 'verre', 'heure', 'papier', 'quartier', 'saladier', 'entier', 'entiere',
+])
+
+const estVerbeInfinitif = (mot) => estInfinitif(mot) && !NOMS_EN_APPARENCE_INFINITIFS.has(mot)
+
+/**
+ * Sel, poivre, herbes sèches, laurier : ce que la cuisine suppose présent. Le catalogue le marque
+ * déjà, et des DEUX côtés — `fond_de_placard` (on ne l'achète pas pour la recette) et
+ * `quantite_figee` (sa quantité ne suit pas les portions : une pincée reste une pincée).
+ */
+export function estFondDePlacard(aliment) {
+  return (aliment?.fond_de_placard ?? aliment?.quantite_figee) === true
+}
+
 /** L'étape reprend-elle un ingrédient déjà nommé sans le renommer ? Déterminant + infinitif. */
 function aUnPronom(mots) {
   for (let i = 0; i + 1 < mots.length; i++) {
-    if (['les', 'le', 'la', 'l', 'en', 'y'].includes(mots[i]) && estInfinitif(mots[i + 1])) return true
+    if (['les', 'le', 'la', 'l', 'en', 'y'].includes(mots[i]) && estVerbeInfinitif(mots[i + 1])) return true
   }
   return false
 }
@@ -281,7 +315,22 @@ export function liensDeLaRecette(recette, aliments) {
     if (retenus.length > 0) {
       const ids = retenus.map((t) => t.id)
       liens.set(etape.ordre, { ids, origine: 'derive' })
-      precedent = ids
+      // ⚠️ CE QUE L'ÉTAPE EMPLOIE ET CE QUE SON PRONOM DÉSIGNERA NE SONT PAS LA MÊME CHOSE. « LES
+      // plonger dans une eau salée et citronnée » emploie le sel et le citron, mais « les » de
+      // l'étape suivante, ce sont toujours les artichauts. Prendre les liens pour antécédent faisait
+      // dériver la référence vers l'assaisonnement, et l'erreur se propageait aux étapes d'après.
+      //
+      // Deux exclusions, chacune tirée d'un défaut mesuré :
+      //   - le VERBE (« salée » → sel_fin) désigne un traitement, jamais l'objet du geste ;
+      //   - le FOND DE PLACARD (sel, poivre, thym, laurier) est un accompagnement même nommé en
+      //     toutes lettres — on n'enveloppe pas « le thym », on enveloppe les betteraves.
+      // Si rien ne reste, l'antécédent PRÉCÉDENT tient : mieux vaut une référence un peu ancienne
+      // qu'une référence fausse.
+      const objets = retenus
+        .filter((t) => t.verdict !== 'verbe')
+        .map((t) => t.id)
+        .filter((id) => !estFondDePlacard(aliments.get(id)))
+      if (objets.length > 0) precedent = objets
     } else if (pronom && precedent.length > 0) {
       liens.set(etape.ordre, { ids: [...precedent], origine: 'herite' })
       precedent = []

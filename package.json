@@ -18,6 +18,7 @@
     "engine:couverture": "tsx app/src/cli/diag-couverture.ts",
     "engine:calibrate-lambda": "tsx app/src/cli/calibre-lambda.ts",
     "catalog:gonfler": "node catalog/gonfler-pour-mesure.mjs",
+    "mesure:61": "node catalog/preparer-mesure-61.mjs",
     "dev": "vite",
     "preview": "vite preview",
     "icons:build": "node catalog/build-icons.mjs"

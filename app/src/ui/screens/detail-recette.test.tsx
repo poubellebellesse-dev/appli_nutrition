@@ -27,6 +27,8 @@ import { readDisplay, readFavorites, writeDisplay } from '../../data/user-store.
 import { AXES_PAR_DEFAUT, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
 import type { OrigineRecette } from '../router.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
+import { preparerTexteEtape } from '../ingredients-recette.js'
+import { formesDeLAliment } from '../texte-etape.js'
 
 /**
  * Catalogue servi par le mock de `catalog-source.js`. `undefined` = le catalogue réel de test
@@ -231,9 +233,31 @@ describe('detail-recette — les étapes', () => {
     const gestes = recette.etapes.filter((e) => e.nature === 'geste')
     const lignes = [...document.querySelectorAll('ol li')]
     expect(lignes).toHaveLength(gestes.length)
+
+    // ⚠️ ON N'ATTEND PLUS LE TEXTE DU YAML TEL QUEL, et c'est le seul changement de ce test. Depuis
+    // `ui/texte-etape.ts`, la quantité est posée DANS la phrase au rendu : « Délayer la moutarde »
+    // s'affiche « Délayer 1 cuillère à soupe de moutarde ». Comparer au YAML mesurerait le
+    // catalogue, pas l'écran. Ce qu'on vérifie ici reste le même : une ligne par geste, dans
+    // l'ordre, numérotée, et TOUS les segments rendus — un segment oublié ferait échouer l'égalité.
+    const catalogue = catalogueDeTest()
+    const rendu = (etape: (typeof gestes)[number]): string =>
+      preparerTexteEtape({
+        texte: etape.texte,
+        ingredients: recette.ingredients,
+        foodIds: etape.foodIds,
+        // Facteur 1 : `quantiteAffichee` rend le libellé d'origine, les grammes ne servent pas.
+        quantites: new Map(),
+        facteur: 1,
+        formesAliment: (foodId) => formesDeLAliment(catalogue.foods.get(foodId as never), foodId),
+        estQuantiteFigee: (foodId) =>
+          catalogue.foods.get(foodId as never)?.quantiteFigee === true,
+      })
+        .segments.map((s) => s.contenu)
+        .join('')
+
     lignes.forEach((ligne, index) => {
       expect(ligne.querySelector('span[aria-hidden="true"]')?.textContent).toBe(String(index + 1))
-      expect(ligne.textContent).toContain(gestes[index]!.texte)
+      expect(ligne.textContent).toContain(rendu(gestes[index]!))
     })
   })
 
@@ -297,7 +321,11 @@ describe('detail-recette — la quantité sous chaque étape', () => {
     // §1 « Casser la queue des artichauts » — `artichaut` est dérivé du texte, pas déclaré.
     const etape1 = document.querySelectorAll('ol li')[0]!
     expect(etape1.textContent).toContain('4 artichauts')
-    expect(etape1.textContent).toContain('Artichaut, cru')
+    // ⚠️ LA QUANTITÉ EST DANS LA PHRASE, PLUS EN BADGE SOUS ELLE, et le nom CIQUAL a disparu avec
+    // le badge : la phrase garde le mot de la recette. « la queue DES artichauts » ne pouvait pas
+    // devenir « la queue 4 artichauts » — le déterminant reste et s'accorde (`ui/texte-etape.ts`).
+    expect(etape1.textContent).toContain('la queue des 4 artichauts')
+    expect(etape1.textContent).not.toContain('Artichaut, cru')
   })
 
   // ⚠️ CETTE LIGNE AJOUTE, ELLE NE FILTRE JAMAIS — la seule objection qui tenait contre la
@@ -316,8 +344,11 @@ describe('detail-recette — la quantité sous chaque étape', () => {
     const recette = recetteDeReference()
     await monter(recette.id)
 
+    // ⚠️ `.tabular-nums` SANS `span` : la quantité est passée du badge (`<span>`) à la phrase
+    // (`<strong>`). Le sélecteur porte sur la classe, qui est le vrai marqueur d'un nombre à
+    // l'écran, et non sur la balise — le test survit à la prochaine bascule.
     const quantiteSousEtape1 = () =>
-      document.querySelectorAll('ol li')[0]!.querySelector('span.tabular-nums')?.textContent
+      document.querySelectorAll('ol li')[0]!.querySelector('.tabular-nums')?.textContent
     expect(quantiteSousEtape1()).toBe('4 artichauts')
 
     const boutonPlus = document.querySelector('button[aria-label="Une portion de plus"]') as HTMLButtonElement

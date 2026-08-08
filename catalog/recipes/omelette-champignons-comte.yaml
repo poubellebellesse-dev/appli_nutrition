@@ -64,6 +64,9 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Ramener les bords vers le centre à la spatule tant que le dessus reste liquide."
+    # « les bords », c'est l'œuf en train de prendre. Les champignons sont dessous et le beurre dans
+    # la poêle : ni l'un ni l'autre n'est employé par ce geste.
+    food_ids: [oeuf]
     lexicon_ids: []
     timer_s: 180
     timer_type: cuisson

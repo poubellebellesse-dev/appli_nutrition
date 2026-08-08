@@ -34,6 +34,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DB = path.join(__dirname, '..', 'app', 'public', 'catalog', 'catalog.db')
 const SAUVEGARDE = `${DB}.vrai`
 
+/** Marque qui distingue un clone d'une recette réelle, dans l'identifiant comme dans le nom. */
+const MARQUE = '__mesure'
+
 function restaurer() {
   if (!existsSync(SAUVEGARDE)) {
     console.error(`Rien à restaurer : ${SAUVEGARDE} n'existe pas. Relancez \`npm run build\`.`)
@@ -82,18 +85,26 @@ function gonfler(cible) {
       .map((c) => c.name)
 
   const colsRecette = colonnes('recipe')
-  const modeles = db.prepare('SELECT * FROM recipe').all()
+  // ⛔ ON NE CLONE QUE DES ORIGINALES, JAMAIS UN CLONE. Deux raisons, la seconde a coûté un build :
+  //   1. un clone de clone porterait un identifiant à double suffixe et un nom à double mention ;
+  //   2. surtout, gonfler DEUX FOIS de suite (305 → 500 → 1 000, ce que fait `preparer-mesure-61`)
+  //      reprenait les clones comme modèles et regénérait leur identifiant à l'identique —
+  //      `UNIQUE constraint failed: recipe.id`. Invisible au premier gonflage.
+  const modeles = db.prepare('SELECT * FROM recipe').all().filter((r) => !r.id.includes(MARQUE))
 
   db.exec('BEGIN')
   let ajoutees = 0
   for (let i = 0; ajoutees < cible - reel; i++) {
     const modele = modeles[i % modeles.length]
-    const suffixe = `__mesure${Math.floor(i / modeles.length) + 1}`
-    const nouvelId = `${modele.id}${suffixe}`
+    // Le rang GLOBAL de la copie (`reel + i`), et non un numéro de tour : il ne se répète jamais,
+    // même entre deux gonflages successifs, et c'est ce qui rend l'identifiant unique par
+    // construction plutôt que par hypothèse sur l'état de départ.
+    const rang = reel + i
+    const nouvelId = `${modele.id}${MARQUE}${rang}`
 
     const valeurs = colsRecette.map((c) => {
       if (c === 'id') return nouvelId
-      if (c === 'nom') return `${modele.nom} (copie de mesure ${Math.floor(i / modeles.length) + 1})`
+      if (c === 'nom') return `${modele.nom} (copie de mesure ${rang})`
       return modele[c]
     })
     db.prepare(

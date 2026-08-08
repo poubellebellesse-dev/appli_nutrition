@@ -64,6 +64,8 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "JETER la première eau, trouble et salée. Une seconde eau, plus claire, se reforme en quelques minutes."
+    # L'eau dont on parle est celle de l'huître : le geste porte sur elle, sans jamais la nommer.
+    food_ids: [huitre]
     lexicon_ids: []
     timer_s: 600
     timer_type: repos

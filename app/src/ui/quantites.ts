@@ -159,8 +159,8 @@ export interface OptionsQuantite {
   readonly libelle: string
   /** Portions demandées / portions de la recette. */
   readonly facteur: number
-  /** `Food.fondDePlacard` — sel, poivre, épices. */
-  readonly fondDePlacard: boolean
+  /** `Food.quantiteFigee` — sel, poivre, épices : le libellé ne suit pas les portions. */
+  readonly quantiteFigee: boolean
   /** Repli quand le libellé ne commence par aucun nombre. Déjà mis à l'échelle par `scaleRecipe`. */
   readonly grammes: number
 }
@@ -169,7 +169,7 @@ export interface OptionsQuantite {
  * Quantité à afficher pour un ingrédient, au nombre de portions demandé.
  *
  * Trois cas, dans cet ordre :
- *   1. **Fond de placard** — sel, poivre, épices : le libellé est FIGÉ. Le moteur applique bien une
+ *   1. **Quantité figée** — sel, poivre, épices : le libellé est FIGÉ. Le moteur applique bien une
  *      règle de trois (choix assumé de `scale-recipe.ts`), mais l'afficher serait absurde : « qui
  *      mesure 8 g de sel ? ». L'en-tête de `scale-recipe.ts` dit lui-même que le sel ne double pas.
  *   2. **Nombre de tête** — on le multiplie, on garde le reste du libellé tel quel. Couvre les
@@ -177,9 +177,9 @@ export interface OptionsQuantite {
  *   3. **Sinon** — grammes ou kilos. Repli honnête pour un libellé sans quantité en tête.
  */
 export function quantiteAffichee(options: OptionsQuantite): QuantiteAffichee {
-  const { libelle, facteur, fondDePlacard, grammes } = options
+  const { libelle, facteur, quantiteFigee, grammes } = options
 
-  if (fondDePlacard) return { texte: libelle, fige: facteur !== 1 }
+  if (quantiteFigee) return { texte: libelle, fige: facteur !== 1 }
   // Au facteur 1, le libellé d'origine est exact ET mieux écrit que tout ce qu'on produirait.
   if (facteur === 1) return { texte: libelle, fige: false }
 

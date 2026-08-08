@@ -36,7 +36,7 @@ ingredients:
     optionnel: false
   - food_id: citron
     quantite_g: 20
-    unite_affichage: "le jus d'1/2 citron"
+    unite_affichage: "1/2 citron"
     optionnel: false
 
 etapes:

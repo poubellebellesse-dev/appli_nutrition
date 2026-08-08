@@ -21,55 +21,52 @@
 
 ---
 
-## §0. ▶ LE PROCHAIN PASSAGE — protocole, et seuil fixé À L'AVANCE
+## §0. ▶ LE PROCHAIN PASSAGE — ce qui reste à relever sur appareil
 
-> Écrit le 2026-08-08. **Trois relevés sont dus sur le même appareil et le même passage**, et aucun
-> ne demande d'outillage à installer. Ils traînent depuis le 2026-08-05 en partie parce que rien
-> n'était écrit : chacun demandait de retrouver comment le prendre.
+> Écrit le 2026-08-08. **Le relevé 1 est FAIT le jour même et a fermé la décision 61.** Restent le
+> **2** et le **3**, tous deux bloqués sur la même chose : `adb` n'est pas installé sur la machine de
+> développement (`command not found`), et sans lui il n'y a pas de contexte sécurisé sur l'appareil.
+> Ils traînent depuis le 2026-08-05 en partie parce que rien n'était écrit : chacun demandait de
+> retrouver comment le prendre.
+>
+> ⚠️ **LA LEÇON DU RELEVÉ 1, à appliquer aux deux autres** : il est resté bloqué des jours derrière
+> `adb`, dont il n'avait **aucun besoin** — le rendu d'une liste ne demande pas de contexte sécurisé.
+> Le protocole faisait dépendre les trois relevés d'un outil que deux seulement réclament. **Avant de
+> déclarer un relevé bloqué, vérifier de quoi il a réellement besoin.**
 
 **Préparer, une fois :**
 
 ```bash
-npx vite build
-npx vite preview --host          # note l'URL réseau affichée
-adb reverse tcp:4173 tcp:4173    # puis http://localhost:4173 SUR le téléphone
+# Installer les platform-tools Android (adb) — c'est le seul prérequis manquant.
+adb reverse tcp:4173 tcp:4173
+npx vite build && npx vite preview --port 4173 --strictPort --host
 ```
 
-⚠️ **`adb reverse` n'est pas un confort, c'est la condition de deux relevés sur trois.** Une origine
+⚠️ **`adb reverse` est requis pour les relevés 2 et 3, PAS pour le 1.** Une origine
 `http://192.168.x.x` n'est pas un contexte sécurisé : OPFS est indisponible ET `navigator.wakeLock`
 disparaît. Sans cela, l'écran qui s'éteint en cuisine ressemble à un défaut d'appareil alors que
-c'est la méthode qui est en cause.
+c'est la méthode qui est en cause. Pour les relevés 2 et 3 : `adb reverse tcp:4173 tcp:4173`, puis
+`http://localhost:4173` **sur le téléphone**.
 
-### Relevé 1 — le temps d'apparition de la liste (décision 61)
+### ~~Relevé 1~~ — le temps d'apparition de la liste (décision 61) ✅ **FAIT le 2026-08-08**
 
-Ouvrir **`http://localhost:4173/?perf#/recettes`** — ⛔ **le `?perf` va AVANT le `#`, jamais après.**
-`#/recettes?perf` retombe silencieusement sur « Aujourd'hui » (`routeDepuisHash` résout les onglets
-par correspondance exacte) et l'on chronométrerait le mauvais écran sans qu'aucun message ne le dise.
+**Relevé, et la décision 61 est FERMÉE — issue (c), on ne virtualise pas.** Trois points pris dans le
+même passage, sur les trois ports servis par `npm run mesure:61` :
 
-Un encadré sous le compteur affiche `montage N ms · M cartes`. Relever **trois points**, parce que la
-61 est une question de CROISSANCE et qu'un seul chiffre n'a pas de pente :
+| Catalogue | montage | par recette | coût **marginal** |
+|---|---|---|---|
+| 305 | **73 ms** | 0,239 ms | — |
+| 500 | **136 ms** | 0,272 ms | 0,323 ms/recette |
+| 1 000 | **210 ms** | 0,210 ms | **0,148 ms/recette** |
 
-```bash
-npm run build                       # 305 recettes — le vrai catalogue
-npm run catalog:gonfler 500         # puis rebuild du bundle : npx vite build
-npm run catalog:gonfler 1000
-npm run catalog:gonfler -- --restaurer   # ⛔ NE PAS OUBLIER
-```
+**Les deux moitiés du seuil sont satisfaites** : `73 ms < 200 ms` sur le point à 305, et la pente
+est **sous-linéaire** — le coût marginal par recette est divisé par deux quand le catalogue double,
+donc la clause « franchement sur-linéaire → virtualiser quel que soit le point à 305 » ne se déclenche
+pas. Détail complet, effets de bord et interdiction de rouvrir sur une impression : `ETAT.md` §4,
+ligne ~~61~~.
 
-⚠️ **Le catalogue gonflé est mensonger sur tout sauf le nombre de cartes** — clones à 100 % de
-similarité. Ne prendre aucune autre mesure dessus. Il est gitignoré, sauvegarde comprise.
-
-**LE SEUIL EST FIXÉ AVANT LA MESURE, ET C'EST DÉLIBÉRÉ** — sans quoi n'importe quel chiffre se lit
-après coup dans le sens qu'on préfère. Sur le point à 305 recettes :
-
-| Mesuré | Décision 61 |
-|---|---|
-| **< 200 ms** | Piste **(c)**, fermée : on ne virtualise pas |
-| **200 – 500 ms** | Piste **(c)**, fermée — mais **à rouvrir au prochain palier de contenu** |
-| **> 500 ms** | Piste **(a)** : virtualiser ⚠️ **ET** réécrire les assertions de garde-fou contre `browseRecipes` — les deux moitiés vont ensemble ou pas du tout (voir la 61) |
-
-Et sur la pente 305 → 1 000 : si elle est franchement **sur-linéaire**, c'est (a) quel que soit le
-point à 305.
+⚠️ **L'outillage reste en place et se relance en une commande** (`npm run mesure:61`). Il resservira
+au prochain palier de contenu — et à ce moment-là, **reprendre les trois points, pas un seul**.
 
 ### Relevé 2 — la vibration et l'écran allumé (mode cuisine)
 
