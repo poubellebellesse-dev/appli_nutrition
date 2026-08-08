@@ -1031,13 +1031,19 @@ describe('user-store — la cuisson en cours (v10, portions en v11)', () => {
     ).toThrow()
   })
 
-  it('⛔ une seule cuisson à la fois — la v1 est mono-recette', () => {
+  // ⚠️ CE TEST AFFIRMAIT L'INVERSE JUSQU'À LA v13, et c'était juste : « une seule cuisson à la fois
+  // — la v1 est mono-recette », garantie par `CHECK (id = 1)`. La v13 lève cette contrainte, comme
+  // la v10 l'annonçait déjà en toutes lettres. On ne SUPPRIME pas la ligne pour autant : elle est
+  // retournée, pour que la relecture voie que la bascule est VOULUE et non un `CHECK` perdu en
+  // route. La garantie qui la remplace — pas deux fois la même recette — est vérifiée dans le bloc
+  // « ce que la migration v13 rend possible, et ce qu'elle protège ».
+  it('depuis la v13, une deuxième cuisson sur une AUTRE recette est acceptée', () => {
     writeCuisineSession(db, SESSION)
     expect(() =>
       db.run('INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (2, ?, 1, 0)', [
         'omelette_fines_herbes',
       ])
-    ).toThrow()
+    ).not.toThrow()
   })
 
   // --- v11 — les portions suivent la cuisson ----------------------------------------------------
@@ -1121,5 +1127,133 @@ describe('user-store — modifier ses allergies après le premier lancement', ()
     writeDiet(db, null)
     expect(readDiet(db)).toBeNull()
     expect(readConstraints(db).allergies).toEqual(['gluten'])
+  })
+})
+
+describe('user-schema — ce que la migration v13 rend possible, et ce qu’elle protège', () => {
+  it('v12 → v13 : les minuteurs d’une cuisson en cours survivent à la migration', () => {
+    // Base bloquée à v12, `PRAGMA foreign_keys = ON` — c'est le régime de production
+    // (`user-store-node.ts`), et c'est LUI qui fait courir le risque : `DROP TABLE
+    // user_cuisine_session` sans détacher l'enfant d'abord exécuterait un DELETE implicite qui
+    // déclenche le CASCADE sur `user_cuisine_timer`. Sans ce pragma, ce test passerait quoi qu'il
+    // arrive et ne prouverait rien.
+    const sqlite = new DatabaseSync(':memory:')
+    sqlite.exec('PRAGMA foreign_keys = ON')
+    const brute: UserDb = {
+      all: <T,>(sql: string, params: readonly (string | number | null)[] = []) =>
+        sqlite.prepare(sql).all(...params) as unknown as readonly T[],
+      run: (sql: string, params: readonly (string | number | null)[] = []) => {
+        sqlite.prepare(sql).run(...params)
+      },
+    }
+    for (const migration of MIGRATIONS.filter((m) => m.version <= 12)) {
+      readSchemaVersion(brute) // bootstrappe app_meta au premier appel
+      for (const sql of migration.statements) brute.run(sql)
+      brute.run('UPDATE app_meta SET schema_version = ? WHERE id = 1', [migration.version])
+    }
+    expect(readSchemaVersion(brute)).toBe(12)
+
+    brute.run(
+      'INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le, portions) VALUES (1, ?, 3, ?, 6)',
+      ['chakchouka', 1_770_000_000_000]
+    )
+    // Un minuteur en marche (échéance posée, aucun reste), un en pause (reste posé, aucune échéance).
+    brute.run(
+      'INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (1, 2, ?, NULL)',
+      [1_770_000_600_000]
+    )
+    brute.run(
+      'INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (1, 3, NULL, 120)'
+    )
+
+    expect(() => migrate(brute)).not.toThrow()
+    expect(readSchemaVersion(brute)).toBe(USER_SCHEMA_VERSION)
+
+    const session = brute.all<{
+      readonly recette_id: string
+      readonly ordre_courant: number
+      readonly ouverte_le: number
+      readonly portions: number
+    }>('SELECT recette_id, ordre_courant, ouverte_le, portions FROM user_cuisine_session WHERE id = 1')[0]
+    expect(session?.recette_id).toBe('chakchouka')
+    expect(session?.ordre_courant).toBe(3)
+    expect(session?.ouverte_le).toBe(1_770_000_000_000)
+    expect(session?.portions).toBe(6)
+
+    const minuteurs = brute
+      .all<{
+        readonly ordre: number
+        readonly fin_ms: number | null
+        readonly pause_restant_s: number | null
+      }>('SELECT ordre, fin_ms, pause_restant_s FROM user_cuisine_timer ORDER BY ordre')
+    expect(minuteurs).toEqual([
+      { ordre: 2, fin_ms: 1_770_000_600_000, pause_restant_s: null },
+      { ordre: 3, fin_ms: null, pause_restant_s: 120 },
+    ])
+  })
+
+  it('le CHECK (id = 1) a sauté : deux cuissons coexistent', () => {
+    db.run(
+      'INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (1, ?, 1, 0)',
+      ['chakchouka']
+    )
+    db.run(
+      'INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (2, ?, 1, 0)',
+      ['omelette_fines_herbes']
+    )
+    const lignes = db.all<{ readonly n: number }>('SELECT COUNT(*) AS n FROM user_cuisine_session')
+    expect(lignes[0]?.n).toBe(2)
+  })
+
+  it('la même recette deux fois est refusée par la forme', () => {
+    db.run(
+      'INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (1, ?, 1, 0)',
+      ['chakchouka']
+    )
+    expect(() =>
+      db.run(
+        'INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (2, ?, 1, 0)',
+        ['chakchouka']
+      )
+    ).toThrow()
+  })
+
+  it('un minuteur sans session_id est refusé — le DEFAULT 1 a été retiré', () => {
+    db.run(
+      'INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (1, ?, 1, 0)',
+      ['chakchouka']
+    )
+    expect(() =>
+      db.run('INSERT INTO user_cuisine_timer (ordre, fin_ms, pause_restant_s) VALUES (1, 1, NULL)')
+    ).toThrow()
+  })
+
+  it('la cascade fonctionne toujours après la reconstruction des tables, et seulement sur ses minuteurs', () => {
+    db.run(
+      'INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (1, ?, 1, 0)',
+      ['chakchouka']
+    )
+    db.run(
+      'INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (2, ?, 1, 0)',
+      ['omelette_fines_herbes']
+    )
+    db.run('INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (1, 1, NULL, 60)')
+    db.run('INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (2, 1, NULL, 60)')
+
+    db.run('DELETE FROM user_cuisine_session WHERE id = 1')
+
+    const restants = db.all<{ readonly session_id: number }>('SELECT session_id FROM user_cuisine_timer')
+    expect(restants).toEqual([{ session_id: 2 }])
+  })
+
+  it('l’heure de service est unique par construction, et acceptée nulle', () => {
+    db.run('INSERT INTO user_cuisine_service (id, heure_service_ms) VALUES (1, NULL)')
+    expect(() => db.run('INSERT INTO user_cuisine_service (id, heure_service_ms) VALUES (2, 1000)')).toThrow()
+
+    db.run('UPDATE user_cuisine_service SET heure_service_ms = ? WHERE id = 1', [72_000_000])
+    const ligne = db.all<{ readonly heure_service_ms: number | null }>(
+      'SELECT heure_service_ms FROM user_cuisine_service WHERE id = 1'
+    )[0]
+    expect(ligne?.heure_service_ms).toBe(72_000_000)
   })
 })

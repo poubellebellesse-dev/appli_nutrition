@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 12
+export const USER_SCHEMA_VERSION = 13
 
 export interface Migration {
   readonly version: number
@@ -609,6 +609,100 @@ const V12_STATEMENTS: readonly string[] = [
      CHECK (tolerance_piquant IS NULL OR tolerance_piquant IN ('aucun','un_peu','tout'))`,
 ]
 
+/**
+ * v13 — PLUSIEURS CUISSONS À LA FOIS (lot L4, `CONCEPTION_MODE_CUISINE.md` §4.0).
+ *
+ * C'est la migration que la v10 annonçait en toutes lettres : « `id = 1` — une seule session, la v1
+ * est mono-recette. La v1.5 fera sauter cette contrainte, pas avant. » La voici.
+ *
+ * ⚠️ POURQUOI CETTE DANSE DE TABLES PLUTÔT QU'UN `ALTER TABLE`. Trois faits se combinent, et aucun
+ * ne se contourne :
+ *   1. SQLite ne sait pas retirer un `CHECK` ; il faut recréer la table.
+ *   2. La procédure officielle pour ça commence par `PRAGMA foreign_keys = OFF` — or ce pragma est
+ *      IGNORÉ EN SILENCE à l'intérieur d'une transaction, et `migrate()` en ouvre une par migration.
+ *   3. `PRAGMA foreign_keys` est ON (`user-store-node.ts`), donc `DROP TABLE user_cuisine_session`
+ *      exécute un `DELETE FROM` implicite qui déclenche le `ON DELETE CASCADE` de la table des
+ *      minuteurs. Le drop naïf EFFACERAIT TOUS LES MINUTEURS EN COURS — sur l'appareil de quelqu'un
+ *      qui a une cuisson lancée, silencieusement, à la première ouverture après mise à jour.
+ * D'où : les minuteurs sont copiés à l'abri, l'ENFANT est détaché EN PREMIER (plus aucune FK ne vise
+ * la session, donc plus de cascade possible), la session est refaite, et l'enfant n'est recréé
+ * qu'APRÈS le `RENAME` — sinon `ALTER TABLE … RENAME TO` réécrirait sa clause `REFERENCES` en cours
+ * de route, ce qui marche mais rend la séquence illisible à la relecture.
+ *
+ * ⚠️ `recette_id … UNIQUE` : la même recette deux fois dans une cuisson est un défaut d'appelant.
+ * `engine/cuisine/ordonnancement.ts` lève déjà une `Error` dessus ; la contrainte le rend
+ * INEXPRIMABLE plutôt que rattrapé au vol. Acquis n°2 du projet — la garantie vient de la forme.
+ *
+ * ⚠️ `DEFAULT 1` RETIRÉ de `user_cuisine_timer.session_id`. Inoffensif tant qu'une seule session
+ * existait, piège dès qu'il y en a trois : une écriture qui omettrait la colonne rattacherait le
+ * minuteur à la première cuisson sans que rien ne proteste. Le store passe déjà `session_id`
+ * explicitement — ce retrait ne casse aucun appelant, il ferme une porte avant qu'on la pousse.
+ *
+ * ⚠️ L'HEURE DE SERVICE DANS SA PROPRE TABLE À LIGNE UNIQUE, et non en colonne sur chaque session.
+ * « À table à 20 h » est UNE propriété du repas, pas de chaque plat : une colonne par session, c'est
+ * N copies de la même valeur et rien qui dise laquelle fait foi le jour où elles divergent. La
+ * contrepartie est explicite et assumée — effacer une cuisson devra vider DEUX tables.
+ *
+ * ⚠️ `heure_service_ms` NULLABLE, et c'est le sens de la colonne. `NULL` = « aucune heure choisie »,
+ * pas une valeur par défaut déguisée : c'est l'état de toute session migrée depuis la v12, et celui
+ * de quelqu'un qui cuisine un seul plat sans viser d'heure. Même discipline que `portions` (v11) et
+ * `tolerance_piquant` (v12).
+ *
+ * ⚠️ AUCUNE COLONNE D'ORDRE. Le rang de chaque plat est RECALCULÉ à l'affichage par
+ * `ordonnancerCuissons`. Le stocker le laisserait dérailler dès l'ajout d'une cuisson, et un dérivé
+ * périmé en base est plus dangereux qu'un calcul refait — celui-ci est pur et instantané.
+ *
+ * COMPATIBLE AVEC LE STORE ACTUEL, à dessein : `user-store.ts` code encore `id = 1` en dur partout,
+ * et `1` reste un identifiant de session parfaitement valide. Cette migration ne casse donc aucun
+ * appelant. La lecture et l'écriture de N sessions viennent au lot suivant.
+ */
+const V13_STATEMENTS: readonly string[] = [
+  // 1 · Mettre les minuteurs à l'abri AVANT de toucher au parent (voir le point 3 ci-dessus).
+  `CREATE TABLE tmp_cuisine_timer (
+     session_id INTEGER, ordre INTEGER, fin_ms INTEGER, pause_restant_s INTEGER
+   )`,
+  `INSERT INTO tmp_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s)
+     SELECT session_id, ordre, fin_ms, pause_restant_s FROM user_cuisine_timer`,
+
+  // 2 · Détacher l'enfant : plus aucune FK ne vise la session, donc plus de cascade au drop.
+  `DROP TABLE user_cuisine_timer`,
+
+  // 3 · La session, sans `CHECK (id = 1)` et avec une seule ligne par recette.
+  `CREATE TABLE user_cuisine_session_neuve (
+     id            INTEGER PRIMARY KEY,
+     recette_id    TEXT NOT NULL UNIQUE,
+     ordre_courant INTEGER NOT NULL CHECK (ordre_courant >= 1),
+     ouverte_le    INTEGER NOT NULL,
+     portions      INTEGER CHECK (portions IS NULL OR portions >= 1)
+   )`,
+  `INSERT INTO user_cuisine_session_neuve (id, recette_id, ordre_courant, ouverte_le, portions)
+     SELECT id, recette_id, ordre_courant, ouverte_le, portions FROM user_cuisine_session`,
+  `DROP TABLE user_cuisine_session`,
+  `ALTER TABLE user_cuisine_session_neuve RENAME TO user_cuisine_session`,
+
+  // 4 · Recréer l'enfant SANS `DEFAULT 1`, puis lui rendre ses minuteurs.
+  `CREATE TABLE user_cuisine_timer (
+     session_id INTEGER NOT NULL
+       REFERENCES user_cuisine_session(id) ON DELETE CASCADE,
+     ordre INTEGER NOT NULL CHECK (ordre >= 1),
+     fin_ms INTEGER,
+     pause_restant_s INTEGER CHECK (pause_restant_s IS NULL OR pause_restant_s >= 0),
+     -- En marche OU en pause, jamais les deux, jamais aucun des deux (inchangé depuis la v10).
+     CHECK ((fin_ms IS NOT NULL AND pause_restant_s IS NULL)
+         OR (fin_ms IS NULL AND pause_restant_s IS NOT NULL)),
+     PRIMARY KEY (session_id, ordre)
+   )`,
+  `INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s)
+     SELECT session_id, ordre, fin_ms, pause_restant_s FROM tmp_cuisine_timer`,
+  `DROP TABLE tmp_cuisine_timer`,
+
+  // 5 · L'heure de service : UNE valeur pour tout le repas, pas une par plat.
+  `CREATE TABLE user_cuisine_service (
+     id INTEGER PRIMARY KEY CHECK (id = 1),
+     heure_service_ms INTEGER
+   )`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -622,6 +716,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 10, statements: V10_STATEMENTS },
   { version: 11, statements: V11_STATEMENTS },
   { version: 12, statements: V12_STATEMENTS },
+  { version: 13, statements: V13_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */
