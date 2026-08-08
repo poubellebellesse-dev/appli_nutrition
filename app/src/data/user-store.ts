@@ -1072,3 +1072,166 @@ export function clearCuisineSession(db: UserDb): void {
     db.run('DELETE FROM user_cuisine_session WHERE id = 1')
   })
 }
+
+// ══ PLUSIEURS CUISSONS À LA FOIS (schéma v13, lot L4) ═══════════════════════════════════════════
+//
+// ⚠️ AJOUT STRICT : les trois fonctions ci-dessus ne changent NI de signature NI de comportement.
+// Elles codent encore `id = 1` en dur, ce qui reste valide — `1` est un identifiant de session
+// comme un autre depuis la v13. Les écrans continuent donc de compiler et de se comporter à
+// l'identique, et la bascule vers les fonctions ci-dessous se fera dans le lot des écrans, d'un
+// seul geste et avec ses tests. Changer la sémantique de `writeCuisineSession` ici aurait modifié
+// le comportement de `cuisine.tsx` SANS toucher `cuisine.tsx` : ouvrir le mode sur une deuxième
+// recette serait passé de « remplace la précédente » à « s'ajoute », en silence.
+//
+// ⚠️ LA RECETTE EST LA CLÉ PUBLIQUE, l'`id` numérique reste interne. `recette_id` est `UNIQUE`
+// depuis la v13 : deux fois le même plat dans une cuisson est inexprimable. Exposer l'`id` aurait
+// obligé chaque appelant à le transporter pour rien, et aurait rendu cette garantie invisible.
+
+/**
+ * Toutes les cuissons en cours, avec leurs minuteurs.
+ *
+ * ⚠️ L'ORDRE RENDU EST CELUI DE L'OUVERTURE, PAS CELUI DU SERVICE. L'ordre d'affichage — quel plat
+ * lancer en premier — est calculé par `engine/cuisine/ordonnancement.ts` à partir des durées, et il
+ * n'est délibérément stocké nulle part : un dérivé figé en base dérive dès qu'on ajoute une cuisson.
+ * Ce tri-ci n'existe que pour être reproductible, `id` départageant deux ouvertures simultanées.
+ *
+ * Deux requêtes et un regroupement en mémoire, pas une par session : le nombre de cuissons est
+ * petit, mais une requête de minuteurs par cuisson serait un N+1 posé volontairement.
+ */
+export function readCuissons(db: UserDb): readonly StoredCuisineSession[] {
+  const rows = db.all<{
+    readonly id: number
+    readonly recette_id: string
+    readonly ordre_courant: number
+    readonly ouverte_le: number
+    readonly portions: number | null
+  }>(
+    `SELECT id, recette_id, ordre_courant, ouverte_le, portions
+       FROM user_cuisine_session ORDER BY ouverte_le, id`
+  )
+  if (rows.length === 0) return []
+
+  const parSession = new Map<number, StoredCuisineTimer[]>()
+  for (const t of db.all<{
+    readonly session_id: number
+    readonly ordre: number
+    readonly fin_ms: number | null
+    readonly pause_restant_s: number | null
+  }>(
+    `SELECT session_id, ordre, fin_ms, pause_restant_s
+       FROM user_cuisine_timer ORDER BY session_id, ordre`
+  )) {
+    const minuteur = { ordre: t.ordre, finMs: t.fin_ms, pauseRestantS: t.pause_restant_s }
+    const liste = parSession.get(t.session_id)
+    if (liste === undefined) parSession.set(t.session_id, [minuteur])
+    else liste.push(minuteur)
+  }
+
+  return rows.map((r) => ({
+    recetteId: r.recette_id,
+    ordreCourant: r.ordre_courant,
+    ouverteLe: r.ouverte_le,
+    portions: r.portions,
+    minuteurs: parSession.get(r.id) ?? [],
+  }))
+}
+
+/**
+ * Écrit UNE cuisson et ses minuteurs, sans toucher aux autres.
+ *
+ * ⚠️ `ON CONFLICT (recette_id)`, ET SURTOUT PAS `INSERT OR REPLACE` — même piège que
+ * `writeCuisineSession`, et il coûterait ici la même chose : `REPLACE` supprime la ligne avant de
+ * la réinsérer, ce qui déclenche le `ON DELETE CASCADE` et emporte les minuteurs qu'on est
+ * précisément en train d'enregistrer (`reference/PIEGES.md`).
+ *
+ * ⚠️ L'`id` N'EST PAS DANS LA LISTE DE COLONNES : c'est SQLite qui l'attribue. Le passer aurait
+ * demandé à l'appelant de connaître une clé qu'il n'a aucune raison d'avoir, et de la deviner juste
+ * pour un plat qu'il ouvre pour la première fois.
+ *
+ * Le `DELETE` des minuteurs est explicite plutôt que confié au CASCADE : ce fichier ne peut pas
+ * garantir que `PRAGMA foreign_keys` est ON, l'ouverture appartenant aux adaptateurs.
+ */
+export function writeCuisson(db: UserDb, session: StoredCuisineSession): void {
+  withTransaction(db, () => {
+    db.run(
+      `INSERT INTO user_cuisine_session (recette_id, ordre_courant, ouverte_le, portions)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT (recette_id) DO UPDATE SET
+         ordre_courant = excluded.ordre_courant,
+         ouverte_le = excluded.ouverte_le,
+         portions = excluded.portions`,
+      [session.recetteId, session.ordreCourant, session.ouverteLe, session.portions]
+    )
+
+    const id = db.all<{ readonly id: number }>(
+      'SELECT id FROM user_cuisine_session WHERE recette_id = ?',
+      [session.recetteId]
+    )[0]?.id
+    // Injoignable si l'`INSERT` ci-dessus a réussi. On lève quand même plutôt que de continuer :
+    // écrire des minuteurs sur un `session_id` inventé les rendrait invisibles à la relecture, et
+    // le décompte d'un plat au feu disparaîtrait sans un mot.
+    if (id === undefined) {
+      throw new Error(`writeCuisson : session introuvable après écriture pour « ${session.recetteId} »`)
+    }
+
+    db.run('DELETE FROM user_cuisine_timer WHERE session_id = ?', [id])
+    for (const t of session.minuteurs) {
+      db.run(
+        'INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (?, ?, ?, ?)',
+        [id, t.ordre, t.finMs, t.pauseRestantS]
+      )
+    }
+  })
+}
+
+/** Ferme UNE cuisson et ses minuteurs. Les autres continuent. */
+export function clearCuisson(db: UserDb, recetteId: string): void {
+  withTransaction(db, () => {
+    db.run(
+      `DELETE FROM user_cuisine_timer
+        WHERE session_id IN (SELECT id FROM user_cuisine_session WHERE recette_id = ?)`,
+      [recetteId]
+    )
+    db.run('DELETE FROM user_cuisine_session WHERE recette_id = ?', [recetteId])
+  })
+}
+
+/**
+ * Ferme TOUT — les cuissons, leurs minuteurs, et l'heure de service.
+ *
+ * ⚠️ L'HEURE DE SERVICE EST DANS UNE AUTRE TABLE, elle ne suit aucune cascade. C'est la
+ * contrepartie assumée de la v13 : une valeur pour le repas entier ne peut pas dépendre d'un plat
+ * en particulier. L'oublier ici laisserait « à table à 20 h » derrière une cuisson abandonnée, et
+ * la cuisson suivante hériterait d'une heure que personne n'a choisie pour elle.
+ */
+export function clearToutesLesCuissons(db: UserDb): void {
+  withTransaction(db, () => {
+    db.run('DELETE FROM user_cuisine_timer')
+    db.run('DELETE FROM user_cuisine_session')
+    db.run('DELETE FROM user_cuisine_service')
+  })
+}
+
+/**
+ * L'heure à laquelle on veut passer à table, en ms epoch, ou `null` = aucune heure choisie.
+ *
+ * ⚠️ PAS DE LIGNE ET LIGNE À `NULL` VEULENT DIRE LA MÊME CHOSE, à dessein : « personne n'a choisi
+ * d'heure ». Les distinguer obligerait chaque appelant à traiter deux absences différentes pour un
+ * seul fait, et l'écran n'en ferait rien de différent.
+ */
+export function readHeureService(db: UserDb): number | null {
+  return (
+    db.all<{ readonly heure_service_ms: number | null }>(
+      'SELECT heure_service_ms FROM user_cuisine_service WHERE id = 1'
+    )[0]?.heure_service_ms ?? null
+  )
+}
+
+/** Pose ou efface l'heure de service. `null` efface le choix sans fermer les cuissons. */
+export function writeHeureService(db: UserDb, heureMs: number | null): void {
+  db.run(
+    `INSERT INTO user_cuisine_service (id, heure_service_ms) VALUES (1, ?)
+     ON CONFLICT (id) DO UPDATE SET heure_service_ms = excluded.heure_service_ms`,
+    [heureMs]
+  )
+}

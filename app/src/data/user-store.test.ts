@@ -30,8 +30,14 @@ import { MIGRATIONS, USER_SCHEMA_VERSION, migrate, readSchemaVersion } from './u
 import {
   aConsenti,
   clearCuisineSession,
+  clearCuisson,
+  clearToutesLesCuissons,
   readCuisineSession,
+  readCuissons,
+  readHeureService,
   writeCuisineSession,
+  writeCuisson,
+  writeHeureService,
   readActiveTopics,
   readAllergies,
   readConstraints,
@@ -1255,5 +1261,138 @@ describe('user-schema — ce que la migration v13 rend possible, et ce qu’elle
       'SELECT heure_service_ms FROM user_cuisine_service WHERE id = 1'
     )[0]
     expect(ligne?.heure_service_ms).toBe(72_000_000)
+  })
+})
+
+describe('user-store — plusieurs cuissons à la fois (v13)', () => {
+  const CHAKCHOUKA = {
+    recetteId: 'chakchouka',
+    ordreCourant: 3,
+    ouverteLe: 1_770_000_000_000,
+    portions: 6,
+    minuteurs: [
+      { ordre: 2, finMs: 1_770_000_600_000, pauseRestantS: null },
+      { ordre: 3, finMs: null, pauseRestantS: 120 },
+    ],
+  }
+  const OMELETTE = {
+    recetteId: 'omelette_fines_herbes',
+    ordreCourant: 1,
+    ouverteLe: 1_770_000_100_000,
+    portions: null,
+    minuteurs: [],
+  }
+  const RATATOUILLE = {
+    recetteId: 'ratatouille',
+    ordreCourant: 2,
+    ouverteLe: 1_770_000_200_000,
+    portions: 4,
+    minuteurs: [{ ordre: 1, finMs: null, pauseRestantS: 30 }],
+  }
+
+  it('trois cuissons coexistent, chacune avec SES minuteurs — un regroupement défaillant les mélangerait', () => {
+    writeCuisson(db, CHAKCHOUKA)
+    writeCuisson(db, OMELETTE)
+    writeCuisson(db, RATATOUILLE)
+
+    const cuissons = readCuissons(db)
+    expect(cuissons).toHaveLength(3)
+
+    const parRecette = new Map(cuissons.map((c) => [c.recetteId, c]))
+    expect(parRecette.get('chakchouka')?.minuteurs).toEqual(CHAKCHOUKA.minuteurs)
+    expect(parRecette.get('omelette_fines_herbes')?.minuteurs).toEqual([])
+    expect(parRecette.get('ratatouille')?.minuteurs).toEqual(RATATOUILLE.minuteurs)
+  })
+
+  it('réécrire une cuisson ne touche pas aux autres — pas d’`INSERT OR REPLACE`', () => {
+    writeCuisson(db, CHAKCHOUKA)
+    writeCuisson(db, OMELETTE)
+    writeCuisson(db, { ...CHAKCHOUKA, ordreCourant: 5, minuteurs: [{ ordre: 4, finMs: 1, pauseRestantS: null }] })
+
+    const cuissons = readCuissons(db)
+    const parRecette = new Map(cuissons.map((c) => [c.recetteId, c]))
+    expect(parRecette.get('chakchouka')?.ordreCourant).toBe(5)
+    expect(parRecette.get('chakchouka')?.minuteurs).toEqual([{ ordre: 4, finMs: 1, pauseRestantS: null }])
+    // B n'a jamais été touchée par la réécriture de A.
+    expect(parRecette.get('omelette_fines_herbes')?.ordreCourant).toBe(1)
+    expect(parRecette.get('omelette_fines_herbes')?.minuteurs).toEqual([])
+  })
+
+  it('rend un tableau vide quand il n’y a aucune cuisson, pas null', () => {
+    expect(readCuissons(db)).toEqual([])
+  })
+
+  it('l’ordre rendu est celui de l’ouverture, croissant, même si l’écriture est dans le désordre', () => {
+    writeCuisson(db, RATATOUILLE) // ouverteLe le plus tardif des trois
+    writeCuisson(db, CHAKCHOUKA) // le plus ancien
+    writeCuisson(db, OMELETTE) // intermédiaire
+
+    expect(readCuissons(db).map((c) => c.recetteId)).toEqual([
+      'chakchouka',
+      'omelette_fines_herbes',
+      'ratatouille',
+    ])
+  })
+
+  it('clearCuisson n’emporte que la sienne, minuteurs compris', () => {
+    writeCuisson(db, CHAKCHOUKA)
+    writeCuisson(db, RATATOUILLE)
+    clearCuisson(db, 'chakchouka')
+
+    const restantes = readCuissons(db)
+    expect(restantes).toHaveLength(1)
+    expect(restantes[0]?.recetteId).toBe('ratatouille')
+    expect(restantes[0]?.minuteurs).toEqual(RATATOUILLE.minuteurs)
+  })
+
+  it('clearToutesLesCuissons vide aussi l’heure de service — sinon la cuisson suivante en hériterait', () => {
+    writeHeureService(db, 72_000_000)
+    writeCuisson(db, CHAKCHOUKA)
+    writeCuisson(db, OMELETTE)
+
+    clearToutesLesCuissons(db)
+
+    expect(readCuissons(db)).toEqual([])
+    expect(readHeureService(db)).toBeNull()
+  })
+
+  it('l’heure de service fait l’aller-retour, et null quand aucune ligne n’existe', () => {
+    expect(readHeureService(db)).toBeNull()
+    writeHeureService(db, 72_000_000)
+    expect(readHeureService(db)).toBe(72_000_000)
+  })
+
+  it('rend null quand la ligne existe mais heure_service_ms est NULL', () => {
+    db.run('INSERT INTO user_cuisine_service (id, heure_service_ms) VALUES (1, NULL)')
+    expect(readHeureService(db)).toBeNull()
+  })
+
+  it('writeHeureService(db, null) efface le choix sans fermer les cuissons', () => {
+    writeHeureService(db, 72_000_000)
+    writeCuisson(db, CHAKCHOUKA)
+
+    writeHeureService(db, null)
+
+    expect(readHeureService(db)).toBeNull()
+    expect(readCuissons(db)).toHaveLength(1)
+  })
+
+  // ⚠️ PÉRIODE DE COHABITATION DES DEUX API. `writeCuisineSession` code encore `id = 1` en dur ; ce
+  // test protège que `readCuissons` la voit, et que `writeCuisson` sur la même recette met à jour
+  // cette ligne au lieu d'en créer une deuxième — sinon la même recette « ouverte » sous deux id.
+  it('interopère avec l’ancienne API : writeCuisineSession est visible par readCuissons, et writeCuisson met à jour au lieu de dupliquer', () => {
+    writeCuisineSession(db, CHAKCHOUKA)
+
+    const apresAncienne = readCuissons(db)
+    expect(apresAncienne).toHaveLength(1)
+    expect(apresAncienne[0]?.minuteurs).toEqual(CHAKCHOUKA.minuteurs)
+
+    writeCuisson(db, { ...CHAKCHOUKA, ordreCourant: 7, minuteurs: [] })
+
+    const apresNouvelle = readCuissons(db)
+    expect(apresNouvelle).toHaveLength(1)
+    expect(apresNouvelle[0]?.recetteId).toBe('chakchouka')
+    expect(apresNouvelle[0]?.ordreCourant).toBe(7)
+    expect(apresNouvelle[0]?.minuteurs).toEqual([])
   })
 })
