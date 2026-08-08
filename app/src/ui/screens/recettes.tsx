@@ -64,6 +64,7 @@ import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle, rebatirCatalogue
 import { hashDeLEditeur, hashDeRecette, hashDuFrigo } from '../router.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { Panneau } from '../panneau.js'
+import { MesureMontage } from '../mesure-montage.js'
 import { exporterRecette } from '../export-recette.js'
 import { importerRecette } from '../import-recette.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
@@ -110,6 +111,10 @@ type Etat =
   | { readonly phase: 'erreur'; readonly message: string }
 
 export function Recettes() {
+  // Instant du PREMIER rendu, pour la décision 61 — capté ici parce que `MesureMontage` n'est monté
+  // qu'une fois l'écran prêt et serait donc incapable de voir le début. `useState` avec initialiseur
+  // paresseux : évaluée une seule fois, jamais à chaque rendu. Voir `ui/mesure-montage.tsx`.
+  const [debutMontage] = useState(() => performance.now())
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [filtres, setFiltres] = useState<Filtres>(FILTRES_ECRAN)
   const [panneauMesRecettesOuvert, setPanneauMesRecettesOuvert] = useState(false)
@@ -305,6 +310,9 @@ export function Recettes() {
         {trouvees.length} recette{trouvees.length > 1 ? 's' : ''}
         {trouvees.length === 0 && ' — essayez de retirer un filtre.'}
       </p>
+
+      {/* Décision 61 : n'apparaît QUE derrière `?perf` dans `location.search`. Rend `null` sinon. */}
+      <MesureMontage depuis={debutMontage} nbCartes={trouvees.length} />
 
       <ul className="mt-3 space-y-2">
         {trouvees.map((id) => {

@@ -16,6 +16,10 @@ dist/
 
 # Catalogue généré (reproductible via `npm run build`)
 app/public/catalog/*.db
+# Sauvegarde du VRAI catalogue posée par `catalog/gonfler-pour-mesure.mjs` (décision 61). La règle
+# ci-dessus ne l'attrape pas : l'extension est `.vrai`, pas `.db`. Sans cette ligne, un catalogue de
+# 305 recettes finirait versionné le jour où quelqu'un oublie `--restaurer`.
+app/public/catalog/*.db.vrai
 
 # Table CIQUAL (ANSES) — source de l'import nutritionnel, 69 Mo dont 67 pour compo_*.xml.
 # NON versionnée : trop lourde pour git, et redistribuable mais inutile au dépôt puisque

@@ -21,6 +21,71 @@
 
 ---
 
+## §0. ▶ LE PROCHAIN PASSAGE — protocole, et seuil fixé À L'AVANCE
+
+> Écrit le 2026-08-08. **Trois relevés sont dus sur le même appareil et le même passage**, et aucun
+> ne demande d'outillage à installer. Ils traînent depuis le 2026-08-05 en partie parce que rien
+> n'était écrit : chacun demandait de retrouver comment le prendre.
+
+**Préparer, une fois :**
+
+```bash
+npx vite build
+npx vite preview --host          # note l'URL réseau affichée
+adb reverse tcp:4173 tcp:4173    # puis http://localhost:4173 SUR le téléphone
+```
+
+⚠️ **`adb reverse` n'est pas un confort, c'est la condition de deux relevés sur trois.** Une origine
+`http://192.168.x.x` n'est pas un contexte sécurisé : OPFS est indisponible ET `navigator.wakeLock`
+disparaît. Sans cela, l'écran qui s'éteint en cuisine ressemble à un défaut d'appareil alors que
+c'est la méthode qui est en cause.
+
+### Relevé 1 — le temps d'apparition de la liste (décision 61)
+
+Ouvrir **`http://localhost:4173/?perf#/recettes`** — ⛔ **le `?perf` va AVANT le `#`, jamais après.**
+`#/recettes?perf` retombe silencieusement sur « Aujourd'hui » (`routeDepuisHash` résout les onglets
+par correspondance exacte) et l'on chronométrerait le mauvais écran sans qu'aucun message ne le dise.
+
+Un encadré sous le compteur affiche `montage N ms · M cartes`. Relever **trois points**, parce que la
+61 est une question de CROISSANCE et qu'un seul chiffre n'a pas de pente :
+
+```bash
+npm run build                       # 305 recettes — le vrai catalogue
+npm run catalog:gonfler 500         # puis rebuild du bundle : npx vite build
+npm run catalog:gonfler 1000
+npm run catalog:gonfler -- --restaurer   # ⛔ NE PAS OUBLIER
+```
+
+⚠️ **Le catalogue gonflé est mensonger sur tout sauf le nombre de cartes** — clones à 100 % de
+similarité. Ne prendre aucune autre mesure dessus. Il est gitignoré, sauvegarde comprise.
+
+**LE SEUIL EST FIXÉ AVANT LA MESURE, ET C'EST DÉLIBÉRÉ** — sans quoi n'importe quel chiffre se lit
+après coup dans le sens qu'on préfère. Sur le point à 305 recettes :
+
+| Mesuré | Décision 61 |
+|---|---|
+| **< 200 ms** | Piste **(c)**, fermée : on ne virtualise pas |
+| **200 – 500 ms** | Piste **(c)**, fermée — mais **à rouvrir au prochain palier de contenu** |
+| **> 500 ms** | Piste **(a)** : virtualiser ⚠️ **ET** réécrire les assertions de garde-fou contre `browseRecipes` — les deux moitiés vont ensemble ou pas du tout (voir la 61) |
+
+Et sur la pente 305 → 1 000 : si elle est franchement **sur-linéaire**, c'est (a) quel que soit le
+point à 305.
+
+### Relevé 2 — la vibration et l'écran allumé (mode cuisine)
+
+Sur **`#/cuisine/chakchouka`**, en HTTPS ou via `localhost`. L'audio a été validé le 2026-08-05 ;
+**la vibration était morte** et n'a pas été réessayée sur l'écran réel — l'essai portait sur une
+maquette.
+
+### Relevé 3 — le pari `rem` à 150 % (le risque n°1 du projet)
+
+Réglages Android → Taille de police → maximum, puis parcourir les neuf écrans. ⚠️ **NON MESURÉ à ce
+jour**, et c'est le seul dont l'échec toucherait tous les écrans à la fois. ⚠️ **Chrome n'est pas la
+WebView Capacitor** : ce relevé donne une indication, pas le verdict — celui-là viendra de
+`npx cap add android`.
+
+---
+
 ## §1. Corrigé le jour même — commits `3dbaf48`, `1f095bc` et suivants
 
 1. **Les 12 suggestions ne changeaient jamais.** Deux causes : `seed: 1` codé en dur sur l'écran
