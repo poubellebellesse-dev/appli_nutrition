@@ -258,6 +258,27 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
           : 'Les valeurs nutritionnelles se calculent toutes seules à partir des ingrédients. Il n’y a rien à saisir de ce côté.'}
       </p>
 
+      {/* ⚠️ LA RÉPONSE RESTE AFFICHÉE ET MODIFIABLE, sur une création comme sur une recette rouverte
+          des mois plus tard. Une question posée une fois avant le formulaire et jamais rappelée
+          enferme dans un choix dont on ne se souvient plus — et une recette perso se rouvre
+          longtemps après. Basculer vers « une sauce » VIDE les créneaux : le bloc « À quel moment ? »
+          disparaît juste en dessous, et une valeur qui n'est plus à l'écran mais reste en base est
+          exactement la forme de faute que ce lot corrige ailleurs. */}
+      <Groupe titre="Un plat ou une sauce ?">
+        <div className="flex flex-wrap gap-2">
+          <Pastille
+            libelle="Un plat"
+            active={!saisie.estSauce}
+            onBasculer={() => maj({ estSauce: false })}
+          />
+          <Pastille
+            libelle="Une sauce"
+            active={saisie.estSauce}
+            onBasculer={() => maj({ estSauce: true, typesRepas: [] })}
+          />
+        </div>
+      </Groupe>
+
       <Champ libelle={saisie.estSauce ? 'Nom de la sauce' : 'Nom du plat'}>
         <input
           type="text"

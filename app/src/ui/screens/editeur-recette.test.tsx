@@ -372,6 +372,39 @@ describe('éditeur — composer une sauce (④)', () => {
     expect(recette.porteDejaUneSauce).toBeNull()
   })
 
+  it('la réponse reste AFFICHÉE et MODIFIABLE en haut du formulaire', async () => {
+    // ⚠️ Une question posée une fois avant le formulaire et jamais rappelée enferme dans un choix
+    // dont on ne se souvient plus — et une recette perso se rouvre des mois plus tard.
+    await monter(null, 'plat')
+    const pastille = (libelle: string) =>
+      screen.getByText(libelle).closest('button') as HTMLButtonElement
+    expect(pastille('Un plat').getAttribute('aria-pressed')).toBe('true')
+    expect(pastille('Une sauce').getAttribute('aria-pressed')).toBe('false')
+
+    fireEvent.click(pastille('Une sauce'))
+    await waitFor(() => expect(pastille('Une sauce').getAttribute('aria-pressed')).toBe('true'))
+    expect(document.body.textContent).not.toContain('À quel moment ?')
+  })
+
+  it('⛔ basculer vers « une sauce » VIDE les créneaux déjà cochés — rien d’invisible en base', async () => {
+    // Le bloc « À quel moment ? » disparaît à la bascule ; un créneau coché avant, laissé en base
+    // après, serait une valeur que plus aucun écran ne montre et que personne ne peut retirer.
+    await monter(null, 'plat')
+    saisir('input[type="text"]', 'Bascule en cours de saisie')
+    await ajouterIngredient('courgette')
+    fireEvent.click(screen.getByText('Petit-déjeuner'))
+    await waitFor(() => expect(enregistrer().disabled).toBe(false))
+
+    fireEvent.click(screen.getByText('Une sauce').closest('button') as HTMLButtonElement)
+    await waitFor(() => expect(enregistrerLaSauce().disabled).toBe(false))
+    fireEvent.click(enregistrerLaSauce())
+    await screen.findByRole('heading', { name: /C'est enregistré/ })
+
+    const [enregistree] = readUserRecipes(baseCourante())
+    expect(enregistree?.estSauce).toBe(true)
+    expect(enregistree?.typesRepas).toEqual([])
+  })
+
   it('une recette perso enregistrée AVANT la question reste un plat', async () => {
     // ⚠️ `schemaVersion` RESTE À 1 ET `estSauce` EST FACULTATIF — c'est tout le point. Le passer à 2
     // aurait fait refuser toutes les recettes perso déjà en base : une donnée saisie à la main,
