@@ -608,3 +608,88 @@ describe('detail-recette — l’ingrédient ouvre la fiche de l’aliment (déc
     expect(retour).toBe(`#/recette/${encodeURIComponent(recette.id)}?de=semaine`)
   })
 })
+
+/**
+ * ⚠️ CES TESTS N'EXISTAIENT PAS, ET LEUR ABSENCE A COÛTÉ UN LOT. Le composant `SaucesAAjouter` a été
+ * écrit le 2026-08-08, `lireLesSauces` interrogeait le moteur à chaque ouverture de fiche — et
+ * `<SaucesAAjouter` n'apparaissait nulle part dans le JSX. Un mois de code mort que ni le typecheck,
+ * ni la suite, ni l'écran n'ont signalé, pendant que `ETAT.md` annonçait le défaut « corrigé, et
+ * verrouillé par un `describe` » qui, lui non plus, n'existait pas.
+ *
+ * ⚠️ ILS VISENT DONC L'ÉCRAN MONTÉ, jamais le composant isolé. Rendre `<SaucesAAjouter>` à la main
+ * dans un test aurait été vert du premier jour sans rien prouver : ce qui manquait n'était pas le
+ * composant, c'était son appel. C'est la cinquième occurrence du piège « un champ déclaré n'est pas
+ * un champ branché » (CLAUDE.md), la première sur un composant entier.
+ *
+ * Recettes réelles du catalogue, choisies pour ce qu'elles portent :
+ *   `poulet_roti_carottes`    — éligible, UNE sauce attachée (`recipe_sauce` → `sauce_poivre`) ;
+ *   `artichauts_vinaigrette`  — `porte_deja_une_sauce: true`, donc aucune proposition.
+ */
+describe('detail-recette — les sauces à ajouter', () => {
+  const PLAT_SAUCABLE = 'poulet_roti_carottes'
+
+  it('rend la section sur la fiche montée — pas seulement le composant, son APPEL', async () => {
+    await monter(PLAT_SAUCABLE)
+    // Une seule sauce attachée au catalogue : la ligne repliée dit ce qu'elle propose, sans avoir
+    // à ouvrir la fenêtre. C'est le seul endroit visible sans geste.
+    expect(screen.getByText('Ajouter une sauce')).toBeDefined()
+    expect(screen.getByText('1 proposée avec ce plat')).toBeDefined()
+  })
+
+  it('sépare « Avec ce plat » des autres, et chaque sauce garde son lien de fiche', async () => {
+    await monter(PLAT_SAUCABLE)
+    fireEvent.click(screen.getByText('Ajouter une sauce').closest('button')!)
+
+    // `Panneau` passe par un portail : `container.querySelector` ne le voit pas, il faut partir de
+    // `screen` puis se restreindre au dialogue (piège documenté, CLAUDE.md).
+    const dialogue = await screen.findByRole('dialog')
+    expect(within(dialogue).getByText('Avec ce plat')).toBeDefined()
+    expect(within(dialogue).getByText('Sauce au poivre')).toBeDefined()
+    expect(within(dialogue).getByText('Autres sauces')).toBeDefined()
+    expect(within(dialogue).getByText('Vinaigrette à la moutarde')).toBeDefined()
+
+    // ⚠️ `?de=` ABSENT, ET C'EST LA VALEUR JUSTE : `hashDeRecette` omet le paramètre quand l'origine
+    // est `recettes`, qui est déjà le défaut du routeur. Le « ← » de la fiche de la sauce dira donc
+    // « Toutes les recettes », pas « retour au poulet ». Choix de l'existant, laissé tel quel ici —
+    // le changer est une décision d'écran, pas un effet de bord de ce lot.
+    const lien = within(dialogue).getByText('Sauce au poivre').closest('a') as HTMLAnchorElement
+    expect(lien.getAttribute('href')).toBe('#/recette/sauce_poivre')
+  })
+
+  it('⛔ ne propose RIEN sur un plat qui vient déjà avec sa sauce', async () => {
+    // `artichauts_vinaigrette` porte `porte_deja_une_sauce: true`. La règle est côté moteur
+    // (`proposerUneSauce`) ; ce test vérifie que l'écran l'honore au lieu d'afficher une section
+    // vide, ce qu'un `total === 0` mal branché produirait.
+    await monter(recetteDeReference().id)
+    expect(screen.queryByText('Ajouter une sauce')).toBeNull()
+  })
+
+  it('dit le nombre de sauces écartées MÊME quand il en reste à afficher', async () => {
+    // Exclure la moutarde retire `vinaigrette_moutarde` des trois sauces du catalogue. Les deux
+    // autres restent : sans cette ligne, la liste raccourcie se lirait comme un catalogue pauvre —
+    // l'utilisateur chercherait un défaut là où l'application a fait exactement son travail.
+    const { writeExcludedFoodIds } = await import('../../data/user-store.js')
+    writeExcludedFoodIds(baseCourante(), ['moutarde_dijon' as never])
+
+    await monter(PLAT_SAUCABLE)
+    fireEvent.click(screen.getByText('Ajouter une sauce').closest('button')!)
+    const dialogue = await screen.findByRole('dialog')
+
+    expect(within(dialogue).queryByText('Vinaigrette à la moutarde')).toBeNull()
+    expect(within(dialogue).getByText('Sauce au poivre')).toBeDefined()
+    expect(
+      within(dialogue).getByText(/1 sauce écartée par vos allergies, votre régime ou vos exclusions\./)
+    ).toBeDefined()
+  })
+
+  it('⛔ n’affiche AUCUN chiffre d’énergie tant que les valeurs sont masquées', async () => {
+    // Les calories d'une sauce se comptent sur leur PROPRE ligne, jamais fondues dans le total du
+    // plat — et elles suivent le réglage `afficherMacros` comme le reste. Le voir apparaître ici
+    // alors que la fiche est repliée voudrait dire que `afficherEnergie` n'est plus branché.
+    await monter(PLAT_SAUCABLE)
+    expect(readDisplay(baseCourante()).afficherMacros).toBe(false)
+    fireEvent.click(screen.getByText('Ajouter une sauce').closest('button')!)
+    const dialogue = await screen.findByRole('dialog')
+    expect(within(dialogue).queryByText(/kcal \/ portion/)).toBeNull()
+  })
+})

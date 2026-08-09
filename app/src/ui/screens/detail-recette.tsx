@@ -411,6 +411,17 @@ export function DetailRecette({
           </p>
         ))}
 
+      {/* ⚠️ RENDU ICI, ET PAS SEULEMENT DÉFINI PLUS BAS. `lireLesSauces` interrogeait le moteur à
+          chaque ouverture de fiche depuis le 2026-08-08 et sa réponse partait à la poubelle : le
+          composant existait, personne ne l'appelait. Ni le typecheck, ni la suite, ni l'écran ne
+          l'ont signalé — quatrième occurrence du piège « un champ déclaré n'est pas un champ
+          branché » (CLAUDE.md). Le test qui suit vérifie la PRÉSENCE de la section, pas seulement
+          la forme du composant : un composant juste que rien n'appelle reste invisible.
+
+          Avant les valeurs nutritionnelles : la sauce est une décision de repas, l'énergie une
+          information qu'on déplie après. */}
+      <SaucesAAjouter sauces={vue.sauces} afficherEnergie={vue.afficherMacros} />
+
       <ValeursNutritionnelles
         affiche={vue.afficherMacros}
         energiePortion={vue.energiePortion}
