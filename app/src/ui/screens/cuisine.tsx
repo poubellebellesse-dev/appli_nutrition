@@ -22,12 +22,14 @@
 // que l'écran ne ment pas au retour.
 //
 // PÉRIMÈTRE — ce qui n'est PAS ici et où c'est écrit : l'heure de service et la frise des départs
-// (niveau 1 de `ordonnancement.ts`, lot suivant), l'entrelacement actif/passif et la réservation
-// d'équipement (niveaux 2 et 3, non décidés — voir `CONCEPTION_MODE_CUISINE.md`).
+// (niveau 1 de `ordonnancement.ts`, lot suivant), la réservation d'équipement (niveau 3, non décidé
+// — voir `CONCEPTION_MODE_CUISINE.md`).
 //
-// ⚠️ L'ORDRE DES ONGLETS VIENT DU MOTEUR, PAS DE L'ORDRE OÙ ON A CHOISI LES PLATS.
-// `ordonnancerCuissons` place le plat le plus long en premier — c'est la seule réponse à « on ne va
-// pas faire la sauce depuis le début, mais à la fin ». Cet écran ne trie rien lui-même : il lit.
+// ⚠️ L'ORDRE DES ONGLETS VIENT DU MOTEUR, PAS DE L'ORDRE OÙ ON A CHOISI LES PLATS. C'est la seule
+// réponse à « on ne va pas faire la sauce depuis le début, mais à la fin ». Cet écran ne trie rien
+// lui-même : il lit. ⛔ ET CE N'EST PLUS « LE PLUS LONG D'ABORD » DEPUIS L2 : les gestes d'un plat
+// esquivent ceux d'un autre, et esquiver veut parfois dire commencer plus tôt qu'un plat plus long.
+// Le rang suit l'heure de départ, jamais la durée.
 //
 // ✅ LES GESTES DU LEXIQUE Y SONT DEPUIS L1ter. Ils en étaient exclus « parce que les dupliquer
 // demanderait d'extraire le composant » — l'extraction a été faite (`ui/gestes-etape.tsx`), le motif
@@ -46,6 +48,7 @@ import {
 } from '../../data/user-store.js'
 import { ordonnancerCuissons } from '../../engine/cuisine/ordonnancement.js'
 import { dureeEcouleeMin } from '../../engine/cuisine/duree.js'
+import { segmentsDeLaRecette } from '../../engine/cuisine/segments.js'
 import { chargerSocle } from '../socle.js'
 import type { PlatACuisiner } from '../router.js'
 import { hashDeRecette } from '../router.js'
@@ -230,14 +233,17 @@ export function Cuisine({
           })
         }
 
-        // L'ordre de DÉPART, décidé par le moteur : le plat le plus long d'abord. Cet écran ne trie
-        // rien lui-même — il rend `departs` dans l'ordre où il les reçoit.
+        // L'ordre de DÉPART, décidé par le moteur. Cet écran ne trie rien lui-même — il rend
+        // `departs` dans l'ordre où il les reçoit. ⚠️ CE N'EST PLUS « LE PLUS LONG D'ABORD » depuis
+        // L2 : un plat court dont les gestes doivent esquiver ceux d'un plat long peut être poussé à
+        // démarrer avant lui. Ne pas réintroduire un tri ici « pour remettre de l'ordre ».
         const parId = new Map(enCuisine.map((p) => [p.recette.id as string, p]))
         const ordre = ordonnancerCuissons(
           enCuisine.map((p) => ({
             recipeId: p.recette.id,
             nom: p.recette.nom,
             dureeMin: dureeEcouleeMin(p.recette),
+            segments: segmentsDeLaRecette(p.recette),
           }))
         )
         const tries = ordre.departs.flatMap((d) => {

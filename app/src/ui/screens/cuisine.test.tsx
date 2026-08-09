@@ -701,6 +701,33 @@ describe('cuisine — la barre d’onglets (plusieurs plats)', () => {
     expect(boutons[1]?.textContent).toContain(chak.nom)
   })
 
+  it('⛔ L’ORDRE N’EST PLUS « LE PLUS LONG D’ABORD » — deux plats tout actifs s’inversent (L2)', async () => {
+    // Chakchouka : 45 min de gestes, aucun repos. Fromage blanc, fruits rouges et miel : 5 min de
+    // gestes, aucun repos. Une seule paire de mains ne peut pas faire les deux en même temps : la
+    // chakchouka garde le créneau collé au service, et le fromage blanc — 5 min — doit être monté
+    // AVANT elle, donc lancé en premier. C'est contraire à l'ordre des durées, et c'est juste.
+    //
+    // ⚠️ CE TEST TOMBE LE JOUR OÙ L'ÉCRAN RETRIE PAR DURÉE « pour remettre de l'ordre ». Il ne lit
+    // aucune minute : rien n'affiche d'heure de départ à ce stade du mode cuisine, seule la barre
+    // d'onglets porte le résultat de l'ordonnancement.
+    const cat = catalogueDeTest()
+    const chak = cat.recipes.get(CHAKCHOUKA as RecipeId)
+    const fromage = cat.recipes.get('fromage_blanc_fruits_miel' as RecipeId)
+    if (chak === undefined || fromage === undefined) throw new Error('recettes de test introuvables')
+
+    // Prémisses VÉRIFIÉES : le fromage blanc est le plus court des deux, et ni l'un ni l'autre ne
+    // porte de repos — sans quoi le test parlerait d'autre chose que de ce qu'il annonce.
+    expect(dureeEcouleeMin(fromage)).toBeLessThan(dureeEcouleeMin(chak))
+    expect(dureeEcouleeMin(fromage)).toBe(fromage.tempsPrepMin + fromage.tempsCuissonMin)
+    expect(dureeEcouleeMin(chak)).toBe(chak.tempsPrepMin + chak.tempsCuissonMin)
+
+    await monterPlusieurs(chak.id, fromage.id)
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    const boutons = within(nav).getAllByRole('button')
+    expect(boutons[0]?.textContent).toContain(fromage.nom)
+    expect(boutons[1]?.textContent).toContain(chak.nom)
+  })
+
   it('le plat AFFICHÉ est celui du lien, même s’il n’est pas premier dans la barre', async () => {
     await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
     // Coq au vin part en premier dans la barre (plus long) ; Chakchouka, demandé en premier dans le
