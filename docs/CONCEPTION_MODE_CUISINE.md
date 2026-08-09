@@ -26,6 +26,10 @@ pas en arrière-plan**, et la reprise remplace la notification (§5).
 | Distinction geste / avertissement | ✅ **faite le 2026-08-05** (L0) | `recipe_step.nature`, §3 |
 | **Ingrédients et quantités en cuisine** | ✅ **faits le 2026-08-06** (L1bis) | `ui/ingredients-recette.tsx`, schéma **v11** |
 | **Gestes du lexique en cuisine** | ✅ **faits le 2026-08-07** (L1ter) | `ui/gestes-etape.tsx` — aucune donnée nouvelle |
+| **Plusieurs plats à la fois** | ✅ **faits le 2026-08-09** (L4) | `engine/cuisine/ordonnancement.ts`, barre d'onglets |
+| **L'heure à laquelle s'y mettre** | ✅ **juste depuis le 2026-08-10** — elle comptait la prépa et la cuisson, jamais les repos | `engine/cuisine/duree.ts`, §4.3.1 |
+| **Le temps passif rendu à l'utilisateur** | ✅ **fait le 2026-08-10** — 107 h de repos cessent d'être du temps occupé | `engine/cuisine/segments.ts`, §4.3.2 |
+| **Réservation d'équipement** | ⛔ **NON LIVRABLE**, et la table livrée n'y change rien | §4.3.3 · question F en §8 |
 
 **Le fait structurant était : 512 minuteurs payés et invisibles.** C'est ce qui a justifié de livrer
 l'écran avant les prérequis, et non l'inverse (§4). ✅ **Ils sont visibles depuis le 2026-08-05.**
@@ -187,7 +191,18 @@ L'ordre suit une règle : **livrer ce qui est utile seul avant ce qui coûte che
 | ~~**L1ter**~~ | ✅ **Fait le 2026-08-07, NON PRÉVU AU PLAN** — les gestes du lexique dépliés sur place, dans l'étape courante. Aucun schéma, aucune donnée | L1 | code |
 | ~~**L2**~~ | ✅ **Fait le 2026-08-07, MAIS PAS COMME PRÉVU** — le lien est **dérivé au build**, pas annoté. Les 1 101 (devenus 1 350) saisies n'ont jamais eu lieu. `food_ids` survit en correction facultative | — | code + schéma |
 | ~~**L3**~~ | ⛔ **ABANDONNÉ, remplacé** — « n'afficher QUE les ingrédients de l'étape » ferait mentir l'écran par omission. À la place : la **ligne de quantités sous l'étape**, qui ajoute sans retrancher | L1bis + L2 | code |
-| **L4** | v1.5 — synchronisation multi-recettes, bascule de service | L1 | code |
+| ~~**L4**~~ | ✅ **Fait le 2026-08-09** — v1.5, plusieurs plats à la fois : barre d'onglets, ordre de départ décidé par `engine/cuisine/ordonnancement.ts`, N cuissons en base | L1 | code + schéma |
+
+⚠️ **CE PLAN DE MONTÉE EST ÉPUISÉ.** Les lots ci-dessous sont postérieurs et n'y figuraient pas.
+⛔ **Et ils portent les mêmes noms que des lots de ce tableau, sans être les mêmes.** Le « L1 » du
+2026-08-10 corrige une durée ; le L1 du tableau est l'écran mono-recette du 2026-08-05. Toujours
+citer la date avec le numéro, sans quoi une relecture rapide croit lire un lot déjà fait.
+
+| Lot du 2026-08-10 | Contenu | Nature |
+|---|---|---|
+| **la durée** | La durée ÉCOULÉE (active + repos chiffrés) remplace la somme prépa + cuisson dans l'ordonnancement — §4.3.1 | code |
+| **l'entrelacement** | Une recette devient une suite de segments actifs et passifs ; deux gestes ne se recouvrent jamais, un repos ne gêne personne — §4.3.2 | code |
+| **le matériel** | Le four réclamé par deux plats est NOMMÉ. La réservation, elle, reste non livrable — §4.3.3 | code |
 
 ### 4.0 Le schéma v10 — reprise et minuteurs ✅ ÉCRIT
 
@@ -474,6 +489,130 @@ décision 9). Les trois se testent dans la même session, sur le même télépho
 
 ---
 
+### 4.3 Les trois lots du 2026-08-10 — la durée, l'entrelacement, le matériel
+
+Postérieurs au plan de montée, qui était épuisé. Tous les trois portent sur `ordonnancement.ts`,
+c'est-à-dire sur la question « à quelle heure je m'y mets », restée sans réponse juste depuis que
+L4 a fait démarrer plusieurs plats à la fois.
+
+#### 4.3.1 La durée était fausse, et elle décidait d'une heure de départ
+
+`ordonnancerCuissons` recevait `tempsPrepMin + tempsCuissonMin`, calculé par l'écran. **Cette somme
+ne compte aucun repos.** Depuis L4 elle fixe l'heure de départ de chaque plat : une marinade de
+12 h, une pâte qui lève, un pudding qui prend au froid — tout ce temps était annoncé comme
+n'existant pas. Le coq au vin partait « 115 min avant le service » ; il lui en faut 835.
+
+**Mesuré avant d'écrire**, sur 330 recettes : 97 étapes portent `timer_type: repos`, 107 h 21
+cumulées, 82 recettes, zéro `timer_s` NULL. Pires écarts — coq au vin 720 min de repos contre 115
+actives, hareng tiède 720 contre 45, pudding de chia 485 contre 6, muesli 480 contre 10.
+
+⛔ **AUCUN CHAMP CRÉÉ, et c'est délibéré.** `tempsReposMin` n'existe ni au schéma, ni au YAML : la
+donnée était déjà au catalogue. Un champ agrégé de plus serait un dérivé à tenir à jour à la main,
+donc un dérivé qui finirait par mentir.
+
+⛔ **IL Y A DEUX DURÉES ET ELLES NE FUSIONNENT PAS** (`engine/cuisine/duree.ts`).
+
+| | Répond à | Lue par |
+|---|---|---|
+| **ACTIVE** = prépa + cuisson | « ai-je le temps ce soir » | `selection/scoring/speed.ts`, `search/index.ts` — chacun dans sa propre fonction privée |
+| **ÉCOULÉE** = active + repos chiffrés | « quand dois-je m'y mettre » | `ordonnancerCuissons`, et elle seule |
+
+Les confondre rendrait le coq au vin « lent » pour le solveur, changerait le classement de tout le
+catalogue et viderait la catégorie « rapide ». `speed.ts` et `search/index.ts` ont été **lus et
+délibérément non modifiés** : rien n'est partagé entre eux, il n'y avait rien à rebrancher. Un
+`describe` entier tombe en rouge le jour où quelqu'un uniformise les deux.
+
+⚠️ **Ce qui manque au CATALOGUE, signalé et non corrigé** (`catalog/` hors lane) : **zéro** recette
+décrit un repos sans le chiffrer, mais **12** replient un refroidissement dans une étape
+`timer_type: cuisson`. Une seule est matériellement fausse — `flan_oeufs_caramel`, dont « refroidir
+plusieurs heures avant de démouler » est chiffré 3 000 s : c'est le bain-marie qui est compté, pas
+la prise au froid.
+
+#### 4.3.2 L'entrelacement — douze heures de marinade sont douze heures de libres
+
+Une recette devient une suite de **segments** (`engine/cuisine/segments.ts`), placés à rebours
+depuis le service. Deux segments **actifs** ne se recouvrent jamais ; un segment **passif** ne gêne
+personne. Sur une salade de 20 min à côté du coq au vin : **855 min de départ annoncées avant,
+120 après** — la marinade est devenue transparente, le mijotage ne l'est pas.
+
+⛔ **UNE CUISSON COMPTE COMME ACTIVE.** Décision prise, pas oubli : rien au catalogue ne distingue
+le four qu'on oublie de la poêle qu'on surveille, et une **troisième** notion de durée (le temps de
+PRÉSENCE, à côté de l'active et de l'écoulée) aurait recréé exactement ce contre quoi §4.3.1
+prévient. Seul un `timer_type: repos` chiffré ouvre du temps libre.
+
+⛔ **AJOUT STRICT — et il a failli ne pas l'être.** Sans `segments`, un plat est mis **hors du jeu** :
+il ne réserve rien, n'esquive rien, son départ vaut `dureeMin` comme avant. La première version le
+traitait comme un bloc actif de `dureeMin` ; trois plats sans segments se poussaient alors les uns
+les autres et **le tri par durée décroissante s'inversait, sur un appel dont pas une ligne n'avait
+changé**. Un test l'a attrapé, il ouvre le bloc L2 de `ordonnancement.test.ts`.
+
+⚠️ **LE RANG N'EST PLUS L'ORDRE DES DURÉES.** Un plat court dont les gestes doivent esquiver ceux
+d'un plat long démarre avant lui : chakchouka 45 min et fromage blanc 5 min, c'est le fromage blanc
+qu'on monte en premier. Le rang suit `departAvantServiceMin`. Sans segments les deux ordres
+coïncident. ⛔ **Ne pas retrier dans l'écran « pour remettre de l'ordre ».**
+
+⛔ **ET LE MODULE NE PROMET PAS QU'AUCUN PLAT NE SOIT PRÊT EN AVANCE.** Cette phrase-là a été écrite,
+avec un test qui la « prouvait » en lisant `departAvantServiceMin - dureeMin` — lequel mesure le
+DÉBUT reculé et n'a jamais rien dit de la fin. Trois plats tout actifs et une seule paire de mains :
+deux attendront, quel que soit l'ordonnancement. Le seul engagement tenable est **qu'aucun plat ne
+parte trop tard**.
+
+**Deux replis, mesurés et non imaginés.** Le temps de geste n'est chiffré nulle part — personne n'a
+écrit « émincer l'oignon prend 4 min » — donc le temps non chiffré est réparti uniformément sur les
+étapes sans minuteur. Deux cas de catalogue résistent :
+
+- **7 recettes** dont les minuteurs de cuisson totalisent **plus** que leur temps actif déclaré
+  (Veau Marengo : 122 min chiffrées pour 110 annoncées — deux cuissons qui se recouvrent, comptées
+  une fois dans le champ éditorial et deux fois dans les étapes) ;
+- **3 recettes** dont toutes les étapes actives sont déjà chiffrées, sans nulle part où poser le
+  reste (Poulet sauté aux noix de cajou : 9 min).
+
+Dans ces deux cas le budget est réparti uniformément sur **toutes** les étapes actives. On perd du
+détail, jamais le total — et **le total est la seule chose exacte** : la somme des segments vaut la
+durée écoulée, `ordonnancerCuissons` **lève** si l'écart dépasse la minute, et l'écran cuisine
+planterait au lieu d'afficher un plat. Un test parcourt les 330 recettes réelles pour qu'une
+onzième ne passe pas en silence.
+
+#### 4.3.3 Le matériel — nommé, jamais arbitré
+
+Le niveau 3 était écrit « la réservation d'équipement », débloqué par la table livrée le 2026-08-09.
+**La table ne suffit pas.** Il lui manque exactement les deux colonnes qu'une réservation demande :
+
+| | Ce qu'il y a | Ce qui manque |
+|---|---|---|
+| `recipe_equipment` | `(recipe_id, equipment_id, niveau)` | **aucune colonne d'étape** → rien ne dit *quand* le four est occupé, aucun créneau n'est déductible |
+| `equipment` | `(id, code, terme, definition)` | **aucune capacité** → rien ne dit qu'une plaque porte trois feux et un four une seule enfournée |
+
+Sans capacité, une réservation exclusive déclarerait un conflit sur **34 290 des 54 285 paires de
+recettes, soit 63 %** — et à tort : `plaque_cuisson` est `requis` sur **260 recettes (79 %)**, or la
+plaque est précisément l'ustensile qu'on partage. Un avertissement qui parle deux fois sur trois
+cesse d'être lu.
+
+**Ce qui est livré nomme au lieu d'arbitrer.** Deux plats qui réclament le même four, l'écran
+l'écrit une fois, en clair, sous la barre d'onglets. Aucun horaire déplacé, aucune exclusion, aucune
+couleur d'alerte — deux plats au four est une information d'organisation, pas une faute
+(principe 6). `role="status"` et pas `role="alert"` : l'un se lit quand on arrive dessus, l'autre
+coupe la parole au lecteur d'écran, sur un écran qu'on ouvre en ayant déjà les mains prises.
+
+⚠️ **DETTE ASSUMÉE.** `CODES_INDIVISIBLES` — `four` et `micro_ondes`, deux entrées sur les 30 du
+référentiel — est un **jugement éditorial posé dans le code** parce que le champ qui devrait le
+porter n'existe pas au catalogue. Le critère n'est pas « deux plats peuvent-ils y toucher » — un
+mixeur se rince en dix secondes — mais « l'ustensile retient-il de la nourriture longtemps, sous un
+réglage unique ». ⛔ **Ne pas y ajouter `plaque_cuisson`** : c'est le premier réflexe et il est faux.
+Le jour où `equipment` gagne une `capacite`, la constante disparaît et la règle devient
+« capacité < nombre de plats qui la réclament ».
+
+#### 4.3.4 Ce que ces trois lots n'ont pas touché
+
+- **Aucune colonne d'ordre en base.** Le rang reste recalculé à l'affichage (`user-schema.ts`).
+  Aucun départ n'est stocké, et `USER_SCHEMA_VERSION` n'a pas bougé.
+- **`engine:plan-stress` est resté à 20/20** à chaque lot — le témoin que le solveur n'a pas vu
+  passer la nouvelle durée.
+- **`speed.ts` et `search/index.ts`** : lus, non modifiés.
+- **`catalog/`** : pas une ligne. Les manques repérés sont signalés en §4.3.1, pas corrigés.
+
+---
+
 ## 5. L'alarme en arrière-plan — les quatre voies, vérifiées et refusées
 
 **Tranché le 2026-08-04 : la v1 ne sonne pas quand l'appli n'est pas visible.** Ce paragraphe existe
@@ -557,6 +696,7 @@ Gradle de Capacitor 8, qui attend du 17 ou du 21.
 | C | Entrée dans le mode depuis « Aujourd'hui » **autrement que pour reprendre** | Le bandeau de reprise couvre le retour ; démarrer une cuisson depuis l'accueil dépend de L4 |
 | ~~D~~ | ~~Le seuil de péremption du bandeau (12 h)~~ | ✅ **Fermée le 2026-08-07 — le seuil n'était pas le problème, le POINT DE RÉFÉRENCE l'était.** Les 12 h sont inchangées ; elles se comptent depuis la fin du dernier minuteur (§4.0). Le retour d'usage qu'on attendait était dans le catalogue : `coq-au-vin` marine 43 200 s, **exactement le seuil** |
 | E | Cuisine partagée **sur plusieurs appareils** | ⚠️ **Pas interdit par le principe 2** — le partage `.nutri-recipe` fait déjà sortir des données à l'initiative de l'utilisateur. Bloqué par le coût : plugin Bluetooth natif, permissions à l'exécution, état distribué (qui gagne si deux personnes avancent l'étape ?). Et un téléphone posé au milieu absorbe l'essentiel du besoin. **v2** |
+| F | **La réservation d'équipement pour de vrai** — un four occupé de telle minute à telle minute, que les autres plats esquivent comme ils esquivent les mains depuis §4.3.2 | ⛔ **Bloquée par deux données absentes, pas par le code** : une colonne d'ÉTAPE sur `recipe_equipment` (sans quoi aucun créneau n'est déductible) et une `capacite` sur `equipment` (sans quoi la plaque déclencherait 63 % des paires). Les deux vivent dans `catalog/`. ⚠️ **La table seule ne débloque rien** — c'est la conclusion qu'on avait tirée trop vite en la livrant. Une inférence par les `lexicon_ids` (`enfourner` → four) a été envisagée puis écartée : elle repose sur une correspondance mot → ustensile écrite dans le code, qu'un lot de contenu casse en silence, et **la capacité manquerait toujours** |
 
 ---
 
