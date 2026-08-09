@@ -1,0 +1,112 @@
+id: frittata_courgette_chevre
+nom: "Frittata de courgette au chèvre frais"
+origine: maison
+description: >
+  Une omelette épaisse cuite à feu doux et à couvert, où la courgette râpée rend son eau
+  dans les œufs et le chèvre frais fond en poches.
+temps_prep_min: 10
+temps_cuisson_min: 18
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [petit_dejeuner, dejeuner]
+service: plat
+piquant: 0
+saison_mois: [6, 7, 8, 9]
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.7
+  leger_consistant: 0.4
+  chaud_froid: 0.7
+  texture: moelleux
+
+ingredients:
+  - food_id: oeuf
+    quantite_g: 360
+    unite_affichage: "6 œufs"
+    optionnel: false
+  - food_id: courgette
+    quantite_g: 300
+    unite_affichage: "2 courgettes"
+    optionnel: false
+  - food_id: chevre_frais
+    quantite_g: 150
+    unite_affichage: "150 g"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 20
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: ciboulette
+    quantite_g: 10
+    unite_affichage: "1 petit bouquet"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Râper les courgettes, les saler et les laisser dégorger dans une passoire."
+    lexicon_ids: [raper, egoutter]
+    timer_s: 600
+    timer_type: repos
+  - ordre: 2
+    texte: "Presser les courgettes entre les mains pour en chasser l'eau."
+    lexicon_ids: [eponger]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Battre les œufs, poivrer, puis incorporer les courgettes pressées et la ciboulette ciselée."
+    lexicon_ids: [battre, incorporer, ciseler]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Verser dans la poêle huilée et parsemer le chèvre frais en petits tas sur la surface."
+    lexicon_ids: [parsemer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Couvrir et cuire à feu doux jusqu'à ce que le dessus prenne sans colorer."
+    lexicon_ids: [poeler]
+    timer_s: 1080
+    timer_type: cuisson
+  - ordre: 6
+    texte: "Faire glisser la frittata sur une planche et la couper en parts."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 7
+    texte: "Une courgette non dégorgée rend son eau dans les œufs et la frittata ne prend jamais au centre."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+    nature: avertissement
+
+equipements:
+  - code: poele
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: rape
+    niveau: requis
+  - code: passoire
+    niveau: informatif
+  - code: saladier
+    niveau: informatif
+  - code: fouet
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: gourmand

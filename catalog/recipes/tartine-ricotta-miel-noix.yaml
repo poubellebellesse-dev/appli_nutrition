@@ -1,0 +1,80 @@
+id: tartine_ricotta_miel_noix
+nom: "Tartine de ricotta, miel et noix"
+origine: maison
+description: >
+  Du pain complet grillé, une couche épaisse de ricotta, du miel et des cerneaux de noix
+  concassés, avec une pointe de cannelle.
+temps_prep_min: 5
+temps_cuisson_min: 3
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+service: dessert
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.4
+  leger_consistant: 0.1
+  chaud_froid: 0.2
+  texture: creme
+
+ingredients:
+  - food_id: pain_complet
+    quantite_g: 120
+    unite_affichage: "4 tranches"
+    optionnel: false
+  - food_id: ricotta
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 40
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: cannelle
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Griller les tranches de pain complet jusqu'à ce qu'elles tiennent droites."
+    lexicon_ids: [dorer]
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 2
+    texte: "Étaler la ricotta en couche épaisse sur le pain encore tiède."
+    lexicon_ids: [etaler]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Concasser les noix et les répartir sur la ricotta."
+    lexicon_ids: [concasser, parsemer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Arroser de miel et saupoudrer d'une pincée de cannelle."
+    lexicon_ids: [arroser, saupoudrer]
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: grille_pain
+    niveau: informatif
+  - code: couteau_chef
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: italienne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: rapide

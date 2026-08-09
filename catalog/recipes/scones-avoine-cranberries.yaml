@@ -1,0 +1,116 @@
+id: scones_avoine_cranberries
+nom: "Scones à l'avoine et aux cranberries"
+origine: maison
+description: >
+  Des scones où une part de la farine est remplacée par des flocons d'avoine, avec des
+  cranberries séchées. La pâte se travaille peu et se cuit tout de suite.
+temps_prep_min: 15
+temps_cuisson_min: 18
+difficulte: 2
+portions_base: 8
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+service: dessert
+piquant: 0
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: 0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.5
+  texture: moelleux
+
+ingredients:
+  - food_id: farine_ble
+    quantite_g: 250
+    unite_affichage: "250 g"
+    optionnel: false
+  - food_id: flocons_avoine
+    quantite_g: 80
+    unite_affichage: "80 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 80
+    unite_affichage: "80 g bien froid"
+    optionnel: false
+  - food_id: lait_demi_ecreme
+    quantite_g: 150
+    unite_affichage: "15 cl"
+    optionnel: false
+  - food_id: levure_chimique
+    quantite_g: 11
+    unite_affichage: "1 sachet et demi"
+    optionnel: false
+  - food_id: sucre_roux
+    quantite_g: 50
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: cranberry_seche
+    quantite_g: 80
+    unite_affichage: "1 poignée"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "1 pincée"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C et mélanger farine, flocons, levure, sucre et sel."
+    lexicon_ids: [prechauffer, incorporer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ajouter le beurre froid coupé en dés et l'écraser du bout des doigts jusqu'à obtenir un sable grossier."
+    lexicon_ids: [tailler_des, ecraser]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Verser le lait et les cranberries, rassembler la pâte en quelques gestes seulement."
+    lexicon_ids: [incorporer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Étaler la pâte sur trois centimètres d'épaisseur et découper huit parts."
+    lexicon_ids: [etaler, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Enfourner sur une plaque garnie de papier cuisson jusqu'à ce que le dessus dore."
+    lexicon_ids: [enfourner, dorer]
+    timer_s: 1080
+    timer_type: cuisson
+  - ordre: 6
+    texte: "Laisser tiédir sur une grille avant de les ouvrir en deux."
+    lexicon_ids: [reserver]
+    timer_s: 600
+    timer_type: repos
+  - ordre: 7
+    texte: "Une pâte à scones se rassemble, elle ne se pétrit pas : travaillée, elle donne des scones durs et plats."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+    nature: avertissement
+
+equipements:
+  - code: four
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: plaque_patisserie
+    niveau: requis
+  - code: papier_cuisson
+    niveau: informatif
+  - code: saladier
+    niveau: informatif
+  - code: rouleau_patisserie
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: britannique
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: gourmand

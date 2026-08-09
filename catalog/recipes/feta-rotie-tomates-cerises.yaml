@@ -1,0 +1,110 @@
+id: feta_rotie_tomates_cerises
+nom: "Pâtes à la feta rôtie et aux tomates cerises"
+origine: maison
+description: >
+  Un bloc de feta posé au centre d'un plat de tomates cerises, le tout rôti au four
+  jusqu'à ce que les tomates éclatent. Écrasé à la fourchette, cela devient la sauce.
+temps_prep_min: 10
+temps_cuisson_min: 35
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: plat
+piquant: 0
+saison_mois: [6, 7, 8, 9]
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.7
+  leger_consistant: 0.6
+  chaud_froid: 0.8
+  texture: onctueux
+
+ingredients:
+  - food_id: feta
+    quantite_g: 200
+    unite_affichage: "1 bloc"
+    optionnel: false
+  - food_id: tomate_cerise
+    quantite_g: 600
+    unite_affichage: "2 barquettes"
+    optionnel: false
+  - food_id: pates_spaghetti
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 50
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 12
+    unite_affichage: "2 gousses"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 15
+    unite_affichage: "quelques feuilles"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C et verser les tomates cerises dans un plat, avec les gousses d'ail en chemise."
+    lexicon_ids: [prechauffer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Poser le bloc de feta au centre, arroser le tout d'huile d'olive et poivrer."
+    lexicon_ids: [arroser]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Enfourner jusqu'à ce que les tomates aient éclaté et que la feta soit dorée sur les bords."
+    lexicon_ids: [enfourner, rotir, dorer]
+    timer_s: 2100
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Pendant ce temps, cuire les pâtes et garder une louche d'eau de cuisson."
+    lexicon_ids: [reserver]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Écraser la feta et les tomates à la fourchette dans le plat brûlant, presser l'ail hors de sa peau et détendre avec l'eau de cuisson."
+    lexicon_ids: [ecraser, detendre]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Verser les pâtes égouttées dans le plat, mélanger et parsemer de basilic."
+    lexicon_ids: [egoutter, parsemer]
+    timer_s: null
+    timer_type: null
+  - ordre: 7
+    texte: "La sauce se fait dans le plat de cuisson, jamais dans un saladier : ce sont les sucs collés au fond qui la lient."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+    nature: avertissement
+
+equipements:
+  - code: four
+    niveau: requis
+  - code: plat_a_four
+    niveau: requis
+  - code: casserole
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: passoire
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: mediterraneenne
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: loufoque

@@ -1,0 +1,95 @@
+id: bol_avoine_sale_parmesan_oeuf
+nom: "Bol d'avoine salé au parmesan et à l'œuf"
+origine: maison
+description: >
+  Des flocons d'avoine cuits dans un bouillon de légumes au lieu du lait, liés au
+  parmesan et couronnés d'un œuf poché. Un porridge qui n'est pas sucré.
+temps_prep_min: 5
+temps_cuisson_min: 12
+difficulte: 2
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, dejeuner]
+service: plat
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.9
+  leger_consistant: 0.5
+  chaud_froid: 0.9
+  texture: onctueux
+
+ingredients:
+  - food_id: flocons_avoine
+    quantite_g: 100
+    unite_affichage: "10 cuillères à soupe"
+    optionnel: false
+  - food_id: bouillon_legumes
+    quantite_g: 500
+    unite_affichage: "50 cl"
+    optionnel: false
+  - food_id: parmesan
+    quantite_g: 40
+    unite_affichage: "40 g râpé"
+    optionnel: false
+  - food_id: oeuf
+    quantite_g: 120
+    unite_affichage: "2 œufs"
+    optionnel: false
+  - food_id: ciboulette
+    quantite_g: 8
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: huile_olive
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Porter le bouillon à frémissement et y verser les flocons d'avoine en pluie."
+    lexicon_ids: [fremir]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Cuire à feu doux en remuant, jusqu'à ce que les flocons boivent le bouillon et que le mélange nappe la cuillère."
+    lexicon_ids: [napper]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Hors du feu, incorporer le parmesan râpé et poivrer."
+    lexicon_ids: [incorporer, raper]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Pocher les œufs dans une casserole d'eau frémissante."
+    lexicon_ids: [pocher]
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Répartir l'avoine dans deux bols, poser un œuf sur chacun et parsemer de ciboulette."
+    lexicon_ids: [dresser, parsemer, ciseler]
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: casserole
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: rape
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: reconfortant

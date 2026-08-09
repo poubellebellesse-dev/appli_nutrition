@@ -1,0 +1,85 @@
+id: pudding_chia_cacao_poire
+nom: "Pudding de chia au cacao et à la poire"
+origine: maison
+description: >
+  Des graines de chia laissées à gonfler toute une nuit dans une boisson d'avoine
+  cacaotée, servies au matin avec des dés de poire.
+temps_prep_min: 6
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+service: dessert
+piquant: 0
+saison_mois: [9, 10, 11, 12]
+envergure: quotidien
+conservation_jours: 3
+axes:
+  sucre_sale: 0.4
+  leger_consistant: 0.0
+  chaud_froid: -0.7
+  texture: creme
+
+ingredients:
+  - food_id: graine_chia
+    quantite_g: 50
+    unite_affichage: "5 cuillères à soupe"
+    optionnel: false
+  - food_id: boisson_avoine
+    quantite_g: 350
+    unite_affichage: "35 cl"
+    optionnel: false
+  - food_id: cacao_poudre
+    quantite_g: 15
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: poire
+    quantite_g: 160
+    unite_affichage: "1 poire"
+    optionnel: false
+  - food_id: sirop_erable
+    quantite_g: 25
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Délayer le cacao dans un fond de boisson d'avoine avant d'ajouter le reste : versé d'un coup, il fait des grumeaux."
+    lexicon_ids: [detendre]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser les graines de chia et le sirop d'érable, puis remuer franchement."
+    lexicon_ids: [incorporer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Remuer une seconde fois cinq minutes plus tard, quand les graines commencent à se rassembler au fond."
+    lexicon_ids: []
+    timer_s: 300
+    timer_type: repos
+  - ordre: 4
+    texte: "Couvrir et laisser gonfler au réfrigérateur jusqu'au lendemain."
+    lexicon_ids: [reserver]
+    timer_s: 28800
+    timer_type: repos
+  - ordre: 5
+    texte: "Couper la poire en petits dés et les poser sur le pudding au moment de servir."
+    lexicon_ids: [tailler_des]
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: saladier
+    niveau: informatif
+  - code: couteau_chef
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: rapide

@@ -1,0 +1,87 @@
+id: croque_matin_jambon_comte
+nom: "Croque du matin au jambon et au comté"
+origine: maison
+description: >
+  Deux tranches de pain de mie, du jambon blanc et du comté râpé, dorées à la poêle dans
+  le beurre jusqu'à ce que le fromage file.
+temps_prep_min: 5
+temps_cuisson_min: 8
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, dejeuner]
+service: plat
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.8
+  leger_consistant: 0.6
+  chaud_froid: 0.9
+  texture: croquant
+
+ingredients:
+  - food_id: pain_mie
+    quantite_g: 160
+    unite_affichage: "4 tranches"
+    optionnel: false
+  - food_id: jambon_blanc
+    quantite_g: 100
+    unite_affichage: "2 tranches"
+    optionnel: false
+  - food_id: comte_rape
+    quantite_g: 80
+    unite_affichage: "80 g"
+    optionnel: false
+  - food_id: beurre_doux
+    quantite_g: 20
+    unite_affichage: "2 noix"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Répartir le comté râpé sur deux tranches de pain, poser le jambon, poivrer et refermer."
+    lexicon_ids: [parsemer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Beurrer la face extérieure de chaque tranche plutôt que la poêle : le beurre dore le pain au lieu de brûler à côté."
+    lexicon_ids: [badigeonner]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Dorer à feu moyen, en appuyant avec une spatule, jusqu'à ce que la face du dessous soit uniformément colorée."
+    lexicon_ids: [poeler, dorer]
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 4
+    texte: "Retourner et poursuivre jusqu'à ce que le fromage file entre les tranches."
+    lexicon_ids: [dorer]
+    timer_s: 240
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Couper en deux en diagonale et manger tout de suite."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: poele
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: rape
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: omnivore
+  - facette: style
+    valeur: gourmand

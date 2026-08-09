@@ -1,0 +1,91 @@
+id: tartine_sardine_citron_echalote
+nom: "Tartine de sardine au citron et à l'échalote"
+origine: maison
+description: >
+  Des sardines à l'huile écrasées à la fourchette avec du jus de citron et de l'échalote
+  ciselée, étalées sur du pain complet grillé.
+temps_prep_min: 8
+temps_cuisson_min: 3
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, dejeuner]
+service: entree
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.8
+  leger_consistant: 0.2
+  chaud_froid: 0.1
+  texture: croquant
+
+ingredients:
+  - food_id: sardine_huile
+    quantite_g: 120
+    unite_affichage: "1 boîte"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 120
+    unite_affichage: "4 tranches"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "un demi-citron"
+    optionnel: false
+  - food_id: echalote
+    quantite_g: 30
+    unite_affichage: "1 échalote"
+    optionnel: false
+  - food_id: persil
+    quantite_g: 8
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Égoutter les sardines et retirer l'arête centrale si elle gêne."
+    lexicon_ids: [egoutter]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les écraser grossièrement à la fourchette, en gardant des morceaux."
+    lexicon_ids: [ecraser]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Ciseler l'échalote très fin et l'ajouter avec le jus de citron et le poivre."
+    lexicon_ids: [ciseler, assaisonner]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Griller les tranches de pain complet."
+    lexicon_ids: [dorer]
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Étaler la préparation sur le pain encore chaud et parsemer de persil ciselé."
+    lexicon_ids: [etaler, parsemer]
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: grille_pain
+    niveau: informatif
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: pescetarien
+  - facette: style
+    valeur: rapide

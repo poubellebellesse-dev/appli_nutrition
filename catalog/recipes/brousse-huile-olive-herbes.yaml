@@ -1,0 +1,96 @@
+id: brousse_huile_olive_herbes
+nom: "Brousse à l'huile d'olive et aux herbes"
+origine: maison
+description: >
+  De la brousse fraîche à peine remuée, arrosée d'huile d'olive et couverte d'herbes
+  ciselées, avec un zeste de citron. Rien ne cuit, rien ne se travaille.
+temps_prep_min: 8
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: fromage
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.5
+  leger_consistant: -0.4
+  chaud_froid: -0.6
+  texture: creme
+
+ingredients:
+  - food_id: brousse
+    quantite_g: 400
+    unite_affichage: "400 g"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: false
+  - food_id: ciboulette
+    quantite_g: 10
+    unite_affichage: "1 petit bouquet"
+    optionnel: false
+  - food_id: basilic_frais
+    quantite_g: 10
+    unite_affichage: "quelques feuilles"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 60
+    unite_affichage: "1 citron"
+    optionnel: false
+  - food_id: pain_complet
+    quantite_g: 160
+    unite_affichage: "8 tranches"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Égoutter la brousse si elle rend de l'eau, puis la déposer telle quelle dans un plat creux."
+    lexicon_ids: [egoutter]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Ciseler la ciboulette et effeuiller le basilic."
+    lexicon_ids: [ciseler, effeuiller]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Arroser d'huile d'olive, râper le zeste du citron par-dessus et couvrir d'herbes."
+    lexicon_ids: [arroser, raper]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Poivrer et servir avec le pain, la brousse encore intacte au centre du plat."
+    lexicon_ids: [assaisonner]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Ne pas battre la brousse pour la lisser : elle rendrait son petit-lait et deviendrait granuleuse."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+    nature: avertissement
+
+equipements:
+  - code: rape
+    niveau: informatif
+  - code: couteau_chef
+    niveau: informatif
+  - code: passoire
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: provencale
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: simple

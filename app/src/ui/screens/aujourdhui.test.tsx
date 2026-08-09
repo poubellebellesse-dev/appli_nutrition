@@ -246,9 +246,22 @@ describe('aujourdhui — les plats proches', () => {
   it('propose d’autres plats, tous différents de celui qu’on regarde', async () => {
     await monter()
     await screen.findByText('Dans le même esprit')
-    const proches = [...document.querySelectorAll('section ul li a')].map((a) => a.textContent ?? '')
+
+    // ⛔ COMPARÉ SUR L'IDENTIFIANT, PAS SUR LE TEXTE — corrigé le 2026-08-09, et le défaut était
+    // DANS CE TEST. Il lisait le `textContent` des liens et vérifiait qu'aucun ne CONTENAIT le nom
+    // du plat affiché. « Dahl de lentilles corail » est un préfixe exact de « Dahl de lentilles
+    // corail aux épinards » : deux recettes bel et bien distinctes, que la sous-chaîne déclarait
+    // identiques. Le test n'a rien vu tant que le tirage ne tombait pas sur ce couple — c'est un lot
+    // de contenu qui l'a réveillé, pas une régression de l'écran.
+    //
+    // Le `href` porte l'identifiant de la recette ; c'est le seul oracle qui ne peut pas se tromper
+    // de plat. Le texte, lui, ne distingue même pas deux recettes homonymes.
+    const courante = screen.getByText('Voir la recette').closest('a')!.getAttribute('href')
+    const proches = [...document.querySelectorAll('section ul li a')].map((a) => a.getAttribute('href'))
     expect(proches.length).toBeGreaterThan(0)
-    for (const proche of proches) expect(proche).not.toContain(platAffiche())
+    for (const proche of proches) expect(proche).not.toBe(courante)
+    // Et pas deux fois le même plat dans la liste : la carte le montrerait deux fois côte à côte.
+    expect(new Set(proches).size).toBe(proches.length)
   })
 })
 

@@ -1,0 +1,108 @@
+id: oeuf_nuage
+nom: "Œuf nuage"
+origine: maison
+description: >
+  Le blanc monté en neige, creusé d'un puits et passé au four ; le jaune, glissé dedans à
+  mi-cuisson, reste coulant au centre d'un nuage doré.
+temps_prep_min: 10
+temps_cuisson_min: 8
+difficulte: 3
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, dejeuner]
+service: entree
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: -0.8
+  leger_consistant: -0.5
+  chaud_froid: 0.9
+  texture: moelleux
+
+ingredients:
+  - food_id: oeuf
+    quantite_g: 240
+    unite_affichage: "4 œufs"
+    optionnel: false
+  - food_id: comte_rape
+    quantite_g: 40
+    unite_affichage: "4 cuillères à soupe"
+    optionnel: true
+  - food_id: ciboulette
+    quantite_g: 8
+    unite_affichage: "quelques brins"
+    optionnel: true
+  - food_id: sel_fin
+    quantite_g: 2
+    unite_affichage: "1 pincée"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 200 °C et séparer les blancs des jaunes, en gardant chaque jaune entier dans une coupelle."
+    lexicon_ids: [prechauffer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Monter les blancs en neige ferme avec le sel, puis incorporer le comté râpé et la ciboulette ciselée."
+    lexicon_ids: [monter_blancs, incorporer, ciseler]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Former quatre nuages sur une plaque garnie de papier cuisson et creuser un puits au centre de chacun, à la cuillère."
+    lexicon_ids: [dresser]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Enfourner une première fois, le temps que les nuages se tiennent et commencent à colorer."
+    lexicon_ids: [enfourner, dorer]
+    timer_s: 300
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Faire glisser un jaune dans chaque puits et remettre au four juste assez pour le tiédir."
+    lexicon_ids: [enfourner]
+    timer_s: 180
+    timer_type: cuisson
+  - ordre: 6
+    texte: "Servir immédiatement, poivré, le jaune encore coulant."
+    lexicon_ids: [assaisonner]
+    timer_s: null
+    timer_type: null
+  - ordre: 7
+    texte: "La moindre trace de jaune dans les blancs les empêche de monter — c'est là que cette recette échoue, pas à la cuisson."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+    nature: avertissement
+
+equipements:
+  - code: four
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: fouet
+    niveau: requis
+  - code: robot_menager
+    niveau: accelere
+  - code: plaque_patisserie
+    niveau: informatif
+  - code: papier_cuisson
+    niveau: informatif
+  - code: saladier
+    niveau: informatif
+  - code: rape
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: loufoque

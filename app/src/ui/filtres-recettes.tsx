@@ -195,8 +195,9 @@ export function compterEnvergure(
 
 /** Un axe à ≤ `PASTILLES_EN_LIGNE` valeurs tient ENTIER sur la ligne — décision 46 (docs/ETAT.md) :
  *  zéro geste pour le cas courant, donc pas de fenêtre à ouvrir quand il n'y a rien à cacher. Mesuré
- *  sur le catalogue réel : régime (4) et service (4) passent tout juste ce seuil, cuisine (26) ne le
- *  passerait à aucun seuil raisonnable. Un axe qui dépasse montre ses 4 premières valeurs (ordre
+ *  sur le catalogue réel : régime (4) tient tout juste, service est passé de 4 à 5 le 2026-08-09
+ *  quand « fromage » a cessé d'être une valeur sans recette, cuisine (26) ne passerait aucun seuil
+ *  raisonnable. Un axe qui dépasse montre ses 4 premières valeurs (ordre
  *  déjà trié par `valeursDeFacette`/`valeursDeService`, jamais retrié ici) puis « Tout voir › », qui
  *  ouvre la fenêtre existante pour le reste. */
 const PASTILLES_EN_LIGNE = 4

@@ -1,0 +1,90 @@
+id: plateau_fromages_raisin_noix
+nom: "Plateau de trois fromages, raisin et noix"
+origine: maison
+description: >
+  Trois fromages d'affinages différents — une pâte pressée, une pâte molle et un bleu —
+  présentés avec du raisin, des cerneaux de noix et du pain de seigle.
+temps_prep_min: 10
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 6
+image_path: null
+types_repas: [dejeuner, diner]
+service: fromage
+piquant: 0
+saison_mois: []
+envergure: convivial
+conservation_jours: 3
+axes:
+  sucre_sale: -0.2
+  leger_consistant: 0.4
+  chaud_froid: -0.4
+  texture: ferme
+
+ingredients:
+  - food_id: cantal
+    quantite_g: 180
+    unite_affichage: "180 g"
+    optionnel: false
+  - food_id: brie
+    quantite_g: 180
+    unite_affichage: "180 g"
+    optionnel: false
+  - food_id: bleu_auvergne
+    quantite_g: 120
+    unite_affichage: "120 g"
+    optionnel: false
+  - food_id: raisin
+    quantite_g: 300
+    unite_affichage: "1 grappe"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 60
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: pain_seigle
+    quantite_g: 240
+    unite_affichage: "12 tranches"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Sortir les trois fromages du réfrigérateur et les laisser revenir à température."
+    lexicon_ids: []
+    timer_s: 3600
+    timer_type: repos
+  - ordre: 2
+    texte: "Les disposer sur une planche en les espaçant, du plus doux au plus affiné, dans le sens des aiguilles d'une montre."
+    lexicon_ids: [dresser]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Détacher le raisin en petites grappes et les répartir entre les fromages avec les cerneaux de noix."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Couper le pain de seigle et le servir à côté, jamais sur la planche : il en boirait l'humidité."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Un couteau par fromage, sinon le bleu emporte le goût des deux autres dès la première coupe."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+    nature: avertissement
+
+equipements:
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: convivial

@@ -1,0 +1,91 @@
+id: glace_banane_minute
+nom: "Glace de banane minute"
+origine: maison
+description: >
+  Des bananes congelées en rondelles, mixées seules jusqu'à ce qu'elles passent de la
+  semoule à la crème. Un seul ingrédient, ni sucre ni matière grasse ajoutés.
+temps_prep_min: 5
+temps_cuisson_min: 0
+difficulte: 2
+portions_base: 4
+image_path: null
+types_repas: [gouter]
+service: dessert
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 7
+axes:
+  sucre_sale: 0.8
+  leger_consistant: -0.3
+  chaud_froid: -1.0
+  texture: creme
+
+ingredients:
+  - food_id: banane
+    quantite_g: 600
+    unite_affichage: "5 bananes bien mûres"
+    optionnel: false
+  - food_id: cacao_poudre
+    quantite_g: 10
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+  - food_id: beurre_cacahuete
+    quantite_g: 30
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+  - food_id: noix_coco_rapee
+    quantite_g: 15
+    unite_affichage: "2 cuillères à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les bananes et les couper en rondelles épaisses."
+    lexicon_ids: [eplucher, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les étaler à plat sur une plaque, sans qu'elles se touchent, et les congeler jusqu'à ce qu'elles soient dures."
+    lexicon_ids: [etaler]
+    timer_s: 10800
+    timer_type: repos
+  - ordre: 3
+    texte: "Mixer les rondelles gelées par à-coups : elles passent d'abord à l'état de semoule, et c'est normal."
+    lexicon_ids: [mixer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Continuer à mixer en raclant les parois — au bout d'une minute, la semoule devient une crème lisse."
+    lexicon_ids: [mixer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Ajouter le cacao ou le beurre de cacahuète en fin de mixage, puis servir aussitôt ou remettre au congélateur."
+    lexicon_ids: [incorporer]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Ne pas ajouter de liquide pour aider le mixeur : la préparation ne prendrait plus et resterait un milk-shake."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+    nature: avertissement
+
+equipements:
+  - code: robot_menager
+    niveau: requis
+  - code: mixeur
+    niveau: accelere
+  - code: couteau_chef
+    niveau: informatif
+  - code: plaque_patisserie
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: loufoque

@@ -1,0 +1,78 @@
+id: yaourt_grec_grenade_pistache
+nom: "Bol de yaourt grec, grenade et pistaches"
+origine: maison
+description: >
+  Du yaourt grec épais, des graines de grenade détachées à la main et des pistaches
+  concassées, avec un filet de miel. Aucun ustensile de cuisson.
+temps_prep_min: 8
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+service: dessert
+piquant: 0
+saison_mois: [10, 11, 12, 1]
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.4
+  leger_consistant: -0.2
+  chaud_froid: -0.7
+  texture: creme
+
+ingredients:
+  - food_id: yaourt_grec
+    quantite_g: 300
+    unite_affichage: "2 pots"
+    optionnel: false
+  - food_id: grenade
+    quantite_g: 200
+    unite_affichage: "1 grenade"
+    optionnel: false
+  - food_id: pistache
+    quantite_g: 30
+    unite_affichage: "1 poignée"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 20
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Couper la grenade en deux et détacher les graines au-dessus d'un saladier, en tapant sur la peau."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Concasser les pistaches grossièrement, sous la lame d'un couteau posée à plat."
+    lexicon_ids: [concasser]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Répartir le yaourt dans deux bols, couvrir de graines de grenade et parsemer de pistaches."
+    lexicon_ids: [dresser, parsemer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Terminer par un filet de miel juste avant de manger."
+    lexicon_ids: [filet]
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: saladier
+    niveau: informatif
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: grecque
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: rapide

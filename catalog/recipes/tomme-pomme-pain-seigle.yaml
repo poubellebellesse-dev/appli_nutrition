@@ -1,0 +1,80 @@
+id: tomme_pomme_pain_seigle
+nom: "Tomme, pomme et pain de seigle"
+origine: maison
+description: >
+  Un seul fromage, une pomme acidulée coupée en fines lamelles et du pain de seigle
+  beurré. Le fromage de tous les jours, servi comme un plat à part entière.
+temps_prep_min: 6
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: fromage
+piquant: 0
+saison_mois: [9, 10, 11, 12, 1]
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.0
+  leger_consistant: 0.2
+  chaud_froid: -0.5
+  texture: ferme
+
+ingredients:
+  - food_id: tomme
+    quantite_g: 200
+    unite_affichage: "200 g"
+    optionnel: false
+  - food_id: pomme
+    quantite_g: 300
+    unite_affichage: "2 pommes"
+    optionnel: false
+  - food_id: pain_seigle
+    quantite_g: 160
+    unite_affichage: "8 tranches"
+    optionnel: false
+  - food_id: beurre_demi_sel
+    quantite_g: 30
+    unite_affichage: "2 noix de beurre"
+    optionnel: true
+  - food_id: noix
+    quantite_g: 40
+    unite_affichage: "quelques cerneaux"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Sortir la tomme à l'avance et retirer la croûte si elle est sèche."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+  - ordre: 2
+    texte: "Couper le fromage en bâtonnets épais plutôt qu'en tranches fines : il tient mieux sous la dent."
+    lexicon_ids: [detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Émincer les pommes en lamelles, sans les peler — la peau tient les tranches ensemble."
+    lexicon_ids: [emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Beurrer le pain de seigle et servir les trois éléments côte à côte, avec les cerneaux de noix."
+    lexicon_ids: [dresser]
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: quotidien

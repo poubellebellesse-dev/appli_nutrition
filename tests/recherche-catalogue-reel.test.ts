@@ -183,11 +183,26 @@ describe('browseRecipes — filtres de service et d’envergure, hors facette', 
     }
   })
 
-  it('⛔ « fromage » — 0 recette au catalogue — n’est PAS une valeur proposée', () => {
-    // Leçon documentée du projet : une liste recopiée ne détecte pas ce qui manque à l'original.
-    // `valeursDeService` est dérivée du catalogue ; `fromage` ne doit donc apparaître nulle part.
-    const services = valeursDeService(catalogue)
-    expect(services.some((s) => s.valeur === 'fromage')).toBe(false)
+  // ⚠️ CE TEST A CHANGÉ DE SENS LE 2026-08-09. Il disait « ⛔ `fromage` — 0 recette au catalogue —
+  // n'est PAS une valeur proposée », et c'était la bonne façon de prouver une liste DÉRIVÉE tant
+  // que le service `fromage` était vide : la valeur figurait au CHECK du DDL sans qu'aucune recette
+  // la porte, donc la voir proposée aurait trahi une liste recopiée à la main. Le lot L4.4 a écrit
+  // 6 recettes de fromage — la question ne se pose plus dans ce sens-là.
+  //
+  // La leçon qu'il gardait ne change pas : une liste recopiée ne détecte pas ce qui manque à
+  // l'original. Elle se vérifie maintenant dans LES DEUX SENS d'un coup — `valeursDeService` doit
+  // rendre exactement les services présents, avec le bon compte. Une valeur au DDL mais sans
+  // recette reste absente ; une valeur qui apparaît ne peut plus être oubliée.
+  it('`valeursDeService` rend exactement les services du catalogue, comptes compris', () => {
+    const attendu = new Map<string, number>()
+    for (const recette of catalogue.recipes.values()) {
+      if (recette.service === null) continue
+      attendu.set(recette.service, (attendu.get(recette.service) ?? 0) + 1)
+    }
+    const obtenu = new Map<string, number>(valeursDeService(catalogue).map((s) => [s.valeur, s.nombre]))
+    expect(obtenu).toEqual(attendu)
+    // Nommé explicitement : c'est le service qui manquait, et son retour à zéro serait une perte.
+    expect(obtenu.get('fromage')).toBeGreaterThan(0)
   })
 
   it('combine deux services en OU', () => {

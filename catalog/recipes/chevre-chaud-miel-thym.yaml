@@ -1,0 +1,103 @@
+id: chevre_chaud_miel_thym
+nom: "Chèvre chaud au miel et au thym"
+origine: maison
+description: >
+  Des rondelles de chèvre affiné posées sur des tranches de pain grillé, arrosées de miel
+  et parfumées au thym, passées sous le gril jusqu'à ce que la surface dore.
+temps_prep_min: 10
+temps_cuisson_min: 8
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: fromage
+piquant: 0
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: 0.1
+  leger_consistant: 0.2
+  chaud_froid: 0.8
+  texture: fondant
+
+ingredients:
+  - food_id: chevre_affine
+    quantite_g: 240
+    unite_affichage: "4 crottins"
+    optionnel: false
+  - food_id: pain_baguette
+    quantite_g: 160
+    unite_affichage: "8 tranches"
+    optionnel: false
+  - food_id: miel
+    quantite_g: 40
+    unite_affichage: "3 cuillères à soupe"
+    optionnel: false
+  - food_id: thym_seche
+    quantite_g: 2
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 15
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: mache
+    quantite_g: 100
+    unite_affichage: "2 poignées"
+    optionnel: true
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 pincée"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le gril du four et couper la baguette en tranches d'un bon centimètre."
+    lexicon_ids: [prechauffer, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Couper chaque crottin en deux dans l'épaisseur et poser une moitié sur chaque tranche."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Arroser de miel et parsemer de thym."
+    lexicon_ids: [arroser, parsemer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Enfourner sous le gril jusqu'à ce que le fromage gonfle et se colore par endroits."
+    lexicon_ids: [enfourner, dorer]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Servir aussitôt sur la mâche, avec un filet d'huile et un tour de poivre."
+    lexicon_ids: [dresser, filet]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Le chèvre chaud se mange dans la minute : refroidi, il durcit et le pain se détrempe."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+    nature: avertissement
+
+equipements:
+  - code: four
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: gourmand

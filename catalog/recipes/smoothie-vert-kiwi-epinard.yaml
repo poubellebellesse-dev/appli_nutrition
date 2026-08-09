@@ -1,0 +1,89 @@
+id: smoothie_vert_kiwi_epinard
+nom: "Smoothie vert kiwi, épinard et banane"
+origine: maison
+description: >
+  Des pousses d'épinard crues mixées avec du kiwi et de la banane : le fruit couvre le
+  goût de la feuille, la banane donne la texture.
+temps_prep_min: 6
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 2
+image_path: null
+types_repas: [petit_dejeuner, gouter]
+service: dessert
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 1
+axes:
+  sucre_sale: 0.5
+  leger_consistant: -0.6
+  chaud_froid: -0.8
+  texture: liquide
+
+ingredients:
+  - food_id: kiwi
+    quantite_g: 200
+    unite_affichage: "2 kiwis"
+    optionnel: false
+  - food_id: epinard
+    quantite_g: 60
+    unite_affichage: "2 grosses poignées"
+    optionnel: false
+  - food_id: banane
+    quantite_g: 240
+    unite_affichage: "2 bananes"
+    optionnel: false
+  - food_id: boisson_amande
+    quantite_g: 300
+    unite_affichage: "30 cl"
+    optionnel: false
+  - food_id: citron
+    quantite_g: 30
+    unite_affichage: "un demi-citron"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Rincer les pousses d'épinard et les égoutter."
+    lexicon_ids: [rincer, egoutter]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Éplucher les kiwis et les bananes, les couper en gros morceaux."
+    lexicon_ids: [eplucher, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Mixer d'abord les épinards avec la boisson d'amande, jusqu'à ce qu'il ne reste aucun morceau de feuille."
+    lexicon_ids: [mixer]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Ajouter les fruits et le jus de citron, puis mixer de nouveau jusqu'à obtenir une texture lisse."
+    lexicon_ids: [mixer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Servir immédiatement, avant que la couleur ne vire."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: mixeur
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: econome
+    niveau: informatif
+  - code: passoire
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: internationale
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: rapide

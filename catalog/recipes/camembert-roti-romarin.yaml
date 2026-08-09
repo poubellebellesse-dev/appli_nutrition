@@ -1,0 +1,99 @@
+id: camembert_roti_romarin
+nom: "Camembert rôti au romarin"
+origine: maison
+description: >
+  Un camembert entier entaillé en croix, piqué d'ail et de romarin, rôti au four jusqu'à
+  ce que le cœur devienne coulant. Il se partage à la cuillère, avec du pain.
+temps_prep_min: 5
+temps_cuisson_min: 20
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: fromage
+piquant: 0
+saison_mois: []
+envergure: convivial
+conservation_jours: 1
+axes:
+  sucre_sale: -0.4
+  leger_consistant: 0.5
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: camembert
+    quantite_g: 250
+    unite_affichage: "1 camembert"
+    optionnel: false
+  - food_id: ail
+    quantite_g: 6
+    unite_affichage: "1 gousse"
+    optionnel: false
+  - food_id: romarin_seche
+    quantite_g: 2
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+  - food_id: huile_olive
+    quantite_g: 10
+    unite_affichage: "1 cuillère à soupe"
+    optionnel: true
+  - food_id: pain_baguette
+    quantite_g: 200
+    unite_affichage: "1 baguette"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Préchauffer le four à 180 °C et remettre le camembert dans sa boîte en bois, couvercle retiré."
+    lexicon_ids: [prechauffer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Entailler la croûte en croix sur le dessus, sans aller jusqu'au fond."
+    lexicon_ids: [piquer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Glisser des lamelles d'ail dans les entailles, parsemer de romarin et arroser d'un filet d'huile."
+    lexicon_ids: [emincer, parsemer, arroser]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Enfourner jusqu'à ce que le centre cède sous le doigt et que la surface bulle légèrement."
+    lexicon_ids: [enfourner]
+    timer_s: 1200
+    timer_type: cuisson
+  - ordre: 5
+    texte: "Couper la baguette en bâtonnets et servir le camembert brûlant, à tremper directement dedans."
+    lexicon_ids: [detailler, tremper]
+    timer_s: null
+    timer_type: null
+  - ordre: 6
+    texte: "Sans boîte en bois ni plat à bords, le fromage fondu s'échappe et brûle sur la plaque."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+    nature: avertissement
+
+equipements:
+  - code: four
+    niveau: requis
+  - code: plat_a_four
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: gourmand

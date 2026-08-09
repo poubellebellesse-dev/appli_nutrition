@@ -1,0 +1,85 @@
+id: roquefort_poire_noix
+nom: "Roquefort, poire et noix"
+origine: maison
+description: >
+  Des lamelles de poire et des cerneaux de noix posés à côté du roquefort, sur du pain de
+  seigle. Le sucre du fruit et l'amertume de la noix tiennent tête au sel du bleu.
+temps_prep_min: 8
+temps_cuisson_min: 0
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: fromage
+piquant: 0
+saison_mois: [9, 10, 11, 12]
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: 0.1
+  leger_consistant: 0.2
+  chaud_froid: -0.5
+  texture: creme
+
+ingredients:
+  - food_id: roquefort
+    quantite_g: 160
+    unite_affichage: "160 g"
+    optionnel: false
+  - food_id: poire
+    quantite_g: 320
+    unite_affichage: "2 poires"
+    optionnel: false
+  - food_id: noix
+    quantite_g: 50
+    unite_affichage: "une poignée de cerneaux"
+    optionnel: false
+  - food_id: pain_seigle
+    quantite_g: 160
+    unite_affichage: "8 tranches"
+    optionnel: false
+  - food_id: poivre_noir
+    quantite_g: 1
+    unite_affichage: "1 tour de moulin"
+    optionnel: true
+
+etapes:
+  - ordre: 1
+    texte: "Sortir le roquefort du réfrigérateur : froid, il ne rend rien."
+    lexicon_ids: []
+    timer_s: 1800
+    timer_type: repos
+  - ordre: 2
+    texte: "Couper les poires en quartiers, retirer le cœur et les détailler en lamelles fines."
+    lexicon_ids: [detailler, emincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 3
+    texte: "Concasser grossièrement les cerneaux de noix."
+    lexicon_ids: [concasser]
+    timer_s: null
+    timer_type: null
+  - ordre: 4
+    texte: "Dresser le roquefort au centre de l'assiette, ranger les lamelles de poire en éventail et parsemer de noix."
+    lexicon_ids: [dresser, parsemer]
+    timer_s: null
+    timer_type: null
+  - ordre: 5
+    texte: "Servir avec le pain de seigle et un tour de poivre sur le fromage."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
+facettes:
+  - facette: cuisine
+    valeur: francaise
+  - facette: regime
+    valeur: vegetarien
+  - facette: style
+    valeur: rapide

@@ -166,18 +166,30 @@ describe('recettes — axes en pastilles, dans le flux (décision 46)', () => {
   const cuisines = valeursDeFacette(catalogueDeTest(), 'cuisine' as FacetteKind)
   const regimes = valeursDeFacette(catalogueDeTest(), 'regime' as FacetteKind)
   const services = valeursDeService(catalogueDeTest())
-  const axesCourts: readonly {
+
+  // ⚠️ LA RÉPARTITION COURT/LONG EST DÉRIVÉE, ELLE NE L'ÉTAIT PAS — corrigé le 2026-08-09.
+  // `axesCourts` nommait « Régime » et « Service » EN DUR, dans un bloc dont le commentaire
+  // promettait pourtant « dérivé du catalogue réel, jamais d'une liste écrite à la main ». Le lot
+  // L4.4 a porté Service de 4 à 5 valeurs : l'axe est devenu long à l'écran, la liste en dur est
+  // restée courte, et le test a échoué en désignant l'écran alors que le faux était chez lui.
+  const SEUIL_EN_LIGNE = 4
+  type Axe = {
     readonly titre: string
     readonly valeurs: readonly { readonly valeur: string; readonly nombre: number }[]
-  }[] = [
+  }
+  const axes: readonly Axe[] = [
+    { titre: 'Cuisine', valeurs: cuisines },
     { titre: 'Régime', valeurs: regimes },
     { titre: 'Service', valeurs: services },
   ]
+  const axesCourts = axes.filter((a) => a.valeurs.length <= SEUIL_EN_LIGNE)
+  const axesLongs = axes.filter((a) => a.valeurs.length > SEUIL_EN_LIGNE)
 
   it('⛔ garde contre un `it.each([])` : le catalogue réel a un axe court et un axe long à comparer', () => {
-    expect(axesCourts.length).toBe(2)
+    expect(axesCourts.length).toBeGreaterThan(0)
+    expect(axesLongs.length).toBeGreaterThan(0)
     for (const axe of axesCourts) expect(axe.valeurs.length).toBeGreaterThan(0)
-    expect(cuisines.length).toBeGreaterThan(4)
+    expect(cuisines.length).toBeGreaterThan(SEUIL_EN_LIGNE)
   })
 
   it.each(axesCourts)(
@@ -247,14 +259,38 @@ describe('recettes — axes en pastilles, dans le flux (décision 46)', () => {
     expect(panneau.closest('ul')).toBeNull()
   })
 
-  it('⛔ « Fromage » — 0 recette au catalogue — n’apparaît ni en ligne ni dans une fenêtre', async () => {
-    // Dérivé des données, pas d'une liste écrite à la main — la leçon documentée du projet.
-    expect(services.length).toBeGreaterThan(0)
-    expect(services.some((s) => s.valeur === 'fromage')).toBe(false)
+  it('« Fromage » est entré au catalogue : aucune valeur de service ne reste hors d’atteinte', async () => {
+    // ⚠️ CE TEST DISAIT L'INVERSE JUSQU'AU 2026-08-09 : « ⛔ Fromage — 0 recette au catalogue —
+    // n'apparaît ni en ligne ni dans une fenêtre ». Il verrouillait un VIDE DE CONTENU depuis un
+    // fichier d'écran, si bien que le premier lot de recettes à combler le trou l'a fait tomber
+    // alors que l'écran était juste. Ce qui se verrouille ici, c'est la DÉRIVATION : autant de
+    // pastilles que de valeurs au catalogue, la traîne atteignable derrière « Tout voir ». Le seuil
+    // comme le nombre de services peuvent bouger sans rien casser.
+    expect(services.find((s) => s.valeur === 'fromage')?.nombre).toBeGreaterThan(0)
 
     await monter()
     const fieldset = screen.getByText('Service').closest('fieldset') as HTMLElement
-    expect(within(fieldset).queryByText(/Fromage/)).toBeNull()
+    // Une pastille porte `aria-pressed` ; « Tout voir », « Retour » et la fermeture n'en portent
+    // pas. C'est le seul discriminant qui ne dépende d'aucun libellé.
+    const pastillesDe = (racine: HTMLElement) =>
+      within(racine)
+        .getAllByRole('button')
+        .filter((b) => b.hasAttribute('aria-pressed'))
+
+    const enLigne = pastillesDe(fieldset)
+    expect(enLigne.length).toBe(Math.min(services.length, SEUIL_EN_LIGNE))
+
+    const libelles = enLigne.map((b) => b.textContent ?? '')
+    if (services.length > SEUIL_EN_LIGNE) {
+      fireEvent.click(within(fieldset).getByRole('button', { name: /^Tout voir/ }))
+      const panneau = await screen.findByRole('dialog', { name: 'Service' })
+      const pastilles = pastillesDe(panneau)
+      expect(pastilles.length).toBe(services.length)
+      libelles.push(...pastilles.map((b) => b.textContent ?? ''))
+    }
+    // Le libellé est éditorial (`LIBELLE_SERVICE`), pas le code brut : on ne recopie pas la table
+    // ici, on vérifie la seule valeur dont ce lot répond.
+    expect(libelles.some((l) => l.startsWith('Fromage'))).toBe(true)
   })
 })
 
