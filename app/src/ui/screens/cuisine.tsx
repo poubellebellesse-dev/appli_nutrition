@@ -49,6 +49,7 @@ import {
 import { ordonnancerCuissons } from '../../engine/cuisine/ordonnancement.js'
 import { dureeEcouleeMin } from '../../engine/cuisine/duree.js'
 import { segmentsDeLaRecette } from '../../engine/cuisine/segments.js'
+import { equipementsDisputes } from '../../engine/cuisine/equipement-partage.js'
 import { chargerSocle } from '../socle.js'
 import type { PlatACuisiner } from '../router.js'
 import { hashDeRecette } from '../router.js'
@@ -533,6 +534,8 @@ export function Cuisine({
         />
       )}
 
+      <MaterielPartage plats={etat.plats} catalogue={catalogue} />
+
       <h1 className="mt-3 font-titre text-[1.6rem] leading-tight text-texte">{recette.nom}</h1>
 
       <p className="mt-1 text-[0.95rem] text-attenue">
@@ -844,6 +847,57 @@ function decompteDeLOnglet(
   }
   if (marche !== null) return formaterDuree(marche)
   return pause === null ? null : `${formaterDuree(pause)} en pause`
+}
+
+/**
+ * L'ustensile que deux plats de la session se disputent — nommé, jamais arbitré (L3).
+ *
+ * ⛔ CE BLOC N'AVERTIT DE RIEN, IL CONSTATE. Pas de couleur d'alerte, pas de pictogramme, pas de
+ * « attention » : deux plats au four est une information d'organisation, pas une faute. Le principe 6
+ * interdit de juger, et il vaut aussi pour le matériel.
+ *
+ * ⛔ ET IL NE DÉPLACE AUCUN HORAIRE. Réserver le four demanderait de savoir QUAND il est occupé, et
+ * la donnée n'existe pas — `recipe_equipment` n'a pas de colonne d'étape. Voir l'en-tête de
+ * `engine/cuisine/equipement-partage.ts` pour la mesure complète. Ne pas « compléter » ce composant
+ * en le branchant sur `ordonnancerCuissons` : il n'y a rien à lui donner.
+ *
+ * ⚠️ `role="status"`, pas `role="alert"`. L'un se lit quand on arrive dessus, l'autre coupe la parole
+ * au lecteur d'écran — sur un écran qu'on ouvre en ayant déjà les mains occupées, la différence n'est
+ * pas cosmétique.
+ */
+function MaterielPartage({
+  plats,
+  catalogue,
+}: {
+  readonly plats: readonly PlatEnCuisine[]
+  readonly catalogue: Catalog
+}): React.JSX.Element | null {
+  const disputes = equipementsDisputes(
+    plats.map((p) => ({ recipeId: p.recette.id, equipements: p.recette.equipements })),
+    (id) => catalogue.equipment.get(id)?.code ?? null,
+  )
+  if (disputes.length === 0) return null
+
+  const nomDuPlat = (id: string): string =>
+    plats.find((p) => p.recette.id === id)?.recette.nom ?? id
+
+  return (
+    <div role="status" className="mt-3 rounded-[--radius-carte] border border-bordure bg-surface p-3">
+      {disputes.map((d) => (
+        <p key={d.equipmentId} className="text-[0.95rem] text-texte">
+          {/* Le terme du référentiel, jamais le code : « Four à micro-ondes », pas `micro_ondes`. */}
+          {catalogue.equipment.get(d.equipmentId)?.terme ?? d.equipmentId} — utilisé par{' '}
+          {enumerer(d.recipeIds.map(nomDuPlat))}.
+        </p>
+      ))}
+    </div>
+  )
+}
+
+/** « A », « A et B », « A, B et C » — l'énumération française, avec la conjonction avant le dernier. */
+function enumerer(noms: readonly string[]): string {
+  if (noms.length <= 1) return noms[0] ?? ''
+  return `${noms.slice(0, -1).join(', ')} et ${noms[noms.length - 1]!}`
 }
 
 /**

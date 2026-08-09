@@ -728,6 +728,47 @@ describe('cuisine — la barre d’onglets (plusieurs plats)', () => {
     expect(boutons[1]?.textContent).toContain(chak.nom)
   })
 
+  it('deux plats au four : l’écran le NOMME, sans rien déplacer (L3)', async () => {
+    const cat = catalogueDeTest()
+    const peches = cat.recipes.get('peches_sirop_erable' as RecipeId)
+    const chevre = cat.recipes.get('chevre_chaud_miel_thym' as RecipeId)
+    if (peches === undefined || chevre === undefined) throw new Error('recettes de test introuvables')
+
+    // Prémisse VÉRIFIÉE : les deux exigent bien le four, et en `requis`. Un lot de contenu qui
+    // rétrograderait l'un des deux en `informatif` doit faire échouer ce test franchement.
+    const exigeLeFour = (r: typeof chevre): boolean =>
+      r.equipements.some((e) => (e.equipmentId as string) === 'four' && e.niveau === 'requis')
+    expect(exigeLeFour(peches)).toBe(true)
+    expect(exigeLeFour(chevre)).toBe(true)
+
+    await monterPlusieurs(peches.id, chevre.id)
+    const constat = screen.getByRole('status')
+    expect(constat.textContent).toContain('Four')
+    expect(constat.textContent).toContain(peches.nom)
+    expect(constat.textContent).toContain(chevre.nom)
+  })
+
+  it('⛔ DEUX PLATS SUR LA PLAQUE NE DÉCLENCHENT RIEN — sinon le constat parlerait tout le temps', () => {
+    // 260 recettes sur 330 déclarent la plaque `requis` : la signaler reviendrait à afficher ce bloc
+    // à presque chaque cuisson à deux plats, ce qui est la façon la plus sûre de le rendre invisible.
+    const cat = catalogueDeTest()
+    const chak = cat.recipes.get(CHAKCHOUKA as RecipeId)!
+    const fromage = cat.recipes.get('fromage_blanc_fruits_miel' as RecipeId)!
+    const codes = (r: typeof chak): readonly string[] =>
+      r.equipements.filter((e) => e.niveau === 'requis').map((e) => e.equipmentId as string)
+
+    // Prémisse : ces deux-là partagent bien un `requis`, et c'est la plaque — sans quoi le test
+    // passerait pour une bonne raison qui n'est pas la sienne.
+    expect(codes(chak)).toContain('plaque_cuisson')
+    expect(codes(fromage)).toContain('plaque_cuisson')
+    expect(codes(chak).filter((c) => codes(fromage).includes(c))).toEqual(['plaque_cuisson'])
+  })
+
+  it('et l’écran reste muet sur cette paire-là', async () => {
+    await monterPlusieurs(CHAKCHOUKA, 'fromage_blanc_fruits_miel')
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
   it('le plat AFFICHÉ est celui du lien, même s’il n’est pas premier dans la barre', async () => {
     await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
     // Coq au vin part en premier dans la barre (plus long) ; Chakchouka, demandé en premier dans le
