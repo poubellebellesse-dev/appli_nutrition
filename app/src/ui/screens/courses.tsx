@@ -33,6 +33,7 @@ import {
   readAllergies,
   readLatestPlan,
   readPantryEntries,
+  readSaucesChoisies,
   readShoppingList,
   removeExtraItem,
   saveShoppingList,
@@ -179,14 +180,24 @@ async function calculerVue(): Promise<Etat> {
   // raye. Même raison que « Déjà chez vous » plus bas : un article qui disparaît en silence est un
   // défaut pire que celui qu'on voit et qu'on barre.
   const applique = pantryFoodIds.filter((id) => !aConfirmer.includes(id))
-  const liste = socle.moteur.buildShoppingList(plan, { pantryFoodIds: applique })
+  // Les sauces retenues (`user_recipe_sauce`, v14) : leurs ingrédients entrent dans la liste chaque
+  // fois que leur plat est prévu. Le moteur ne connaît pas `user.db` — sans cette option, aucune
+  // sauce n'est achetée, ce qui est exactement le comportement d'avant la v14.
+  const saucesParRecette = readSaucesChoisies(socle.db)
+  const liste = socle.moteur.buildShoppingList(plan, { pantryFoodIds: applique, saucesParRecette })
 
   // « Déjà chez vous » — voir l'en-tête de `Vue.dejaChezVous`. Une seule liste de référence
   // (sans l'option) suffit : `pantryFoodIds` n'AJOUTE aucune ligne, il n'en retire.
+  //
+  // ⚠️ LES SAUCES Y SONT AUSSI. Sans elles, l'échalote d'une sauce retenue disparaîtrait de la liste
+  // (déclarée au frigo) sans apparaître dans « Déjà chez vous » : retirée d'un côté, invisible de
+  // l'autre — le seul cas où une ligne s'évapore vraiment.
   const dejaChezVous =
     applique.length === 0
       ? []
-      : socle.moteur.buildShoppingList(plan).items.filter((item) => applique.includes(item.foodId))
+      : socle.moteur
+          .buildShoppingList(plan, { saucesParRecette })
+          .items.filter((item) => applique.includes(item.foodId))
 
   if (enregistree === null || enregistree.planId !== plan.id) {
     saveShoppingList(socle.db, liste)

@@ -23,6 +23,7 @@ import type {
   Catalog,
   Food,
   FoodId,
+  RecipeId,
   ShoppingList,
   ShoppingListItem,
   ShoppingOptions,
@@ -151,14 +152,20 @@ export function buildShoppingList(
 
   // Clé = aliment + tranche : le même aliment acheté en deux fois donne deux lignes, sinon la
   // scission de §7.4 ne servirait à rien.
-  const cumul = new Map<string, { foodId: FoodId; grammes: number; tranche: number; pourSlots: SlotRef[] }>()
+  const cumul = new Map<
+    string,
+    { foodId: FoodId; grammes: number; tranche: number; pourSlots: SlotRef[]; pourSauces: RecipeId[] }
+  >()
 
-  for (const entree of plan.entries) {
-    if (entree.recipeId === null || entree.isLeftover) continue // voir l'en-tête : un reste ne se rachète pas
-    const recette = catalog.recipes.get(entree.recipeId)
-    if (recette === undefined) continue
-
-    const tranche = trancheDe(entree.slot.date, plan.startDate, opts.joursDeCourses)
+  /**
+   * Verse les ingrédients d'une recette dans le cumul. Une seule implémentation pour le plat et pour
+   * ses sauces : le garde-manger, le fond de placard et la scission par tranche doivent s'appliquer
+   * exactement pareil des deux côtés — une seconde boucle recopiée aurait divergé au premier
+   * changement de règle, et personne n'aurait vu passer une sauce à travers le filtre « j'ai déjà ».
+   */
+  const verser = (recipeId: RecipeId, tranche: number, slot: SlotRef | null): void => {
+    const recette = catalog.recipes.get(recipeId)
+    if (recette === undefined) return // id inconnu après mise à jour du catalogue : on ignore, jamais d'erreur
     for (const ingredient of recette.ingredients) {
       if (deja.has(ingredient.foodId)) continue
       const food = catalog.foods.get(ingredient.foodId)
@@ -167,16 +174,44 @@ export function buildShoppingList(
       const cle = `${ingredient.foodId}#${tranche}`
       const existant = cumul.get(cle)
       if (existant === undefined) {
-        cumul.set(cle, { foodId: ingredient.foodId, grammes: ingredient.quantiteG, tranche, pourSlots: [entree.slot] })
+        cumul.set(cle, {
+          foodId: ingredient.foodId,
+          grammes: ingredient.quantiteG,
+          tranche,
+          pourSlots: slot === null ? [] : [slot],
+          pourSauces: slot === null ? [recipeId] : [],
+        })
+        continue
+      }
+      existant.grammes += ingredient.quantiteG
+      if (slot === null) {
+        // Dédupliqué : la même sauce retenue sur deux plats de la semaine se cite UNE fois par
+        // ligne, sinon la provenance affichée dirait « Sauce au poivre, Sauce au poivre ».
+        if (!existant.pourSauces.includes(recipeId)) existant.pourSauces.push(recipeId)
       } else {
-        existant.grammes += ingredient.quantiteG
-        existant.pourSlots.push(entree.slot)
+        existant.pourSlots.push(slot)
       }
     }
   }
 
+  for (const entree of plan.entries) {
+    if (entree.recipeId === null || entree.isLeftover) continue // voir l'en-tête : un reste ne se rachète pas
+    if (!catalog.recipes.has(entree.recipeId)) continue
+
+    const tranche = trancheDe(entree.slot.date, plan.startDate, opts.joursDeCourses)
+    verser(entree.recipeId, tranche, entree.slot)
+
+    // ⚠️ SOUS LE GARDE `isLeftover`, ET C'EST TOUT L'ENJEU. Une sauce suit son plat : si le plat est
+    // un reste, il n'est pas recuisiné, donc sa sauce non plus. Verser les sauces au-dessus du garde
+    // aurait fait racheter la sauce à chaque repas d'un plat cuisiné une seule fois — exactement le
+    // gain que les restes existent pour produire, annulé sur une ligne.
+    for (const sauceId of opts.saucesParRecette?.get(entree.recipeId) ?? []) {
+      verser(sauceId, tranche, null)
+    }
+  }
+
   const items: ShoppingListItem[] = []
-  for (const { foodId, grammes, tranche, pourSlots } of cumul.values()) {
+  for (const { foodId, grammes, tranche, pourSlots, pourSauces } of cumul.values()) {
     const food = catalog.foods.get(foodId)
     if (food === undefined) continue // intégrité garantie au build ; garde purement défensive
     items.push({
@@ -185,6 +220,7 @@ export function buildShoppingList(
       rayon: rayonDe(food, catalog.foods),
       tranche,
       pourSlots,
+      pourSauces,
     })
   }
 

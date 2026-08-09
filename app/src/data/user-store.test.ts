@@ -51,6 +51,8 @@ import {
   readPantryFoodIds,
   readPreferences,
   readProfile,
+  readSaucesChoisies,
+  setSauceChoisie,
   addExtraItem,
   readExtraItems,
   readConsents,
@@ -739,6 +741,53 @@ describe('user-schema — ce que la migration v2 corrige', () => {
   })
 })
 
+describe('user-store — les sauces retenues avec un plat (v14)', () => {
+  const ROTI = 'roti' as RecipeId
+  const POISSON = 'poisson' as RecipeId
+  const POIVRE = 'sauce_poivre' as RecipeId
+  const YAOURT = 'sauce_yaourt' as RecipeId
+
+  it('aller-retour : ce qui est retenu se relit, groupé par plat', () => {
+    setSauceChoisie(db, ROTI, POIVRE, true)
+    setSauceChoisie(db, ROTI, YAOURT, true)
+    setSauceChoisie(db, POISSON, YAOURT, true)
+
+    const parPlat = readSaucesChoisies(db)
+    expect([...(parPlat.get(ROTI) ?? [])].sort()).toEqual(['sauce_poivre', 'sauce_yaourt'])
+    expect(parPlat.get(POISSON)).toEqual(['sauce_yaourt'])
+    expect(parPlat.get('inconnu' as RecipeId)).toBeUndefined()
+  })
+
+  it('idempotent dans les deux sens — retenir deux fois ne duplique pas, relâcher deux fois ne casse pas', () => {
+    setSauceChoisie(db, ROTI, POIVRE, true)
+    setSauceChoisie(db, ROTI, POIVRE, true)
+    expect(readSaucesChoisies(db).get(ROTI)).toEqual(['sauce_poivre'])
+
+    setSauceChoisie(db, ROTI, POIVRE, false)
+    setSauceChoisie(db, ROTI, POIVRE, false)
+    expect(readSaucesChoisies(db).get(ROTI)).toBeUndefined()
+  })
+
+  it('⛔ relâcher UNE sauce ne touche pas les autres, ni celles des autres plats', () => {
+    setSauceChoisie(db, ROTI, POIVRE, true)
+    setSauceChoisie(db, ROTI, YAOURT, true)
+    setSauceChoisie(db, POISSON, POIVRE, true)
+
+    setSauceChoisie(db, ROTI, POIVRE, false)
+
+    expect(readSaucesChoisies(db).get(ROTI)).toEqual(['sauce_yaourt'])
+    expect(readSaucesChoisies(db).get(POISSON)).toEqual(['sauce_poivre'])
+  })
+
+  it('accepte des identifiants inconnus du catalogue — aucune clé étrangère entre les deux bases', () => {
+    // §4.1 : `catalog.db` est un AUTRE FICHIER, SQLite ne contraint pas entre bases. Une recette
+    // retirée par une mise à jour laisse une ligne orpheline, et c'est le cas NORMAL : c'est
+    // l'appelant, qui tient le catalogue, qui l'ignore en silence à l'affichage.
+    setSauceChoisie(db, 'plat_disparu' as RecipeId, 'sauce_disparue' as RecipeId, true)
+    expect(readSaucesChoisies(db).get('plat_disparu' as RecipeId)).toEqual(['sauce_disparue'])
+  })
+})
+
 describe('user-store — liste de courses', () => {
   const PLAN_ID = 'plan-2026-08-03-3'
 
@@ -752,6 +801,9 @@ describe('user-store — liste de courses', () => {
       rayon: 'épicerie',
       tranche: 0,
       pourSlots: [{ date: '2026-08-03', creneau: 'diner' as MealSlot }],
+      // Aucune sauce retenue : ce `describe` teste la PERSISTANCE des cochages, et le champ n'est
+      // pas persisté — la liste se reconstruit du plan à chaque fois (voir `saveShoppingList`).
+      pourSauces: [],
     })),
   })
 

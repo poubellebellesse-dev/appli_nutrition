@@ -27,7 +27,14 @@ import type {
   RecipeSource,
   RecipeStep,
 } from '../../engine/domain/index.js'
-import { readDisplay, readUserState, setFavorite, writeDisplay } from '../../data/user-store.js'
+import {
+  readDisplay,
+  readSaucesChoisies,
+  readUserState,
+  setFavorite,
+  setSauceChoisie,
+  writeDisplay,
+} from '../../data/user-store.js'
 import type { Socle } from '../socle.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import type { OrigineRecette } from '../router.js'
@@ -80,6 +87,14 @@ interface LigneSauce {
   readonly id: RecipeId
   readonly nom: string
   readonly energiePortion: number | null
+  /**
+   * L'utilisateur a dit prendre TOUJOURS cette sauce avec ce plat (`user_recipe_sauce`, v14) — donc
+   * ses ingrédients entrent dans la liste de courses chaque fois que le plat est prévu.
+   *
+   * ⚠️ RIEN À VOIR AVEC LE FAIT D'ÊTRE « attachée ». Le catalogue PROPOSE (`Recipe.sauceIds`),
+   * l'utilisateur CHOISIT. Une sauce de la section « Autres sauces » se choisit tout autant.
+   */
+  readonly choisie: boolean
 }
 
 interface VueSauces {
@@ -111,10 +126,12 @@ type Etat =
  */
 function lireLesSauces(socle: Socle, id: RecipeId, constraints: HardConstraints): VueSauces {
   const res = socle.moteur.suggestSauces({ recipeId: id, constraints })
+  const choisies = new Set(readSaucesChoisies(socle.db).get(id) ?? [])
   const ligne = (sauceId: RecipeId): LigneSauce => ({
     id: sauceId,
     nom: socle.catalogue.recipes.get(sauceId)?.nom ?? sauceId,
     energiePortion: energieParPortion(socle.catalogue, sauceId),
+    choisie: choisies.has(sauceId),
   })
   return {
     proposer: res.proposer,
@@ -191,10 +208,6 @@ export function DetailRecette({
             sauces: lireLesSauces(socle, id, utilisateur.constraints),
           },
         })
-        // ⚠️ RÉINITIALISÉ À CHAQUE RECETTE, et non conservé. Garder la valeur précédente faisait
-        // s'ouvrir une recette prévue pour 4 sur les 8 portions réglées SUR UNE AUTRE — toutes ses
-        // quantités mises à l'échelle sans que personne ne l'ait demandé.
-        setPortions(recette.portionsBase)
       })
       .catch((erreur: unknown) => {
         setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
@@ -202,6 +215,23 @@ export function DetailRecette({
   }, [recetteId])
 
   useEffect(charger, [charger])
+
+  /**
+   * ⚠️ RÉINITIALISÉ À CHAQUE RECETTE, et non conservé. Garder la valeur précédente faisait s'ouvrir
+   * une recette prévue pour 4 sur les 8 portions réglées SUR UNE AUTRE — toutes ses quantités mises
+   * à l'échelle sans que personne ne l'ait demandé.
+   *
+   * ⛔ ET SURTOUT PAS DANS `charger`, QUI EST AUSSI LE RAFRAÎCHISSEMENT. `basculerFavori`,
+   * `basculerSauce` et `basculerMacros` le rappellent pour relire la base : y laisser la remise à
+   * zéro faisait qu'appuyer sur l'étoile — un geste sans aucun rapport — reperdait en silence les
+   * 6 portions réglées, sans un mot. La clé est `recetteId`, pas « chaque fois qu'on relit ».
+   *
+   * `null` et non `portionsBase` : `portionsAffichees` retombe déjà sur la base de la recette, et
+   * l'écrire ici obligerait à attendre le chargement pour connaître la valeur.
+   */
+  useEffect(() => {
+    setPortions(null)
+  }, [recetteId])
 
   const basculerFavori = useCallback(() => {
     if (etat.phase !== 'pret') return
@@ -213,6 +243,25 @@ export function DetailRecette({
       })
       .catch(() => undefined)
   }, [etat, recetteId, charger])
+
+  /**
+   * « Je la prends toujours avec ce plat » — écrit `user_recipe_sauce` (v14).
+   *
+   * ⚠️ ÉCRIT SUR LA RECETTE AFFICHÉE, PAS SUR UN CRÉNEAU. C'est une préférence durable, valable pour
+   * toutes les semaines à venir, régénérations comprises. Voir la migration v14 pour la variante par
+   * créneau qui a été écartée, et pourquoi.
+   */
+  const basculerSauce = useCallback(
+    (sauceId: RecipeId, choisie: boolean) => {
+      chargerSocle()
+        .then((socle) => {
+          setSauceChoisie(socle.db, recetteId as RecipeId, sauceId, choisie)
+          charger()
+        })
+        .catch(() => undefined)
+    },
+    [recetteId, charger]
+  )
 
   const basculerMacros = useCallback(() => {
     if (etat.phase !== 'pret') return
@@ -420,7 +469,11 @@ export function DetailRecette({
 
           Avant les valeurs nutritionnelles : la sauce est une décision de repas, l'énergie une
           information qu'on déplie après. */}
-      <SaucesAAjouter sauces={vue.sauces} afficherEnergie={vue.afficherMacros} />
+      <SaucesAAjouter
+        sauces={vue.sauces}
+        afficherEnergie={vue.afficherMacros}
+        onBasculer={basculerSauce}
+      />
 
       <ValeursNutritionnelles
         affiche={vue.afficherMacros}
@@ -785,20 +838,28 @@ function ValeursNutritionnelles({
 function SaucesAAjouter({
   sauces,
   afficherEnergie,
+  onBasculer,
 }: {
   readonly sauces: VueSauces
   readonly afficherEnergie: boolean
+  readonly onBasculer: (sauceId: RecipeId, choisie: boolean) => void
 }) {
   const [ouvert, setOuvert] = useState(false)
   if (!sauces.proposer) return null
 
   const total = sauces.attachees.length + sauces.autres.length
+  // ⚠️ CE QUE L'UTILISATEUR A CHOISI PASSE DEVANT CE QUE LE CATALOGUE PROPOSE. Sans ça, la ligne
+  // repliée dirait « 1 proposée avec ce plat » à quelqu'un qui en a déjà retenu deux : le seul
+  // endroit où l'on voit son choix sans ouvrir la fenêtre annoncerait autre chose que son choix.
+  const choisies = [...sauces.attachees, ...sauces.autres].filter((s) => s.choisie).length
   const valeur =
-    total === 0
-      ? 'Aucune ne convient à vos réglages'
-      : sauces.attachees.length > 0
-        ? `${sauces.attachees.length} proposée${sauces.attachees.length > 1 ? 's' : ''} avec ce plat`
-        : `${total} au catalogue`
+    choisies > 0
+      ? `${choisies} dans vos courses`
+      : total === 0
+        ? 'Aucune ne convient à vos réglages'
+        : sauces.attachees.length > 0
+          ? `${sauces.attachees.length} proposée${sauces.attachees.length > 1 ? 's' : ''} avec ce plat`
+          : `${total} au catalogue`
 
   return (
     <section className="mt-10 border-t border-bordure pt-5">
@@ -808,6 +869,7 @@ function SaucesAAjouter({
         <Panneau titre="Ajouter une sauce" onFermer={() => setOuvert(false)}>
           <p className="text-[0.95rem] leading-relaxed text-texte-doux">
             À préparer à côté et à servir avec. Rien n'est ajouté à la recette ni à ses quantités.
+            Une sauce que vous retenez entre dans vos courses chaque fois que ce plat est prévu.
           </p>
 
           {sauces.attachees.length > 0 && (
@@ -817,7 +879,12 @@ function SaucesAAjouter({
               </h3>
               <ul className="mt-2">
                 {sauces.attachees.map((sauce) => (
-                  <LienSauce key={sauce.id} sauce={sauce} afficherEnergie={afficherEnergie} />
+                  <LienSauce
+                    key={sauce.id}
+                    sauce={sauce}
+                    afficherEnergie={afficherEnergie}
+                    onBasculer={onBasculer}
+                  />
                 ))}
               </ul>
             </>
@@ -830,7 +897,12 @@ function SaucesAAjouter({
               </h3>
               <ul className="mt-2">
                 {sauces.autres.map((sauce) => (
-                  <LienSauce key={sauce.id} sauce={sauce} afficherEnergie={afficherEnergie} />
+                  <LienSauce
+                    key={sauce.id}
+                    sauce={sauce}
+                    afficherEnergie={afficherEnergie}
+                    onBasculer={onBasculer}
+                  />
                 ))}
               </ul>
             </>
@@ -856,16 +928,26 @@ function SaucesAAjouter({
   )
 }
 
-/** Une sauce dans la liste : son nom, son énergie sur sa PROPRE ligne, et le lien vers sa fiche. */
+/**
+ * Une sauce dans la liste : son nom, son énergie sur sa PROPRE ligne, le lien vers sa fiche, et le
+ * bouton qui la fait entrer dans les courses.
+ *
+ * ⚠️ DEUX CIBLES DISTINCTES, PAS UNE LIGNE CLIQUABLE À DOUBLE SENS. Aller lire la recette et décider
+ * de l'acheter toutes les semaines ne se ressemblent pas assez pour partager un geste, et la seconde
+ * est difficile à défaire si on la déclenche par erreur. Le lien reste un lien, le choix est un
+ * `<button aria-pressed>` — comme l'étoile des favoris ailleurs dans l'application.
+ */
 function LienSauce({
   sauce,
   afficherEnergie,
+  onBasculer,
 }: {
   readonly sauce: LigneSauce
   readonly afficherEnergie: boolean
+  readonly onBasculer: (sauceId: RecipeId, choisie: boolean) => void
 }) {
   return (
-    <li className="border-b border-bordure last:border-b-0">
+    <li className="border-b border-bordure py-1 last:border-b-0">
       <a
         href={hashDeRecette(sauce.id, 'recettes')}
         className="flex min-h-tactile items-center justify-between gap-3 py-2 text-[1.05rem] text-texte no-underline"
@@ -877,6 +959,19 @@ function LienSauce({
           </span>
         )}
       </a>
+      <button
+        type="button"
+        onClick={() => onBasculer(sauce.id, !sauce.choisie)}
+        aria-pressed={sauce.choisie}
+        className={
+          'mb-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-3 text-[0.95rem] font-semibold ' +
+          (sauce.choisie
+            ? 'border-2 border-accent bg-accent-doux text-accent-texte'
+            : 'border border-bordure-forte bg-surface text-texte-doux')
+        }
+      >
+        {sauce.choisie ? '✓ Je la prends toujours avec ce plat' : 'Je la prends toujours avec ce plat'}
+      </button>
     </li>
   )
 }

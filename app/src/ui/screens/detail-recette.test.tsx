@@ -23,7 +23,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { RecipeId } from '../../engine/domain/index.js'
-import { readDisplay, readFavorites, writeDisplay } from '../../data/user-store.js'
+import { readDisplay, readFavorites, readSaucesChoisies, writeDisplay } from '../../data/user-store.js'
 import { AXES_PAR_DEFAUT, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
 import type { OrigineRecette } from '../router.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
@@ -691,5 +691,110 @@ describe('detail-recette — les sauces à ajouter', () => {
     fireEvent.click(screen.getByText('Ajouter une sauce').closest('button')!)
     const dialogue = await screen.findByRole('dialog')
     expect(within(dialogue).queryByText(/kcal \/ portion/)).toBeNull()
+  })
+})
+
+/**
+ * ① « Je la prends toujours avec ce plat » — `user_recipe_sauce` (v14).
+ *
+ * ⚠️ CHAQUE TEST VÉRIFIE LA BASE, PAS SEULEMENT L'ÉCRAN. Un `aria-pressed` qui bascule sans écrire
+ * est exactement le défaut que ce lot répare ailleurs : l'état React survit à la session, pas au
+ * remontage. Le dernier test remonte l'écran de zéro pour cette raison.
+ */
+describe('detail-recette — retenir une sauce pour les courses (v14)', () => {
+  const PLAT_SAUCABLE = 'poulet_roti_carottes'
+
+  async function ouvrirLePanneau() {
+    await monter(PLAT_SAUCABLE)
+    fireEvent.click(screen.getByText('Ajouter une sauce').closest('button')!)
+    return await screen.findByRole('dialog')
+  }
+
+  /**
+   * Le bouton d'UNE sauce, désigné par le nom de la sauce et non par un index : la liste est triée
+   * alphabétiquement et un lot de contenu peut y insérer une entrée devant.
+   *
+   * ⚠️ `aria-pressed` EST LE SEUL DISCRIMINANT indépendant du libellé : la fenêtre contient aussi
+   * des liens et un bouton de fermeture, et le libellé du bouton change quand il est enfoncé.
+   */
+  const boutonDe = (dialogue: HTMLElement, nomSauce: string) => {
+    const item = within(dialogue).getByText(nomSauce).closest('li') as HTMLElement
+    return within(item).getAllByRole('button').find((b) => b.hasAttribute('aria-pressed'))!
+  }
+
+  it('écrit le choix en base, et le relâche', async () => {
+    const dialogue = await ouvrirLePanneau()
+    const bouton = boutonDe(dialogue, 'Sauce au poivre')
+    expect(bouton.getAttribute('aria-pressed')).toBe('false')
+
+    fireEvent.click(bouton)
+    await waitFor(() =>
+      expect(readSaucesChoisies(baseCourante()).get(PLAT_SAUCABLE as RecipeId)).toEqual(['sauce_poivre'])
+    )
+
+    fireEvent.click(boutonDe(screen.getByRole('dialog'), 'Sauce au poivre'))
+    await waitFor(() =>
+      expect(readSaucesChoisies(baseCourante()).get(PLAT_SAUCABLE as RecipeId)).toBeUndefined()
+    )
+  })
+
+  it('une sauce de « Autres sauces » se retient tout autant qu’une sauce attachée', async () => {
+    // ⚠️ LE CATALOGUE PROPOSE, L'UTILISATEUR CHOISIT. Restreindre le bouton aux sauces attachées
+    // ferait dériver le choix de l'utilisateur de `Recipe.sauceIds`, donc le ferait changer à la
+    // prochaine mise à jour du catalogue. La vinaigrette n'est PAS attachée au poulet rôti.
+    const dialogue = await ouvrirLePanneau()
+    expect(within(dialogue).getByText('Autres sauces')).toBeDefined()
+
+    fireEvent.click(boutonDe(dialogue, 'Vinaigrette à la moutarde'))
+    await waitFor(() =>
+      expect(readSaucesChoisies(baseCourante()).get(PLAT_SAUCABLE as RecipeId)).toEqual(['vinaigrette_moutarde'])
+    )
+  })
+
+  it('la ligne repliée annonce le CHOIX, pas la proposition du catalogue', async () => {
+    // Sans ça, le seul endroit visible sans ouvrir la fenêtre dirait « 1 proposée avec ce plat » à
+    // quelqu'un qui en a retenu deux — il annoncerait autre chose que son propre choix.
+    const dialogue = await ouvrirLePanneau()
+    fireEvent.click(boutonDe(dialogue, 'Sauce au poivre'))
+    await waitFor(() => expect(screen.queryByText('1 dans vos courses')).not.toBeNull())
+
+    fireEvent.click(boutonDe(screen.getByRole('dialog'), 'Vinaigrette à la moutarde'))
+    await waitFor(() => expect(screen.queryByText('2 dans vos courses')).not.toBeNull())
+    expect(screen.queryByText('1 proposée avec ce plat')).toBeNull()
+  })
+
+  it('persiste : un écran remonté de zéro retrouve le bouton enfoncé', async () => {
+    const dialogue = await ouvrirLePanneau()
+    fireEvent.click(boutonDe(dialogue, 'Sauce au poivre'))
+    await waitFor(() =>
+      expect(readSaucesChoisies(baseCourante()).get(PLAT_SAUCABLE as RecipeId)).toEqual(['sauce_poivre'])
+    )
+
+    cleanup()
+    const rouvert = await ouvrirLePanneau()
+    expect(boutonDe(rouvert, 'Sauce au poivre').getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('⛔ retenir une sauce NE REPERD PAS les portions réglées', async () => {
+    // Le défaut verrouillé : `basculerSauce` rappelle `charger()` pour relire la base, et la remise
+    // à zéro des portions vivait DANS `charger`. Régler 6 portions puis toucher une sauce — ou
+    // l'étoile des favoris, qui rappelle le même `charger` — reperdait le réglage sans un mot.
+    await monter(PLAT_SAUCABLE)
+    const selecteur = screen.getByLabelText('Une portion de plus').closest('div') as HTMLElement
+    const lu = () => within(selecteur).getByText(/^\d+$/).textContent
+    const base = lu()
+
+    fireEvent.click(screen.getByLabelText('Une portion de plus'))
+    fireEvent.click(screen.getByLabelText('Une portion de plus'))
+    const regle = lu()
+    expect(regle).not.toBe(base)
+
+    fireEvent.click(screen.getByText('Ajouter une sauce').closest('button')!)
+    fireEvent.click(boutonDe(await screen.findByRole('dialog'), 'Sauce au poivre'))
+    await waitFor(() =>
+      expect(readSaucesChoisies(baseCourante()).get(PLAT_SAUCABLE as RecipeId)).toEqual(['sauce_poivre'])
+    )
+
+    expect(lu()).toBe(regle)
   })
 })

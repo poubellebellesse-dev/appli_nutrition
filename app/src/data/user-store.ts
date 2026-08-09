@@ -292,6 +292,62 @@ export function setFavorite(db: UserDb, recipeId: RecipeId, favori: boolean, ajo
   ])
 }
 
+// --- Sauces retenues avec un plat (v14) --------------------------------------------------------
+
+/**
+ * Les sauces que l'utilisateur prend TOUJOURS avec un plat donné, par plat.
+ *
+ * ⚠️ RIEN À VOIR AVEC `Recipe.sauceIds`, qui vit dans `catalog.db`. Le catalogue PROPOSE, cette
+ * table enregistre ce que l'utilisateur a CHOISI — y compris une sauce prise dans « Autres sauces »,
+ * que le catalogue n'attachait pas à ce plat. Croiser les deux sources est le premier moyen de faire
+ * disparaître un choix à la prochaine mise à jour du catalogue.
+ *
+ * ⚠️ AUCUN FILTRAGE ICI. Un id de sauce devenu inconnu (catalogue mis à jour, recette retirée) est
+ * rendu tel quel : la table `user.db` ne connaît pas le catalogue, et c'est l'appelant — qui, lui,
+ * le tient — qui l'ignore en silence. Filtrer ici obligerait `data/` à recevoir le catalogue pour
+ * une lecture qui n'en a pas besoin.
+ */
+export function readSaucesChoisies(db: UserDb): ReadonlyMap<RecipeId, readonly RecipeId[]> {
+  const parPlat = new Map<RecipeId, RecipeId[]>()
+  const lignes = db.all<{ readonly recipe_id: string; readonly sauce_recipe_id: string }>(
+    'SELECT recipe_id, sauce_recipe_id FROM user_recipe_sauce ORDER BY recipe_id, sauce_recipe_id'
+  )
+  for (const ligne of lignes) {
+    const plat = ligne.recipe_id as RecipeId
+    const liste = parPlat.get(plat)
+    if (liste === undefined) parPlat.set(plat, [ligne.sauce_recipe_id as RecipeId])
+    else liste.push(ligne.sauce_recipe_id as RecipeId)
+  }
+  return parPlat
+}
+
+/**
+ * Retient ou relâche UNE sauce pour UN plat. Idempotent dans les deux sens.
+ *
+ * ⚠️ `INSERT … ON CONFLICT DO NOTHING`, JAMAIS `INSERT OR REPLACE` : ce dernier SUPPRIME la ligne
+ * avant de la réinsérer, ce qui déclencherait les `ON DELETE CASCADE` de ses enfants s'il en
+ * apparaissait un jour (piège documenté, CLAUDE.md). Ici la ligne n'a que sa clé — il n'y a rien à
+ * mettre à jour, seulement à ne pas dupliquer.
+ */
+export function setSauceChoisie(
+  db: UserDb,
+  recipeId: RecipeId,
+  sauceRecipeId: RecipeId,
+  choisie: boolean
+): void {
+  if (!choisie) {
+    db.run('DELETE FROM user_recipe_sauce WHERE recipe_id = ? AND sauce_recipe_id = ?', [
+      recipeId,
+      sauceRecipeId,
+    ])
+    return
+  }
+  db.run(
+    'INSERT INTO user_recipe_sauce (recipe_id, sauce_recipe_id) VALUES (?, ?) ON CONFLICT DO NOTHING',
+    [recipeId, sauceRecipeId]
+  )
+}
+
 // --- Thématiques et garde-manger ---------------------------------------------------------------
 
 export function readActiveTopics(db: UserDb): readonly TopicId[] {

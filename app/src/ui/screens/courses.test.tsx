@@ -15,12 +15,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { JSX } from 'react'
-import type { AllergenId } from '../../engine/domain/index.js'
+import type { AllergenId, RecipeId } from '../../engine/domain/index.js'
 import {
   readPantryDeclareLe,
   readPantryFoodIds,
   readShoppingList,
   savePlan,
+  setSauceChoisie,
   writeAllergies,
   writePantry,
 } from '../../data/user-store.js'
@@ -864,5 +865,72 @@ describe('courses — la quantité affichée et celle du texte partagé s’acco
     expect(texte).toContain(`- ${nom} : ${quantiteEcran}`)
 
     Reflect.deleteProperty(navigator, 'clipboard')
+  })
+})
+
+/**
+ * ① Les sauces retenues entrent dans les courses (`user_recipe_sauce`, v14).
+ *
+ * ⚠️ CE `describe` EXISTE PARCE QUE L'OPTION EST FACULTATIVE. `ShoppingOptions.saucesParRecette`
+ * omise ne produit aucune erreur — ni au type, ni au test, ni à l'écran : la liste serait juste
+ * silencieusement dépourvue de sauces. C'est le piège signature de ce dépôt, et le seul moyen de le
+ * fermer est une assertion sur l'ÉCRAN, pas sur `buildShoppingList`.
+ */
+describe('courses — une sauce retenue s’achète avec son plat (v14)', () => {
+  /** Le premier plat RÉELLEMENT cuisiné du plan — un reste ne se rachète pas, il ne sert à rien ici. */
+  const premierPlatCuisine = (plan: { entries: readonly { recipeId: RecipeId | null; isLeftover: boolean }[] }) => {
+    const entree = plan.entries.find((e) => e.recipeId !== null && !e.isLeftover)
+    if (entree?.recipeId == null) throw new Error('plan sans aucun plat à cuisiner')
+    return entree.recipeId
+  }
+
+  /**
+   * La ligne d'un aliment, quantité comprise, ou `undefined`.
+   *
+   * ⚠️ ON COMPARE LA LIGNE ENTIÈRE, PAS SA PRÉSENCE. Le plan est engendré par le moteur : rien ne
+   * garantit qu'un ingrédient de la sauce soit absent de la liste avant qu'on la retienne — la
+   * crème et le bouillon sont des aliments courants. Une assertion « il apparaît » serait donc
+   * verte même si le câblage ne faisait rien, du jour où un plat du plan en contient déjà. La
+   * quantité, elle, bouge dans les deux cas.
+   */
+  const ligneDe = (lignes: readonly string[], nom: string) => lignes.find((l) => l.includes(nom))
+
+  it('retenir une sauce change la liste, la relâcher la rend IDENTIQUE à ce qu’elle était', async () => {
+    const { plan } = await avecUnPlan()
+    const plat = premierPlatCuisine(plan)
+
+    await monter()
+    const avant = lignesAffichees()
+    cleanup()
+
+    setSauceChoisie(baseCourante(), plat, 'sauce_poivre' as RecipeId, true)
+    await monter()
+    const apres = lignesAffichees()
+    cleanup()
+
+    // Le bouillon de légumes est un ingrédient de `sauce_poivre` : sa ligne doit avoir bougé —
+    // apparue, ou grossie si un plat du plan en demandait déjà.
+    expect(ligneDe(apres, 'Bouillon de légumes')).toBeDefined()
+    expect(ligneDe(apres, 'Bouillon de légumes')).not.toBe(ligneDe(avant, 'Bouillon de légumes'))
+
+    // ⛔ LE GESTE SE DÉFAIT INTÉGRALEMENT. Une liste qui ne revient pas exactement à son état
+    // d'origine voudrait dire qu'une quantité de sauce s'est logée ailleurs que dans l'option.
+    setSauceChoisie(baseCourante(), plat, 'sauce_poivre' as RecipeId, false)
+    await monter()
+    expect(lignesAffichees()).toEqual(avant)
+  })
+
+  it('⛔ la sauce d’un plat qui n’est PAS au plan ne s’achète pas', async () => {
+    // `saucesParRecette` porte tout le carnet de l'utilisateur, pas seulement les plats de la
+    // semaine : c'est `buildShoppingList` qui ne consulte le carnet qu'aux entrées du plan. Sans
+    // ça, retenir une sauce sur un plat cuisiné l'an dernier l'achèterait toutes les semaines.
+    await avecUnPlan()
+    await monter()
+    const avant = lignesAffichees()
+    cleanup()
+
+    setSauceChoisie(baseCourante(), 'plat_jamais_prevu' as RecipeId, 'sauce_poivre' as RecipeId, true)
+    await monter()
+    expect(lignesAffichees()).toEqual(avant)
   })
 })

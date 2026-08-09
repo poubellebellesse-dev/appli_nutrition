@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 13
+export const USER_SCHEMA_VERSION = 14
 
 export interface Migration {
   readonly version: number
@@ -703,6 +703,32 @@ const V13_STATEMENTS: readonly string[] = [
    )`,
 ]
 
+/**
+ * v14 — « je prends toujours cette sauce avec ce plat ».
+ *
+ * ⚠️ À NE PAS CONFONDRE AVEC `recipe_sauce` DU CATALOGUE, qui vit dans l'autre fichier. Le catalogue
+ * PROPOSE (`Recipe.sauceIds`, éditorial, remplacé à chaque mise à jour) ; cette table-ci enregistre
+ * ce que L'UTILISATEUR a choisi, et rien ne doit jamais écrire dans l'une en croyant toucher
+ * l'autre. Une sauce prise dans la section « Autres sauces » se choisit tout autant qu'une sauce
+ * attachée : le lien de l'utilisateur ne dérive pas de celui du catalogue.
+ *
+ * ⚠️ PAR PLAT, PAS PAR CRÉNEAU. La variante `(plan_id, jour, creneau, sauce_id)` a été écartée : une
+ * sauce retenue est une préférence durable, valable pour toutes les semaines à venir, régénérations
+ * comprises. La clé par créneau aurait obligé à re-choisir la même sauce à chaque plan, et aurait
+ * perdu le choix au premier « régénérer ma semaine ».
+ *
+ * ⚠️ PAS DE `CHECK` NI DE FK sur les deux colonnes : elles désignent des recettes de `catalog.db`,
+ * un autre fichier — SQLite ne contraint pas entre bases (voir l'en-tête). Un id devenu inconnu
+ * après une mise à jour du catalogue s'ignore en silence, à la lecture, comme partout ailleurs.
+ */
+const V14_STATEMENTS: readonly string[] = [
+  `CREATE TABLE user_recipe_sauce (
+     recipe_id       TEXT NOT NULL,
+     sauce_recipe_id TEXT NOT NULL,
+     PRIMARY KEY (recipe_id, sauce_recipe_id)
+   )`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -717,6 +743,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 11, statements: V11_STATEMENTS },
   { version: 12, statements: V12_STATEMENTS },
   { version: 13, statements: V13_STATEMENTS },
+  { version: 14, statements: V14_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

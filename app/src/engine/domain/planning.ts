@@ -182,6 +182,18 @@ export interface ShoppingOptions {
   readonly pantryFoodIds?: readonly FoodId[]
   /** Réaffiche sel, poivre et épices, écartés par défaut (`Food.fondDePlacard`). */
   readonly inclureFondDePlacard?: boolean
+  /**
+   * Les sauces que l'utilisateur prend TOUJOURS avec un plat : plat → sauces (`user_recipe_sauce`,
+   * v14). Leurs ingrédients entrent dans la liste chaque fois que le plat est prévu.
+   *
+   * ⚠️ CE N'EST PAS `Recipe.sauceIds`. Le catalogue PROPOSE des sauces, l'utilisateur en CHOISIT ;
+   * seul le second achète. Lire `sauceIds` ici mettrait la sauce au poivre dans les courses de
+   * quiconque prévoit un poulet rôti, sans que personne ne l'ait demandé.
+   *
+   * ⚠️ ABSENT = AUCUNE SAUCE, et non « toutes celles du catalogue ». Le moteur ne connaît pas
+   * `user.db` : ce que l'appelant n'apporte pas n'existe pas ici.
+   */
+  readonly saucesParRecette?: ReadonlyMap<RecipeId, readonly RecipeId[]>
 }
 
 export interface ShoppingListItem {
@@ -207,6 +219,15 @@ export interface ShoppingListItem {
    * Le manque ne se voyait pas — la liste avait l'air complète.
    */
   readonly pourSlots: readonly SlotRef[]
+  /**
+   * Les sauces retenues qui demandent cet aliment. Vide dans l'écrasante majorité des cas.
+   *
+   * ⚠️ UNE PROVENANCE DE PLUS, PAS UN REMPLACEMENT DE `pourSlots`. Un même aliment peut venir à la
+   * fois d'un plat et d'une sauce — l'échalote du bourguignon et celle de la sauce au poivre
+   * s'additionnent dans la même ligne. L'écran doit pouvoir dire d'où sort la quantité, sinon une
+   * ligne gonflée par une sauce passe pour une erreur de calcul.
+   */
+  readonly pourSauces: readonly RecipeId[]
 }
 
 export interface ShoppingList {

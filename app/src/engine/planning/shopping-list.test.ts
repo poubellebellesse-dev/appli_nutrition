@@ -82,6 +82,126 @@ describe('planning/shopping-list — agrégation', () => {
   })
 })
 
+/**
+ * Les sauces retenues par l'utilisateur (`ShoppingOptions.saucesParRecette`, v14).
+ *
+ * ⚠️ FIXTURES MONTÉES À LA MAIN, jamais dérivées du catalogue réel : un oracle qui partage la donnée
+ * de son sujet ne vérifie rien (PIEGES.md). Le catalogue ci-dessous porte un plat, une sauce, et un
+ * aliment COMMUN aux deux — c'est ce dernier qui rend visible le cumul et la double provenance.
+ */
+describe('planning/shopping-list — les sauces retenues', () => {
+  const AVEC_SAUCE = (): Catalog =>
+    makeCatalog(
+      [
+        makeRecipe('roti', {
+          ingredients: [makeIngredient('boeuf', { quantiteG: 900 }), makeIngredient('echalote', { quantiteG: 30 })],
+        }),
+        // Pas de `estSauce: true` : `makeRecipe` ne l'expose pas, et `buildShoppingList` ne le lit
+        // pas — il verse ce que `saucesParRecette` lui désigne, sans redemander au catalogue si
+        // c'en est une. Le filtre « c'est bien une sauce » est en amont, sur l'écran qui l'a fait
+        // retenir. Le nom de la recette suffit donc à la lisibilité de ces cas.
+        makeRecipe('sauce_poivre', {
+          ingredients: [makeIngredient('creme', { quantiteG: 100 }), makeIngredient('echalote', { quantiteG: 20 })],
+        }),
+      ],
+      [food('boeuf', 'viandes'), food('creme', 'lait et produits laitiers'), food('echalote', 'légumes')]
+    )
+
+  const RETENUE = new Map<RecipeId, readonly RecipeId[]>([
+    ['roti' as RecipeId, ['sauce_poivre' as RecipeId]],
+  ])
+
+  it('⛔ n’achète AUCUNE sauce sans l’option — le moteur ne connaît pas `user.db`', () => {
+    // `saucesParRecette` absent veut dire « aucune sauce retenue », pas « toutes celles du
+    // catalogue ». C'est aussi ce qui garantit que la v14 ne change rien pour qui n'a rien choisi.
+    const liste = buildShoppingList(plan([entree('2026-08-03', 'diner', 'roti')]), AVEC_SAUCE())
+    expect(liste.items.map((i) => i.foodId)).not.toContain('creme')
+  })
+
+  it('verse les ingrédients de la sauce retenue, et les CUMULE avec ceux du plat', () => {
+    const liste = buildShoppingList(plan([entree('2026-08-03', 'diner', 'roti')]), AVEC_SAUCE(), {
+      saucesParRecette: RETENUE,
+    })
+    expect(liste.items.find((i) => i.foodId === 'creme')!.quantiteTotale).toBe(100)
+    // 30 g pour le rôti + 20 g pour la sauce : une seule ligne, pas deux.
+    expect(liste.items.find((i) => i.foodId === 'echalote')!.quantiteTotale).toBe(50)
+    expect(liste.items.filter((i) => i.foodId === 'echalote')).toHaveLength(1)
+  })
+
+  it('dit la PROVENANCE : `pourSauces` à côté de `pourSlots`, pas à sa place', () => {
+    const liste = buildShoppingList(plan([entree('2026-08-03', 'diner', 'roti')]), AVEC_SAUCE(), {
+      saucesParRecette: RETENUE,
+    })
+    const echalote = liste.items.find((i) => i.foodId === 'echalote')!
+    // L'échalote vient des DEUX : sans les deux champs, une ligne gonflée par une sauce passe pour
+    // une erreur de calcul.
+    expect(echalote.pourSlots).toHaveLength(1)
+    expect(echalote.pourSauces).toEqual(['sauce_poivre'])
+
+    const boeuf = liste.items.find((i) => i.foodId === 'boeuf')!
+    expect(boeuf.pourSauces).toEqual([])
+  })
+
+  it('⛔ LA SAUCE D’UN RESTE NE SE RACHÈTE PAS — la boucle est SOUS le garde `isLeftover`', () => {
+    // Le piège exact de ce lot : verser les sauces au-dessus du garde aurait fait racheter la sauce
+    // à chaque repas d'un plat cuisiné une seule fois, annulant le gain des restes sur une ligne.
+    const avecReste = plan([
+      entree('2026-08-03', 'diner', 'roti'),
+      entree('2026-08-04', 'dejeuner', 'roti', true),
+      entree('2026-08-05', 'dejeuner', 'roti', true),
+    ])
+    const liste = buildShoppingList(avecReste, AVEC_SAUCE(), { saucesParRecette: RETENUE })
+
+    expect(liste.items.find((i) => i.foodId === 'creme')!.quantiteTotale).toBe(100)
+    expect(liste.items.find((i) => i.foodId === 'echalote')!.quantiteTotale).toBe(50)
+  })
+
+  it('la même sauce sur deux plats se cite UNE fois par ligne, mais s’achète deux fois', () => {
+    const catalog = makeCatalog(
+      [
+        makeRecipe('roti', { ingredients: [makeIngredient('echalote', { quantiteG: 30 })] }),
+        makeRecipe('poisson', { ingredients: [makeIngredient('echalote', { quantiteG: 10 })] }),
+        makeRecipe('sauce_poivre', { ingredients: [makeIngredient('echalote', { quantiteG: 20 })] }),
+      ],
+      [food('echalote', 'légumes')]
+    )
+    const surLesDeux = new Map<RecipeId, readonly RecipeId[]>([
+      ['roti' as RecipeId, ['sauce_poivre' as RecipeId]],
+      ['poisson' as RecipeId, ['sauce_poivre' as RecipeId]],
+    ])
+    const liste = buildShoppingList(
+      plan([entree('2026-08-03', 'diner', 'roti'), entree('2026-08-04', 'diner', 'poisson')]),
+      catalog,
+      { saucesParRecette: surLesDeux }
+    )
+    const echalote = liste.items.find((i) => i.foodId === 'echalote')!
+    // Deux sauces à préparer, donc 30 + 10 + 20 + 20 = 80 g d'échalote à acheter…
+    expect(echalote.quantiteTotale).toBe(80)
+    // …mais une seule mention de provenance : « Sauce au poivre, Sauce au poivre » ne dit rien.
+    expect(echalote.pourSauces).toEqual(['sauce_poivre'])
+  })
+
+  it('un id de sauce inconnu du catalogue s’ignore en silence, jamais une erreur', () => {
+    // Une mise à jour du catalogue peut retirer une recette que `user.db` cite encore. `user.db`
+    // n'a aucune clé étrangère vers le catalogue — c'est le cas NORMAL, pas une anomalie.
+    const disparue = new Map<RecipeId, readonly RecipeId[]>([['roti' as RecipeId, ['sauce_fantome' as RecipeId]]])
+    const liste = buildShoppingList(plan([entree('2026-08-03', 'diner', 'roti')]), AVEC_SAUCE(), {
+      saucesParRecette: disparue,
+    })
+    expect(liste.items.find((i) => i.foodId === 'echalote')!.quantiteTotale).toBe(30)
+  })
+
+  it('le garde-manger s’applique AUSSI aux ingrédients d’une sauce', () => {
+    // Une seule implémentation du versement pour le plat et pour ses sauces : sans ça, la crème
+    // déclarée au frigo serait retirée du plat et rachetée pour la sauce.
+    const liste = buildShoppingList(plan([entree('2026-08-03', 'diner', 'roti')]), AVEC_SAUCE(), {
+      saucesParRecette: RETENUE,
+      pantryFoodIds: ['creme' as FoodId],
+    })
+    expect(liste.items.map((i) => i.foodId)).not.toContain('creme')
+  })
+})
+
 describe('planning/shopping-list — rayon', () => {
   const foods = new Map<FoodId, Food>()
   const ajoute = (f: Food) => {
