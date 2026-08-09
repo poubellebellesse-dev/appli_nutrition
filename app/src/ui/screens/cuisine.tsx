@@ -45,6 +45,7 @@ import {
   type StoredCuisineTimer,
 } from '../../data/user-store.js'
 import { ordonnancerCuissons } from '../../engine/cuisine/ordonnancement.js'
+import { dureeEcouleeMin } from '../../engine/cuisine/duree.js'
 import { chargerSocle } from '../socle.js'
 import type { PlatACuisiner } from '../router.js'
 import { hashDeRecette } from '../router.js'
@@ -108,10 +109,11 @@ function cleMinuteur(recetteId: string, ordre: number): string {
   return `${recetteId}#${ordre}`
 }
 
-/** Ce que `ordonnancerCuissons` a besoin de savoir d'une recette : sa durée totale. */
-function dureeTotaleMin(recette: Recipe): number {
-  return recette.tempsPrepMin + recette.tempsCuissonMin
-}
+// ⛔ `dureeTotaleMin` A ÉTÉ RETIRÉE D'ICI, elle rendait `tempsPrepMin + tempsCuissonMin` et cet
+// écran la passait à `ordonnancerCuissons` : le coq au vin partait 115 min avant le service au lieu
+// de 12 h 55. Ce qu'il faut ici est `dureeEcouleeMin` (`engine/cuisine/duree.ts`), qui ajoute les
+// repos chiffrés. ⚠️ NE PAS LA RÉÉCRIRE À CÔTÉ : l'autre durée existe encore et sert ailleurs, elle
+// est juste sans objet pour décider d'une heure de départ.
 
 /** Le minuteur qui sonne, ou qui vient de sonner. Porte SA recette — voir `cleMinuteur`. */
 interface MinuteurVise {
@@ -235,7 +237,7 @@ export function Cuisine({
           enCuisine.map((p) => ({
             recipeId: p.recette.id,
             nom: p.recette.nom,
-            dureeMin: dureeTotaleMin(p.recette),
+            dureeMin: dureeEcouleeMin(p.recette),
           }))
         )
         const tries = ordre.departs.flatMap((d) => {

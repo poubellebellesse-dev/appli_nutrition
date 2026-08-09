@@ -5,13 +5,21 @@
 // ici formalisée pour être vérifiable et pour départager les égalités sans ambiguïté.
 //
 // ⚠️ NIVEAU DE FIDÉLITÉ VOLONTAIREMENT LIMITÉ, à ne pas dépasser sans en rediscuter :
-//   1. Le calcul porte sur la DURÉE TOTALE PAR RECETTE (`tempsPrepMin + tempsCuissonMin`, fournie
-//      par l'appelant), jamais étape par étape. Le module ne regarde aucune étape individuelle.
-//   2. Le module NE CONNAÎT PAS le matériel (casseroles, four, thermomix) : cette donnée n'existe
-//      nulle part dans le catalogue. Deux plats qui réclament le même four au même instant ne sont
-//      pas détectés.
+//   1. Le calcul porte sur la DURÉE ÉCOULÉE PAR RECETTE, fournie par l'appelant, jamais étape par
+//      étape. Le module ne regarde aucune étape individuelle.
+//   2. Le module NE CONNAÎT PAS le matériel (casseroles, four, thermomix). Deux plats qui réclament
+//      le même four au même instant ne sont pas détectés. ⚠️ La donnée EXISTE désormais
+//      (`Recipe.equipements`, 1 473 couples dont 357 `requis`) mais elle est déclarée PAR RECETTE,
+//      pas par étape : rien n'y dit *quand* le four est occupé, donc rien ne permet de réserver un
+//      créneau. Ne pas conclure de sa présence qu'il ne reste qu'à la lire.
 //   3. Le module NE DISTINGUE PAS temps actif et temps passif : il n'entrelace rien. Une marinade de
 //      deux heures compte comme deux heures pleines, comme une cuisson surveillée.
+//
+// ⛔ `dureeMin` EST LA DURÉE ÉCOULÉE, PLUS LA DURÉE ACTIVE — ce module recevait la mauvaise jusqu'au
+// 2026-08-09. Il n'avait rien de faux : c'est ce qu'on lui donnait qui l'était. `tempsPrepMin +
+// tempsCuissonMin` ne compte AUCUN repos, si bien qu'un coq au vin de 12 h de marinade était annoncé
+// « à lancer 115 min avant le service ». La distinction et son calcul vivent dans `./duree.ts` ; s'y
+// reporter avant de toucher à ce contrat, elle a un versant qu'il ne faut surtout pas fusionner.
 //
 // ⚠️ AUCUNE HORLOGE. Tout est en minutes relatives avant le service (`departAvantServiceMin`),
 // jamais en horodatages — même discipline que `ui/cuisine-session.ts`. C'est l'écran qui convertit
@@ -24,7 +32,12 @@ import type { RecipeId } from '../domain/index.js'
 export interface CuissonAOrdonnancer {
   readonly recipeId: RecipeId
   readonly nom: string
-  /** `tempsPrepMin + tempsCuissonMin`, calculé par l'appelant. Entier >= 0. */
+  /**
+   * La durée ÉCOULÉE, `dureeEcouleeMin(recette)` — active + repos chiffrés. Entier >= 0.
+   *
+   * ⛔ PAS `tempsPrepMin + tempsCuissonMin`. Cette somme-là répond à « ai-je le temps ce soir »,
+   * pas à « quand dois-je m'y mettre », et la donner ici fait partir en retard de tout le repos.
+   */
   readonly dureeMin: number
 }
 

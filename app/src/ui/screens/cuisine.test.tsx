@@ -21,6 +21,7 @@ import { readCuissons, writeCuisson } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 import { hashDeRecette } from '../router.js'
 import type { RecipeId } from '../../engine/domain/index.js'
+import { dureeEcouleeMin } from '../../engine/cuisine/duree.js'
 
 vi.mock('../catalog-source.js', () => ({
   chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
@@ -672,6 +673,32 @@ describe('cuisine — la barre d’onglets (plusieurs plats)', () => {
     const boutons = within(nav).getAllByRole('button')
     expect(boutons[0]?.textContent).toContain(long.nom)
     expect(boutons[1]?.textContent).toContain(court.nom)
+  })
+
+  it('⛔ L’ORDRE SUIT LA DURÉE ÉCOULÉE, PAS LA DURÉE ACTIVE — le défaut que L1 répare', async () => {
+    // ⚠️ CE TEST EST LE SEUL DE CE FICHIER OÙ LES DEUX DURÉES DONNENT DES RÉPONSES CONTRAIRES, et
+    // c'est tout son intérêt. Le test précédent compare Chakchouka et Coq au vin : le coq est le
+    // plus long des deux dans les DEUX comptes, il resterait vert avec le calcul fautif.
+    //
+    // Ici le pudding de chia demande 6 min de travail et 8 h de prise au froid ; la chakchouka
+    // demande 45 min et aucun repos. Avec `tempsPrepMin + tempsCuissonMin`, la chakchouka passait
+    // devant et le pudding était annoncé « à lancer 6 min avant le service » — servi liquide.
+    const cat = catalogueDeTest()
+    const pudding = cat.recipes.get('pudding_chia_cacao_poire' as RecipeId)
+    const chak = cat.recipes.get(CHAKCHOUKA as RecipeId)
+    if (pudding === undefined || chak === undefined) throw new Error('recettes de test introuvables')
+
+    // Les deux prémisses sont VÉRIFIÉES, pas supposées : un lot de contenu qui chiffrerait la prise
+    // du pudding autrement doit faire échouer ce test franchement, pas le rendre vide de sens.
+    const actif = (r: typeof chak): number => r.tempsPrepMin + r.tempsCuissonMin
+    expect(actif(pudding)).toBeLessThan(actif(chak))
+    expect(dureeEcouleeMin(pudding)).toBeGreaterThan(dureeEcouleeMin(chak))
+
+    await monterPlusieurs(chak.id, pudding.id)
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    const boutons = within(nav).getAllByRole('button')
+    expect(boutons[0]?.textContent).toContain(pudding.nom)
+    expect(boutons[1]?.textContent).toContain(chak.nom)
   })
 
   it('le plat AFFICHÉ est celui du lien, même s’il n’est pas premier dans la barre', async () => {
