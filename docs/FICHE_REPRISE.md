@@ -33,13 +33,18 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
                                                                                           ⬅ ICI
 ```
 
-✅ **SUITE VERTE EN ENTIER — RÉEXÉCUTÉE LE 2026-08-09 À 14h20 SUR L'ARBRE COMPLET**, les quatre lots
-des sauces inclus.
-`npm test` → **1 940 passed / 0 failed**, **96 fichiers**, en 52,3 s · `npm run typecheck` propre ·
-`npx vite build` ✓ (3,42 s) · `npm run engine:plan-stress` → **20/20, PLUS AUCUN SIGNAL**.
-✅ **REJOUÉE À 14h35, arbre complet, lot « nom de portion » inclus** : `npm test` → **1 941 passed /
-0 failed**, 96 fichiers, en 33,6 s · typecheck propre · `vite build` ✓ (2,94 s) ·
-`engine:plan-stress` **20/20**.
+✅ **SUITE VERTE EN ENTIER — DERNIER RELEVÉ LE 2026-08-09 AU SOIR, SUR L'ARBRE COMMITÉ** (`c457694`,
+lot « sauces » ①②③④ inclus, reconstruit) :
+`npm test` → **1 901 passed / 0 failed**, **97 fichiers**, en 30,2 s · `npm run typecheck` propre ·
+`npx vite build` ✓ (2,84 s) · `npm run engine:plan-stress` → **20/20**.
+⚠️ **L'écart avec le 1 856 de `CLAUDE.md` est attribué par `git diff --name-only`, pas déduit** : le
+lot sauces a ajouté ses tests dans `api/index.test.ts`, `recettes.test.tsx`, `courses.test.tsx`,
+`detail-recette.test.tsx` et `editeur-recette.test.tsx` ; le reste vient des autres lanes du jour.
+
+⛔ **LES TROIS RELEVÉS QUI SUIVENT SONT DE L'HISTOIRE DU 2026-08-09 APRÈS-MIDI, PAS UN ÉTAT** — ils
+restent parce que chacun porte une leçon d'attribution qui se repaierait.
+✅ 14h20, **1 940 passed**, 96 fichiers, 52,3 s · ✅ 14h35, **1 941 passed**, lot « nom de portion »
+inclus.
 ⛔ **LE « +1 » A ÉTÉ ATTRIBUÉ À LA MAUVAISE SESSION, ET C'EST L'EXEMPLE À GARDER.** La ligne
 ci-dessus disait « le test de plus vient de la session sauces » ; **il vient du mode cuisine**, qui
 avait relevé **1 941 à 14h23**, donc AVANT le lot « nom de portion » de 14h35. C'est le test unique
@@ -55,6 +60,12 @@ réapparaît sans explication, c'est ailleurs qu'il faut chercher.** ▶ **Le re
 portion » est celui-là** : **1 823 passed / 0 failed**, 96 fichiers, en 29,2 s · typecheck propre ·
 `vite build` ✓ (2,73 s) · `engine:plan-stress` **20/20** · `node catalog/build.mjs` → **2 809 liens,
 1 312/1 407 gestes (93,2 %)**.
+⚠️ **LE `git stash` N'EXPLIQUE PAS LA DISPARITION DE ②③④.** Vérifié à la reconstruction : le stash
+`d3a5c37a` contenait le rendu de `SaucesAAjouter` dans `detail-recette.tsx` et un morceau de
+`choisir-plat.tsx` — **rien de ②, ③ ni ④**, dont `git log --all -S` ne trouvait aucune trace nulle
+part. Deux histoires distinctes le même après-midi, et les confondre a fait chercher un `stash` à
+restaurer pendant qu'il fallait construire. **Le contrôle qui les sépare est `git log --all -S`,
+pas la mémoire de la journée.**
 ⚠️ **Les comptes d'aliments et de recettes datent du 2026-08-08 et n'ont pas bougé** : **451
 aliments, 308 recettes** (dont **3 sauces**), 1 425 étapes, 62 gestes, 73 tips, 8 fiches. ⛔ **En
 revanche 4 recettes YAML ONT été éditées le 2026-08-09** (texte d'étapes, aucun nombre ajouté) et
@@ -117,23 +128,23 @@ juste ne suffit pas** — c'est le fait à retenir, pas le nombre : le manque é
 le compte exact disait *marge zéro*, pas *il manque un plat*. Détail :
 [archive/RECAP_SESSION_2026-08-07_recettes-aliments.md](./archive/RECAP_SESSION_2026-08-07_recettes-aliments.md) §2.
 
-⛔ **LE LOT « SAUCES » N'EST PAS FERMÉ — UN QUART l'est, et cette ligne a annoncé les quatre.**
-Rectifié le 2026-08-09 au soir. **Livré** : l'axe séparé (décision 62) — 3 recettes de sauce et
-14 attachements au catalogue, `engine/domain/sauces.ts`, `Engine.suggestSauces` avec son garde-fou
-allergènes. **Pas livré** : la préférence durable et les courses (`user_recipe_sauce`, v14), le
-bouton « Sauces (N) », « la cuisiner avec le plat », les sauces perso dans l'éditeur. Et le panneau
-« Ajouter une sauce » de la fiche recette **est écrit mais jamais rendu** — `lireLesSauces` appelle
-le moteur à chaque ouverture et le résultat est jeté.
-⚠️ **Ce n'est pas du code perdu par accident : il n'a jamais été commité.** `git log --all -S` sur
-chacun de ces identifiants ne trouve que deux commits de **documentation**. La lane a écrit son
-récit et pas son code. ⛔ **La règle qui en sort, et elle vaut pour toutes les lanes : aucun ✅ ici
-sans `git log --all -S` sur un identifiant du code concerné.** Un compte de tests vert ne prouve
-rien — celui de 1 940 était vrai sur un arbre qui n'existe plus.
-▶ **Spécification complète, pièges compris, en `ETAT.md` §8** ; les décisions en §3, valides et
-inchangées. Le récit archivé
+✅ **LE LOT « SAUCES » EST FERMÉ — ①②③④, RECONSTRUIT ET COMMITÉ LE 2026-08-09 AU SOIR.** Le panneau
+« Ajouter une sauce » de la fiche est **rendu** (`e2a5596`) ; la préférence durable et les courses
+sont là (`user_recipe_sauce`, **v14**, `f6a65d5`) ; le bouton « Sauces (N) » et la section de sauce
+des courses aussi (`fea703f`) ; « la cuisiner avec le plat » (`c2917b0`) ; les sauces perso dans
+l'éditeur (`30a4964`, `c457694`).
+⛔ **CE N'EST PAS LA MÊME LIGNE QUE CELLE DU MATIN, ET LA DIFFÉRENCE EST LA SEULE QUI COMPTE.** La
+précédente annonçait les quatre points sur un arbre où `git log --all -S` ne trouvait que deux
+commits de **documentation** : la lane avait écrit son récit et pas son code. **La règle qui en
+sort, et elle vaut pour toutes les lanes : aucun ✅ ici sans `git log --all -S` sur un identifiant
+du code concerné.** Un compte de tests vert ne prouve rien — celui de 1 940 était vrai sur un arbre
+qui n'existe plus. Les identifiants et leur commit sont listés un par un en `ETAT.md` §8.
+▶ **Détail, écarts assumés et six pièges en `ETAT.md` §8** ; les décisions en §3 — dont une
+**corrigée** : la section de sauce des courses est en rangements « Repas » **ET** « Jour », pas en
+« Repas » seul. Le récit archivé
 ([archive/RECAP_SESSION_2026-08-09_sauces.md](./archive/RECAP_SESSION_2026-08-09_sauces.md))
-**décrit un travail absent de l'arbre** — il reste en place, un instantané daté ne se réécrit
-jamais, mais il ne se lit pas comme un état.
+**décrit un travail qui, à sa date, était absent de l'arbre** — il reste en place, un instantané
+daté ne se réécrit jamais, mais il ne se lit pas comme un état.
 
 **Ce qui reste n'est plus du code d'écran.** Trois chantiers, par ordre de dépendance :
 

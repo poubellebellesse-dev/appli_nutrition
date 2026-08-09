@@ -504,11 +504,12 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   MESURÉ** — le premier essai visait le mauvais réglage (Android au lieu de Chrome). Compte rendu
   complet : `CONCEPTION_MODE_CUISINE.md` §7.
 
-> ⚠️ **LES SIX LIGNES QUI SUIVENT SONT DES DÉCISIONS, PAS UN ÉTAT DE LIVRAISON.** Elles restent
-> valides et n'ont pas bougé ; mais le présent qu'elles emploient (« `pourSauces` est disjoint »,
-> « v14 ») décrit ce qui **doit** être, pas ce qui **est**. **Ce qui est réellement livré se lit en
-> §8**, et au 2026-08-09 seul l'axe séparé l'est. Confondre les deux est précisément ce qui a fait
-> déclarer ce lot fermé pendant deux jours.
+> ✅ **LES LIGNES QUI SUIVENT SONT DES DÉCISIONS, ET DEPUIS LE 2026-08-09 AU SOIR ELLES SONT AUSSI
+> L'ÉTAT.** Le présent qu'elles emploient (« `pourSauces` est disjoint », « v14 ») décrivait ce qui
+> **devait** être ; ①②③④ sont livrés et vérifiés commit par commit, voir §8. ⚠️ **Ne pas relire cet
+> avertissement comme une garantie permanente** : ce qui est réellement livré se lit en §8, jamais
+> ici. Confondre les deux est exactement ce qui a fait déclarer ce lot fermé pendant deux jours
+> alors que son code n'existait dans aucun commit.
 >
 > ⚠️ **DEUX DÉCISIONS PORTENT LE NUMÉRO 62, et il faut le savoir avant de suivre une référence.**
 > La 62 du tableau §4 (barrée, fermée le 2026-08-07) est « 23 recettes n'ont aucune facette
@@ -554,16 +555,27 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   jamais confondre `Recipe.sauceIds` et `user_recipe_sauce`** : le catalogue **propose**,
   l'utilisateur **choisit**. Acheter sur la proposition mettrait au panier les ingrédients de toutes
   les sauces suggérées de la semaine.
-- **Les sauces n'ont de catégorie propre QUE dans le rangement « Repas » des courses** (2026-08-09,
-  décision utilisateur : « ajouter sauces dans courses dans la catégorie repas, sinon traité comme
-  les autres »). En « Rayon » et en « Jour », un ingrédient de sauce est un article comme un autre —
-  un yaourt de sauce se prend à la crèmerie avec les autres yaourts. **Motif** : les six rayons
-  comptent le nombre de fois qu'on traverse un magasin, pas des familles d'aliments ; en sortir les
-  sauces ferait revenir sur ses pas. En vue « repas » la question n'est plus « où est-ce dans le
-  magasin » mais « à quoi ça sert », et là la sauce est bien une catégorie. ⚠️ **`pourSlots` et
-  `pourSauces` sont DISJOINTS sur `ShoppingListItem`** : un citron réclamé par le plat ET par sa
-  sauce est rangé une fois sous chacun, jamais deux fois sous le même titre. ⚠️ **La boucle des
-  sauces est SOUS le garde `isLeftover`** — un reste ne se rachète pas (§7.3), sa sauce non plus.
+- **Les sauces ont une catégorie propre dans les rangements « Repas » ET « Jour » des courses, pas
+  en « Rayon »** (2026-08-09, décision utilisateur : « ajouter sauces dans courses dans la catégorie
+  repas, sinon traité comme les autres » — **étendue à « Jour » le 2026-08-09 au soir, décision
+  utilisateur, sur mesure**). En « Rayon », un ingrédient de sauce est un article comme un autre :
+  un yaourt de sauce se prend à la crèmerie avec les autres yaourts. **Motif du rayon** : les six
+  rayons comptent le nombre de fois qu'on traverse un magasin, pas des familles d'aliments ; en
+  sortir les sauces ferait revenir sur ses pas. En « Repas » la question n'est plus « où est-ce dans
+  le magasin » mais « à quoi ça sert », et là la sauce est bien une catégorie.
+  ⚠️ **« TRAITÉ COMME LES AUTRES » N'EST PAS ATTEIGNABLE EN « JOUR », ET C'EST CE QUI A ÉTENDU LA
+  DÉCISION.** Mesuré, pas supposé : `grouper()` (`courses.tsx`) itère `pourSlots`, et un article de
+  sauce porte `pourSlots: []` — une sauce n'est pas planifiée, elle suit son plat. Sans section, ces
+  articles sont **achetés, comptés dans le total, et affichés dans AUCUNE section** : ils
+  disparaissent en silence. Il n'existe pas de bucket « les autres » où les faire retomber en
+  « Jour ». Le rayon, lui, range par `aisle` et n'a pas ce trou.
+  ⚠️ **`pourSlots` et `pourSauces` sont DISJOINTS sur `ShoppingListItem`** : un citron réclamé par le
+  plat ET par sa sauce est rangé une fois sous chacun, jamais deux fois sous le même titre.
+  ⚠️ **La boucle des sauces est SOUS le garde `isLeftover`** — un reste ne se rachète pas (§7.3), sa
+  sauce non plus. ⚠️ **Elle passe en SECONDE PASSE**, après celle des repas : `Map` conserve l'ordre
+  d'insertion, donc les sections de sauce se rangent en pied de liste, là où l'on va chercher ce qui
+  n'appartient à aucun repas (même parti que `ArticlesAjoutes` — « les ranger sous un repas
+  inventerait une provenance »).
 
 ### Média, stockage & modèle
 - **Gestes de cuisine** : boucle WebP 3 s pour les gestes simples ; **3 clips MP4 de 3 s**
@@ -1073,12 +1085,38 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   `condiments`. La première est plus juste, la seconde plus petite ; les deux demandent de rejouer
   `engine:plan-stress` et le banc d'exclusion.
 
-- ⛔ **LE LOT « SAUCES » N'EST PAS LIVRÉ — SEUL ① L'EST, ET CETTE ENTRÉE A ANNONCÉ LE CONTRAIRE
-  PENDANT DEUX JOURS.** Rectifié le 2026-08-09 au soir. Elle disait « FERMÉ EN ENTIER — ①, ②, ③
-  ET ④ », avec quatre ✅ et un relevé vert de 1 940 tests. **Le code de ②, ③ et ④ n'existe nulle
-  part dans ce dépôt, et n'a jamais existé dans aucun commit.**
+- ✅ **LE LOT « SAUCES » EST LIVRÉ — ①②③④, ET CHAQUE POINT EST PROUVÉ PAR UN `git log --all -S`.**
+  Reconstruit et commité le 2026-08-09 au soir, après que cette même entrée eut annoncé le contraire
+  pendant deux jours (voir « ce qui s'était passé » plus bas — la leçon est conservée, elle a coûté
+  un lot entier).
 
-  **Mesuré, pas supposé** — c'est exactement le contrôle qui avait manqué :
+  **Preuve, la seule qui vaille ici** — un identifiant de code par point, trouvé dans *ce* commit :
+  ```
+  ① user_recipe_sauce · readSaucesChoisies · saucesParRecette · pourSauces  → f6a65d5
+  ② saucesSeules      · recettesSauces     · nomSauce                       → fea703f
+  ③ hrefCuisiner                                                            → c2917b0
+  ④ estSauce (SaisieRecette) · QuestionNature                               → 30a4964, c457694
+  Phase 1 : <SaucesAAjouter rendu dans le JSX                               → e2a5596
+  USER_SCHEMA_VERSION = 14 (migration comprise)                             → f6a65d5
+  ```
+  **Relevé pris sur l'arbre commité** (2026-08-09, `c457694`) : `npm test` **1 901 passed / 0 failed
+  (97 fichiers)** · `npm run typecheck` propre · `npx vite build` ✓ (2,84 s) ·
+  `npm run engine:plan-stress` **20/20**.
+
+  ⚠️ **Trois écarts de ce lot par rapport à ce que cette entrée spécifiait, tous assumés et
+  arbitrés** — les laisser tacites reproduirait exactement la dérive du 7 août :
+  1. **La section « sauce » des courses est en « Repas » ET en « Jour »**, alors que §3 disait
+     « Repas uniquement ». Motif mesuré et décision utilisateur du 2026-08-09 au soir : §3 est
+     corrigée, pas contournée.
+  2. **③ n'a coûté AUCUN changement de schéma** — la v13 portait déjà tout (`SousVue.cuisine` avec
+     sa liste, `hashDeLaCuisine(id, portions, avec[])`, `ordonnancerCuissons`). Cette entrée l'avait
+     chiffré comme une migration `user.db`. **Remesurer une dette avant de la payer.**
+  3. **④ a livré, en plus de la question, une bande « Un plat / Une sauce » modifiable en tête de
+     formulaire** — la seconde moitié du sixième piège ci-dessous, qui aurait été oubliée sans lui.
+
+  **CE QUI S'ÉTAIT PASSÉ, à ne pas effacer.** L'entrée disait « FERMÉ EN ENTIER — ①, ②, ③ ET ④ »,
+  avec quatre ✅ et un relevé vert de 1 940 tests, alors que le code de ②, ③ et ④ n'existait dans
+  **aucun commit du dépôt**. Mesuré à la rectification :
   ```
   USER_SCHEMA_VERSION = 13                                    (l'entrée annonçait v14)
   user_recipe_sauce · readSaucesChoisies · setSauceChoisie
@@ -1094,55 +1132,57 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   `git log --all -S` sur un identifiant du code concerné.** Un compte de tests vert ne prouve rien —
   celui de 1 940 était vrai sur un arbre qui n'a jamais été poussé.
 
-  **CE QUI EST RÉELLEMENT LÀ** (lot ①, `d85fc42`, vérifié dans l'arbre) : le catalogue — 3 recettes
-  de sauce, 14 attachements plat→sauce, 10 aliments `sous_groupe: sauce` — `engine/domain/sauces.ts`,
-  `Engine.suggestSauces` avec ses exclusions et son garde-fou allergènes, et les champs de domaine
-  `Recipe.estSauce` / `porteDejaUneSauce` / `sauceIds`. **Les fondations moteur sont saines** : ce
-  qui manque est au-dessus d'elles, pas dedans.
+  **LES FONDATIONS** (lot ①, `d85fc42`) : le catalogue — 3 recettes de sauce, 14 attachements
+  plat→sauce, 10 aliments `sous_groupe: sauce` — `engine/domain/sauces.ts`, `Engine.suggestSauces`
+  avec ses exclusions et son garde-fou allergènes, et les champs de domaine `Recipe.estSauce` /
+  `porteDejaUneSauce` / `sauceIds`. Elles n'avaient jamais bougé ; tout ce qui suit est **au-dessus**
+  d'elles.
 
-  **CE QUI RESTE À CONSTRUIRE, ET QUI VAUT SPÉCIFICATION.** Les décisions de §3 sont valides et
-  n'ont pas bougé ; ce qui suit en est la traduction en travail, y compris les pièges que la lane
-  disparue avait identifiés — ils sont conservés parce qu'ils coûteront la même chose à quiconque
-  reconstruira, et perdus ils se repaieront.
-  - **① la préférence durable** — table `user_recipe_sauce (recipe_id, sauce_recipe_id)`, schéma
-    **v14** + migration, `readSaucesChoisies`/`setSauceChoisie`, option
-    `ShoppingOptions.saucesParRecette` et champ `ShoppingListItem.pourSauces`, pour qu'une sauce
-    retenue entre dans les courses chaque fois que son plat est prévu.
-  - **② la visibilité** — bouton « Sauces (N) » dans l'écran Recettes (`BrowseRequest.saucesSeules`,
-    exclusif avec « Mes favoris ») et section par sauce dans les courses **en rangement « Repas »
-    uniquement**. ⚠️ La boucle des sauces va **sous** le garde `isLeftover` : un reste ne se rachète
-    pas, sa sauce non plus.
-  - **③ cuisiner la sauce avec le plat** — un bouton par ligne de sauce, qui remplit la **même liste
-    `avec`** que « cuisiner avec un autre plat ». Aucun second chemin à construire : la v13 a déjà
-    livré ce qu'il faut (`SousVue.cuisine` porte une LISTE, `hashDeLaCuisine(id, portions, avec[])`
-    la transporte, `ordonnancerCuissons` fait partir la plus longue en premier — une sauce de 5 min
-    finit d'elle-même à la fin). ⚠️ **CE POINT A ÉTÉ CHIFFRÉ ICI COMME UN CHANGEMENT DE SCHÉMA
-    `user.db` ALORS QU'IL COÛTE UN BOUTON** — remesurer une dette avant de la payer, surtout à
-    plusieurs lanes dans le même dépôt.
-  - **④ les sauces perso** — l'éditeur demande **avant le formulaire** « un plat ou une sauce ? »,
-    et `problemes()` cesse d'exiger un créneau **pour une sauce seulement**. Sans cette exception,
-    la règle et la décision 62 se contredisent et **aucune sauce perso n'est enregistrable**.
-    ⚠️ **La moitié de ④ est déjà acquise par ① et ça ne se voit pas d'ici** : « attacher une sauce à
-    une recette perso » ne demande rien, `suggestSauces` rendant déjà toutes les sauces dans
-    `autres` et une recette perso étant une recette comme une autre dans le panneau.
+  **CE QUI A ÉTÉ CONSTRUIT PAR-DESSUS**, dans l'ordre des commits :
+  - **① la préférence durable** (`f6a65d5`) — table `user_recipe_sauce (recipe_id, sauce_recipe_id)`,
+    schéma **v14** + migration, `readSaucesChoisies`/`setSauceChoisie`, option
+    `ShoppingOptions.saucesParRecette` et champ `ShoppingListItem.pourSauces` : une sauce retenue
+    entre dans les courses chaque fois que son plat est prévu.
+  - **② la visibilité** (`fea703f`) — bouton « Sauces (N) » dans l'écran Recettes
+    (`BrowseRequest.saucesSeules`, **exclusif** avec « Mes favoris », qui gagne) et section par sauce
+    dans les courses **en rangements « Repas » ET « Jour »** (voir §3, et l'écart n° 1 ci-dessus).
+    ⚠️ La boucle des sauces va **sous** le garde `isLeftover` : un reste ne se rachète pas, sa sauce
+    non plus. ⚠️ Le titre d'une section de sauce est le **nom de la sauce, seul** — pas d'article à
+    accorder, et les titres de repas contiennent tous un « · » quand ceux des sauces jamais.
+  - **③ cuisiner la sauce avec le plat** (`c2917b0`) — un lien par ligne de sauce, qui remplit la
+    **même liste `avec`** que « cuisiner avec un autre plat ». Aucun second chemin : la v13 portait
+    déjà tout. ⚠️ Le lien **n'apparaît que si le plat a au moins une étape `geste`** (`cuisinable`) —
+    sinon il ouvrirait un mode cuisine sans rien à y faire. Aucune recette du catalogue n'est à la
+    fois saucable et sans geste (0 ligne en SQL sur `catalog.db`) : **ce garde n'est pas couvert par
+    une donnée réelle**, il l'est par un test monté à la main.
+  - **④ les sauces perso** (`30a4964`, `c457694`) — l'éditeur demande **avant le formulaire** « un
+    plat ou une sauce ? », et `problemes()` cesse d'exiger un créneau **pour une sauce seulement** ;
+    sans cette exception, la règle et la décision 62 se contredisent et aucune sauce perso n'est
+    enregistrable. La réponse **reste affichée et modifiable** en tête de formulaire, et basculer
+    vers « une sauce » **vide `typesRepas`**. `StoredUserRecipe.estSauce` est **facultatif**,
+    `schemaVersion` **reste à 1** (piège 3 ci-dessous). ⚠️ « Attacher une sauce à une recette perso »
+    n'a rien demandé : ① l'avait déjà livré, `suggestSauces` rendant toutes les sauces dans `autres`
+    et une recette perso étant une recette comme une autre.
 
-  **LES SIX PIÈGES À NE PAS REDÉCOUVRIR** (conservés du travail perdu ; les trois derniers sont
-  rapportés par `archive/RECAP_SESSION_2026-08-09_sauces.md` et **non vérifiables dans cet arbre**,
-  puisque le code qu'ils décrivent n'y est pas) :
+  **LES SIX PIÈGES, MAINTENANT PAYÉS OU VÉRIFIÉS** — conservés parce qu'ils se repaieraient à
+  l'identique, et parce que le sixième est tombé pendant la reconstruction, exactement comme annoncé :
   1. ⛔ **Les deux boutons d'une ligne de sauce sont DEUX décisions et doivent le rester** : celui du
      haut est durable (`user_recipe_sauce`, on l'achète toutes les semaines), celui du bas meurt au
      démontage de la fiche. **Les fusionner ferait ACHETER une sauce à qui voulait seulement la
-     préparer ce soir.** À verrouiller par test dans les deux sens.
+     préparer ce soir.** ✅ Verrouillé **dans les deux sens** par `detail-recette.test.tsx` :
+     « SENS 1 — cuisiner la sauce ce soir n'écrit RIEN dans les courses » et « SENS 2 — retenir la
+     sauce pour les courses ne change pas ce lien ».
   2. ⛔ **Ne jamais confondre `Recipe.sauceIds` et `user_recipe_sauce`** : le catalogue **propose**,
      l'utilisateur **choisit**. `sauceIds` **RESTE VIDE** sur une recette perso — les mêler ferait
      s'effondrer la distinction précisément là où elle porte.
-  3. ⚠️ **`schemaVersion` de la recette perso RESTE À 1**, les champs sont optionnels sur la forme
-     stockée. `analyserAvecMotif` REFUSE net toute autre version avec un message à l'écran : passer
-     à 2 rendrait illisible chaque recette perso déjà enregistrée **et** ferait rejeter par une
-     version antérieure tout `.nutri-recipe` exporté par celle-ci (§8.7). Absent se lit `undefined`,
-     donc « un plat, rien de dit sur sa sauce » — exactement ce que voulaient dire les entrées
-     écrites avant le lot. ⛔ **Ne pas confondre avec `USER_SCHEMA_VERSION`**, qui lui doit passer
-     à 14 : ce sont deux versions différentes, l'une du fichier échangé, l'autre de la base locale.
+  3. ⚠️ **`schemaVersion` de la recette perso RESTE À 1** — respecté : `StoredUserRecipe.estSauce`
+     est **facultatif**. `analyserAvecMotif` REFUSE net toute autre version avec un message à
+     l'écran : passer à 2 rendrait illisible chaque recette perso déjà enregistrée **et** ferait
+     rejeter par une version antérieure tout `.nutri-recipe` exporté par celle-ci (§8.7). Absent se
+     lit `undefined`, donc « un plat, rien de dit sur sa sauce » — verrouillé par le test « une
+     recette perso enregistrée AVANT la question reste un plat ». ⛔ **Ne pas confondre avec
+     `USER_SCHEMA_VERSION`**, passé à **14** : ce sont deux versions différentes, l'une du fichier
+     échangé, l'autre de la base locale.
   4. ⚠️ **La garantie de la décision 62 s'applique à UN SEUL endroit, `versRecette`**, qui force
      `typesRepas: []` et `service: null` sur une sauce ; la forme stockée garde la saisie telle
      quelle. Deux points d'application finiraient par diverger, et c'est `versRecette` qui construit
@@ -1151,32 +1191,38 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
      symétrique** : cochée → `true`, décochée → **`null`, jamais `false`**. `null` veut dire
      « personne n'a tranché » et laisse la dérivation par les ingrédients attraper une recette perso
      au ketchup ; `false` affirmerait « je certifie qu'il n'y a pas de sauce », ce que ne pas cocher
-     une case ne dit pas. **`user-recipe.ts:207-208` fige aujourd'hui `estSauce: false` et
-     `porteDejaUneSauce: null` EN DUR** — c'est là qu'il faudra ouvrir.
-  6. ⛔ **Une question posée AVANT le formulaire casse le parcours guidé.** « Composer » ouvre sur
-     `#/composer`, donc sur la question, et sa première bulle n'a plus rien à désigner : l'invariant
-     « au moins une étape résout toujours » tombe au rouge, attrapé par `parcours.test.tsx` et **pas
-     par la relecture**. Le remède connu : porter `data-visite="titre-composer"` sur le titre de la
-     question aussi. **Toute question déplacée en amont d'un écran se vérifie contre les ancres de
-     son parcours.** Et le type choisi doit rester **affiché et modifiable** en haut du formulaire,
-     y compris sur une recette rouverte des mois plus tard — sinon on enferme quelqu'un dans un
-     choix fait une fois.
+     une case ne dit pas. ✅ **`estSauce` est ouvert** (④) ; **`porteDejaUneSauce` reste figé à
+     `null` dans `versRecette`, et c'est volontaire** — aucune case ne le demande à l'écran, et
+     `null` est justement ce que veut dire « personne n'a tranché ». La case reste à construire le
+     jour où l'on voudra le `true`. **Ne pas la câbler sur `false`.**
+  6. ⛔ **Une question posée AVANT le formulaire casse le parcours guidé — ET C'EST ARRIVÉ.**
+     Annoncé ici, tombé au rouge le 2026-08-09 en écrivant ④, attrapé par `parcours.test.tsx` et
+     **par rien d'autre** : « Composer » ouvre sur `#/composer`, donc sur la question, et la
+     première bulle n'avait plus rien à désigner. Remède appliqué : `data-visite="titre-composer"`
+     porté **aussi** par le titre de la question ; les étapes suivantes se sautent tant que la
+     nature n'est pas tranchée, comportement prévu par `parcours.ts`. **Toute question déplacée en
+     amont d'un écran se vérifie contre les ancres de son parcours.** La seconde moitié du piège —
+     le type doit rester **affiché et modifiable** en haut du formulaire, y compris sur une recette
+     rouverte des mois plus tard — a été livrée par `c457694`.
 
-- ⛔ **`SaucesAAjouter` EST ÉCRIT ET N'EST TOUJOURS PAS RENDU — le défaut « un champ déclaré n'est
-  pas un champ branché », et l'entrée qui le décrivait s'est déclarée corrigée à tort.** État
-  **mesuré le 2026-08-09 au soir sur `HEAD`** : le composant existe (`detail-recette.tsx:774`),
-  l'interface `VueSauces` (l.85) et `LienSauce` (l.849) aussi, le chargement `lireLesSauces` (l.112)
-  est **appelé l.191 à chaque ouverture de fiche** et remplit `vue.sauces` — et **`<SaucesAAjouter`
-  n'apparaît nulle part dans le JSX**. Le moteur est interrogé, sa réponse est jetée. La section
-  « Ajouter une sauce » n'a jamais existé à l'écran.
-  ⛔ **CETTE ENTRÉE DISAIT « Corrigé, et verrouillé par `describe('detail-recette — le panneau
-  « Ajouter une sauce » (v14)')` ». CE `describe` N'EXISTE PAS** : `detail-recette.test.tsx` ne
-  contient **pas une seule occurrence du mot « sauce »**. Un correctif annoncé avec le nom de son
-  propre test de non-régression, alors que ni l'un ni l'autre n'était dans l'arbre — c'est la forme
-  la plus coûteuse de la dérive de ce document, parce qu'elle éteint le soupçon.
-  ⚠️ **Rien d'automatique ne pouvait le signaler** : le typecheck est content d'un champ rempli et
-  jamais lu. **La leçon n'est pas « mieux relire »** — c'est qu'un lot d'interface sans un seul test
-  d'écran ne prouve rien de ce qu'il annonce, et qu'un ✅ se confronte au code avant d'être écrit.
+- ✅ **`SaucesAAjouter` EST RENDU** (`e2a5596`, 2026-08-09) — quatrième occurrence fermée du défaut
+  « un champ déclaré n'est pas un champ branché ». Le composant, `VueSauces`, `LienSauce` et le
+  chargement `lireLesSauces` existaient tous ; **`<SaucesAAjouter` n'apparaissait nulle part dans le
+  JSX**. Le moteur était interrogé à chaque ouverture de fiche et sa réponse jetée. La section
+  « Ajouter une sauce » n'avait jamais existé à l'écran.
+  ⛔ **CE QUE CETTE ENTRÉE A COÛTÉ, à garder.** Elle a d'abord annoncé « Corrigé, et verrouillé par
+  `describe('detail-recette — le panneau « Ajouter une sauce » (v14)')` » — **ce `describe`
+  n'existait pas**, et `detail-recette.test.tsx` ne contenait pas une occurrence du mot « sauce ».
+  Un correctif annoncé avec le nom de son propre test de non-régression, ni l'un ni l'autre dans
+  l'arbre : c'est la forme la plus coûteuse de la dérive de ce document, parce qu'elle éteint le
+  soupçon. ⚠️ **Rien d'automatique ne pouvait le signaler** : le typecheck est content d'un champ
+  rempli et jamais lu. **La leçon n'est pas « mieux relire »** — c'est qu'un lot d'interface sans un
+  seul test d'écran ne prouve rien de ce qu'il annonce, et qu'un ✅ se confronte au code avant d'être
+  écrit. ⚠️ **Ce `describe`-là n'a jamais été créé, et ne le sera pas** : le nommer aujourd'hui
+  donnerait raison après coup à une entrée fausse. La couverture réelle vit sous trois autres noms,
+  vérifiables dans l'arbre — `'detail-recette — les sauces à ajouter'`, `'… — retenir une sauce pour
+  les courses (v14)'` et `'… — cuisiner une sauce avec le plat'`, ce dernier portant les deux sens
+  du piège 1 ci-dessus.
 
 - ⚠️ **L'ÉCRAN RECETTES SE RE-REND UNE FOIS DE TROP APRÈS SA PREMIÈRE PEINTURE.** Trouvé le
   2026-08-08 **par accident**, en relevant la mesure d'appareil de la décision 61 — aucun test ne le
