@@ -89,8 +89,7 @@ function Ecran({
   // `useLancerParcours()` (voir `ui/lancer-parcours.tsx`), exactement comme les six autres écrans.
   if (sousVue.type === 'parametres') return <Parametres />
   if (sousVue.type === 'editeur') return <EditeurRecette baseId={sousVue.baseId} />
-  if (sousVue.type === 'cuisine')
-    return <Cuisine recetteId={sousVue.id} portionsDemandees={sousVue.portions} />
+  if (sousVue.type === 'cuisine') return <Cuisine plats={sousVue.plats} />
   if (sousVue.type === 'aliment')
     return <Aliment alimentId={sousVue.id} retour={sousVue.retour} />
   if (onglet === 'aujourdhui') return <Aujourdhui />

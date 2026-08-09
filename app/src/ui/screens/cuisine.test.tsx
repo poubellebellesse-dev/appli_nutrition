@@ -17,8 +17,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { readCuisineSession, writeCuisineSession } from '../../data/user-store.js'
+import { readCuisineSession, readCuissons, writeCuisineSession } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
+import { hashDeRecette } from '../router.js'
+import type { RecipeId } from '../../engine/domain/index.js'
 
 vi.mock('../catalog-source.js', () => ({
   chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
@@ -47,7 +49,15 @@ const CHAKCHOUKA = 'chakchouka'
 
 async function monter(recetteId = CHAKCHOUKA, portionsDemandees: number | null = null) {
   const { Cuisine } = await import('./cuisine.js')
-  const rendu = render(<Cuisine recetteId={recetteId} portionsDemandees={portionsDemandees} />)
+  const rendu = render(<Cuisine plats={[{ id: recetteId, portions: portionsDemandees }]} />)
+  await screen.findByRole('heading', { level: 1 })
+  return rendu
+}
+
+/** Plusieurs plats d'un coup — l'écran les affiche dans l'ordre de départ, pas dans celui-ci. */
+async function monterPlusieurs(...ids: readonly string[]) {
+  const { Cuisine } = await import('./cuisine.js')
+  const rendu = render(<Cuisine plats={ids.map((id) => ({ id, portions: null }))} />)
   await screen.findByRole('heading', { level: 1 })
   return rendu
 }
@@ -367,7 +377,7 @@ describe('cuisine — garde-fous', () => {
 
   it('une recette inconnue ne casse pas l’écran', async () => {
     const { Cuisine } = await import('./cuisine.js')
-    render(<Cuisine recetteId="recette_qui_n_existe_pas" portionsDemandees={null} />)
+    render(<Cuisine plats={[{ id: 'recette_qui_n_existe_pas', portions: null }]} />)
     expect(await screen.findByText('Cette recette est introuvable.')).toBeTruthy()
   })
 })
@@ -619,5 +629,281 @@ describe('cuisine — les quantités sous l’étape', () => {
     expect(fenetre.getByText('6 œufs')).toBeTruthy()
     expect(fenetre.getByText('quelques brins')).toBeTruthy()
     expect(fenetre.getByText('6 tomates')).toBeTruthy()
+  })
+})
+
+// ⚠️ CE BLOC TESTE LE PASSAGE D'UNE RECETTE À PLUSIEURS. `chakchouka` (45 min) et `coq_au_vin`
+// (115 min) sont choisis parce qu'ils portent tous deux CINQ étapes « geste » et un minuteur au
+// même `ordre` (3) — exactement le terrain où `cleMinuteur` doit empêcher la confusion.
+describe('cuisine — la barre d’onglets (plusieurs plats)', () => {
+  it('un seul plat : aucune barre d’onglets', async () => {
+    await monter()
+    // Un onglet unique n'offre aucun choix, il mangerait de la hauteur pour ne rien dire.
+    expect(screen.queryByRole('navigation', { name: 'Plats en cours' })).toBeNull()
+  })
+
+  it('deux plats : la barre porte les deux noms, un seul onglet porte aria-current', async () => {
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    expect(within(nav).getByText('Chakchouka')).toBeTruthy()
+    expect(within(nav).getByText('Coq au vin')).toBeTruthy()
+
+    const actifs = within(nav)
+      .getAllByRole('button')
+      .filter((b) => b.getAttribute('aria-current') === 'true')
+    expect(actifs).toHaveLength(1)
+    // Chakchouka est premier dans le lien : c'est lui l'onglet actif.
+    expect(actifs[0]?.textContent).toContain('Chakchouka')
+  })
+
+  it('⛔ l’ordre des onglets vient du MOTEUR, pas de l’ordre du lien', async () => {
+    // Les durées sont LUES au catalogue, pas codées en dur : un lot de contenu qui les changerait ne
+    // doit pas faire mentir ce test, il doit le faire échouer franchement s'il égalise les deux.
+    const cat = catalogueDeTest()
+    const chak = cat.recipes.get(CHAKCHOUKA as RecipeId)
+    const coq = cat.recipes.get('coq_au_vin' as RecipeId)
+    if (chak === undefined || coq === undefined) throw new Error('recettes de test introuvables')
+    const duree = (r: typeof chak): number => r.tempsPrepMin + r.tempsCuissonMin
+    const [court, long] = duree(chak) <= duree(coq) ? [chak, coq] : [coq, chak]
+    expect(duree(long)).toBeGreaterThan(duree(court))
+
+    await monterPlusieurs(court.id, long.id) // la plus courte en premier dans le LIEN
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    const boutons = within(nav).getAllByRole('button')
+    expect(boutons[0]?.textContent).toContain(long.nom)
+    expect(boutons[1]?.textContent).toContain(court.nom)
+  })
+
+  it('le plat AFFICHÉ est celui du lien, même s’il n’est pas premier dans la barre', async () => {
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    // Coq au vin part en premier dans la barre (plus long) ; Chakchouka, demandé en premier dans le
+    // lien, reste le plat affiché — appuyer sur « Cuisiner pas à pas » depuis la sauce doit montrer
+    // la sauce.
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Chakchouka')
+  })
+
+  it('taper un onglet change le plat affiché', async () => {
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    fireEvent.click(within(nav).getByText('Coq au vin'))
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Coq au vin')
+    expect(screen.getByText(/Étape 1 sur 5/)).toBeTruthy()
+  })
+})
+
+describe('cuisine — l’isolement entre plats', () => {
+  it('avancer l’étape d’un plat ne bouge pas l’autre, et l’avancement survit au retour', async () => {
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    expect(screen.getByText(/Étape 3 sur 5/)).toBeTruthy()
+
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    fireEvent.click(within(nav).getByText('Coq au vin'))
+    expect(screen.getByText(/Étape 1 sur 5/)).toBeTruthy()
+
+    fireEvent.click(within(nav).getByText('Chakchouka'))
+    expect(screen.getByText(/Étape 3 sur 5/)).toBeTruthy()
+  })
+
+  it('« Terminer ce plat » ferme UN plat sans quitter le mode — l’autre reste en base', async () => {
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    for (let i = 0; i < 4; i++) fireEvent.click(screen.getByText('Étape suivante →'))
+    expect(screen.getByText('Terminer ce plat')).toBeTruthy()
+
+    fireEvent.click(screen.getByText('Terminer ce plat'))
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Coq au vin')
+    // Le point : fermer la sauce ne sort pas le rôti du four.
+    const restantes = readCuissons(baseCourante())
+    expect(restantes.map((c) => c.recetteId)).toEqual(['coq_au_vin'])
+  })
+
+  it('terminer le DERNIER plat quitte le mode cuisine — plus aucune cuisson en base', async () => {
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    for (let i = 0; i < 4; i++) fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Terminer ce plat')) // ferme Chakchouka
+
+    for (let i = 0; i < 4; i++) fireEvent.click(screen.getByText('Étape suivante →'))
+    // Un seul plat restant : le libellé n'est plus « ce plat ».
+    fireEvent.click(screen.getByText('Terminer la cuisson'))
+
+    expect(readCuissons(baseCourante())).toEqual([])
+    expect(window.location.hash).toBe(hashDeRecette('coq_au_vin'))
+  })
+})
+
+describe('cuisine — les minuteurs entre plusieurs plats', () => {
+  // ⛔ LE TEST LE PLUS IMPORTANT DU LOT. Les deux recettes portent un minuteur au même `ordre` (3) :
+  // c'est exactement le terrain où deux minuteurs indexés sur `ordre` seul se confondraient.
+  it('⛔ même numéro d’étape sur deux plats : deux minuteurs distincts, indépendants', async () => {
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    expect(screen.getByText(/Étape 3 sur 5/)).toBeTruthy()
+    fireEvent.click(screen.getByText('Lancer le minuteur (10:00)'))
+
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    fireEvent.click(within(nav).getByText('Coq au vin'))
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    expect(screen.getByText(/Étape 3 sur 5/)).toBeTruthy()
+    fireEvent.click(screen.getByText('Lancer le minuteur (15:00)'))
+
+    const cuissons = readCuissons(baseCourante())
+    const chak = cuissons.find((c) => c.recetteId === CHAKCHOUKA)
+    const coq = cuissons.find((c) => c.recetteId === 'coq_au_vin')
+    expect(chak?.minuteurs).toHaveLength(1)
+    expect(coq?.minuteurs).toHaveLength(1)
+    expect(chak?.minuteurs[0]?.finMs).not.toBe(coq?.minuteurs[0]?.finMs)
+
+    // Arrêter celui de Coq au vin (affiché) laisse celui de Chakchouka intact.
+    fireEvent.click(screen.getByText('Arrêter'))
+    const apres = readCuissons(baseCourante())
+    expect(apres.find((c) => c.recetteId === 'coq_au_vin')?.minuteurs).toHaveLength(0)
+    expect(apres.find((c) => c.recetteId === CHAKCHOUKA)?.minuteurs).toHaveLength(1)
+  })
+
+  it('l’onglet d’un plat SANS minuteur n’affiche aucun décompte, celui d’un plat AVEC en affiche un', async () => {
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    const onglet = (nom: string) =>
+      within(screen.getByRole('navigation', { name: 'Plats en cours' })).getByText(nom).closest('button')
+
+    expect(onglet('Chakchouka')?.textContent).not.toMatch(/\d+:\d{2}/)
+    expect(onglet('Coq au vin')?.textContent).not.toMatch(/\d+:\d{2}/)
+
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+
+    expect(onglet('Chakchouka')?.textContent).toMatch(/\d+:\d{2}/)
+    expect(onglet('Coq au vin')?.textContent).not.toMatch(/\d+:\d{2}/)
+  })
+})
+
+// ⚠️ « SI UN MINUTEUR SONNE → FENÊTRE QUI PASSE DEVANT LA RECETTE EN COURS, AVEC UN RENVOI » —
+// demandé nommément par l'utilisateur, écrit dans `cuisine.tsx` (`alarmeSur`, `aiguillage`,
+// `stopperAlarme`, la fenêtre « Changer de plat ? ») et jusqu'ici jamais touché par un test. Non
+// testée, cette fonctionnalité est indiscernable d'une fonctionnalité déclarée mais pas branchée.
+describe('cuisine — l’alarme entre plusieurs plats', () => {
+  it('un minuteur qui sonne sur le plat NON affiché nomme ce plat sur la surface d’alarme', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    fireEvent.click(within(nav).getByText('Coq au vin'))
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Coq au vin')
+
+    await act(async () => {
+      vi.advanceTimersByTime(12 * 60 * 1000 + 2000)
+    })
+
+    const arret = screen.getByRole('button', { name: 'Arrêter l’alarme' })
+    expect(arret.textContent).toContain('Chakchouka')
+  })
+
+  // Le contraste avec le test précédent est le point : le même minuteur, regardé depuis SON plat,
+  // ne se nomme pas — « minuteur terminé » sur l'écran du gratin alors que c'est lui qui sonne.
+  it('un minuteur qui sonne sur le plat déjà AFFICHÉ ne se nomme pas', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+    // On reste sur Chakchouka, le plat affiché.
+
+    await act(async () => {
+      vi.advanceTimersByTime(12 * 60 * 1000 + 2000)
+    })
+
+    const arret = screen.getByRole('button', { name: 'Arrêter l’alarme' })
+    expect(arret.textContent).not.toContain('Chakchouka')
+    expect(arret.textContent).not.toContain('Coq au vin')
+  })
+
+  // ⛔ LE TEST LE PLUS IMPORTANT DU LOT. La claque à l'aveugle qui coupe la sonnerie — le geste pour
+  // lequel cette surface existe — ne doit jamais déplacer, sous peine de faire perdre l'étape en
+  // cours sur l'autre plat.
+  it('⛔ l’appui qui tait l’alarme NE CHANGE PAS de recette affichée', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    fireEvent.click(within(nav).getByText('Coq au vin'))
+
+    await act(async () => {
+      vi.advanceTimersByTime(12 * 60 * 1000 + 2000)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Arrêter l’alarme' }))
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Coq au vin')
+  })
+
+  it('le renvoi se propose APRÈS l’arrêt, dans une fenêtre — « Rester ici » ne bouge pas', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    fireEvent.click(within(nav).getByText('Coq au vin'))
+
+    await act(async () => {
+      vi.advanceTimersByTime(12 * 60 * 1000 + 2000)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Arrêter l’alarme' }))
+
+    const dialogue = within(screen.getByRole('dialog'))
+    expect(dialogue.getByText(/Le minuteur de « Chakchouka » a sonné/)).toBeTruthy()
+    expect(dialogue.getByText('Rester ici')).toBeTruthy()
+
+    fireEvent.click(dialogue.getByText('Rester ici'))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Coq au vin')
+  })
+
+  it('« Aller à … » bascule le plat affiché sur celui qui a sonné', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+
+    const nav = screen.getByRole('navigation', { name: 'Plats en cours' })
+    fireEvent.click(within(nav).getByText('Coq au vin'))
+
+    await act(async () => {
+      vi.advanceTimersByTime(12 * 60 * 1000 + 2000)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Arrêter l’alarme' }))
+    fireEvent.click(within(screen.getByRole('dialog')).getByText(/Aller à Chakchouka/))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Chakchouka')
+  })
+
+  // Sonner sur le plat déjà affiché ne laisse nulle part où renvoyer : la fenêtre ne doit pas
+  // apparaître, le comportement reste celui d'avant le multi-recettes.
+  it('aucune fenêtre de renvoi quand le minuteur sonne sur le plat DÉJÀ affiché', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    await monterPlusieurs(CHAKCHOUKA, 'coq_au_vin')
+    fireEvent.click(screen.getByText('Étape suivante →'))
+    fireEvent.click(screen.getByText('Lancer le minuteur (12:00)'))
+    // On reste sur Chakchouka : rien où aller.
+
+    await act(async () => {
+      vi.advanceTimersByTime(12 * 60 * 1000 + 2000)
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Arrêter l’alarme' }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Chakchouka')
   })
 })

@@ -122,7 +122,7 @@ describe('ui/router — mode cuisine', () => {
   it('porte l’identifiant de la recette qu’on cuisine', () => {
     expect(routeDepuisHash(hashDeLaCuisine('chakchouka'))).toEqual({
       onglet: 'recettes',
-      sousVue: { type: 'cuisine', id: 'chakchouka', portions: null },
+      sousVue: { type: 'cuisine', plats: [{ id: 'chakchouka', portions: null }] },
     })
   })
 
@@ -130,7 +130,7 @@ describe('ui/router — mode cuisine', () => {
     const id = 'recette perso/2026'
     expect(routeDepuisHash(hashDeLaCuisine(id))).toEqual({
       onglet: 'recettes',
-      sousVue: { type: 'cuisine', id, portions: null },
+      sousVue: { type: 'cuisine', plats: [{ id, portions: null }] },
     })
   })
 
@@ -143,7 +143,7 @@ describe('ui/router — mode cuisine', () => {
   it('porte les portions réglées sur la fiche', () => {
     expect(routeDepuisHash(hashDeLaCuisine('chakchouka', 6))).toEqual({
       onglet: 'recettes',
-      sousVue: { type: 'cuisine', id: 'chakchouka', portions: 6 },
+      sousVue: { type: 'cuisine', plats: [{ id: 'chakchouka', portions: 6 }] },
     })
   })
 
@@ -151,8 +151,7 @@ describe('ui/router — mode cuisine', () => {
     expect(hashDeLaCuisine('chakchouka')).not.toContain('portions')
     expect(routeDepuisHash('#/cuisine/chakchouka').sousVue).toEqual({
       type: 'cuisine',
-      id: 'chakchouka',
-      portions: null,
+      plats: [{ id: 'chakchouka', portions: null }],
     })
   })
 
@@ -162,7 +161,7 @@ describe('ui/router — mode cuisine', () => {
   it('⛔ refuse zéro, le négatif, le fractionnaire et le non-numérique', () => {
     for (const brut of ['0', '-2', '2.5', 'beaucoup', '']) {
       const route = routeDepuisHash(`#/cuisine/chakchouka?portions=${brut}`)
-      expect(route.sousVue).toEqual({ type: 'cuisine', id: 'chakchouka', portions: null })
+      expect(route.sousVue).toEqual({ type: 'cuisine', plats: [{ id: 'chakchouka', portions: null }] })
     }
   })
 
@@ -172,8 +171,7 @@ describe('ui/router — mode cuisine', () => {
     const id = 'quoi? du riz'
     expect(routeDepuisHash(hashDeLaCuisine(id, 3)).sousVue).toEqual({
       type: 'cuisine',
-      id,
-      portions: 3,
+      plats: [{ id, portions: 3 }],
     })
   })
 
@@ -187,6 +185,119 @@ describe('ui/router — mode cuisine', () => {
   it('ne se confond pas avec la fiche de la MÊME recette', () => {
     expect(hashDeLaCuisine('x')).not.toBe(hashDeRecette('x'))
     expect(routeDepuisHash(hashDeRecette('x')).sousVue.type).toBe('recette')
+  })
+})
+
+describe('ui/router — mode cuisine, plusieurs plats (&avec=)', () => {
+  it('deux plats font deux entrées, le principal en premier', () => {
+    // L'ordre du hash est celui où on a DÉSIGNÉ les plats — le routeur ne trie rien,
+    // c'est `ordonnancerCuissons` qui décidera l'ordre de cuisson.
+    expect(routeDepuisHash('#/cuisine/roti?avec=sauce').sousVue).toEqual({
+      type: 'cuisine',
+      plats: [
+        { id: 'roti', portions: null },
+        { id: 'sauce', portions: null },
+      ],
+    })
+  })
+
+  it('chaque plat porte SES portions — celles du principal ne débordent pas sur les autres', () => {
+    // « rôti pour 6 » ne dit rien du nombre de parts de la sauce (commentaire de `PlatACuisiner`).
+    expect(routeDepuisHash('#/cuisine/roti?portions=6&avec=sauce:2,gratin').sousVue).toEqual({
+      type: 'cuisine',
+      plats: [
+        { id: 'roti', portions: 6 },
+        { id: 'sauce', portions: 2 },
+        { id: 'gratin', portions: null },
+      ],
+    })
+  })
+
+  it('un doublon avec le plat principal est écarté — le principal garde ses portions', () => {
+    // `ordonnancerCuissons` lève sur un `recipeId` en double et `recette_id` est `UNIQUE` : un lien
+    // recollé sur son propre plat ne doit jamais produire deux entrées pour le même id.
+    expect(routeDepuisHash('#/cuisine/roti?portions=6&avec=roti:2').sousVue).toEqual({
+      type: 'cuisine',
+      plats: [{ id: 'roti', portions: 6 }],
+    })
+  })
+
+  it('un doublon entre deux entrées de « avec » est écarté — la première gagne', () => {
+    expect(routeDepuisHash('#/cuisine/roti?avec=sauce:2,sauce:9').sousVue).toEqual({
+      type: 'cuisine',
+      plats: [
+        { id: 'roti', portions: null },
+        { id: 'sauce', portions: 2 },
+      ],
+    })
+  })
+
+  // Même règle que `?portions=` sur le plat principal : c'est délibérément le même `entierPositif`,
+  // et le plat reste malgré des portions illisibles.
+  it('des portions invalides dans « avec » deviennent null, sans faire disparaître le plat', () => {
+    for (const brut of ['0', '-2', '1.5', 'beaucoup']) {
+      const route = routeDepuisHash(`#/cuisine/roti?avec=sauce:${brut}`)
+      expect(route.sousVue).toEqual({
+        type: 'cuisine',
+        plats: [
+          { id: 'roti', portions: null },
+          { id: 'sauce', portions: null },
+        ],
+      })
+    }
+  })
+
+  // `valeurBrute` existe pour ça : `URLSearchParams` décoderait `%2C`/`%3A` avant le découpage et
+  // scinderait ces identifiants en plats fantômes. L'aller-retour par `hashDeLaCuisine` est le test
+  // qui compte, pas une construction manuelle du hash.
+  it('un identifiant contenant une virgule ou un deux-points survit intact à « avec »', () => {
+    const idAvecVirgule = 'sauce, maison'
+    const hashVirgule = hashDeLaCuisine('roti', undefined, [{ id: idAvecVirgule, portions: null }])
+    expect(routeDepuisHash(hashVirgule).sousVue).toEqual({
+      type: 'cuisine',
+      plats: [
+        { id: 'roti', portions: null },
+        { id: idAvecVirgule, portions: null },
+      ],
+    })
+
+    const idAvecDeuxPoints = 'sauce: maison'
+    const hashDeuxPoints = hashDeLaCuisine('roti', undefined, [{ id: idAvecDeuxPoints, portions: 2 }])
+    expect(routeDepuisHash(hashDeuxPoints).sousVue).toEqual({
+      type: 'cuisine',
+      plats: [
+        { id: 'roti', portions: null },
+        { id: idAvecDeuxPoints, portions: 2 },
+      ],
+    })
+  })
+
+  it('un « avec » vide ou malformé ne casse rien — seul le plat principal reste', () => {
+    for (const hash of ['#/cuisine/roti?avec=', '#/cuisine/roti?avec=,,', '#/cuisine/roti']) {
+      expect(routeDepuisHash(hash).sousVue).toEqual({
+        type: 'cuisine',
+        plats: [{ id: 'roti', portions: null }],
+      })
+    }
+  })
+})
+
+describe('ui/router — hashDeLaCuisine, aller-retour avec plusieurs plats', () => {
+  it('reconstruit portions et plusieurs plats à l’identique', () => {
+    const avec = [
+      { id: 'sauce', portions: 2 },
+      { id: 'gratin', portions: null },
+    ]
+    const hash = hashDeLaCuisine('roti', 6, avec)
+    expect(routeDepuisHash(hash).sousVue).toEqual({
+      type: 'cuisine',
+      plats: [{ id: 'roti', portions: 6 }, ...avec],
+    })
+  })
+
+  it('sans portions ni « avec », le hash reste NU — c’est le lien de reprise', () => {
+    expect(hashDeLaCuisine('roti')).toBe('#/cuisine/roti')
+    expect(hashDeLaCuisine('roti')).not.toContain('?')
   })
 })
 

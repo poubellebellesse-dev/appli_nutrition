@@ -9,7 +9,7 @@
 // supprimer à la lecture ferait dépendre l'état de la base du fait qu'on ait ouvert un écran.
 
 import { useEffect, useState } from 'react'
-import { readCuisineSession, type StoredCuisineSession } from '../data/user-store.js'
+import { readCuissons, type StoredCuisineSession } from '../data/user-store.js'
 import { chargerSocle } from './socle.js'
 import { hashDeLaCuisine } from './router.js'
 import { etatMinuteur, sessionPerimee } from './cuisine-session.js'
@@ -37,19 +37,57 @@ export function resumeDeSession(
   return {
     recetteId: session.recetteId,
     depuis: anciennete(session.ouverteLe, maintenant),
-    minuteursEchus: session.minuteurs.filter((t) => etatMinuteur(t, maintenant).mode === 'termine').length,
+    minuteursEchus: minuteursEchus(session, maintenant),
   }
 }
 
+function minuteursEchus(session: StoredCuisineSession, maintenant: number): number {
+  return session.minuteurs.filter((t) => etatMinuteur(t, maintenant).mode === 'termine').length
+}
+
+/**
+ * Le bandeau quand PLUSIEURS plats cuisent (schéma v13). `autresPlats` compte ceux qu'on ne nomme
+ * pas : le lien les rouvre tous, la barre d'onglets du mode cuisine s'en charge.
+ *
+ * ⛔ CE BANDEAU LISAIT `WHERE id = 1`, ET LA v13 A FAIT SAUTER CE `CHECK`. Le défaut était muet et
+ * il portait sur de la nourriture : ouvrir un rôti (`id = 1`) puis une sauce (`id = 2`), terminer le
+ * rôti, et la sauce continuait de mijoter SANS que le bandeau ne la signale plus jamais. Or ce
+ * bandeau est ce qui remplace la notification d'arrière-plan — il n'y a rien derrière lui.
+ *
+ * ⚠️ ON NOMME CELLE QUI RÉCLAME LA MAIN, pas la première venue : un minuteur échu passe devant tout
+ * le reste. À égalité, la plus anciennement ouverte — c'est celle qu'on risque le plus d'avoir
+ * oubliée. L'ordre est total et reproductible, `recetteId` tranche les ex æquo.
+ */
+export function resumeDesCuissons(
+  cuissons: readonly StoredCuisineSession[],
+  maintenant: number
+): {
+  readonly recetteId: string
+  readonly depuis: string | null
+  readonly minuteursEchus: number
+  readonly autresPlats: number
+} | null {
+  const vivantes = cuissons.filter((c) => !sessionPerimee(c, maintenant))
+  const triees = [...vivantes].sort((a, b) => {
+    const echusA = minuteursEchus(a, maintenant) > 0
+    const echusB = minuteursEchus(b, maintenant) > 0
+    if (echusA !== echusB) return echusA ? -1 : 1
+    if (a.ouverteLe !== b.ouverteLe) return a.ouverteLe - b.ouverteLe
+    return a.recetteId < b.recetteId ? -1 : a.recetteId > b.recetteId ? 1 : 0
+  })
+  const tete = resumeDeSession(triees[0] ?? null, maintenant)
+  return tete === null ? null : { ...tete, autresPlats: vivantes.length - 1 }
+}
+
 export function RepriseCuisine({ nomDeRecette }: { readonly nomDeRecette?: (id: string) => string }) {
-  const [session, setSession] = useState<StoredCuisineSession | null>(null)
+  const [cuissons, setCuissons] = useState<readonly StoredCuisineSession[]>([])
   const [maintenant, setMaintenant] = useState(() => Date.now())
 
   useEffect(() => {
     let vivant = true
     chargerSocle()
       .then((socle) => {
-        if (vivant) setSession(readCuisineSession(socle.db))
+        if (vivant) setCuissons(readCuissons(socle.db))
       })
       .catch(() => {
         /* pas de socle, pas de bandeau : jamais une erreur à l'écran pour ça */
@@ -70,12 +108,12 @@ export function RepriseCuisine({ nomDeRecette }: { readonly nomDeRecette?: (id: 
    * sur l'écran d'accueil pour un bandeau qui n'existe pas serait payé par tout le monde.
    */
   useEffect(() => {
-    if (session === null) return undefined
+    if (cuissons.length === 0) return undefined
     const battement = setInterval(() => setMaintenant(Date.now()), 1000)
     return () => clearInterval(battement)
-  }, [session])
+  }, [cuissons])
 
-  const resume = resumeDeSession(session, maintenant)
+  const resume = resumeDesCuissons(cuissons, maintenant)
   if (resume === null) return null
 
   const nom = nomDeRecette?.(resume.recetteId) ?? resume.recetteId
@@ -86,6 +124,15 @@ export function RepriseCuisine({ nomDeRecette }: { readonly nomDeRecette?: (id: 
     >
       <span className="text-[1.02rem] leading-snug">
         <span className="font-semibold">Reprendre la cuisson</span> — {nom}
+        {/* Le lien ne désigne qu'un plat, mais le mode cuisine rouvre TOUTES les cuissons en base :
+            ce compte annonce ce qu'on va retrouver, il ne promet pas un second lien. */}
+        {resume.autresPlats > 0 && (
+          <span className="text-[0.9rem]">
+            {' '}
+            et {resume.autresPlats} autre{resume.autresPlats > 1 ? 's' : ''} plat
+            {resume.autresPlats > 1 ? 's' : ''}
+          </span>
+        )}
         {resume.depuis !== null && <span className="text-[0.9rem]"> · commencée {resume.depuis}</span>}
         {/* Dire qu'un minuteur est ÉCHU, sans dire depuis quand : l'ancienneté exacte appartient à
             l'écran de cuisine, qui la calcule minuteur par minuteur. Ici, c'est un appel à revenir. */}

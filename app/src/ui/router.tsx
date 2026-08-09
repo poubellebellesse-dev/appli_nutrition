@@ -32,6 +32,19 @@ export type Onglet = 'aujourdhui' | 'semaine' | 'courses' | 'recettes' | 'savoir
  * indépendants, c'est un état impossible à écrire (`{ recetteId: 'x', frigo: true }`) que rien
  * n'empêche. L'union le rend inexprimable.
  */
+/**
+ * Un plat à cuisiner, tel que le hash le transporte.
+ *
+ * `portions` à `null` = aucun choix exprimé pour CE plat — voir `portionsDepuisRequete`. Le plat
+ * ajouté en cours de route n'en porte souvent pas : on l'a désigné dans une liste, pas réglé sur une
+ * fiche. C'est alors le `portionsBase` de la recette qui s'applique, et surtout pas celui du plat
+ * principal : « rôti pour 6 » ne dit rien du nombre de parts de la sauce.
+ */
+export interface PlatACuisiner {
+  readonly id: string
+  readonly portions: number | null
+}
+
 export type SousVue =
   | { readonly type: 'liste' }
   | { readonly type: 'recette'; readonly id: string; readonly origine: OrigineRecette }
@@ -39,9 +52,16 @@ export type SousVue =
   | { readonly type: 'parametres' }
   /** Éditeur de recette. `baseId` non nul = on adapte une recette existante. */
   | { readonly type: 'editeur'; readonly baseId: string | null }
-  /** Mode cuisine, plein écran, sur UNE recette (§5bis ARCHITECTURE). `portions` : voir
-   *  `portionsDepuisRequete` — `null` veut dire « aucun choix exprimé », jamais « 4 ». */
-  | { readonly type: 'cuisine'; readonly id: string; readonly portions: number | null }
+  /**
+   * Mode cuisine, plein écran (§5bis ARCHITECTURE). `plats` en porte UN OU PLUSIEURS — voir
+   * `PlatACuisiner` et `platsDepuisRequete`.
+   *
+   * ⚠️ JAMAIS VIDE. Un hash dont on ne tire aucun plat lisible retombe sur la liste des recettes,
+   * pas sur une cuisine à zéro plat. Le type ne sait pas le dire, mais aucune branche de
+   * `lireRoute` ne construit ce cas — c'est l'invariant que `cuisine.tsx` a le droit de supposer
+   * pour lire `plats[0]` sans garde.
+   */
+  | { readonly type: 'cuisine'; readonly plats: readonly PlatACuisiner[] }
   /**
    * Détail d'un ALIMENT (décision 33). `retour` : le hash d'où l'on vient, `''` quand on ne le sait
    * pas (lien collé, signet). Voir `retourDepuisRequete` — c'est un HASH, pas un mot-clé, et
@@ -197,10 +217,8 @@ export function routeDepuisHash(hash: string): Route {
       const [idBrut, requete] = hash.slice(PREFIXE_CUISINE.length).split('?')
       const id = decodeURIComponent(idBrut ?? '')
       if (id !== '') {
-        return {
-          onglet: 'recettes',
-          sousVue: { type: 'cuisine', id, portions: portionsDepuisRequete(requete) },
-        }
+        const plats = platsDepuisRequete({ id, portions: portionsDepuisRequete(requete) }, requete)
+        return { onglet: 'recettes', sousVue: { type: 'cuisine', plats } }
       }
     } catch {
       /* fragment illisible → liste des recettes */
@@ -254,8 +272,54 @@ const ORIGINES_CONNUES: ReadonlySet<string> = new Set(['aujourdhui', 'recettes',
  * valeur fractionnaire passerait ensuite dans `scaleRecipe` sans que rien ne l'arrête.
  */
 function portionsDepuisRequete(requete: string | undefined): number | null {
-  const brut = new URLSearchParams(requete ?? '').get('portions')
-  if (brut === null) return null
+  // Une seule règle de validité pour les portions, partagée avec `&avec=` : deux copies de ce test
+  // dériveraient, et le hash accepterait d'un côté ce qu'il refuse de l'autre.
+  return entierPositif(new URLSearchParams(requete ?? '').get('portions') ?? '')
+}
+
+/**
+ * Les plats d'une même cuisson : le principal (dans le chemin) suivi de ceux que `&avec=` ajoute.
+ *
+ * Format : `&avec=<id>:<portions>,<id>,…` — les identifiants sont encodés un par un, les portions
+ * facultatives et séparées par `:`.
+ *
+ * ⚠️ LA VALEUR N'EST PAS LUE PAR `URLSearchParams`, et ce n'est pas une négligence. Celui-ci décode
+ * une fois : un identifiant contenant une virgule y arriverait en `%2C`, en ressortirait en `,` et
+ * se scinderait en deux plats fantômes. On découpe donc le fragment BRUT — même précaution que le
+ * split sur `?` juste au-dessus, pour la même raison.
+ *
+ * ⚠️ LES DOUBLONS SONT ÉCARTÉS, et c'est une protection, pas un confort. `ordonnancerCuissons` LÈVE
+ * sur un `recipeId` en double, et `user_cuisine_session.recette_id` est `UNIQUE` : un lien recollé
+ * deux fois, ou un plat ajouté qui se trouve être le plat principal, ferait planter l'écran au lieu
+ * d'ouvrir la cuisine. Le premier gagne, parce que c'est lui qui porte les portions réglées à la main.
+ */
+function platsDepuisRequete(principal: PlatACuisiner, requete: string | undefined): readonly PlatACuisiner[] {
+  const plats: PlatACuisiner[] = [principal]
+  const vus = new Set<string>([principal.id])
+  for (const morceau of valeurBrute(requete, 'avec').split(',')) {
+    if (morceau === '') continue
+    const sep = morceau.indexOf(':')
+    const idBrut = sep === -1 ? morceau : morceau.slice(0, sep)
+    const id = decodeURIComponent(idBrut)
+    if (id === '' || vus.has(id)) continue
+    vus.add(id)
+    plats.push({ id, portions: sep === -1 ? null : entierPositif(morceau.slice(sep + 1)) })
+  }
+  return plats
+}
+
+/** La valeur d'un paramètre SANS décodage, pour les cas où le décodage effacerait un séparateur. */
+function valeurBrute(requete: string | undefined, cle: string): string {
+  const prefixe = `${cle}=`
+  for (const paire of (requete ?? '').split('&')) {
+    if (paire.startsWith(prefixe)) return paire.slice(prefixe.length)
+  }
+  return ''
+}
+
+/** Même règle que `portionsDepuisRequete` : tout ce qui n'est pas un entier ≥ 1 devient `null`. */
+function entierPositif(brut: string): number | null {
+  if (brut === '') return null
   const n = Number(brut)
   return Number.isInteger(n) && n >= 1 ? n : null
 }
@@ -331,10 +395,22 @@ export function hashDuFrigo(): string {
  * C'est le lien de REPRISE : il laisse la session décider, parce qu'une cuisson déjà commencée porte
  * déjà son nombre de portions et qu'un lien ne doit pas l'écraser. Seule la fiche recette, au premier
  * lancement, a une valeur à transmettre.
+ *
+ * `avec` : les plats à cuisiner EN MÊME TEMPS, dans l'ordre où on les a désignés. Cet ordre-là n'est
+ * pas celui où on cuisinera — c'est `ordonnancerCuissons` qui le décide, et il part du plat le plus
+ * long. Le hash transporte un ensemble, pas un programme.
  */
-export function hashDeLaCuisine(id: string, portions?: number): string {
+export function hashDeLaCuisine(id: string, portions?: number, avec: readonly PlatACuisiner[] = []): string {
   const base = `${PREFIXE_CUISINE}${encodeURIComponent(id)}`
-  return portions === undefined ? base : `${base}?portions=${portions}`
+  const parametres: string[] = []
+  if (portions !== undefined) parametres.push(`portions=${portions}`)
+  if (avec.length > 0) {
+    const morceaux = avec.map((p) =>
+      p.portions === null ? encodeURIComponent(p.id) : `${encodeURIComponent(p.id)}:${p.portions}`,
+    )
+    parametres.push(`avec=${morceaux.join(',')}`)
+  }
+  return parametres.length === 0 ? base : `${base}?${parametres.join('&')}`
 }
 
 /**
