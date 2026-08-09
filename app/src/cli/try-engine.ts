@@ -558,6 +558,9 @@ function buildRequest(opts: CliOptions): SuggestionRequest {
       allergies: opts.allergies,
       diet: opts.regime,
       excludedFoodIds: opts.exclus,
+      // Le banc ne déclare aucun matériel : la couche `equipement` doit y rester inerte, sinon
+      // les mesures porteraient sur un catalogue amputé de ses recettes à source de chaleur.
+      ownedEquipmentIds: null,
     },
     context: {
       creneau: opts.slot,

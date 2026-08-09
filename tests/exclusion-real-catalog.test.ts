@@ -139,7 +139,7 @@ describe('selection/exclusion-pass + guards — catalogue réel', () => {
       assertNoDeclaredAllergen(
         new Set(['pates_ail_huile' as RecipeId]),
         catalog,
-        { allergies: ['gluten' as AllergenId], diet: null, excludedFoodIds: [] }
+        { allergies: ['gluten' as AllergenId], diet: null, excludedFoodIds: [], ownedEquipmentIds: null }
       )
     ).toThrow(EngineSafetyError)
   })
@@ -199,7 +199,7 @@ describe('selection/exclusion-pass + guards — catalogue réel', () => {
 
       // Le garde-fou, appelé sur cette même sortie, ne doit jamais lever.
       expect(() =>
-        assertNoDeclaredAllergen(candidates, catalog, { allergies: combo, diet: null, excludedFoodIds: [] })
+        assertNoDeclaredAllergen(candidates, catalog, { allergies: combo, diet: null, excludedFoodIds: [], ownedEquipmentIds: null })
       ).not.toThrow()
 
       combinationsChecked++

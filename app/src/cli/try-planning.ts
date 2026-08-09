@@ -34,7 +34,7 @@ const req: WeekPlanRequest = {
     poidsKg: 62,
     facteurPortion: 1,
   },
-  constraints: { allergies: [], diet: null, excludedFoodIds: [] },
+  constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
   startDate: '2026-08-03',
   days: jours,
   slots: SLOTS,

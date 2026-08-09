@@ -2,7 +2,7 @@
 //
 // Requête de suggestion (docs/ENGINE.md §8.1).
 
-import type { AllergenId, FoodId, RecipeId, TopicId } from './ids.js'
+import type { AllergenId, EquipmentId, FoodId, RecipeId, TopicId } from './ids.js'
 import type { ArchetypeId } from './archetype-ids.js'
 import type { DietCode, MealSlot,
   NutrientVector,
@@ -16,6 +16,29 @@ export interface HardConstraints {
   readonly allergies: readonly AllergenId[]
   readonly diet: DietCode | null
   readonly excludedFoodIds: readonly FoodId[]
+  /**
+   * Le matériel que l'utilisateur DÉCLARE posséder (table `user_equipment`). Lu par la couche
+   * d'exclusion `equipement`, qui écarte une recette dont un équipement `requis` manque à l'appel.
+   *
+   * ⛔ TRI-ÉTAT, ET C'EST TOUT L'ENJEU. `null` = **jamais déclaré** → la couche est INERTE, rien
+   * n'est exclu. `[]` = **déclaré vide**, l'utilisateur affirme ne rien posséder → les recettes à
+   * `requis` tombent. Confondre les deux viderait le catalogue de ses 234 recettes à source de
+   * chaleur pour tout utilisateur n'ayant jamais ouvert l'écran Paramètres — c'est-à-dire tout le
+   * monde au premier lancement. Le précédent exact est `temps.ts` (`availableMin === null` → tout
+   * est conservé) ; même parti que `PiquantTolerance` et que `Recipe.porteDejaUneSauce`.
+   *
+   * ⚠️ ICI ET PAS DANS `MealContext`, à l'inverse de `requiredFoodIds`. L'asymétrie est raisonnée :
+   * `requiredFoodIds` est en contexte pour être structurellement inexprimable dans un plan de
+   * semaine, parce qu'exiger un aliment précis sur 21 créneaux vide le panier. L'équipement est le
+   * cas OPPOSÉ — on veut justement qu'un plan de semaine respecte le four qu'on n'a pas. Un
+   * réglage durable, comme `excludedFoodIds` juste au-dessus.
+   *
+   * ⚠️ REQUIS, ET NON OPTIONNEL. Même raison que `tolerancePiquant` plus bas, et le même prix : le
+   * compilateur désigne les sites de construction au lieu de les laisser omettre le champ en
+   * silence. `user_equipment` existait déjà en base — créée, jamais lue, jamais écrite : la
+   * cinquième occurrence en germe du piège « un champ déclaré n'est pas un champ branché ».
+   */
+  readonly ownedEquipmentIds: readonly EquipmentId[] | null
 }
 
 /** Envies exprimées sur les axes sensoriels (pastilles Léger/Chaud/Salé…, §6.5 ENGINE). */

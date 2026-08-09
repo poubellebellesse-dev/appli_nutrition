@@ -32,7 +32,7 @@ const REPO_ROOT = path.join(__dirname, '..')
 let catalogue: Catalog
 let moteur: Engine
 
-const SANS_CONTRAINTE = { allergies: [], diet: null, excludedFoodIds: [] } as const
+const SANS_CONTRAINTE = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null } as const
 
 /**
  * Le catalogue TEL QUE `browseRecipes` et `searchByPantry` le voient : sans les sauces.
@@ -224,7 +224,7 @@ describe('browseRecipes — filtres de service et d’envergure, hors facette', 
 })
 
 describe('browseRecipes — l’entonnoir et la garantie de sécurité', () => {
-  const AVEC_GLUTEN = { allergies: ['gluten' as AllergenId], diet: null, excludedFoodIds: [] } as const
+  const AVEC_GLUTEN = { allergies: ['gluten' as AllergenId], diet: null, excludedFoodIds: [], ownedEquipmentIds: null } as const
 
   it('NE REND JAMAIS une recette contenant un allergène déclaré', () => {
     // ⚠️ LA propriété qui justifie que `browseRecipes` passe par les couches du moteur plutôt que
@@ -382,7 +382,7 @@ describe('searchByPantry — « vider le frigo » sur le catalogue réel', () =>
     // Même propriété que pour la recherche : un écran qui refiltrerait lui-même finirait par
     // proposer un plat contenant un allergène déclaré.
     const resultat = moteur.searchByPantry({
-      constraints: { allergies: ['gluten' as AllergenId], diet: null, excludedFoodIds: [] },
+      constraints: { allergies: ['gluten' as AllergenId], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
       pantryFoodIds: gardeManger(6),
     })
     for (const match of resultat.matches) {

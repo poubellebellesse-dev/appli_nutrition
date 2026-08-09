@@ -18,11 +18,15 @@ import type {
   CatalogIndexes,
   CourseKind,
   DietCode,
+  Equipment,
+  EquipmentId,
+  EquipmentLevel,
   Food,
   FoodAllergen,
   FoodId,
   Recipe,
   RecipeEnvergure,
+  RecipeEquipment,
   RecipeFacet,
   RecipeId,
   RecipeIngredient,
@@ -103,6 +107,7 @@ export function makeRecipe(
     readonly envergure?: RecipeEnvergure
     /** Decision 35 — `null` = non renseigne, JAMAIS « doux ». */
     readonly piquant?: Recipe['piquant']
+    readonly equipements?: readonly RecipeEquipment[]
   } = {}
 ): Recipe {
   return {
@@ -130,7 +135,17 @@ export function makeRecipe(
     estSauce: false,
     porteDejaUneSauce: null,
     sauceIds: [],
+    equipements: overrides.equipements ?? [],
   }
+}
+
+/** Un couple recette × équipement monté à la main — le niveau est ici, jamais sur `makeEquipment`. */
+export function requiert(code: string, niveau: EquipmentLevel): RecipeEquipment {
+  return { equipmentId: code as EquipmentId, niveau }
+}
+
+export function makeEquipment(code: string): Equipment {
+  return { id: code as EquipmentId, code, terme: code, definition: `définition de ${code}` }
 }
 
 /**
@@ -183,7 +198,11 @@ function buildIndexes(
   }
 }
 
-export function makeCatalog(recipes: readonly Recipe[], foods: readonly Food[] = []): Catalog {
+export function makeCatalog(
+  recipes: readonly Recipe[],
+  foods: readonly Food[] = [],
+  equipment: readonly Equipment[] = [],
+): Catalog {
   const recipeMap = new Map(recipes.map((recipe) => [recipe.id, recipe]))
   const foodMap = new Map(foods.map((food) => [food.id, food]))
 
@@ -196,6 +215,7 @@ export function makeCatalog(recipes: readonly Recipe[], foods: readonly Food[] =
     nutrients: [],
     allergens: new Map(),
     lexicon: new Map(),
+    equipment: new Map(equipment.map((item) => [item.id, item])),
     tips: [],
     evidence: new Map(),
     topics: new Map(),
@@ -225,6 +245,8 @@ export function makeRequest(
     readonly allergies?: readonly string[]
     readonly diet?: DietCode | null
     readonly excludedFoodIds?: readonly string[]
+    /** Absent → `null` (jamais déclaré). `[]` = déclaré vide, ce n'est PAS la même chose. */
+    readonly ownedEquipmentIds?: readonly string[] | null
     readonly requiredFoodIds?: readonly string[]
     readonly pantryFoodIds?: readonly string[]
     readonly creneau?: SuggestionRequest['context']['creneau']
@@ -254,6 +276,12 @@ export function makeRequest(
       allergies: (overrides.allergies ?? []) as readonly AllergenId[],
       diet: overrides.diet ?? null,
       excludedFoodIds: (overrides.excludedFoodIds ?? []) as readonly FoodId[],
+      // `null` par défaut = jamais déclaré → couche `equipement` inerte. Un `[]` par défaut aurait
+      // rendu toutes les fixtures muettes sur le sujet tout en excluant les recettes à `requis`.
+      ownedEquipmentIds:
+        overrides.ownedEquipmentIds === undefined
+          ? null
+          : (overrides.ownedEquipmentIds as readonly EquipmentId[] | null),
     },
     context: {
       creneau: overrides.creneau ?? 'diner',

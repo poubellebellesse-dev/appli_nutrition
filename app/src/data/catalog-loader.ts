@@ -51,6 +51,9 @@ import type {
   Food,
   FoodAllergen,
   FoodId,
+  Equipment,
+  EquipmentId,
+  EquipmentLevel,
   LexiconEntry,
   LexiconEntryId,
   MealSlot,
@@ -206,6 +209,19 @@ interface LexiconRow {
   readonly code: string
   readonly terme: string
   readonly definition: string
+}
+
+interface EquipmentRow {
+  readonly id: string
+  readonly code: string
+  readonly terme: string
+  readonly definition: string
+}
+
+interface RecipeEquipmentRow {
+  readonly recipe_id: string
+  readonly equipment_id: string
+  readonly niveau: string
 }
 
 interface EvidenceSheetRow {
@@ -399,6 +415,16 @@ function loadLexicon(db: SqlSource): Map<LexiconEntryId, LexiconEntry> {
   return map
 }
 
+function loadEquipment(db: SqlSource): Map<EquipmentId, Equipment> {
+  const rows = queryAll<EquipmentRow>(db, 'SELECT * FROM equipment')
+  const map = new Map<EquipmentId, Equipment>()
+  for (const row of rows) {
+    const id = row.id as EquipmentId
+    map.set(id, { id, code: row.code, terme: row.terme, definition: row.definition })
+  }
+  return map
+}
+
 /**
  * Fiches scientifiques de « Comprendre » (§8.2 ARCHITECTURE, §4.7 DESIGN).
  *
@@ -503,6 +529,10 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
     queryAll<RecipeSauceRow>(db, 'SELECT * FROM recipe_sauce ORDER BY recipe_id, sauce_recipe_id'),
     (r) => r.recipe_id
   )
+  const equipmentByRecipe = groupByKey(
+    queryAll<RecipeEquipmentRow>(db, 'SELECT * FROM recipe_equipment ORDER BY recipe_id, equipment_id'),
+    (r) => r.recipe_id
+  )
 
   const map = new Map<RecipeId, Recipe>()
   for (const row of recipeRows) {
@@ -573,6 +603,12 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
       // teste sur `null` d'abord — c'est tout l'intérêt d'avoir trois valeurs plutôt que deux.
       porteDejaUneSauce: row.porte_deja_une_sauce === null ? null : row.porte_deja_une_sauce !== 0,
       sauceIds: (saucesByRecipe.get(row.id) ?? []).map((s) => s.sauce_recipe_id as RecipeId),
+      // Le niveau vient de la LIAISON, pas du référentiel : c'est une propriété du couple
+      // recette × équipement (voir `RecipeEquipment`). La colonne porte un CHECK côté build.
+      equipements: (equipmentByRecipe.get(row.id) ?? []).map((e) => ({
+        equipmentId: e.equipment_id as EquipmentId,
+        niveau: e.niveau as EquipmentLevel,
+      })),
     })
   }
   return map
@@ -710,6 +746,7 @@ export function loadCatalogFrom(db: SqlSource): Catalog {
     nutrients: loadNutrients(db),
     allergens: loadAllergens(db),
     lexicon: loadLexicon(db),
+    equipment: loadEquipment(db),
     tips: loadTips(db),
     evidence: loadEvidence(db),
     topics: new Map(),

@@ -195,6 +195,7 @@ function recetteDeBase(): Recipe {
     estSauce: false,
     porteDejaUneSauce: null,
     sauceIds: [],
+    equipements: [],
   }
 }
 

@@ -207,6 +207,7 @@ export function versRecette(stockee: StoredUserRecipe, foods: ReadonlyMap<FoodId
     estSauce: false,
     porteDejaUneSauce: null,
     sauceIds: [],
+    equipements: [],
   }
 }
 

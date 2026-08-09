@@ -31,6 +31,7 @@ function recette(id: string, prep: number, cuisson: number, nom = id): Recipe {
     estSauce: false,
     porteDejaUneSauce: null,
     sauceIds: [],
+    equipements: [],
   }
 }
 

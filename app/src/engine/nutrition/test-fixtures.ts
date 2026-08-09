@@ -121,6 +121,7 @@ export function makeRecipe(
     estSauce: false,
     porteDejaUneSauce: null,
     sauceIds: [],
+    equipements: [],
   };
 }
 
@@ -151,6 +152,7 @@ export function makeCatalog(
     nutrients,
     allergens: new Map(),
     lexicon: new Map(),
+    equipment: new Map(),
     tips: [],
     evidence: new Map(),
     topics: new Map(),

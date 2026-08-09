@@ -98,6 +98,7 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
     estSauce: false,
     porteDejaUneSauce: null,
     sauceIds: [],
+    equipements: [],
   };
 }
 
@@ -106,6 +107,7 @@ function constraints(allergies: readonly string[]): HardConstraints {
     allergies: allergies as readonly AllergenId[],
     diet: null,
     excludedFoodIds: [],
+    ownedEquipmentIds: null,
   };
 }
 
@@ -120,6 +122,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       nutrients: [],
       allergens: new Map(),
       lexicon: new Map(),
+      equipment: new Map(),
       tips: [],
       evidence: new Map(),
       topics: new Map(),
@@ -150,6 +153,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       nutrients: [],
       allergens: new Map(),
       lexicon: new Map(),
+      equipment: new Map(),
       tips: [],
       evidence: new Map(),
       topics: new Map(),
@@ -176,6 +180,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       nutrients: [],
       allergens: new Map(),
       lexicon: new Map(),
+      equipment: new Map(),
       tips: [],
       evidence: new Map(),
       topics: new Map(),
@@ -198,6 +203,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       nutrients: [],
       allergens: new Map(),
       lexicon: new Map(),
+      equipment: new Map(),
       tips: [],
       evidence: new Map(),
       topics: new Map(),
@@ -222,6 +228,7 @@ describe("guards/assertNoDeclaredAllergen — ceinture de sécurité (§5.2 ARCH
       nutrients: [],
       allergens: new Map(),
       lexicon: new Map(),
+      equipment: new Map(),
       tips: [],
       evidence: new Map(),
       topics: new Map(),

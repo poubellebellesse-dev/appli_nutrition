@@ -130,7 +130,7 @@ function plan(): readonly Config[] {
 function requete(config: Config, lambda: number): SuggestionRequest {
   return {
     profile: PROFIL,
-    constraints: { allergies: [], diet: config.regime, excludedFoodIds: [] },
+    constraints: { allergies: [], diet: config.regime, excludedFoodIds: [], ownedEquipmentIds: null },
     context: {
       creneau: config.creneau,
       date: DATE,

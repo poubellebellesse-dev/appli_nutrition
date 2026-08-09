@@ -28,7 +28,7 @@ const BUILD_SCRIPT = path.join(REPO_ROOT, 'catalog', 'build.mjs')
 function makePlanRequest(profile: WeekPlanRequest['profile'], seed: number): WeekPlanRequest {
   return {
     profile,
-    constraints: { allergies: [], diet: null, excludedFoodIds: [] },
+    constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
     startDate: '2026-08-03',
     days: 7,
     slots: ['petit_dejeuner', 'dejeuner', 'diner'] as readonly MealSlot[],

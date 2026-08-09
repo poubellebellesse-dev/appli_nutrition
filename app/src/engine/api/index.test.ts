@@ -89,6 +89,7 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
     estSauce: false,
     porteDejaUneSauce: null,
     sauceIds: [],
+    equipements: [],
   };
 }
 
@@ -125,6 +126,7 @@ function makeCatalog(): Catalog {
     nutrients: [kcal],
     allergens: new Map(),
     lexicon: new Map(),
+    equipment: new Map(),
     tips: [],
     evidence: new Map(),
     topics: new Map(),
@@ -182,7 +184,7 @@ describe("engine/api — searchByPantry, condiments seuls ne proposent plus rien
     };
   }
 
-  const constraints = { allergies: [], diet: null, excludedFoodIds: [] };
+  const constraints = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null };
 
   it("garde-manger de condiments seuls, sans rapport → aucune recette", () => {
     // Le poivre n'est présent QU'EN OPTIONNEL dans tout le catalogue de test : aucune recette ne
@@ -280,7 +282,7 @@ describe("engine/api — createEngine (§8 ENGINE)", () => {
         niveauActivite: "actif",
         facteurPortion: 1,
       },
-      constraints: { allergies: [], diet: null, excludedFoodIds: [] },
+      constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
       history: { windowDays: 21, entries: [] },
       activeTopics: [],
   tolerancePiquant: null,
@@ -390,6 +392,7 @@ function ferRecipe(id: string, foodId: string): Recipe {
     estSauce: false,
     porteDejaUneSauce: null,
     sauceIds: [],
+    equipements: [],
   };
 }
 
@@ -428,6 +431,7 @@ function makeFerFixture(): FerFixture {
     nutrients: [FER_NUTRIENT],
     allergens: new Map(),
     lexicon: new Map(),
+    equipment: new Map(),
     tips: [],
     evidence: new Map(),
     topics: new Map(),
@@ -482,6 +486,7 @@ function ferRequest(
       allergies: [],
       diet: null,
       excludedFoodIds: overrides.excludedFoodIds ?? [],
+      ownedEquipmentIds: null,
     },
     context: {
       creneau: "diner",
@@ -862,6 +867,7 @@ function makeEnergyFixture(): Catalog {
     nutrients: [energie],
     allergens: new Map(),
     lexicon: new Map(),
+    equipment: new Map(),
     tips: [],
     evidence: new Map(),
     topics: new Map(),
@@ -936,7 +942,7 @@ describe("engine/api — avertissements d'un plan (§6.5)", () => {
       {
         profile: PROFIL_TEST,
         tolerancePiquant: null,
-        constraints: { allergies: [], diet: null, excludedFoodIds: [] },
+        constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
         history: { windowDays: 21, entries: [] },
         activeTopics: [],
         seed: 1,

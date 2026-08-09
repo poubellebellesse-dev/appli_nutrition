@@ -14,6 +14,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type {
   AllergenId,
+  EquipmentId,
   FoodId,
   MealHistoryEntry,
   RecipeId,
@@ -38,6 +39,8 @@ import {
   readActiveTopics,
   readAllergies,
   readConstraints,
+  readOwnedEquipmentIds,
+  writeOwnedEquipmentIds,
   readDiet,
   readDisplay,
   readExcludedFoodIds,
@@ -275,7 +278,29 @@ describe('user-store — profil', () => {
 describe('user-store — contraintes dures', () => {
   it('rend des contraintes vides sur une base neuve, jamais null', () => {
     // Un `HardConstraints` absent obligerait chaque appelant à gérer le cas ; vide est le neutre.
-    expect(readConstraints(db)).toEqual({ allergies: [], diet: null, excludedFoodIds: [] })
+    expect(readConstraints(db)).toEqual({ allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null })
+  })
+
+  it('fait l’aller-retour sur le matériel déclaré', () => {
+    writeOwnedEquipmentIds(db, ['four', 'poele'] as EquipmentId[])
+    expect(readOwnedEquipmentIds(db)).toEqual(['four', 'poele'])
+    expect(readConstraints(db).ownedEquipmentIds).toEqual(['four', 'poele'])
+  })
+
+  it('⛔ table vide → `null`, JAMAIS `[]` — la couche `equipement` doit rester inerte', () => {
+    // Le sens de cette assertion : `[]` signifierait « je ne possède rien », et ferait tomber les
+    // recettes qui exigent une source de chaleur pour quelqu'un qui n'a simplement rien déclaré.
+    expect(readOwnedEquipmentIds(db)).toBeNull()
+
+    writeOwnedEquipmentIds(db, ['four'] as EquipmentId[])
+    writeOwnedEquipmentIds(db, [])
+    expect(readOwnedEquipmentIds(db)).toBeNull()
+  })
+
+  it('REMPLACE la liste entière, sans accumuler', () => {
+    writeOwnedEquipmentIds(db, ['four', 'poele'] as EquipmentId[])
+    writeOwnedEquipmentIds(db, ['wok'] as EquipmentId[])
+    expect(readOwnedEquipmentIds(db)).toEqual(['wok'])
   })
 
   it('fait l’aller-retour sur les allergènes, sévérité comprise', () => {
@@ -474,6 +499,9 @@ describe('user-store — readUserState', () => {
       allergies: ['gluten'],
       diet: 'vegetarien',
       excludedFoodIds: ['coriandre'],
+      // Rien n'a été écrit dans `user_equipment` : `null`, donc la couche `equipement` reste
+      // inerte. Un `[]` ici retirerait à cet utilisateur toutes les recettes à source de chaleur.
+      ownedEquipmentIds: null,
     })
     expect(etat.preferences.get('poulet' as FoodId)).toBe(2)
     expect(etat.favoriteRecipeIds.has('r1' as RecipeId)).toBe(true)

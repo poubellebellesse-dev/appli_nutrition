@@ -20,6 +20,7 @@ import type {
   AllergenId,
   CourseKind,
   DietCode,
+  EquipmentId,
   FoodId,
   HardConstraints,
   MealHistory,
@@ -201,12 +202,47 @@ export function writeExcludedFoodIds(db: UserDb, foodIds: readonly FoodId[]): vo
   })
 }
 
-/** Les trois contraintes dures en une lecture. Vides = aucune contrainte, jamais `null`. */
+/**
+ * Le matériel déclaré. `null` = RIEN EN BASE, et la couche `equipement` reste alors inerte.
+ *
+ * ⚠️ CETTE FONCTION NE SAIT PAS DIRE « déclaré vide ». `user_equipment` ne porte qu'une clé : une
+ * table vide ne distingue pas « l'utilisateur n'a jamais ouvert l'écran » de « il a tout décoché ».
+ * Des deux lectures possibles, on prend délibérément la SÛRE — `null`, donc aucune exclusion. Se
+ * tromper dans l'autre sens retirerait les 234 recettes à source de chaleur à quelqu'un qui n'a
+ * simplement rien dit, c'est-à-dire à tout le monde au premier lancement.
+ *
+ * Aucun écran n'écrit encore cette table, donc « déclaré vide » est aujourd'hui INATTEIGNABLE et
+ * la confusion ne coûte rien. Le jour où des Paramètres permettront de décocher, il faudra un
+ * marqueur de déclaration en base (une ligne `id = 1` datée, patron de `user_diet`) — pas avant :
+ * une migration pour un état que rien ne produit serait de la dette spéculative.
+ */
+export function readOwnedEquipmentIds(db: UserDb): readonly EquipmentId[] | null {
+  const ids = db
+    .all<{ readonly equipment_id: string }>('SELECT equipment_id FROM user_equipment ORDER BY equipment_id')
+    .map((row) => row.equipment_id as EquipmentId)
+  return ids.length === 0 ? null : ids
+}
+
+/** Remplace la liste entière, même raison que `writeAllergies`. */
+export function writeOwnedEquipmentIds(db: UserDb, equipmentIds: readonly EquipmentId[]): void {
+  withTransaction(db, () => {
+    db.run('DELETE FROM user_equipment')
+    for (const equipmentId of equipmentIds) {
+      db.run('INSERT INTO user_equipment (equipment_id) VALUES (?)', [equipmentId])
+    }
+  })
+}
+
+/**
+ * Les contraintes dures en une lecture. Vides = aucune contrainte — sauf `ownedEquipmentIds`, dont
+ * le `null` est porteur de sens (voir `readOwnedEquipmentIds`).
+ */
 export function readConstraints(db: UserDb): HardConstraints {
   return {
     allergies: readAllergies(db).map((a) => a.allergenId),
     diet: readDiet(db),
     excludedFoodIds: readExcludedFoodIds(db),
+    ownedEquipmentIds: readOwnedEquipmentIds(db),
   }
 }
 

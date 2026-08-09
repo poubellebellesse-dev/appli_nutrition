@@ -41,7 +41,7 @@ const CRENEAUX: readonly MealSlot[] = ['petit_dejeuner', 'dejeuner', 'diner']
 
 const req: WeekPlanRequest = {
   profile: FEMME,
-  constraints: { allergies: [], diet: null, excludedFoodIds: [] },
+  constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
   startDate: '2026-08-03',
   days: 7,
   slots: CRENEAUX,

@@ -15,3 +15,4 @@ export type AllergenId = Branded<string, 'AllergenId'>
 export type LexiconEntryId = Branded<string, 'LexiconEntryId'>
 export type TopicId = Branded<string, 'TopicId'>
 export type EvidenceSheetId = Branded<string, 'EvidenceSheetId'>
+export type EquipmentId = Branded<string, 'EquipmentId'>

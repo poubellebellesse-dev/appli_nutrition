@@ -26,6 +26,7 @@ import type {
   LexiconEntryId,
   TopicId,
   EvidenceSheetId,
+  EquipmentId,
 } from './ids.js'
 import type { Grams, Minutes } from './units.js'
 
@@ -400,6 +401,35 @@ export type DietCode = string
  */
 export type RecipeOrigine = 'maison' | 'domaine_public' | 'libre' | 'utilisateur' | 'partagee'
 
+/**
+ * Ce que coûte un équipement à qui ne l'a pas (§6.5 ENGINE). **UN SEUL des trois exclut.**
+ *
+ * - `requis` — INFAISABLE SANS. Un gratin sans source de chaleur n'est pas un gratin plus long,
+ *   il n'existe pas. Seul niveau lu par la couche d'exclusion `equipement`.
+ * - `accelere` — faisable à la main, plus lentement. Un velouté se passe de mixeur : un moulin à
+ *   légumes, un presse-purée ou un tamis font le travail. Critère de score, jamais d'exclusion.
+ * - `informatif` — l'ustensile est nommé pour que la fiche puisse l'afficher, et c'est tout.
+ *   AUCUN effet moteur.
+ *
+ * ⚠️ La discipline est dans la répartition, pas dans la liste. §6.5 avertit que sans la
+ * distinction requis/accéléré, « ne pas posséder de mixeur supprimerait la moitié du catalogue ».
+ * Au catalogue actuel : 326 `requis`, 36 `accelere`, 1 031 `informatif`.
+ */
+export type EquipmentLevel = 'requis' | 'accelere' | 'informatif'
+
+/**
+ * Un équipement cité par une recette, AVEC son niveau.
+ *
+ * ⚠️ Le niveau vit sur le COUPLE, pas sur l'ustensile — c'est pourquoi `Equipment` n'en porte
+ * aucun. Un four est `requis` pour un gratin et `informatif` pour réchauffer une part : la même
+ * enceinte, deux exigences. Poser le niveau sur le référentiel aurait forcé à choisir laquelle
+ * des deux mentir.
+ */
+export interface RecipeEquipment {
+  readonly equipmentId: EquipmentId
+  readonly niveau: EquipmentLevel
+}
+
 export interface Recipe {
   readonly id: RecipeId
   readonly nom: string
@@ -484,6 +514,15 @@ export interface Recipe {
    * `porteDejaUneSauce`, jamais ici. Le build refuse qu'une recette porte les deux à la fois.
    */
   readonly sauceIds: readonly RecipeId[]
+  /**
+   * Le matériel que la recette demande, chacun avec son niveau (§ `RecipeEquipment`).
+   *
+   * Vide = la recette n'exige rien de particulier, et la couche `equipement` ne peut pas l'exclure.
+   * Ce n'est PAS un tri-état : au catalogue, 51 recettes ne portent aucun `requis` et c'est un fait
+   * sur elles, pas une absence de déclaration. Le tri-état est du côté de l'utilisateur —
+   * `HardConstraints.ownedEquipmentIds`, qui distingue « n'a rien déclaré » de « ne possède rien ».
+   */
+  readonly equipements: readonly RecipeEquipment[]
 }
 
 /**
@@ -535,6 +574,20 @@ export interface Tip {
 
 export interface LexiconEntry {
   readonly id: LexiconEntryId
+  readonly code: string
+  readonly terme: string
+  readonly definition: string
+}
+
+/**
+ * Un ustensile du référentiel (`catalog/equipment/*.yaml`, table `equipment`). Même forme que
+ * `LexiconEntry`, et pour la même raison : il faut pouvoir NOMMER et EXPLIQUER l'objet à l'écran.
+ *
+ * ⚠️ AUCUN NIVEAU ICI, volontairement — voir `RecipeEquipment`. Le référentiel dit ce qu'est un
+ * wok ; il ne dit pas s'il est indispensable, parce que ça dépend du plat.
+ */
+export interface Equipment {
+  readonly id: EquipmentId
   readonly code: string
   readonly terme: string
   readonly definition: string
@@ -738,6 +791,8 @@ export interface Catalog {
   readonly nutrients: readonly Nutrient[]
   readonly allergens: ReadonlyMap<AllergenId, Allergen>
   readonly lexicon: ReadonlyMap<LexiconEntryId, LexiconEntry>
+  /** Référentiel des ustensiles (`catalog/equipment/*.yaml`). Le niveau est sur `Recipe.equipements`. */
+  readonly equipment: ReadonlyMap<EquipmentId, Equipment>
   readonly tips: readonly Tip[]
   /** Chapitres de « Comprendre » (§4.7). Sources éditables : `catalog/evidence/*.md`. */
   readonly evidence: ReadonlyMap<EvidenceSheetId, EvidenceSheet>

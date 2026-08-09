@@ -11,15 +11,16 @@
 // aujourd'hui », un objectif présenté comme cible et un code couleur rouge/vert ne le sont pas.
 // Ne jamais ajouter ici de cumul de la journée, de barre de progression, ni de couleur de jugement.
 //
-// PÉRIMÈTRE — ce que §4.6 décrit et qui n'est PAS ici : la photo (zéro sur 241 recettes), la
-// section « Matériel » (le catalogue n'a AUCUNE table équipement — c'est aussi pourquoi la couche
-// `equipement` est inerte depuis P1a), les alternatives d'ingrédients (`suggestAlternatives` exige
+// PÉRIMÈTRE — ce que §4.6 décrit et qui n'est PAS ici : la photo (`imagePath` n'est lu nulle part
+// dans cet écran), les alternatives d'ingrédients (`suggestAlternatives` exige
 // une `SuggestionRequest` complète pour que les substitutions repassent les filtres d'allergènes —
 // un lot, pas un bouton), les notes locales, la roue des goûts, et « Ajouter à ma semaine ».
 
 import { useCallback, useEffect, useState } from 'react'
 import type {
   Catalog,
+  Equipment,
+  EquipmentId,
   HardConstraints,
   Recipe,
   RecipeId,
@@ -357,6 +358,8 @@ export function DetailRecette({
         lienAliment={(foodId) => hashDeLAliment(foodId, hashDeRecette(recetteId, origine))}
       />
 
+      <SectionMateriel equipements={recette.equipements} catalogue={vue.catalogue} />
+
       <h2 className="mt-8 text-[1.5rem] text-texte">Préparation</h2>
 
       {/* L'entrée du mode cuisine (§5bis). Ici et pas en tête de fiche : on le lance au moment de
@@ -620,6 +623,64 @@ function Etape({
         <GestesDeLEtape etape={etape} catalogue={catalogue} />
       </div>
     </li>
+  )
+}
+
+/**
+ * « Matériel » — les ustensiles de la recette, chacun ouvrant sa définition (§4.4 DESIGN).
+ *
+ * ⚠️ AUCUN NIVEAU N'EST AFFICHÉ, et c'est un choix. `requis` / `accelere` / `informatif` pilotent le
+ * moteur ; les montrer ici lirait « il te manque le bon matériel » sur une fiche que l'utilisateur a
+ * ouverte exprès. La liste informe de ce qu'il faut sortir du placard, elle ne trie pas les gens
+ * entre équipés et non équipés (principe 6). L'ordre suit celui du catalogue, sans regroupement.
+ *
+ * La section DISPARAÎT entièrement quand la recette ne déclare rien — pas de « aucun matériel
+ * particulier », qui occuperait une place pour ne rien dire.
+ */
+function SectionMateriel({
+  equipements,
+  catalogue,
+}: {
+  readonly equipements: Recipe['equipements']
+  readonly catalogue: Catalog
+}): React.JSX.Element | null {
+  const [ouvert, setOuvert] = useState<EquipmentId | null>(null)
+
+  // Un équipement cité mais absent du référentiel n'a ni nom ni définition à montrer : on le saute
+  // plutôt que d'afficher son identifiant. Le build refuse déjà ce cas, ceci couvre un `catalog.db`
+  // plus ancien que le référentiel.
+  const lignes = equipements
+    .map((equipement) => catalogue.equipment.get(equipement.equipmentId))
+    .filter((equipement): equipement is Equipment => equipement !== undefined)
+
+  if (lignes.length === 0) return null
+
+  const detail = ouvert === null ? undefined : catalogue.equipment.get(ouvert)
+
+  return (
+    <section className="mt-8">
+      <h2 className="text-[1.5rem] text-texte">Matériel</h2>
+      <ul className="mt-3 flex flex-wrap gap-2">
+        {lignes.map((equipement) => (
+          <li key={equipement.id}>
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => setOuvert(equipement.id)}
+              className="min-h-tactile rounded-[0.7rem] border border-bordure bg-fond px-3 text-[0.95rem] text-texte-doux"
+            >
+              {equipement.terme}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {detail !== undefined && (
+        <Panneau titre={detail.terme} onFermer={() => setOuvert(null)}>
+          <p className="text-[1rem] leading-relaxed text-texte">{detail.definition}</p>
+        </Panneau>
+      )}
+    </section>
   )
 }
 
