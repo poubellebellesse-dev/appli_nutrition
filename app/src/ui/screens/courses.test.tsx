@@ -933,4 +933,59 @@ describe('courses — une sauce retenue s’achète avec son plat (v14)', () => 
     await monter()
     expect(lignesAffichees()).toEqual(avant)
   })
+
+  /**
+   * ② La sauce a sa propre SECTION hors du rangement « rayon ».
+   *
+   * ⛔ CE TEST FERME UN DÉFAUT QUE ① AVAIT OUVERT. Un ingrédient qui ne vient que d'une sauce a
+   * `pourSlots` VIDE — la sauce n'est pas au plan, elle suit son plat. Les rangements « repas » et
+   * « jour » itèrent sur `pourSlots` : cet article était donc acheté, compté dans le total, et
+   * affiché dans AUCUNE section. Le symptôme exact que le reste de cet écran combat déjà (« un
+   * article qui disparaît en silence est un défaut pire que celui qu'on voit et qu'on barre »).
+   */
+  it('⛔ rangement « Repas » : aucun article de sauce ne disparaît, et sa section porte le nom de la sauce', async () => {
+    // `vinaigrette_moutarde` PLUTÔT QUE `sauce_poivre`, et c'est ce qui donne des dents au test : les
+    // quatre ingrédients achetables de la sauce au poivre (échalote, beurre, bouillon, crème) sont
+    // déjà demandés par des plats du plan engendré, donc aucun n'a `pourSlots` vide et l'assertion
+    // serait verte sans le correctif. La moutarde, elle, ne vient QUE de la vinaigrette.
+    const { plan } = await avecUnPlan()
+    setSauceChoisie(baseCourante(), premierPlatCuisine(plan), 'vinaigrette_moutarde' as RecipeId, true)
+    await monter()
+
+    const parRayon = new Set(lignesAffichees())
+    expect([...parRayon].some((l) => l.includes('Moutarde'))).toBe(true)
+
+    fireEvent.click(screen.getByText('Repas'))
+    await waitFor(() => expect(screen.getByText('Repas').closest('button')!.getAttribute('aria-pressed')).toBe('true'))
+
+    // ⛔ L'ASSERTION DU DÉFAUT : la moutarde est achetée, comptée au total, et n'était affichée dans
+    // AUCUNE section. Changer de rangement RÉORGANISE, il ne retire jamais rien.
+    expect(new Set(lignesAffichees())).toEqual(parRayon)
+    // Et la provenance se lit : la section est titrée du nom de la sauce, jamais rangée sous un
+    // repas — la donnée ne dit pas à quel créneau la sauce est faite, l'inventer serait mentir.
+    expect(screen.getByText('Vinaigrette à la moutarde')).toBeTruthy()
+  })
+
+  it('l’échalote du plat ET de la sauce se lit des DEUX côtés — une ligne gonflée sans provenance passe pour une erreur', async () => {
+    // `pourSauces` s'AJOUTE à `pourSlots`, il ne le remplace pas : un article mixte apparaît sous
+    // son repas et sous sa sauce. Ici on vérifie la conséquence visible — la section de la sauce
+    // n'est pas réservée aux articles orphelins, elle liste tout ce que la sauce demande.
+    const { plan } = await avecUnPlan()
+    setSauceChoisie(baseCourante(), premierPlatCuisine(plan), 'sauce_poivre' as RecipeId, true)
+    await monter()
+
+    fireEvent.click(screen.getByText('Repas'))
+    await waitFor(() => expect(screen.getByText('Sauce au poivre')).toBeTruthy())
+
+    const section = screen.getByText('Sauce au poivre').closest('article') as HTMLElement
+    const dansLaSection = [...section.querySelectorAll('button[aria-pressed]')].map((b) => b.textContent ?? '')
+    for (const nom of ['Échalote', 'Beurre doux', 'Bouillon de légumes', 'Crème fraîche']) {
+      expect(dansLaSection.some((l) => l.includes(nom))).toBe(true)
+    }
+    // ⚠️ ET LE POIVRE N'Y EST PAS, alors qu'il est le premier ingrédient de la sauce : `poivre_noir`
+    // porte `fondDePlacard`. C'est la preuve que la sauce traverse le MÊME `verser()` que le plat —
+    // une seconde boucle recopiée aurait laissé passer un fond de placard côté sauce, et personne
+    // ne l'aurait vu avant de lire « poivre noir » sur sa liste chaque semaine.
+    expect(dansLaSection.some((l) => l.includes('Poivre noir'))).toBe(false)
+  })
 })

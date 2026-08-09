@@ -22,6 +22,7 @@ import type {
   Catalog,
   Food,
   FoodId,
+  RecipeId,
   ShoppingList,
   ShoppingListItem,
   SlotRef,
@@ -135,6 +136,10 @@ interface Vue {
    */
   readonly quantiteDe: (item: ShoppingListItem) => string
   readonly platDuCreneau: (slot: SlotRef) => string | null
+  /** Le nom d'une sauce retenue, pour titrer sa section (voir `grouper`). Repli sur l'identifiant :
+   *  une sauce retenue puis retirée du catalogue laisse sa ligne en courses, et une section sans
+   *  titre serait pire qu'un titre technique. */
+  readonly nomSauce: (id: RecipeId) => string
   /** Le catalogue des aliments, pour la complétion de `FormulaireAjout` et le rayon qu'elle en déduit. */
   readonly foods: ReadonlyMap<FoodId, Food>
   /**
@@ -263,6 +268,7 @@ async function calculerVue(): Promise<Etat> {
           socle.catalogue.foods.get(item.foodId)?.conditionnementG ?? null
         ),
       platDuCreneau: (slot) => platParCreneau.get(cleCreneau(slot.date, slot.creneau)) ?? null,
+      nomSauce: (id) => socle.catalogue.recipes.get(id)?.nom ?? id,
       foods: socle.catalogue.foods,
       noteAllergeneDe: (food) => noteAllergene(food, allergiesDeclarees, socle.catalogue.allergens),
     },
@@ -299,6 +305,16 @@ function noteAllergene(
  *
  * `Map` plutôt qu'un `Set` de contrôle : `set` sur une clé existante conserve la position
  * d'insertion d'origine, donc l'ordre des articles ne dépend pas du nombre de créneaux traversés.
+ *
+ * ⚠️ LES SAUCES ONT LEUR PROPRE SECTION, ET SANS ELLE UNE LIGNE DISPARAISSAIT. Un ingrédient qui ne
+ * vient QUE d'une sauce a `pourSlots` vide — la sauce n'est pas au plan, elle suit son plat. La
+ * boucle ci-dessous parcourt `pourSlots` : hors rangement « rayon », la moutarde d'une sauce retenue
+ * n'était donc ajoutée à AUCUNE section. Achetée, comptée dans le total, invisible à l'écran.
+ *
+ * Une section par sauce, jamais sous un repas : la titrer « lundi · Dîner » inventerait une
+ * provenance que la donnée ne porte pas — même raison qu'`ArticlesAjoutes`, plus bas. Et l'article
+ * mixte (l'échalote du rôti ET de la sauce) apparaît des DEUX côtés : sa quantité est gonflée par la
+ * sauce, une ligne gonflée sans provenance visible se lit comme une erreur de calcul.
  */
 function grouper(vue: Vue, rangement: Rangement): { titre: string; items: readonly ShoppingListItem[] }[] {
   const sections = new Map<string, Map<FoodId, ShoppingListItem>>()
@@ -323,6 +339,17 @@ function grouper(vue: Vue, rangement: Rangement): { titre: string; items: readon
         const creneau = `${formaterJour(slot.date)} · ${LIBELLE_CRENEAU[slot.creneau]}`
         ajouter(plat === null ? creneau : `${creneau} — ${plat}`, item)
       }
+    }
+  }
+
+  // Seconde passe, APRÈS la première : `Map` conserve l'ordre d'insertion, donc les sections de
+  // sauce se rangent en pied de liste, là où on va chercher ce qui n'appartient à aucun repas.
+  if (rangement !== 'rayon') {
+    for (const item of vue.liste.items) {
+      // Le nom de la sauce SEUL, sans habillage : « Pour la Sauce au poivre » demanderait un article
+      // accordé au nom, et le catalogue en porte déjà (« Vinaigrette à la moutarde »). Les titres de
+      // repas contiennent tous un « · », ceux-là jamais — la distinction se lit sans qu'on l'écrive.
+      for (const sauceId of item.pourSauces) ajouter(vue.nomSauce(sauceId), item)
     }
   }
 

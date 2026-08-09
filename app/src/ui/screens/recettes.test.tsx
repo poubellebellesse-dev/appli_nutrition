@@ -645,3 +645,57 @@ describe('recettes — les favoris', () => {
     await waitFor(() => expect(idsAffiches()).toEqual([id]))
   })
 })
+
+describe('recettes — l’axe des sauces', () => {
+  // `browseRecipes` retire TOUJOURS les sauces de la liste ordinaire (`recettesHorsSauces`). Sans ce
+  // bouton, une sauce ne s'atteint que depuis la fiche d'un plat qui la cite — et celle que personne
+  // ne cite, nulle part. Le bouton n'est donc pas un filtre de confort : c'est le seul chemin.
+  const boutonSauces = () => screen.getByText(/^Sauces \(\d+\)$/).closest('button') as HTMLButtonElement
+  const boutonFavoris = () => screen.getByText(/^Mes favoris \(\d+\)$/).closest('button') as HTMLButtonElement
+
+  it('par défaut aucune sauce n’est listée, et le bouton annonce combien il y en a', async () => {
+    await monter()
+    expect(idsAffiches()).not.toContain('sauce_poivre')
+    // Le compte est DANS le libellé : la liste étant vide par défaut, un bouton sans chiffre ne se
+    // distingue pas d'un bouton cassé tant qu'on ne l'a pas pressé.
+    expect(boutonSauces().textContent).toBe('Sauces (3)')
+    expect(boutonSauces().getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('pressé, il rend les sauces et ELLES SEULES', async () => {
+    await monter()
+    fireEvent.click(boutonSauces())
+    await waitFor(() => expect(idsAffiches()).toContain('sauce_poivre'))
+    expect([...idsAffiches()].sort()).toEqual([
+      'sauce_poivre',
+      'sauce_yaourt_citron_ciboulette',
+      'vinaigrette_moutarde',
+    ])
+  })
+
+  it('« Sauces » et « Mes favoris » s’éteignent l’un l’autre — deux départs ne s’empilent pas', async () => {
+    await monter()
+    fireEvent.click(boutonSauces())
+    await waitFor(() => expect(boutonSauces().getAttribute('aria-pressed')).toBe('true'))
+
+    fireEvent.click(boutonFavoris())
+    await waitFor(() => expect(boutonFavoris().getAttribute('aria-pressed')).toBe('true'))
+    // ⚠️ C'EST L'ASSERTION DU TEST. Laisser les deux allumés donnerait « mes sauces favorites », un
+    // troisième axe que personne n'a demandé et que le moteur, lui, tranche en faveur des favoris :
+    // l'écran afficherait alors des plats sous un bouton « Sauces » enfoncé.
+    expect(boutonSauces().getAttribute('aria-pressed')).toBe('false')
+  })
+
+  it('« Sauces » se retire aussi par sa puce de filtre actif', async () => {
+    await monter()
+    fireEvent.click(boutonSauces())
+    await waitFor(() => expect(idsAffiches()).toContain('sauce_poivre'))
+
+    // La puce doit exister : `aucunFiltreEcran` masque tout le bloc si elle ne compte pas
+    // `saucesSeules`, et le seul moyen de revenir aux plats serait de retrouver le bouton.
+    const puce = screen.getByText('Sauces').closest('button') as HTMLButtonElement
+    fireEvent.click(puce)
+    await waitFor(() => expect(idsAffiches()).not.toContain('sauce_poivre'))
+    expect(boutonSauces().getAttribute('aria-pressed')).toBe('false')
+  })
+})

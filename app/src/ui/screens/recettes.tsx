@@ -87,12 +87,15 @@ interface Filtres {
   readonly commun: FiltresRecette
   readonly texte: string
   readonly favorisSeuls: boolean
+  /** Exclusif avec `favorisSeuls` — voir le bouton, plus bas : tous deux désignent un point de
+   *  DÉPART dans le catalogue, pas un critère, et deux départs ne s'empilent pas. */
+  readonly saucesSeules: boolean
 }
 
-const FILTRES_ECRAN: Filtres = { commun: FILTRES_VIDES, texte: '', favorisSeuls: false }
+const FILTRES_ECRAN: Filtres = { commun: FILTRES_VIDES, texte: '', favorisSeuls: false, saucesSeules: false }
 
 function aucunFiltreEcran(f: Filtres): boolean {
-  return aucunFiltre(f.commun) && f.texte.trim() === '' && !f.favorisSeuls
+  return aucunFiltre(f.commun) && f.texte.trim() === '' && !f.favorisSeuls && !f.saucesSeules
 }
 
 interface Socle {
@@ -168,8 +171,9 @@ export function Recettes() {
         envergures: commun.envergures,
         favoriteRecipeIds: socle.favoris,
         onlyFavorites: filtres.favorisSeuls,
+        saucesSeules: filtres.saucesSeules,
       }),
-    [filtres.texte, filtres.favorisSeuls]
+    [filtres.texte, filtres.favorisSeuls, filtres.saucesSeules]
   )
 
   const resultat = useMemo(
@@ -200,6 +204,16 @@ export function Recettes() {
       envergures: compterEnvergure(etat.socle.catalogue, sansEnvergureR.recipeIds),
     }
   }, [etat, filtres.commun, interroger])
+
+  /** Combien de sauces porte le catalogue. Annoncé DANS le libellé du bouton, avant d'y entrer :
+   *  ailleurs sur cet écran un compte se lit après coup, mais ici la liste est vide par défaut et
+   *  un bouton qui ouvre le vide ne se distingue pas d'un bouton cassé. */
+  const nombreDeSauces = useMemo(() => {
+    if (etat.phase !== 'pret') return 0
+    let n = 0
+    for (const recette of etat.socle.catalogue.recipes.values()) if (recette.estSauce) n += 1
+    return n
+  }, [etat])
 
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement du catalogue…</p>
   if (etat.phase === 'erreur') {
@@ -271,7 +285,7 @@ export function Recettes() {
       <button
         type="button"
         data-visite="favoris"
-        onClick={() => setFiltres({ ...filtres, favorisSeuls: !filtres.favorisSeuls })}
+        onClick={() => setFiltres({ ...filtres, favorisSeuls: !filtres.favorisSeuls, saucesSeules: false })}
         aria-pressed={filtres.favorisSeuls}
         className={
           'mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-[1rem] font-semibold ' +
@@ -281,6 +295,25 @@ export function Recettes() {
         }
       >
         Mes favoris ({socle.favoris.size})
+      </button>
+
+      {/* Les sauces sont l'AUTRE MOITIÉ du catalogue, pas une facette de celui-ci : `browseRecipes`
+          les retire toujours de la liste ordinaire (`recettesHorsSauces`). Sans ce bouton, une
+          sauce ne s'atteint que depuis la fiche d'un plat qui la cite — et celle que personne ne
+          cite ne s'atteint nulle part. Le même geste qu'un favori, donc le même bouton : c'est un
+          point de départ, et deux départs ne s'empilent pas — chacun éteint l'autre. */}
+      <button
+        type="button"
+        onClick={() => setFiltres({ ...filtres, saucesSeules: !filtres.saucesSeules, favorisSeuls: false })}
+        aria-pressed={filtres.saucesSeules}
+        className={
+          'mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-[1rem] font-semibold ' +
+          (filtres.saucesSeules
+            ? 'border-2 border-accent bg-accent-doux text-accent-texte'
+            : 'border border-bordure-forte bg-surface text-texte-doux')
+        }
+      >
+        Sauces ({nombreDeSauces})
       </button>
 
       <FiltresRecettes
@@ -299,6 +332,9 @@ export function Recettes() {
               : [{ libelle: `« ${filtres.texte} »`, retirer: () => setFiltres({ ...filtres, texte: '' }) }]),
             ...(filtres.favorisSeuls
               ? [{ libelle: 'Mes favoris', retirer: () => setFiltres({ ...filtres, favorisSeuls: false }) }]
+              : []),
+            ...(filtres.saucesSeules
+              ? [{ libelle: 'Sauces', retirer: () => setFiltres({ ...filtres, saucesSeules: false }) }]
               : []),
           ]}
           onChange={(commun) => setFiltres({ ...filtres, commun })}

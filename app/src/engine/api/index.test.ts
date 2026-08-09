@@ -211,6 +211,63 @@ describe("engine/api — searchByPantry, condiments seuls ne proposent plus rien
   });
 });
 
+describe("engine/api — browseRecipes, l'axe des sauces (`saucesSeules`)", () => {
+  // Le catalogue est partitionné par `estSauce` : la liste ordinaire ne montre QUE des plats
+  // (`recettesHorsSauces`), donc sans un point de départ complémentaire une sauce n'est atteignable
+  // que depuis la fiche d'un plat qui la cite — et celle que personne ne cite, nulle part.
+  const oeuf = food("oeuf", 100);
+  const omelette = recipeWithOneIngredient("omelette", "oeuf");
+  const gratin = recipeWithOneIngredient("gratin", "oeuf");
+  const poivre = { ...recipeWithOneIngredient("sauce_poivre", "oeuf"), estSauce: true };
+  const vinaigrette = { ...recipeWithOneIngredient("vinaigrette", "oeuf"), estSauce: true };
+
+  function catalogueMixte(): Catalog {
+    const base = makeCatalog();
+    return {
+      ...base,
+      foods: new Map([[oeuf.id, oeuf]]),
+      recipes: new Map([omelette, gratin, poivre, vinaigrette].map((r) => [r.id, r])),
+    };
+  }
+
+  const constraints = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null };
+
+  it("sans l'option, les sauces restent hors de la liste — la v14 ne change rien pour qui ne demande rien", () => {
+    const engine = createEngine(catalogueMixte());
+    const r = engine.browseRecipes({ constraints });
+    expect([...r.recipeIds].sort()).toEqual(["gratin", "omelette"]);
+  });
+
+  it("`saucesSeules` rend les sauces, et ELLES SEULES — un complémentaire, pas un filtre ajouté", () => {
+    const engine = createEngine(catalogueMixte());
+    const r = engine.browseRecipes({ constraints, saucesSeules: true });
+    expect([...r.recipeIds].sort()).toEqual(["sauce_poivre", "vinaigrette"]);
+  });
+
+  it("`totalCatalogue` suit le point de départ : 2 sur l'axe des sauces, pas 4", () => {
+    // Un entonnoir dont le premier nombre ment ne se remarque nulle part ailleurs : « 2 sur 4 »
+    // laisserait croire que deux recettes ont été écartées par une contrainte.
+    const engine = createEngine(catalogueMixte());
+    expect(engine.browseRecipes({ constraints, saucesSeules: true }).totalCatalogue).toBe(2);
+    expect(engine.browseRecipes({ constraints }).totalCatalogue).toBe(2);
+  });
+
+  it("`onlyFavorites` GAGNE sur `saucesSeules` — un favori plat reste rendu, l'axe des sauces cède", () => {
+    // Les deux désignent un point de DÉPART, jamais deux critères qui s'intersectent. L'ordre est
+    // fixé ici pour que l'écran n'ait pas à connaître la règle : il éteint l'un en allumant l'autre,
+    // et si un appelant les passe quand même ensemble, le moteur ne rend pas une liste vide.
+    const engine = createEngine(catalogueMixte());
+    const r = engine.browseRecipes({
+      constraints,
+      saucesSeules: true,
+      onlyFavorites: true,
+      favoriteRecipeIds: new Set(["gratin" as RecipeId]),
+    });
+    expect([...r.recipeIds]).toEqual(["gratin"]);
+    expect(r.totalCatalogue).toBe(2); // le total des plats, pas celui des sauces
+  });
+});
+
 describe("engine/api — createEngine (§8 ENGINE)", () => {
   it("expose version (moteur) et catalogVersion (celle du catalogue reçu)", () => {
     const catalog = makeCatalog();

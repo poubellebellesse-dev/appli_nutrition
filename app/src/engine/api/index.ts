@@ -549,6 +549,20 @@ export interface BrowseRequest {
   /** Section « Mes favoris » de §4.4 : restreint aux seuls favoris quand `onlyFavorites` est vrai. */
   readonly favoriteRecipeIds?: ReadonlySet<RecipeId>
   readonly onlyFavorites?: boolean
+  /**
+   * Renverse le point de départ : LES SAUCES SEULES, au lieu du catalogue sans elles.
+   *
+   * ⚠️ CE N'EST PAS UN FILTRE, C'EST L'AUTRE MOITIÉ DU CATALOGUE. `browseRecipes` part par défaut de
+   * `recettesHorsSauces` — sans quoi « Vinaigrette à la moutarde » s'afficherait parmi les plats
+   * qu'on pose dans une case du dîner. Les sauces restent donc INATTEIGNABLES depuis cet écran, ce
+   * qui est voulu pour un parcours de plats et absurde pour qui cherche une sauce.
+   *
+   * ⚠️ EXCLUSIF AVEC `onlyFavorites`, et l'exclusion est résolue ICI : une sauce mise en favori
+   * appartient aux deux ensembles, et laisser l'appelant décider de la priorité produirait deux
+   * écrans qui répondent différemment à la même question. `onlyFavorites` l'emporte — il désigne un
+   * geste explicite de l'utilisateur, `saucesSeules` un axe de navigation.
+   */
+  readonly saucesSeules?: boolean
 }
 
 export interface BrowseResult {
@@ -721,6 +735,19 @@ function recettesHorsSauces(catalog: Catalog): ReadonlySet<RecipeId> {
   return ids
 }
 
+/**
+ * L'autre moitié : les sauces seules, point de départ de `BrowseRequest.saucesSeules`.
+ *
+ * ⚠️ COMPLÉMENTAIRE EXACT de `recettesHorsSauces`, dérivé du MÊME champ. Deux prédicats écrits
+ * séparément (`estSauce` ici, `service === null` ailleurs) finiraient par ne plus partitionner le
+ * catalogue, et une recette tomberait dans les deux ensembles ou dans aucun.
+ */
+function recettesSauces(catalog: Catalog): ReadonlySet<RecipeId> {
+  const ids = new Set<RecipeId>()
+  for (const [id, recipe] of catalog.recipes) if (recipe.estSauce) ids.add(id)
+  return ids
+}
+
 export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): Engine {
   const enrichedCatalog = attachDerivedIndexes(catalog)
   // Index de recherche construit UNE FOIS, comme les index dérivés : normaliser 241 recettes et
@@ -804,7 +831,10 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       // à la différence de `suggestMeals` qui lève : ici l'utilisateur voit qu'il n'en a aucun.
       const favoris = req.favoriteRecipeIds ?? new Set<RecipeId>()
       const horsSauces = recettesHorsSauces(enrichedCatalog)
-      const depart: ReadonlySet<RecipeId> = req.onlyFavorites === true ? favoris : horsSauces
+      const sauces = recettesSauces(enrichedCatalog)
+      // L'ordre décide de l'exclusivité : voir `BrowseRequest.saucesSeules`. `onlyFavorites` gagne.
+      const depart: ReadonlySet<RecipeId> =
+        req.onlyFavorites === true ? favoris : req.saucesSeules === true ? sauces : horsSauces
 
       // ⚠️ LES MÊMES COUCHES QUE LA SUGGESTION, avec un ensemble initial fourni plutôt que déduit
       // d'un créneau. La requête ci-dessous n'est qu'un porteur de contraintes : `context.creneau`
@@ -828,10 +858,11 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
       return {
         recipeIds,
         entonnoir: buildRejectionSummary(depart.size, exclusion),
-        // ⚠️ HORS SAUCES, comme le point de départ. Y laisser `recipes.size` ferait annoncer un
-        // total que ce même appel ne peut pas atteindre : « 12 sur 308 » quand seules 305 ont été
-        // regardées. Un entonnoir dont le premier nombre ment ne se remarque nulle part ailleurs.
-        totalCatalogue: horsSauces.size,
+        // ⚠️ LE TOTAL SUIT LE POINT DE DÉPART. Y laisser `recipes.size` ferait annoncer un total que
+        // ce même appel ne peut pas atteindre : « 12 sur 308 » quand seules 305 ont été regardées,
+        // ou « 2 sur 330 » sur l'axe des sauces, qui n'en compte que 3. Un entonnoir dont le premier
+        // nombre ment ne se remarque nulle part ailleurs.
+        totalCatalogue: req.saucesSeules === true && req.onlyFavorites !== true ? sauces.size : horsSauces.size,
       }
     },
     // ⚠️ `convives` n'est pas dans `WeekPlan` — il vient de la REQUÊTE. `planLeftovers` étant
