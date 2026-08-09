@@ -7,7 +7,7 @@ temps_prep_min: 20
 temps_cuisson_min: 35
 difficulte: 1
 portions_base: 6
-image_path: null
+image_path: /catalog/images/tarte-pommes.avif
 types_repas: [gouter]
 service: dessert
 piquant: 0

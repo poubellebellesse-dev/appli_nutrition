@@ -7,7 +7,7 @@ temps_prep_min: 15
 temps_cuisson_min: 5
 difficulte: 1
 portions_base: 2
-image_path: null
+image_path: /catalog/images/salade-avocat-crevettes.avif
 types_repas: [dejeuner]
 service: plat
 piquant: 0

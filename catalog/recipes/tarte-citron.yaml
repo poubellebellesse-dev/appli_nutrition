@@ -7,7 +7,7 @@ temps_prep_min: 30
 temps_cuisson_min: 30
 difficulte: 3
 portions_base: 8
-image_path: null
+image_path: /catalog/images/tarte-citron.avif
 types_repas: [gouter]
 service: dessert
 piquant: 0

@@ -7,7 +7,7 @@ temps_prep_min: 5
 temps_cuisson_min: 5
 difficulte: 1
 portions_base: 1
-image_path: null
+image_path: /catalog/images/porridge-soja-banane.avif
 types_repas: [petit_dejeuner]
 service: plat
 piquant: 0

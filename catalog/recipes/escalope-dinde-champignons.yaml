@@ -7,7 +7,7 @@ temps_prep_min: 10
 temps_cuisson_min: 20
 difficulte: 2
 portions_base: 4
-image_path: null
+image_path: /catalog/images/escalope-dinde-champignons.avif
 types_repas: [dejeuner, diner]
 service: plat
 piquant: 0

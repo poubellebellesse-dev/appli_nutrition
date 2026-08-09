@@ -8,7 +8,7 @@ temps_prep_min: 15
 temps_cuisson_min: 30
 difficulte: 1
 portions_base: 4
-image_path: null
+image_path: /catalog/images/polenta-champignons-tomate.avif
 types_repas: [dejeuner, diner]
 service: plat
 piquant: 0

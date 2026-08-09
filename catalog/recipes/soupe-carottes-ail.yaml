@@ -7,7 +7,7 @@ temps_prep_min: 15
 temps_cuisson_min: 25
 difficulte: 1
 portions_base: 4
-image_path: null
+image_path: /catalog/images/soupe-carottes-ail.avif
 types_repas: [dejeuner, diner]
 service: entree
 piquant: 0

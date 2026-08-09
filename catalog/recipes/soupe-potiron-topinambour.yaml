@@ -7,7 +7,7 @@ temps_prep_min: 20
 temps_cuisson_min: 30
 difficulte: 1
 portions_base: 4
-image_path: null
+image_path: /catalog/images/soupe-potiron-topinambour.avif
 types_repas: [diner]
 service: plat
 piquant: 0

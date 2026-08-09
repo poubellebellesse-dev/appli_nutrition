@@ -7,7 +7,7 @@ temps_prep_min: 10
 temps_cuisson_min: 25
 difficulte: 2
 portions_base: 6
-image_path: null
+image_path: /catalog/images/crepes.avif
 types_repas: [gouter, petit_dejeuner]
 service: dessert
 piquant: 0

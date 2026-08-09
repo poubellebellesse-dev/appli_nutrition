@@ -7,7 +7,7 @@ temps_prep_min: 20
 temps_cuisson_min: 70
 difficulte: 2
 portions_base: 6
-image_path: null
+image_path: /catalog/images/gratin-dauphinois.avif
 types_repas: [diner]
 service: accompagnement
 piquant: 0
