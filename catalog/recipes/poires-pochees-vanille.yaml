@@ -58,7 +58,7 @@ etapes:
   - ordre: 4
     texte: "Réserver les poires et laisser tiédir dans le sirop avant de servir."
     lexicon_ids: [reserver]
-    timer_s: null
+    timer_s: 1800
     timer_type: repos
 
 equipements:

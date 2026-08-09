@@ -43,8 +43,8 @@ etapes:
   - ordre: 2
     texte: "Ajouter les fraises en fin de cuisson et laisser tiédir."
     lexicon_ids: []
-    timer_s: null
-    timer_type: null
+    timer_s: 1800
+    timer_type: repos
 
 equipements:
   - code: couteau_chef

@@ -56,7 +56,7 @@ etapes:
   - ordre: 1
     texte: "Sortir le gigot du réfrigérateur une heure avant de le cuire, pour qu'il revienne à température ambiante."
     lexicon_ids: []
-    timer_s: null
+    timer_s: 3600
     timer_type: repos
   - ordre: 2
     texte: "Préchauffer le four à 210 °C. Piquer le gigot d'éclats d'ail, le frotter d'huile, de thym et de sel."

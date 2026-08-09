@@ -66,8 +66,8 @@ etapes:
   - ordre: 4
     texte: "Parsemer de pistaches concassées et réserver au frais avant de servir."
     lexicon_ids: [parsemer, reserver]
-    timer_s: null
-    timer_type: null
+    timer_s: 1800
+    timer_type: repos
 
 equipements:
   - code: couteau_chef

@@ -62,8 +62,8 @@ etapes:
   - ordre: 4
     texte: "Incorporer les raisins secs hors du feu et laisser tiédir avant de servir."
     lexicon_ids: [incorporer]
-    timer_s: null
-    timer_type: null
+    timer_s: 1800
+    timer_type: repos
 
 equipements:
   - code: plaque_cuisson

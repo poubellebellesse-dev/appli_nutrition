@@ -42,8 +42,8 @@ etapes:
   - ordre: 1
     texte: "Verser la boisson à l'amande sur les flocons et laisser reposer."
     lexicon_ids: []
-    timer_s: null
-    timer_type: null
+    timer_s: 300
+    timer_type: repos
   - ordre: 2
     texte: "Ajouter les myrtilles et les amandes effilées au moment de servir."
     lexicon_ids: []

@@ -54,8 +54,8 @@ etapes:
   - ordre: 1
     texte: "Cuire le riz et le laisser refroidir."
     lexicon_ids: []
-    timer_s: null
-    timer_type: null
+    timer_s: 1800
+    timer_type: repos
   - ordre: 2
     texte: "Couper le tofu en cubes et le dorer à l'huile de sésame."
     lexicon_ids: [dorer, tailler_des]
