@@ -77,6 +77,22 @@ etapes:
     timer_s: 60
     timer_type: cuisson
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+  - code: econome
+    niveau: informatif
+  - code: passoire
+    niveau: informatif
+  - code: saladier
+    niveau: informatif
+  - code: poele
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: chinoise

@@ -73,6 +73,14 @@ etapes:
     timer_s: 45
     timer_type: cuisson
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: saladier
+    niveau: informatif
+  - code: poele
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: bretonne

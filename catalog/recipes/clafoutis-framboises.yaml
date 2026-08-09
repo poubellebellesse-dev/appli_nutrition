@@ -77,6 +77,18 @@ etapes:
     timer_s: 2400
     timer_type: cuisson
 
+equipements:
+  - code: four
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: saladier
+    niveau: informatif
+  - code: fouet
+    niveau: informatif
+  - code: moule_a_tarte
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

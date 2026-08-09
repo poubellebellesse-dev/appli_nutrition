@@ -97,6 +97,16 @@ etapes:
     timer_s: 600
     timer_type: repos
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+  - code: mortier
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: maghrebine

@@ -78,6 +78,16 @@ etapes:
     timer_s: 300
     timer_type: cuisson
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+  - code: cocotte
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: vietnamienne

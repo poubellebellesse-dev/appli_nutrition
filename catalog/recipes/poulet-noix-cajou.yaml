@@ -85,6 +85,16 @@ etapes:
     timer_s: 120
     timer_type: cuisson
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: wok
+    niveau: accelere
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: chinoise

@@ -65,6 +65,16 @@ etapes:
     timer_s: 2400
     timer_type: cuisson
 
+equipements:
+  - code: four
+    niveau: requis
+  - code: robot_menager
+    niveau: accelere
+  - code: cuit_vapeur
+    niveau: accelere
+  - code: saladier
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

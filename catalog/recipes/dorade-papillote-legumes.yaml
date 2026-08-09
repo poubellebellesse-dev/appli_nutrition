@@ -81,6 +81,20 @@ etapes:
     timer_s: 1200
     timer_type: cuisson
 
+equipements:
+  - code: four
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: cuit_vapeur
+    niveau: accelere
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+  - code: papier_cuisson
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: mediterraneenne

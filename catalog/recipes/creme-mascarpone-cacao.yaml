@@ -79,6 +79,14 @@ etapes:
     timer_s: null
     timer_type: null
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: saladier
+    niveau: informatif
+  - code: fouet
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: italienne

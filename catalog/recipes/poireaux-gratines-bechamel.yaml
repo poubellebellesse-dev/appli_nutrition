@@ -77,6 +77,18 @@ etapes:
     timer_s: 1500
     timer_type: cuisson
 
+equipements:
+  - code: four
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: passoire
+    niveau: informatif
+  - code: fouet
+    niveau: informatif
+  - code: plat_a_four
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

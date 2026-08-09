@@ -107,6 +107,20 @@ etapes:
     timer_s: null
     timer_type: null
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+  - code: passoire
+    niveau: informatif
+  - code: chinois
+    niveau: informatif
+  - code: rape
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: chinoise

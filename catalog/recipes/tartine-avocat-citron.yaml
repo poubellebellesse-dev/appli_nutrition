@@ -59,6 +59,10 @@ etapes:
     timer_s: null
     timer_type: null
 
+equipements:
+  - code: grille_pain
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: internationale

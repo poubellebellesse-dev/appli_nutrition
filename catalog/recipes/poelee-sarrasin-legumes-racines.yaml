@@ -77,6 +77,16 @@ etapes:
     timer_s: 900
     timer_type: cuisson
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+  - code: econome
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

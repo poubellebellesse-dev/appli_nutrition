@@ -63,6 +63,16 @@ etapes:
     timer_s: 1800
     timer_type: repos
 
+equipements:
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+  - code: saladier
+    niveau: informatif
+  - code: fouet
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

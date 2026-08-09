@@ -60,6 +60,12 @@ etapes:
     timer_s: null
     timer_type: null
 
+equipements:
+  - code: mixeur
+    niveau: accelere
+  - code: econome
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: internationale

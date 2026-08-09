@@ -68,6 +68,14 @@ etapes:
     timer_s: null
     timer_type: null
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

@@ -77,6 +77,16 @@ etapes:
     timer_s: null
     timer_type: null
 
+equipements:
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+  - code: passoire
+    niveau: informatif
+  - code: saladier
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

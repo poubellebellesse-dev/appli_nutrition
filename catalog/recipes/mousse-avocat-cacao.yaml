@@ -60,6 +60,14 @@ etapes:
     timer_s: 3600
     timer_type: repos
 
+equipements:
+  - code: mixeur
+    niveau: accelere
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

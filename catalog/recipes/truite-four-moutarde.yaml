@@ -81,6 +81,22 @@ etapes:
     timer_s: 1500
     timer_type: cuisson
 
+equipements:
+  - code: four
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: couteau_chef
+    niveau: informatif
+  - code: planche_a_decouper
+    niveau: informatif
+  - code: passoire
+    niveau: informatif
+  - code: saladier
+    niveau: informatif
+  - code: plat_a_four
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

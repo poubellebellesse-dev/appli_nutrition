@@ -75,6 +75,14 @@ etapes:
     timer_s: 720
     timer_type: cuisson
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: rape
+    niveau: informatif
+  - code: poele
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: suisse

@@ -69,6 +69,14 @@ etapes:
     timer_s: 2400
     timer_type: cuisson
 
+equipements:
+  - code: four
+    niveau: requis
+  - code: plaque_cuisson
+    niveau: requis
+  - code: plaque_patisserie
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise

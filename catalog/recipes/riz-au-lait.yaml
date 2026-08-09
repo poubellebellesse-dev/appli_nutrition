@@ -69,6 +69,12 @@ etapes:
     timer_s: null
     timer_type: null
 
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: passoire
+    niveau: informatif
+
 facettes:
   - facette: cuisine
     valeur: francaise
