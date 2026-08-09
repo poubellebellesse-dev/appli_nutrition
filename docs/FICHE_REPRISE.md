@@ -117,13 +117,23 @@ juste ne suffit pas** — c'est le fait à retenir, pas le nombre : le manque é
 le compte exact disait *marge zéro*, pas *il manque un plat*. Détail :
 [archive/RECAP_SESSION_2026-08-07_recettes-aliments.md](./archive/RECAP_SESSION_2026-08-07_recettes-aliments.md) §2.
 
-✅ **LE LOT « SAUCES » EST FERMÉ EN ENTIER — 2026-08-09, ses quatre points.** Une sauce se propose à
-côté d'un plat, se retient pour les courses (`user_recipe_sauce`, v14), se cuisine en même temps que
-le plat, et **s'écrit soi-même** dans l'éditeur. ⚠️ **Deux fois dans ce lot, une dette chiffrée a
-coûté moins que son énoncé** — ③ était budgété en changement de schéma et a coûté un bouton, la
-moitié de ④ était déjà livrée sans que personne l'ait vu. **Remesurer une dette avant de la payer**,
-surtout à plusieurs sessions dans le même dépôt. Décisions, garanties et les deux défauts trouvés :
-[archive/RECAP_SESSION_2026-08-09_sauces.md](./archive/RECAP_SESSION_2026-08-09_sauces.md).
+⛔ **LE LOT « SAUCES » N'EST PAS FERMÉ — UN QUART l'est, et cette ligne a annoncé les quatre.**
+Rectifié le 2026-08-09 au soir. **Livré** : l'axe séparé (décision 62) — 3 recettes de sauce et
+14 attachements au catalogue, `engine/domain/sauces.ts`, `Engine.suggestSauces` avec son garde-fou
+allergènes. **Pas livré** : la préférence durable et les courses (`user_recipe_sauce`, v14), le
+bouton « Sauces (N) », « la cuisiner avec le plat », les sauces perso dans l'éditeur. Et le panneau
+« Ajouter une sauce » de la fiche recette **est écrit mais jamais rendu** — `lireLesSauces` appelle
+le moteur à chaque ouverture et le résultat est jeté.
+⚠️ **Ce n'est pas du code perdu par accident : il n'a jamais été commité.** `git log --all -S` sur
+chacun de ces identifiants ne trouve que deux commits de **documentation**. La lane a écrit son
+récit et pas son code. ⛔ **La règle qui en sort, et elle vaut pour toutes les lanes : aucun ✅ ici
+sans `git log --all -S` sur un identifiant du code concerné.** Un compte de tests vert ne prouve
+rien — celui de 1 940 était vrai sur un arbre qui n'existe plus.
+▶ **Spécification complète, pièges compris, en `ETAT.md` §8** ; les décisions en §3, valides et
+inchangées. Le récit archivé
+([archive/RECAP_SESSION_2026-08-09_sauces.md](./archive/RECAP_SESSION_2026-08-09_sauces.md))
+**décrit un travail absent de l'arbre** — il reste en place, un instantané daté ne se réécrit
+jamais, mais il ne se lit pas comme un état.
 
 **Ce qui reste n'est plus du code d'écran.** Trois chantiers, par ordre de dépendance :
 
