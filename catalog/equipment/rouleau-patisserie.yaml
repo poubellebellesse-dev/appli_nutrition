@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: rouleau_patisserie
+terme: "Rouleau à pâtisserie"
+definition: >
+  Cylindre lisse qui étale une pâte à épaisseur régulière.

@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: cocotte
+terme: "Cocotte"
+definition: >
+  Récipient épais à couvercle lourd, en fonte le plus souvent. Garde une chaleur douce et régulière : c'est le récipient des mijotés et des braisés.

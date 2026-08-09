@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: passoire
+terme: "Passoire"
+definition: >
+  Récipient perforé qui sépare le solide du liquide : égoutter des pâtes, rincer des légumes, laver une salade.

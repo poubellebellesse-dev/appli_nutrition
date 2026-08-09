@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: rape
+terme: "Râpe"
+definition: >
+  Grille métallique qui réduit un aliment ferme en filaments ou en poudre — fromage, zeste, muscade.

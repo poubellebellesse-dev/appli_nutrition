@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: cuit_vapeur
+terme: "Cuit-vapeur"
+definition: >
+  Panier perforé posé au-dessus d'une eau frémissante, ou appareil dédié. Une passoire métallique posée sur une casserole couverte le remplace.

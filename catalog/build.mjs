@@ -232,6 +232,19 @@ async function loadTips() {
   return readYamlDir(path.join(SOURCES_DIR, 'tips'))
 }
 
+/**
+ * Référentiel d'équipement — `catalog/equipment/*.yaml` (docs/ENGINE.md §6.5, décision « trois
+ * niveaux » d'ETAT.md §3).
+ *
+ * ⚠️ CE FICHIER NE PORTE AUCUN NIVEAU. `requis` / `accelere` / `informatif` qualifient le COUPLE
+ * recette × équipement, pas l'ustensile : un robot est `accelere` pour une pâte et `requis` pour
+ * une glace. Le niveau vit donc sur `recipe.equipements[].niveau`, jamais ici — sans quoi
+ * l'exemple canonique de §6.5 ENGINE deviendrait inexprimable.
+ */
+async function loadEquipment() {
+  return readYamlDir(path.join(SOURCES_DIR, 'equipment'))
+}
+
 // Frontmatter YAML + corps Markdown. Le corps peut être vide, la validation s'en charge ensuite.
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/
 
@@ -350,6 +363,17 @@ const RECIPE_ORIGINES = new Set(['maison', 'domaine_public', 'libre'])
 // et promettrait une action alors que le plat est deja servi. Absent = 'geste', qui est le cas des
 // 223 recettes qui n'en portent pas — l'omission n'est donc pas une erreur.
 const STEP_NATURES = new Set(['geste', 'avertissement'])
+
+// Les trois niveaux d'équipement (docs/ENGINE.md §6.5, ETAT.md §3). Fermé, et l'ordre compte pour
+// la lecture : `requis` EXCLUT (couche `equipement`), `accelere` déclasse au score, `informatif`
+// n'a AUCUN effet moteur — c'est le matériel qu'on affiche sur la fiche et rien de plus.
+//
+// ⚠️ `requis` EST RÉSERVÉ À L'INFAISABLE SANS, pas au « plus commode avec ». §6.5 ENGINE le dit en
+// toutes lettres : « sans cette distinction, ne pas posséder de mixeur supprimerait la moitié du
+// catalogue ». Un mixeur est `accelere` — un moulin à légumes, un presse-purée ou un tamis font le
+// travail. Le seuil est vérifiable : si un ustensile de base remplace l'appareil, ce n'est pas
+// `requis`.
+const NIVEAUX_EQUIPEMENT = new Set(['requis', 'accelere', 'informatif'])
 
 const CUISINES = new Set([
   'francaise', 'provencale', 'bretonne', 'italienne', 'espagnole', 'portugaise', 'grecque',
@@ -494,7 +518,7 @@ function evidenceWarnings(evidence, maintenant) {
   return warnings
 }
 
-function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
+function validateCatalog({ foods, lexicon, recipes, tips, evidence, equipment = [] }) {
   const errors = []
   const nutrientKeys = new Set(NUTRIENTS.map((n) => n.key))
   const allergenCodes = new Set(ALLERGENS.map((a) => a.code))
@@ -639,6 +663,30 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
     }
   }
 
+  // --- Équipement ---
+  const equipmentCodes = new Set()
+  for (const item of equipment) {
+    if (!item?.code) {
+      errors.push(`Équipement sans code : ${JSON.stringify(item)}`)
+      continue
+    }
+    if (equipmentCodes.has(item.code)) errors.push(`Équipement en double : code '${item.code}'`)
+    equipmentCodes.add(item.code)
+
+    if (typeof item.terme !== 'string' || item.terme.trim().length === 0) {
+      errors.push(`Équipement '${item.code}' : 'terme' vide ou absent`)
+    }
+    if (typeof item.definition !== 'string' || item.definition.trim().length === 0) {
+      errors.push(`Équipement '${item.code}' : 'definition' vide ou absente`)
+    }
+    for (const field of [item.terme, item.definition]) {
+      const hits = findBannedTerms(field)
+      if (hits.length > 0) {
+        errors.push(`Équipement '${item.code}' : vocabulaire banni détecté (${hits.join(', ')})`)
+      }
+    }
+  }
+
   // --- Recettes ---
   // Pre-passe : quelles recettes sont des sauces, et quels aliments sont des sauces du commerce.
   // Necessaire AVANT la boucle parce qu'un plat peut attacher une sauce definie plus loin dans
@@ -670,6 +718,31 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence }) {
       if (!foodIds.has(ingredient.food_id)) {
         errors.push(`Recette '${recipe.id}' : aliment inconnu '${ingredient.food_id}'`)
       }
+    }
+
+    // Équipement de la recette — le couple (code, niveau), voir NIVEAUX_EQUIPEMENT.
+    // Un code inconnu ARRÊTE le build : la couche `equipement` exclurait sur une référence morte,
+    // et la fiche recette afficherait un matériel sans nom ni définition.
+    const equipementsCites = new Set()
+    for (const eq of recipe.equipements ?? []) {
+      if (!eq?.code) {
+        errors.push(`Recette '${recipe.id}' : équipement sans code (${JSON.stringify(eq)})`)
+        continue
+      }
+      if (!equipmentCodes.has(eq.code)) {
+        errors.push(`Recette '${recipe.id}' : équipement inconnu '${eq.code}'`)
+      }
+      if (!NIVEAUX_EQUIPEMENT.has(eq.niveau)) {
+        errors.push(
+          `Recette '${recipe.id}', équipement '${eq.code}' : niveau '${eq.niveau}' inconnu (attendu : requis | accelere | informatif)`
+        )
+      }
+      if (equipementsCites.has(eq.code)) {
+        errors.push(
+          `Recette '${recipe.id}' : équipement '${eq.code}' cité deux fois — un couple recette×équipement porte UN seul niveau`
+        )
+      }
+      equipementsCites.add(eq.code)
     }
 
     const etapes = recipe.etapes ?? []
@@ -1126,6 +1199,35 @@ CREATE TABLE tip (
   source_url TEXT NOT NULL
 );
 
+-- Referentiel d'equipement (docs/ENGINE.md §6.5). Source : catalog/equipment/*.yaml.
+--
+-- ⚠️ AUCUNE COLONNE 'niveau' ICI, VOLONTAIREMENT. Le niveau qualifie le COUPLE recette x
+--    equipement : un robot est 'accelere' pour une pate et 'requis' pour une glace. Le porter sur
+--    l'ustensile rendrait l'exemple canonique de §6.5 ENGINE inexprimable. Il vit donc sur
+--    recipe_equipment, plus bas, et nulle part ailleurs — une seule source de verite.
+CREATE TABLE equipment (
+  id TEXT PRIMARY KEY,
+  code TEXT NOT NULL UNIQUE,
+  terme TEXT NOT NULL,
+  definition TEXT NOT NULL
+);
+
+-- Quel equipement cette recette demande, et a quel titre.
+--
+-- niveau : 'requis' = infaisable sans, SEUL a exclure (couche equipement, §6.5 ENGINE) ;
+--          'accelere' = faisable a la main, plus long — critere de SCORE, n'exclut jamais ;
+--          'informatif' = ustensile affiche sur la fiche, AUCUN effet moteur.
+--
+-- ⚠️ LA COUCHE NE DOIT LIRE QUE 'requis'. Si elle excluait sur 'accelere', ne pas posseder de
+--    mixeur retirerait la moitie du catalogue — le scenario que §6.5 ENGINE nomme pour justifier
+--    les trois niveaux. C'est verifie cote moteur (engine/selection/equipement.ts), pas ici.
+CREATE TABLE recipe_equipment (
+  recipe_id    TEXT NOT NULL REFERENCES recipe(id),
+  equipment_id TEXT NOT NULL REFERENCES equipment(id),
+  niveau       TEXT NOT NULL CHECK (niveau IN ('requis', 'accelere', 'informatif')),
+  PRIMARY KEY (recipe_id, equipment_id)
+);
+
 CREATE TABLE lexicon_entry (
   id TEXT PRIMARY KEY,
   code TEXT NOT NULL UNIQUE,
@@ -1215,7 +1317,7 @@ CREATE TABLE evidence_link (
 );
 `
 
-function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {} }, outPath) {
+function buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment = [], confiance = {} }, outPath) {
   if (existsSync(outPath)) rmSync(outPath, { force: true })
 
   const db = new DatabaseSync(outPath)
@@ -1292,6 +1394,19 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {}
     for (const entry of lexicon) {
       insertLexicon.run(entry.code, entry.code, entry.terme, entry.definition)
     }
+
+    // AVANT les recettes : `recipe_equipment.equipment_id` vise une ligne qui doit deja exister
+    // (cle etrangere non DEFERRABLE — le referentiel se lit en entier avant la premiere recette,
+    // contrairement a recipe_sauce ou une recette peut viser une recette definie plus loin).
+    const insertEquipment = db.prepare(
+      'INSERT INTO equipment (id, code, terme, definition) VALUES (?, ?, ?, ?)'
+    )
+    for (const item of equipment) {
+      insertEquipment.run(item.code, item.code, item.terme, String(item.definition).trim())
+    }
+    const insertRecipeEquipment = db.prepare(
+      'INSERT INTO recipe_equipment (recipe_id, equipment_id, niveau) VALUES (?, ?, ?)'
+    )
 
     const insertRecipe = db.prepare(`
       INSERT INTO recipe (
@@ -1391,6 +1506,9 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {}
       for (const facette of recipe.facettes ?? []) {
         insertFacet.run(recipe.id, facette.facette, facette.valeur)
       }
+      for (const eq of recipe.equipements ?? []) {
+        insertRecipeEquipment.run(recipe.id, eq.code, eq.niveau)
+      }
     }
 
     const insertSheet = db.prepare(`
@@ -1478,16 +1596,17 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance = {}
 // ----------------------------------------------------------------------------
 
 async function main() {
-  const [foods, lexicon, recipes, tips, evidence, confiance] = await Promise.all([
+  const [foods, lexicon, recipes, tips, evidence, equipment, confiance] = await Promise.all([
     loadFoods(),
     loadLexicon(),
     loadRecipes(),
     loadTips(),
     loadEvidence(),
+    loadEquipment(),
     loadConfiance(),
   ])
 
-  const errors = validateCatalog({ foods, lexicon, recipes, tips, evidence })
+  const errors = validateCatalog({ foods, lexicon, recipes, tips, evidence, equipment })
   if (errors.length > 0) {
     console.error(`Build du catalogue échoué — ${errors.length} erreur(s) :\n`)
     for (const err of errors) console.error(`  - ${err}`)
@@ -1501,7 +1620,7 @@ async function main() {
   }
 
   await mkdir(path.dirname(OUT_PATH), { recursive: true })
-  buildDatabase({ foods, lexicon, recipes, tips, evidence, confiance }, OUT_PATH)
+  buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment, confiance }, OUT_PATH)
 
   const positions = evidence.reduce((total, fiche) => total + (fiche.positions?.length ?? 0), 0)
   const etapesToutes = recipes.flatMap((r) => r.etapes ?? [])
@@ -1527,6 +1646,23 @@ async function main() {
   console.log(
     `sauces : ${alimentsSauce.length} aliments 'sous_groupe: sauce', ${recettesSauce.length} recettes de sauce, ` +
       `${attachements} attachements plat→sauce${sauceOrphelines > 0 ? ` — ⚠ ${sauceOrphelines} sauce(s) attachée(s) à aucun plat` : ''}.`
+  )
+
+  // Équipement — trois nombres, et c'est le dernier qui se regarde. Un ustensile du référentiel
+  // qu'aucune recette ne cite a coûté du contenu pour rien ; il n'apparaîtra sur aucune fiche et
+  // ne pèsera sur aucune sélection. Ce n'est PAS une faute — d'où l'avertissement et non l'erreur,
+  // exactement comme les sauces orphelines juste au-dessus.
+  const couples = recipes.flatMap((r) => r.equipements ?? [])
+  const parNiveau = { requis: 0, accelere: 0, informatif: 0 }
+  for (const eq of couples) {
+    if (eq?.niveau !== undefined && parNiveau[eq.niveau] !== undefined) parNiveau[eq.niveau]++
+  }
+  const codesCites = new Set(couples.map((eq) => eq?.code))
+  const equipementsOrphelins = equipment.filter((e) => !codesCites.has(e.code)).map((e) => e.code)
+  console.log(
+    `équipement : ${equipment.length} au référentiel, ${couples.length} couples recette→équipement ` +
+      `(${parNiveau.requis} requis, ${parNiveau.accelere} accélère, ${parNiveau.informatif} informatifs)` +
+      `${equipementsOrphelins.length > 0 ? ` — ⚠ cité par aucune recette : ${equipementsOrphelins.join(', ')}` : ''}.`
   )
 
   // ⚠️ CE COMPTEUR EST LE SEUL GARDE-FOU DE LA DÉRIVATION, et il ne peut pas être un test. Aucune

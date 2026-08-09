@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: robot_menager
+terme: "Robot ménager"
+definition: >
+  Appareil à bol et lame qui pétrit, hache ou émulsionne à votre place. Tout ce qu'il fait se fait aussi à la main, en y passant plus de temps.

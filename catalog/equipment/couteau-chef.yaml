@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: couteau_chef
+terme: "Couteau de chef"
+definition: >
+  Grande lame large, l'outil de coupe principal : émincer, tailler, hacher, concasser.

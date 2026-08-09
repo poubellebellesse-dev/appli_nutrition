@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: four
+terme: "Four"
+definition: >
+  Enceinte fermée qui chauffe par le haut, le bas ou les deux. Cuit sans retourner ni remuer, et colore la surface.

@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: wok
+terme: "Wok"
+definition: >
+  Poêle profonde à fond arrondi, faite pour saisir très fort en remuant sans cesse. Une grande poêle fait l'affaire, avec un peu moins de place pour remuer.

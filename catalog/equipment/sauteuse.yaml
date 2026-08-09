@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: sauteuse
+terme: "Sauteuse"
+definition: >
+  Entre la poêle et la casserole : bords hauts et droits, fond large. Pour faire revenir puis mouiller sans changer de récipient.

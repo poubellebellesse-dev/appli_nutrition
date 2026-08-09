@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: plaque_patisserie
+terme: "Plaque de cuisson au four"
+definition: >
+  Tôle plate à rebord bas qui se glisse dans le four. Pour tout ce qui rôtit à plat sans baigner : légumes, biscuits, pâte étalée.

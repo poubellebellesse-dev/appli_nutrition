@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: chinois
+terme: "Chinois"
+definition: >
+  Passoire conique à maille fine qui retient jusqu'aux plus petites particules. Rend une sauce ou un velouté parfaitement lisse.

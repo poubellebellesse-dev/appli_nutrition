@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: mixeur
+terme: "Mixeur"
+definition: >
+  Lame qui tourne vite, au bout d'un bras plongeant ou au fond d'un bol, pour réduire en purée ou en velouté. Un moulin à légumes, un presse-purée ou un tamis font le même travail à la main.

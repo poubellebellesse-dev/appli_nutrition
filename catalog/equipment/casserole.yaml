@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: casserole
+terme: "Casserole"
+definition: >
+  Récipient à bords hauts et manche, pour tout ce qui cuit dans un liquide : sauces, céréales, légumes à l'eau.

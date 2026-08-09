@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: grille_pain
+terme: "Grille-pain"
+definition: >
+  Fentes chauffantes qui dorent une tranche de pain des deux côtés. Une poêle sèche ou le gril du four font la même chose.

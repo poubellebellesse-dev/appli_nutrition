@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: plat_a_four
+terme: "Plat à four"
+definition: >
+  Plat creux en verre, terre ou céramique qui va au four. Gratins, rôtis, légumes au four.

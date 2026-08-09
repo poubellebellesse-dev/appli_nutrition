@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: plaque_cuisson
+terme: "Plaque de cuisson"
+definition: >
+  Le feu du dessus : gaz, plaque électrique, vitrocéramique ou induction. Tout ce qui se cuit dans une poêle ou une casserole passe par elle.

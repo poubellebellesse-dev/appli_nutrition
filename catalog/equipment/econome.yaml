@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: econome
+terme: "Économe"
+definition: >
+  Petite lame mobile qui retire la peau des légumes et des fruits en fine pelure.

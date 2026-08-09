@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: moule_a_tarte
+terme: "Moule à tarte"
+definition: >
+  Moule rond et bas, à bord cannelé ou droit, pour les tartes et les quiches.

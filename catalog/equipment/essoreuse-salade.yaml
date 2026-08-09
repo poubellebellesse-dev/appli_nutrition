@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: essoreuse_salade
+terme: "Essoreuse à salade"
+definition: >
+  Panier tournant qui chasse l'eau des feuilles par la force centrifuge. Un torchon propre secoué fait la même chose.

@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: mortier
+terme: "Mortier et pilon"
+definition: >
+  Bol épais et pilon lourd qui écrasent épices, herbes et ail en pâte, sans les chauffer ni les hacher net.

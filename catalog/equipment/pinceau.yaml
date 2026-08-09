@@ -1,0 +1,5 @@
+# Équipement de cuisine — référencé par recipe.equipements[].code (docs/ENGINE.md §6.5).
+code: pinceau
+terme: "Pinceau de cuisine"
+definition: >
+  Poils souples pour badigeonner une surface d'huile, de beurre fondu ou de jaune d'œuf.
