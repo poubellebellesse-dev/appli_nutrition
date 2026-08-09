@@ -798,3 +798,85 @@ describe('detail-recette — retenir une sauce pour les courses (v14)', () => {
     expect(lu()).toBe(regle)
   })
 })
+
+/**
+ * ③ « La cuisiner avec le plat » — la MÊME liste `avec` que « cuisiner avec un autre plat ».
+ *
+ * ⚠️ AUCUN SECOND CHEMIN N'EST CONSTRUIT ICI, et ces tests le vérifient plutôt que de le supposer :
+ * `SousVue.cuisine` porte déjà une LISTE de plats (v13) et `hashDeLaCuisine` la transporte. Le point
+ * avait été chiffré comme un changement de schéma `user.db` ; il coûte un lien, et la seule façon de
+ * le prouver est de comparer ce lien à celui du plat seul.
+ */
+describe('detail-recette — cuisiner une sauce avec le plat', () => {
+  const PLAT_SAUCABLE = 'poulet_roti_carottes'
+
+  async function ouvrirLePanneau() {
+    await monter(PLAT_SAUCABLE)
+    fireEvent.click(screen.getByText('Ajouter une sauce').closest('button')!)
+    return await screen.findByRole('dialog')
+  }
+
+  const hrefDuPlatSeul = () =>
+    (screen.getByText('Cuisiner pas à pas').closest('a') as HTMLAnchorElement).getAttribute('href')
+
+  /** Le lien de CETTE sauce — la fenêtre en contient un par ligne, jamais un seul. */
+  const lienCuisinerDe = (dialogue: HTMLElement, nomSauce: string) => {
+    const item = within(dialogue).getByText(nomSauce).closest('li') as HTMLElement
+    return within(item).getByText('La cuisiner avec le plat').closest('a') as HTMLAnchorElement
+  }
+
+  it('mène au mode cuisine du PLAT, la sauce ajoutée à sa liste `avec`', async () => {
+    const dialogue = await ouvrirLePanneau()
+    // ⚠️ COMPARÉ AU LIEN DU PLAT SEUL, jamais à un hash écrit à la main : c'est ce qui prouve que
+    // les deux ouvrent le même écran sur le même plat, et que la sauce s'y AJOUTE au lieu de le
+    // remplacer. Un hash littéral serait vert même si le plat avait changé d'identifiant.
+    expect(lienCuisinerDe(dialogue, 'Sauce au poivre').getAttribute('href')).toBe(
+      `${hrefDuPlatSeul()}&avec=sauce_poivre`
+    )
+    // Et pas seulement sur les sauces attachées : la vinaigrette vient de « Autres sauces ».
+    expect(lienCuisinerDe(dialogue, 'Vinaigrette à la moutarde').getAttribute('href')).toBe(
+      `${hrefDuPlatSeul()}&avec=vinaigrette_moutarde`
+    )
+  })
+
+  it('les portions réglées voyagent — celles du PLAT, aucune pour la sauce', async () => {
+    // ⚠️ `portions: null` CÔTÉ SAUCE, ET C'EST VOULU : « rôti pour 6 » ne dit rien du nombre de
+    // parts de la sauce, donc c'est son `portionsBase` qui s'applique (`PlatACuisiner`). Recopier
+    // les 6 portions du plat sur la sauce ferait préparer six fois la dose.
+    await monter(PLAT_SAUCABLE)
+    fireEvent.click(screen.getByLabelText('Une portion de plus'))
+    fireEvent.click(screen.getByLabelText('Une portion de plus'))
+    fireEvent.click(screen.getByText('Ajouter une sauce').closest('button')!)
+    const dialogue = await screen.findByRole('dialog')
+
+    const href = lienCuisinerDe(dialogue, 'Sauce au poivre').getAttribute('href')!
+    expect(href).toBe(`${hrefDuPlatSeul()}&avec=sauce_poivre`)
+    expect(href).toContain('portions=')
+    // Aucun `:portions` accroché à l'identifiant de la sauce — voir `hashDeLaCuisine`.
+    expect(href.endsWith('avec=sauce_poivre')).toBe(true)
+  })
+
+  it('⛔ SENS 1 — cuisiner la sauce ce soir n’écrit RIEN dans les courses', async () => {
+    // Les fusionner ferait ACHETER une sauce à qui voulait seulement la préparer ce soir. Ce lien
+    // est un `<a href>` sans `onClick` : il ne peut structurellement rien écrire — le test le
+    // constate quand même, parce qu'un jour quelqu'un voudra « en profiter pour la retenir aussi ».
+    const dialogue = await ouvrirLePanneau()
+    fireEvent.click(lienCuisinerDe(dialogue, 'Sauce au poivre'))
+    expect(readSaucesChoisies(baseCourante()).get(PLAT_SAUCABLE as RecipeId)).toBeUndefined()
+  })
+
+  it('⛔ SENS 2 — retenir la sauce pour les courses ne change pas ce lien', async () => {
+    // L'inverse du précédent : le choix durable ne doit pas non plus se mettre à décider de ce
+    // qu'on cuisine ce soir. Le lien est identique avant et après.
+    const dialogue = await ouvrirLePanneau()
+    const item = within(dialogue).getByText('Sauce au poivre').closest('li') as HTMLElement
+    const avant = lienCuisinerDe(dialogue, 'Sauce au poivre').getAttribute('href')
+
+    fireEvent.click(within(item).getAllByRole('button').find((b) => b.hasAttribute('aria-pressed'))!)
+    await waitFor(() =>
+      expect(readSaucesChoisies(baseCourante()).get(PLAT_SAUCABLE as RecipeId)).toEqual(['sauce_poivre'])
+    )
+
+    expect(lienCuisinerDe(screen.getByRole('dialog'), 'Sauce au poivre').getAttribute('href')).toBe(avant)
+  })
+})

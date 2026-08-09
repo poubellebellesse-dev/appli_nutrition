@@ -309,6 +309,11 @@ export function DetailRecette({
   const quantites = vue.quantitePour(portionsAffichees)
   const facteur = portionsAffichees / (recette.portionsBase > 0 ? recette.portionsBase : 1)
   const mention = mentionOrigine(recette)
+  // Le mode cuisine numérote des GESTES : sans geste, il n'a rien à dérouler. Extrait ici plutôt
+  // qu'écrit deux fois, parce que le bouton « Cuisiner pas à pas » et celui de chaque ligne de sauce
+  // ouvrent le MÊME écran — deux prédicats séparés finiraient par diverger, et l'un des deux
+  // mènerait à une cuisine vide.
+  const cuisinable = recette.etapes.some((e) => e.nature === 'geste')
 
   return (
     <article>
@@ -419,7 +424,7 @@ export function DetailRecette({
           démontage, et un hash ne transporte qu'un identifiant. Le mode cuisine les recopie ensuite
           dans sa session (v11), où elles survivent à la fermeture — ce lien ne sert qu'au premier
           lancement, jamais à la reprise. */}
-      {recette.etapes.some((e) => e.nature === 'geste') && (
+      {cuisinable && (
         <a
           href={hashDeLaCuisine(recette.id, portionsAffichees)}
           className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] bg-accent-plein px-4 text-[1.08rem] font-semibold text-white"
@@ -469,10 +474,25 @@ export function DetailRecette({
 
           Avant les valeurs nutritionnelles : la sauce est une décision de repas, l'énergie une
           information qu'on déplie après. */}
+      {/* ⚠️ LA MÊME LISTE `avec` QUE « cuisiner avec un autre plat », pas un second chemin. La v13 a
+          déjà livré tout ce qu'il faut : `SousVue.cuisine` porte une LISTE de plats,
+          `hashDeLaCuisine(id, portions, avec[])` la transporte, et `ordonnancerCuissons` fait partir
+          la plus longue en premier — une sauce de 5 min finit d'elle-même à la fin, sans qu'on ait
+          rien à lui dire. Ce point avait été chiffré comme un changement de schéma `user.db` : il
+          coûte un lien.
+
+          `portions: null` sur la sauce, et ce n'est pas un oubli : « rôti pour 6 » ne dit rien du
+          nombre de parts de la sauce, donc c'est son `portionsBase` qui s'applique
+          (`PlatACuisiner`). */}
       <SaucesAAjouter
         sauces={vue.sauces}
         afficherEnergie={vue.afficherMacros}
         onBasculer={basculerSauce}
+        hrefCuisiner={(sauceId) =>
+          cuisinable
+            ? hashDeLaCuisine(recette.id, portionsAffichees, [{ id: sauceId, portions: null }])
+            : null
+        }
       />
 
       <ValeursNutritionnelles
@@ -839,10 +859,13 @@ function SaucesAAjouter({
   sauces,
   afficherEnergie,
   onBasculer,
+  hrefCuisiner,
 }: {
   readonly sauces: VueSauces
   readonly afficherEnergie: boolean
   readonly onBasculer: (sauceId: RecipeId, choisie: boolean) => void
+  /** `null` = ce plat n'a aucun geste, le mode cuisine n'a rien à dérouler — voir `cuisinable`. */
+  readonly hrefCuisiner: (sauceId: RecipeId) => string | null
 }) {
   const [ouvert, setOuvert] = useState(false)
   if (!sauces.proposer) return null
@@ -884,6 +907,7 @@ function SaucesAAjouter({
                     sauce={sauce}
                     afficherEnergie={afficherEnergie}
                     onBasculer={onBasculer}
+                    hrefCuisiner={hrefCuisiner(sauce.id)}
                   />
                 ))}
               </ul>
@@ -902,6 +926,7 @@ function SaucesAAjouter({
                     sauce={sauce}
                     afficherEnergie={afficherEnergie}
                     onBasculer={onBasculer}
+                    hrefCuisiner={hrefCuisiner(sauce.id)}
                   />
                 ))}
               </ul>
@@ -941,10 +966,12 @@ function LienSauce({
   sauce,
   afficherEnergie,
   onBasculer,
+  hrefCuisiner,
 }: {
   readonly sauce: LigneSauce
   readonly afficherEnergie: boolean
   readonly onBasculer: (sauceId: RecipeId, choisie: boolean) => void
+  readonly hrefCuisiner: string | null
 }) {
   return (
     <li className="border-b border-bordure py-1 last:border-b-0">
@@ -972,6 +999,23 @@ function LienSauce({
       >
         {sauce.choisie ? '✓ Je la prends toujours avec ce plat' : 'Je la prends toujours avec ce plat'}
       </button>
+
+      {/* ⛔ DEUX DÉCISIONS, ET ELLES DOIVENT LE RESTER. Celui du dessus est DURABLE — il écrit
+          `user_recipe_sauce` et fait acheter la sauce chaque semaine où le plat est prévu. Celui-ci
+          meurt au démontage de la fiche : il ouvre le mode cuisine avec la sauce en plus, ce soir,
+          et n'écrit rien. Les fusionner ferait ACHETER une sauce à qui voulait seulement la préparer
+          ce soir. Verrouillé par test dans les deux sens.
+
+          Un LIEN, pas un bouton : il navigue. Même nature que « Cuisiner pas à pas » plus haut, et
+          un `<button>` qui change de page priverait du clic milieu et de l'aperçu de destination. */}
+      {hrefCuisiner !== null && (
+        <a
+          href={hrefCuisiner}
+          className="mb-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-accent-texte no-underline"
+        >
+          La cuisiner avec le plat
+        </a>
+      )}
     </li>
   )
 }
