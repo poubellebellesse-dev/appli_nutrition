@@ -468,7 +468,7 @@ export function Cuisine({
   /**
    * ⛔ « TERMINER » EFFAÇAIT DES MINUTEURS EN COURS SANS UN MOT, et le cas n'a rien d'exotique : la
    * dernière étape d'un plat est souvent un repos (« laisser reposer 10 min »), on lance son
-   * minuteur, et le bouton qui clôt le déroulé est juste à côté. `clearCuisineSession` emporte la
+   * minuteur, et le bouton qui clôt le déroulé est juste à côté. La fermeture emporte la
    * ligne et ses enfants — le décompte disparaît sans trace.
    *
    * ⚠️ ON NE DEMANDE RIEN QUAND IL N'Y A RIEN À PERDRE. Une confirmation systématique est une

@@ -29,13 +29,10 @@ import type { UserDb } from './user-db.js'
 import { MIGRATIONS, USER_SCHEMA_VERSION, migrate, readSchemaVersion } from './user-schema.js'
 import {
   aConsenti,
-  clearCuisineSession,
   clearCuisson,
   clearToutesLesCuissons,
-  readCuisineSession,
   readCuissons,
   readHeureService,
-  writeCuisineSession,
   writeCuisson,
   writeHeureService,
   readActiveTopics,
@@ -982,38 +979,38 @@ describe('user-store — la cuisson en cours (v10, portions en v11)', () => {
   }
 
   it('aucune cuisson au départ', () => {
-    expect(readCuisineSession(db)).toBeNull()
+    expect(readCuissons(db)[0] ?? null).toBeNull()
   })
 
   it('fait l’aller-retour complet, minuteurs compris et triés', () => {
-    writeCuisineSession(db, SESSION)
-    expect(readCuisineSession(db)).toEqual(SESSION)
+    writeCuisson(db, SESSION)
+    expect(readCuissons(db)[0] ?? null).toEqual(SESSION)
   })
 
   // ⚠️ LE PIÈGE DÉJÀ PAYÉ (reference/PIEGES.md). `INSERT OR REPLACE` sur la session supprimerait la
   // ligne avant de la réinsérer, déclenchant le CASCADE sur `user_cuisine_timer` — les minuteurs
   // qu'on est en train d'écrire disparaîtraient dans le même appel, sans la moindre erreur.
   it('⛔ réécrire la session ne perd PAS ses minuteurs', () => {
-    writeCuisineSession(db, SESSION)
-    writeCuisineSession(db, { ...SESSION, ordreCourant: 4 })
+    writeCuisson(db, SESSION)
+    writeCuisson(db, { ...SESSION, ordreCourant: 4 })
 
-    const relue = readCuisineSession(db)
+    const relue = readCuissons(db)[0] ?? null
     expect(relue?.ordreCourant).toBe(4)
     expect(relue?.minuteurs).toHaveLength(2)
   })
 
   it('remplace les minuteurs au lieu de les empiler — arrêter un minuteur doit le FAIRE disparaître', () => {
-    writeCuisineSession(db, SESSION)
-    writeCuisineSession(db, { ...SESSION, minuteurs: [SESSION.minuteurs[0]!] })
+    writeCuisson(db, SESSION)
+    writeCuisson(db, { ...SESSION, minuteurs: [SESSION.minuteurs[0]!] })
 
-    expect(readCuisineSession(db)?.minuteurs.map((t) => t.ordre)).toEqual([2])
+    expect((readCuissons(db)[0] ?? null)?.minuteurs.map((t) => t.ordre)).toEqual([2])
   })
 
   it('fermer la cuisson emporte ses minuteurs', () => {
-    writeCuisineSession(db, SESSION)
-    clearCuisineSession(db)
+    writeCuisson(db, SESSION)
+    clearToutesLesCuissons(db)
 
-    expect(readCuisineSession(db)).toBeNull()
+    expect(readCuissons(db)[0] ?? null).toBeNull()
     const restants = db.all<{ readonly n: number }>('SELECT COUNT(*) AS n FROM user_cuisine_timer')
     expect(restants[0]?.n).toBe(0)
   })
@@ -1022,14 +1019,14 @@ describe('user-store — la cuisson en cours (v10, portions en v11)', () => {
   // n'existe qu'un reste. Un minuteur portant les deux serait une contradiction lisible dans les
   // deux sens — la base doit le refuser, pas le code de lecture.
   it('⛔ refuse un minuteur qui serait en marche ET en pause', () => {
-    writeCuisineSession(db, SESSION)
+    writeCuisson(db, SESSION)
     expect(() =>
       db.run('INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (1, 9, 1, 1)')
     ).toThrow()
   })
 
   it('⛔ refuse un minuteur qui ne serait NI en marche NI en pause', () => {
-    writeCuisineSession(db, SESSION)
+    writeCuisson(db, SESSION)
     expect(() =>
       db.run(
         'INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (1, 9, NULL, NULL)'
@@ -1044,7 +1041,7 @@ describe('user-store — la cuisson en cours (v10, portions en v11)', () => {
   // route. La garantie qui la remplace — pas deux fois la même recette — est vérifiée dans le bloc
   // « ce que la migration v13 rend possible, et ce qu'elle protège ».
   it('depuis la v13, une deuxième cuisson sur une AUTRE recette est acceptée', () => {
-    writeCuisineSession(db, SESSION)
+    writeCuisson(db, SESSION)
     expect(() =>
       db.run('INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le) VALUES (2, ?, 1, 0)', [
         'omelette_fines_herbes',
@@ -1055,16 +1052,16 @@ describe('user-store — la cuisson en cours (v10, portions en v11)', () => {
   // --- v11 — les portions suivent la cuisson ----------------------------------------------------
 
   it('les portions font l’aller-retour', () => {
-    writeCuisineSession(db, SESSION)
-    expect(readCuisineSession(db)?.portions).toBe(6)
+    writeCuisson(db, SESSION)
+    expect((readCuissons(db)[0] ?? null)?.portions).toBe(6)
   })
 
   // ⚠️ `null` = AUCUN CHOIX EXPRIMÉ, jamais « les portions de base ». C'est l'état d'une cuisson
   // ouverte AVANT la v11, et c'est l'écran — seul à connaître `portionsBase` — qui tranche alors.
   // Combler ici écrirait dans la base un choix que personne n'a fait.
   it('⛔ `null` reste `null` — le store n’invente aucun nombre de portions', () => {
-    writeCuisineSession(db, { ...SESSION, portions: null })
-    expect(readCuisineSession(db)?.portions).toBeNull()
+    writeCuisson(db, { ...SESSION, portions: null })
+    expect((readCuissons(db)[0] ?? null)?.portions).toBeNull()
   })
 
   // La garantie vient de la FORME, pas du code appelant : `portions = 0` ferait disparaître la
@@ -1082,10 +1079,10 @@ describe('user-store — la cuisson en cours (v10, portions en v11)', () => {
   // portions à jour SANS emporter les minuteurs au passage (`ON CONFLICT DO UPDATE`, jamais
   // `INSERT OR REPLACE`).
   it('changer les portions ne perd pas les minuteurs', () => {
-    writeCuisineSession(db, SESSION)
-    writeCuisineSession(db, { ...SESSION, portions: 2 })
+    writeCuisson(db, SESSION)
+    writeCuisson(db, { ...SESSION, portions: 2 })
 
-    const relue = readCuisineSession(db)
+    const relue = readCuissons(db)[0] ?? null
     expect(relue?.portions).toBe(2)
     expect(relue?.minuteurs).toHaveLength(2)
   })
@@ -1375,24 +1372,5 @@ describe('user-store — plusieurs cuissons à la fois (v13)', () => {
 
     expect(readHeureService(db)).toBeNull()
     expect(readCuissons(db)).toHaveLength(1)
-  })
-
-  // ⚠️ PÉRIODE DE COHABITATION DES DEUX API. `writeCuisineSession` code encore `id = 1` en dur ; ce
-  // test protège que `readCuissons` la voit, et que `writeCuisson` sur la même recette met à jour
-  // cette ligne au lieu d'en créer une deuxième — sinon la même recette « ouverte » sous deux id.
-  it('interopère avec l’ancienne API : writeCuisineSession est visible par readCuissons, et writeCuisson met à jour au lieu de dupliquer', () => {
-    writeCuisineSession(db, CHAKCHOUKA)
-
-    const apresAncienne = readCuissons(db)
-    expect(apresAncienne).toHaveLength(1)
-    expect(apresAncienne[0]?.minuteurs).toEqual(CHAKCHOUKA.minuteurs)
-
-    writeCuisson(db, { ...CHAKCHOUKA, ordreCourant: 7, minuteurs: [] })
-
-    const apresNouvelle = readCuissons(db)
-    expect(apresNouvelle).toHaveLength(1)
-    expect(apresNouvelle[0]?.recetteId).toBe('chakchouka')
-    expect(apresNouvelle[0]?.ordreCourant).toBe(7)
-    expect(apresNouvelle[0]?.minuteurs).toEqual([])
   })
 })

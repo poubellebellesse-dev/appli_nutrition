@@ -17,7 +17,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
-import { readCuisineSession, readCuissons, writeCuisineSession } from '../../data/user-store.js'
+import { readCuissons, writeCuisson } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
 import { hashDeRecette } from '../router.js'
 import type { RecipeId } from '../../engine/domain/index.js'
@@ -202,7 +202,7 @@ describe('cuisine — reprendre une cuisson', () => {
   // « fermer l'appli, revenir plus tard ». L'écran doit dire depuis quand c'est fini — jamais
   // afficher un décompte figé, jamais laisser croire que ça vient de sonner.
   it('⛔ une session reprise DIT LA VÉRITÉ sur un minuteur échu', async () => {
-    writeCuisineSession(baseCourante(), {
+    writeCuisson(baseCourante(), {
       recetteId: CHAKCHOUKA,
       ordreCourant: 2,
       ouverteLe: Date.now() - 40 * 60 * 1000,
@@ -217,7 +217,7 @@ describe('cuisine — reprendre une cuisson', () => {
   })
 
   it('rouvre à l’étape où l’on s’était arrêté', async () => {
-    writeCuisineSession(baseCourante(), {
+    writeCuisson(baseCourante(), {
       recetteId: CHAKCHOUKA,
       ordreCourant: 4,
       ouverteLe: Date.now(),
@@ -232,7 +232,7 @@ describe('cuisine — reprendre une cuisson', () => {
   // ⚠️ L'alarme ne doit PAS retentir pour un minuteur déjà échu à l'ouverture : ce serait le
   // mensonge du point 7 retourné en son contraire sonore.
   it('⛔ ne SONNE PAS pour un minuteur déjà échu au moment où l’on rouvre', async () => {
-    writeCuisineSession(baseCourante(), {
+    writeCuisson(baseCourante(), {
       recetteId: CHAKCHOUKA,
       ordreCourant: 2,
       ouverteLe: Date.now() - 60 * 60 * 1000,
@@ -249,7 +249,7 @@ describe('cuisine — reprendre une cuisson', () => {
   // échu, y compris celui qui venait d'aboutir pendant qu'on posait le téléphone. Le seuil qui
   // sépare les deux cas est l'arrêt automatique de l'alarme (`sonnerieEncoreJuste`).
   it('⛔ SONNE pour un minuteur qui vient d’aboutir, même à l’ouverture', async () => {
-    writeCuisineSession(baseCourante(), {
+    writeCuisson(baseCourante(), {
       recetteId: CHAKCHOUKA,
       ordreCourant: 2,
       ouverteLe: Date.now() - 20 * 60 * 1000,
@@ -266,7 +266,7 @@ describe('cuisine — reprendre une cuisson', () => {
   // aucun geste : `findIndex` rend `-1` et la ligne annonçait « Étape 0 — il reste 4:12 ».
   // ⚠️ Le décompte doit RESTER : le faire disparaître serait pire, c'est un décompte qu'on oublie.
   it('⛔ un minuteur dont l’étape a disparu perd son numéro, jamais son décompte', async () => {
-    writeCuisineSession(baseCourante(), {
+    writeCuisson(baseCourante(), {
       recetteId: CHAKCHOUKA,
       ordreCourant: 1,
       ouverteLe: Date.now(),
@@ -282,7 +282,7 @@ describe('cuisine — reprendre une cuisson', () => {
   })
 
   it('une session d’une AUTRE recette ne se reprend pas ici', async () => {
-    writeCuisineSession(baseCourante(), {
+    writeCuisson(baseCourante(), {
       recetteId: 'omelette_fines_herbes',
       ordreCourant: 3,
       ouverteLe: Date.now(),
@@ -315,7 +315,7 @@ describe('cuisine — l’alarme', () => {
 
 describe('cuisine — terminer', () => {
   // ⛔ LE CAS N'A RIEN D'EXOTIQUE : la dernière étape d'un plat est souvent un repos, on lance son
-  // minuteur, et le bouton qui clôt le déroulé est juste à côté. `clearCuisineSession` emportait la
+  // minuteur, et le bouton qui clôt le déroulé est juste à côté. La fermeture emportait la
   // ligne ET ses enfants, sans un mot.
   it('⛔ ne jette pas un minuteur en cours sans le dire', async () => {
     await monter()
@@ -328,7 +328,7 @@ describe('cuisine — terminer', () => {
     expect(within(screen.getByRole('dialog')).getByText(/minuteur tourne encore/)).toBeTruthy()
     // ⚠️ CE QUI COMPTE : rien n'a encore été effacé. Une fenêtre qui s'ouvre APRÈS la destruction
     // serait une politesse, pas un garde-fou.
-    expect(readCuisineSession(baseCourante())).not.toBeNull()
+    expect((readCuissons(baseCourante())[0] ?? null)).not.toBeNull()
   })
 
   // ⚠️ Une confirmation systématique est une confirmation qu'on cesse de lire au troisième plat —
@@ -340,7 +340,7 @@ describe('cuisine — terminer', () => {
     fireEvent.click(screen.getByText('Terminer la cuisson'))
 
     expect(screen.queryByRole('dialog')).toBeNull()
-    expect(readCuisineSession(baseCourante())).toBeNull()
+    expect((readCuissons(baseCourante())[0] ?? null)).toBeNull()
   })
 
   it('« Terminer quand même » va au bout', async () => {
@@ -352,7 +352,7 @@ describe('cuisine — terminer', () => {
     fireEvent.click(screen.getByText('Terminer la cuisson'))
     fireEvent.click(within(screen.getByRole('dialog')).getByText('Terminer quand même'))
 
-    expect(readCuisineSession(baseCourante())).toBeNull()
+    expect((readCuissons(baseCourante())[0] ?? null)).toBeNull()
   })
 })
 
@@ -431,12 +431,12 @@ describe('cuisine — les ingrédients sous la main', () => {
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Une portion de plus' })
     )
 
-    expect(readCuisineSession(baseCourante())?.portions).toBe(5)
+    expect((readCuissons(baseCourante())[0] ?? null)?.portions).toBe(5)
     expect(screen.getByRole('button', { name: /pour 5 portions/ })).toBeTruthy()
   })
 
   it('⛔ reprendre une cuisson ne RAMÈNE PAS les portions à la valeur de base', async () => {
-    writeCuisineSession(baseCourante(), {
+    writeCuisson(baseCourante(), {
       recetteId: CHAKCHOUKA,
       ordreCourant: 2,
       ouverteLe: Date.now(),
@@ -452,7 +452,7 @@ describe('cuisine — les ingrédients sous la main', () => {
   // `portions = null` est l'état d'une cuisson ouverte AVANT la v11. L'écran ne doit pas afficher un
   // nombre inventé : il retombe sur celui de la recette, seul endroit qui le connaisse.
   it('une cuisson d’avant la v11 retombe sur les portions de la recette', async () => {
-    writeCuisineSession(baseCourante(), {
+    writeCuisson(baseCourante(), {
       recetteId: CHAKCHOUKA,
       ordreCourant: 2,
       ouverteLe: Date.now(),

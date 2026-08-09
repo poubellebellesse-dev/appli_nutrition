@@ -1006,82 +1006,7 @@ export interface StoredCuisineSession {
   readonly minuteurs: readonly StoredCuisineTimer[]
 }
 
-export function readCuisineSession(db: UserDb): StoredCuisineSession | null {
-  const row = db.all<{
-    readonly recette_id: string
-    readonly ordre_courant: number
-    readonly ouverte_le: number
-    readonly portions: number | null
-  }>('SELECT recette_id, ordre_courant, ouverte_le, portions FROM user_cuisine_session WHERE id = 1')[0]
-  if (!row) return null
-
-  const minuteurs = db
-    .all<{
-      readonly ordre: number
-      readonly fin_ms: number | null
-      readonly pause_restant_s: number | null
-    }>('SELECT ordre, fin_ms, pause_restant_s FROM user_cuisine_timer WHERE session_id = 1 ORDER BY ordre')
-    .map((t) => ({ ordre: t.ordre, finMs: t.fin_ms, pauseRestantS: t.pause_restant_s }))
-
-  return {
-    recetteId: row.recette_id,
-    ordreCourant: row.ordre_courant,
-    ouverteLe: row.ouverte_le,
-    portions: row.portions,
-    minuteurs,
-  }
-}
-
-/**
- * Écrit la session et SES minuteurs, en remplaçant les précédents.
- *
- * ⚠️ `INSERT … ON CONFLICT DO UPDATE`, JAMAIS `INSERT OR REPLACE` — piège déjà payé
- * (`reference/PIEGES.md`) : `REPLACE` supprime la ligne avant de la réinsérer, ce qui déclencherait
- * le `ON DELETE CASCADE` et effacerait les minuteurs qu'on est en train d'enregistrer.
- *
- * Le `DELETE` des minuteurs est explicite plutôt que confié au CASCADE : ce fichier ne peut pas
- * garantir que `PRAGMA foreign_keys` est ON, l'ouverture appartenant aux adaptateurs. Même
- * précaution que `savePlan`.
- */
-export function writeCuisineSession(db: UserDb, session: StoredCuisineSession): void {
-  withTransaction(db, () => {
-    db.run(
-      `INSERT INTO user_cuisine_session (id, recette_id, ordre_courant, ouverte_le, portions)
-       VALUES (1, ?, ?, ?, ?)
-       ON CONFLICT (id) DO UPDATE SET
-         recette_id = excluded.recette_id,
-         ordre_courant = excluded.ordre_courant,
-         ouverte_le = excluded.ouverte_le,
-         portions = excluded.portions`,
-      [session.recetteId, session.ordreCourant, session.ouverteLe, session.portions]
-    )
-    db.run('DELETE FROM user_cuisine_timer WHERE session_id = 1')
-    for (const t of session.minuteurs) {
-      db.run(
-        'INSERT INTO user_cuisine_timer (session_id, ordre, fin_ms, pause_restant_s) VALUES (1, ?, ?, ?)',
-        [t.ordre, t.finMs, t.pauseRestantS]
-      )
-    }
-  })
-}
-
-/** Ferme la cuisson. Les minuteurs suivent, par CASCADE et par `DELETE` explicite. */
-export function clearCuisineSession(db: UserDb): void {
-  withTransaction(db, () => {
-    db.run('DELETE FROM user_cuisine_timer WHERE session_id = 1')
-    db.run('DELETE FROM user_cuisine_session WHERE id = 1')
-  })
-}
-
 // ══ PLUSIEURS CUISSONS À LA FOIS (schéma v13, lot L4) ═══════════════════════════════════════════
-//
-// ⚠️ AJOUT STRICT : les trois fonctions ci-dessus ne changent NI de signature NI de comportement.
-// Elles codent encore `id = 1` en dur, ce qui reste valide — `1` est un identifiant de session
-// comme un autre depuis la v13. Les écrans continuent donc de compiler et de se comporter à
-// l'identique, et la bascule vers les fonctions ci-dessous se fera dans le lot des écrans, d'un
-// seul geste et avec ses tests. Changer la sémantique de `writeCuisineSession` ici aurait modifié
-// le comportement de `cuisine.tsx` SANS toucher `cuisine.tsx` : ouvrir le mode sur une deuxième
-// recette serait passé de « remplace la précédente » à « s'ajoute », en silence.
 //
 // ⚠️ LA RECETTE EST LA CLÉ PUBLIQUE, l'`id` numérique reste interne. `recette_id` est `UNIQUE`
 // depuis la v13 : deux fois le même plat dans une cuisson est inexprimable. Exposer l'`id` aurait
@@ -1139,10 +1064,9 @@ export function readCuissons(db: UserDb): readonly StoredCuisineSession[] {
 /**
  * Écrit UNE cuisson et ses minuteurs, sans toucher aux autres.
  *
- * ⚠️ `ON CONFLICT (recette_id)`, ET SURTOUT PAS `INSERT OR REPLACE` — même piège que
- * `writeCuisineSession`, et il coûterait ici la même chose : `REPLACE` supprime la ligne avant de
- * la réinsérer, ce qui déclenche le `ON DELETE CASCADE` et emporte les minuteurs qu'on est
- * précisément en train d'enregistrer (`reference/PIEGES.md`).
+ * ⚠️ `ON CONFLICT (recette_id)`, ET SURTOUT PAS `INSERT OR REPLACE` — piège déjà payé
+ * (`reference/PIEGES.md`) : `REPLACE` supprime la ligne avant de la réinsérer, ce qui déclenche
+ * le `ON DELETE CASCADE` et emporte les minuteurs qu'on est précisément en train d'enregistrer.
  *
  * ⚠️ L'`id` N'EST PAS DANS LA LISTE DE COLONNES : c'est SQLite qui l'attribue. Le passer aurait
  * demandé à l'appelant de connaître une clé qu'il n'a aucune raison d'avoir, et de la deviner juste

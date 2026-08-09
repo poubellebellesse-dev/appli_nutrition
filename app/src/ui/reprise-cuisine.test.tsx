@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, render, screen } from '@testing-library/react'
 import type { StoredCuisineSession } from '../data/user-store.js'
-import { writeCuisineSession } from '../data/user-store.js'
+import { writeCuisson } from '../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from './test-socle.js'
 import { PEREMPTION_CUISINE_MS } from './cuisine-session.js'
 import { anciennete, resumeDeSession } from './reprise-cuisine.js'
@@ -93,7 +93,7 @@ describe('reprise-cuisine — le bandeau à l’écran', () => {
   // reproche que la décision de ne pas sonner en arrière-plan s'était engagée à ne pas mériter.
   it('⛔ annonce un minuteur qui arrive à terme SOUS LES YEUX, sans changer d’écran', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
-    writeCuisineSession(baseCourante(), {
+    writeCuisson(baseCourante(), {
       recetteId: 'chakchouka',
       ordreCourant: 2,
       ouverteLe: Date.now(),
