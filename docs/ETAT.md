@@ -530,6 +530,34 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   **premier chargement web**, pas une limite d'APK (plafond AAB 150 Mo). Estimation à vérifier avant
   de produire les photos : 241 × (hero ~120 Ko + vignette ~32 Ko) ≈ **36 Mo**, soit hors budget web
   et confortable en binaire. **À trancher avant la prise de vue** — `archive/RECAP_SESSION_8.md` §2.
+  ✅ **L'ESTIMATION DE 36 Mo EST CADUQUE — REMPLACÉE PAR UNE MESURE le 2026-08-09.** Une hero AVIF
+  pèse **30 Ko de médiane**, pas 120 : les 88 premières font **3,12 Mo** à elles toutes. Il n'y a
+  **pas de vignette** — la même image sert partout, redimensionnée par le navigateur. Extrapolé à
+  308 : **~10,9 Mo de photos**, et un `dist/` mesuré à **6,61 Mo** aujourd'hui ⇒ **~14,4 Mo à
+  terme**. ⚠️ **Le budget web tient, mais il ne reste que 0,6 Mo de marge sur les 15 Mo du critère
+  P6.** Ce n'est plus une contrainte confortable : toute décision qui alourdit le bundle (une
+  deuxième police, un clip de geste, un `catalog.db` qui double) doit désormais se peser contre les
+  photos. **La prise de vue peut commencer ; le budget, lui, est à surveiller à chaque lot.**
+- ✅ **ENCODEUR : `sharp` (devDependency), AVIF 1024 px, `quality: 45`, `effort: 6`** — décidé avec
+  l'utilisateur le 2026-08-09, **sur mesure et non au jugé**. Les sources brutes font 19,9 Mo pour
+  88 photos (médiane 189 Ko, max 1 674 Ko, **2 seulement sous 40 Ko**) : le ré-encodage n'est pas une
+  optimisation, c'est ce qui rend le lot expédiable. ⚠️ **LE CHOIX AVIF/WebP NE SE COMPARE PAS À
+  `quality` ÉGALE** — les échelles nominales des deux formats ne veulent pas dire la même chose. La
+  comparaison a été refaite **à PSNR égal** contre la source redimensionnée, sur 22 photos : AVIF y
+  rend **25 à 33 % de moins** que WebP. C'est ce qui a tranché, pas le nombre écrit dans l'appel.
+  ⚠️ **CETTE DÉCISION VA CONTRE L'EN-TÊTE DE `catalog/build-icons.mjs`**, qui interdit `sharp` pour
+  ne pas faire entrer de chaîne de compilation native. Tenue quand même : l'objection visait un
+  script qui dessine deux cercles, `sharp` 0.35.3 livre des **binaires précompilés win32-x64**, et
+  **la garantie de fond reste intacte — les artefacts sont commités, `npm run build` et `vite build`
+  n'appellent JAMAIS `sharp`.** C'est un outil d'atelier à un coup, pas une dépendance de build ;
+  `npm audit --omit=dev` rend 0 vulnérabilité. **Si un jour un build appelle `sharp`, cette phrase
+  est le signal que quelque chose a dérivé.**
+- ⛔ **66 DES 88 PHOTOS SONT SOUS CC BY OU CC BY-SA : L'ATTRIBUTION EST UNE OBLIGATION LÉGALE, PAS
+  UNE POLITESSE.** Le bloc généré de `catalog/CREDITS.md` (entre les marqueurs `DÉBUT PHOTOS` /
+  `FIN PHOTOS`, réécrit par `catalog/import-photos.mjs`) est le seul endroit où elle vit aujourd'hui.
+  ⚠️ **Elle doit suivre l'image PARTOUT où l'image est rediffusée** — donc si le `.nutri-recipe` de
+  §3 « Communauté » se met à embarquer la photo, il doit embarquer l'attribution avec, et la
+  carte-image Canvas pour les réseaux aussi. **Non fait, parce que rien n'embarque encore de photo.**
 - **Modèle : 100 % gratuit, sans pub.** Un simple lien « à propos » vers site perso / réseaux.
 
 ### Communauté sans serveur & contenu
@@ -801,7 +829,7 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 > | Recettes | **308**, dont **3 sauces** | `SELECT COUNT(*) FROM recipe` · `… WHERE est_sauce=1` |
 > | Aliments | **451** | `SELECT COUNT(*) FROM food` |
 > | Étapes de recette | **1 425** | `SELECT COUNT(*) FROM recipe_step` |
-> | Photos de recette | **0 / 308** | `SELECT COUNT(*) FROM recipe WHERE image_path IS NOT NULL AND image_path <> ''` |
+> | Photos de recette | **88 / 308** (2026-08-09) | `SELECT COUNT(*) FROM recipe WHERE image_path IS NOT NULL AND image_path <> ''` |
 > | `piquant` renseigné | **308 / 308** | `SELECT piquant, COUNT(*) FROM recipe GROUP BY 1` |
 > | Sauces : aliments · attachements · `porte_deja_une_sauce` posé | **10** · **14** · **20** | `food WHERE sous_groupe='sauce'` · `recipe_sauce` · `recipe WHERE porte_deja_une_sauce IS NOT NULL` |
 > | Créneaux | dîner **197** · déjeuner **172** · petit-déjeuner **43** · goûter **40** | agréger `recipe.types_repas` (JSON) |
@@ -928,6 +956,25 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   risque, pas un écart constaté.
 
 ### Défauts connus, non corrigés
+
+- ⚠️ **UN COMMENTAIRE D'`export-recette.ts` EST DEVENU FAUX LE 2026-08-09.**
+  `app/src/data/export-recette.ts` porte « `imagePath` toujours `null`, il n'y a rien à embarquer ».
+  Il était vrai jusqu'à l'arrivée des 88 photos ; il ne l'est plus. **Le code, lui, est correct** —
+  il n'embarque toujours rien, et c'est le comportement voulu tant que la question de l'attribution
+  qui voyage avec l'image n'est pas tranchée (§3 « Média »). **C'est le commentaire qui ment, pas la
+  fonction.** Non corrigé ici : le fichier appartient à une autre piste, et le signaler vaut mieux
+  que le retoucher au milieu d'un lot de photos.
+
+- ⚠️ **`vite-plugin-sw.ts` EST CLASSÉ BINAIRE PAR GIT — un octet NUL littéral vit dans son code.**
+  Trouvé le 2026-08-09 : `versionDuCache` sépare l'URL de l'empreinte par `\0` et non par un espace
+  (`` `${e.url}\0${e.empreinte}` ``). Conséquence : `git diff` affiche `Bin 7706 -> 9900 bytes` et
+  `git blame` ne rend plus rien de lisible **sur le fichier qui génère le service worker**. **Ni
+  introduit ni aggravé par le lot photos** — vérifié : absent de `eec24f8` (commit d'origine du SW),
+  présent dans `da8e3b8` (« sept défauts trouvés en relisant l'application »). ⛔ **NON CORRIGÉ
+  DÉLIBÉRÉMENT** : c'est une fonction pure sous test de régression, et remplacer le séparateur change
+  l'entrée du haché ⇒ **nouvelle version de cache ⇒ un re-téléchargement complet imposé à tout
+  utilisateur ayant installé l'application**. Le geste est d'une ligne, son coût ne l'est pas : à
+  grouper avec un lot qui fait de toute façon tourner la version du cache.
 
 - ⚠️ **`regimeExigePar` CLASSE UN EXTRAIT DE VIANDE COMME UN PRODUIT LAITIER.** Trouvé le 2026-08-08
   en écrivant `sauce-poivre.yaml`. **Le fait brut** : `app/src/engine/selection/regime.ts` ne rend
@@ -1211,11 +1258,16 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - ✅ **Le filtre allergènes a enfin une source.** Jusqu'au 2026-07-30, le garde-fou CRITIQUE et
   incontournable du moteur tournait sur une liste **vide** : aucun écran ne demandait ses allergies.
   Le code était juste, il n'avait pas de données. L'écran 3 du premier lancement les collecte.
-- **Écran 4 du premier lancement (« vos goûts ») — NON FAIT**, deux raisons : zéro photo (voir le relevé en tête de §8), et surtout `user_preference` travaille par ALIMENT quand l'écran propose des PLATS.
+- **Écran 4 du premier lancement (« vos goûts ») — NON FAIT**, deux raisons : les photos ne couvrent que 88 recettes sur 308 (relevé en tête de §8), et surtout `user_preference` travaille par ALIMENT quand l'écran propose des PLATS.
   Traduire « j'aime ce curry » en préférences d'aliments (ingrédient caractéristique seul ? tous ?
   quelle pondération ?) est une décision de conception absente des docs — à trancher par mesure,
   pas au jugé, sous peine de fausser le démarrage à froid que cet écran existe pour résoudre.
-- **Écran Détail — reste à faire** : la photo (zéro, voir le relevé en tête de §8), la section « Matériel » (le catalogue
+- **Écran Détail — reste à faire** : **la photo — la donnée est là depuis le 2026-08-09 (88 recettes
+  sur 308, relevé en tête de §8), le pixel non : AUCUN composant ne lit `Recipe.imagePath`.** La
+  chaîne est branchée de bout en bout jusqu'au modèle ; l'afficher est une décision §4.1 DESIGN
+  (« photo dominante ») et un travail d'écran, pas de catalogue. ⚠️ **Et il faudra décider quoi
+  montrer pour les 220 recettes SANS photo** — un trou visuel à côté d'une fiche illustrée se lit
+  comme un défaut de l'application. Reste aussi la section « Matériel » (le catalogue
   n'a **aucune table équipement** — c'est aussi pourquoi la couche `equipement` est inerte depuis
   P1a), les alternatives d'ingrédients (`suggestAlternatives` exige une `SuggestionRequest` complète
   pour que les substitutions repassent les filtres d'allergènes), les notes locales
@@ -1326,10 +1378,13 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 
 ### Contenu — constats de l'audit du 2026-07-27, remesurés le 2026-07-29
 
-- **Zéro photo** — le compte de recettes est en tête de §8, cette ligne ne le recopie plus. Le critère de sortie P6 (« bundle < 15 Mo », budget 40 Ko/image)
-  suppose 200-300 photos originales, sous le même interdit que les recettes (contenu original, pas
-  de scrap). Poste de travail le plus lourd du projet, **chiffré nulle part**. En cours côté
-  utilisateur.
+- **Photos : 88 sur 308** depuis le 2026-08-09 — le compte fait foi en tête de §8, cette ligne ne le
+  recopie plus. Le poste n'est plus « chiffré nulle part » : voir §3 « Média » pour l'encodeur, le
+  poids mesuré et la marge qui reste sur le critère P6. **Il manque 220 photos**, et le goulot est la
+  **récolte**, pas le tri : le bac est vide, et beaucoup des 220 ont déjà vu passer plus de dix
+  candidates sans qu'aucune ne soit gardée. ⛔ **« Le build échoue si une recette n'a pas de photo »
+  reste INTERDIT tant qu'on n'est pas à 308/308** — l'activer maintenant casserait le build de tout
+  le monde pour un travail de contenu qui n'est pas fini.
 - ✅ **Lexique — RÉSOLU** (décision 43) : 4 → **62 gestes**, 763 étapes annotées sur 1 097.
   ⚠️ **Reste « illustré »** : §2 ARCHITECTURE promet un lexique *illustré*, les 62 fiches sont du
   texte seul. Dépend des visuels.

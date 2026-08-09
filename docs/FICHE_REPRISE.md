@@ -8,7 +8,11 @@
 > sont recopiés verbatim dans [archive/FICHE_REPRISE_extraits_2026-08-07.md](./archive/FICHE_REPRISE_extraits_2026-08-07.md)
 > et [archive/FICHE_REPRISE_extraits_2026-08-09.md](./archive/FICHE_REPRISE_extraits_2026-08-09.md),
 > qui disent aussi, bloc par bloc, où le fait durable vit désormais.*
-> ⛔ **207 LIGNES AU 2026-08-09 : LA PAGE A GROSSI MALGRÉ UN DÉGONFLAGE, ET C'EST LE FAIT UTILE.**
+> ⛔ **239 LIGNES AU 2026-08-09 EN FIN DE JOURNÉE : LA PAGE A GROSSI MALGRÉ UN DÉGONFLAGE, ET C'EST
+> LE FAIT UTILE.** Le compte annoncé ici était 207 ; **l'écart s'attribue par `git log -- ce
+> fichier`, pas par déduction** : 201 lignes à `c912a9d` (la passe de dégonflage), 195 à `86857e3`,
+> puis **+41 d'un coup à `f20382b`** (lane « étapes ») et +3 au lot photos. **Deux lanes ont ajouté
+> 44 lignes en une journée à une page que personne n'a raccourcie.**
 > La passe du jour a bien sorti 25 lignes (relevé périmé, 2 rouges fermés, « l'arbre est propre »,
 > le signal du banc éteint) — mais une **autre session** en a ajouté 35 le même jour en refermant le
 > tri des photos. **Le glissement n'est pas une négligence, il est structurel** : chaque lot livré
@@ -156,11 +160,14 @@ Détail du chantier : `atelier/photos/REPRISE.md` (gitignoré) · récit, mesure
 **[archive/…_photos-fin-du-tri.md](./archive/RECAP_SESSION_2026-08-09_photos-fin-du-tri.md)**.
 ⛔ **Les 220 ne sont pas un défaut de tri : 94 d'entre elles ont vu plus de dix photos sans en
 garder aucune.** Le goulot est la récolte. ▶ **Relancer une récolte, ne pas rejuger le bac.**
-⛔ **L'import est ÉCRIT NULLE PART et BLOQUÉ sur deux décisions**, toutes deux instruites dans le
-récit §5 : **ré-encoder** (2 photos sur 88 tiennent dans le budget de 40 Ko de P6, et **aucun
-encodeur n'est installé** — donc un choix d'outil, pas un détail), et **`vite-plugin-sw.ts:39`
-`ASSETS_PUBLICS` est une liste écrite à la main** : des images posées dans `public/` ne seraient
-pas pré-cachées, donc **invisibles hors ligne**.
+✅ **LES 88 SONT DANS L'APPLICATION** (2026-08-09) : `catalog/import-photos.mjs` (`photos:import`,
+idempotent) ré-encode en **AVIF 1024 px** — 19,9 Mo bruts → **3,12 Mo** — pose `image_path` et
+régénère l'attribution de `CREDITS.md` ; `vite-plugin-sw.ts` **balaie** le dossier au lieu de lister,
+donc un lot de photos n'oblige plus personne à penser au pré-cache. Encodeur, marge restante sur les
+15 Mo de P6, obligation CC BY-SA : `ETAT.md` §3 « Média ».
+▶ **CE QUI RESTE** : ① la **récolte** des 220 (goulot, hors dépôt) ; ② **afficher** — la donnée
+existe, **aucun composant ne lit `Recipe.imagePath`**, et il faudra décider quoi montrer pour les
+220 recettes nues ; ③ ⛔ **« le build échoue sans photo » : INTERDIT avant 308/308.**
 
 ✅ **LE MODE CUISINE EST FINI POUR CE QUI ÉTAIT PLANIFIÉ — L0 à L4**, dont **L4 le 2026-08-09** :
 plusieurs plats à la fois, heure de service, frise des départs.
