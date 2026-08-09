@@ -180,7 +180,10 @@ déclarait honnêtement travailler sur une seule durée par recette, et personne
 ça coûtait.
 ▶ **CE QUI RESTE : les niveaux 2 et 3** — entrelacement actif/passif, réservation d'équipement.
 ✅ Le prérequis supposé du 2 est **tombé** (`timerType` porte déjà `cuisson`/`repos`, zéro annotation
-à saisir) ; le 3 est bloqué sur du **contenu**, l'équipement n'existe nulle part au catalogue.
+à saisir). ✅ **Et celui du 3 est tombé le 2026-08-09** — cette phrase disait « l'équipement n'existe
+nulle part au catalogue », ce n'est plus vrai : `catalog/equipment/` porte **30 ustensiles** et
+`recipe_equipment` **1 473 couples** sur 330 recettes, avec le niveau sur le couple. **Le niveau 3
+n'attend plus de contenu**, il attend d'être codé.
 ✅ **L2 n'est plus suspendu** :
 la décision 60 est fermée le 2026-08-07, le lien étape → ingrédient est **dérivé au build** et
 n'a demandé **aucune** des 1 350 annotations prévues (**2 809 liens, 93,2 % des gestes** au
