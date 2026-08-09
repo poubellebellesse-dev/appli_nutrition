@@ -102,6 +102,101 @@ const HYPERONYMES = new Map([
   ['agrume', 'fruits'],
 ])
 
+/**
+ * LE NOM DE PORTION — le mot par lequel une recette compte une chair sans jamais la nommer.
+ *
+ * ⚠️ C'EST LE GISEMENT QU'AUCUNE SONDE NE VOYAIT, et pour une raison circulaire : ces étapes
+ * n'avaient AUCUN lien, donc n'apparaissaient dans aucun relevé de liens, donc dans aucun chantier
+ * de relecture. Quatorze étapes de poisson, mesurées le 2026-08-09 : `maquereau_moutarde_poele`
+ * écrit « retourner les filets » et ne redit jamais « maquereau » — aucun rapprochement de chaîne
+ * n'y arrivera, pas plus que « les fruits » n'atteint la pomme.
+ *
+ * Le mot manquant est pourtant déjà écrit dans la recette, une ligne plus haut : le libellé de
+ * l'ingrédient dit « 8 filets ». Il DÉCLARE l'unité dans laquelle cette recette-là compte cette
+ * chair-là. Même mouvement que `HYPERONYMES` — le sens vient de la recette, jamais d'une table par
+ * aliment — sauf qu'il vient ici de la ligne d'ingrédient plutôt que du `groupe`.
+ *
+ * ⚠️ MÊME LISTE QUE `PORTIONS` DANS `app/src/ui/texte-etape.ts`, et il faut les tenir ensemble : ce
+ * module décide QUEL ingrédient l'étape emploie, l'autre décide OÙ poser la quantité. Un mot présent
+ * ici et absent là-bas produit « 4 pavés DE PAVÉS » — le défaut « 1 chou-fleur de chou-fleur »,
+ * corrigé le 2026-08-08, dans son autre sens. La liste est fermée par la BOUCHERIE et la
+ * POISSONNERIE, pas par le catalogue : ajouter un aliment n'oblige pas à revenir ici.
+ */
+const PORTIONS = new Set([
+  'filet', 'pave', 'dos', 'darne', 'tranche', 'escalope', 'aiguillette', 'medaillon', 'steak',
+])
+
+/**
+ * Le nom de portion qu'emploie ce libellé, ou `null`. « 4 pavés » → `pave`, « 500 g » → `null`.
+ *
+ * Un libellé au poids ne compte rien : il n'y a pas d'unité à retrouver dans la phrase. C'est ce qui
+ * laisse `soupe_poisson_fenouil` (merlu « 500 g » + lieu « 400 g ») hors de portée — à raison, elle
+ * dit « les poissons » au pluriel générique et relève d'un autre mécanisme.
+ */
+export function portionDuLibelle(libelle) {
+  if (typeof libelle !== 'string') return null
+  for (const mot of normaliser(libelle).split(' ')) {
+    const singulier = mot.replace(/(s|x)$/, '')
+    if (PORTIONS.has(singulier)) return singulier
+  }
+  return null
+}
+
+/**
+ * ⚠️ « UN FILET D'HUILE » N'EST PAS UNE PORTION DE POISSON, ET « UNE TRANCHE DE JAMBON » N'EST PAS
+ * UNE TRANCHE DE PAIN. Le mot est le même, la chose comptée ne l'est pas — et la phrase le dit
+ * elle-même, en plaçant son complément juste derrière.
+ *
+ * Un nom de portion NU (« poser les filets », « napper chaque pavé ») est le seul cas où le mot
+ * remplace l'ingrédient. Suivi de « de X », il le qualifie : X est nommé, et les voies normales du
+ * rapprochement s'en chargent déjà. Les quatre rendus fautifs relevés au diff du 2026-08-09 avaient
+ * tous cette forme, dont un qui inventait un nombre — « rouler chacune dans UNE TRANCHE de jambon »
+ * devenait « rouler chacune dans 8 TRANCHES », soit huit fois la vérité.
+ *
+ * ⚠️ LE TEST PORTE SUR LE COMPLÉMENT, PAS SUR LE « DE ». « Napper chaque pavé DE CE MÉLANGE » ne
+ * nomme aucun ingrédient : c'est une portion nue, et le saumon s'y rattache. La première version,
+ * qui refusait tout « de », a emporté cette étape-là avec les fautives.
+ *
+ * ⚠️ ET C'EST UN AUTRE ALIMENT QU'IL FAUT Y LIRE, PAS N'IMPORTE LEQUEL. « Poser les pavés DE
+ * SAUMON » nomme le saumon lui-même : la phrase dit deux fois la même chose, elle ne compte pas
+ * autre chose. Une version intermédiaire refusait aussi ce cas et éteignait six étapes que la
+ * relecture manuelle avait justement écrites sous cette forme.
+ */
+function suiviDUnAutreIngredient(mots, i, nommeUnAutre) {
+  if (mots[i + 1] !== 'de' && mots[i + 1] !== 'd') return false
+  const complement = mots[i + 2]
+  return complement !== undefined && nommeUnAutre(complement)
+}
+
+/**
+ * ⚠️ UN NOM DE PORTION EST AUSSI UN PARTICIPE PASSÉ — troisième occurrence du même piège, après
+ * « la vinaigrette » pour `vinaigr` et « chou-fleur » pour le séparateur. `salade_poulet_parmesan`
+ * dit « dresser le poulet TRANCHÉ dessus » : `normaliser` en fait « tranche », le mot du libellé du
+ * PAIN, et l'étape se voyait rattacher le pain. Trouvé au diff, pas au test — il n'était pas dans
+ * les 17 étapes visées, il est arrivé en prime.
+ *
+ * La parade tient à ce qu'est une portion : une chose qu'on COMPTE. Elle porte donc un déterminant
+ * — « les filets », « chaque tranche », « le pavé ». « le poulet tranché » n'en a pas devant lui, il
+ * a un nom. Aucune des 14 étapes visées n'y perd quoi que ce soit, toutes disent « les » ou
+ * « chaque ».
+ */
+const DEVANT_UNE_PORTION = new Set([
+  'le', 'la', 'l', 'les', 'un', 'une', 'des', 'du', 'de', 'd', 'au', 'aux',
+  'ce', 'cet', 'cette', 'ces', 'son', 'sa', 'ses', 'leur', 'leurs', 'chaque',
+])
+
+/** Le nom de portion est-il employé comme portion dans cette phrase, plutôt que comme mesure ? */
+function portionEmployee(mots, portion, nommeUnAutre) {
+  for (let i = 0; i < mots.length; i++) {
+    if (!memeMot(mots[i], portion)) continue
+    if (i === 0 || !DEVANT_UNE_PORTION.has(mots[i - 1])) continue
+    // `normaliser` a déjà transformé « d'huile » en « d huile ».
+    if (suiviDUnAutreIngredient(mots, i, nommeUnAutre)) continue
+    return true
+  }
+  return false
+}
+
 /** Mots qui ne discriminent rien — articles, et qualificatifs d'état des noms CIQUAL. */
 const VIDES = new Set([
   'de', 'du', 'des', 'la', 'le', 'les', 'au', 'aux', 'a', 'en', 'et', 'ou', 'un', 'une',
@@ -246,6 +341,11 @@ function aUnPronom(mots) {
 export function rapprocherEtape(texte, candidats) {
   const mots = normaliser(texte).split(' ').filter(Boolean)
   const trouves = []
+  /** Ce mot nomme-t-il un AUTRE ingrédient de la recette ? Garde-fou des noms de portion. */
+  const nommeUnAutreQue = (aliment) => (mot) =>
+    candidats.some(
+      (c) => c.id !== aliment.id && formesDe(c).some((forme) => forme.some((f) => memeMot(mot, f)))
+    )
 
   for (const aliment of candidats) {
     let verdict = null
@@ -264,6 +364,18 @@ export function rapprocherEtape(texte, candidats) {
           tete ??= mot
           break
         }
+      }
+    }
+    // Le nom de portion ne parle qu'en dernier : quand la phrase écrit « le saumon », c'est le nom
+    // propre qui gagne, et le verdict `tete` porte alors le VRAI mot de tête.
+    if (verdict === null) {
+      const portion = portionDuLibelle(aliment.libelle)
+      if (portion !== null && portionEmployee(mots, portion, nommeUnAutreQue(aliment))) {
+        // ⚠️ VERDICT `tete` ET NON UN CINQUIÈME VERDICT, pour que l'AMBIGUÏTÉ joue toute seule :
+        // deux poissons comptés en filets dans la même recette portent la même tête, l'appelant les
+        // fait taire tous les deux. Un cinquième verdict aurait fallu redire cette règle.
+        verdict = 'tete'
+        tete = portion
       }
     }
     if (verdict === null) {
@@ -314,8 +426,14 @@ export function rapprocherEtape(texte, candidats) {
  * remettrait exactement la corvée que la dérivation existe pour supprimer.
  */
 export function liensDeLaRecette(recette, aliments) {
+  // ⚠️ LE LIBELLÉ VOYAGE AVEC L'ALIMENT, parce qu'il appartient à la RECETTE et non au catalogue :
+  // le même saumon se compte en pavés ici et au poids ailleurs. `rapprocherEtape` reçoit donc une
+  // copie enrichie, jamais l'entrée du catalogue — qu'on ne modifie pas sous les pieds du build.
   const candidats = (recette.ingredients ?? [])
-    .map((i) => aliments.get(i.food_id))
+    .map((i) => {
+      const aliment = aliments.get(i.food_id)
+      return aliment === undefined ? undefined : { ...aliment, libelle: i.unite_affichage }
+    })
     .filter((a) => a !== undefined)
 
   const liens = new Map()

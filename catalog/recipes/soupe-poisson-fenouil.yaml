@@ -79,7 +79,7 @@ etapes:
     timer_s: 1200
     timer_type: cuisson
   - ordre: 4
-    texte: "Couper les poissons en gros morceaux et ne les ajouter qu'en fin de cuisson."
+    texte: "Couper le merlu et le lieu en gros morceaux et ne les ajouter qu'en fin de cuisson."
     lexicon_ids: []
     timer_s: null
     timer_type: null

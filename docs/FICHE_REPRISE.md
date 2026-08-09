@@ -3,18 +3,19 @@
 > **Une page, jamais plus — plafond dur : 100 lignes.** État vérifié + prochaine étape, rien d'autre.
 > Avancement détaillé, décisions et dette : [ETAT.md](./ETAT.md) · Index : [README.md](./README.md).
 > Font foi : [ENGINE.md](./ENGINE.md) (moteur), [ARCHITECTURE.md](./ARCHITECTURE.md) (le reste).
-> *Dégonflée trois fois : 341 → ~95 lignes le 2026-08-03, puis **285 → 193**, puis **193 → 169** le
-> 2026-08-07. Rien n'est perdu — les blocs sortis sont recopiés verbatim dans
-> [archive/FICHE_REPRISE_extraits_2026-08-07.md](./archive/FICHE_REPRISE_extraits_2026-08-07.md),
-> qui dit aussi, bloc par bloc, où le fait durable vit désormais.*
-> ⛔ **169 LIGNES : LE PLAFOND EST TOUJOURS DÉPASSÉ, ET C'EST DÉLIBÉRÉ.** N'ont été retirés que les
-> blocs faisant DOUBLON avec `ETAT.md`, `PIEGES.md` ou un document de chantier — **plus, le
-> 2026-08-07, ceux dont le chantier s'est fermé** : les lots non commités et les 2 tests rouges,
-> exactement comme la règle ci-dessous l'exige. Ce qui reste décrit des chantiers EN COURS (photos,
-> essai sur appareil, empaquetage) : ça n'a pas encore d'autre domicile. **Chacun de ces blocs part
-> le jour où son chantier se ferme.**
-> ⚠️ **Le glissement est structurel** : chaque lot livré ajoute son récit ici et aucun n'en repart.
+> *Dégonflée quatre fois : 341 → ~95 lignes le 2026-08-03, puis **285 → 193**, puis **193 → 169** le
+> 2026-08-07, puis les blocs des chantiers fermés le 2026-08-09. Rien n'est perdu — les blocs sortis
+> sont recopiés verbatim dans [archive/FICHE_REPRISE_extraits_2026-08-07.md](./archive/FICHE_REPRISE_extraits_2026-08-07.md)
+> et [archive/FICHE_REPRISE_extraits_2026-08-09.md](./archive/FICHE_REPRISE_extraits_2026-08-09.md),
+> qui disent aussi, bloc par bloc, où le fait durable vit désormais.*
+> ⛔ **207 LIGNES AU 2026-08-09 : LA PAGE A GROSSI MALGRÉ UN DÉGONFLAGE, ET C'EST LE FAIT UTILE.**
+> La passe du jour a bien sorti 25 lignes (relevé périmé, 2 rouges fermés, « l'arbre est propre »,
+> le signal du banc éteint) — mais une **autre session** en a ajouté 35 le même jour en refermant le
+> tri des photos. **Le glissement n'est pas une négligence, il est structurel** : chaque lot livré
+> ajoute son récit ici, aucun n'en repart tout seul, et à plusieurs sessions le solde est positif.
 > Quand un lot est fini, son fait va dans `ETAT.md` ou son document de chantier — pas sur cette page.
+> **Chacun de ces blocs part le jour où son chantier se ferme.** ✅ **Le bloc photos est parti** : la
+> session qui l'avait écrit l'a dégonflé elle-même de 43 lignes à 11 — verbatim en §5 des extraits.
 
 ## Le projet
 
@@ -28,17 +29,33 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ 
                                                                                           ⬅ ICI
 ```
 
-✅ **SUITE VERTE EN ENTIER — RÉEXÉCUTÉE LE 2026-08-07 SUR L'ARBRE COMPLET**, lot mode cuisine et
-facettes `cuisine` inclus.
-`npm test` → **1 669 passed / 0 failed**, **91 fichiers**, en 50,2 s · `npm run typecheck` propre ·
-`npx vite build` ✓ (2,9 s) · `npm run engine:plan-stress` → **20/20, PLUS AUCUN SIGNAL** ·
-`node catalog/build.mjs` → **451 aliments, 305 recettes, 1 415 étapes, 62 gestes, 73 tips,
-8 fiches**.
-
-✅ **LES 2 ÉCHECS D'`aujourdhui.test.tsx` SONT FERMÉS** (`70e2493`) — l'arbitrage attendu ici a été
-rendu : les assertions étaient trop fortes, elles pariaient sur la taille du catalogue. Le récit de
-la bissection et la falsification qui a écarté la couche `piquant` restent dans
-[archive/RECAP_SESSION_2026-08-07_recettes-aliments.md](./archive/RECAP_SESSION_2026-08-07_recettes-aliments.md) §5.
+✅ **SUITE VERTE EN ENTIER — RÉEXÉCUTÉE LE 2026-08-09 À 14h20 SUR L'ARBRE COMPLET**, les quatre lots
+des sauces inclus.
+`npm test` → **1 940 passed / 0 failed**, **96 fichiers**, en 52,3 s · `npm run typecheck` propre ·
+`npx vite build` ✓ (3,42 s) · `npm run engine:plan-stress` → **20/20, PLUS AUCUN SIGNAL**.
+✅ **REJOUÉE À 14h35, arbre complet, lot « nom de portion » inclus** : `npm test` → **1 941 passed /
+0 failed**, 96 fichiers, en 33,6 s · typecheck propre · `vite build` ✓ (2,94 s) ·
+`engine:plan-stress` **20/20**.
+⛔ **LE « +1 » A ÉTÉ ATTRIBUÉ À LA MAUVAISE SESSION, ET C'EST L'EXEMPLE À GARDER.** La ligne
+ci-dessus disait « le test de plus vient de la session sauces » ; **il vient du mode cuisine**, qui
+avait relevé **1 941 à 14h23**, donc AVANT le lot « nom de portion » de 14h35. C'est le test unique
+ajouté après relecture sur `reposLongMin` (les ~23 autres du lot étaient déjà dans le 1 940 de
+14h20). ⚠️ **Personne n'avait menti et personne n'avait mal compté** : à trois sessions dans un
+arbre, chacune voit l'écart depuis SON relevé précédent et l'attribue par défaut à son voisin.
+**Un écart ne s'attribue pas par déduction, il s'attribue par `git diff --name-only`.**
+⛔ **PUIS 1 823 À 14h44, VERT, SANS LE MOINDRE ROUGE — ET CE N'EST PAS UNE RÉGRESSION.** Les 118
+tests manquants sont ceux du lot « sauces », **partis dans un `git stash` posé par une session
+voisine** (bloc plus bas), pas perdus. ⚠️ **C'est exactement la signature dont cette page répète
+qu'elle est un signal** — un compte qui baisse sans rouge. **Ici la cause est nommée ; si l'écart
+réapparaît sans explication, c'est ailleurs qu'il faut chercher.** ▶ **Le relevé du commit « nom de
+portion » est celui-là** : **1 823 passed / 0 failed**, 96 fichiers, en 29,2 s · typecheck propre ·
+`vite build` ✓ (2,73 s) · `engine:plan-stress` **20/20** · `node catalog/build.mjs` → **2 809 liens,
+1 312/1 407 gestes (93,2 %)**.
+⚠️ **Les comptes d'aliments et de recettes datent du 2026-08-08 et n'ont pas bougé** : **451
+aliments, 308 recettes** (dont **3 sauces**), 1 425 étapes, 62 gestes, 73 tips, 8 fiches. ⛔ **En
+revanche 4 recettes YAML ONT été éditées le 2026-08-09** (texte d'étapes, aucun nombre ajouté) et
+`recipe_step_ingredient` est passé à **2 809 liens, 1 312/1 407 gestes (93,2 %)** — « aucun lot du
+jour ne touche un fichier de contenu » était vrai des sauces seules.
 
 ⚠️ **Piège de relevé, déjà payé le 2026-08-07** : `npm test 2>&1 | tail -25` rend le code de sortie
 du **pipe**, donc 0. Lire le compte `Tests N failed`, jamais `$?`.
@@ -51,15 +68,22 @@ qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** Un nombre écrit ici est faux dès le commit
 suivant.
 
-✅ **L'ARBRE EST PROPRE — PLUS AUCUN LOT EN VOL, 2026-08-07.** Les trois lots qui traînaient sont
-commités (décisions 33 et 35 et dette §8 dans `5b63e5f`, rouge d'`aujourdhui.test.tsx` fermé par
-`70e2493`, branche `recette-aliments` disparue), **et les deux derniers lots en vol le sont aussi** :
-les 8 plats végétaliens sans gluten, puis le lot mode cuisine + facettes `cuisine`.
-**Le découpage à trois pistes qui bloquait tout commit n'existe plus.**
+⛔ **TROIS SESSIONS ÉCRIVAIENT DANS CET ARBRE LE 2026-08-09** — sauces (celle-ci), mode cuisine à
+plusieurs plats, tri des photos. HEAD a bougé plusieurs fois sans qu'aucune y touche, et une session
+avait des fichiers **indexés** qui ne lui appartenaient pas. **Ne jamais relever un compte, ni
+attribuer un rouge, sans dire quelle session a écrit quoi.**
 ⚠️ **HEAD est EN AVANCE sur `origin/main` — les commits attendent d'être poussés.** Claude committe,
 l'utilisateur pousse.
 ⚠️ **`git status -sb` avant de committer quoi que ce soit ; ne jamais committer `-a`** — les sessions
 parallèles continuent d'écrire dans le même arbre.
+
+⛔ **CINQUIÈME FOIS, ET LA PLUS BRUTALE — 2026-08-09 : un `git stash` posé par une session a VIDÉ
+L'ARBRE ENTIER**, emportant les 12 fichiers d'une piste voisine en pleine rédaction. Symptôme :
+`git status` **propre**, code disparu, **rien dans `git log`**. ▶ **`git stash list` AVANT
+`git reflog`**, puis `git checkout stash@{0} -- <chemins>` — qui rend sans dépiler et **laisse la
+remise à celle qui l'a posée**. ⛔ **Jamais `git stash pop` sur une remise à deux sessions.**
+⚠️ **`git stash` n'a pas de forme sûre ici** : `-- <chemins>` limite ce qu'on remise, rien ne limite
+ce qu'on rend. **Committer son lot est le seul geste qui ne prend pas l'arbre des autres en otage.**
 
 ⚠️ **Le travail à deux dans un même dépôt a déjà coûté cher quatre fois** — un `main` poussé rouge,
 un commit qui ne compilait pas, un lot emporté par la session voisine, et un rouge passé parce
@@ -84,19 +108,18 @@ Premier passage le 2026-08-05 : **deux mappings faux**, `canard_magret` (× 4,9 
 un identifiant qui contredit sa ligne Ciqual ne fait rougir personne.
 Au 2026-08-07 : **9 candidats, tous des écarts de forme**, aucun mauvais aliment.
 
-✅ **LE DERNIER SIGNAL DU BANC EST ÉTEINT — 2026-08-07, lot « 8 plats végétaliens sans gluten ».**
-« végétalien + sans gluten, 14 j × 4 » passe de **27/28 à 28/28 accompagnements**, plancher
-**1 302 → 1 530 kcal**. ⚠️ **La cause mesurée n'était pas celle que cette page annonçait.** Elle
-disait « il manque des plats » ; le compte exact dit **marge zéro** : le catalogue portait
-**exactement 28** plats végétaliens ET sans gluten portant `dejeuner` ou `diner`, pour **exactement
-28 créneaux** (14 j × 2). Il suffisait qu'un seul soit écarté par une autre contrainte pour qu'un
-créneau reçoive un non-plat — et `pickAccompagnement` sort dès que la recette posée n'est pas
-`service: 'plat'`. Ils sont **36**. **Un catalogue qui suffit tout juste ne suffit pas** : c'est le
-fait à retenir, pas le nombre.
-⚠️ **Reste vrai, et c'est ce qui a guidé le lot** : le manque est dans les PLATS, jamais dans les
-accompagnements — tripler les accompagnements végétaliens (11 → 29) n'avait pas bougé le compteur
-d'une unité. Détail :
+✅ **LE BANC NE SIGNALE PLUS RIEN** depuis le 2026-08-07 (20/20). **Un catalogue qui suffit tout
+juste ne suffit pas** — c'est le fait à retenir, pas le nombre : le manque était dans les PLATS, et
+le compte exact disait *marge zéro*, pas *il manque un plat*. Détail :
 [archive/RECAP_SESSION_2026-08-07_recettes-aliments.md](./archive/RECAP_SESSION_2026-08-07_recettes-aliments.md) §2.
+
+✅ **LE LOT « SAUCES » EST FERMÉ EN ENTIER — 2026-08-09, ses quatre points.** Une sauce se propose à
+côté d'un plat, se retient pour les courses (`user_recipe_sauce`, v14), se cuisine en même temps que
+le plat, et **s'écrit soi-même** dans l'éditeur. ⚠️ **Deux fois dans ce lot, une dette chiffrée a
+coûté moins que son énoncé** — ③ était budgété en changement de schéma et a coûté un bouton, la
+moitié de ④ était déjà livrée sans que personne l'ait vu. **Remesurer une dette avant de la payer**,
+surtout à plusieurs sessions dans le même dépôt. Décisions, garanties et les deux défauts trouvés :
+[archive/RECAP_SESSION_2026-08-09_sauces.md](./archive/RECAP_SESSION_2026-08-09_sauces.md).
 
 **Ce qui reste n'est plus du code d'écran.** Trois chantiers, par ordre de dépendance :
 
@@ -127,31 +150,44 @@ d'une unité. Détail :
 **Contenu qui reste** : **photos**, lexique illustré, 27 tips pour la centaine visée, 8 fiches sur
 les 60-100 de §8.2. Rien de tout cela n'est un problème de code.
 
-▶ **LE TRI DES PHOTOS A COMMENCÉ — 2026-08-06 → 08-07.** Outil : `atelier/photos/` (**gitignoré,
-hors de `app/`**, `vite.config.ts` pose `root: 'app'`). Reprise du chantier :
-**`atelier/photos/REPRISE.md`** · récit : **[archive/…_photos.md](./archive/RECAP_SESSION_2026-08-07_photos.md)**.
-Au 2026-08-07 : **10 photos tranchées par l'humain**, **9 propositions** en attente de confirmation
-à l'écran, **272 couples (image × recette) jugés** par la passe, **211 recettes encore à voir** et
-**68 sans aucune candidate**. ⚠️ **La passe PROPOSE, elle ne tranche pas** — elle n'écrit que dans
-`etat/ma-passe.jsonl`, jamais dans `decisions.json`.
-⚠️ **`image_path` n'est encore posé nulle part** : l'étape d'import (AVIF/WebP sous 40 Ko, entrées
-de `CREDITS.md`) **n'est pas écrite**. Trier n'est pas rattacher.
-⛔ **La récolte n'était ciblée que pour 254 dossiers sur 413** — `lire_csv` de `chercher_photos.py`
-retombe **en silence** sur le slug de recette quand la colonne de requête est vide, d'où des fleurs
-de *crepe jasmine* et une libellule dans `photos/crepes/`. Rendement mesuré : **5/90** de `oui` sur
-un dossier ciblé (5,6 %) contre **4/182** sans (2,2 %). ▶ **Récolter d'abord vaut mieux que trier
-plus** : le fichier
-`recettes-appli.csv` (224 recettes, vérifié) attend dans `G:\Claude\Dessinateur\recettes\`, et
-**c'est à l'utilisateur de le lancer** — réseau et clés API.
+🏁 **LE TRI DES PHOTOS EST TERMINÉ, LE BAC EST VIDE** (2026-08-06 → 08-09). **88** recettes ont une
+photo validée, **220** n'en ont pas, **22** photos valent pour un plat absent du catalogue.
+Détail du chantier : `atelier/photos/REPRISE.md` (gitignoré) · récit, mesures et causes :
+**[archive/…_photos-fin-du-tri.md](./archive/RECAP_SESSION_2026-08-09_photos-fin-du-tri.md)**.
+⛔ **Les 220 ne sont pas un défaut de tri : 94 d'entre elles ont vu plus de dix photos sans en
+garder aucune.** Le goulot est la récolte. ▶ **Relancer une récolte, ne pas rejuger le bac.**
+⛔ **L'import est ÉCRIT NULLE PART et BLOQUÉ sur deux décisions**, toutes deux instruites dans le
+récit §5 : **ré-encoder** (2 photos sur 88 tiennent dans le budget de 40 Ko de P6, et **aucun
+encodeur n'est installé** — donc un choix d'outil, pas un détail), et **`vite-plugin-sw.ts:39`
+`ASSETS_PUBLICS` est une liste écrite à la main** : des images posées dans `public/` ne seraient
+pas pré-cachées, donc **invisibles hors ligne**.
 
-▶ **LE MODE CUISINE TOURNE** — L0, L1, L1bis, L1ter **et L2** faits. ✅ **L2 n'est plus suspendu** :
+✅ **LE MODE CUISINE EST FINI POUR CE QUI ÉTAIT PLANIFIÉ — L0 à L4**, dont **L4 le 2026-08-09** :
+plusieurs plats à la fois, heure de service, frise des départs.
+⛔ **LE FAIT À RETENIR N'EST PAS LA FRISE, C'EST CE QU'ELLE A RÉVÉLÉ.** `tempsPrepMin +
+tempsCuissonMin` **ne compte pas les repos** : faux sur **143 recettes sur 308**, jusqu'à **11 h 40**
+d'écart — « à lancer 45 min avant le service » pour une marinade de douze heures. Le code était
+cohérent avec lui-même ET avec ses tests ; **on l'a vu en interrogeant `catalog.db`, pas en
+relisant.** ⚠️ **Une limite documentée n'est pas une limite chiffrée** : `ordonnancement.ts`
+déclarait honnêtement travailler sur une seule durée par recette, et personne n'avait mesuré ce que
+ça coûtait.
+▶ **CE QUI RESTE : les niveaux 2 et 3** — entrelacement actif/passif, réservation d'équipement.
+✅ Le prérequis supposé du 2 est **tombé** (`timerType` porte déjà `cuisson`/`repos`, zéro annotation
+à saisir) ; le 3 est bloqué sur du **contenu**, l'équipement n'existe nulle part au catalogue.
+✅ **L2 n'est plus suspendu** :
 la décision 60 est fermée le 2026-08-07, le lien étape → ingrédient est **dérivé au build** et
-n'a demandé **aucune** des 1 350 annotations prévues (2 715 liens, 93,7 % des gestes couverts).
+n'a demandé **aucune** des 1 350 annotations prévues (**2 809 liens, 93,2 % des gestes** au
+2026-08-09 — ⚠️ **les 2 715 / 93,7 % écrits ici jusque-là étaient périmés de deux lots**, et le
+taux a BAISSÉ parce que des liens FAUX ont été retirés : voir `ETAT.md`).
+✅ **La quantité est dans la phrase de l'étape, et le chantier de réécriture à la main est vide** —
+**1 étape** reste à relire contre 114 au départ. Le reste est hors de portée d'une règle
+(« au goût »). ▶ **Le seul arbitrage qui reste est un choix d'écriture, la décision 63.**
 ⛔ **Ce qui survit et ne doit pas être défait : la table AJOUTE, elle ne FILTRE JAMAIS.**
 Spec : `ARCHITECTURE.md` §5bis · état et ordre des lots :
-**[CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md)** · récit :
-[archive/…_mode-cuisine.md](./archive/RECAP_SESSION_2026-08-05_mode-cuisine.md) · le détail des lots
-tel qu'il figurait ici : [archive/FICHE_REPRISE_extraits_2026-08-07.md](./archive/FICHE_REPRISE_extraits_2026-08-07.md).
+**[CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md)** · récits :
+[…_mode-cuisine.md](./archive/RECAP_SESSION_2026-08-05_mode-cuisine.md) (L1) et
+[…_cuisine-multi-plats.md](./archive/RECAP_SESSION_2026-08-09_cuisine-multi-plats.md) (L4) · le
+détail des lots tel qu'il figurait ici : [archive/FICHE_REPRISE_extraits_2026-08-07.md](./archive/FICHE_REPRISE_extraits_2026-08-07.md).
 ⛔ **L'alarme ne sonne PAS quand l'appli est fermée — décision instruite, pas un oubli.** Ne pas la
 rouvrir sans lire `CONCEPTION_MODE_CUISINE.md` §5.
 
@@ -188,8 +224,13 @@ automatiquement à chaque session. Plus recopiés ici : un fait, un seul endroit
 | Les invariants du moteur, les commandes de vérification | [../CLAUDE.md](../CLAUDE.md) |
 | Sections datées sorties de cette fiche le 2026-08-03 | [archive/FICHE_REPRISE_extraits_2026-08-03.md](./archive/FICHE_REPRISE_extraits_2026-08-03.md) |
 | **Blocs sortis de cette fiche le 2026-08-07**, et où leur fait vit maintenant | [archive/FICHE_REPRISE_extraits_2026-08-07.md](./archive/FICHE_REPRISE_extraits_2026-08-07.md) |
+| **Blocs sortis le 2026-08-09** — dont « l'arbre est propre », qui a eu tort en 48 h | [archive/FICHE_REPRISE_extraits_2026-08-09.md](./archive/FICHE_REPRISE_extraits_2026-08-09.md) |
+| **Les sauces** : pourquoi le choix s'attache au plat, les trois garanties, les deux défauts | [archive/RECAP_SESSION_2026-08-09_sauces.md](./archive/RECAP_SESSION_2026-08-09_sauces.md) |
 | **Pourquoi le manque de contenu est dans les PLATS**, la bissection des 2 rouges, les aliments refusés | [archive/RECAP_SESSION_2026-08-07_recettes-aliments.md](./archive/RECAP_SESSION_2026-08-07_recettes-aliments.md) |
 | **Pourquoi la recherche d'aliments a été refaite**, et les deux mappings Ciqual faux | [archive/RECAP_SESSION_2026-08-05_recherche-aliments.md](./archive/RECAP_SESSION_2026-08-05_recherche-aliments.md) |
-| **Le tri des photos** : où en est la file, le barème, la récolte à relancer | `../atelier/photos/REPRISE.md` (hors dépôt) |
+| **Le tri des photos** : le barème complet, les décisions en attente, la commande de régénération | `../atelier/photos/REPRISE.md` (hors dépôt) |
+| **Pourquoi 220 recettes n'ont rien reçu**, ce que l'import n'aura pas à faire, les 231 plats hors catalogue | [archive/RECAP_SESSION_2026-08-09_photos-fin-du-tri.md](./archive/RECAP_SESSION_2026-08-09_photos-fin-du-tri.md) |
+| **Pourquoi « les filets » chiffre maintenant**, le nombre × 8 qu'aucun test ne voyait, les trois sens d'un mot de portion | [archive/RECAP_SESSION_2026-08-09_quantites-portions.md](./archive/RECAP_SESSION_2026-08-09_quantites-portions.md) |
 | **Pourquoi la récolte de photos n'était pas ciblée**, et le barème d'acceptation | [archive/RECAP_SESSION_2026-08-07_photos.md](./archive/RECAP_SESSION_2026-08-07_photos.md) |
 | **Pourquoi l'alarme ne sonne pas appli fermée**, et pourquoi la recette n'avance pas seule | [archive/RECAP_SESSION_2026-08-05_mode-cuisine.md](./archive/RECAP_SESSION_2026-08-05_mode-cuisine.md) |
+| **Pourquoi la durée déclarée d'une recette était fausse sur 143 sur 308**, et pourquoi « inatteignable en pratique » se mesure | [archive/RECAP_SESSION_2026-08-09_cuisine-multi-plats.md](./archive/RECAP_SESSION_2026-08-09_cuisine-multi-plats.md) |

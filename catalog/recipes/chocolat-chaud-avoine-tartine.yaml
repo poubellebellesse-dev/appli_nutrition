@@ -50,7 +50,9 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 3
-    texte: "Servir avec la tranche de pain grillée."
+    # Le libellé vaut « 2 tranches » dès la portion de base : le singulier laissait « 2 tranches de
+    # pain grillée » à l'affichage. La phrase se met au pluriel, l'accord suit dans les deux sens.
+    texte: "Servir avec les tranches de pain grillées."
     lexicon_ids: []
     timer_s: null
     timer_type: null

@@ -36,6 +36,15 @@
   ne passent pas par l'index concerné.** Ici il y en avait trois : les deux ci-dessus, plus les trois
   fonctions de comptage de `engine/search/index.ts` qui alimentent les pastilles de filtre — un
   compte non filtré y annonce 236 pour 233 résultats, écart que rien ne signale.
+- ⚠️ **Une question déplacée EN AMONT d'un écran casse les ancres du parcours guidé.** Payé le
+  2026-08-09 en posant « un plat ou une sauce ? » avant le formulaire de l'éditeur. Le parcours
+  « composer » ouvre sur `#/composer`, donc désormais sur la question : ses quatre étapes visent des
+  `data-visite` du FORMULAIRE, qui n'existe pas encore, et l'invariant « au moins une étape résout
+  toujours » est passé au rouge. ⛔ **Le réflexe « c'est un écran de plus, rien ne le lit » est faux :
+  `parcours.ts` désigne des éléments par attribut, à travers les écrans.** Avant de mettre une étape
+  devant un écran, chercher son id dans `parcours.ts` et vérifier qu'au moins une ancre survit.
+  L'autre coût d'une question en amont est d'enfermer : le type doit rester **affiché et modifiable**
+  dans l'écran suivant, sinon il est décidé une fois pour toutes.
 
 **Chaîne de build**
 
@@ -93,6 +102,19 @@
   compte plus), `git add`, puis restaurer l'arbre depuis une copie. Et pour un fichier dont les
   hunks sont inséparables — un document, jamais du code — l'envoyer **entier** dans l'un des deux
   commits, en le disant dans le message.
+- ⛔ **`git stash` VIDE L'ARBRE ENTIER, PAS SEULEMENT SON LOT — payé le 2026-08-09.** Une session a
+  remisé avant de committer ; la remise a emporté **41 fichiers**, dont les 12 d'une piste voisine
+  qui n'avait rien demandé, en pleine rédaction. Vu de l'autre session, le symptôme est brutal et
+  muet : `git status` **propre**, le code disparu, et **rien dans le journal des commits** — on
+  cherche d'abord son lot dans `git log`, où il n'est pas.
+  ▶ **Le réflexe qui trouve la cause en une commande : `git stash list` avant `git reflog`.**
+  ▶ **La récupération se fait SANS dépiler** : `git checkout stash@{0} -- <chemins>` rend fichier
+  par fichier, l'index et l'arbre, et **laisse la remise intacte** pour celle qui l'a posée.
+  ⛔ **Ne jamais `git stash pop` une remise qui contient le travail de deux sessions** — elle se
+  dépile en bloc, sur un arbre qui a bougé depuis.
+  ⚠️ **À plusieurs sessions, `git stash` n'a pas de forme sûre** : `-- <chemins>` limite ce qu'on
+  remise, mais **rien ne limite ce qu'on rend**. Committer son lot est le seul geste qui ne prend
+  pas l'arbre des autres en otage.
 - ⚠️ **Un arbre neuf n'a pas de `catalog.db`** : il est gitignoré. Une suite lancée dans un worktree
   frais rend ~168 échecs « unable to open database file » qui ne sont **pas** des régressions. Faire
   `node catalog/build.mjs` d'abord, sinon on diagnostique un fantôme. **Repayé le 2026-08-07 : 203
@@ -459,6 +481,45 @@ ce cas (`filet`, `pavé`, `morceau`, `cuisse`).
 
 Un chantier bâti sur ce qui existe ne montre pas ce qui manque. Pour le second gisement il faut une
 sonde à l'envers : partir du VOCABULAIRE de la phrase, pas de la table.
+
+**Fermé le 2026-08-09** par le NOM DE PORTION (section suivante) : 14 des 17 étapes ont trouvé leur
+lien, il en reste 3 qui relèvent chacune d'un autre mécanisme.
+
+### UN NOM DE PORTION EST UN NOM, UN PARTICIPE PASSÉ, ET UNE MESURE — trois fois le même mot
+
+Une recette compte souvent sa chair sans jamais la nommer : `maquereau_moutarde_poele` écrit
+« retourner **les filets** » et ne redit plus « maquereau » après la ligne d'ingrédients. Le mot
+manquant est pourtant écrit à portée de main — le libellé dit « 8 filets ». Le libellé DÉCLARE
+l'unité dans laquelle cette recette-là compte cette chair-là, exactement comme `HYPERONYMES` fait
+dire « les fruits » aux fruits de la recette. D'où `PORTIONS`, des deux côtés :
+`catalog/lien-etape-ingredient.mjs` (quel ingrédient) et `app/src/ui/texte-etape.ts` (où poser).
+
+**Le même mot sert trois fois, et les trois emplois se ressemblent à s'y méprendre. Chacun a coûté
+une passe de diff :**
+
+| La phrase dit | Ce que c'est | Le garde-fou |
+|---|---|---|
+| « poser **les filets** dessus » | la portion, nue | c'est le cas visé |
+| « dresser le poulet **tranché** » | un participe passé | une portion **se compte**, donc porte un déterminant devant |
+| « un **filet d'huile** », « une **tranche de jambon** » | une mesure, ou le nom d'un autre aliment | un complément qui **nomme un ingrédient** de la recette derrière le mot |
+
+Le troisième garde-fou porte sur le COMPLÉMENT et jamais sur le « de » : « napper chaque pavé **de
+ce mélange** » ne nomme rien et reste une portion nue. La version qui refusait tout « de » a emporté
+cette étape-là avec les fautives.
+
+**Le plus cher des trois inventait un nombre.** « Rouler chacune dans **une tranche** de jambon »
+devenait « rouler chacune dans **8 tranches** » : le compte par endive remplacé par le total de la
+recette, huit fois la vérité. Un nombre faux se suit sans broncher, là où une phrase bancale se voit.
+
+⚠️ **Ces trois-là ne sont sortis d'aucun test — ils sont sortis du diff de rendu sur les 305
+recettes.** Les tests écrits d'avance ne couvraient que le cas visé. Après toute règle qui touche à
+la dérivation, comparer les 1 100 phrases rendues avant/après, jamais deux totaux :
+`atelier/diff-liens.mjs` pour les liens, un dump de `injecterQuantites` pour le texte.
+
+⚠️ **Le mot de portion vaut nommage SEULEMENT s'il est celui qui a été trouvé dans la phrase.** Une
+huile d'olive porte le libellé « 1 filet » : quand la phrase dit « l'huile », le libellé ne nomme
+rien et « Ajouter 1 filet » perd son « d'huile ». Deux tests le gardaient depuis toujours et sont
+passés au rouge à la première version. D'où le drapeau `estPortion` dans `localiser`.
 
 ## Contenu : la règle qui tient tout l'onglet Savoir
 

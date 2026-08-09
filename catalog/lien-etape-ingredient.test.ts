@@ -28,10 +28,10 @@ function carte(...aliments: Aliment[]): Map<string, Aliment> {
   return new Map(aliments.map((a) => [a.id, a]))
 }
 
-function recette(ingredients: Aliment[], textes: string[]) {
+function recette(ingredients: Aliment[], textes: string[], libelles: Record<string, string> = {}) {
   return {
     id: 'essai',
-    ingredients: ingredients.map((a) => ({ food_id: a.id })),
+    ingredients: ingredients.map((a) => ({ food_id: a.id, unite_affichage: libelles[a.id] })),
     etapes: textes.map((texte, i) => ({ ordre: i + 1, texte })),
   }
 }
@@ -215,5 +215,103 @@ describe('une racine de verbe n’est pas un préfixe de nom', () => {
       const liens = liensDeLaRecette(recette([SEL, HUILE, CITRON], [texte]), carte(SEL, HUILE, CITRON))
       expect(ids(liens, 1).length, texte).toBe(1)
     }
+  })
+})
+
+describe('le libellé dit en quoi la chair se compte', () => {
+  // ⛔ LE GISEMENT QU'AUCUNE SONDE NE VOYAIT : 14 étapes de poisson n'avaient AUCUN lien, donc
+  // n'apparaissaient dans aucun chantier de relecture. Une recette de maquereau écrit « retourner
+  // les filets » et ne redit jamais « maquereau » — aucun rapprochement de chaîne n'y arrivera.
+  //
+  // Le mot manquant n'est pourtant écrit nulle part ailleurs qu'à portée de main : le libellé de
+  // l'ingrédient dit « 8 filets ». Il déclare l'unité dans laquelle CETTE recette compte CETTE
+  // chair. C'est le même mouvement que `HYPERONYMES` — le sens vient de la recette, pas d'une
+  // table par aliment — sauf qu'ici il vient de la ligne d'ingrédient elle-même.
+  const DORADE = A('dorade', 'Dorade, crue', { groupe: 'poissons' })
+  const SAUMON = A('saumon', 'Saumon, cru', { groupe: 'poissons' })
+  const MERLU = A('merlu', 'Merlu, cru', { groupe: 'poissons' })
+  const HUILE_OLIVE = A('huile_olive', 'Huile d’olive', { groupe: 'matières grasses' })
+
+  it('« poser le filet dessus » rattache la dorade, dont le libellé dit « 4 filets »', () => {
+    const liens = liensDeLaRecette(
+      recette([DORADE], ['Répartir les légumes au centre, saler, poser le filet dessus.'], {
+        dorade: '4 filets',
+      }),
+      carte(DORADE)
+    )
+    expect(ids(liens, 1)).toEqual(['dorade'])
+  })
+
+  it('« napper chaque pavé » rattache le saumon (« 4 pavés »)', () => {
+    const liens = liensDeLaRecette(
+      recette([SAUMON], ['Napper généreusement chaque pavé de ce mélange.'], { saumon: '4 pavés' }),
+      carte(SAUMON)
+    )
+    expect(ids(liens, 1)).toEqual(['saumon'])
+  })
+
+  it('⛔ un libellé au poids ne compte rien — « 500 g » ne nomme aucune portion', () => {
+    const liens = liensDeLaRecette(
+      recette([MERLU], ['Couper en gros morceaux et ajouter en fin de cuisson.'], { merlu: '500 g' }),
+      carte(MERLU)
+    )
+    expect(ids(liens, 1)).toEqual([])
+  })
+
+  it('⛔ deux chairs comptées en filets : l’ambiguïté les fait taire toutes les deux', () => {
+    const liens = liensDeLaRecette(
+      recette([DORADE, MERLU], ['Poser les filets côte à côte dans le plat.'], {
+        dorade: '2 filets',
+        merlu: '2 filets',
+      }),
+      carte(DORADE, MERLU)
+    )
+    expect(ids(liens, 1)).toEqual([])
+  })
+
+  // ⛔ « UN FILET D'HUILE » N'EST PAS UNE PORTION DE POISSON. Le mot est le même, la mesure ne l'est
+  // pas : ici « filet » compte l'HUILE. Sans ce garde-fou, toute recette dont le poisson se compte
+  // en filets se voyait rattacher son poisson à chaque étape qui arrose d'un filet d'huile.
+  it('⛔ « un filet d’huile » ne rattache pas le poisson', () => {
+    const liens = liensDeLaRecette(
+      recette([DORADE, HUILE_OLIVE], ['Arroser d’un filet d’huile d’olive avant d’enfourner.'], {
+        dorade: '4 filets',
+      }),
+      carte(DORADE, HUILE_OLIVE)
+    )
+    expect(ids(liens, 1)).toEqual(['huile_olive'])
+  })
+
+  it('le nom propre de l’aliment reste prioritaire quand la phrase l’écrit', () => {
+    const liens = liensDeLaRecette(
+      recette([SAUMON], ['Déposer le saumon peau vers le bas.'], { saumon: '4 pavés' }),
+      carte(SAUMON)
+    )
+    expect(ids(liens, 1)).toEqual(['saumon'])
+  })
+})
+
+describe('un nom de portion est aussi un participe passé', () => {
+  // ⛔ TROUVÉ AU DIFF, PAS AU TEST — il n'était pas dans les 17 étapes visées, il est arrivé en
+  // prime. `salade_poulet_parmesan` dit « dresser le poulet TRANCHÉ dessus » : normalisé, c'est le
+  // mot « tranche », celui du libellé du PAIN, et l'étape se voyait rattacher le pain.
+  const PAIN = A('pain_complet', 'Pain complet', { groupe: 'céréales' })
+
+  it('⛔ « le poulet tranché » ne rattache pas le pain', () => {
+    const liens = liensDeLaRecette(
+      recette([PAIN], ['Dresser le poulet tranché dessus, puis parsemer de croûtons.'], {
+        pain_complet: '4 tranches',
+      }),
+      carte(PAIN)
+    )
+    expect(ids(liens, 1)).toEqual([])
+  })
+
+  it('la portion comptée, elle, est bien reconnue — « frotter la tranche »', () => {
+    const liens = liensDeLaRecette(
+      recette([PAIN], ['Frotter la tranche avec la gousse d’ail.'], { pain_complet: '2 tranches' }),
+      carte(PAIN)
+    )
+    expect(ids(liens, 1)).toEqual(['pain_complet'])
   })
 })

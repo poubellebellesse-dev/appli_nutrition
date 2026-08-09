@@ -463,3 +463,48 @@ describe('injecterQuantites', () => {
     })
   })
 })
+
+describe('le libellé dit en quoi la chair se compte', () => {
+  // ⛔ PENDANT DE `PORTIONS` DANS `catalog/lien-etape-ingredient.mjs`. Le build sait désormais que
+  // « les filets » désigne le maquereau ; sans ce qui suit, l'écran recevrait bien le lien mais ne
+  // trouverait pas où poser la quantité — « filet » n'est une forme d'aucun poisson.
+  //
+  // Et s'il la trouvait sans reconnaître le mot dans le libellé, il recollerait le nom derrière :
+  // « 4 pavés DE PAVÉS ». C'est le défaut « 1 chou-fleur de chou-fleur » du 2026-08-08, dans son
+  // autre sens — d'où le test qui suit, écrit pour cette faute-là précisément.
+  const eglefin: IngredientDeLEtape = {
+    foodId: 'eglefin',
+    formes: ['Églefin, cru', 'eglefin'],
+    quantite: '4 filets',
+  }
+  const saumon: IngredientDeLEtape = {
+    foodId: 'saumon',
+    formes: ['Saumon, cru', 'saumon'],
+    quantite: '4 pavés',
+  }
+
+  it('« les filets » porte la quantité de l’églefin', () => {
+    expect(rendu('Poser les filets dans un plat huilé.', [eglefin])).toBe(
+      'Poser 4 filets dans un plat huilé.'
+    )
+  })
+
+  it('⛔ et jamais « 4 pavés de pavés » — le libellé se reconnaît dans le mot de la phrase', () => {
+    expect(rendu('Napper chaque pavé de ce mélange.', [saumon])).toBe(
+      'Napper les 4 pavés de ce mélange.'
+    )
+  })
+
+  it('un libellé au poids ne fait de personne une portion', () => {
+    const merlu: IngredientDeLEtape = { foodId: 'merlu', formes: ['Merlu, cru'], quantite: '500 g' }
+    expect(rendu('Couper les filets en gros morceaux.', [merlu])).toBe(
+      'Couper les filets en gros morceaux.'
+    )
+  })
+
+  it('le nom propre reste prioritaire quand la phrase l’écrit', () => {
+    expect(rendu('Déposer le saumon peau vers le bas.', [saumon])).toBe(
+      'Déposer 4 pavés de saumon peau vers le bas.'
+    )
+  })
+})

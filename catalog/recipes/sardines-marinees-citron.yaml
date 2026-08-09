@@ -62,7 +62,7 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 3
-    texte: "Ranger les filets à plat dans un plat creux, peau vers le bas, et les saler."
+    texte: "Ranger les filets des sardines à plat dans un plat creux, peau vers le bas, et les saler."
     lexicon_ids: []
     timer_s: null
     timer_type: null

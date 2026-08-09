@@ -237,6 +237,52 @@ function jetonner(texte: string): readonly Jeton[] {
   return jetons
 }
 
+/**
+ * LE NOM DE PORTION — le mot par lequel une recette compte une chair sans la nommer : « 8 filets »,
+ * « 4 pavés ». La recette de maquereau écrit « retourner les filets » et ne redit jamais le
+ * poisson ; le seul endroit où le mot est écrit, c'est le libellé de l'ingrédient.
+ *
+ * ⚠️ MÊME LISTE QUE `PORTIONS` DANS `catalog/lien-etape-ingredient.mjs`, et les deux se tiennent :
+ * là-bas elle décide QUEL ingrédient l'étape emploie, ici OÙ poser la quantité. Un mot présent d'un
+ * seul côté produit soit une étape muette, soit « 4 pavés DE PAVÉS » — le défaut « 1 chou-fleur de
+ * chou-fleur » du 2026-08-08 dans son autre sens, puisque `libelleNommeLAliment` répondrait non sur
+ * un libellé qui ne parle que de portions.
+ *
+ * C'est du VOCABULAIRE, pas un verdict : ce module continue de ne rien décider de ce qu'une étape
+ * emploie — il reçoit des ingrédients déjà retenus et cherche seulement l'endroit.
+ *
+ * ⚠️ LE MÊME MOT MESURE PARFOIS AUTRE CHOSE, ET LE LIBELLÉ NE LE DIT PAS. Une huile d'olive porte
+ * « 1 filet » — et là « filet » compte l'HUILE, pas un poisson. Deux tests de la suite le
+ * garantissaient depuis toujours (« Ajouter 1 filet d'huile »), et ils sont passés au rouge à la
+ * première version de cette règle : le libellé s'y reconnaissait dans son propre mot de portion et
+ * le rendu laissait tomber « d'huile ». D'où le partage retenu dans `localiser` — le nom de portion
+ * sert à TROUVER l'endroit, mais il ne vaut nommage QUE si c'est par lui que la phrase a été
+ * attrapée. Voir `MESURES_TROMPEUSES` côté catalogue, qui traite l'autre moitié du même piège.
+ */
+const PORTIONS = new Set([
+  'filet', 'pave', 'dos', 'darne', 'tranche', 'escalope', 'aiguillette', 'medaillon', 'steak',
+])
+
+/** « une tranche DE JAMBON » — la portion introduit le nom de son aliment, elle ne le remplace pas. */
+function estSuiviDuNom(
+  jetons: readonly Jeton[],
+  i: number,
+  vocabulaire: readonly string[]
+): boolean {
+  if (!['de', 'd'].includes(jetons[i + 1]?.mot ?? '')) return false
+  const complement = jetons[i + 2]?.mot
+  return complement !== undefined && vocabulaire.some((f) => memeMot(complement, f))
+}
+
+/** Le nom de portion qu'emploie ce libellé, ou `null`. « 4 pavés » → `pave`, « 500 g » → `null`. */
+function portionDuLibelle(quantite: string): string | null {
+  for (const mot of motsDuLibelle(quantite)) {
+    const singulier = mot.replace(/(s|x)$/, '')
+    if (PORTIONS.has(singulier)) return singulier
+  }
+  return null
+}
+
 /** Les formes d'un ingrédient, en mots normalisés, les plus longues d'abord. */
 function formesEnMots(formes: readonly string[]): readonly (readonly string[])[] {
   const sorties: string[][] = []
@@ -543,15 +589,24 @@ function elider(quantite: string): string {
 function localiser(
   texte: string,
   jetons: readonly Jeton[],
-  ingredient: IngredientDeLEtape
+  ingredient: IngredientDeLEtape,
+  vocabulaireDesAutres: readonly string[]
 ): Occurrence | null {
   if (!COMMENCE_PAR_UN_NOMBRE.test(ingredient.quantite)) return null
 
   const formes = formesEnMots(ingredient.formes)
   if (formes.length === 0) return null
+
+  // Le nom de portion cherche en DERNIER, après toutes les vraies formes : quand la phrase écrit
+  // « le saumon », c'est le nom propre qui gagne et la phrase garde le mot qu'elle avait choisi.
+  const portion = portionDuLibelle(ingredient.quantite)
+  const aChercher: readonly { readonly forme: readonly string[]; readonly estPortion: boolean }[] = [
+    ...formes.map((forme) => ({ forme, estPortion: false })),
+    ...(portion === null ? [] : [{ forme: [portion], estPortion: true }]),
+  ]
   const vocabulaire = formes.flat()
 
-  for (const forme of formes) {
+  for (const { forme, estPortion } of aChercher) {
     // Forme entière (« poivron rouge »), puis mot de tête seul (« les poivrons »). Le nom CIQUAL
     // met parfois le règne devant — « Veau, escalope » — d'où les DEUX premiers mots, comme au build.
     const essais: readonly (readonly string[])[] =
@@ -561,7 +616,28 @@ function localiser(
       for (let i = 0; i + essai.length <= jetons.length; i++) {
         const brut = apparier(jetons, i, essai)
         if (brut < 0) continue
-        const dernier = etendre(texte, jetons, brut, vocabulaire)
+        // ⚠️ UN NOM DE PORTION QUI COMPTE UN AUTRE ALIMENT N'EN COMPTE PAS LE SIEN. « Rouler
+        // chacune dans une tranche DE JAMBON » devenait « rouler chacune dans 8 tranches » — le
+        // libellé « 8 tranches » est celui du PAIN, et le compte par endive s'est retrouvé remplacé
+        // par le total de la recette, huit fois la vérité.
+        //
+        // Le test porte sur le COMPLÉMENT, jamais sur le « de » : « napper chaque pavé DE CE
+        // MÉLANGE » ne nomme rien et reste une portion nue. Une première version, qui refusait tout
+        // « de », a emporté cette étape-là avec les fautives.
+        if (estPortion && estSuiviDuNom(jetons, brut, vocabulaireDesAutres)) continue
+
+        // ⚠️ « UNE TRANCHE » N'EST PAS « LES 8 TRANCHES » — l'indéfini singulier compte UNE unité, là
+        // où le libellé donne le total de la recette. « Rouler chacune dans UNE tranche de jambon »
+        // rendait « dans 8 tranches de jambon » : huit fois la vérité, sur une phrase qui distribue
+        // une tranche par endive. « Les », « des » et « chaque », eux, désignent bien tout le lot.
+        if (estPortion && ['un', 'une'].includes(jetons[brut - 1]?.mot ?? '')) continue
+
+        // ⚠️ ET UNE PORTION N'AVALE PAS SON PROPRE COMPLÉMENT. « Poser les pavés DE SAUMON » doit
+        // rendre « poser 4 pavés de saumon » et non « poser 4 pavés » : c'est la phrase qui a choisi
+        // de nommer le poisson, on ne le lui retire pas. `etendre` engloberait « de saumon », qui
+        // est dans le vocabulaire de l'aliment — d'où l'arrêt net sur le mot de portion.
+        const suivi = estPortion && estSuiviDuNom(jetons, brut, vocabulaire)
+        const dernier = suivi ? brut : etendre(texte, jetons, brut, vocabulaire)
 
         const groupe = groupeDeterminant(jetons, i)
         if (groupe === null) continue
@@ -570,9 +646,15 @@ function localiser(
         if (prefixe === null) continue
 
         const nomDansLaPhrase = texte.slice(jetons[i]!.debut, jetons[dernier]!.fin)
-        const suite = libelleNommeLAliment(ingredient.quantite, formes)
-          ? ''
-          : ` ${liaison(nomDansLaPhrase)}${nomDansLaPhrase}`
+        // ⚠️ `estPortion` EST DANS CE TEST, ET C'EST LUI QUI SÉPARE LA PORTION DE LA MESURE. Le
+        // libellé « 4 pavés » nomme l'aliment quand c'est « pavé » qui a été trouvé dans la phrase —
+        // sans quoi le rendu recollerait « 4 pavés DE PAVÉ ». Mais le libellé « 1 filet » d'une
+        // huile ne nomme rien du tout quand c'est « huile » qui a été trouvé : là le complément est
+        // l'information, et « Ajouter 1 filet » sans « d'huile » perd le nom de l'ingrédient.
+        const suite =
+          estPortion || libelleNommeLAliment(ingredient.quantite, formes)
+            ? ''
+            : ` ${liaison(nomDansLaPhrase)}${nomDansLaPhrase}`
 
         return {
           debut: groupe.debut,
@@ -612,7 +694,12 @@ export function injecterQuantites(
 
   const occurrences: Occurrence[] = []
   for (const ingredient of ingredients) {
-    const trouve = localiser(texte, jetons, ingredient)
+    // Le vocabulaire des AUTRES ingrédients de l'étape : c'est lui qui démasque « une tranche de
+    // jambon » quand c'est le pain qui se compte en tranches.
+    const desAutres = ingredients
+      .filter((i) => i.foodId !== ingredient.foodId)
+      .flatMap((i) => formesEnMots(i.formes).flat())
+    const trouve = localiser(texte, jetons, ingredient, desAutres)
     if (trouve === null) continue
     // Un morceau de phrase ne se remplace qu'une fois.
     if (occurrences.some((o) => trouve.debut < o.fin && o.debut < trouve.fin)) continue

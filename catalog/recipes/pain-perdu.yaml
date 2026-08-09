@@ -53,7 +53,10 @@ etapes:
     timer_s: null
     timer_type: null
   - ordre: 2
-    texte: "Tremper chaque tranche des deux côtés sans la laisser se détremper — quelques secondes suffisent."
+    # « chaque tranche » devient « les 8 tranches » à l'affichage — règle d'accord de `texte-etape`,
+    # documentée sur `CONTRACTES`. Le pronom qui suit doit donc être au pluriel : « la » ne renvoyait
+    # plus à rien une fois la quantité posée.
+    texte: "Tremper chaque tranche des deux côtés sans les laisser se détremper — quelques secondes suffisent."
     lexicon_ids: [tremper]
     timer_s: null
     timer_type: null
