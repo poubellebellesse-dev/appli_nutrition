@@ -29,6 +29,23 @@
 # sesame, sulfites, lupin, mollusques.
 # certitude ∈ { contient, traces }
 #
+# Piquant (0 à 4 : 0 pas piquant · 1 un peu · 2 moyen · 3 fort · 4 extrême).
+# TROIS ÉTATS, et l'absence du champ n'est PAS le troisième déguisé :
+#   - champ ABSENT = `null` = NON RENSEIGNÉ. C'est le cas de 430 aliments sur
+#     451, et c'est l'état par défaut : ne pas le combler par un 0 de confort.
+#   - `piquant: 0` porte une information ÉDITORIALE — « vérifié non piquant ».
+#     Réservé aux faux amis, ceux dont le nom fait croire au feu : paprika,
+#     curcuma, les trois poivrons. Un aliment banalement doux (la carotte) n'a
+#     rien à faire ici, il reste non renseigné.
+#   - `piquant: 1..4` est le piquant de l'ALIMENT TEL QU'IL SE CONSOMME.
+# ⚠️ Le piquant d'une RECETTE ne s'en déduit pas et ne doit jamais en être
+# recalculé (app/src/engine/domain/catalog.ts, `PiquantLevel`) : il dépend de la
+# quantité, du rapport au reste du plat et du mode de cuisson.
+# ⚠️ Les alliums crus — oignon, échalote, ail — restent NON RENSEIGNÉS
+# délibérément : leur mordant est détruit par la cuisson, et ce champ ne
+# distingue pas cru de cuit. Une seule valeur y serait fausse dans la majorité
+# des emplois. Ne pas « compléter » cet oubli : il n'en est pas un.
+#
 # Saisonnalité (P1b-1, docs/ARCHITECTURE.md §4.2, docs/ENGINE.md §6.5
 # précision 3) : `toute_annee` et `saison_mois` sont DEUX DIMENSIONS
 # INDÉPENDANTES, pas un choix exclusif.
@@ -225,6 +242,7 @@ foods:
     quantite_figee: true
     sous_famille: "poivre"
     toute_annee: true
+    piquant: 2
     nutriments:
       energie_kcal: 331
       proteines_g: 13.3
@@ -402,6 +420,9 @@ foods:
     poids_piece_g: 150
     sous_famille: "poivron"
     saison_mois: [7, 8, 9, 10]
+    # FAUX AMI, comme les deux autres poivrons : Capsicum annuum sans capsaïcine. Le
+    # nom porte « poivre », le légume ne pique pas.
+    piquant: 0
     nutriments:
       energie_kcal: 33.6
       proteines_g: 1.06
@@ -888,6 +909,7 @@ foods:
     poids_piece_g: 15
     sous_famille: "radis"
     saison_mois: [4, 5, 6, 7, 8, 9]
+    piquant: 1
     nutriments:
       energie_kcal: 11
       proteines_g: 0.94
@@ -1637,6 +1659,7 @@ foods:
     conditionnement_g: 200
     sous_famille: "moutarde"
     toute_annee: true
+    piquant: 2
     nutriments:
       energie_kcal: 151
       proteines_g: 6.92
@@ -1780,6 +1803,10 @@ foods:
     quantite_figee: true
     conditionnement_g: 40
     toute_annee: true
+    # FAUX AMI : poudre rouge de piment doux. Le `0` est éditorial — « vérifié non
+    # piquant » — et non un défaut de renseignement. Le paprika FORT est un autre
+    # produit, absent du catalogue.
+    piquant: 0
     nutriments:
       energie_kcal: 318
       proteines_g: 14.1
@@ -1800,6 +1827,9 @@ foods:
     quantite_figee: true
     conditionnement_g: 40
     toute_annee: true
+    # Le mélange de rayon en France est dominé par curcuma, coriandre et cumin ; le
+    # « curry fort » est un autre produit, absent du catalogue.
+    piquant: 1
     nutriments:
       energie_kcal: 301
       proteines_g: 14.5
@@ -1821,6 +1851,10 @@ foods:
     conditionnement_g: 40
     sous_famille: "gingembre"
     toute_annee: true
+    # Même niveau que le frais, DÉLIBÉRÉMENT. Le séché n'est pas « plus doux » : le
+    # gingérol y devient shogaol, plus pungent au poids. Aucune source ne permet de
+    # trancher le sens de l'écart, donc on ne l'invente pas.
+    piquant: 2
     nutriments:
       energie_kcal: 335
       proteines_g: 8.98
@@ -3160,6 +3194,7 @@ foods:
     # Jeune pousse cultivée sous abri hors saison — même choix éditorial que la laitue.
     saison_mois: [4, 5, 6, 9, 10]
     toute_annee: true
+    piquant: 1
     nutriments:
       energie_kcal: 27.9
       proteines_g: 2.58
@@ -3217,6 +3252,7 @@ foods:
     sous_famille: "poivron"
     saison_mois: [6, 7, 8, 9, 10]
     toute_annee: true
+    piquant: 0
     nutriments:
       energie_kcal: 22.5
       proteines_g: 0.81
@@ -3856,6 +3892,8 @@ foods:
     quantite_figee: true
     conditionnement_g: 40
     toute_annee: true
+    # FAUX AMI : épice de couleur, amère et terreuse, jamais piquante.
+    piquant: 0
     nutriments:
       energie_kcal: 291
       proteines_g: 9.68
@@ -4410,6 +4448,9 @@ foods:
     origine_animale: mammifere
     sous_famille: "porc"
     toute_annee: true
+    # 1 et non 2 : le chorizo existe en doux comme en fort, et le catalogue n'en porte
+    # qu'une entrée. Le niveau bas est celui qui ment le moins aux deux.
+    piquant: 1
     nutriments:
       energie_kcal: 425
       proteines_g: 23.5
@@ -4662,6 +4703,9 @@ foods:
     nom: "Cresson de fontaine, cru"
     groupe: "légumes"
     saison_mois: [3, 4, 5, 10, 11]
+    # Même famille de glucosinolates que le radis et la roquette : annoté avec elles,
+    # sinon l'annotation aurait un trou que rien ne justifie.
+    piquant: 1
     nutriments:
       energie_kcal: 15.5
       proteines_g: 2.3
@@ -4698,6 +4742,7 @@ foods:
     poids_piece_g: 150
     sous_famille: "poivron"
     saison_mois: [7, 8, 9, 10]
+    piquant: 0
     nutriments:
       energie_kcal: 29.4
       proteines_g: 0.94
@@ -4827,6 +4872,8 @@ foods:
     quantite_figee: true
     conditionnement_g: 30
     toute_annee: true
+    # Le plus fort du catalogue, et le seul qui mérite 4 : capsaïcine pure, en poudre.
+    piquant: 4
     nutriments:
       energie_kcal: 376
       proteines_g: 12
@@ -5997,6 +6044,8 @@ foods:
     sous_groupe: sauce
     conditionnement_g: 100
     toute_annee: true
+    # Pâte de piment, mais coupée de tomate et d'huile : sous la poudre pure.
+    piquant: 3
     nutriments:
       energie_kcal: 76.4
       proteines_g: 2.72
@@ -6473,6 +6522,7 @@ foods:
     groupe: "condiments"
     sous_famille: "gingembre"
     toute_annee: true
+    piquant: 2
     nutriments:
       energie_kcal: 33.3
       proteines_g: 1.1
@@ -6728,6 +6778,8 @@ foods:
     poids_piece_g: 70
     origine_animale: mammifere
     toute_annee: true
+    # Au-dessus du chorizo : la merguez est relevée par définition, pas par variante.
+    piquant: 2
     nutriments:
       energie_kcal: 381
       proteines_g: 12.8
@@ -7506,6 +7558,8 @@ foods:
     conditionnement_g: 30
     sous_famille: "poivre"
     toute_annee: true
+    # Même pipérine, même dose que le noir : pas de distinction inventée ici.
+    piquant: 2
     nutriments:
       energie_kcal: 313
       proteines_g: 12.1
@@ -8353,6 +8407,9 @@ foods:
     conditionnement_g: 200
     sous_famille: "moutarde"
     toute_annee: true
+    # Sous la Dijon d'un cran, et c'est la seule distinction fine que je pose : les
+    # graines entières libèrent moins de sinigrine que la moutarde broyée forte.
+    piquant: 1
     nutriments:
       energie_kcal: 142
       proteines_g: 6.6
@@ -8375,6 +8432,9 @@ foods:
     groupe: "condiments"
     sous_groupe: sauce
     toute_annee: true
+    # Isothiocyanate d'allyle : une brûlure qui monte au nez et retombe vite, pas
+    # celle du piment. L'échelle ne distingue pas les deux — voir `PiquantLevel`.
+    piquant: 3
     nutriments:
       energie_kcal: 73.2
       proteines_g: 5.25
@@ -8918,6 +8978,8 @@ foods:
     poids_piece_g: 300
     sous_famille: "radis"
     saison_mois: [10, 11, 12, 1, 2]
+    # Nettement au-dessus du radis rose, et c'est ce qu'on vient y chercher.
+    piquant: 2
     nutriments:
       energie_kcal: 28.2
       proteines_g: 0.94

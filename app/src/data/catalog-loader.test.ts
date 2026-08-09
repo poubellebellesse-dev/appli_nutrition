@@ -229,10 +229,39 @@ describe('data/catalog-loader — loadCatalog(catalog.db réel)', () => {
     expect(recettes.some((r) => (r.piquant ?? 0) > 0)).toBe(true)
   })
 
-  // ⚠️ LES ALIMENTS, EUX, NE SONT TOUJOURS PAS ANNOTÉS — `foods.yaml` était en cours d'édition par
-  // une autre piste au moment de la décision 35. `null` y reste « non renseigné », JAMAIS « doux ».
-  it('`Food.piquant` vaut encore `null` partout — non renseigné, jamais 0 par défaut', () => {
-    expect([...catalog.foods.values()].every((f) => f.piquant === null)).toBe(true)
+  // ⚠️ CE TEST-CI A CHANGÉ DE SENS LE 2026-08-09, POUR LA MÊME RAISON QUE CELUI DU DESSUS. Il disait
+  // « `Food.piquant` vaut ENCORE `null` partout », parce que `foods.yaml` n'était pas annoté. Il
+  // l'est (lot L4.3) : 21 aliments sur 451. Ce qu'il garde, c'est la règle qui n'a PAS changé —
+  // `null` reste « non renseigné » et n'est jamais comblé par un 0 de confort — plus la distinction
+  // que l'annotation vient d'introduire et qui se perdrait la première.
+  it('l’annotation des aliments reste sélective, et l’échelle est celle du catalogue', () => {
+    const aliments = [...catalog.foods.values()]
+    const annotes = aliments.filter((f) => f.piquant !== null)
+    expect(annotes.every((f) => f.piquant !== null && f.piquant >= 0 && f.piquant <= 4)).toBe(true)
+    // `null` reste MAJORITAIRE, et de loin : ce lot annote ce qui est concerné, il ne remplit pas
+    // une colonne. Le jour où ce seuil casse, c'est qu'on a comblé au lieu d'annoter.
+    expect(annotes.length).toBeLessThan(aliments.length / 4)
+    // …et il annote pour de vrai : sans un niveau > 0, l'annotation serait un remplissage à zéro.
+    expect(annotes.some((f) => (f.piquant ?? 0) > 0)).toBe(true)
+  })
+
+  // ⛔ LA DISTINCTION QUI SE PERDRAIT LA PREMIÈRE : `0` N'EST PAS `null`. Ces cinq-là portent 0 parce
+  // qu'on a VÉRIFIÉ qu'ils ne piquent pas, contre ce que leur nom laisse croire — « poivron » porte
+  // « poivre », le paprika est une poudre de piment, le curcuma est une épice orange vif. Les
+  // remettre à `null` « pour uniformiser » effacerait cette vérification sans laisser de trace.
+  // Oracle écrit à la main, jamais dérivé de `foods.yaml` — un oracle qui partage la donnée de son
+  // sujet ne vérifie rien (PIEGES.md).
+  it('les faux amis portent un `0` éditorial, jamais `null`', () => {
+    for (const id of ['paprika', 'curcuma', 'poivron_rouge', 'poivron_vert', 'poivron_jaune']) {
+      expect(catalog.foods.get(id as FoodId)?.piquant).toBe(0)
+    }
+  })
+
+  // Le pendant du test précédent, et ce qui l'empêche de dériver : un aliment doux SANS ambiguïté de
+  // nom reste `null`. Le 0 est réservé à ce qui a été vérifié contre une croyance, il n'est pas
+  // distribué aux 430 aliments dont personne n'a jamais cru qu'ils piquaient.
+  it('un aliment banalement doux reste `null`, et ne bascule pas à `0`', () => {
+    expect(catalog.foods.get('carotte' as FoodId)?.piquant).toBeNull()
   })
 
   // --- Fiches scientifiques (§8.2 ARCHITECTURE, §4.7 DESIGN) -----------------------------------
