@@ -83,6 +83,7 @@ function saisie(foodIds: readonly string[], surcharges: Partial<SaisieRecette> =
       optionnel: false,
     })),
     etapes: ['Tout mélanger.'],
+    estSauce: false,
     ...surcharges,
   }
 }

@@ -34,7 +34,13 @@ afterEach(cleanup)
 // ⚠️ `ProvenanceLancerParcours` IMPORTÉ DYNAMIQUEMENT DANS `monter`, PAS EN TÊTE DE FICHIER — voir
 // `courses.test.tsx` pour la raison : `vi.resetModules()` en `beforeEach` figerait sinon un
 // `Context` React distinct de celui que `EditeurRecette` utilise réellement dans `<LienTutoriel>`.
-async function monter(baseId: string | null = null) {
+/**
+ * @param nature La réponse à « un plat ou une sauce ? » (④), posée AVANT le formulaire pour une
+ *   création de zéro. `'plat'` par défaut : c'est ce que testaient tous les cas écrits avant que la
+ *   question existe, et leur faire traverser l'écran plutôt que le contourner garde le chemin réel.
+ *   `null` laisse la question à l'écran, pour les tests qui portent sur elle.
+ */
+async function monter(baseId: string | null = null, nature: 'plat' | 'sauce' | null = 'plat') {
   const { EditeurRecette } = await import('./editeur-recette.js')
   const { ProvenanceLancerParcours } = await import('../lancer-parcours.js')
   render(
@@ -43,12 +49,20 @@ async function monter(baseId: string | null = null) {
     </ProvenanceLancerParcours>
   )
   await screen.findByRole('heading', { level: 1 })
+  // La question ne se pose qu'à la création de zéro : une variante et une recette rouverte portent
+  // déjà leur nature (`variantePartantDe`, `saisieDepuisStockee`).
+  if (baseId === null && nature !== null) {
+    fireEvent.click(screen.getByText(nature === 'sauce' ? 'Une sauce' : 'Un plat'))
+    await screen.findByRole('heading', { level: 1 })
+  }
 }
 
 const champ = (selecteur: string) => document.querySelector(selecteur) as HTMLInputElement
 const saisir = (selecteur: string, valeur: string) =>
   fireEvent.change(champ(selecteur), { target: { value: valeur } })
 const enregistrer = () => screen.getByText('Enregistrer ma recette').closest('button') as HTMLButtonElement
+const enregistrerLaSauce = () =>
+  screen.getByText('Enregistrer ma sauce').closest('button') as HTMLButtonElement
 
 /** Ajoute le premier aliment proposé pour une recherche donnée. */
 async function ajouterIngredient(recherche: string) {
@@ -165,7 +179,14 @@ describe('éditeur — adapter une recette existante', () => {
   it('un identifiant de base inconnu ouvre une création vide plutôt que de planter', async () => {
     // Un signet périmé ou une recette retirée du catalogue arrivent facilement.
     await monter('recette-qui-nexiste-pas')
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ma recette')
+    // ⚠️ ET LA QUESTION DE ④ SE POSE, parce qu'il ne reste rien à hériter : une base introuvable ne
+    // dit pas si l'on composait un plat ou une sauce, et la deviner « plat » écrirait en base une
+    // nature que personne n'a déclarée. C'est bien une création de zéro, elle en suit le chemin.
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("Qu'est-ce que vous composez ?")
+    fireEvent.click(screen.getByText('Un plat'))
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ma recette')
+    )
   })
 })
 
@@ -192,6 +213,7 @@ describe('éditeur — modifier une recette perso', () => {
     facettesHeritees: [],
     service: 'plat',
     piquant: 2,
+    estSauce: false,
   })
 
   it('rouvre l’éditeur sur « Modifier ma recette », pré-remplie', async () => {
@@ -267,5 +289,118 @@ describe('éditeur — la recherche d’ingrédient répond comme les autres éc
     await ajouterIngredient('crue courgette')
 
     expect(document.body.textContent).toMatch(/Courgette/)
+  })
+})
+
+/**
+ * ④ « Un plat ou une sauce ? » — la question posée AVANT le formulaire.
+ *
+ * ⚠️ SANS L'EXCEPTION DE `problemes()`, AUCUNE SAUCE PERSO N'EST ENREGISTRABLE. La règle générale
+ * exige au moins un créneau de repas ; la décision 62 fait de `types_repas: []` la forme normale
+ * d'une sauce. Les deux se contredisaient, et le bouton restait bloqué sur un message auquel plus
+ * aucun champ à l'écran ne permettait de répondre. C'est ce que le test central de ce bloc constate.
+ */
+describe('éditeur — composer une sauce (④)', () => {
+  it('pose la question AVANT le formulaire — aucun champ tant qu’elle n’est pas tranchée', async () => {
+    // Posée au milieu, elle ferait disparaître un bloc déjà rempli : la réponse décide de ce que le
+    // formulaire DEMANDE, pas seulement de ce qu'il enregistre.
+    await monter(null, null)
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("Qu'est-ce que vous composez ?")
+    expect(document.querySelector('input[type="text"]')).toBeNull()
+    expect(screen.queryByText('Nom du plat')).toBeNull()
+    // ⚠️ ET L'ANCRE DU TUTORIEL RESTE LÀ. Cet écran est désormais l'état neuf de #/composer ; sans
+    // `data-visite="titre-composer"`, la première étape du parcours ne résout plus et le tutoriel
+    // entier devient fantôme (`parcours.ts`, règle 1). C'est ce qui a cassé en écrivant ④.
+    expect(document.querySelector('[data-visite="titre-composer"]')).not.toBeNull()
+  })
+
+  it('« Une sauce » ouvre un formulaire SANS moment de repas', async () => {
+    await monter(null, 'sauce')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ma sauce')
+    expect(screen.getByText('Nom de la sauce')).toBeDefined()
+    // ⛔ Le bloc entier est retiré, pas laissé vide : une sauce ne se sert à aucune heure.
+    expect(document.body.textContent).not.toContain('À quel moment ?')
+    // Et ce qui reste vrai d'une sauce reste demandé — la question ne vide pas le formulaire.
+    expect(screen.getByText('Combien de temps se garde-t-il ?')).toBeDefined()
+  })
+
+  it('« Un plat » laisse le formulaire inchangé — la question n’enlève rien par défaut', async () => {
+    await monter(null, 'plat')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Ma recette')
+    expect(screen.getByText('À quel moment ?')).toBeDefined()
+    expect(screen.getByText('Nom du plat')).toBeDefined()
+  })
+
+  it('⛔ s’ENREGISTRE sans créneau — sans l’exception de `problemes()`, le bouton reste bloqué', async () => {
+    await monter(null, 'sauce')
+    saisir('input[type="text"]', 'Ma sauce au poivre à moi')
+    await ajouterIngredient('courgette')
+    await waitFor(() => expect(enregistrerLaSauce().disabled).toBe(false))
+    // Le message de la règle générale ne doit PAS être là : il serait sans réponse possible.
+    expect(screen.queryByText('Choisissez au moins un moment de repas.')).toBeNull()
+
+    fireEvent.click(enregistrerLaSauce())
+    await screen.findByRole('heading', { name: /C'est enregistré/ })
+
+    const enregistrees = readUserRecipes(baseCourante())
+    expect(enregistrees).toHaveLength(1)
+    expect(enregistrees[0]?.estSauce).toBe(true)
+    // ⚠️ `typesRepas` VIDÉ, pas laissé au « dîner » de `SAISIE_VIDE` : une valeur invisible à
+    // l'écran et fausse en base est pire qu'une valeur absente.
+    expect(enregistrees[0]?.typesRepas).toEqual([])
+  })
+
+  it('entre dans le MÊME ensemble que les sauces du catalogue', async () => {
+    // ⚠️ C'EST L'ASSERTION QUI COMPTE. Un `estSauce` écrit en base mais non porté jusqu'à `Recipe`
+    // laisserait la sauce perso dans la liste ordinaire des plats — cinquième occurrence du piège
+    // « un champ déclaré n'est pas un champ branché ». On vérifie la CONVERSION, pas le stockage.
+    const { versRecette } = await import('../../data/user-recipe.js')
+    await monter(null, 'sauce')
+    saisir('input[type="text"]', 'Ma vinaigrette maison')
+    await ajouterIngredient('courgette')
+    await waitFor(() => expect(enregistrerLaSauce().disabled).toBe(false))
+    fireEvent.click(enregistrerLaSauce())
+    await screen.findByRole('heading', { name: /C'est enregistré/ })
+
+    const stockee = readUserRecipes(baseCourante())[0]!
+    const recette = versRecette(stockee, catalogueDeTest().foods)
+    expect(recette.estSauce).toBe(true)
+    // ⚠️ ET `sauceIds` RESTE VIDE : attacher une sauce à sa propre recette se fait depuis la fiche
+    // (`user_recipe_sauce`, ①), où le choix est durable et révocable. Deux endroits pour dire la
+    // même chose, ce serait deux réponses possibles et aucune règle pour les départager.
+    expect(recette.sauceIds).toEqual([])
+    expect(recette.porteDejaUneSauce).toBeNull()
+  })
+
+  it('une recette perso enregistrée AVANT la question reste un plat', async () => {
+    // ⚠️ `schemaVersion` RESTE À 1 ET `estSauce` EST FACULTATIF — c'est tout le point. Le passer à 2
+    // aurait fait refuser toutes les recettes perso déjà en base : une donnée saisie à la main,
+    // disparue sans un mot pour un champ ajouté.
+    const { versRecette } = await import('../../data/user-recipe.js')
+    const ancienne = {
+      schemaVersion: 1,
+      id: 'perso:avant-la-question',
+      source: 'perso',
+      baseRecipeId: null,
+      nom: 'Recette d’avant',
+      tempsPrepMin: 10,
+      tempsCuissonMin: 5,
+      portionsBase: 2,
+      difficulte: 1,
+      typesRepas: ['diner'],
+      envergure: 'quotidien',
+      conservationJours: 2,
+      axes: { sucreSale: -1, legerConsistant: 0, chaudFroid: 1, texture: 'moelleux' },
+      ingredients: [{ foodId: [...catalogueDeTest().foods.keys()][0]!, quantiteG: 100, uniteAffichage: '100 g', optionnel: false }],
+      etapes: ['Mélanger.'],
+      facettesHeritees: [],
+      service: null,
+      piquant: null,
+    } as unknown as StoredUserRecipe
+    saveUserRecipe(baseCourante(), ancienne, '2026-08-01')
+
+    const relue = readUserRecipes(baseCourante())[0]!
+    expect(relue.estSauce).toBeUndefined()
+    expect(versRecette(relue, catalogueDeTest().foods).estSauce).toBe(false)
   })
 })

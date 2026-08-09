@@ -451,6 +451,7 @@ describe('recettes — les recettes personnelles', () => {
       axes: AXES_PAR_DEFAUT,
       ingredients: [{ foodId: unAliment, quantiteG: 100, uniteAffichage: '100 g', optionnel: false }],
       etapes: ['Mélanger et servir.'],
+      estSauce: false,
     }
     saveUserRecipe(baseCourante(), construireRecette(id, saisie, null), '2026-08-01')
 
@@ -473,6 +474,7 @@ describe('recettes — la fenêtre « Mes recettes »', () => {
     axes: AXES_PAR_DEFAUT,
     ingredients: [],
     etapes: ['Mélanger et servir.'],
+    estSauce: false,
   }
 
   it('liste uniquement les recettes perso — une recette du catalogue n’y figure pas', async () => {
@@ -598,6 +600,7 @@ describe('recettes — importer une recette (.nutri-recipe, §8.7)', () => {
       axes: AXES_PAR_DEFAUT,
       ingredients: [{ foodId: unAliment, quantiteG: 100, uniteAffichage: '100 g', optionnel: false }],
       etapes: ['Servir.'],
+      estSauce: false,
     }
     const idExistant = 'perso:fichier-externe'
     saveUserRecipe(baseCourante(), construireRecette(idExistant, existante, null), '2026-08-01')

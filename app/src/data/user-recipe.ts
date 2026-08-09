@@ -87,6 +87,16 @@ export interface StoredUserRecipe {
   /** Hérités d'une recette de base ; `null` sur une création — ni l'un ni l'autre ne se dérive. */
   readonly service: CourseKind | null
   readonly piquant: PiquantLevel | null
+  /**
+   * L'utilisateur a répondu « une sauce » à la question posée avant le formulaire (④).
+   *
+   * ⚠️ FACULTATIF, ET `schemaVersion` RESTE À 1 — C'EST LE POINT DE CE CHAMP. Le passer à 2 aurait
+   * fait REFUSER toutes les recettes perso déjà enregistrées (`analyserAvecMotif` compare la version
+   * à l'identique) : une donnée que l'utilisateur a saisie lui-même, disparue sans un mot pour un
+   * champ ajouté. `undefined` = saisie antérieure à la question, donc un plat — lu partout comme
+   * `=== true`, jamais comme un booléen supposé présent.
+   */
+  readonly estSauce?: boolean
 }
 
 export const VERSION_CONTENU_RECETTE = 1
@@ -200,11 +210,20 @@ export function versRecette(stockee: StoredUserRecipe, foods: ReadonlyMap<FoodId
     // marque déjà « non vérifié » : c'est cette mention-là qui parle, pas une source empruntée.
     sources: [],
     testeLe: null,
-    // Une recette utilisateur n'est pas une sauce et n'en attache pas : l'éditeur n'expose aucun de
-    // ces deux champs. `porteDejaUneSauce: null` n'est PAS « non » — c'est « personne n'a tranché »,
-    // donc la dérivation par les ingrédients s'applique, et une recette perso au ketchup se verra
+    // ⚠️ `estSauce` VIENT DE LA QUESTION POSÉE AVANT LE FORMULAIRE (④), plus de la constante `false`
+    // qui était écrite ici. Une recette perso déclarée sauce entre dans le même ensemble que les
+    // sauces du catalogue : elle sort de la liste ordinaire (`recettesHorsSauces`), apparaît sous
+    // « Sauces (N) », et `suggestSauces` la propose avec les plats.
+    //
+    // `porteDejaUneSauce: null` n'est PAS « non » — c'est « personne n'a tranché », donc la
+    // dérivation par les ingrédients s'applique, et une recette perso au ketchup se verra
     // correctement reconnue comme portant déjà sa sauce.
-    estSauce: false,
+    //
+    // ⚠️ `sauceIds` RESTE VIDE, et ce n'est pas un oubli : attacher une sauce à sa propre recette se
+    // fait déjà depuis la fiche (`user_recipe_sauce`, ①), où le choix est DURABLE et révocable.
+    // L'exposer aussi ici créerait un second endroit où dire la même chose, avec deux réponses
+    // possibles et aucune règle pour les départager.
+    estSauce: stockee.estSauce === true,
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: [],
@@ -322,6 +341,9 @@ export interface SaisieRecette {
   readonly axes: SensoryAxes
   readonly ingredients: readonly IngredientSaisi[]
   readonly etapes: readonly string[]
+  /** Répondu AVANT le formulaire, jamais au milieu — voir `QuestionNature` dans l'éditeur. Requis
+   *  ici, à la différence de `StoredUserRecipe.estSauce` : l'écran a toujours une réponse. */
+  readonly estSauce: boolean
 }
 
 export const AXES_PAR_DEFAUT: SensoryAxes = {
@@ -355,6 +377,9 @@ export function variantePartantDe(base: Recipe): SaisieRecette {
       optionnel: i.optionnel,
     })),
     etapes: base.etapes.map((e) => e.texte),
+    // La variante d'une sauce est une sauce — la question ne se repose pas, elle est déjà tranchée
+    // par la recette qu'on adapte.
+    estSauce: base.estSauce,
   }
 }
 
@@ -381,6 +406,7 @@ export function saisieDepuisStockee(stockee: StoredUserRecipe): SaisieRecette {
     // Une ligne vide au minimum, pour que le bloc « Étapes » ait toujours un champ à éditer —
     // même règle que `SAISIE_VIDE` côté écran.
     etapes: stockee.etapes.length > 0 ? stockee.etapes : [''],
+    estSauce: stockee.estSauce === true,
   }
 }
 
@@ -409,6 +435,7 @@ export function mettreAJourRecette(precedente: StoredUserRecipe, saisie: SaisieR
     facettesHeritees: precedente.facettesHeritees,
     service: precedente.service,
     piquant: precedente.piquant,
+    estSauce: saisie.estSauce,
   }
 }
 
@@ -437,6 +464,7 @@ export function construireRecette(
     facettesHeritees: base?.facettes.filter((f) => f.facette !== 'regime') ?? [],
     service: base?.service ?? null,
     piquant: base?.piquant ?? null,
+    estSauce: saisie.estSauce,
   }
 }
 
@@ -462,7 +490,15 @@ export function problemes(saisie: SaisieRecette): readonly string[] {
     messages.push('Au moins un ingrédient doit être indispensable — sinon le plat n’a pas de base.')
   }
   if (saisie.portionsBase <= 0) messages.push('Indiquez pour combien de portions.')
-  if (saisie.typesRepas.length === 0) messages.push('Choisissez au moins un moment de repas.')
+  // ⛔ POUR UNE SAUCE SEULEMENT, ET SANS CETTE EXCEPTION RIEN N'EST ENREGISTRABLE. Une sauce ne se
+  // sert à aucun créneau — les trois du catalogue portent `types_repas: []`, et la décision 62 en
+  // fait la forme normale. La règle générale exigeait pourtant un créneau : elle et la décision se
+  // contredisaient, et le bouton « Enregistrer » restait bloqué sur un message auquel une sauce ne
+  // peut pas répondre. L'exception est portée ICI, pas dans l'écran, parce que la règle doit tenir
+  // quelle que soit la manière dont la recette arrive (voir l'en-tête).
+  if (!saisie.estSauce && saisie.typesRepas.length === 0) {
+    messages.push('Choisissez au moins un moment de repas.')
+  }
   // Un plat qui n'est ni préparé ni cuit ne se distingue pas d'une saisie abandonnée.
   if (saisie.tempsPrepMin + saisie.tempsCuissonMin <= 0) {
     messages.push('Indiquez un temps de préparation ou de cuisson.')

@@ -53,6 +53,7 @@ const SAISIE_VIDE: SaisieRecette = {
   axes: AXES_PAR_DEFAUT,
   ingredients: [],
   etapes: [''],
+  estSauce: false,
 }
 
 const CRENEAUX: readonly MealSlot[] = ['petit_dejeuner', 'dejeuner', 'gouter', 'diner']
@@ -101,6 +102,16 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
   const [saisie, setSaisie] = useState<SaisieRecette>(SAISIE_VIDE)
   const [recherche, setRecherche] = useState('')
   const [enregistre, setEnregistre] = useState<string | null>(null)
+  /**
+   * La question « un plat ou une sauce ? » a-t-elle été tranchée (④).
+   *
+   * ⚠️ AVANT LE FORMULAIRE, JAMAIS AU MILIEU. Elle décide de ce que le formulaire DEMANDE — une
+   * sauce n'a pas de créneau de repas — et une question qui retire un bloc déjà rempli fait perdre
+   * une réponse sans le dire. Elle ne se pose donc qu'à la CRÉATION DE ZÉRO : une variante hérite de
+   * la nature de sa base, une recette rouverte porte la sienne, et les deux la reposeraient pour
+   * rien.
+   */
+  const [naturePosee, setNaturePosee] = useState(false)
 
   useEffect(() => {
     let annule = false
@@ -113,6 +124,9 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
         if (baseId !== null && estRecettePerso(baseId)) {
           const stockee = readUserRecipe(socle.db, baseId)
           setSaisie(stockee === null ? SAISIE_VIDE : saisieDepuisStockee(stockee))
+          // Une recette rouverte porte déjà sa nature — la redemander laisserait croire qu'on peut
+          // la changer, alors que le formulaire est déjà celui de cette nature-là.
+          setNaturePosee(stockee !== null)
           setEtat({
             phase: 'pret',
             catalogue: socle.catalogue,
@@ -125,6 +139,8 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
         // adapter une adaptation empilerait des héritages dont plus personne ne suit la trace.
         const base = baseId === null ? undefined : socle.catalogueSource.recipes.get(baseId as never)
         setSaisie(base === undefined ? SAISIE_VIDE : variantePartantDe(base))
+        // La variante d'une sauce est une sauce : `variantePartantDe` l'a déjà tranché.
+        setNaturePosee(base !== undefined)
         setEtat({ phase: 'pret', catalogue: socle.catalogue, variante: base !== undefined, edition: null })
       })
       .catch((erreur: unknown) => {
@@ -181,9 +197,13 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
     return (
       <section>
         <h1 className="text-[2.1rem] text-texte">C'est enregistré</h1>
+        {/* ⚠️ DEUX PHRASES, PARCE QU'UNE SAUCE NE SE PLANIFIE PAS. Promettre « planifiée dans votre
+            semaine » à une sauce serait annoncer quelque chose qui n'arrivera jamais : elle n'a
+            aucun créneau, et le planificateur ne la verra pas. */}
         <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
-          « {saisie.nom.trim()} » fait maintenant partie de vos recettes. Elle peut être proposée,
-          planifiée dans votre semaine et entrer dans vos courses, comme les autres.
+          {saisie.estSauce
+            ? `« ${saisie.nom.trim()} » fait maintenant partie de vos sauces. Elle sera proposée avec vos plats, et entrera dans vos courses chaque fois que vous la retiendrez avec l’un d’eux.`
+            : `« ${saisie.nom.trim()} » fait maintenant partie de vos recettes. Elle peut être proposée, planifiée dans votre semaine et entrer dans vos courses, comme les autres.`}
         </p>
         <a
           href={hashDeRecette(enregistre, 'recettes')}
@@ -202,12 +222,34 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
   }
 
   const { catalogue, variante, edition } = etat
+
+  if (!naturePosee) {
+    return (
+      <QuestionNature
+        onRepondre={(estSauce) => {
+          // ⚠️ `typesRepas: []` EN MÊME TEMPS, dans le même `maj`. `SAISIE_VIDE` propose « dîner » ;
+          // le laisser en place enregistrerait une sauce servie au dîner, que le bloc « À quel
+          // moment ? » ne montre même pas pour une sauce. Une valeur invisible et fausse est pire
+          // qu'une valeur absente.
+          maj(estSauce ? { estSauce: true, typesRepas: [] } : { estSauce: false })
+          setNaturePosee(true)
+        }}
+      />
+    )
+  }
+
   const bloquants = problemes(saisie)
 
   return (
     <section>
       <h1 data-visite="titre-composer" className="text-[2.1rem] text-texte">
-        {edition !== null ? 'Modifier ma recette' : variante ? 'Adapter la recette' : 'Ma recette'}
+        {edition !== null
+          ? 'Modifier ma recette'
+          : variante
+            ? 'Adapter la recette'
+            : saisie.estSauce
+              ? 'Ma sauce'
+              : 'Ma recette'}
       </h1>
       <LienTutoriel parcoursId="composer" />
       <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
@@ -216,7 +258,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
           : 'Les valeurs nutritionnelles se calculent toutes seules à partir des ingrédients. Il n’y a rien à saisir de ce côté.'}
       </p>
 
-      <Champ libelle="Nom du plat">
+      <Champ libelle={saisie.estSauce ? 'Nom de la sauce' : 'Nom du plat'}>
         <input
           type="text"
           data-visite="nom-du-plat"
@@ -261,6 +303,12 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
           plat qu'on n'a fait que modifier est le meilleur moyen d'obtenir une réponse au hasard. */}
       {!variante && (
         <>
+          {/* ⛔ PAS DE CRÉNEAU POUR UNE SAUCE. Les trois du catalogue portent `types_repas: []` et
+              la décision 62 en fait la forme normale : une sauce accompagne un plat, elle ne se
+              sert pas à une heure. Le bloc est retiré plutôt que laissé vide — et `problemes()`
+              lève l'exigence en parallèle, sinon le bouton « Enregistrer » resterait bloqué sur un
+              message auquel plus aucun champ à l'écran ne permet de répondre. */}
+          {!saisie.estSauce && (
           <Groupe titre="À quel moment ?">
             <div className="flex flex-wrap gap-2">
               {CRENEAUX.map((creneau) => (
@@ -279,6 +327,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
               ))}
             </div>
           </Groupe>
+          )}
 
           <Groupe titre="Quel genre de plat ?">
             <div className="flex flex-wrap gap-2">
@@ -343,7 +392,56 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
         disabled={bloquants.length > 0}
         className="mt-6 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1.05rem] font-semibold text-white disabled:opacity-40"
       >
-        Enregistrer ma recette
+        {saisie.estSauce ? 'Enregistrer ma sauce' : 'Enregistrer ma recette'}
+      </button>
+    </section>
+  )
+}
+
+// --- « Un plat ou une sauce ? » (④) ---------------------------------------------------------------
+
+/**
+ * La question posée AVANT le formulaire, pour une création de zéro.
+ *
+ * ⚠️ CE N'EST PAS UN CHAMP DU FORMULAIRE, ET LE PLACEMENT EST TOUTE LA DIFFÉRENCE. La réponse décide
+ * de ce que le formulaire demande — une sauce n'a pas de créneau de repas. Posée au milieu, elle
+ * ferait disparaître un bloc déjà rempli, donc perdre une réponse sans le dire.
+ *
+ * ⚠️ AUCUN DÉFAUT PRÉSÉLECTIONNÉ, aucun `aria-pressed` : deux chemins, pas une bascule. Un « plat »
+ * préenfoncé ferait passer la question pour un réglage facultatif, et l'écran suivant ne serait pas
+ * celui qu'on croit avoir demandé.
+ */
+function QuestionNature({ onRepondre }: { readonly onRepondre: (estSauce: boolean) => void }) {
+  return (
+    <section>
+      {/* ⚠️ `data-visite="titre-composer"` AUSSI ICI, ET CE N'EST PAS UN DOUBLON : c'est l'ANCRE
+          INCONDITIONNELLE du parcours « composer » (règle 1 de `parcours.ts` — la première étape
+          d'un parcours doit résoudre sur un écran neuf, sans quoi le tutoriel est fantôme). Cet
+          écran-ci EST désormais l'état neuf de #/composer ; sans l'ancre, le tutoriel ne s'ouvrait
+          plus du tout, et rien d'autre que `parcours.test.tsx` ne le disait. Les étapes suivantes
+          (« nom-du-plat », « ajout-ingredient ») se sautent tant que la question n'est pas
+          tranchée — comportement prévu et documenté, pas un accident. */}
+      <h1 data-visite="titre-composer" className="text-[2.1rem] text-texte">
+        Qu'est-ce que vous composez ?
+      </h1>
+      <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+        Une sauce se prépare à côté et se sert avec un plat. Elle n'a pas de moment de repas à elle,
+        et c'est la seule différence : tout le reste se saisit pareil.
+      </p>
+
+      <button
+        type="button"
+        onClick={() => onRepondre(false)}
+        className="mt-6 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1.05rem] font-semibold text-white"
+      >
+        Un plat
+      </button>
+      <button
+        type="button"
+        onClick={() => onRepondre(true)}
+        className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-surface px-5 text-[1.05rem] font-semibold text-accent-texte"
+      >
+        Une sauce
       </button>
     </section>
   )

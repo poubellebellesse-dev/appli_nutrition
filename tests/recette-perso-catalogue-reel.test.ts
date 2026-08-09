@@ -82,6 +82,7 @@ describe('recette utilisateur — fusionnée dans le catalogue réel', () => {
       optionnel: false,
     })),
     etapes: ['Tout mélanger.'],
+    estSauce: false,
   })
 
   const catalogueAvec = (foodIds: readonly FoodId[], id: string, nom: string): Catalog => {
