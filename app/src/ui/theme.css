@@ -254,3 +254,51 @@
   color: var(--color-texte);
   border-radius: var(--radius-carte);
 }
+
+/* --- Impression (§4.3 DESIGN : « impression et export ») -----------------------------------------
+ *
+ * ⚠️ AUCUNE RÈGLE SUR `button`. Masquer les boutons à l'impression serait le réflexe — une feuille
+ * ne se clique pas — mais la case à cocher de la liste de courses EST un bouton (`courses.tsx`,
+ * `Ligne` : la ligne entière est la cible, §4.3). `button { display: none }` viderait donc la liste
+ * imprimée de tous ses articles. Ce qui ne s'imprime pas est marqué UN PAR UN, par
+ * `.sans-impression`, et cette dépense de quelques classes est exactement ce qui évite le défaut.
+ *
+ * ⚠️ La case reste dessinée, vide : c'est une case à cocher au stylo, dans le magasin. Elle est
+ * portée par une bordure, pas par un fond — `print-color-adjust` n'a donc rien à préserver. */
+@media print {
+  /* La navigation ne mène nulle part sur une feuille ; les bandeaux (`role="status"`,
+   * `role="alert"`) décrivent l'état de l'application à un instant, pas le contenu qu'on imprime ;
+   * une fenêtre ouverte (`role="dialog"`) est par définition ce qu'on vient de faire pour lancer
+   * l'impression. */
+  nav,
+  [role='status'],
+  [role='alert'],
+  [role='dialog'],
+  .sans-impression {
+    display: none !important;
+  }
+
+  /* Le gabarit d'écran réserve la place de la barre du bas et de la barre latérale. Sur une feuille,
+   * ces marges ne réservent rien — elles gaspillent un quart de la page. */
+  .lg\:pl-64,
+  .max-w-3xl {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  /* Encre noire sur papier blanc : les fonds chauds du thème ne s'impriment pas (la plupart des
+   * navigateurs les suppriment de toute façon) et les gris clairs deviennent illisibles. */
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* ⛔ Une liste de courses ne doit JAMAIS se couper au milieu d'un rayon si la page peut l'éviter :
+   * chercher la fin d'une section au verso, debout dans une allée, est exactement ce qu'une liste
+   * imprimée doit épargner. */
+  article,
+  li {
+    break-inside: avoid;
+  }
+}

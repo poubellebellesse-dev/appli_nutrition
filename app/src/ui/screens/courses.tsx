@@ -13,8 +13,12 @@
 // restes que le planning place ensuite (§7.4 ENGINE). Diviser par les convives ferait acheter de
 // quoi cuisiner un demi-plat et supprimerait ces restes. Ne pas « corriger » ça ici.
 //
-// PÉRIMÈTRE — ce que §4.3 décrit et qui n'est PAS ici : l'impression et l'export CSV/JSON du menu
-// discret, et le découpage en deux virées de courses (`joursDeCourses`, §7.4).
+// ✅ L'IMPRESSION ET L'EXPORT SONT LÀ DEPUIS LE 2026-08-10 — voir `BoutonImprimerExporter` en bas de
+// fichier, le format dans `ui/export-courses.ts`, et le bloc `@media print` de `theme.css`. Les deux
+// s'ouvrent dans une fenêtre plutôt que d'ajouter trois boutons à la barre d'actions.
+//
+// PÉRIMÈTRE — ce que §4.3 décrit et qui n'est toujours PAS ici : le découpage en deux virées de
+// courses (`joursDeCourses`, §7.4).
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type {
@@ -56,6 +60,17 @@ import {
   type Socle,
 } from '../socle.js'
 import { hashDe, hashDuFrigo } from '../router.js'
+import {
+  FICHIER_CSV,
+  FICHIER_JSON,
+  MIME_CSV,
+  MIME_JSON,
+  telecharger,
+  versCsv,
+  versJson,
+  type LigneCourses,
+} from '../export-courses.js'
+import { Panneau } from '../panneau.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
 import { ConfirmerFrigo, alimentsAConfirmer } from '../confirmer-frigo.js'
 import { BoutonParcourir, ParcoursAliments } from '../parcours-aliments.js'
@@ -356,6 +371,51 @@ function grouper(vue: Vue, rangement: Rangement): { titre: string; items: readon
   return [...sections.entries()].map(([titre, items]) => ({ titre, items: [...items.values()] }))
 }
 
+/**
+ * Les lignes telles qu'elles partent dans un fichier — voir l'en-tête d'`export-courses.ts` pour le
+ * pourquoi de chaque parti pris (ordre fixe, articles cochés conservés, aucune horloge).
+ *
+ * ⚠️ L'ORDRE NE VIENT PAS DE `grouper`, ET C'EST VOULU. `grouper` suit le rangement CHOISI à
+ * l'écran ; un fichier doit être reproductible, donc il suit `RAYONS_ALIMENTAIRES`, puis le nom.
+ * Exporter deux fois la même semaine en ayant touché au bouton « Ranger par » entre les deux doit
+ * rendre deux fichiers identiques.
+ *
+ * ⚠️ ET LA QUANTITÉ PASSE PAR `vue.quantiteDe`, jamais par `${quantiteTotale} ${unite}` : c'est le
+ * quatrième lecteur de cette règle (voir le commentaire de `Vue.quantiteDe`), et la recopier ici
+ * serait la quatrième occasion de la voir diverger de l'écran.
+ */
+function lignesExport(vue: Vue): readonly LigneCourses[] {
+  const rang = new Map(RAYONS_ALIMENTAIRES.map((rayon, index) => [rayon, index]))
+  const duPlan = [...vue.liste.items]
+    .sort((a, b) => {
+      // Un rayon absent du référentiel se range en fin, jamais au hasard : `rayonDe` a un repli
+      // (« autres »), mais une liste enregistrée avant un renommage peut porter autre chose.
+      const ra = rang.get(a.rayon) ?? RAYONS_ALIMENTAIRES.length
+      const rb = rang.get(b.rayon) ?? RAYONS_ALIMENTAIRES.length
+      if (ra !== rb) return ra - rb
+      return vue.nomAliment(a.foodId).localeCompare(vue.nomAliment(b.foodId), 'fr')
+    })
+    .map((item) => ({
+      libelle: vue.nomAliment(item.foodId),
+      quantite: vue.quantiteDe(item),
+      rayon: item.rayon,
+      coche: vue.enregistree.coches.has(item.foodId),
+      origine: 'plan' as const,
+    }))
+
+  // Les ajouts manuels gardent leur ordre de saisie — c'est celui de `user.db`, donc stable d'un
+  // export à l'autre, et il porte une information que le tri alphabétique détruirait.
+  const ajoutes = vue.enregistree.extras.map((extra) => ({
+    libelle: extra.libelle,
+    quantite: extra.quantite ?? '',
+    rayon: extra.rayon ?? 'Autres',
+    coche: extra.coche,
+    origine: 'ajout' as const,
+  }))
+
+  return [...duPlan, ...ajoutes]
+}
+
 export function Courses() {
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
   const [rangement, setRangement] = useState<Rangement>('rayon')
@@ -469,7 +529,11 @@ export function Courses() {
       <h1 data-visite="titre-courses" className="text-[2.1rem] text-texte">
         Mes courses
       </h1>
-      <LienTutoriel parcoursId="courses" />
+      {/* Enveloppé plutôt que marqué à la source : `LienTutoriel` sert cinq écrans, et le masquer
+          pour tous serait une décision sur des écrans dont personne n'a réglé l'impression. */}
+      <div className="sans-impression">
+        <LienTutoriel parcoursId="courses" />
+      </div>
       {/* La semaine d'abord, le compteur EN DESSOUS et sur sa propre ligne : accolés par un point
           médian, on lisait « du 3 au 9 août · 12 sur 40 » comme une seule information. */}
       <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">{plageDuPlan(vue.liste)}</p>
@@ -510,7 +574,11 @@ export function Courses() {
         sous « Reste du plat de la veille ».
       </p>
 
-      <fieldset data-visite="ranger-courses" className="mt-5">
+      {/* ⚠️ `sans-impression` ici et sur la barre d'actions : un choix de rangement et des boutons
+          n'ont aucun sens sur une feuille. Ce qui suit — l'avertissement sur les quantités, les
+          sections, les cases vides à cocher — s'imprime, LUI. Voir le bloc `@media print` de
+          `theme.css` : c'est un opt-out article par article, pas une règle sur `button`. */}
+      <fieldset data-visite="ranger-courses" className="sans-impression mt-5">
         <legend className="text-[0.9rem] text-texte-doux">Ranger par</legend>
         <div className="mt-2 flex gap-2">
           {(['rayon', 'repas', 'jour'] as const).map((valeur) => (
@@ -532,7 +600,7 @@ export function Courses() {
         </div>
       </fieldset>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="sans-impression mt-4 flex flex-wrap gap-2">
         <button
           type="button"
           data-visite="ajouter-article"
@@ -542,6 +610,7 @@ export function Courses() {
           Ajouter un article
         </button>
         <BoutonPartager vue={vue} coches={coches} />
+        <BoutonImprimerExporter vue={vue} />
       </div>
 
       {ajoutOuvert && (
@@ -559,7 +628,7 @@ export function Courses() {
       {extras.length >= 2 && (
         <a
           href={hashDuFrigo()}
-          className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+          className="sans-impression mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
         >
           Que cuisiner avec ?
         </a>
@@ -770,7 +839,9 @@ function Ligne({
           type="button"
           onClick={onSupprimer}
           aria-label={`Retirer ${libelle}`}
-          className="flex min-h-tactile w-12 items-center justify-center text-[1.1rem] text-attenue"
+          // Le seul bouton de la ligne qui ne s'imprime pas : celui de la case à cocher, lui, DOIT
+          // s'imprimer — c'est la case qu'on coche au stylo (voir `@media print`, `theme.css`).
+          className="sans-impression flex min-h-tactile w-12 items-center justify-center text-[1.1rem] text-attenue"
         >
           ×
         </button>
@@ -884,7 +955,7 @@ function FormulaireAjout({
           onAjouter(propre, rayon === '' ? null : rayon, quantitePropre === '' ? null : quantitePropre, noteAllergene)
         }
       }}
-      className="mt-4 rounded-[--radius-carte] border border-bordure bg-surface p-4"
+      className="sans-impression mt-4 rounded-[--radius-carte] border border-bordure bg-surface p-4"
     >
       <label className="block">
         <span className="text-[0.95rem] text-texte-doux">Article</span>
@@ -1025,6 +1096,95 @@ function BoutonPartager({ vue, coches }: { readonly vue: Vue; readonly coches: R
     >
       {copie ? 'Copié' : 'Partager'}
     </button>
+  )
+}
+
+/**
+ * « Imprimer ou exporter » (§4.3).
+ *
+ * ⚠️ UNE FENÊTRE, PAS TROIS BOUTONS DE PLUS. La barre en portait déjà deux ; trois actions
+ * secondaires supplémentaires auraient poussé « Ajouter un article » — l'action principale — sur une
+ * seconde ligne, sur un téléphone. Et c'est la règle verrouillée du produit : hors accueil, ce qui
+ * se choisit s'ouvre en fenêtre (`panneau.tsx`), jamais en dépliant. Le déclencheur porte donc
+ * `aria-haspopup="dialog"` et jamais `aria-expanded`.
+ *
+ * ⚠️ RIEN NE SORT DE L'APPAREIL. `window.print` parle à l'imprimante du système, les deux exports
+ * fabriquent un `Blob` en mémoire et le donnent au gestionnaire de téléchargement — §6.2 tient, il
+ * n'y a pas une requête réseau dans ce composant.
+ */
+function BoutonImprimerExporter({ vue }: { readonly vue: Vue }) {
+  const [ouvert, setOuvert] = useState(false)
+  const lignes = useMemo(() => lignesExport(vue), [vue])
+  const periode = plageDuPlan(vue.liste)
+
+  const action =
+    'flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[1rem] font-semibold text-texte-doux'
+
+  return (
+    <>
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={() => setOuvert(true)}
+        // `basis-full` : sa propre ligne, sous la paire existante. À trois `flex-1` sur un écran de
+        // 360 px, chaque libellé se casse en deux — « Ajouter un article », l'action principale,
+        // finissait aussi mal lotie que la moins fréquente des trois.
+        className="flex min-h-cta basis-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[1rem] font-semibold text-texte-doux"
+      >
+        Imprimer ou exporter
+      </button>
+
+      {ouvert && (
+        <Panneau titre="Imprimer ou exporter" onFermer={() => setOuvert(false)}>
+          <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+            La liste part sur votre imprimante ou dans un fichier, sur cet appareil. Rien n'est
+            envoyé nulle part.
+          </p>
+          <div className="mt-5 space-y-2">
+            <button
+              type="button"
+              onClick={() => {
+                // ⚠️ ON FERME **ET** ON IMPRIME DANS LE MÊME GESTE, et l'ordre n'y change rien :
+                // React groupe la mise à jour et ne la rend qu'après le retour du gestionnaire,
+                // donc `window.print()` voit encore la fenêtre ouverte. C'est le `@media print` de
+                // `theme.css` qui la masque — `[role='dialog']` y figure exactement pour ça.
+                setOuvert(false)
+                if (typeof window.print === 'function') window.print()
+              }}
+              className={action}
+            >
+              Imprimer
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                telecharger(versCsv(lignes), FICHIER_CSV, MIME_CSV)
+                setOuvert(false)
+              }}
+              className={action}
+            >
+              Exporter en CSV (tableur)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                telecharger(versJson(lignes, periode), FICHIER_JSON, MIME_JSON)
+                setOuvert(false)
+              }}
+              className={action}
+            >
+              Exporter en JSON
+            </button>
+          </div>
+          {/* Dit ce que le fichier contiendra : le compte à l'écran ne parle que du restant, celui-ci
+              parle de tout, cases cochées comprises. La différence surprendrait à l'ouverture. */}
+          <p className="mt-4 text-[0.9rem] leading-relaxed text-attenue">
+            <span className="tabular-nums">{lignes.length}</span> article
+            {lignes.length > 1 ? 's' : ''}, cochés compris.
+          </p>
+        </Panneau>
+      )}
+    </>
   )
 }
 

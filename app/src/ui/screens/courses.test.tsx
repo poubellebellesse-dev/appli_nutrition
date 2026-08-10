@@ -989,3 +989,154 @@ describe('courses — une sauce retenue s’achète avec son plat (v14)', () => 
     expect(dansLaSection.some((l) => l.includes('Poivre noir'))).toBe(false)
   })
 })
+
+/**
+ * L'impression et l'export (§4.3).
+ *
+ * ⚠️ LE FORMAT N'EST PAS TESTÉ ICI — il l'est dans `ui/export-courses.test.ts`, octet par octet.
+ * Ce bloc ne vérifie que le CÂBLAGE : le bon bouton appelle la bonne fonction avec le bon nom de
+ * fichier, et l'écran envoie bien TOUTE la liste, cases cochées comprises. C'est exactement la
+ * couture où le défaut maison se loge — « un champ déclaré n'est pas un champ branché ».
+ */
+describe('courses — imprimer et exporter', () => {
+  /** Remplace `createObjectURL`/`revokeObjectURL` (absents de jsdom) et capte les téléchargements. */
+  function capterTelechargements(): { readonly fichiers: string[]; readonly contenus: string[] } {
+    const contenus: string[] = []
+    Object.assign(URL, {
+      createObjectURL: (blob: Blob) => {
+        // ⚠️ `Blob.text()` est asynchrone : on ne peut pas le lire ici. On garde le blob de côté et
+        // on lit son type, seul champ synchrone — le CONTENU est vérifié par `export-courses.test.ts`.
+        contenus.push(blob.type)
+        return 'blob:test'
+      },
+      revokeObjectURL: () => undefined,
+    })
+    const fichiers: string[] = []
+    const vraiCreateElement = document.createElement.bind(document)
+    vi.spyOn(document, 'createElement').mockImplementation((nom: string) => {
+      const el = vraiCreateElement(nom) as HTMLElement
+      if (nom === 'a') el.click = () => fichiers.push((el as HTMLAnchorElement).download)
+      return el
+    })
+    return { fichiers, contenus }
+  }
+
+  afterEach(() => vi.restoreAllMocks())
+
+  /** Ouvre la fenêtre et rend son contenu — `Panneau` sort par un PORTAIL (voir `panneau.tsx`) :
+   *  `container.querySelector` ne le voit pas, `screen` oui. */
+  async function ouvrirLaFenetre(): Promise<HTMLElement> {
+    fireEvent.click(screen.getByText('Imprimer ou exporter'))
+    return (await screen.findByRole('dialog')) as HTMLElement
+  }
+
+  it('le déclencheur ouvre une FENÊTRE, pas un dépliant', async () => {
+    await avecUnPlan()
+    await monter()
+
+    // ⚠️ `aria-haspopup="dialog"` et JAMAIS `aria-expanded` : la règle du produit (`panneau.tsx`)
+    // est qu'un déclencheur hors accueil annonce une fenêtre, pas un contenu qui se déplie.
+    const declencheur = screen.getByText('Imprimer ou exporter').closest('button') as HTMLButtonElement
+    expect(declencheur.getAttribute('aria-haspopup')).toBe('dialog')
+    expect(declencheur.getAttribute('aria-expanded')).toBeNull()
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    const fenetre = await ouvrirLaFenetre()
+    expect(within(fenetre).getByText('Imprimer')).toBeTruthy()
+  })
+
+  it('« Imprimer » appelle l’impression du système et referme la fenêtre', async () => {
+    await avecUnPlan()
+    await monter()
+    // jsdom n'implémente pas `window.print` : sans doublure, il écrirait « Not implemented ».
+    const imprimer = vi.fn()
+    vi.spyOn(window, 'print').mockImplementation(imprimer)
+
+    const fenetre = await ouvrirLaFenetre()
+    fireEvent.click(within(fenetre).getByText('Imprimer'))
+
+    expect(imprimer).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('« Exporter en CSV » télécharge `mes-courses.csv`, en `text/csv`', async () => {
+    await avecUnPlan()
+    await monter()
+    const capte = capterTelechargements()
+
+    const fenetre = await ouvrirLaFenetre()
+    fireEvent.click(within(fenetre).getByText(/Exporter en CSV/))
+
+    expect(capte.fichiers).toEqual(['mes-courses.csv'])
+    expect(capte.contenus[0]).toContain('text/csv')
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  })
+
+  it('« Exporter en JSON » télécharge `mes-courses.json`, en `application/json`', async () => {
+    await avecUnPlan()
+    await monter()
+    const capte = capterTelechargements()
+
+    const fenetre = await ouvrirLaFenetre()
+    fireEvent.click(within(fenetre).getByText('Exporter en JSON'))
+
+    expect(capte.fichiers).toEqual(['mes-courses.json'])
+    expect(capte.contenus[0]).toBe('application/json')
+  })
+
+  it('⛔ LE FICHIER PORTE AUSSI LES ARTICLES COCHÉS — et le dit avant qu’on clique', async () => {
+    // C'est l'écart avec « Partager », qui n'envoie que le restant. Un export qui perdrait les
+    // cases cochées ne se découvrirait qu'à l'ouverture du fichier, chez quelqu'un d'autre.
+    await avecUnPlan()
+    await monter()
+    const avant = lignesAffichees().length
+
+    const premiere = document.querySelector('article button[aria-pressed]') as HTMLButtonElement
+    fireEvent.click(premiere)
+    await waitFor(() => expect(premiere.getAttribute('aria-pressed')).toBe('true'))
+
+    const fenetre = await ouvrirLaFenetre()
+    // Le compte annoncé n'a pas bougé d'un article : cocher ne retire rien du fichier.
+    expect(
+      within(fenetre).getByText(
+        (_, element) =>
+          element?.tagName === 'P' && new RegExp(`^${avant} articles?, cochés compris\.$`).test(element.textContent ?? '')
+      )
+    ).toBeTruthy()
+  })
+
+  it('un article ajouté à la main entre dans le compte de l’export', async () => {
+    await avecUnPlan()
+    await monter()
+    const avant = lignesAffichees().length
+    await ajouterArticle('Lessive')
+
+    const fenetre = await ouvrirLaFenetre()
+    expect(
+      within(fenetre).getByText(
+        (_, element) =>
+          element?.tagName === 'P' &&
+          new RegExp(`^${avant + 1} articles?, cochés compris\.$`).test(element.textContent ?? '')
+      )
+    ).toBeTruthy()
+  })
+
+  it('⛔ CE QUI NE S’IMPRIME PAS EST MARQUÉ, ET LA CASE À COCHER NE L’EST PAS', async () => {
+    // ⚠️ Ce test verrouille le piège du lot : `@media print { button { display: none } }` aurait été
+    // le réflexe, et il aurait VIDÉ la liste imprimée — la ligne cochable EST un bouton (§4.3).
+    // jsdom n'applique aucune feuille d'impression ; on vérifie donc le MARQUAGE, qui est ce que
+    // `theme.css` lit. Sans lui, la règle CSS ne masquerait rien.
+    await avecUnPlan()
+    await monter()
+
+    const barre = screen.getByText('Ajouter un article').closest('div') as HTMLElement
+    expect(barre.classList.contains('sans-impression')).toBe(true)
+    const rangement = screen.getByText('Ranger par').closest('fieldset') as HTMLElement
+    expect(rangement.classList.contains('sans-impression')).toBe(true)
+
+    const ligne = document.querySelector('article button[aria-pressed]') as HTMLButtonElement
+    expect(ligne.classList.contains('sans-impression')).toBe(false)
+    // Et la case elle-même reste dans l'arbre : c'est elle qu'on cochera au stylo.
+    expect(ligne.querySelector('span[aria-hidden="true"]')).not.toBeNull()
+  })
+})
