@@ -23,7 +23,7 @@ import type {
   UserProfile,
   WeekPlan,
 } from '../../engine/domain/index.js'
-import { MAX_PLAN_DAYS, MIN_PLAN_DAYS } from '../../engine/planning/plan-week.js'
+import { DEFAULT_PLAN_DAYS, MAX_PLAN_DAYS, MIN_PLAN_DAYS } from '../../engine/planning/plan-week.js'
 import { readLatestPlan, readRythme, readUserState, savePlan } from '../../data/user-store.js'
 import {
   FENETRE_HISTORIQUE_JOURS,
@@ -49,7 +49,10 @@ import { ChoisirPlat } from '../choisir-plat.js'
 // Aujourd'hui en a eu besoin à son tour : deux copies auraient donné une semaine et un écran du jour
 // qui ne parlent pas des mêmes repas.
 
-const JOURS_PAR_DEFAUT = 7
+// L'horizon par défaut vit à côté de ses bornes, dans `plan-week.ts` : l'écran de réglages en a
+// besoin lui aussi pour dire « moins que la semaine n'en demande », et une deuxième constante de 7
+// aurait fini par avertir sur un horizon que le planificateur n'utilise plus.
+const JOURS_PAR_DEFAUT = DEFAULT_PLAN_DAYS
 
 interface Reglages {
   readonly jours: number

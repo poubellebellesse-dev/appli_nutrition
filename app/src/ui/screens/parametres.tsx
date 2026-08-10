@@ -28,14 +28,20 @@ import type {
   AllergenId,
   Catalog,
   DietCode,
+  EquipmentId,
+  EtatDuCreneau,
   Food,
   FoodId,
   GroupeAnimal,
   GroupeAnimalId,
+  HardConstraints,
   MealSlot,
   PiquantTolerance,
+  PlatsDuCreneau,
 } from '../../engine/domain/index.js'
-import { groupesAnimaux } from '../../engine/domain/index.js'
+import { deplierGroupesRetires, groupesAnimaux, platsParCreneau } from '../../engine/domain/index.js'
+import type { Engine } from '../../engine/api/index.js'
+import { DEFAULT_PLAN_DAYS } from '../../engine/planning/plan-week.js'
 import { DIET_CHAIN, regimeExigePar } from '../../engine/selection/index.js'
 import {
   readDisplay,
@@ -43,6 +49,7 @@ import {
   readExcludedGroupIds,
   readGroupExceptionFoodIds,
   readMealTimes,
+  readOwnedEquipmentIds,
   writeAllergies,
   writeDiet,
   writeExcludedFoodIds,
@@ -92,6 +99,19 @@ import { LienTutoriel } from '../lien-tutoriel.js'
  */
 interface Vue extends ChoixProfil {
   readonly catalogue: Catalog
+  /**
+   * Le moteur, pour le SEUL compteur « il reste N plats » — jamais pour suggérer quoi que ce soit.
+   *
+   * ⚠️ ON INTERROGE LE MOTEUR PLUTÔT QUE DE RECOMPTER. Un écran qui refiltrerait le catalogue
+   * lui-même annoncerait un nombre que les suggestions ne confirment pas : `browseRecipes` applique
+   * exactement les couches d'exclusion de `suggestMeals`, ce qu'aucune réécriture ici ne garantirait.
+   */
+  readonly moteur: Engine
+  /**
+   * Le matériel déclaré, lu UNE FOIS — cet écran ne le règle pas encore, mais il pèse sur le compte
+   * de plats restants. `null` = jamais déclaré, la couche `equipement` reste inerte (tri-état).
+   */
+  readonly equipement: readonly EquipmentId[] | null
   readonly affichage: StoredDisplay
   readonly heures: HeuresDeRepas
   /** Décision 35. `null` = jamais déclarée — la couche `piquant` du moteur reste alors inerte. */
@@ -140,6 +160,8 @@ async function lireVue(): Promise<Vue> {
     ...lireChoixProfil(socle.db),
     tolerancePiquant: readTolerancePiquant(socle.db),
     catalogue: socle.catalogue,
+    moteur: socle.moteur,
+    equipement: readOwnedEquipmentIds(socle.db),
     affichage: readDisplay(socle.db),
     heures: readMealTimes(socle.db),
     sauvegarde: lireEtatSauvegarde(socle.db),
@@ -265,6 +287,58 @@ export function Parametres() {
     () => (catalogue === null ? [] : groupesAnimaux(catalogue.foods)),
     [catalogue]
   )
+
+  /**
+   * « Il reste N plats », créneau par créneau.
+   *
+   * ⚠️ LE COÛT EST MESURÉ, PAS SUPPOSÉ : **0,6 ms par appel** sur le catalogue réel (330 recettes,
+   * 200 appels, régime végétarien), **0,98 ms** avec 120 aliments exclus — `createEngine` a déjà
+   * construit le catalogue enrichi, `browseRecipes` ne fait que la passe d'exclusion. Le recalcul à
+   * chaque case cochée ne coûte donc rien de visible, et le `useMemo` n'est PAS ce qui rend l'écran
+   * tenable : il évite seulement de rejouer la passe aux rendus déclenchés par les autres réglages
+   * de la page. Les dépendances sont exactement ce qui change le résultat — les trois ensembles de
+   * cases, le régime, les allergies, le matériel, et le rythme qui décide des créneaux affichés.
+   *
+   * ⚠️ UN SEUL APPEL À `browseRecipes` POUR TOUS LES CRÉNEAUX. L'intersection avec `recipesBySlot`
+   * suffit — un axe « créneaux » dans `BrowseRequest` coûterait quatre passes de couches pour le
+   * même nombre. `platsParCreneau` porte le détail.
+   */
+  const vueCourante = etat.phase === 'pret' ? etat.vue : null
+  const comptes = useMemo<readonly PlatsDuCreneau[]>(() => {
+    if (vueCourante === null || catalogue === null) return []
+    const contraintes: HardConstraints = {
+      // `ChoixProfil.allergenes` est un ensemble de `string` — même conversion que
+      // `ecrireChoixProfil` (ui/profil-enregistre.ts), qui fait le chemin inverse.
+      allergies: [...vueCourante.allergenes].map((id) => id as AllergenId),
+      diet: vueCourante.regime,
+      // La MÊME règle de dépliage que `readExcludedFoodIdsDeplies`, appelée sur l'état d'écran —
+      // qui est en avance sur la base, `appliquer` écrivant après avoir posé l'état.
+      excludedFoodIds: deplierGroupesRetires(
+        groupes,
+        vueCourante.groupesRetires,
+        vueCourante.alimentsRetires,
+        vueCourante.exceptions
+      ),
+      ownedEquipmentIds: vueCourante.equipement,
+    }
+    return platsParCreneau(
+      vueCourante.moteur.browseRecipes({ constraints: contraintes }).recipeIds,
+      catalogue.indexes.recipesBySlot,
+      creneauxDuRythme(vueCourante.rythme.repasParJour),
+      DEFAULT_PLAN_DAYS
+    )
+  }, [
+    catalogue,
+    groupes,
+    vueCourante?.moteur,
+    vueCourante?.allergenes,
+    vueCourante?.regime,
+    vueCourante?.groupesRetires,
+    vueCourante?.alimentsRetires,
+    vueCourante?.exceptions,
+    vueCourante?.equipement,
+    vueCourante?.rythme.repasParJour,
+  ])
 
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement…</p>
   if (etat.phase === 'erreur') {
@@ -412,6 +486,20 @@ export function Parametres() {
             groupesRetires={vue.groupesRetires}
             alimentsRetires={vue.alimentsRetires}
             exceptions={vue.exceptions}
+            comptes={comptes}
+            onPreselection={(ajouts) => {
+              // ⛔ UNE PRÉSÉLECTION AJOUTE, ELLE NE DÉCOCHE JAMAIS. Même polarité que partout dans ce
+              // mécanisme (`regimeExigePar` rend `omnivore` en cas d'ignorance) : l'erreur qui
+              // retire un aliment de trop se voit et se répare, celle qui en réadmet un en silence
+              // ne se voit pas. Contrepartie assumée : se tromper de présélection ne s'annule pas
+              // d'un clic, il faut décocher soi-même. C'est le prix, il est payé sciemment — et ⛔
+              // surtout pas compensé par un « annuler » qui rouvrirait la direction interdite.
+              const groupesRetires = new Set(vue.groupesRetires)
+              for (const groupeId of ajouts) groupesRetires.add(groupeId)
+              appliquer({ ...vue, groupesRetires }, (db) =>
+                writeExcludedGroupIds(db, [...groupesRetires])
+              )
+            }}
             onGroupe={(groupeId, retire) => {
               const groupesRetires = new Set(vue.groupesRetires)
               if (retire) groupesRetires.add(groupeId)
@@ -924,9 +1012,10 @@ const CONTACT = 'contact@example.org'
  * qui filtre ses suggestions. Ils sont montrés comme déjà écartés, sans case : les ré-admettre
  * toucherait la couche `regime`, qui reste 🔒 critique, et c'est un autre lot.
  *
- * ⚠️ AUCUN DÉCOMPTE DE PLATS RESTANTS ICI. « Il vous reste 34 plats » et l'avertissement de planning
- * vide sont un lot à part ; un chiffre posé sans son avertissement se lirait comme un jugement sur le
- * choix de l'utilisateur (principe 6).
+ * ⚠️ LE DÉCOMPTE DE PLATS RESTANTS EST UN CARDINAL, JAMAIS UNE NOTE. « 38 plats » se lit ; un score
+ * du moteur à côté d'un choix de l'utilisateur se lirait comme un jugement (principe 6). Il informe
+ * et ⛔ ne bloque RIEN : aucune case n'est refusée, aucune n'est grisée par le compte. L'utilisateur
+ * a le droit de se mettre dans une impasse ; il a le droit de le savoir avant.
  *
  * Rendu à l'intérieur d'un `Panneau` : pas de titre ici, le panneau le porte déjà dans son en-tête.
  */
@@ -937,6 +1026,8 @@ function AlimentsEcartes({
   groupesRetires,
   alimentsRetires,
   exceptions,
+  comptes,
+  onPreselection,
   onGroupe,
   onAliment,
 }: {
@@ -946,10 +1037,13 @@ function AlimentsEcartes({
   readonly groupesRetires: ReadonlySet<GroupeAnimalId>
   readonly alimentsRetires: ReadonlySet<FoodId>
   readonly exceptions: ReadonlySet<FoodId>
+  readonly comptes: readonly PlatsDuCreneau[]
+  readonly onPreselection: (ajouts: readonly GroupeAnimalId[]) => void
   readonly onGroupe: (groupeId: GroupeAnimalId, retire: boolean) => void
   readonly onAliment: (foodId: FoodId, retire: boolean, groupeRetire: boolean) => void
 }) {
   const [deplie, setDeplie] = useState<GroupeAnimalId | null>(null)
+  const preselections = regime === null ? [] : (PRESELECTIONS[regime] ?? [])
 
   return (
     <>
@@ -957,6 +1051,26 @@ function AlimentsEcartes({
         Ces aliments ne vous seront plus proposés. Cochez un groupe entier, ou dépliez-le pour n'en
         retirer qu'une partie. Une allergie se déclare ailleurs, dans « Mes allergies ».
       </p>
+
+      {preselections.length > 0 && (
+        <div className="mb-3 space-y-2">
+          {preselections.map((preselection) => (
+            <button
+              key={preselection.libelle}
+              type="button"
+              onClick={() => onPreselection(preselection.groupes)}
+              className="flex min-h-tactile w-full flex-col items-start justify-center rounded-[--radius-carte] border border-bordure-forte bg-fond px-4 py-2 text-left"
+            >
+              <span className="text-lecture font-semibold text-texte">{preselection.libelle}</span>
+              <span className="text-mention leading-snug text-attenue">
+                {preselection.explication} Ce bouton coche, il ne décoche jamais.
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      <ComptesParCreneau comptes={comptes} />
 
       <div className="space-y-2">
         {groupes.map((groupe) => {
@@ -1050,4 +1164,107 @@ function ecarteParLeRegime(
   const rangDemande = DIET_CHAIN.indexOf(regime)
   if (rangDemande < 0) return false
   return groupe.aliments.every((f) => DIET_CHAIN.indexOf(regimeExigePar(f, foods)) > rangDemande)
+}
+
+/**
+ * Un raccourci nommé : les groupes qu'il COCHE, et rien d'autre.
+ *
+ * ⛔ RIEN NE PERSISTE LE NOM. Ce qui part en base reste `user_excluded_group`, inchangé — un nom
+ * stocké se désynchroniserait des cases dès le premier cochage manuel, et l'écran afficherait
+ * « lacto-végétarien » à quelqu'un qui a repris les œufs. Le nom ne vit que le temps du clic.
+ */
+interface Preselection {
+  readonly libelle: string
+  readonly explication: string
+  readonly groupes: readonly GroupeAnimalId[]
+}
+
+/**
+ * ⚠️ UNE PRÉSÉLECTION N'EST OFFERTE QUE SOUS LE RÉGIME QUI LA REND SENSÉE. « Lacto-végétarien » ne
+ * veut rien dire pour un omnivore : le proposer ouvrirait un SECOND chemin vers un état que la
+ * couche `regime` porte déjà, avec deux écrans qui décrivent la même chose sans se parler. ⛔ On ne
+ * propose donc pas « devenir végétarien » par ces cases — ça se déclare dans « Mon régime ».
+ *
+ * ⚠️ `vegetalien` ET `omnivore` N'EN ONT AUCUNE, ET C'EST UNE ABSENCE RAISONNÉE, pas un oubli. Le
+ * végétalien a déjà tout écarté ; l'omnivore n'a rien à raccourcir qui ne soit un régime déclaré.
+ *
+ * 📌 PAS DE BOUTON « OVO-LACTO-VÉGÉTARIEN », contrairement à ce que listait
+ * `docs/CONCEPTION_REGIME_PERSONNALISE.md` (corrigé dans le même lot). Sous la règle ci-dessus,
+ * c'est l'état PAR DÉFAUT de `vegetarien` : un bouton qui ne cocherait rien, donc un bouton dont le
+ * clic ne produit aucun changement visible — la pire forme de commande.
+ *
+ * Clé `string` parce que `DietCode` en est un (vocabulaire ouvert, `domain/catalog.ts`) ; un régime
+ * inconnu retombe sur « aucune présélection », ce qui est le bon défaut.
+ */
+const PRESELECTIONS: Readonly<Record<string, readonly Preselection[]>> = {
+  vegetarien: [
+    {
+      libelle: 'Lacto-végétarien',
+      explication: 'Les produits laitiers restent, les œufs partent.',
+      groupes: ['oeufs'],
+    },
+    {
+      libelle: 'Ovo-végétarien',
+      explication: 'Les œufs restent, les produits laitiers partent.',
+      groupes: ['laitiers'],
+    },
+  ],
+  pescetarien: [
+    {
+      libelle: 'Sans fruits de mer',
+      explication: 'Le poisson reste, coquillages et crustacés partent.',
+      groupes: ['fruits_de_mer'],
+    },
+  ],
+}
+
+/**
+ * ⚠️ LES DEUX SEUILS NE DISENT PAS LA MÊME CHOSE, ET « IMPOSSIBLE » EST PLUS FORT QUE LE FAIT.
+ * Vérifié dans le moteur, pas déduit — voir `EtatDuCreneau` (engine/domain/plats-par-creneau.ts) :
+ *
+ * - à 0, `suggestMeals` LÈVE et le créneau ne peut réellement pas être rempli ;
+ * - en dessous d'une semaine, `planWeek` ne répète PAS — `pickForSlot` écarte tout plat déjà placé
+ *   dans ses deux passes, puis rend `null`. Les jours en trop ressortent VIDES. Écrire « votre
+ *   planning sera répétitif » serait faux, et « impossible » le serait aussi, dans le sens qui fait
+ *   peur : la couche `variety` pénalise la répétition, elle ne l'interdit pas.
+ */
+const AVERTISSEMENT_CRENEAU: Readonly<Record<Exclude<EtatDuCreneau, 'suffisant'>, string>> = {
+  vide: 'Aucun plat ne reste pour ce repas : il ne pourra pas être proposé, et un planning laissera sa case vide.',
+  court: `Moins de plats que les ${DEFAULT_PLAN_DAYS} jours d'une semaine n'en demandent. Un planning ne sert jamais deux fois le même plat : les jours en trop resteront vides.`,
+}
+
+/**
+ * « Il reste, avec vos choix » — un compte PAR CRÉNEAU, jamais un total.
+ *
+ * ⚠️ UN TOTAL GLOBAL PEUT ÊTRE VERT PENDANT QU'UN CRÉNEAU EST DÉJÀ VIDE. Le banc a mesuré cette
+ * panne exacte : « végétalien + sans gluten », 28 plats pour 28 créneaux, marge zéro — une exclusion
+ * de plus vidait un créneau sans que le total le montre.
+ *
+ * ⚠️ SEULS LES CRÉNEAUX QUE L'UTILISATEUR PLANIFIE sont comptés (`creneauxDuRythme`) : afficher le
+ * goûter à qui mange deux fois par jour est du bruit, et un avertissement de bruit ne se lit plus.
+ *
+ * ⚠️ NI COULEUR, NI SCORE, NI BLOCAGE. Le nombre est un cardinal, l'avertissement une phrase ; rien
+ * n'est rouge, rien n'est grisé, aucune case n'est refusée (principes 1 et 6).
+ */
+function ComptesParCreneau({ comptes }: { readonly comptes: readonly PlatsDuCreneau[] }) {
+  if (comptes.length === 0) return null
+
+  return (
+    <div className="mb-3 rounded-[--radius-carte] border border-bordure bg-fond px-4 py-3">
+      <p className="text-courant font-semibold text-texte">Il reste, avec vos choix :</p>
+      <ul className="mt-2 space-y-2">
+        {comptes.map(({ creneau, plats, etat }) => (
+          <li key={creneau} className="text-lecture text-texte-doux">
+            <span className="font-semibold text-texte">{LIBELLE_CRENEAU[creneau]}</span> {plats}{' '}
+            plat{plats === 1 ? '' : 's'}
+            {etat !== 'suffisant' && (
+              <span className="mt-1 block text-mention leading-snug text-texte-doux">
+                {AVERTISSEMENT_CRENEAU[etat]}
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
 }

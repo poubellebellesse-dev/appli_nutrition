@@ -82,6 +82,17 @@ export type SuggestForSlot = (req: SuggestionRequest) => SuggestionResult
 export const MIN_PLAN_DAYS = 2
 export const MAX_PLAN_DAYS = 14
 
+/**
+ * L'horizon proposé par défaut : une semaine.
+ *
+ * ⚠️ REMONTÉ ICI DEPUIS `ui/screens/semaine.tsx`, où il vivait seul. Deux écrans en ont maintenant
+ * besoin — la semaine pour son réglage, les réglages pour dire « moins que la semaine n'en
+ * demande » — et deux copies auraient donné un compteur qui n'avertit pas sur l'horizon que le
+ * planificateur utilise vraiment. Même motif que `creneauxDuRythme`, remonté dans `ui/creneau.ts`
+ * le jour où « Aujourd'hui » a eu besoin du mapping de `semaine.tsx`.
+ */
+export const DEFAULT_PLAN_DAYS = 7
+
 const MS_PER_DAY = 86_400_000
 
 /** ISO yyyy-mm-dd + n jours. Jamais `Date.now()` : la date de départ vient de la requête (§3 ENGINE). */

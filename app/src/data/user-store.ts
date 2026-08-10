@@ -37,7 +37,7 @@ import type {
   UserProfile,
   WeekPlan,
 } from '../engine/domain/index.js'
-import { groupesAnimaux } from '../engine/domain/index.js'
+import { deplierGroupesRetires, groupesAnimaux } from '../engine/domain/index.js'
 import { withTransaction, type UserDb } from './user-db.js'
 
 // --- Types de bordure -------------------------------------------------------------------------
@@ -274,6 +274,11 @@ export function writeGroupExceptionFoodIds(db: UserDb, foodIds: readonly FoodId[
  * de `GroupeAnimalId` (engine/domain/groupes-animaux.ts), et le `CHECK` de la v15 est le fil-piège
  * qui force à la traiter le jour où l'union change.
  *
+ * ⚠️ LA RÈGLE ELLE-MÊME EST DANS `deplierGroupesRetires` (engine/domain/groupes-animaux.ts), PAS
+ * ICI. Cette fonction ne fait que lire les trois tables et la lui passer. L'écran de réglages
+ * appelle la même règle sur son état d'écran, plus récent que la base : deux écritures du dépliage
+ * finiraient par compter deux choses différentes.
+ *
  * Coût : `groupesAnimaux` parcourt les aliments une fois — et n'est appelée QUE si au moins un
  * groupe est retiré, ce qui est faux pour la quasi-totalité des utilisateurs.
  */
@@ -281,20 +286,13 @@ export function readExcludedFoodIdsDeplies(
   db: UserDb,
   foods: ReadonlyMap<FoodId, Food>
 ): readonly FoodId[] {
-  const exclus = new Set<FoodId>(readExcludedFoodIds(db))
-
-  const retires = readExcludedGroupIds(db)
-  if (retires.length > 0) {
-    const coches = new Set<GroupeAnimalId>(retires)
-    for (const groupe of groupesAnimaux(foods)) {
-      if (!coches.has(groupe.id)) continue
-      for (const aliment of groupe.aliments) exclus.add(aliment.id)
-    }
-  }
-
-  for (const foodId of readGroupExceptionFoodIds(db)) exclus.delete(foodId)
-
-  return [...exclus].sort()
+  const retires = new Set<GroupeAnimalId>(readExcludedGroupIds(db))
+  return deplierGroupesRetires(
+    retires.size === 0 ? [] : groupesAnimaux(foods),
+    retires,
+    readExcludedFoodIds(db),
+    readGroupExceptionFoodIds(db)
+  )
 }
 
 /**

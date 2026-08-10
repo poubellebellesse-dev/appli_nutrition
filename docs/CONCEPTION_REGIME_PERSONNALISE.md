@@ -113,13 +113,24 @@ livre l'essentiel :
 
 ### Lot C — le garde-fou de vide, et les présélections nommées
 
-1. **Le compteur.** « Il reste 34 plats sur 330 » pendant que l'utilisateur coche, et un
-   avertissement **avant** que le planning ne devienne infaisable.
+1. **Le compteur.** Un compte **par créneau** pendant que l'utilisateur coche — jamais un total
+   global — et un avertissement **avant** que le planning ne se vide.
    ⚠️ **Ce n'est pas une précaution théorique** : le banc a mesuré « végétalien + sans gluten » à
    **marge zéro** — 28 plats utilisables pour 28 créneaux, une seule contrainte de plus vidait un
-   créneau. Un utilisateur qui coche librement recrée exactement cette situation.
-2. **Les présélections** — « ovo-lacto-végétarien », « lacto-végétarien » — qui ne sont rien d'autre
-   que des jeux de cases pré-remplis. Nommer, pas coder.
+   créneau. Un utilisateur qui coche librement recrée exactement cette situation. Un total global
+   serait resté vert pendant ce temps : c'est pourquoi le compte est **par créneau**.
+   ⚠️ **Deux seuils, et le mot « infaisable » est plus fort que le fait.** À **0 plat**,
+   `suggestMeals` lève et le créneau ne peut réellement pas être rempli. **En dessous d'une
+   semaine**, `planWeek` ne répète pas — `pickForSlot` écarte tout plat déjà placé dans ses deux
+   passes et rend `null` : les jours en trop ressortent **vides**, pas répétitifs. « Répétitif »
+   serait faux, « impossible » aussi.
+2. **Les présélections** — « lacto-végétarien », « ovo-végétarien », « sans fruits de mer » — qui ne
+   sont rien d'autre que des jeux de cases pré-remplis. Nommer, pas coder.
+   ⚠️ **Corrigé le 2026-08-10 (lot C) : pas de bouton « ovo-lacto-végétarien ».** Une présélection
+   n'est offerte que sous le régime qui la rend sensée, et sous `vegetarien` l'ovo-lacto est l'état
+   **par défaut** — le bouton ne cocherait rien. Une présélection **ajoute** des cases, elle n'en
+   décoche jamais : même polarité que le reste du chantier, l'erreur qui retire un aliment de trop
+   se voit et se répare, celle qui en réadmet un en silence ne se voit pas.
 
 ### Lot D — la direction « admettre » *(le seul lot à risque)*
 

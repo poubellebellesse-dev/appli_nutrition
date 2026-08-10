@@ -313,6 +313,171 @@ describe('parametres — « Aliments que je ne veux pas »', () => {
     // Retirer le lait par goût N'EST PAS déclarer une allergie au lait.
     expect(readAllergies(baseCourante())).toEqual([])
   })
+
+  // --- Le compteur de plats restants (lot C) ----------------------------------------------------
+
+  /**
+   * Les lignes du compteur, telles qu'affichées.
+   *
+   * ⛔ AUCUN NOMBRE ATTENDU N'EST ÉCRIT EN DUR. Ce que les tests vérifient est une RELATION — quels
+   * créneaux sont listés, et dans quel sens le nombre bouge quand on coche. La valeur, elle,
+   * appartient au contenu du catalogue et change à chaque lot.
+   */
+  function lignesDuCompteur(panneau: ReturnType<typeof within>): readonly string[] {
+    const bloc = panneau.getByText('Il reste, avec vos choix :').closest('div')!
+    return [...bloc.querySelectorAll('li')].map((li) => li.textContent ?? '')
+  }
+
+  function platsDuCreneau(panneau: ReturnType<typeof within>, libelle: string): number {
+    const ligne = lignesDuCompteur(panneau).find((texte) => texte.startsWith(libelle))
+    return Number(/(\d+)\s*plat/.exec(ligne ?? '')![1])
+  }
+
+  it('compte les plats restants CRÉNEAU PAR CRÉNEAU, et seulement ceux que l’utilisateur planifie', async () => {
+    // Un total global peut être vert pendant qu'un créneau est déjà vide — c'est la panne mesurée au
+    // banc (« végétalien + sans gluten », 28 plats pour 28 créneaux). Et compter le goûter de qui
+    // mange deux fois par jour est du bruit : un avertissement de bruit ne se lit plus.
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    const lignes = lignesDuCompteur(panneau)
+
+    // Rythme par défaut : deux repas par jour → déjeuner et dîner, pas les quatre créneaux.
+    expect(lignes.some((l) => l.startsWith('Déjeuner'))).toBe(true)
+    expect(lignes.some((l) => l.startsWith('Dîner'))).toBe(true)
+    expect(lignes.some((l) => l.startsWith('Goûter'))).toBe(false)
+    expect(lignes.some((l) => l.startsWith('Petit-déjeuner'))).toBe(false)
+  })
+
+  it('le compteur SUIT le rythme déclaré', async () => {
+    const { writeRythme, readRythme } = await import('../../data/user-store.js')
+    const rythme = readRythme(baseCourante())
+    writeRythme(baseCourante(), {
+      repasParJour: 3,
+      tempsSemaineMin: rythme?.tempsSemaineMin ?? 30,
+      tempsWeekendMin: rythme?.tempsWeekendMin ?? null,
+    })
+
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    expect(lignesDuCompteur(panneau).some((l) => l.startsWith('Petit-déjeuner'))).toBe(true)
+  })
+
+  it('⛔ LE COMPTE BAISSE QUAND ON COCHE — il décrit les contraintes, il ne les décore pas', async () => {
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    const avant = platsDuCreneau(panneau, 'Dîner')
+    expect(avant).toBeGreaterThan(0)
+
+    fireEvent.click(panneau.getByText(ligneDuGroupe('Viande de mammifère')))
+
+    await waitFor(() => expect(platsDuCreneau(panneau, 'Dîner')).toBeLessThan(avant))
+  })
+
+  it('⛔ À ZÉRO PLAT, LA PHRASE DIT « ne pourra pas », JAMAIS « répétitif » NI « impossible »', async () => {
+    // Le mot « infaisable » est plus fort que le fait, et les deux seuils ne disent pas la même
+    // chose : à 0, `suggestMeals` LÈVE (le créneau ne peut pas être rempli) ; en dessous d'une
+    // semaine, `planWeek` ne répète pas, il laisse des cases VIDES. « répétitif » serait faux, et
+    // « impossible » le serait aussi — dans le sens qui fait peur.
+    const { writeExcludedFoodIds } = await import('../../data/user-store.js')
+    writeExcludedFoodIds(baseCourante(), [...catalogueDeTest().foods.keys()])
+
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    expect(platsDuCreneau(panneau, 'Dîner')).toBe(0)
+
+    const ligne = lignesDuCompteur(panneau).find((l) => l.startsWith('Dîner'))!
+    expect(ligne).toMatch(/ne pourra pas être proposé/)
+    expect(ligne).not.toMatch(/répétitif|impossible|infaisable/i)
+  })
+
+  it('⛔ RIEN N’EST BLOQUÉ NI GRISÉ PAR LE COMPTE — l’utilisateur a le droit de se mettre dans une impasse', async () => {
+    // Principe 1 et principe 6 : l'écran informe, il ne décide pas. Le seul devoir est de le dire
+    // AVANT. On coche donc tout, et les cases doivent toutes continuer de répondre.
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    const cochables = ['Lait et produits laitiers', 'Œufs', 'Miel', 'Viande de mammifère', 'Volaille', 'Poisson', 'Fruits de mer']
+    for (const libelle of cochables) {
+      const bouton = panneau.getByText(ligneDuGroupe(libelle)).closest('button')!
+      expect(bouton.hasAttribute('disabled'), libelle).toBe(false)
+      fireEvent.click(bouton)
+    }
+
+    const { readExcludedGroupIds } = await import('../../data/user-store.js')
+    await waitFor(() => expect(readExcludedGroupIds(baseCourante()).length).toBe(cochables.length))
+  })
+
+  // --- Les présélections nommées (lot C) --------------------------------------------------------
+
+  it('⛔ AUCUNE PRÉSÉLECTION SANS LE RÉGIME QUI LA REND SENSÉE', async () => {
+    // « Lacto-végétarien » proposé à un omnivore ouvrirait un SECOND chemin vers un état que la
+    // couche `regime` porte déjà — deux écrans qui décrivent la même chose sans se parler.
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    expect(panneau.queryByText('Lacto-végétarien')).toBeNull()
+    expect(panneau.queryByText('Ovo-végétarien')).toBeNull()
+    expect(panneau.queryByText('Sans fruits de mer')).toBeNull()
+  })
+
+  it('sous « végétarien », les deux présélections apparaissent — et AUCUN bouton « ovo-lacto »', async () => {
+    // 📌 L'ovo-lacto est l'état PAR DÉFAUT de `vegetarien` : le bouton ne cocherait rien. Le document
+    // de conception le listait, il a été corrigé dans le même lot.
+    const { writeDiet } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetarien')
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+
+    expect(panneau.getByText('Lacto-végétarien')).toBeDefined()
+    expect(panneau.getByText('Ovo-végétarien')).toBeDefined()
+    expect(panneau.queryByText(/ovo.?lacto/i)).toBeNull()
+  })
+
+  it('une présélection coche les groupes qu’elle nomme, et rien de plus', async () => {
+    const { writeDiet, readExcludedGroupIds } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetarien')
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+
+    fireEvent.click(panneau.getByText('Lacto-végétarien'))
+    await waitFor(() => expect(readExcludedGroupIds(baseCourante())).toEqual(['oeufs']))
+  })
+
+  it('⛔ UNE PRÉSÉLECTION AJOUTE, ELLE NE DÉCOCHE JAMAIS', async () => {
+    // Même polarité que partout dans ce chantier : l'erreur qui retire un aliment de trop se voit et
+    // se répare, celle qui en réadmet un en silence ne se voit pas. Contrepartie assumée — se
+    // tromper de présélection ne s'annule pas d'un clic.
+    const { writeDiet, readExcludedGroupIds } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetarien')
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+
+    fireEvent.click(panneau.getByText(ligneDuGroupe('Miel')))
+    await waitFor(() => expect(readExcludedGroupIds(baseCourante())).toEqual(['miel']))
+
+    fireEvent.click(panneau.getByText('Ovo-végétarien'))
+    await waitFor(() =>
+      expect([...readExcludedGroupIds(baseCourante())].sort()).toEqual(['laitiers', 'miel'])
+    )
+  })
+
+  it('⛔ AUCUN NOM DE PRÉSÉLECTION N’EST STOCKÉ — seules les cases le sont', async () => {
+    // Un nom stocké se désynchronise des cases dès le premier cochage manuel : l'écran afficherait
+    // « lacto-végétarien » à quelqu'un qui vient de reprendre les œufs.
+    const { writeDiet, readExcludedGroupIds, readExcludedFoodIds, readGroupExceptionFoodIds } =
+      await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetarien')
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    fireEvent.click(panneau.getByText('Lacto-végétarien'))
+    await waitFor(() => expect(readExcludedGroupIds(baseCourante())).toEqual(['oeufs']))
+
+    // Rien d'autre n'a bougé, et aucune table ne porte de libellé.
+    expect(readExcludedFoodIds(baseCourante())).toEqual([])
+    expect(readGroupExceptionFoodIds(baseCourante())).toEqual([])
+    const tables = baseCourante().all<{ readonly name: string }>(
+      "SELECT name FROM sqlite_master WHERE type = 'table'"
+    )
+    expect(tables.some((t) => /preselection|preset/i.test(t.name))).toBe(false)
+  })
 })
 
 describe('parametres — les réglages d’affichage', () => {

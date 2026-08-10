@@ -148,3 +148,41 @@ export function groupesAnimaux(foods: ReadonlyMap<FoodId, Food>): readonly Group
     return [{ id, libelle, aliments: [...aliments].sort((a, b) => a.nom.localeCompare(b.nom, 'fr')) }]
   })
 }
+
+/**
+ * Les aliments réellement écartés, à partir de ce que l'utilisateur a COCHÉ.
+ *
+ *     exclus = ( ⋃ aliments(g) pour g retiré ∪ aliments cochés seuls ) \ ré-admis
+ *
+ * ⚠️ UNE SEULE ÉCRITURE DE CETTE RÈGLE, et c'est pour cela qu'elle est ici plutôt que dans le
+ * magasin. Deux appelants en ont besoin : `readExcludedFoodIdsDeplies` (data/user-store.ts), qui
+ * déplie ce qui est EN BASE pour le moteur, et l'écran de réglages, qui doit compter les plats
+ * restants sur un état d'écran encore plus récent que la base. Recopier le dépliage dans le second
+ * ferait diverger le compteur des suggestions au premier ajustement — et c'est le compteur qui
+ * aurait tort sans que rien ne le dise.
+ *
+ * ⚠️ LE DÉPLIAGE SE FAIT À LA LECTURE, CONTRE `groupes`. Passer les groupes du catalogue DU JOUR est
+ * toute la décision du lot B : un aliment ajouté au catalogue après le cochage entre de lui-même
+ * dans le groupe déjà coché. `groupes` peut donc être vide sans que ce soit une erreur — c'est le
+ * cas quand aucun groupe n'est retiré et que l'appelant s'épargne le parcours du catalogue.
+ *
+ * ⚠️ UNE RÉ-ADMISSION HORS GROUPE RETIRÉ EST INERTE, PAS FAUSSE. Elle ne retire rien à
+ * `alimentsSeuls`, qui n'est pas censé la contenir (les deux tables restent disjointes à
+ * l'écriture) ; elle reprend effet telle quelle si le groupe est recoché.
+ *
+ * Sortie triée — un ordre stable rend les comparaisons de tests lisibles et l'écriture idempotente.
+ */
+export function deplierGroupesRetires(
+  groupes: readonly GroupeAnimal[],
+  groupesRetires: ReadonlySet<GroupeAnimalId>,
+  alimentsSeuls: Iterable<FoodId>,
+  reAdmis: Iterable<FoodId>
+): readonly FoodId[] {
+  const exclus = new Set<FoodId>(alimentsSeuls)
+  for (const groupe of groupes) {
+    if (!groupesRetires.has(groupe.id)) continue
+    for (const aliment of groupe.aliments) exclus.add(aliment.id)
+  }
+  for (const foodId of reAdmis) exclus.delete(foodId)
+  return [...exclus].sort()
+}
