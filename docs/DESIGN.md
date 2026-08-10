@@ -29,6 +29,32 @@ ci-dessous font foi ; le tableau a été corrigé au passage à l'implémentatio
 | Police texte | Instrument Sans (variable 400-600) | Lisibilité |
 | Cible tactile | `3rem` (48 px), CTA `3.25rem` | Toutes tranches d'âge |
 | Rayon | `0.875rem` (14 px) | — |
+| Échelle de texte | `0.85` · `0.95` · `1.05` · `1.25` · `1.5` · `2.1rem` | **Six pas, et six seulement** |
+
+**L'échelle de texte a six pas nommés**, déclarés dans le `@theme` de `theme.css` et employés par
+leur nom (`text-mention`, `text-courant`, `text-lecture`, `text-titre-s`, `text-titre-m`,
+`text-titre-l`) :
+
+| Pas | Taille | Emploi |
+|---|---|---|
+| `mention` | `0.85rem` | Notes, légendes, mentions secondaires |
+| `courant` | `0.95rem` | Le texte d'interface par défaut |
+| `lecture` | `1.05rem` | Paragraphes qu'on lit vraiment : étapes, explications |
+| `titre-s` | `1.25rem` | Titre de section (`h2`) |
+| `titre-m` | `1.5rem` | Titre de sous-écran |
+| `titre-l` | `2.1rem` | Titre d'écran (`h1`) |
+
+> ⚠️ **Elle remplace 30 tailles écrites à la main**, mesurées le 2026-08-10 sur 421 occurrences de
+> `text-[…rem]`. Aucune n'était fautive prise seule : c'est l'ensemble qui ne se tenait plus. L'écart
+> entre `0.92` et `0.95rem` fait 0,5 px à la taille de base — invisible de tout le monde, et
+> suffisant pour que chaque écran reparte d'un nombre voisin choisi au jugé. Les quatre tailles
+> fréquentes (`0.90` · `0.95` · `1.00` · `1.05`, 280 occurrences) sont **fondues en deux pas** :
+> aucune paire ne se distingue à l'œil.
+
+> ⛔ **On n'ajoute pas un septième pas.** Le besoin d'un pas intermédiaire est le symptôme d'un écran
+> qui hiérarchise mal, pas d'une échelle trop courte. `ui/echelle-typo.test.ts` refuse toute taille
+> littérale hors d'une liste d'exceptions nommées fichier par fichier — c'est ce test, et non ce
+> tableau, qui empêche les trente de revenir.
 
 > ⚠️ **`#e9e2d6` (sable) n'est PAS le fond de l'application.** C'est le `body` du visualiseur de
 > maquettes — la zone autour du cadre téléphone. Le fond de l'appli, dans le cadre, est `#faf6ef`.
@@ -41,8 +67,10 @@ ci-dessous font foi ; le tableau a été corrigé au passage à l'implémentatio
 > échouent même au niveau AA. D'où : l'encre atténuée descend à `#5a534d`, un `accent-texte` distinct
 > apparaît, et le bouton prend `#a3542f`. Détail et calculs dans l'en-tête de `theme.css`.
 
-> ⚠️ **Libellés d'onglets à `0.8125rem`, pas `0.66rem`** comme les maquettes. ~10,5 px de texte sur
-> la barre que tout le monde doit lire contredit la contrainte d'âge du même bloc commun.
+> ⚠️ **Libellés d'onglets à `text-mention` (`0.85rem`), pas `0.66rem`** comme les maquettes. ~10,5 px
+> de texte sur la barre que tout le monde doit lire contredit la contrainte d'âge du même bloc
+> commun. Ils ont longtemps porté `0.8125rem`, une valeur choisie à la main pour cette même raison ;
+> l'échelle à six pas l'a absorbée **en montant de 4 %**, donc dans le sens que cet écart défendait.
 
 **Toutes les dimensions liées au texte et aux cibles sont en `rem`, jamais en `px`** : le bloc commun
 exige que l'interface tienne « si la police système est agrandie de 150 % », ce qu'une hauteur en
@@ -198,7 +226,16 @@ stateDiagram-v2
 
 - **Sélecteur « Ranger par » : Rayon / Repas / Jour** — trois usages réels
 - Bouton visible « Ajouter un article » (autocomplétion)
-- « Partager » conservé et visible ; **« Imprimer » et export CSV/JSON rangés dans un menu discret**
+- « Partager » conservé et visible ; **« Imprimer » et export CSV/JSON** (livrés le 2026-08-10) dans
+  une **fenêtre** et non un menu discret — la règle du produit interdit tout dépliant hors accueil
+  (`ui/panneau.tsx`). Trois actions : imprimer, CSV, JSON.
+  - Le **fichier porte les articles cochés**, avec leur état, et la fenêtre l'annonce avant le clic.
+    C'est l'écart voulu avec « Partager », qui n'envoie que le restant : un message qu'on lit debout
+    dans un magasin n'a pas le même contenu qu'un fichier qu'on garde et qu'on vérifie après coup.
+  - L'export **ignore le bouton « Ranger par »** et sort toujours par rayon : deux exports de la même
+    semaine doivent rendre deux fichiers identiques, ce qu'un ordre lu à l'écran ne garantit pas.
+  - ⛔ **À l'impression, la case à cocher reste dessinée, vide** — c'est celle qu'on coche au stylo.
+    Voir `PIEGES.md` : la masquer avec les autres boutons viderait la liste imprimée.
 - Cases à cocher 48 px, ligne entière cliquable ; article coché barré mais **conservé à sa place**
 - Quantités arrondies aux conditionnements réels (« 250 g », « 1 botte »)
 - **Ajout manuel** : classé au rayon en vue Rayon ; en **pied de liste** en vues Repas/Jour (pas

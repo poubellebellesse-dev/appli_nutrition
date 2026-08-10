@@ -24,6 +24,29 @@
 
 ## Les pièges qui ne se voient pas
 
+**Interface**
+
+- ⛔ **`@media print { button { display: none } }` VIDE LA LISTE DE COURSES IMPRIMÉE.** C'est le
+  réflexe — une feuille ne se clique pas — et il est faux ici : §4.3 exige que **la ligne entière**
+  soit la cible tactile, donc la case à cocher de `courses.tsx#Ligne` **est** un `<button>` qui
+  contient tout le libellé et toute la quantité. La règle générique aurait laissé les titres de
+  rayon et rien d'autre. ➡️ **Ce qui ne s'imprime pas se marque un par un** (`.sans-impression`,
+  `theme.css`), jamais par type d'élément. Et le marquage se **teste** : jsdom n'applique aucune
+  feuille d'impression, donc seul le marquage est vérifiable — sans test, la règle CSS peut cesser
+  de désigner quoi que ce soit sans que rien ne rougisse.
+- ⚠️ **`screen.getByText` compare NŒUD PAR NŒUD : une phrase coupée par un `<span>` est
+  introuvable.** `et <span className="tabular-nums">{n}</span> autres.` ne se rapproche d'aucune
+  regex `/et 2 autres\./`, alors que le texte s'affiche exactement ainsi. Le message d'échec dit
+  « unable to find element », ce qui se lit comme « le composant ne rend rien » — l'inverse du
+  défaut. ➡️ Lire l'élément porteur : `getByText((_, el) => el?.tagName === 'P' && …el.textContent)`.
+  Le cas est fréquent dès qu'un nombre porte `tabular-nums`, ce que le produit fait partout.
+- ⚠️ **Une valeur de style écrite au jugé se relit comme une décision.** 30 tailles de texte
+  distinctes vivaient dans `app/src`, chacune arrivée en réponse à un écran précis. Le ménage seul
+  ne sert à rien : le mécanisme qui les a produites (hésiter entre deux pas, trancher par un nombre
+  entre les deux) reproduira la trente-et-unième, et la revue ne voit qu'une ligne de classes de
+  plus. ➡️ **Un test qui lit les sources** (`ui/echelle-typo.test.ts`), avec une liste d'exceptions
+  nommées fichier par fichier — une exception anonyme rouvre la porte en grand.
+
 **Garanties structurelles**
 
 - ⚠️ **Une garantie liée au CRÉNEAU ne protège que les écrans qui partent d'un créneau.** Payé le
