@@ -162,24 +162,98 @@ entrées et des accompagnements posés faute de plat — est une information ré
 pas. Ce serait un **quatrième état** de `EtatDuCreneau` avec son propre libellé, donc un choix de
 produit ; il n'est pas fait ici.
 
-### Lot D — la direction « admettre » *(le seul lot à risque)*
+### Lot D — la direction « admettre » *(le lot à soigner)*
 
 Le végétalien qui fait une exception pour le miel. Nouveau champ de contraintes, nouvelle table,
-lecture par la couche `regime`.
+second panneau de réglages.
 
-⛔ **POURQUOI CE LOT EST À PART ET VIENT EN DERNIER.** La couche `regime` lit aujourd'hui
-l'**étiquette écrite à la main** de chaque recette. Admettre le miel oblige à **recalculer**
-l'exigence de chaque recette depuis ses ingrédients en ignorant les aliments admis. Cette règle
-existe — `regimeExigeParIngredients` — et `tests/regime-coherence.test.ts` vérifie qu'elle est
-d'accord avec les 330 étiquettes. Elle l'est.
+⛔ **CE QUI ÉTAIT ÉCRIT ICI ÉTAIT FAUX, ET LE CORRIGER CHANGE LA RECOMMANDATION.** Cette section
+disait : « ce lot rendrait `regimeExigeParIngredients` porteuse en production, alors qu'elle n'est
+aujourd'hui qu'un contrôle ». **Elle l'est déjà.** `app/src/data/user-recipe.ts:150` l'appelle pour
+**chaque recette composée par l'utilisateur**, et l'en-tête du fichier le déclare — « règle promue en
+production pour ce fichier précisément » ; l'en-tête de la fonction le redit. Une recette utilisateur
+n'a personne pour l'étiqueter : sans dérivation, un plat au poisson serait proposé à un végétarien.
 
-Mais ce lot la rendrait **porteuse en production** pour ces utilisateurs, alors qu'elle n'est
-aujourd'hui qu'un contrôle. Le jour où une étiquette et la règle divergeraient, ce sont eux qui le
-paieraient — **sur la couche de sécurité**. Faisable, verrouillable par test, mais pas dans la
-foulée d'un écran.
+⚠️ **CE QUI RESTE VRAI EST PLUS ÉTROIT, et c'est le vrai objet du lot.** La règle tourne aujourd'hui
+sur une liste d'ingrédients **entière**. D la ferait tourner sur une liste **amputée** des aliments
+admis. C'est un chemin de code que rien n'exécute, et que `tests/regime-coherence.test.ts` ne peut
+pas couvrir : il n'existe aucune étiquette « végétalien sauf miel » à confronter.
 
-▶ **Recommandation : livrer A + B + C, s'en servir, et décider de D après.** La direction
-« admettre » sert nettement moins de cas que la direction « retirer ».
+▶ **Recommandation révisée le 2026-08-10 : rien ne bloque D techniquement.** L'argument d'attente
+n'est plus la sûreté, c'est la **demande** — « je ne veux pas d'œufs » est courant, « je suis
+végétalien mais je mange du miel » l'est beaucoup moins, et depuis le lot B l'appli couvre déjà la
+quasi-totalité des sous-formes réelles par le sens restrictif. Se lancer parce que le besoin est
+là, pas parce que le lot est au plan.
+
+#### Les quatre propriétés de sûreté
+
+`dietLayer` compare l'étiquette de la recette au régime demandé. D ajoute une **seconde chance** :
+une recette refusée par l'étiquette est reprise si, une fois les aliments admis retirés de ses
+ingrédients, la règle rend un régime compatible.
+
+**P1 — Aucune admission ⇒ chemin identique, à l'octet.** `admittedFoodIds` vide ⇒ `dietLayer`
+n'appelle pas la règle. Zéro utilisateur existant ne change de comportement — c'est ce qui rend le
+lot rejouable et tout défaut attribuable.
+
+**P2 — Seconde chance uniquement, jamais un refus de plus.** Le recalcul ne peut qu'ADMETTRE ce que
+l'étiquette écartait ; une recette acceptée par l'étiquette n'est jamais repassée à la règle. Un
+défaut de la règle ne peut donc retirer aucun plat à personne.
+
+**P3 — La règle ne sert que là où elle est D'ACCORD avec l'étiquette.** ⭐ *Le cœur du lot.* Avant
+d'admettre, on vérifie que `regimeExigeParIngredients(TOUS les ingrédients)` **égale** l'étiquette
+écrite à la main. Si les deux divergent sur cette recette, la règle n'est pas utilisée et la recette
+reste écartée. **La garantie à l'exécution devient exactement celle que le test de cohérence
+apporte** : la règle est porteuse là où elle est prouvée, et échoue *fermée* ailleurs. C'est ce qui
+désamorce le seul risque réel du lot.
+
+**P4 — L'admission ne touche QUE la couche `regime`.** Jamais lue par la couche allergènes ni par
+`exclusions` : un `miel` admis reste écarté s'il est déclaré allergène, ou s'il a été coché au lot B.
+**La garantie vient de la forme** — `admittedFoodIds` n'est passé qu'à `dietLayer` — pas d'une
+vérification qu'on pourrait oublier. C'est le garde-fou 1 rendu structurel.
+
+⚠️ **Sur TOUS les ingrédients, sans filtrer les `optionnel`.** `user-recipe.ts` les filtre, la
+cohérence non — et c'est la cohérence qui fait foi ici, sinon P3 échouerait à tort sur toute recette
+portant un ingrédient animal optionnel. Deux questions différentes : « quel régime cette recette
+exige-t-elle » ≠ « cet utilisateur peut-il la manger ».
+
+⚠️ **L'admission est LITTÉRALE, sans cascade `deriveDe`** : admettre `lait_entier` n'admet pas le
+beurre. On retire l'aliment de la liste d'ingrédients, on ne neutralise pas son origine dans la
+carte des aliments — ce qui propagerait par la cascade et surprendrait.
+
+⚠️ **Uniquement quand le régime demandé est dans `DIET_CHAIN`.** `halal` et `sans_gluten` passent par
+l'égalité stricte (`isDietCompatible`, cas 1) ; la règle ne les modélise pas et ne doit pas les
+approcher.
+
+#### Les sous-lots
+
+**D1 — le moteur, sans écran ni base.** `admittedFoodIds` dans `HardConstraints` + P1 à P4 dans
+`dietLayer`. ⚠️ **Contrairement à `requiredFoodIds` (acquis n° 2), sa place EST dans
+`HardConstraints`** : une exception est un réglage durable qui doit valoir partout — suggestion,
+plan, navigation. L'acquis 2 tenait `requiredFoodIds` dehors pour le rendre inexprimable dans un plan
+de semaine ; ici c'est l'inverse qu'on veut, et ce contraste s'écrit dans le code sous peine de se
+lire comme une entorse. **Fini quand** : P1 à P4 ont chacune leur test, dont P3 avec une recette dont
+l'étiquette et la règle divergent volontairement — et elle reste écartée.
+
+**D2 — la persistance.** Table `user_admitted_food`, migration 16, symétrique de
+`user_excluded_food`, lue par `readConstraints` (qui prend déjà `foods` depuis le lot B — pas de
+nouvelle rupture de signature). **Fini quand** : un aliment admis survit au rechargement, et un
+aliment à la fois admis et exclu reste **exclu**, par test explicite.
+
+**D3 — le panneau « Mes exceptions ».** ⛔ **Un SECOND panneau, séparé de « Aliments que je ne veux
+pas »** — décision utilisateur du 2026-08-10. Le garde-fou 1 vise exactement ce montage : le même
+écran qui laisse réadmettre le miel ne doit jamais laisser réadmettre l'arachide, et deux écrans
+rendent la confusion structurellement plus dure. Il ne liste que les aliments que le régime déclaré
+écarte — donc rien pour un omnivore, et le panneau ne s'affiche pas. Réutilise `groupesAnimaux`
+(lot A). **Fini quand** : cocher *Miel* en végétalien fait réapparaître un plat au miel, et
+« pourquoi ce plat » ne l'attribue plus au régime.
+
+**D4 — le compteur et le document.** Le compteur du lot C lit `browseRecipes`, donc il suit
+automatiquement — ⚠️ **mais ce n'est pas branché tant qu'un test ne le montre pas** (« un champ
+déclaré n'est pas un champ branché », trois occurrences payées).
+
+📌 **Ouvert, à poser à D3 quand l'écran existera** : faut-il signaler qu'une admission rend le régime
+déclaré trompeur — « végétalien » affiché alors que la personne mange du miel ? Choix de produit,
+pas correction.
 
 ### Lot E — le fait « présure » *(contenu, indépendant, optionnel)*
 
@@ -196,8 +270,12 @@ vérifiée**. Le cas certain est le parmesan du pesto.
 ## 4. Ordre
 
 ```
-A  →  B  →  C            D et E : après, et seulement si le besoin se confirme
+A  →  B  →  C  ✅ livrés le 2026-08-10       D1 → D2 → D3 → D4        E : indépendant, optionnel
 ```
+
+⚠️ **`D` n'est plus « après, et seulement si le besoin se confirme »** — la raison technique qui le
+mettait en quarantaine était fausse (voir sa section). Il reste conditionné à la **demande**, pas au
+risque. `E` ne bloque rien : sans lui, l'utilisateur retire les fromages un par un.
 
 ## 5. Les trois garde-fous, quel que soit le lot
 
