@@ -27,9 +27,14 @@
 // la CONTREDISAIT. Un test verrouille désormais le libellé (`recettes.test.tsx`), sans quoi une
 // reformulation la recacherait en silence.
 //
-// PÉRIMÈTRE — ce que §4.4 décrit et qui n'est PAS ici : l'état « Pourquoi pas ce plat ? »
-// (`entonnoir.entries` porte déjà la matière), et la catégorie « Loufoque », qui n'a AUCUNE recette
-// au catalogue — six styles seulement, du contenu à écrire, pas du code à ajouter.
+// ✅ « POURQUOI PAS CE PLAT ? » EST LÀ DEPUIS LE 2026-08-10 (`PourquoiPasCePlat`, bas de fichier) —
+// cette ligne l'annonçait comme manquant. L'entonnoir disait déjà COMBIEN de recettes une contrainte
+// dure avait retirées ; il ne disait pas LESQUELLES, et c'est la seule forme de la question qu'un
+// utilisateur se pose vraiment : « je cherche ce plat, il n'est pas là, pourquoi ». Le bloc ne
+// s'affiche donc QUE sur une recherche en cours.
+//
+// PÉRIMÈTRE — ce que §4.4 décrit et qui n'est PAS ici : la catégorie « Loufoque », qui n'a AUCUNE
+// recette au catalogue — six styles seulement, du contenu à écrire, pas du code à ajouter.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type {
@@ -38,6 +43,7 @@ import type {
   FacetteKind,
   Recipe,
   RecipeId,
+  RejectionSummary,
 } from '../../engine/domain/index.js'
 import { normaliser, valeursDeFacette } from '../../engine/search/index.js'
 import type { BrowseResult, Engine } from '../../engine/api/index.js'
@@ -346,6 +352,15 @@ export function Recettes() {
           par quoi, au lieu de laisser croire que le catalogue est petit. */}
       {resultat !== null && resultat.entonnoir.totalRejected > 0 && <Entonnoir resultat={resultat} />}
 
+      {/* « Pourquoi pas ce plat ? » (§4.4) — l'entonnoir dit COMBIEN, celui-ci dit LEQUEL. */}
+      {resultat !== null && (
+        <PourquoiPasCePlat
+          entonnoir={resultat.entonnoir}
+          texte={filtres.texte}
+          catalogue={socle.catalogue}
+        />
+      )}
+
       <p className="mt-5 text-[0.95rem] text-attenue">
         {trouvees.length} recette{trouvees.length > 1 ? 's' : ''}
         {trouvees.length === 0 && ' — essayez de retirer un filtre.'}
@@ -653,5 +668,82 @@ function Entonnoir({ resultat }: { readonly resultat: BrowseResult }) {
       {' = '}
       <span className="font-semibold tabular-nums text-texte">{restantes}</span> disponibles
     </p>
+  )
+}
+
+/** Au-delà, la liste cesse d'être une réponse et devient un mur. Ce qui dépasse est COMPTÉ, jamais
+ *  tu : un « et 12 autres » dit qu'on n'a pas tout montré, une troncature muette ment. */
+const ECARTEES_MONTREES = 6
+
+/**
+ * « Pourquoi pas ce plat ? » (§4.4) — l'entonnoir dit COMBIEN ont été écartées, celui-ci dit
+ * LESQUELLES, quand ce sont justement celles qu'on cherchait.
+ *
+ * ⚠️ SEULEMENT SUR UNE RECHERCHE EN COURS, et c'est ce qui rend le bloc lisible. Sans texte saisi,
+ * la question « pourquoi pas ce plat » n'a pas de sujet : dérouler les 58 écartées d'un catalogue
+ * répondrait à une question que personne n'a posée, et l'entonnoir donne déjà les comptes. La
+ * question ne se pose que quand quelqu'un cherche un plat précis et ne le voit pas revenir.
+ *
+ * ⚠️ CORRESPONDANCE SUR LE NOM SEUL, alors que `browseRecipes` cherche aussi dans les ingrédients.
+ * L'écart est voulu : celui qui tape « poulet » et lit « Tarte aux pommes — écartée » ne comprend
+ * pas, la tarte contenant du beurre issu d'un lait qu'il a exclu. Ici on répond à « je cherchais CE
+ * plat », pas à « montre-moi tout ce que ma saisie effleure ».
+ *
+ * ⚠️ LE MOTIF VIENT DU MOTEUR, mot pour mot (`RejectionEntry.reason`). Le réécrire à l'écran ferait
+ * une seconde formulation à tenir à jour, qui divergerait le jour où une couche change de critère —
+ * et c'est la couche qui sait pourquoi elle a écarté, pas l'écran. Corollaire assumé : un régime y
+ * apparaît sous son identifiant (« vegetalien »), sans accent.
+ *
+ * ⛔ AUCUN SCORE, ICI MOINS QU'AILLEURS. Ces plats ont été écartés par une contrainte DURE, pas mal
+ * notés — afficher un nombre à côté ferait exactement lire l'inverse.
+ */
+function PourquoiPasCePlat({
+  entonnoir,
+  texte,
+  catalogue,
+}: {
+  readonly entonnoir: RejectionSummary
+  readonly texte: string
+  readonly catalogue: Catalog
+}) {
+  const recherche = normaliser(texte.trim())
+  if (recherche.length === 0) return null
+
+  // Une entrée par recette — `RejectionEntry` retient déjà le PREMIER motif rencontré, mais passer
+  // par une table rend la clé React sûre sans avoir à en dépendre.
+  const parRecette = new Map<RecipeId, { readonly id: RecipeId; readonly nom: string; readonly motif: string }>()
+  for (const entree of entonnoir.entries) {
+    if (parRecette.has(entree.recipeId)) continue
+    const nom = catalogue.recipes.get(entree.recipeId)?.nom
+    if (nom === undefined || !normaliser(nom).includes(recherche)) continue
+    parRecette.set(entree.recipeId, { id: entree.recipeId, nom, motif: entree.reason })
+  }
+
+  // Trié par nom : deux passages sur la même recherche donnent la même liste dans le même ordre.
+  const ecartees = [...parRecette.values()].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
+  if (ecartees.length === 0) return null
+
+  const montrees = ecartees.slice(0, ECARTEES_MONTREES)
+  const restantes = ecartees.length - montrees.length
+
+  return (
+    <div className="mt-3 rounded-[--radius-carte] border border-bordure bg-surface p-3">
+      <p className="text-[0.9rem] font-semibold text-texte">
+        Écartée{ecartees.length > 1 ? 's' : ''} de vos résultats
+      </p>
+      <ul className="mt-2 space-y-2">
+        {montrees.map((ecartee) => (
+          <li key={ecartee.id} className="text-[0.9rem] leading-relaxed">
+            <span className="text-texte">{ecartee.nom}</span>
+            <span className="block text-texte-doux">{ecartee.motif}</span>
+          </li>
+        ))}
+      </ul>
+      {restantes > 0 && (
+        <p className="mt-2 text-[0.9rem] text-attenue">
+          et <span className="tabular-nums">{restantes}</span> autre{restantes > 1 ? 's' : ''}.
+        </p>
+      )}
+    </div>
   )
 }

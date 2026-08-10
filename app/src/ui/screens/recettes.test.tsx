@@ -432,6 +432,84 @@ describe('recettes — la recherche textuelle', () => {
   })
 })
 
+/**
+ * ⚠️ LE CATALOGUE RÉEL PORTE **8 TARTES, TOUTES AU GLUTEN** (mesuré le 2026-08-10, requête sur
+ * `recipe_ingredient` × `food_allergen`). Déclarer l'allergie et chercher « tarte » donne donc
+ * 0 résultat et 8 écartées — le cas exact que ce bloc doit expliquer, sans le fabriquer.
+ *
+ * ⛔ ET LES TESTS QUI PORTENT LE LOT SONT LES TROIS SILENCES : sans recherche, sans contrainte, et
+ * sur une recherche qui ne touche aucune écartée, le bloc ne doit RIEN dire. Un écran qui explique
+ * en permanence ce qu'il n'affiche pas est un écran qu'on cesse de lire.
+ */
+describe('recettes — « Pourquoi pas ce plat ? »', () => {
+  const chercher = (valeur: string) => {
+    const champ = document.querySelector('input[type="search"]') as HTMLInputElement
+    fireEvent.change(champ, { target: { value: valeur } })
+  }
+
+  it('nomme la recette écartée ET le motif rendu par le moteur', async () => {
+    writeAllergies(baseCourante(), [{ allergenId: 'gluten' as AllergenId, severite: null }])
+    await monter()
+    chercher('tarte')
+
+    await screen.findByText('Tarte au citron')
+    // Le motif vient de `RejectionEntry.reason` (`selection/allergenes.ts`), mot pour mot : c'est la
+    // couche qui sait pourquoi elle a écarté, pas l'écran.
+    expect(screen.getAllByText(/contient l’allergène déclaré|contient l'allergène déclaré/).length).toBeGreaterThan(0)
+    // Et elle reste ÉCARTÉE : le bloc explique une absence, il ne réintroduit pas le plat.
+    expect(idsAffiches()).not.toContain('tarte_citron')
+  })
+
+  it('annonce ce qu’il ne montre pas — 8 écartées, 6 nommées, « et 2 autres »', async () => {
+    // ⛔ Une troncature muette se lirait « voilà tout ce qui a été écarté », ce qui serait faux.
+    writeAllergies(baseCourante(), [{ allergenId: 'gluten' as AllergenId, severite: null }])
+    await monter()
+    chercher('tarte')
+
+    await screen.findByText('Tarte au citron')
+
+    // ⚠️ LE NOMBRE VIT DANS SON PROPRE `<span>` (`tabular-nums`, pour que le chiffre ne danse pas
+    // d'un rendu à l'autre). `getByText` compare nœud par nœud : il ne rapprochera JAMAIS « et »,
+    // « 2 » et « autres. » d'une même regex. On interroge donc le paragraphe entier.
+    const compte = screen.getByText(
+      (_, element) => element?.tagName === 'P' && /^et\s*2\s*autres\.$/.test(element.textContent ?? '')
+    )
+    expect(compte).toBeDefined()
+
+    // Et la troncature est bien à 6 : sans ça, « et 2 autres » pourrait rester juste sur un tout
+    // autre nombre d'écartées, et le test cesserait de mesurer la coupe.
+    const bloc = compte.closest('div') as HTMLElement
+    expect(bloc.querySelectorAll('li').length).toBe(6)
+  })
+
+  it('⛔ NE DIT RIEN SANS RECHERCHE, même avec 100 recettes écartées', async () => {
+    writeAllergies(baseCourante(), [{ allergenId: 'gluten' as AllergenId, severite: null }])
+    const conteneur = await monter()
+    // L'entonnoir, lui, parle : c'est bien la CONTRAINTE qui écarte, pas l'absence de recherche.
+    await waitFor(() => expect(conteneur.textContent).toMatch(/disponibles/))
+
+    expect(screen.queryByText(/Écartée/)).toBeNull()
+    expect(screen.queryByText('Tarte au citron')).toBeNull()
+  })
+
+  it('⛔ NE DIT RIEN QUAND RIEN N’EST ÉCARTÉ — sans allergie déclarée, les tartes s’affichent', async () => {
+    await monter()
+    chercher('tarte')
+
+    await waitFor(() => expect(idsAffiches()).toContain('tarte_citron'))
+    expect(screen.queryByText(/Écartée/)).toBeNull()
+  })
+
+  it('⛔ NE DIT RIEN QUAND LA RECHERCHE NE TOUCHE AUCUNE ÉCARTÉE', async () => {
+    writeAllergies(baseCourante(), [{ allergenId: 'gluten' as AllergenId, severite: null }])
+    await monter()
+    chercher('zzzzznexistepasdutoutducatalogue')
+
+    await screen.findByText(/0 recette — essayez de retirer un filtre\./)
+    expect(screen.queryByText(/Écartée/)).toBeNull()
+  })
+})
+
 describe('recettes — les recettes personnelles', () => {
   // Chaîne `avecRecettesSupplementaires` → index reconstruits (ui/socle.ts) : une recette perso
   // (préfixe `perso:`) doit apparaître dans la liste au même titre qu'une recette du catalogue.
