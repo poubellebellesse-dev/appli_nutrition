@@ -111,7 +111,7 @@ livre l'essentiel :
 **Fini quand** : un plat contenant un aliment coché disparaît des propositions ET l'écran
 « pourquoi pas ce plat » l'attribue aux exclusions, pas au régime.
 
-### Lot C — le garde-fou de vide, et les présélections nommées
+### Lot C — le garde-fou de vide, et les présélections nommées ✅ **LIVRÉ le 2026-08-10 (`eacb065`)**
 
 1. **Le compteur.** Un compte **par créneau** pendant que l'utilisateur coche — jamais un total
    global — et un avertissement **avant** que le planning ne se vide.
@@ -131,6 +131,36 @@ livre l'essentiel :
    **par défaut** — le bouton ne cocherait rien. Une présélection **ajoute** des cases, elle n'en
    décoche jamais : même polarité que le reste du chantier, l'erreur qui retire un aliment de trop
    se voit et se répare, celle qui en réadmet un en silence ne se voit pas.
+
+#### Lot C-bis — la correction demandée n'était pas un défaut ⛔ **NON APPLIQUÉE, ET C'EST LA CONCLUSION**
+
+Le lot C-bis devait fermer un défaut supposé : `platsParCreneau` compte des recettes que
+`pickForSlot` refuse — les `entree`, `accompagnement`, `fromage` et `dessert` au déjeuner et au
+dîner, écartées par `peutRemplirSeul`. La conclusion annoncée était un **retournement d'état** : un
+créneau où il ne reste que des entrées se lirait « il en reste 5 » (`'court'`) pendant que
+`planWeek` laisserait **tous** ces dîners vides.
+
+⛔ **Le code dit l'inverse, et il fait foi.** `pickForSlot` a **deux passes** : la première exige un
+plat, **la seconde repose la question sans cette exigence**. Le filtre est une *préférence*, pas une
+exigence — c'est écrit dans son commentaire, et la version dure a été annulée le 2026-08-03 après
+avoir fait retomber le végétalien 14 j de 42/42 créneaux remplis à 32/42.
+
+**MESURÉ le 2026-08-10** — 4 recettes partielles (entrée, accompagnement, fromage, dessert), 7 dîners :
+
+| | compte | état | message | ce que fait le moteur |
+|---|---|---|---|---|
+| tel quel | 4 | `'court'` | « les jours en trop resteront vides » | **4 remplis, 3 vides** ✅ |
+| avec le filtre | 0 | `'vide'` | « il ne pourra pas être proposé » | ❌ faux — et `suggestMeals` ne lève pas |
+
+Appliquer le filtre aurait échangé un compte **exact** contre un message alarmiste **faux**. Le lot
+livre donc l'inverse de ce qu'il demandait : le compte ne bouge pas, et un **test de non-régression**
+verrouille la chose pour que l'idée ne revienne pas (`engine/domain/plats-par-creneau.test.ts`,
+dernier cas, avec `planWeek` pour oracle). L'impasse est consignée dans `docs/reference/PIEGES.md`.
+
+📌 **Reste ouvert, et non tranché seul** : un créneau rempli **uniquement par pis-aller** — des
+entrées et des accompagnements posés faute de plat — est une information réelle que l'écran ne dit
+pas. Ce serait un **quatrième état** de `EtatDuCreneau` avec son propre libellé, donc un choix de
+produit ; il n'est pas fait ici.
 
 ### Lot D — la direction « admettre » *(le seul lot à risque)*
 

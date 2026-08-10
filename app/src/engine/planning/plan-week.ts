@@ -452,6 +452,12 @@ const CRENEAUX_REPAS_PRINCIPAL: readonly MealSlot[] = ['dejeuner', 'diner']
  * exprimable dans toute suggestion, y compris celles que l'utilisateur pilote. Même raisonnement
  * que `requiredFoodIds`, tenu hors de `HardConstraints` pour la raison inverse (acquis n°2).
  *
+ * ⛔ CE N'EST PAS UN FILTRE DE DISPONIBILITÉ, ET LE COMPTEUR DES RÉGLAGES NE DOIT PAS LE RECOPIER.
+ * Elle ne gouverne que la PREMIÈRE passe de `pickForSlot` ; la seconde repose la question sans
+ * elle. Un créneau dont toutes les survivantes sont des entrées est donc REMPLI, par pis-aller —
+ * MESURÉ le 2026-08-10, 4 recettes partielles sur 7 dîners : 4 créneaux remplis, 3 vides, et
+ * `suggestMeals` ne lève pas. Voir l'en-tête de `domain/plats-par-creneau.ts`.
+ *
  * ⚠️ `service === null` EST ACCEPTÉ, ce n'est pas un oubli. `Recipe.service` vaut `null` pour les
  * recettes qui remplissent un créneau seules (`catalog.ts`) ; seules les valeurs EXPLICITES
  * `entree`, `accompagnement`, `fromage` et `dessert` désignent un rôle partiel. Refuser `null`

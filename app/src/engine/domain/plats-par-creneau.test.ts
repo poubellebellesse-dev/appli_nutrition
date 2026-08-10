@@ -63,7 +63,12 @@ describe('platsParCreneau', () => {
   })
 
   it('un créneau absent de l’index vaut zéro, pas une absence de ligne', () => {
-    const comptes = platsParCreneau(ids('a'), index([['diner', ['a']]]), ['gouter'], 7)
+    const comptes = platsParCreneau(
+      ids('a'),
+      index([['diner', ['a']]]),
+      ['gouter'],
+      7
+    )
 
     expect(comptes).toEqual([{ creneau: 'gouter', plats: 0, etat: 'vide' }])
   })
@@ -195,5 +200,74 @@ describe('le compte dit vrai sur ce que le moteur fera', () => {
     expect(vides.length).toBe(2)
     // La preuve que ce n'est pas une répétition : aucun plat n'apparaît deux fois.
     expect(new Set(remplis.map((e) => e.recipeId)).size).toBe(remplis.length)
+  })
+
+  it('⛔ LE SERVICE NE RESTREINT PAS CE COMPTE — un dîner d’entrées et d’accompagnements est REMPLI', () => {
+    // ⛔ CE TEST EXISTE POUR EMPÊCHER UNE « CORRECTION ». L'idée d'appliquer ici `peutRemplirSeul`
+    // (engine/planning/plan-week.ts) revient forcément : ce filtre écarte bien les `entree`,
+    // `accompagnement`, `fromage` et `dessert` au déjeuner et au dîner. Mais il ne gouverne que la
+    // PREMIÈRE passe de `pickForSlot` — la seconde repose la question sans lui. Filtrer ici ferait
+    // lire « aucun plat ne reste, ce repas ne pourra pas être proposé » sur un créneau que le plan
+    // remplit. L'oracle est le planificateur lui-même, pas un recomptage.
+    const partielles = [
+      makeRecipe('entree_artichauts', {
+        typesRepas: ['diner'],
+        service: 'entree',
+        ingredients: [makeIngredient('riz')],
+      }),
+      makeRecipe('puree_carottes', {
+        typesRepas: ['diner'],
+        service: 'accompagnement',
+        ingredients: [makeIngredient('riz')],
+      }),
+      makeRecipe('plateau_fromages', {
+        typesRepas: ['diner'],
+        service: 'fromage',
+        ingredients: [makeIngredient('riz')],
+      }),
+      makeRecipe('tarte_pommes', {
+        typesRepas: ['diner'],
+        service: 'dessert',
+        ingredients: [makeIngredient('riz')],
+      }),
+    ]
+    const catalogue = makeCatalog(partielles, [RIZ])
+    const moteur = createEngine(catalogue)
+    const base = makeRequest()
+
+    const jours = partielles.length + 3
+    const comptes = platsParCreneau(
+      moteur.browseRecipes({ constraints: base.constraints }).recipeIds,
+      catalogue.indexes.recipesBySlot,
+      ['diner'],
+      jours
+    )
+
+    // Le compte les garde toutes, et l'état reste le mot mesuré : « court », pas « vide ».
+    expect(comptes[0]?.plats).toBe(partielles.length)
+    expect(comptes[0]?.etat).toBe('court')
+
+    const plan = moteur.planWeek({
+      profile: base.profile,
+      constraints: base.constraints,
+      startDate: '2026-07-23',
+      days: jours,
+      slots: ['diner'],
+      history: base.history,
+      activeTopics: [],
+      tolerancePiquant: null,
+      convives: 1,
+      seed: 1,
+    })
+
+    // Autant de dîners remplis que de recettes comptées — la SECONDE passe les pose toutes.
+    const remplis = plan.entries.filter((e) => e.recipeId !== null)
+    expect(remplis.length).toBe(comptes[0]?.plats)
+    expect(plan.entries.length - remplis.length).toBe(jours - partielles.length)
+
+    // Et l'écran du jour ne lève pas non plus : « ne pourra pas être proposé » serait faux.
+    expect(moteur.suggestMeals(makeRequest({ creneau: 'diner' })).suggestions.length).toBeGreaterThan(
+      0
+    )
   })
 })

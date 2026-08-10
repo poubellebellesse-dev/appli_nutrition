@@ -16,6 +16,25 @@
 // `CatalogIndexes.recipesBySlot`, qui est précisément l'ensemble de départ de `suggestMeals`
 // (engine/api/index.ts, étape (a)). Ajouter un axe « créneaux » à `BrowseRequest` coûterait quatre
 // passes de couches au lieu d'une, pour le même nombre.
+//
+// ⛔ NE PAS Y AJOUTER `peutRemplirSeul` — IMPASSE MESURÉE LE 2026-08-10, ET LE COMPTE ACTUEL EST LE
+// BON. L'idée paraît juste : `pickForSlot` (engine/planning/plan-week.ts) écarte les `entree`,
+// `accompagnement`, `fromage` et `dessert` au déjeuner et au dîner, donc ce module compterait des
+// plats que le planificateur refuse. ELLE EST FAUSSE, parce que `pickForSlot` a DEUX passes et que
+// la seconde repose la question SANS ce filtre : le refus est une PRÉFÉRENCE, pas une exigence —
+// c'est écrit noir sur blanc dans son commentaire, et c'est une régression mesurée le 2026-08-03
+// (la version dure faisait retomber le végétalien 14 j de 42/42 créneaux remplis à 32/42).
+//
+// Un créneau dont toutes les survivantes sont partielles est donc REMPLI, par pis-aller. MESURÉ sur
+// 4 recettes (entrée, accompagnement, fromage, dessert) et 7 dîners :
+//
+//     compte actuel        4 → 'court'  « les jours en trop resteront vides »  → 4 remplis, 3 vides ✓
+//     compte filtré        0 → 'vide'   « il ne pourra pas être proposé »      → FAUX, et `suggestMeals`
+//                                                                                ne lève même pas
+//
+// Filtrer ici échangerait un compte exact contre un message alarmiste faux. La règle de `plan-week`
+// gouverne QUEL plat est posé, jamais SI le créneau est rempli — et c'est la seconde question que
+// pose ce module. Verrouillé par test (`plats-par-creneau.test.ts`, dernier describe).
 
 import type { MealSlot } from './catalog.js'
 import type { RecipeId } from './ids.js'
@@ -55,6 +74,10 @@ export interface PlatsDuCreneau {
    * servira qu'une fois — `placedRecipeIds` est global au plan. (2) `browseRecipes` neutralise les
    * couches contextuelles (temps disponible, envie, piquant) : ce nombre dit ce que les réglages
    * DURABLES laissent passer, pas ce qu'un mardi soir pressé laissera passer.
+   *
+   * ⛔ ET IL N'Y EN A PAS DE TROISIÈME : le service ne restreint PAS ce compte. Voir l'en-tête du
+   * module — `peutRemplirSeul` gouverne quel plat `planWeek` pose en premier choix, pas si le
+   * créneau finit rempli.
    */
   readonly plats: number
   readonly etat: EtatDuCreneau

@@ -49,6 +49,22 @@
 
 **Garanties structurelles**
 
+- ⛔ **UN FILTRE QUI N'EST QU'UNE PRÉFÉRENCE NE SE RECOPIE PAS DANS UN COMPTEUR.** Payé le
+  2026-08-10, lot C-bis de `CONCEPTION_REGIME_PERSONNALISE.md`. Le raisonnement paraissait solide :
+  `pickForSlot` (`engine/planning/plan-week.ts`) écarte les `entree`, `accompagnement`, `fromage`
+  et `dessert` au déjeuner et au dîner via `peutRemplirSeul`, donc `platsParCreneau` — qui ne le
+  faisait pas — comptait des plats que le planificateur allait refuser, et l'écran des réglages
+  annonçait « il en reste 5 » sur un créneau condamné. **Faux.** `pickForSlot` a **deux passes**, et
+  la seconde repose la question SANS le filtre : le refus est une préférence, pas une exigence — la
+  version dure avait fait retomber le végétalien 14 j de 42/42 créneaux remplis à 32/42 et fut
+  annulée le 2026-08-03. ➡️ **MESURÉ avant de coder, 4 recettes partielles sur 7 dîners : 4 remplis,
+  3 vides, et `suggestMeals` ne lève pas.** Le compte non filtré était donc EXACT, et « corriger »
+  l'aurait fait afficher « ce repas ne pourra pas être proposé » sur un créneau que le plan
+  remplit — un compte juste échangé contre un message alarmiste faux. **La règle générale : avant
+  de propager une contrainte du placement vers un compteur, lire jusqu'au bout la fonction qui
+  l'applique.** Deux passes, un `try/catch`, un repli — et la contrainte ne gouverne plus SI le
+  créneau est rempli, seulement QUEL plat y va. Verrouillé par test
+  (`engine/domain/plats-par-creneau.test.ts`, dernier cas) pour que l'idée ne revienne pas.
 - ⚠️ **Une garantie liée au CRÉNEAU ne protège que les écrans qui partent d'un créneau.** Payé le
   2026-08-08 sur les sauces. `types_repas: []` les tient hors de `catalog.indexes.recipesBySlot`,
   donc `suggestMeals` ne peut pas les proposer — c'est solide, et c'est la bonne façon de rendre une
