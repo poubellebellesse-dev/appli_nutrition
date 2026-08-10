@@ -1,6 +1,6 @@
 # Index de la documentation
 
-**Neuf documents vivants**, quatre rôles (plus ce fichier, qui n'est que l'index, et [reference/](./reference/), qui porte les parties du moteur et les pièges). Il dit **lequel
+**Douze documents vivants**, quatre rôles (plus ce fichier, qui n'est que l'index, et [reference/](./reference/), qui porte les parties du moteur et les pièges). Il dit **lequel
 lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
 
 > Les instantanés datés — récits des sessions 1 à 7 et audit du 2026-07-27 — sont dans
@@ -80,6 +80,7 @@ une piste a été écartée vaut souvent l'énoncé de celle qui a été retenue
 |---|---|---|
 | [CONCEPTION_B_VIN_REPAS.md](./CONCEPTION_B_VIN_REPAS.md) | Conseils vin (métadonnée éditoriale, loi Évin) et modes recette/repas | 8 décisions tranchées, rang 0 codé, le reste en file |
 | [CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md) | **Plan de montée** du mode cuisine — ordre des lots, et comment monter les deux prérequis. La spec, elle, est dans `ARCHITECTURE.md` §5bis | Décision 8 fermée le 2026-08-04 ; rien de codé ; 2 prérequis non satisfaits |
+| [CONCEPTION_REGIME_PERSONNALISE.md](./CONCEPTION_REGIME_PERSONNALISE.md) | **Plan de montée** du régime personnalisable — pourquoi les sous-formes de végétarisme ne peuvent PAS entrer dans `DIET_CHAIN`, et les 5 lots. ⚠️ Le sens « retirer » est de la plomberie complète moins un écran | Décision 67 ouverte le 2026-08-10 ; rien de codé ; A → B → C recommandé, D et E après |
 | [STRATEGIE_DISTRIBUTION.md](./STRATEGIE_DISTRIBUTION.md) | Positionnement, stores, modèle économique, marketing organique | Cadre posé, points « à confirmer » ouverts jusqu'à la publication |
 | [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) | Backlog des retours utilisateur — l'essai sur un vrai appareil (2026-08-02) en §1 à §5, **et le lot `test appli.txt` de la session 8 en §6**, instruit le 2026-08-03 | 11 lots livrés ; reste bloqué par des DÉCISIONS et du CONTENU, plus par du code |
 | [SOURCES_RECETTES.md](./SOURCES_RECETTES.md) | D'où viennent les 241 recettes, quelles sources libres existent, ce que coûte un import | Sources vérifiées le 2026-08-02, aucune encore utilisée ; 4 décisions ouvertes |
