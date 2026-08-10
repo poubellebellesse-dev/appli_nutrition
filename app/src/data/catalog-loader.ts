@@ -30,6 +30,7 @@
 
 import type {
   AnimalOrigin,
+  AnimalProvenance,
   CourseKind,
   PiquantLevel,
   Allergen,
@@ -113,6 +114,7 @@ interface FoodRow {
   readonly quantite_figee: number
   readonly conditionnement_g: number | null
   readonly origine_animale: string | null
+  readonly provenance_animale: string | null
   readonly derive_de: string | null
 }
 
@@ -395,6 +397,7 @@ function loadFoods(db: SqlSource): Map<FoodId, Food> {
       quantiteFigee: row.quantite_figee !== 0,
       conditionnementG: row.conditionnement_g ?? null,
       origineAnimale: (row.origine_animale as AnimalOrigin | null) ?? null,
+      provenanceAnimale: (row.provenance_animale as AnimalProvenance | null) ?? null,
       deriveDe: (row.derive_de as FoodId | null) ?? null,
       nutrimentsPour100g,
       allergenes,

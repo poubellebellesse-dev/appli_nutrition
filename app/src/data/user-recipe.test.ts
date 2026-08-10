@@ -29,7 +29,22 @@ import {
 
 // --- Fixtures ---------------------------------------------------------------------------------
 
-function aliment(id: string, groupe: string, origine: Food['origineAnimale'], deriveDe: string | null = null): Food {
+/**
+ * ⚠️ `provenance` est OBLIGATOIRE dès qu'une origine est déclarée, et l'oubli JETTE — même règle
+ * que le garde de `catalog/build.mjs`, pour la même raison. Un défaut par défaut se rattraperait ici
+ * en silence, et c'est exactement ce qui a laissé six aliments passer pour végétariens jusqu'au
+ * 2026-08-10 (voir engine/selection/regime.ts).
+ */
+function aliment(
+  id: string,
+  groupe: string,
+  origine: Food['origineAnimale'],
+  provenance: Food['provenanceAnimale'] = null,
+  deriveDe: string | null = null
+): Food {
+  if (origine !== null && provenance === null) {
+    throw new Error(`fixture '${id}' : origine '${origine}' déclarée sans provenance animale`)
+  }
   return {
     id: id as FoodId,
     codeCiqual: `T-${id}`,
@@ -48,6 +63,7 @@ function aliment(id: string, groupe: string, origine: Food['origineAnimale'], de
     quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: origine,
+    provenanceAnimale: provenance,
     deriveDe: deriveDe === null ? null : (deriveDe as FoodId),
   }
 }
@@ -56,12 +72,12 @@ const ALIMENTS: ReadonlyMap<FoodId, Food> = new Map(
   [
     aliment('tomate', 'legumes', null),
     aliment('riz', 'cereales', null),
-    aliment('lait', 'produits_laitiers', 'mammifere'),
-    aliment('beurre', 'matieres_grasses', null, 'lait'), // dérivé : l'origine remonte la chaîne
-    aliment('miel', 'produits_sucres', 'insecte'),
-    aliment('saumon', 'poissons', 'poisson'),
-    aliment('boeuf', 'viandes', 'mammifere'),
-    aliment('poulet', 'viandes', 'volaille'),
+    aliment('lait', 'produits_laitiers', 'mammifere', 'production'),
+    aliment('beurre', 'matieres_grasses', null, null, 'lait'), // dérivé : les deux faits remontent la chaîne
+    aliment('miel', 'produits_sucres', 'insecte', 'production'),
+    aliment('saumon', 'poissons', 'poisson', 'corps'),
+    aliment('boeuf', 'viandes', 'mammifere', 'corps'),
+    aliment('poulet', 'viandes', 'volaille', 'corps'),
   ].map((f) => [f.id, f])
 )
 

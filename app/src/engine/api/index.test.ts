@@ -52,6 +52,7 @@ function food(id: string, kcalPer100g: number): Food {
     quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
+    provenanceAnimale: null,
     deriveDe: null,
   };
 }
@@ -406,6 +407,7 @@ function ferFood(id: string, ferPer100g: number): Food {
     quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
+    provenanceAnimale: null,
     deriveDe: null,
   };
 }
@@ -1132,5 +1134,86 @@ describe("engine/api — un plat préparé rend la journée immesurable (décisi
     };
     const apres = engine.setSlotHorsCatalogue(verrouille, { date: "2026-08-03", creneau: "gouter" }, "Pizza", PROFIL_TEST);
     expect(apres).toBe(verrouille);
+  });
+});
+
+describe("engine/api — suggestSauces : les couches critiques s'appliquent AUSSI aux sauces", () => {
+  // ⚠️ CE BLOC COMBLE UN TROU, PAS UN CAS LIMITE. `suggestSauces` n'était exercé par AUCUN test
+  // jusqu'au 2026-08-10 : sa documentation affirme « LES EXCLUSIONS S'APPLIQUENT, PAR LES MÊMES
+  // COUCHES » et rien ne le vérifiait. `domain/sauces.test.ts` couvre la RELATION plat↔sauce, qui
+  // ignore les contraintes par construction (le module ne les reçoit pas) ; l'exclusion ne vit que
+  // dans l'API, sur le chemin testé ici.
+  //
+  // Le fixture reproduit le SEUL couple du catalogue réel qui croise deux régimes (relevé du
+  // 2026-08-10 : 1 couple sur 14) — `pommes_terre_four_romarin`, végétalienne, porte
+  // `sauce_yaourt_citron_ciboulette`, végétarienne. La situation n'est donc pas hypothétique, et
+  // c'est elle qui a fait soupçonner un défaut : il n'y en a pas, mais rien ne le prouvait.
+
+  const oeuf = food("oeuf", 100);
+  const regime = (valeur: string) => [{ facette: "regime" as const, valeur }];
+
+  const plat = {
+    ...recipeWithOneIngredient("pdt_four", "oeuf"),
+    facettes: regime("vegetalien"),
+    sauceIds: ["sauce_yaourt" as RecipeId, "sauce_citron" as RecipeId],
+  };
+  const sauceYaourt = {
+    ...recipeWithOneIngredient("sauce_yaourt", "oeuf"),
+    estSauce: true,
+    facettes: regime("vegetarien"),
+  };
+  const sauceCitron = {
+    ...recipeWithOneIngredient("sauce_citron", "oeuf"),
+    estSauce: true,
+    facettes: regime("vegetalien"),
+  };
+
+  function catalogueAuxSauces(): Catalog {
+    const base = makeCatalog();
+    return {
+      ...base,
+      foods: new Map([[oeuf.id, oeuf]]),
+      recipes: new Map([plat, sauceYaourt, sauceCitron].map((r) => [r.id, r])),
+    };
+  }
+
+  const sansRegime = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null };
+  const avec = (diet: string) => ({ ...sansRegime, diet });
+
+  it("sans régime déclaré, les deux sauces attachées sont rendues — la couche est INERTE", () => {
+    const r = createEngine(catalogueAuxSauces()).suggestSauces({
+      recipeId: "pdt_four" as RecipeId,
+      constraints: sansRegime,
+    });
+    expect(r.proposer).toBe(true);
+    expect([...r.attachees].sort()).toEqual(["sauce_citron", "sauce_yaourt"]);
+    expect(r.ecartees).toBe(0);
+  });
+
+  it("⛔ RÉGIME VÉGÉTALIEN : la sauce au yaourt est ÉCARTÉE, et le plat reste proposé", () => {
+    // Le cas qui justifie tout le bloc. Un plat végétalien peut porter une sauce qui ne l'est pas :
+    // c'est un appariement du catalogue, pas un ingrédient. La sauce doit disparaître pour qui a
+    // déclaré végétalien — et l'écran doit pouvoir le DIRE, d'où `ecartees`, sans quoi la liste
+    // raccourcie se lit comme un catalogue pauvre.
+    const r = createEngine(catalogueAuxSauces()).suggestSauces({
+      recipeId: "pdt_four" as RecipeId,
+      constraints: avec("vegetalien"),
+    });
+    expect(r.proposer).toBe(true);
+    expect(r.attachees).toEqual(["sauce_citron"]);
+    expect(r.autres).toEqual([]);
+    expect(r.ecartees).toBe(1);
+  });
+
+  it("régime VÉGÉTARIEN : les deux passent — l'inclusion joue, ce n'est pas une égalité stricte", () => {
+    // Une sauce PLUS restrictive que le régime demandé reste servie (`DIET_CHAIN`). Sans ce test,
+    // une régression vers l'égalité stricte ne rendrait la sauce végétalienne invisible qu'aux
+    // végétariens — une absence, donc aucune erreur nulle part.
+    const r = createEngine(catalogueAuxSauces()).suggestSauces({
+      recipeId: "pdt_four" as RecipeId,
+      constraints: avec("vegetarien"),
+    });
+    expect([...r.attachees].sort()).toEqual(["sauce_citron", "sauce_yaourt"]);
+    expect(r.ecartees).toBe(0);
   });
 });

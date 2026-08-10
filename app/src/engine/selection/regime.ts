@@ -27,7 +27,7 @@
 // Dépendances autorisées : domain/, ./index.js (contrat local) — §2/§3 ENGINE.
 
 import type { DietCode, Food, FoodId, Recipe, RecipeId, RejectionEntry } from '../domain/index.js'
-import { resolveAnimalOrigin } from '../domain/index.js'
+import { resolveAnimalOrigin, resolveAnimalProvenance } from '../domain/index.js'
 import type { ExclusionLayerResult, SelectionLayer } from './index.js'
 
 /**
@@ -66,16 +66,38 @@ function rangDansChaine(diet: DietCode): number {
  * `resolveAnimalOrigin` remonte la chaîne `deriveDe` (beurre → lait entier → mammifère), donc un
  * dérivé ne peut plus passer à travers, quel que soit son rayon.
  *
- * La correspondance origine → régime est faite ICI et pas dans le domaine : `AnimalOrigin` est un
- * FAIT, `DietCode` une règle. Un futur filtre halal lira la même origine pour en tirer autre chose.
+ * ⛔ ET L'AVERTISSEMENT CI-DESSUS A ÉTÉ ENFREINT DANS CETTE FONCTION MÊME, jusqu'au 2026-08-10 :
+ * la branche `mammifere`/`volaille` tranchait sur `food.groupe === 'viandes'`. Voir le détail au
+ * corps de la fonction. Deux passages du groupe, deux défauts sur une couche 🔒 critique — la
+ * seconde fois en ayant l'avertissement sous les yeux. Si une réécriture future y ramène `groupe`,
+ * ce sera la troisième.
+ *
+ * La correspondance fait → régime est faite ICI et pas dans le domaine : `AnimalOrigin` et
+ * `AnimalProvenance` sont des FAITS, `DietCode` une règle. Un futur filtre halal ou casher lira les
+ * mêmes faits pour en tirer autre chose.
  */
 export function regimeExigePar(food: Food, foods: ReadonlyMap<FoodId, Food>): DietCode {
   switch (resolveAnimalOrigin(food, foods)) {
     case 'mammifere':
     case 'volaille':
-      // La CHAIR impose omnivore ; le lait et l'œuf s'arrêtent à végétarien. Le groupe tranche, il
-      // est fiable pour ça : ce qui vient d'un mammifère sans être en « viandes » est un produit.
-      return food.groupe === 'viandes' ? 'omnivore' : 'vegetarien'
+      // Ce qui est PRODUIT par l'animal vivant (lait, œuf) s'arrête à végétarien ; ce qui est
+      // prélevé sur son CORPS impose omnivore. C'est la distinction végétarienne, et elle est lue
+      // sur un fait déclaré, jamais déduite.
+      //
+      // ⛔ CETTE LIGNE A LU `food.groupe` JUSQU'AU 2026-08-10, ET C'ÉTAIT LA MÊME FAUTE QUE CELLE
+      // QUE L'EN-TÊTE CI-DESSUS INTERDIT — écrite onze lignes sous l'avertissement qui la nomme.
+      // « Mammifère hors groupe viandes » valait végétarien : vrai pour le beurre, faux pour
+      // `bouillon_boeuf` et `bouillon_volaille` (condiments), `gelatine` (condiments), `saindoux`
+      // et `graisse_canard` (matières grasses), `guimauve` (produits sucrés, à base de gélatine).
+      // Six aliments servis à un végétarien. Le groupe est un rayon de magasin ; il ne répondra
+      // jamais à une question diététique.
+      //
+      // ⚠️ EN L'ABSENCE DE PROVENANCE, ON REND `omnivore`, PAS `vegetarien` — le plus permissif,
+      // donc le plus restrictif à l'usage, comme `regimeExigeParIngredients` sans ingrédient connu.
+      // Le build refuse une origine sans provenance, mais cette fonction tourne aussi sur des
+      // recettes composées par l'utilisateur, contre un `user.db` sans clé étrangère vers le
+      // catalogue. En cas d'ignorance, on n'affirme rien.
+      return resolveAnimalProvenance(food, foods) === 'production' ? 'vegetarien' : 'omnivore'
     case 'poisson':
     case 'fruit_de_mer':
       return 'pescetarien'

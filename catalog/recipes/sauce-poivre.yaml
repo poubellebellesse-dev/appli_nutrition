@@ -33,12 +33,14 @@ ingredients:
     quantite_g: 20
     unite_affichage: "une noix"
     optionnel: false
-  # bouillon de LÉGUMES, et ce n'est pas un choix de goût : `bouillon_boeuf` porte
-  # `origine_animale: mammifere` dans le groupe `condiments`, et `regimeExigePar` classe « mammifère
-  # hors groupe viandes » comme un produit laitier (vrai pour le beurre, faux pour un extrait de
-  # viande). La sauce serait alors étiquetable végétarienne tout en contenant du bœuf. Voir la dette
-  # ouverte dans docs/ETAT.md §8 — tant qu'elle n'est pas tranchée, aucune recette n'emploie ces
-  # deux bouillons de viande.
+  # bouillon de LÉGUMES — à l'origine un CONTOURNEMENT, aujourd'hui un simple choix de recette.
+  # ✅ Le défaut qui l'imposait est corrigé (2026-08-10) : `regimeExigePar` classait « mammifère hors
+  # groupe viandes » comme un produit, donc `bouillon_boeuf` passait pour végétarien. Il lit
+  # désormais `provenance_animale`, et les bouillons de viande déclarent `corps`. Les employer
+  # étiquetterait correctement la recette `omnivore`.
+  # ⚠️ Le bouillon de légumes est CONSERVÉ pour ne pas changer le régime de cette sauce en douce —
+  # c'est une décision de contenu, pas la correction d'un bug. La changer est un choix à faire
+  # explicitement.
   - food_id: bouillon_legumes
     quantite_g: 200
     unite_affichage: "20 cl"

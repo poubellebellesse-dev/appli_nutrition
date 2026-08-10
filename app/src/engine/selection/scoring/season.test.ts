@@ -30,6 +30,8 @@ function makeFood(id: string, opts: { readonly touteAnnee: boolean; readonly sai
     quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
+
+    provenanceAnimale: null,
     deriveDe: null,
   }
 }

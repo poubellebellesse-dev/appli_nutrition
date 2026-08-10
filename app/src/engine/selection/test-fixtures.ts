@@ -14,6 +14,8 @@
 
 import type {
   AllergenId,
+  AnimalOrigin,
+  AnimalProvenance,
   Catalog,
   CatalogIndexes,
   CourseKind,
@@ -58,14 +60,21 @@ export function asScoringResult(result: LayerResult): ScoringLayerResult {
 export function makeFood(
   id: string,
   allergenes: readonly FoodAllergen[] = [],
-  opts: { readonly sousFamille?: string; readonly synonymes?: readonly string[] } = {}
+  opts: {
+    readonly sousFamille?: string
+    readonly synonymes?: readonly string[]
+    readonly groupe?: string
+    readonly origineAnimale?: AnimalOrigin | null
+    readonly provenanceAnimale?: AnimalProvenance | null
+    readonly deriveDe?: string | null
+  } = {}
 ): Food {
   return {
     id: id as FoodId,
     codeCiqual: `TEST-${id}`,
     nom: id,
     synonymes: opts.synonymes ?? [],
-    groupe: 'test',
+    groupe: opts.groupe ?? 'test',
     sousFamille: opts.sousFamille ?? null,
     sousGroupe: null,
     nutrimentsPour100g: new Map(),
@@ -77,8 +86,9 @@ export function makeFood(
     fondDePlacard: false,
     quantiteFigee: false,
     conditionnementG: null,
-    origineAnimale: null,
-    deriveDe: null,
+    origineAnimale: opts.origineAnimale ?? null,
+    provenanceAnimale: opts.provenanceAnimale ?? null,
+    deriveDe: (opts.deriveDe ?? null) as FoodId | null,
   }
 }
 

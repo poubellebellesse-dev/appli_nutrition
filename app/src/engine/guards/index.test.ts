@@ -61,6 +61,7 @@ function food(id: string, allergenId: string | null): Food {
     quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
+    provenanceAnimale: null,
     deriveDe: null,
   };
 }

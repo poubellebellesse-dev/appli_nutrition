@@ -645,6 +645,60 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence, equipment = 
     }
   }
 
+  // --- Provenance animale : OBLIGATOIRE partout où une origine est déclarée ---
+  //
+  // ⛔ DÉFAUT TROUVÉ LE 2026-08-10, MÊME COUCHE 🔒 CRITIQUE, MÊME MÉCANISME QUE CI-DESSUS.
+  // `regimeExigePar` déduisait le régime de `food.groupe` : « mammifère hors groupe viandes » valait
+  // végétarien. Vrai pour le beurre et l'œuf, FAUX pour six aliments qui viennent bien d'un corps
+  // animal sans être rangés en « viandes » — `bouillon_boeuf`, `bouillon_volaille`, `gelatine`,
+  // `saindoux`, `graisse_canard` et `guimauve` (à base de gélatine). Un végétarien se les serait vu
+  // proposer dans une recette qu'il compose lui-même.
+  //
+  // ⚠️ LA LEÇON ÉTAIT DÉJÀ ÉCRITE DANS LA FONCTION FAUTIVE, onze lignes plus haut que la faute :
+  // « NE PAS DEVINER DEPUIS `Food.groupe` » — avertissement posé quand le même raisonnement avait
+  // raté le BEURRE et déclaré « Radis au beurre » végétalienne. Le groupe est un classement de
+  // RAYON ; il ne répond pas à une question diététique et n'y répondra jamais : la gélatine est un
+  // condiment, le saindoux une matière grasse, la guimauve un bonbon.
+  //
+  // ⚠️ POURQUOI LE CHAMP EST OBLIGATOIRE ET SANS VALEUR PAR DÉFAUT. Une valeur par défaut déduite de
+  // `groupe` reproduirait le défaut au prochain aliment ajouté, en silence — c'est exactement ce que
+  // ce garde existe pour rendre impossible. La liste des six n'a pas été trouvée par relecture : la
+  // guimauve a échappé à une passe qui cherchait précisément ces cas-là, parce qu'elle se lit comme
+  // un bonbon. Une garde à exemptions se dégrade ; celle-ci est uniforme et ne demande aucune
+  // vigilance. Le champ se PROPAGE par `derive_de` comme l'origine : il n'est exigé qu'au point de
+  // DÉCLARATION, jamais sur un dérivé (le beurre le tient de `lait_entier`).
+  const PROVENANCES_ANIMALES = new Set(['corps', 'production'])
+  for (const food of foods) {
+    if (!food?.id) continue
+    if (!food.origine_animale) continue
+    if (food.provenance_animale === undefined || food.provenance_animale === null) {
+      errors.push(
+        `Aliment '${food.id}' : déclare 'origine_animale: ${food.origine_animale}' sans ` +
+          '`provenance_animale`. Ce champ est OBLIGATOIRE dès qu\'une origine est déclarée — il dit ' +
+          'si l\'aliment est prélevé sur le CORPS de l\'animal (chair, graisse, os, extrait) ou ' +
+          'PRODUIT par l\'animal vivant (lait, œuf, miel), et c\'est lui qui décide du régime dans ' +
+          'engine/selection/regime.ts. Valeurs : `corps` | `production`'
+      )
+      continue
+    }
+    if (!PROVENANCES_ANIMALES.has(food.provenance_animale)) {
+      errors.push(
+        `Aliment '${food.id}' : 'provenance_animale: ${food.provenance_animale}' inconnue — ` +
+          'attendu `corps` ou `production`'
+      )
+    }
+  }
+  // Et l'inverse : une provenance sans origine ne se propage nulle part et ne serait jamais lue.
+  for (const food of foods) {
+    if (!food?.id) continue
+    if (food.provenance_animale && !food.origine_animale) {
+      errors.push(
+        `Aliment '${food.id}' : déclare 'provenance_animale' sans 'origine_animale'. La provenance ` +
+          'se lit le long de la même chaîne que l\'origine — déclarée seule, elle est morte'
+      )
+    }
+  }
+
   // --- Lexique ---
   const lexiconCodes = new Set()
   for (const entry of lexicon) {
@@ -999,6 +1053,16 @@ CREATE TABLE food (
   --   DIET_CHAIN en deduit ce qu'elle veut, un futur filtre halal/casher lira le meme champ.
   --   NULL = vegetal, mineral, OU derive (l'origine se lit alors sur derive_de).
   origine_animale TEXT CHECK (origine_animale IN ('mammifere','volaille','poisson','fruit_de_mer','insecte')),
+  -- provenance_animale : ce que l'aliment PREND a l'animal. FACTUEL comme origine_animale, et pour
+  --   la meme raison — c'est regime.ts qui en tire un DietCode, pas ce champ.
+  --     corps      = prelevé SUR l'animal : chair, graisse, os et collagene, extrait, sang.
+  --     production = produit PAR l'animal vivant : lait, oeuf, miel.
+  --   ⛔ C'EST LA DISTINCTION VEGETARIENNE, et elle ne se devine PAS depuis groupe. La gelatine est
+  --   un « condiment », le saindoux une « matiere grasse », la guimauve un « produit sucre » : tous
+  --   les trois viennent d'un corps animal et aucun n'est en « viandes ». Voir le garde plus haut.
+  --   NULL = origine_animale NULL (vegetal, mineral, OU derive : la provenance se lit alors sur
+  --   derive_de, exactement comme l'origine).
+  provenance_animale TEXT CHECK (provenance_animale IN ('corps','production')),
   -- derive_de : aliment dont celui-ci est tire (beurre_doux -> lait_entier). L'origine animale se
   --   PROPAGE le long de cette chaine. C'est ce champ qui rattrape les derives que groupe laisse
   --   passer : le beurre est en « matieres grasses », le miel en « produits sucres ».
@@ -1335,7 +1399,7 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment = []
     for (const a of ALLERGENS) insertAllergen.run(a.id, a.code, a.nom)
 
     const insertFood = db.prepare(
-      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, sous_groupe, saison_mois, toute_annee, piquant, poids_piece_g, fond_de_placard, quantite_figee, conditionnement_g, origine_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO food (id, code_ciqual, nom, groupe, sous_famille, sous_groupe, saison_mois, toute_annee, piquant, poids_piece_g, fond_de_placard, quantite_figee, conditionnement_g, origine_animale, provenance_animale, derive_de) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     )
     const insertFoodNutrient = db.prepare(
       'INSERT INTO food_nutrient (food_id, nutrient_id, valeur_pour_100g, code_confiance) VALUES (?, ?, ?, ?)'
@@ -1361,6 +1425,7 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment = []
         food.quantite_figee ? 1 : 0,
         food.conditionnement_g ?? null,
         food.origine_animale ?? null,
+        food.provenance_animale ?? null,
         food.derive_de ?? null
       )
       const cotesDeCetAliment = confiance[food.id] ?? {}

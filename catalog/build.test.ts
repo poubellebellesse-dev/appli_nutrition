@@ -1431,6 +1431,7 @@ describe('catalog/build.mjs — origine animale exigée par l’allergène (couc
     nom: "Sauce de poisson"
     groupe: "condiments"
     origine_animale: poisson
+    provenance_animale: corps
     nutriments:
       energie_kcal: 81
     allergenes:
@@ -1456,6 +1457,7 @@ describe('catalog/build.mjs — origine animale exigée par l’allergène (couc
     nom: "Lait entier"
     groupe: "lait et produits laitiers"
     origine_animale: mammifere
+    provenance_animale: production
     nutriments:
       energie_kcal: 65
     allergenes:
@@ -1471,6 +1473,119 @@ describe('catalog/build.mjs — origine animale exigée par l’allergène (couc
     allergenes:
       - code: lait
         certitude: contient
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status, result.stderr).toBe(0)
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('⛔ REFUSE une origine animale déclarée SANS `provenance_animale`', () => {
+    // Le garde qui ferme le défaut du 2026-08-10. Sans lui, l'aliment ci-dessous serait rendu
+    // `omnivore` par prudence — sûr, mais silencieusement absent des suggestions végétariennes s'il
+    // s'agissait d'un produit laitier. Le build est le seul endroit où l'oubli peut encore parler.
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-provenance-absente-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_gelatine
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Gélatine sèche"
+    groupe: "condiments"
+    origine_animale: mammifere
+    nutriments:
+      energie_kcal: 348
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status).not.toBe(0)
+      expect(result.stderr + result.stdout).toContain('fixture_gelatine')
+      // ⚠️ ASSERTER SUR `OBLIGATOIRE`, PAS SUR `provenance_animale` — ce test ne vérifiait RIEN
+      // jusqu'au 2026-08-10. Une provenance absente arrive `undefined` au garde SUIVANT, qui la
+      // refuse en « 'provenance_animale: undefined' inconnue » : la chaîne `provenance_animale`
+      // était donc présente même le garde ci-dessus supprimé, et le test restait vert. Vérifié par
+      // mutation. `OBLIGATOIRE` n'apparaît que dans CE message-ci, et c'est lui qui dit à l'auteur
+      // du YAML quoi écrire — « undefined inconnue » ne le dit pas.
+      expect(result.stderr + result.stdout).toContain('OBLIGATOIRE')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('⛔ REFUSE une `provenance_animale` inconnue', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-provenance-inconnue-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_saindoux
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Saindoux"
+    groupe: "matières grasses"
+    origine_animale: mammifere
+    provenance_animale: chair
+    nutriments:
+      energie_kcal: 891
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status).not.toBe(0)
+      expect(result.stderr + result.stdout).toContain('inconnue')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('⛔ REFUSE une provenance déclarée SANS origine — elle ne serait jamais lue', () => {
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-provenance-orpheline-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_carotte
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Carotte"
+    groupe: "légumes"
+    provenance_animale: corps
+    nutriments:
+      energie_kcal: 36
+`
+      )
+      const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])
+      expect(result.status).not.toBe(0)
+      expect(result.stderr + result.stdout).toContain('fixture_carotte')
+    } finally {
+      rmSync(fixtureDir, { recursive: true, force: true })
+    }
+  })
+
+  it('ACCEPTE une provenance HÉRITÉE — le dérivé ne la déclare pas', () => {
+    // Symétrique du test d'origine héritée : le garde n'exige la provenance qu'au point de
+    // DÉCLARATION. Un dérivé qui la redéclarerait serait du bruit, et un dérivé qui l'omet est la
+    // situation normale — c'est le cas du beurre dans le catalogue réel.
+    const fixtureDir = mkdtempSync(path.join(tmpdir(), 'nutri-fixture-provenance-heritee-'))
+    try {
+      writeFoodsFixture(
+        fixtureDir,
+        `
+  - id: fixture_lait2
+    code_ciqual: "PROV-FIXTURE"
+    nom: "Lait entier"
+    groupe: "lait et produits laitiers"
+    origine_animale: mammifere
+    provenance_animale: production
+    nutriments:
+      energie_kcal: 65
+  - id: fixture_beurre2
+    code_ciqual: "PROV-FIXTURE-2"
+    nom: "Beurre doux"
+    groupe: "matières grasses"
+    derive_de: fixture_lait2
+    nutriments:
+      energie_kcal: 750
 `
       )
       const result = runBuild(['--sources', fixtureDir, '--out', path.join(fixtureDir, 'catalog.db')])

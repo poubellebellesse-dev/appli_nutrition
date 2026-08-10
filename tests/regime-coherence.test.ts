@@ -24,7 +24,7 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Catalog, DietCode, Food, FoodId, Recipe } from '../app/src/engine/domain/index.js'
-import { resolveAnimalOrigin } from '../app/src/engine/domain/index.js'
+import { resolveAnimalOrigin, resolveAnimalProvenance } from '../app/src/engine/domain/index.js'
 import { DIET_CHAIN, regimeExigePar } from '../app/src/engine/selection/index.js'
 import { loadCatalog } from '../app/src/data/catalog-loader-node.js'
 
@@ -178,6 +178,63 @@ describe('catalogue réel — la chaîne `deriveDe` (origine animale en cascade)
       // Se termine : la résolution ne boucle pas et rend une origine déclarée.
       expect(resolveAnimalOrigin(food, catalog.foods)).not.toBeNull()
     }
+  })
+
+  it('⛔ LES SIX QUI PASSAIENT POUR VÉGÉTARIENS — sur le catalogue réel', () => {
+    // Le défaut du 2026-08-10 : `regimeExigePar` lisait `food.groupe`, et « mammifère hors groupe
+    // viandes » valait végétarien. Aucune recette du catalogue ne les employait — `sauce-poivre`
+    // avait même CONTOURNÉ le défaut en prenant du bouillon de légumes, commentaire à l'appui — donc
+    // les deux tests de cohérence ci-dessus ne pouvaient rien voir. Celui-ci porte sur les aliments
+    // eux-mêmes, pas sur les recettes, et c'est pour ça qu'il existe.
+    for (const id of [
+      'bouillon_boeuf',
+      'bouillon_volaille',
+      'gelatine',
+      'saindoux',
+      'graisse_canard',
+      'guimauve',
+    ] as FoodId[]) {
+      const food = catalog.foods.get(id)!
+      expect(food.groupe, `${id} — le piège est justement qu'il n'est PAS en « viandes »`).not.toBe('viandes')
+      expect(resolveAnimalProvenance(food, catalog.foods), id).toBe('corps')
+      expect(regimeExigePar(food, catalog.foods), id).toBe('omnivore')
+    }
+  })
+
+  it('le lait, l’œuf et le miel restent végétariens — la non-régression qui compte', () => {
+    for (const id of ['lait_entier', 'oeuf', 'miel', 'chocolat_lait', 'meringue'] as FoodId[]) {
+      expect(regimeExigePar(catalog.foods.get(id)!, catalog.foods), id).toBe('vegetarien')
+    }
+    // Et le beurre, qui ne déclare RIEN : il tient `production` de `lait_entier` par la cascade.
+    const beurre = catalog.foods.get('beurre_doux' as FoodId)!
+    expect(beurre.provenanceAnimale).toBeNull()
+    expect(resolveAnimalProvenance(beurre, catalog.foods)).toBe('production')
+    expect(regimeExigePar(beurre, catalog.foods)).toBe('vegetarien')
+  })
+
+  it('provenance et origine sont nulles ENSEMBLE, sur les 451 aliments', () => {
+    // L'invariant qui rend la couche sûre. Le build le garantit à l'écriture ; ce test le vérifie
+    // APRÈS le passage par SQLite et le loader — « un champ déclaré n'est pas un champ branché ».
+    const incoherents = [...catalog.foods.values()]
+      .filter((f) => (f.origineAnimale === null) !== (f.provenanceAnimale === null))
+      .map((f) => `${f.id} : origine=${f.origineAnimale} provenance=${f.provenanceAnimale}`)
+
+    expect(incoherents).toEqual([])
+  })
+
+  it('tout aliment d’origine mammifère ou volaille a une provenance résolue — aucun oubli', () => {
+    // Le pendant exact du test d'origine ci-dessus. Sans provenance, la branche rend `omnivore` :
+    // pas de faille de sécurité, mais un aliment qui disparaît des suggestions végétariennes sans
+    // que rien ne rougisse — le mode de défaillance silencieux que ce catalogue traque partout.
+    const oublies = [...catalog.foods.values()]
+      .filter((f) => {
+        const origine = resolveAnimalOrigin(f, catalog.foods)
+        return (origine === 'mammifere' || origine === 'volaille') &&
+          resolveAnimalProvenance(f, catalog.foods) === null
+      })
+      .map((f) => f.id)
+
+    expect(oublies).toEqual([])
   })
 
   it('un cycle ne fait pas boucler la résolution — garde défensive', () => {

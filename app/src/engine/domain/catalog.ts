@@ -93,6 +93,26 @@ export interface FoodAllergen {
  */
 export type AnimalOrigin = 'mammifere' | 'volaille' | 'poisson' | 'fruit_de_mer' | 'insecte'
 
+/**
+ * Ce qu'un aliment PREND à l'animal — `corps` : chair, graisse, os et collagène, extrait, sang ;
+ * `production` : lait, œuf, miel, produits par l'animal vivant.
+ *
+ * FAIT, pas régime, exactement comme `AnimalOrigin` et pour la même raison : `regimeExigePar` en
+ * tire un `DietCode`, un futur filtre y lira autre chose. C'est la distinction VÉGÉTARIENNE, la
+ * seule que `AnimalOrigin` ne porte pas — lait et bœuf sont tous deux `mammifere`.
+ *
+ * ⛔ NE SE DÉDUIT PAS DE `Food.groupe`, et c'est tout l'objet de ce type. Une version antérieure de
+ * `regimeExigePar` traitait « mammifère hors groupe *viandes* » comme un produit : vrai pour le
+ * beurre, faux pour la gélatine (« condiments »), le saindoux (« matières grasses ») et la guimauve
+ * (« produits sucrés »), qui viennent tous d'un corps animal. Six aliments étaient déclarés
+ * végétariens à tort. Le groupe est un rayon de magasin ; il ne répond pas à une question
+ * diététique.
+ *
+ * `null` = pas d'origine animale déclarée — donc végétal, minéral, **ou dérivé**, auquel cas la
+ * provenance se lit sur `deriveDe`. Toujours passer par `resolveAnimalProvenance`.
+ */
+export type AnimalProvenance = 'corps' | 'production'
+
 // --- Aliments (table `food` + `food_nutrient` + `food_allergen`) -----------------------------
 
 export interface Food {
@@ -211,6 +231,15 @@ export interface Food {
    */
   readonly origineAnimale: AnimalOrigin | null
   /**
+   * Provenance animale DIRECTE (§ `AnimalProvenance`) — `corps` ou `production`. Toujours `null`
+   * quand `origineAnimale` l'est, et jamais `null` quand elle ne l'est pas : le build refuse l'un
+   * sans l'autre.
+   *
+   * Mêmes précautions que `origineAnimale` : ne jamais lire ce champ seul, passer par
+   * `resolveAnimalProvenance`. Le beurre le porte à `null` et vient pourtant d'une production.
+   */
+  readonly provenanceAnimale: AnimalProvenance | null
+  /**
    * Aliment dont celui-ci est TIRÉ — `beurre_doux` → `lait_entier`. L'origine animale se propage le
    * long de cette chaîne : le beurre vient du lait, qui vient d'un mammifère, donc le beurre vient
    * d'un mammifère.
@@ -225,26 +254,50 @@ export interface Food {
 
 /**
  * Remonte la chaîne `deriveDe` jusqu'à trouver une origine animale déclarée. `null` = végétal ou
- * minéral, une fois la chaîne épuisée.
- *
- * ⚠️ GARDE ANTI-CYCLE. Une chaîne mal saisie (`a` dérive de `b` qui dérive de `a`) boucle sans fin.
- * Le build la refuse déjà, mais cette fonction est appelée sur des données qui peuvent venir
- * d'ailleurs : elle s'arrête et rend `null` plutôt que de figer l'appelant. Ne pas retirer cette
- * garde au motif que « le build vérifie » — le build vérifie SON catalogue, pas tous.
+ * minéral, une fois la chaîne épuisée. Garde anti-cycle : voir `sourceAnimale`.
  */
 export function resolveAnimalOrigin(
   food: Food | undefined,
   foods: ReadonlyMap<FoodId, Food>
 ): AnimalOrigin | null {
+  return sourceAnimale(food, foods)?.origineAnimale ?? null
+}
+
+/**
+ * Même chaîne, même garde, autre champ : la provenance se propage comme l'origine — le beurre tient
+ * `production` de `lait_entier`, la guimauve déclare `corps` elle-même.
+ *
+ * ⚠️ LES DEUX RÉSOLUTIONS PARTAGENT LEUR PARCOURS (`sourceAnimale`) EXPRÈS, et il ne faut pas les
+ * réécrire séparément. L'invariant qui rend la couche `regime` sûre est « provenance nulle si et
+ * seulement si origine nulle » ; deux parcours indépendants pourraient s'arrêter sur deux ancêtres
+ * différents et le rompre en silence — le mode de défaillance exact que ce champ existe pour fermer.
+ */
+export function resolveAnimalProvenance(
+  food: Food | undefined,
+  foods: ReadonlyMap<FoodId, Food>
+): AnimalProvenance | null {
+  return sourceAnimale(food, foods)?.provenanceAnimale ?? null
+}
+
+/**
+ * Premier aliment de la chaîne `deriveDe` qui DÉCLARE une origine animale — `undefined` si la
+ * chaîne s'épuise sans en trouver (végétal, minéral).
+ *
+ * ⚠️ GARDE ANTI-CYCLE. Une chaîne mal saisie (`a` dérive de `b` qui dérive de `a`) boucle sans fin.
+ * Le build la refuse déjà, mais cette fonction est appelée sur des données qui peuvent venir
+ * d'ailleurs : elle s'arrête et rend `undefined` plutôt que de figer l'appelant. Ne pas retirer
+ * cette garde au motif que « le build vérifie » — le build vérifie SON catalogue, pas tous.
+ */
+function sourceAnimale(food: Food | undefined, foods: ReadonlyMap<FoodId, Food>): Food | undefined {
   const vus = new Set<FoodId>()
   let courant = food
   while (courant !== undefined) {
-    if (courant.origineAnimale !== null) return courant.origineAnimale
-    if (courant.deriveDe === null || vus.has(courant.id)) return null
+    if (courant.origineAnimale !== null) return courant
+    if (courant.deriveDe === null || vus.has(courant.id)) return undefined
     vus.add(courant.id)
     courant = foods.get(courant.deriveDe)
   }
-  return null
+  return undefined
 }
 
 // --- Recettes (table `recipe` + tables liées) -------------------------------------------------
