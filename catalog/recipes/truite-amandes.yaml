@@ -7,7 +7,7 @@ temps_prep_min: 5
 temps_cuisson_min: 12
 difficulte: 1
 portions_base: 2
-image_path: null
+image_path: /catalog/images/truite-amandes.avif
 types_repas: [diner]
 service: plat
 piquant: 0

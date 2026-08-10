@@ -7,7 +7,7 @@ temps_prep_min: 25
 temps_cuisson_min: 95
 difficulte: 3
 portions_base: 6
-image_path: null
+image_path: /catalog/images/blanquette-veau.avif
 types_repas: [dejeuner, diner]
 service: plat
 piquant: 0

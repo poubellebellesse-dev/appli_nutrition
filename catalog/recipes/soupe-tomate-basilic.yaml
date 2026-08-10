@@ -7,7 +7,7 @@ temps_prep_min: 10
 temps_cuisson_min: 30
 difficulte: 1
 portions_base: 4
-image_path: null
+image_path: /catalog/images/soupe-tomate-basilic.avif
 types_repas: [diner]
 service: entree
 piquant: 0

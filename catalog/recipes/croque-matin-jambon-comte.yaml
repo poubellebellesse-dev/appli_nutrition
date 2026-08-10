@@ -8,7 +8,7 @@ temps_prep_min: 5
 temps_cuisson_min: 8
 difficulte: 1
 portions_base: 2
-image_path: null
+image_path: /catalog/images/croque-matin-jambon-comte.avif
 types_repas: [petit_dejeuner, dejeuner]
 service: plat
 piquant: 0

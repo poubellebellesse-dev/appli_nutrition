@@ -7,7 +7,7 @@ temps_prep_min: 10
 temps_cuisson_min: 6
 difficulte: 3
 portions_base: 4
-image_path: null
+image_path: /catalog/images/saint-jacques-poelees.avif
 types_repas: [diner]
 service: entree
 piquant: 0
