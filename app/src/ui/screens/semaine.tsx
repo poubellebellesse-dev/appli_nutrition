@@ -407,8 +407,8 @@ export function Semaine() {
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">La semaine n'a pas pu être construite.</p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="text-lecture font-semibold text-texte">La semaine n'a pas pu être construite.</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -428,11 +428,11 @@ export function Semaine() {
 
   return (
     <section>
-      <h1 data-visite="titre-semaine" className="text-[2.1rem] text-texte">
+      <h1 data-visite="titre-semaine" className="text-titre-l text-texte">
         Ma semaine
       </h1>
       <LienTutoriel parcoursId="semaine" />
-      <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
+      <p className="mt-2 text-courant leading-relaxed text-attenue">
         {/* ⚠️ DES REPAS, PAS DES ENTRÉES. Compter les lignes du plan doublerait le total depuis que
             le déjeuner porte un plat ET son accompagnement : « 28 repas prévus » pour quatorze
             assiettes. On compte les CRÉNEAUX servis. */}
@@ -448,11 +448,11 @@ export function Semaine() {
         type="button"
         data-visite="autre-semaine"
         onClick={() => replanifier({ ...reglages, graine: reglages.graine + 1 })}
-        className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white"
+        className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
       >
         Proposer une autre semaine
       </button>
-      <p className="mt-2 text-[0.9rem] text-attenue">Vos repas gardés ne changeront pas.</p>
+      <p className="mt-2 text-courant text-attenue">Vos repas gardés ne changeront pas.</p>
 
       {modeAvance && <AlerteEnergie warnings={plan.warnings} />}
 
@@ -461,7 +461,7 @@ export function Semaine() {
       <div className="mt-4 space-y-4">
         {dates.map((date) => (
           <article key={date} className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
-            <h2 className="font-titre text-[1.25rem] text-texte">{formaterJour(date)}</h2>
+            <h2 className="font-titre text-titre-s text-texte">{formaterJour(date)}</h2>
             <div className="mt-2 grid gap-2 sm:grid-cols-3">
               {creneaux.map((creneau) => {
                 // ⚠️ DEUX ENTRÉES POSSIBLES PAR CRÉNEAU depuis le mode repas — `find` seul rendait
@@ -525,11 +525,11 @@ function SemaineVide({
 }) {
   return (
     <section>
-      <h1 data-visite="titre-semaine" className="text-[2.1rem] text-texte">
+      <h1 data-visite="titre-semaine" className="text-titre-l text-texte">
         Ma semaine
       </h1>
       <LienTutoriel parcoursId="semaine" />
-      <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+      <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
         Rien de prévu pour l'instant. Composez une semaine quand vous voulez — vous pourrez changer
         chaque repas ensuite.
       </p>
@@ -541,14 +541,14 @@ function SemaineVide({
         type="button"
         data-visite="composer-semaine"
         onClick={onComposer}
-        className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white"
+        className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
       >
         Composer ma semaine
       </button>
 
       <a
         href={hashDuFrigo()}
-        className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+        className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-accent-texte no-underline"
       >
         Ou partir de ce que j'ai dans le frigo
       </a>
@@ -597,7 +597,7 @@ function AlerteEnergie({ warnings }: { readonly warnings: WeekPlan['warnings'] }
   return (
     <div
       role="status"
-      className="mt-5 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond text-[0.95rem] leading-relaxed text-alerte-texte"
+      className="mt-5 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond text-courant leading-relaxed text-alerte-texte"
     >
       <button
         type="button"
@@ -625,7 +625,7 @@ function AlerteEnergie({ warnings }: { readonly warnings: WeekPlan['warnings'] }
           <line x1="12" y1="16.3" x2="12" y2="16.4" />
         </svg>
         <span className="flex-1 font-semibold">{resume}</span>
-        <span aria-hidden="true" className="shrink-0 text-[0.85rem] font-semibold">
+        <span aria-hidden="true" className="shrink-0 text-mention font-semibold">
           Détail
         </span>
       </button>
@@ -663,7 +663,7 @@ function Reglage({
   readonly onChange: (suivants: Reglages) => void
 }) {
   return (
-    <div className="mt-5 flex flex-wrap gap-4 rounded-[--radius-carte] border border-bordure bg-surface p-4 text-[0.95rem]">
+    <div className="mt-5 flex flex-wrap gap-4 rounded-[--radius-carte] border border-bordure bg-surface p-4 text-courant">
       <label className="flex items-center gap-2">
         <span className="text-texte-doux">Jours</span>
         <ChampJours valeur={reglages.jours} onValider={(jours) => onChange({ ...reglages, jours })} />
@@ -761,7 +761,7 @@ function ChampJours({
  */
 function Legende() {
   return (
-    <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[0.85rem] text-attenue">
+    <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-mention text-attenue">
       <li className="flex items-center gap-2">
         <span aria-hidden="true" className="h-4 w-4 rounded-[0.3rem] border border-bordure-forte bg-surface" />
         Proposé
@@ -829,11 +829,11 @@ function Creneau({
 
   return (
     <div className={`flex flex-col rounded-[--radius-carte] p-3 ${apparence}`}>
-      <p className="text-[0.8rem] font-semibold uppercase tracking-wide text-attenue">
+      <p className="text-mention font-semibold uppercase tracking-wide text-attenue">
         {LIBELLE_CRENEAU[entry.slot.creneau]}
       </p>
 
-      <p className="mt-1 font-titre text-[1.1rem] leading-snug text-texte">
+      <p className="mt-1 font-titre text-lecture leading-snug text-texte">
         {horsCatalogue !== null ? (
           // Pas de lien : il n'y a aucune fiche derrière, et un lien mort se remarque plus tard.
           <span className="text-texte">{horsCatalogue}</span>
@@ -853,7 +853,7 @@ function Creneau({
           ce qui est mangé (principe 6 : informer, jamais juger) — ni « non équilibré », ni
           « pensez à », ni code couleur. */}
       {horsCatalogue !== null && (
-        <p className="mt-1 text-[0.85rem] leading-snug text-attenue">
+        <p className="mt-1 text-mention leading-snug text-attenue">
           Repas noté à la main — l’application ne connaît pas ce qu’il apporte.
         </p>
       )}
@@ -863,7 +863,7 @@ function Creneau({
           plus : « Changer » rejoue le plat ET son accompagnement (`reroll-slot.ts`), ce qui est le
           comportement attendu — on refuse une assiette, pas une garniture. */}
       {accompagnement !== null && (
-        <p className="mt-1 text-[0.95rem] leading-snug text-texte-doux">
+        <p className="mt-1 text-courant leading-snug text-texte-doux">
           avec{' '}
           <a href={hashDeRecette(accompagnement.recipeId, 'semaine')} className="text-texte-doux">
             {accompagnement.nom}
@@ -874,7 +874,7 @@ function Creneau({
       {/* Les états se disent AUSSI en toutes lettres — l'emoji seul serait invisible à un lecteur
           d'écran, et le cadenas de la maquette ne suffit pas à expliquer ce qu'il signifie. */}
       {(entry.locked || entry.isLeftover) && (
-        <p className="mt-1 text-[0.85rem] font-medium text-accent-texte">
+        <p className="mt-1 text-mention font-medium text-accent-texte">
           {entry.locked ? 'Gardé' : 'Reste du plat de la veille'}
         </p>
       )}
@@ -890,7 +890,7 @@ function Creneau({
           type="button"
           onClick={onChanger}
           disabled={entry.locked}
-          className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[0.9rem] font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
+          className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
         >
           {vide ? 'Proposer' : 'Changer'}
         </button>
@@ -899,7 +899,7 @@ function Creneau({
           onClick={onChoisir}
           disabled={entry.locked}
           aria-haspopup="dialog"
-          className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[0.9rem] font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
+          className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
         >
           Choisir
         </button>
@@ -909,7 +909,7 @@ function Creneau({
           disabled={vide && !entry.locked}
           aria-pressed={entry.locked}
           className={
-            'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-3 text-[0.9rem] font-semibold disabled:opacity-45 ' +
+            'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-3 text-courant font-semibold disabled:opacity-45 ' +
             (entry.locked
               ? 'border-2 border-accent bg-surface text-accent-texte'
               : 'border border-bordure-forte bg-fond text-texte-doux hover:bg-accent-doux')

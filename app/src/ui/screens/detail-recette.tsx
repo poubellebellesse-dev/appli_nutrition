@@ -281,13 +281,13 @@ export function DetailRecette({
   if (etat.phase === 'introuvable') {
     return (
       <section>
-        <h1 className="text-[1.9rem] text-texte">Recette introuvable</h1>
-        <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+        <h1 className="text-titre-l text-texte">Recette introuvable</h1>
+        <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
           Elle a peut-être disparu d'une mise à jour du catalogue.
         </p>
         <a
           href={hashDe('recettes')}
-          className="mt-5 inline-flex min-h-cta items-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white no-underline"
+          className="mt-5 inline-flex min-h-cta items-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white no-underline"
         >
           Voir toutes les recettes
         </a>
@@ -297,8 +297,8 @@ export function DetailRecette({
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">La recette n'a pas pu être lue.</p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="text-lecture font-semibold text-texte">La recette n'a pas pu être lue.</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -319,7 +319,7 @@ export function DetailRecette({
     <article>
       <a
         href={retour.hash}
-        className="inline-flex min-h-tactile items-center text-[0.95rem] font-semibold text-accent-texte no-underline"
+        className="inline-flex min-h-tactile items-center text-courant font-semibold text-accent-texte no-underline"
       >
         {retour.libelle}
       </a>
@@ -333,12 +333,12 @@ export function DetailRecette({
           mentirait — elle vient d'ailleurs, personne ici ne l'a écrite ni relue. */}
       {estRecettePerso(recetteId) &&
         (vue.sourcePerso === 'importe' ? (
-          <p className="mt-2 rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 py-3 text-[0.9rem] leading-relaxed text-texte-doux">
+          <p className="mt-2 rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 py-3 text-courant leading-relaxed text-texte-doux">
             Recette importée. Les apports sont calculés depuis ses ingrédients ; le reste — étapes,
             temps, portions — vient de la personne qui l'a partagée et n'a pas été vérifié.
           </p>
         ) : (
-          <p className="mt-2 rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 py-3 text-[0.9rem] leading-relaxed text-texte-doux">
+          <p className="mt-2 rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 py-3 text-courant leading-relaxed text-texte-doux">
             Votre recette. Les apports sont calculés depuis vos ingrédients ; le reste n'a pas été
             vérifié.
           </p>
@@ -351,18 +351,18 @@ export function DetailRecette({
           duplication. Voir docs/SOURCES_RECETTES.md §5.
           PAS pour les recettes perso : leur bandeau ci-dessus dit déjà la même chose, en mieux. */}
       {!estRecettePerso(recetteId) && mention !== null && (
-        <p className="mt-2 text-[0.9rem] leading-relaxed text-attenue">{mention}</p>
+        <p className="mt-2 text-courant leading-relaxed text-attenue">{mention}</p>
       )}
 
       <header className="mt-2 flex items-start justify-between gap-4">
-        <h1 className="text-[2.2rem] leading-tight text-texte">{recette.nom}</h1>
+        <h1 className="text-titre-l leading-tight text-texte">{recette.nom}</h1>
         <button
           type="button"
           onClick={basculerFavori}
           aria-pressed={vue.favori}
           aria-label={vue.favori ? 'Retirer des favoris' : 'Ajouter aux favoris'}
           className={
-            'flex min-h-tactile w-14 shrink-0 items-center justify-center text-[1.6rem] ' +
+            'flex min-h-tactile w-14 shrink-0 items-center justify-center text-titre-m ' +
             (vue.favori ? 'text-accent-texte' : 'text-attenue')
           }
         >
@@ -376,13 +376,13 @@ export function DetailRecette({
           editeur-recette.tsx) : jamais les deux liens à la fois. */}
       <a
         href={hashDeLEditeur(recetteId)}
-        className="mt-4 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+        className="mt-4 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-accent-texte no-underline"
       >
         {estRecettePerso(recetteId) ? 'Modifier ma recette' : 'Adapter cette recette à ma façon'}
       </a>
 
-      <p className="mt-2 text-[1.05rem] leading-relaxed text-texte-doux">{recette.description}</p>
-      <p className="mt-3 text-[1rem] text-attenue">
+      <p className="mt-2 text-lecture leading-relaxed text-texte-doux">{recette.description}</p>
+      <p className="mt-3 text-lecture text-attenue">
         {recette.tempsPrepMin} min de préparation · {recette.tempsCuissonMin} min de cuisson ·
         difficulté {recette.difficulte}/3
       </p>
@@ -395,7 +395,7 @@ export function DetailRecette({
         onChange={setPortions}
       />
 
-      <h2 className="mt-8 text-[1.5rem] text-texte">Ingrédients</h2>
+      <h2 className="mt-8 text-titre-m text-texte">Ingrédients</h2>
       {/* ⚠️ `manquants` À `null` QUAND LE GARDE-MANGER EST VIDE, et ce n'est pas un raccourci. Sans
           ce test, un garde-manger vide — le cas de presque tout le monde — marquait CHAQUE ligne
           « à acheter », ce qui n'informe plus de rien et noie la liste. */}
@@ -414,7 +414,7 @@ export function DetailRecette({
 
       <SectionMateriel equipements={recette.equipements} catalogue={vue.catalogue} />
 
-      <h2 className="mt-8 text-[1.5rem] text-texte">Préparation</h2>
+      <h2 className="mt-8 text-titre-m text-texte">Préparation</h2>
 
       {/* L'entrée du mode cuisine (§5bis). Ici et pas en tête de fiche : on le lance au moment de
           se mettre aux fourneaux, après avoir lu les ingrédients.
@@ -427,7 +427,7 @@ export function DetailRecette({
       {cuisinable && (
         <a
           href={hashDeLaCuisine(recette.id, portionsAffichees)}
-          className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] bg-accent-plein px-4 text-[1.08rem] font-semibold text-white"
+          className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] bg-accent-plein px-4 text-lecture font-semibold text-white"
         >
           Cuisiner pas à pas
         </a>
@@ -459,7 +459,7 @@ export function DetailRecette({
         .map((etape) => (
           <p
             key={etape.ordre}
-            className="mt-4 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-[1.02rem] leading-relaxed text-alerte-texte"
+            className="mt-4 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-lecture leading-relaxed text-alerte-texte"
           >
             {etape.texte}
           </p>
@@ -562,16 +562,16 @@ function Sources({
 
   return (
     <section className="mt-10 border-t border-bordure pt-5">
-      <h2 className="text-[1.5rem] text-texte">Sources</h2>
+      <h2 className="text-titre-m text-texte">Sources</h2>
 
       {testeLe !== null && (
-        <p className="mt-3 text-[1rem] text-texte-doux">Recette cuisinée et jugée le {testeLe}.</p>
+        <p className="mt-3 text-lecture text-texte-doux">Recette cuisinée et jugée le {testeLe}.</p>
       )}
 
       {provenances.length > 0 && (
         <ul className="mt-3 space-y-2">
           {provenances.map((source) => (
-            <li key={source.url} className="text-[1rem] leading-relaxed text-texte-doux">
+            <li key={source.url} className="text-lecture leading-relaxed text-texte-doux">
               D'après{' '}
               <a href={source.url} target="_blank" rel="noreferrer" className="text-accent-texte">
                 {source.titre}
@@ -585,10 +585,10 @@ function Sources({
 
       {references.length > 0 && (
         <>
-          <p className="mt-4 text-[0.9rem] text-attenue">Consulté pour vérifier cette recette :</p>
+          <p className="mt-4 text-courant text-attenue">Consulté pour vérifier cette recette :</p>
           <ul className="mt-2 space-y-2">
             {references.map((source) => (
-              <li key={source.url} className="text-[1rem] leading-relaxed text-texte-doux">
+              <li key={source.url} className="text-lecture leading-relaxed text-texte-doux">
                 <a href={source.url} target="_blank" rel="noreferrer" className="text-accent-texte">
                   {source.titre}
                 </a>{' '}
@@ -614,7 +614,7 @@ function Origines({ recette }: { readonly recette: Recipe }) {
   if (cuisines.length === 0) return null
 
   return (
-    <p className="mt-2 flex flex-wrap gap-2 text-[0.95rem] text-texte-doux">
+    <p className="mt-2 flex flex-wrap gap-2 text-courant text-texte-doux">
       {cuisines.map((facette) => {
         const origine = origineDeCuisine(facette.valeur)
         return (
@@ -673,13 +673,13 @@ function Etape({
       <div className="flex gap-3">
         <span
           aria-hidden="true"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-doux text-[1.1rem] font-semibold text-accent-texte"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-doux text-lecture font-semibold text-accent-texte"
         >
           {numero}
         </span>
         <TexteEtape
           segments={redaction.segments}
-          className="text-[1.12rem] leading-relaxed text-texte"
+          className="text-lecture leading-relaxed text-texte"
         />
       </div>
 
@@ -743,7 +743,7 @@ function SectionMateriel({
 
   return (
     <section className="mt-8">
-      <h2 className="text-[1.5rem] text-texte">Matériel</h2>
+      <h2 className="text-titre-m text-texte">Matériel</h2>
       <ul className="mt-3 flex flex-wrap gap-2">
         {lignes.map((equipement) => (
           <li key={equipement.id}>
@@ -751,7 +751,7 @@ function SectionMateriel({
               type="button"
               aria-haspopup="dialog"
               onClick={() => setOuvert(equipement.id)}
-              className="min-h-tactile rounded-[0.7rem] border border-bordure bg-fond px-3 text-[0.95rem] text-texte-doux"
+              className="min-h-tactile rounded-[0.7rem] border border-bordure bg-fond px-3 text-courant text-texte-doux"
             >
               {equipement.terme}
             </button>
@@ -761,7 +761,7 @@ function SectionMateriel({
 
       {detail !== undefined && (
         <Panneau titre={detail.terme} onFermer={() => setOuvert(null)}>
-          <p className="text-[1rem] leading-relaxed text-texte">{detail.definition}</p>
+          <p className="text-lecture leading-relaxed text-texte">{detail.definition}</p>
         </Panneau>
       )}
     </section>
@@ -809,25 +809,25 @@ function ValeursNutritionnelles({
           {affiche ? (
             <>
               {energiePortion === null ? (
-                <p className="text-[1rem] text-attenue">Non renseignées pour cette recette.</p>
+                <p className="text-lecture text-attenue">Non renseignées pour cette recette.</p>
               ) : (
-                <p className="text-[1.1rem] text-texte">
+                <p className="text-lecture text-texte">
                   Cette portion : <span className="tabular-nums">{Math.round(energiePortion)}</span> kcal
                 </p>
               )}
-              <p className="mt-2 text-[0.9rem] leading-relaxed text-attenue">
+              <p className="mt-2 text-courant leading-relaxed text-attenue">
                 Une information, pas un objectif. Ce réglage se désactive à tout moment.
               </p>
             </>
           ) : (
-            <p className="text-[1rem] leading-relaxed text-texte-doux">
+            <p className="text-lecture leading-relaxed text-texte-doux">
               Masquées par choix. Ce réglage se retrouve aussi dans Paramètres.
             </p>
           )}
           <button
             type="button"
             onClick={onBasculer}
-            className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux"
+            className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
           >
             {affiche ? 'Masquer ces valeurs' : 'Afficher ces valeurs'}
           </button>
@@ -890,14 +890,14 @@ function SaucesAAjouter({
 
       {ouvert && (
         <Panneau titre="Ajouter une sauce" onFermer={() => setOuvert(false)}>
-          <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+          <p className="text-courant leading-relaxed text-texte-doux">
             À préparer à côté et à servir avec. Rien n'est ajouté à la recette ni à ses quantités.
             Une sauce que vous retenez entre dans vos courses chaque fois que ce plat est prévu.
           </p>
 
           {sauces.attachees.length > 0 && (
             <>
-              <h3 className="mt-5 text-[0.85rem] font-semibold uppercase tracking-wide text-attenue">
+              <h3 className="mt-5 text-mention font-semibold uppercase tracking-wide text-attenue">
                 Avec ce plat
               </h3>
               <ul className="mt-2">
@@ -916,7 +916,7 @@ function SaucesAAjouter({
 
           {sauces.autres.length > 0 && (
             <>
-              <h3 className="mt-5 text-[0.85rem] font-semibold uppercase tracking-wide text-attenue">
+              <h3 className="mt-5 text-mention font-semibold uppercase tracking-wide text-attenue">
                 {sauces.attachees.length > 0 ? 'Autres sauces' : 'Toutes les sauces'}
               </h3>
               <ul className="mt-2">
@@ -934,7 +934,7 @@ function SaucesAAjouter({
           )}
 
           {total === 0 && (
-            <p className="mt-5 text-[1rem] leading-relaxed text-texte">
+            <p className="mt-5 text-lecture leading-relaxed text-texte">
               Aucune sauce du catalogue ne convient à vos allergies et à votre régime.
             </p>
           )}
@@ -942,7 +942,7 @@ function SaucesAAjouter({
           {/* Le nombre écarté se dit TOUJOURS, y compris quand il reste des sauces à l'écran : sans
               lui, une liste amputée par une allergie ressemble à un catalogue pauvre. */}
           {sauces.ecartees > 0 && (
-            <p className="mt-4 text-[0.9rem] leading-relaxed text-attenue">
+            <p className="mt-4 text-courant leading-relaxed text-attenue">
               {sauces.ecartees} sauce{sauces.ecartees > 1 ? 's' : ''} écartée
               {sauces.ecartees > 1 ? 's' : ''} par vos allergies, votre régime ou vos exclusions.
             </p>
@@ -977,11 +977,11 @@ function LienSauce({
     <li className="border-b border-bordure py-1 last:border-b-0">
       <a
         href={hashDeRecette(sauce.id, 'recettes')}
-        className="flex min-h-tactile items-center justify-between gap-3 py-2 text-[1.05rem] text-texte no-underline"
+        className="flex min-h-tactile items-center justify-between gap-3 py-2 text-lecture text-texte no-underline"
       >
         <span>{sauce.nom}</span>
         {afficherEnergie && sauce.energiePortion !== null && (
-          <span className="shrink-0 tabular-nums text-[0.9rem] text-attenue">
+          <span className="shrink-0 tabular-nums text-courant text-attenue">
             {Math.round(sauce.energiePortion)} kcal / portion
           </span>
         )}
@@ -991,7 +991,7 @@ function LienSauce({
         onClick={() => onBasculer(sauce.id, !sauce.choisie)}
         aria-pressed={sauce.choisie}
         className={
-          'mb-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-3 text-[0.95rem] font-semibold ' +
+          'mb-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-3 text-courant font-semibold ' +
           (sauce.choisie
             ? 'border-2 border-accent bg-accent-doux text-accent-texte'
             : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -1011,7 +1011,7 @@ function LienSauce({
       {hrefCuisiner !== null && (
         <a
           href={hrefCuisiner}
-          className="mb-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-accent-texte no-underline"
+          className="mb-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-courant font-semibold text-accent-texte no-underline"
         >
           La cuisiner avec le plat
         </a>

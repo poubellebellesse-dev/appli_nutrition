@@ -225,8 +225,8 @@ export function Recettes() {
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">Le catalogue n'a pas pu être lu.</p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="text-lecture font-semibold text-texte">Le catalogue n'a pas pu être lu.</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -240,7 +240,7 @@ export function Recettes() {
 
   return (
     <section>
-      <h1 data-visite="titre-recettes" className="text-[2.1rem] text-texte">
+      <h1 data-visite="titre-recettes" className="text-titre-l text-texte">
         Recettes
       </h1>
       <LienTutoriel parcoursId="recettes" />
@@ -255,7 +255,7 @@ export function Recettes() {
           pas une recette, on part de ce qu'on a. C'est là que vit la recherche par ALIMENT. */}
       <a
         href={hashDuFrigo()}
-        className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte no-underline"
+        className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-accent-texte no-underline"
       >
         Vider le frigo — partir de ce que j'ai
       </a>
@@ -264,7 +264,7 @@ export function Recettes() {
           chemin — on n'y cherche pas une recette, on en fabrique une. */}
       <a
         href={hashDeLEditeur(null)}
-        className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte no-underline"
+        className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-accent-texte no-underline"
       >
         Composer ma propre recette
       </a>
@@ -275,7 +275,7 @@ export function Recettes() {
         type="button"
         onClick={() => setPanneauMesRecettesOuvert(true)}
         aria-haspopup="dialog"
-        className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte"
+        className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-accent-texte"
       >
         Mes recettes ({socle.recettesPerso.length})
       </button>
@@ -294,7 +294,7 @@ export function Recettes() {
         onClick={() => setFiltres({ ...filtres, favorisSeuls: !filtres.favorisSeuls, saucesSeules: false })}
         aria-pressed={filtres.favorisSeuls}
         className={
-          'mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-[1rem] font-semibold ' +
+          'mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-lecture font-semibold ' +
           (filtres.favorisSeuls
             ? 'border-2 border-accent bg-accent-doux text-accent-texte'
             : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -313,7 +313,7 @@ export function Recettes() {
         onClick={() => setFiltres({ ...filtres, saucesSeules: !filtres.saucesSeules, favorisSeuls: false })}
         aria-pressed={filtres.saucesSeules}
         className={
-          'mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-[1rem] font-semibold ' +
+          'mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-lecture font-semibold ' +
           (filtres.saucesSeules
             ? 'border-2 border-accent bg-accent-doux text-accent-texte'
             : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -361,7 +361,7 @@ export function Recettes() {
         />
       )}
 
-      <p className="mt-5 text-[0.95rem] text-attenue">
+      <p className="mt-5 text-courant text-attenue">
         {trouvees.length} recette{trouvees.length > 1 ? 's' : ''}
         {trouvees.length === 0 && ' — essayez de retirer un filtre.'}
       </p>
@@ -391,7 +391,7 @@ export function Recettes() {
                 aria-pressed={favori}
                 aria-label={favori ? `Retirer ${recette.nom} des favoris` : `Ajouter ${recette.nom} aux favoris`}
                 className={
-                  'flex min-h-tactile w-14 items-center justify-center text-[1.3rem] ' +
+                  'flex min-h-tactile w-14 items-center justify-center text-titre-s ' +
                   (favori ? 'text-accent-texte' : 'text-attenue')
                 }
               >
@@ -413,12 +413,12 @@ export function Recettes() {
 function ContenuCarteRecette({ recette }: { readonly recette: Recipe }) {
   return (
     <>
-      <h2 className="font-titre text-[1.2rem] leading-snug text-texte">
+      <h2 className="font-titre text-titre-s leading-snug text-texte">
         {drapeauDe(recette)}
         {recette.nom}
       </h2>
-      <p className="mt-1 text-[0.92rem] leading-relaxed text-texte-doux">{recette.description}</p>
-      <p className="mt-1 text-[0.85rem] text-attenue">
+      <p className="mt-1 text-courant leading-relaxed text-texte-doux">{recette.description}</p>
+      <p className="mt-1 text-mention text-attenue">
         {recette.tempsPrepMin + recette.tempsCuissonMin} min · {recette.portionsBase} portions
       </p>
     </>
@@ -441,7 +441,7 @@ function PanneauMesRecettes({
 }) {
   if (recettesPerso.length === 0) {
     return (
-      <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+      <p className="text-courant leading-relaxed text-texte-doux">
         Vous n'avez pas encore composé de recette.{' '}
         <a href={hashDeLEditeur(null)} className="font-semibold text-accent-texte underline">
           Composer ma première recette
@@ -481,7 +481,7 @@ function BoutonExporter({ recette }: { readonly recette: StoredUserRecipe }) {
       type="button"
       onClick={() => void exporterRecette(recette)}
       aria-label={`Exporter ${recette.nom}`}
-      className="flex min-h-tactile w-14 items-center justify-center text-[1.2rem] text-attenue"
+      className="flex min-h-tactile w-14 items-center justify-center text-titre-s text-attenue"
     >
       <span aria-hidden="true">⬇</span>
     </button>
@@ -536,7 +536,7 @@ function ImporterRecette({
 
   return (
     <div className="mb-4">
-      <label className="flex min-h-tactile w-full cursor-pointer items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.98rem] font-semibold text-accent-texte">
+      <label className="flex min-h-tactile w-full cursor-pointer items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-accent-texte">
         Importer une recette (.nutri-recipe)
         <input
           type="file"
@@ -554,7 +554,7 @@ function ImporterRecette({
         <p
           role={etat.type === 'erreur' ? 'alert' : undefined}
           className={
-            'mt-2 text-[0.9rem] leading-relaxed ' +
+            'mt-2 text-courant leading-relaxed ' +
             (etat.type === 'erreur' ? 'text-texte' : 'text-texte-doux')
           }
         >
@@ -626,7 +626,7 @@ function Recherche({
           exemple. L'affordance ne taisait pas la capacité, elle la CONTREDISAIT — personne n'avait
           de raison d'y taper « poulet ». Repéré à l'essai du 2026-08-02, où le filtre « aliments
           voulus » a été demandé alors qu'il existait déjà sous cette forme. */}
-      <span className="text-[0.9rem] text-texte-doux">Rechercher un plat ou un ingrédient</span>
+      <span className="text-courant text-texte-doux">Rechercher un plat ou un ingrédient</span>
       <input
         type="search"
         data-visite="recherche-recettes"
@@ -634,7 +634,7 @@ function Recherche({
         value={valeur}
         onChange={(e) => onChange(e.target.value)}
         placeholder="blanquette, poulet, gratin…"
-        className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[1.05rem] text-texte"
+        className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-lecture text-texte"
       />
       <datalist id="suggestions-recettes">
         {proposees.map((mot) => (
@@ -657,7 +657,7 @@ function Entonnoir({ resultat }: { readonly resultat: BrowseResult }) {
   const restantes = resultat.entonnoir.totalInitial - resultat.entonnoir.totalRejected
 
   return (
-    <p className="mt-4 rounded-[--radius-carte] border border-bordure bg-surface p-3 text-[0.9rem] leading-relaxed text-texte-doux">
+    <p className="mt-4 rounded-[--radius-carte] border border-bordure bg-surface p-3 text-courant leading-relaxed text-texte-doux">
       <span className="tabular-nums">{resultat.entonnoir.totalInitial}</span> recettes
       {etapes.map(([couche, nombre]) => (
         <span key={couche}>
@@ -728,19 +728,19 @@ function PourquoiPasCePlat({
 
   return (
     <div className="mt-3 rounded-[--radius-carte] border border-bordure bg-surface p-3">
-      <p className="text-[0.9rem] font-semibold text-texte">
+      <p className="text-courant font-semibold text-texte">
         Écartée{ecartees.length > 1 ? 's' : ''} de vos résultats
       </p>
       <ul className="mt-2 space-y-2">
         {montrees.map((ecartee) => (
-          <li key={ecartee.id} className="text-[0.9rem] leading-relaxed">
+          <li key={ecartee.id} className="text-courant leading-relaxed">
             <span className="text-texte">{ecartee.nom}</span>
             <span className="block text-texte-doux">{ecartee.motif}</span>
           </li>
         ))}
       </ul>
       {restantes > 0 && (
-        <p className="mt-2 text-[0.9rem] text-attenue">
+        <p className="mt-2 text-courant text-attenue">
           et <span className="tabular-nums">{restantes}</span> autre{restantes > 1 ? 's' : ''}.
         </p>
       )}

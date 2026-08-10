@@ -215,10 +215,10 @@ export function Parametres() {
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">
+        <p className="text-lecture font-semibold text-texte">
           Les réglages n'ont pas pu être enregistrés.
         </p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -228,11 +228,11 @@ export function Parametres() {
 
   return (
     <section>
-      <h1 data-visite="titre-parametres" className="text-[2.1rem] text-texte">
+      <h1 data-visite="titre-parametres" className="text-titre-l text-texte">
         Paramètres
       </h1>
       <LienTutoriel parcoursId="reglages" />
-      <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
+      <p className="mt-2 text-courant leading-relaxed text-attenue">
         Tout se modifie à tout moment. Rien n'est envoyé nulle part.
       </p>
 
@@ -315,7 +315,7 @@ export function Parametres() {
 
       {panneauOuvert === 'allergies' && (
         <Panneau titre="Mes allergies" onFermer={fermer}>
-          <p className="mb-3 text-[0.95rem] leading-relaxed text-texte-doux">
+          <p className="mb-3 text-courant leading-relaxed text-texte-doux">
             Ces aliments sont écartés systématiquement, sans exception et sans pondération.
           </p>
           <ChoixAllergenes
@@ -512,7 +512,7 @@ function Rappels({
   return (
     <>
       {etat?.disponible === false && (
-        <p className="mb-3 rounded-[--radius-carte] border border-bordure bg-surface p-3 text-[0.9rem] leading-relaxed text-texte-doux">
+        <p className="mb-3 rounded-[--radius-carte] border border-bordure bg-surface p-3 text-courant leading-relaxed text-texte-doux">
           Les rappels demandent l'application installée depuis le store. Dans un navigateur, aucune
           notification ne peut être programmée à l'avance — vos heures sont tout de même enregistrées.
         </p>
@@ -525,24 +525,24 @@ function Rappels({
         onBasculer={basculer}
       />
 
-      <p className="mt-4 text-[0.9rem] text-texte-doux">À quelle heure mangez-vous ?</p>
+      <p className="mt-4 text-courant text-texte-doux">À quelle heure mangez-vous ?</p>
       <div className="mt-2 space-y-2">
         {creneauxDuRythme(rythme.repasParJour).map((creneau) => (
           <label
             key={creneau}
             className="flex min-h-tactile items-center justify-between gap-3 rounded-[--radius-carte] border border-bordure bg-surface px-4"
           >
-            <span className="text-[1rem] text-texte">{LIBELLE_CRENEAU[creneau]}</span>
+            <span className="text-lecture text-texte">{LIBELLE_CRENEAU[creneau]}</span>
             <input
               type="time"
               value={enTexte(heures.get(creneau))}
               onChange={(e) => onHeure(creneau, enMinutes(e.target.value))}
-              className="min-h-tactile rounded-[0.6rem] border border-bordure-forte bg-fond px-2 text-[1rem] text-texte"
+              className="min-h-tactile rounded-[0.6rem] border border-bordure-forte bg-fond px-2 text-lecture text-texte"
             />
           </label>
         ))}
       </div>
-      <p className="mt-2 text-[0.85rem] leading-relaxed text-attenue">
+      <p className="mt-2 text-mention leading-relaxed text-attenue">
         Un repas sans heure n'est jamais rappelé. Rien n'est obligatoire.
       </p>
     </>
@@ -651,12 +651,12 @@ function Sauvegarde({
   if (phase.type === 'confirmation') {
     return (
       <div>
-        <p className="text-[1.05rem] font-semibold text-texte">
+        <p className="text-lecture font-semibold text-texte">
           Restaurer remplacera toutes vos données actuelles.
         </p>
         {/* Ce qui disparaît est ÉNUMÉRÉ, pas résumé en « vos données » : personne ne peut évaluer un
             risque qu'on lui décrit en deux mots. */}
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">
           Votre profil, vos allergies, votre régime, vos goûts, votre semaine, vos courses et vos
           recettes personnelles seront remplacés par ceux du fichier « {phase.fichier.name} ». Ce qui
           est sur cet appareil aujourd'hui ne pourra pas être récupéré.
@@ -666,7 +666,7 @@ function Sauvegarde({
             type="button"
             onClick={exporter}
             disabled={occupe}
-            className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-texte-doux disabled:opacity-60"
+            className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-courant font-semibold text-texte-doux disabled:opacity-60"
           >
             Sauvegarder d'abord ce qui est sur cet appareil
           </button>
@@ -674,14 +674,14 @@ function Sauvegarde({
             type="button"
             onClick={() => restaurer(phase.fichier)}
             disabled={occupe}
-            className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-texte disabled:opacity-60"
+            className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-courant font-semibold text-texte disabled:opacity-60"
           >
             Remplacer mes données
           </button>
           <button
             type="button"
             onClick={() => setPhase({ type: 'repos' })}
-            className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-3 text-[0.95rem] font-medium text-attenue"
+            className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-3 text-courant font-medium text-attenue"
           >
             Annuler
           </button>
@@ -692,13 +692,13 @@ function Sauvegarde({
 
   return (
     <div>
-      <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+      <p className="text-courant leading-relaxed text-texte-doux">
         Vos données ne sont que sur cet appareil : aucun serveur n'en garde de copie. Une sauvegarde
         est un fichier que vous rangez où vous voulez — elle contient tout, y compris vos allergies et
         votre régime.
       </p>
       {etat.dernierExport === null && (
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
+        <p className="mt-2 text-courant leading-relaxed text-attenue">
           Vous n'avez encore jamais sauvegardé.
         </p>
       )}
@@ -708,7 +708,7 @@ function Sauvegarde({
           type="button"
           onClick={exporter}
           disabled={occupe}
-          className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-texte disabled:opacity-60"
+          className="flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-courant font-semibold text-texte disabled:opacity-60"
         >
           Créer une sauvegarde
         </button>
@@ -717,7 +717,7 @@ function Sauvegarde({
             n'est pas une inconséquence : exporter ne fait que LIRE la base en mémoire, qui est
             valide — c'est même le geste qu'on veut laisser à portée dans cette situation. */}
         {verrou === 'partage' ? (
-          <p className="rounded-[0.7rem] border border-bordure bg-surface px-3 py-3 text-[0.95rem] leading-relaxed text-texte-doux">
+          <p className="rounded-[0.7rem] border border-bordure bg-surface px-3 py-3 text-courant leading-relaxed text-texte-doux">
             Restaurer une sauvegarde n'est pas possible depuis cet onglet : l'application est ouverte
             dans un autre onglet, et c'est lui qui enregistre. Fermez-le, rechargez cette page, puis
             recommencez.
@@ -726,7 +726,7 @@ function Sauvegarde({
           /* Le champ de fichier natif est masqué et porté par un `label` : c'est le motif déjà
              employé par l'import de recette (`recettes.tsx`), et le seul qui donne une cible tactile
              correcte sans réimplémenter un sélecteur de fichiers. */
-          <label className="flex min-h-tactile w-full cursor-pointer items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-texte-doux">
+          <label className="flex min-h-tactile w-full cursor-pointer items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-courant font-semibold text-texte-doux">
             Restaurer une sauvegarde
             <input
               type="file"
@@ -746,7 +746,7 @@ function Sauvegarde({
       </div>
 
       {phase.type === 'erreur' && (
-        <p role="alert" className="mt-4 text-[0.95rem] leading-relaxed text-texte">
+        <p role="alert" className="mt-4 text-courant leading-relaxed text-texte">
           {phase.motif}
         </p>
       )}
@@ -757,7 +757,7 @@ function Sauvegarde({
 function Section({ titre, children }: { readonly titre: string; readonly children: React.ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="font-titre text-[1.4rem] text-texte">{titre}</h2>
+      <h2 className="font-titre text-titre-m text-texte">{titre}</h2>
       <div className="mt-3">{children}</div>
     </section>
   )
@@ -777,7 +777,7 @@ function Section({ titre, children }: { readonly titre: string; readonly childre
  */
 function APropos() {
   return (
-    <div className="space-y-3 rounded-[--radius-carte] border border-bordure bg-surface p-4 text-[0.98rem] leading-relaxed text-texte-doux">
+    <div className="space-y-3 rounded-[--radius-carte] border border-bordure bg-surface p-4 text-courant leading-relaxed text-texte-doux">
       <p>
         Application gratuite, sans publicité, sans compte et sans mesure d'audience. Aucune recette
         n'est sponsorisée ni placée par une marque.

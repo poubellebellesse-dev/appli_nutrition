@@ -275,7 +275,7 @@ export function FiltresRecettes({
           dépliant, mais le temps disponible n'est pas un raffinement : c'est le premier critère de
           quelqu'un qui cherche quoi faire à manger ce soir. Il pilote la couche `temps` du moteur. */}
       <fieldset className="mt-4">
-        <legend className="text-[0.9rem] text-texte-doux">Temps maximum</legend>
+        <legend className="text-courant text-texte-doux">Temps maximum</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {PALIERS_TEMPS.map((palier) => (
             <Pastille
@@ -395,7 +395,7 @@ function BoutonAxe({
       onClick={onOuvrir}
       aria-haspopup="dialog"
       className={
-        'mt-3 flex min-h-tactile w-full items-center justify-between rounded-[0.7rem] px-4 text-[0.98rem] font-semibold ' +
+        'mt-3 flex min-h-tactile w-full items-center justify-between rounded-[0.7rem] px-4 text-courant font-semibold ' +
         (actif
           ? 'border-2 border-accent bg-accent-doux text-accent-texte'
           : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -450,7 +450,7 @@ function AxeEnLigne<T extends string>({
 
   return (
     <fieldset data-visite={`filtre-${cle}`} className="mt-4">
-      <legend className="text-[0.9rem] text-texte-doux">{titre}</legend>
+      <legend className="text-courant text-texte-doux">{titre}</legend>
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {visibles.map((v) => {
           const nombre = comptes?.get(v.valeur) ?? 0
@@ -472,7 +472,7 @@ function AxeEnLigne<T extends string>({
             type="button"
             onClick={onToutVoir}
             aria-haspopup="dialog"
-            className="flex min-h-tactile items-center px-1 text-[0.92rem] font-semibold text-accent underline"
+            className="flex min-h-tactile items-center px-1 text-courant font-semibold text-accent underline"
           >
             Tout voir ({valeurs.length}) ›
           </button>
@@ -510,7 +510,7 @@ function Pastilles<T extends string>({
 
   return (
     <fieldset className="mt-4">
-      <legend className="text-[0.9rem] text-texte-doux">{titre}</legend>
+      <legend className="text-courant text-texte-doux">{titre}</legend>
       <div className="mt-2 flex flex-wrap gap-2">
         {valeurs.map((v) => {
           const nombre = comptes?.get(v.valeur) ?? 0
@@ -551,7 +551,7 @@ function Pastille({
       disabled={inerte}
       aria-pressed={active}
       className={
-        'flex min-h-tactile items-center rounded-[0.7rem] px-3 text-[0.92rem] font-semibold disabled:opacity-40 ' +
+        'flex min-h-tactile items-center rounded-[0.7rem] px-3 text-courant font-semibold disabled:opacity-40 ' +
         (active
           ? 'border-2 border-accent bg-accent-doux text-accent-texte'
           : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -614,7 +614,7 @@ export function FiltresActifs({
           type="button"
           onClick={actif.retirer}
           aria-label={`Retirer le filtre ${actif.libelle}`}
-          className="flex min-h-tactile items-center gap-2 rounded-[0.7rem] border-2 border-accent bg-accent-doux px-3 text-[0.92rem] font-semibold text-accent-texte"
+          className="flex min-h-tactile items-center gap-2 rounded-[0.7rem] border-2 border-accent bg-accent-doux px-3 text-courant font-semibold text-accent-texte"
         >
           {actif.libelle}
           <span aria-hidden="true">×</span>
@@ -623,7 +623,7 @@ export function FiltresActifs({
       <button
         type="button"
         onClick={onVider}
-        className="flex min-h-tactile items-center px-3 text-[0.92rem] font-semibold text-attenue underline"
+        className="flex min-h-tactile items-center px-3 text-courant font-semibold text-attenue underline"
       >
         Tout retirer
       </button>

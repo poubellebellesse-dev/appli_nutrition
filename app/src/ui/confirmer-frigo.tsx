@@ -161,7 +161,7 @@ export function ConfirmerFrigo({
       {/* ⚠️ UN FAIT, PAS UN REPROCHE. « Vous n'avez pas mis à jour votre frigo » culpabiliserait pour
           un entretien que l'appli s'interdit précisément d'exiger. On dit la date, on pose la
           question, on n'en tire aucune conclusion sur la personne. */}
-      <p className="text-[0.95rem] leading-relaxed text-texte">
+      <p className="text-courant leading-relaxed text-texte">
         Vous aviez déclaré {garde.length} aliment{garde.length > 1 ? 's' : ''}{' '}
         {depuisQuand(declareLe, aujourdhui)}. Vous les avez toujours&nbsp;?
       </p>
@@ -169,7 +169,7 @@ export function ConfirmerFrigo({
       <ul className="mt-3 space-y-1">
         {garde.map((foodId) => (
           <li key={foodId}>
-            <label className="flex min-h-tactile items-center gap-3 text-[1rem] text-texte">
+            <label className="flex min-h-tactile items-center gap-3 text-lecture text-texte">
               <input
                 type="checkbox"
                 checked={coches.has(foodId)}
@@ -185,7 +185,7 @@ export function ConfirmerFrigo({
       <button
         type="button"
         onClick={valider}
-        className="mt-3 min-h-tactile w-full rounded-[0.7rem] border-2 border-accent bg-accent-doux px-3 text-[0.95rem] font-semibold text-accent-texte"
+        className="mt-3 min-h-tactile w-full rounded-[0.7rem] border-2 border-accent bg-accent-doux px-3 text-courant font-semibold text-accent-texte"
       >
         {coches.size === garde.length
           ? 'Oui, tout est là'

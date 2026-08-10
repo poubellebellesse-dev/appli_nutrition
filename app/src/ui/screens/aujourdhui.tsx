@@ -355,10 +355,10 @@ export function Aujourdhui() {
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">
+        <p className="text-lecture font-semibold text-texte">
           Les suggestions n'ont pas pu être calculées.
         </p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -370,17 +370,17 @@ export function Aujourdhui() {
   if (courante === undefined) {
     return (
       <section>
-        <h1 data-visite="titre-aujourdhui" className="text-[2.1rem] text-texte">
+        <h1 data-visite="titre-aujourdhui" className="text-titre-l text-texte">
           {TITRE_CRENEAU[vue.creneau]}
         </h1>
-        <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+        <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
           Aucun plat ne correspond à ce que vous avez demandé. Élargissez le temps disponible, ou
           repartez de zéro.
         </p>
         <button
           type="button"
           onClick={() => setReglages(REGLAGES_VIDES)}
-          className="mt-5 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white"
+          className="mt-5 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
         >
           Repartir de zéro
         </button>
@@ -396,10 +396,10 @@ export function Aujourdhui() {
       <RepriseCuisine nomDeRecette={vue.nomDe} />
       <header>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h1 data-visite="titre-aujourdhui" className="text-[2.1rem] text-texte">
+          <h1 data-visite="titre-aujourdhui" className="text-titre-l text-texte">
             {TITRE_CRENEAU[vue.creneau]}
           </h1>
-          <p className="text-[0.9rem] tabular-nums text-attenue">
+          <p className="text-courant tabular-nums text-attenue">
             {position + 1} sur {total}
           </p>
         </div>
@@ -426,7 +426,7 @@ export function Aujourdhui() {
             défiler ; un seul exemplaire, retiré du bas de l'écran. */}
         <a
           href={hashDuFrigo()}
-          className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+          className="mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-accent-texte no-underline"
         >
           Vider le frigo — partir de ce que j'ai
         </a>
@@ -451,7 +451,7 @@ export function Aujourdhui() {
           type="button"
           data-visite="envie"
           onClick={() => setAideOuverte(true)}
-          className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-texte-doux"
+          className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-texte-doux"
         >
           Dites-moi ce que vous cherchez
         </button>
@@ -473,7 +473,7 @@ export function Aujourdhui() {
       />
 
       {vue.nbRetenus > 0 && (
-        <p className="mt-4 text-[0.9rem] leading-relaxed text-attenue">
+        <p className="mt-4 text-courant leading-relaxed text-attenue">
           {vue.nbRetenus} plat{vue.nbRetenus > 1 ? 's' : ''} retenu{vue.nbRetenus > 1 ? 's' : ''} ces{' '}
           {FENETRE_HISTORIQUE_JOURS} derniers jours.
         </p>
@@ -538,6 +538,11 @@ function CarteRepas({
         style={{ backgroundColor: couleurDeRecette(suggestion.recipeId) }}
         className="flex h-[40vh] min-h-[12rem] items-center justify-center"
       >
+        {/* ⛔ LA SEULE TAILLE LITTÉRALE QUI SUBSISTE HORS DE L'ÉCHELLE (`theme.css`), et elle est
+            `aria-hidden` deux lignes plus haut : ce n'est pas du texte, c'est un aplat de couleur
+            portant une initiale, là où une photo manquera toujours (242 recettes sur 330). Lui
+            donner un pas de l'échelle de LECTURE serait prétendre que quelqu'un la lit.
+            `ui/echelle-typo.test.ts` la nomme comme exception unique. */}
         <span className="font-titre text-[5rem] leading-none text-white/70">
           {initialeDeRecette(nom)}
         </span>
@@ -552,7 +557,7 @@ function CarteRepas({
             Au-delà de l'obscurité, un nombre sur 100 posé à côté d'un nom de plat se lit comme une
             note de qualité nutritionnelle — Nutri-Score, Yuka — c'est-à-dire exactement le jugement
             que §6.2 ARCHITECTURE interdit à cette application de porter. */}
-        <h2 className="font-titre text-[1.6rem] leading-tight text-texte">{nom}</h2>
+        <h2 className="font-titre text-titre-m leading-tight text-texte">{nom}</h2>
 
         {/* ⚠️ Les explications viennent du moteur (§6.7) et passent `assertNoTherapeuticClaim`. Ne
             JAMAIS composer une phrase d'explication ici : la garde ne verrait rien.
@@ -560,12 +565,12 @@ function CarteRepas({
             selection/explain.ts) et la liste revenir vide — un `<p>` vide laisserait une marge
             inexpliquée sous le titre. */}
         {suggestion.explanations.length > 0 && (
-          <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">
+          <p className="mt-2 text-courant leading-relaxed text-texte-doux">
             {suggestion.explanations.map((e) => e.label).join(' · ')}
           </p>
         )}
 
-        <p className="mt-3 text-[0.85rem] text-attenue">Photo à venir</p>
+        <p className="mt-3 text-mention text-attenue">Photo à venir</p>
 
         {/* Les flèches. Toujours présentes, jamais réduites à une icône nue.
             `data-visite` : cible stable pour `ui/visite.tsx`, indépendante des classes Tailwind
@@ -580,14 +585,14 @@ function CarteRepas({
         <button
           type="button"
           onClick={surProposerAutreChose}
-          className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-texte-doux"
+          className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-texte-doux"
         >
           Proposer autre chose
         </button>
 
         <a
           href={hashDeRecette(suggestion.recipeId, 'aujourdhui')}
-          className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[1rem] font-semibold text-texte no-underline"
+          className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-lecture font-semibold text-texte no-underline"
         >
           Voir la recette
         </a>
@@ -595,7 +600,7 @@ function CarteRepas({
         <button
           type="button"
           onClick={surRetenir}
-          className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-4 text-[1rem] font-semibold text-white"
+          className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-4 text-lecture font-semibold text-white"
         >
           J'ai choisi ce plat
         </button>
@@ -620,7 +625,7 @@ function BoutonNavigation({
       type="button"
       onClick={onClic ?? undefined}
       disabled={onClic === null}
-      className="flex min-h-tactile flex-1 items-center justify-center gap-2 rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[0.95rem] font-semibold text-texte-doux disabled:opacity-40"
+      className="flex min-h-tactile flex-1 items-center justify-center gap-2 rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux disabled:opacity-40"
     >
       {!apresTexte && <span aria-hidden="true">{fleche}</span>}
       {libelle}
@@ -653,14 +658,14 @@ function EncartEnvie({
 
   return (
     <div className="mt-4 rounded-[--radius-carte] border border-bordure-forte bg-surface p-4">
-      <h2 className="font-titre text-[1.25rem] text-texte">Dites-moi ce que vous cherchez</h2>
-      <p className="mt-1 text-[0.9rem] leading-relaxed text-attenue">
+      <h2 className="font-titre text-titre-s text-texte">Dites-moi ce que vous cherchez</h2>
+      <p className="mt-1 text-courant leading-relaxed text-attenue">
         Rien n'est obligatoire. Ce que vous indiquez ne vaut que pour ce repas.
       </p>
 
       {/* Le temps d'abord : c'est le critère le plus général, et le plus souvent décisif. */}
       <fieldset className="mt-4">
-        <legend className="text-[0.9rem] text-texte-doux">Combien de temps devant vous ?</legend>
+        <legend className="text-courant text-texte-doux">Combien de temps devant vous ?</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {PALIERS_TEMPS.map((palier) => (
             <Pastille
@@ -680,7 +685,7 @@ function EncartEnvie({
 
       {AXES_ENVIE.map((axe) => (
         <fieldset key={axe.cle} className="mt-4">
-          <legend className="text-[0.9rem] text-texte-doux">{axe.question}</legend>
+          <legend className="text-courant text-texte-doux">{axe.question}</legend>
           <div className="mt-2 flex flex-wrap gap-2">
             <Pastille
               libelle={axe.bas}
@@ -699,7 +704,7 @@ function EncartEnvie({
       <button
         type="button"
         onClick={onFermer}
-        className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-[0.95rem] font-semibold text-texte-doux"
+        className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-courant font-semibold text-texte-doux"
       >
         Masquer
       </button>
@@ -722,7 +727,7 @@ function Pastille({
       onClick={onBasculer}
       aria-pressed={active}
       className={
-        'flex min-h-tactile items-center rounded-[0.7rem] border px-4 text-[0.95rem] font-semibold ' +
+        'flex min-h-tactile items-center rounded-[0.7rem] border px-4 text-courant font-semibold ' +
         (active
           ? 'border-2 border-accent bg-accent-doux text-accent-texte'
           : 'border-bordure-forte bg-fond text-texte-doux')
@@ -754,18 +759,18 @@ function PlatsProches({
 
   return (
     <section className="mt-6">
-      <h2 className="font-titre text-[1.25rem] text-texte">Dans le même esprit</h2>
+      <h2 className="font-titre text-titre-s text-texte">Dans le même esprit</h2>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {ids.map((id) => (
           <li key={id}>
             <a
               href={hashDeRecette(id, 'aujourdhui')}
-              className="flex min-h-tactile items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface p-2 text-[0.95rem] text-texte no-underline"
+              className="flex min-h-tactile items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface p-2 text-courant text-texte no-underline"
             >
               <span
                 aria-hidden="true"
                 style={{ backgroundColor: couleurDeRecette(id) }}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.6rem] font-titre text-[1.3rem] text-white/70"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.6rem] font-titre text-titre-s text-white/70"
               >
                 {initialeDeRecette(nomDe(id))}
               </span>

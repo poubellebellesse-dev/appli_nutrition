@@ -98,7 +98,7 @@ export function ParcoursAliments({
             onClick={() => setOuverte(index)}
             aria-pressed={f.groupe === famille?.groupe}
             className={
-              'flex min-h-tactile shrink-0 items-center gap-1.5 rounded-[0.7rem] px-3 text-[0.9rem] font-semibold ' +
+              'flex min-h-tactile shrink-0 items-center gap-1.5 rounded-[0.7rem] px-3 text-courant font-semibold ' +
               (f.groupe === famille?.groupe
                 ? 'border-2 border-accent bg-accent-doux text-accent-texte'
                 : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -107,13 +107,13 @@ export function ParcoursAliments({
             {f.groupe}
             {/* Le compte annonce la longueur AVANT d'ouvrir : « condiments 58 » prévient qu'il
                 faudra faire défiler, « œufs 4 » qu'un coup d'œil suffit. */}
-            <span className="text-[0.8rem] font-normal text-attenue">{f.aliments.length}</span>
+            <span className="text-mention font-normal text-attenue">{f.aliments.length}</span>
           </button>
         ))}
       </div>
 
       {famille === undefined ? (
-        <p className="mt-4 text-[1rem] leading-relaxed text-attenue">
+        <p className="mt-4 text-lecture leading-relaxed text-attenue">
           Vous avez déjà retenu tous les aliments du catalogue.
         </p>
       ) : (
@@ -123,7 +123,7 @@ export function ParcoursAliments({
               <button
                 type="button"
                 onClick={() => onChoisir(aliment)}
-                className="flex min-h-tactile w-full items-center px-4 text-left text-[1rem] leading-snug text-texte"
+                className="flex min-h-tactile w-full items-center px-4 text-left text-lecture leading-snug text-texte"
               >
                 {aliment.nom}
               </button>
@@ -135,7 +135,7 @@ export function ParcoursAliments({
       {/* ⚠️ CETTE NOTE N'EST PAS UN ORNEMENT — c'est la seule réponse honnête à la cause (3) de la
           décision 58. Sans elle, quelqu'un qui ne trouve pas son aliment cherchera de lui-même « le
           plus proche », et personne ne lui aura dit ce que ça coûte. */}
-      <p className="mt-6 text-[0.92rem] leading-relaxed text-attenue">
+      <p className="mt-6 text-courant leading-relaxed text-attenue">
         Votre aliment n'y est pas ? Nous ne l'avons pas encore. Ne prenez pas un aliment voisin à sa
         place : l'application lui appliquerait les allergènes et les valeurs de celui que vous avez
         coché, pas les siens.
@@ -157,7 +157,7 @@ export function BoutonParcourir({ onOuvrir }: { readonly onOuvrir: () => void })
       onClick={onOuvrir}
       aria-haspopup="dialog"
       data-visite="parcourir-aliments"
-      className="mt-2 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[0.95rem] font-semibold text-texte-doux"
+      className="mt-2 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-courant font-semibold text-texte-doux"
     >
       Parcourir tous les aliments
     </button>

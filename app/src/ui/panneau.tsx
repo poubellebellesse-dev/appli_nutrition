@@ -136,12 +136,12 @@ export function Panneau({
           onClick={onFermer}
           // Cible pleine et libellé écrit : une flèche seule est une convention que l'utilisateur
           // visé n'a pas forcément — même raisonnement que pour les onglets (navigation.tsx).
-          className="flex min-h-tactile items-center gap-2 rounded-[0.7rem] px-2 text-[1rem] font-semibold text-texte"
+          className="flex min-h-tactile items-center gap-2 rounded-[0.7rem] px-2 text-lecture font-semibold text-texte"
         >
           <span aria-hidden="true">←</span>
           Retour
         </button>
-        <h2 className="flex-1 truncate text-right font-titre text-[1.15rem] leading-tight text-texte">
+        <h2 className="flex-1 truncate text-right font-titre text-lecture leading-tight text-texte">
           {titre}
         </h2>
       </div>
@@ -183,10 +183,10 @@ export function LigneOuvrante({
       className="flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface px-4 py-3 text-left"
     >
       <span className="flex-1">
-        <span className="block text-[1rem] font-medium text-texte">{libelle}</span>
-        <span className="mt-0.5 block text-[0.9rem] leading-snug text-attenue">{valeur}</span>
+        <span className="block text-lecture font-medium text-texte">{libelle}</span>
+        <span className="mt-0.5 block text-courant leading-snug text-attenue">{valeur}</span>
       </span>
-      <span aria-hidden="true" className="shrink-0 text-[1.1rem] text-attenue">
+      <span aria-hidden="true" className="shrink-0 text-lecture text-attenue">
         ›
       </span>
     </button>

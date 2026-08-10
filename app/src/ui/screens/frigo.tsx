@@ -231,8 +231,8 @@ export function Frigo() {
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">Le catalogue n'a pas pu être lu.</p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="text-lecture font-semibold text-texte">Le catalogue n'a pas pu être lu.</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -245,16 +245,16 @@ export function Frigo() {
     <section>
       <a
         href={hashDe('recettes')}
-        className="inline-flex min-h-tactile items-center text-[0.95rem] font-semibold text-accent-texte no-underline"
+        className="inline-flex min-h-tactile items-center text-courant font-semibold text-accent-texte no-underline"
       >
         ← Recettes
       </a>
 
-      <h1 data-visite="titre-frigo" className="mt-2 text-[2rem] leading-tight text-texte">
+      <h1 data-visite="titre-frigo" className="mt-2 text-titre-l leading-tight text-texte">
         Qu'avez-vous sous la main ?
       </h1>
       <LienTutoriel parcoursId="frigo" />
-      <p className="mt-2 text-[1.05rem] leading-relaxed text-texte-doux">
+      <p className="mt-2 text-lecture leading-relaxed text-texte-doux">
         Ajoutez ce qu'il vous reste. On cherche des plats à faire avec.
       </p>
 
@@ -268,7 +268,7 @@ export function Frigo() {
 
       {garde.length > 0 && (
         <div className="mt-4">
-          <h2 className="text-[0.95rem] text-texte-doux">Chez vous · {garde.length}</h2>
+          <h2 className="text-courant text-texte-doux">Chez vous · {garde.length}</h2>
           <ul className="mt-2 flex flex-wrap gap-2">
             {garde.map((foodId) => (
               <li key={foodId}>
@@ -276,7 +276,7 @@ export function Frigo() {
                   type="button"
                   onClick={() => retirer(foodId)}
                   aria-label={`Retirer ${nomDe(foodId)}`}
-                  className="flex min-h-tactile items-center gap-2 rounded-full border-2 border-accent bg-accent-doux px-4 text-[0.95rem] font-semibold text-accent-texte"
+                  className="flex min-h-tactile items-center gap-2 rounded-full border-2 border-accent bg-accent-doux px-4 text-courant font-semibold text-accent-texte"
                 >
                   {nomDe(foodId)}
                   <span aria-hidden="true">×</span>
@@ -290,7 +290,7 @@ export function Frigo() {
       <AjoutRapide familles={familles} deja={garde} nomDe={nomDe} onAjouter={ajouter} />
 
       {resultats === null ? (
-        <p className="mt-8 text-[1.05rem] leading-relaxed text-attenue">
+        <p className="mt-8 text-lecture leading-relaxed text-attenue">
           Ajoutez au moins un aliment pour voir ce que vous pouvez cuisiner.
         </p>
       ) : (
@@ -330,7 +330,7 @@ export function Frigo() {
               sans un mot ressemble à un bug d'affichage — c'était le cas. La liste est classée par
               couverture : au-delà des premières, la couverture devient dérisoire, mais c'est à
               l'écran de le dire, pas à l'utilisateur de le deviner. */}
-          <p className="mt-4 text-[0.95rem] text-attenue">
+          <p className="mt-4 text-courant text-attenue">
             {resultats.matches.length} recette{resultats.matches.length > 1 ? 's' : ''}
             {resultats.matches.length > RESULTATS_AFFICHES && (
               <> — les {RESULTATS_AFFICHES} mieux couvertes sont affichées</>
@@ -402,14 +402,14 @@ function Recherche({
   return (
     <div className="mt-5">
       <label className="block">
-        <span className="text-[0.9rem] text-texte-doux">Ajouter un aliment</span>
+        <span className="text-courant text-texte-doux">Ajouter un aliment</span>
         <input
           type="search"
           data-visite="ajout-aliment"
           value={valeur}
           onChange={(e) => onSaisir(e.target.value)}
           placeholder="courgette, œufs, riz…"
-          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[1.05rem] text-texte"
+          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-lecture text-texte"
         />
       </label>
       {propositions.length > 0 && (
@@ -419,7 +419,7 @@ function Recherche({
               <button
                 type="button"
                 onClick={() => onChoisir(aliment.id)}
-                className="flex min-h-tactile w-full items-center px-3 text-left text-[1rem] text-texte"
+                className="flex min-h-tactile w-full items-center px-3 text-left text-lecture text-texte"
               >
                 {aliment.nom}
               </button>
@@ -474,7 +474,7 @@ function AjoutRapide({
 
   return (
     <div data-visite="ajout-rapide" className="mt-5">
-      <h2 className="text-[0.95rem] text-texte-doux">Ajout rapide</h2>
+      <h2 className="text-courant text-texte-doux">Ajout rapide</h2>
 
       {/* Défilement horizontal : quatorze familles ne tiennent pas sur la largeur d'un téléphone,
           et les replier derrière un menu contredirait « navigation permanente et visible ». */}
@@ -486,7 +486,7 @@ function AjoutRapide({
             onClick={() => setOuverte(index)}
             aria-pressed={index === ouverte}
             className={
-              'flex min-h-tactile shrink-0 items-center rounded-[0.7rem] px-3 text-[0.9rem] font-semibold ' +
+              'flex min-h-tactile shrink-0 items-center rounded-[0.7rem] px-3 text-courant font-semibold ' +
               (index === ouverte
                 ? 'border-2 border-accent bg-accent-doux text-accent-texte'
                 : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -498,7 +498,7 @@ function AjoutRapide({
       </div>
 
       {proposes.length === 0 ? (
-        <p className="mt-2 text-[0.92rem] text-attenue">Vous avez déjà tout de cette famille.</p>
+        <p className="mt-2 text-courant text-attenue">Vous avez déjà tout de cette famille.</p>
       ) : (
         <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {proposes.map((foodId) => (
@@ -506,7 +506,7 @@ function AjoutRapide({
               key={foodId}
               type="button"
               onClick={() => onAjouter(foodId)}
-              className="flex min-h-tactile items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-2 text-center text-[0.92rem] font-semibold text-texte-doux"
+              className="flex min-h-tactile items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-2 text-center text-courant font-semibold text-texte-doux"
             >
               {nomDe(foodId)}
             </button>
@@ -532,7 +532,7 @@ function Bascule({
       onClick={onChoisir}
       aria-pressed={actif}
       className={
-        'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-3 text-center text-[0.95rem] font-semibold leading-tight ' +
+        'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-3 text-center text-courant font-semibold leading-tight ' +
         (actif
           ? 'border-2 border-accent bg-accent-doux text-accent-texte'
           : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -561,7 +561,7 @@ function Resultat({
 
   return (
     <li className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
-      <h3 className="font-titre text-[1.2rem] leading-snug">
+      <h3 className="font-titre text-titre-s leading-snug">
         <a href={hashDeRecette(match.recipeId, 'frigo')} className="text-texte no-underline">
           {recette.nom}
         </a>
@@ -571,7 +571,7 @@ function Resultat({
           nombre : un seul ingrédient sur cinq peut représenter les trois quarts du plat si c'est la
           pièce de viande. Sans cette phrase, la barre aux trois quarts en face d'un « 1 sur 5 »
           passe pour un bug — c'est le retour d'usage qui a motivé ce texte. */}
-      <p className="mt-2 text-[0.95rem] text-texte-doux">
+      <p className="mt-2 text-courant text-texte-doux">
         {presents} ingrédient{presents > 1 ? 's' : ''} sur {requis} déjà chez vous — soit {pourcent} %
         du poids du plat
       </p>
@@ -592,7 +592,7 @@ function Resultat({
         // « Écrit en clair » (§4.5) : afficher ce qui manque est la contrepartie directe du choix
         // « score et non filtre » — une recette couverte à 80 % reste proposable À CONDITION que
         // l'utilisateur voie ce qu'il doit acheter.
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">
           Il vous manque : {match.manquants.map(nomDe).join(', ')}
         </p>
       )}

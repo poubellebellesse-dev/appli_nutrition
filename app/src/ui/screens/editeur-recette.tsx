@@ -187,8 +187,8 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">La recette n'a pas pu être enregistrée.</p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="text-lecture font-semibold text-texte">La recette n'a pas pu être enregistrée.</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -196,24 +196,24 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
   if (enregistre !== null) {
     return (
       <section>
-        <h1 className="text-[2.1rem] text-texte">C'est enregistré</h1>
+        <h1 className="text-titre-l text-texte">C'est enregistré</h1>
         {/* ⚠️ DEUX PHRASES, PARCE QU'UNE SAUCE NE SE PLANIFIE PAS. Promettre « planifiée dans votre
             semaine » à une sauce serait annoncer quelque chose qui n'arrivera jamais : elle n'a
             aucun créneau, et le planificateur ne la verra pas. */}
-        <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+        <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
           {saisie.estSauce
             ? `« ${saisie.nom.trim()} » fait maintenant partie de vos sauces. Elle sera proposée avec vos plats, et entrera dans vos courses chaque fois que vous la retiendrez avec l’un d’eux.`
             : `« ${saisie.nom.trim()} » fait maintenant partie de vos recettes. Elle peut être proposée, planifiée dans votre semaine et entrer dans vos courses, comme les autres.`}
         </p>
         <a
           href={hashDeRecette(enregistre, 'recettes')}
-          className="mt-5 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white no-underline"
+          className="mt-5 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white no-underline"
         >
           Voir ma recette
         </a>
         <a
           href={hashDe('recettes')}
-          className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-[0.95rem] font-semibold text-texte-doux no-underline"
+          className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-courant font-semibold text-texte-doux no-underline"
         >
           Retour aux recettes
         </a>
@@ -242,7 +242,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
 
   return (
     <section>
-      <h1 data-visite="titre-composer" className="text-[2.1rem] text-texte">
+      <h1 data-visite="titre-composer" className="text-titre-l text-texte">
         {edition !== null
           ? 'Modifier ma recette'
           : variante
@@ -252,7 +252,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
               : 'Ma recette'}
       </h1>
       <LienTutoriel parcoursId="composer" />
-      <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">
+      <p className="mt-2 text-courant leading-relaxed text-attenue">
         {variante
           ? 'Changez ce que vous voulez. Le reste — texture, conservation, moment du repas — est repris de la recette d’origine.'
           : 'Les valeurs nutritionnelles se calculent toutes seules à partir des ingrédients. Il n’y a rien à saisir de ce côté.'}
@@ -286,7 +286,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
           value={saisie.nom}
           onChange={(e) => maj({ nom: e.target.value })}
           placeholder="Gratin de courgettes de ma mère"
-          className="min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[1.05rem] text-texte"
+          className="min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-lecture text-texte"
         />
       </Champ>
 
@@ -300,7 +300,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
 
       <Etapes etapes={saisie.etapes} onChange={(etapes) => maj({ etapes })} />
 
-      <h2 className="mt-8 font-titre text-[1.4rem] text-texte">Quelques repères</h2>
+      <h2 className="mt-8 font-titre text-titre-m text-texte">Quelques repères</h2>
 
       <div className="mt-3 grid gap-4 sm:grid-cols-2">
         <Nombre
@@ -374,7 +374,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
                 />
               ))}
             </div>
-            <p className="mt-2 text-[0.85rem] leading-relaxed text-attenue">
+            <p className="mt-2 text-mention leading-relaxed text-attenue">
               Sert à placer les restes dans votre semaine. Dans le doute, restez court.
             </p>
           </Groupe>
@@ -399,7 +399,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
       )}
 
       {bloquants.length > 0 && (
-        <ul className="mt-6 space-y-1 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-[0.95rem] leading-relaxed text-alerte-texte">
+        <ul className="mt-6 space-y-1 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-courant leading-relaxed text-alerte-texte">
           {bloquants.map((m) => (
             <li key={m}>{m}</li>
           ))}
@@ -411,7 +411,7 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
         data-visite="enregistrer-recette"
         onClick={enregistrer}
         disabled={bloquants.length > 0}
-        className="mt-6 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1.05rem] font-semibold text-white disabled:opacity-40"
+        className="mt-6 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white disabled:opacity-40"
       >
         {saisie.estSauce ? 'Enregistrer ma sauce' : 'Enregistrer ma recette'}
       </button>
@@ -442,10 +442,10 @@ function QuestionNature({ onRepondre }: { readonly onRepondre: (estSauce: boolea
           plus du tout, et rien d'autre que `parcours.test.tsx` ne le disait. Les étapes suivantes
           (« nom-du-plat », « ajout-ingredient ») se sautent tant que la question n'est pas
           tranchée — comportement prévu et documenté, pas un accident. */}
-      <h1 data-visite="titre-composer" className="text-[2.1rem] text-texte">
+      <h1 data-visite="titre-composer" className="text-titre-l text-texte">
         Qu'est-ce que vous composez ?
       </h1>
-      <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+      <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
         Une sauce se prépare à côté et se sert avec un plat. Elle n'a pas de moment de repas à elle,
         et c'est la seule différence : tout le reste se saisit pareil.
       </p>
@@ -453,14 +453,14 @@ function QuestionNature({ onRepondre }: { readonly onRepondre: (estSauce: boolea
       <button
         type="button"
         onClick={() => onRepondre(false)}
-        className="mt-6 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1.05rem] font-semibold text-white"
+        className="mt-6 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
       >
         Un plat
       </button>
       <button
         type="button"
         onClick={() => onRepondre(true)}
-        className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-surface px-5 text-[1.05rem] font-semibold text-accent-texte"
+        className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-surface px-5 text-lecture font-semibold text-accent-texte"
       >
         Une sauce
       </button>
@@ -514,7 +514,7 @@ function Ingredients({
 
   return (
     <>
-      <h2 className="mt-8 font-titre text-[1.4rem] text-texte">Ingrédients</h2>
+      <h2 className="mt-8 font-titre text-titre-m text-texte">Ingrédients</h2>
 
       {ingredients.length > 0 && (
         <ul className="mt-3 space-y-2">
@@ -524,19 +524,19 @@ function Ingredients({
               className="rounded-[--radius-carte] border border-bordure bg-surface p-3"
             >
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[1rem] text-texte">{nomDe(ingredient.foodId)}</span>
+                <span className="text-lecture text-texte">{nomDe(ingredient.foodId)}</span>
                 <button
                   type="button"
                   onClick={() => onChange(ingredients.filter((_, i) => i !== index))}
                   aria-label={`Retirer ${nomDe(ingredient.foodId)}`}
-                  className="flex min-h-tactile w-12 shrink-0 items-center justify-center rounded-[0.6rem] text-[1.2rem] text-texte-doux"
+                  className="flex min-h-tactile w-12 shrink-0 items-center justify-center rounded-[0.6rem] text-titre-s text-texte-doux"
                 >
                   <span aria-hidden="true">✕</span>
                 </button>
               </div>
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <label className="flex items-center gap-2">
-                  <span className="text-[0.9rem] text-texte-doux">Quantité (g)</span>
+                  <span className="text-courant text-texte-doux">Quantité (g)</span>
                   <input
                     type="number"
                     min={1}
@@ -548,7 +548,7 @@ function Ingredients({
                         )
                       )
                     }
-                    className="min-h-tactile w-24 rounded-[0.6rem] border border-bordure-forte bg-fond px-2 text-[1rem] text-texte"
+                    className="min-h-tactile w-24 rounded-[0.6rem] border border-bordure-forte bg-fond px-2 text-lecture text-texte"
                   />
                 </label>
                 <PetiteBascule
@@ -572,14 +572,14 @@ function Ingredients({
           `FoodId` choisi, pas un texte. Retrouver l'aliment par son nom réintroduirait une
           correspondance approximative là où on a déjà l'identifiant. */}
       <label className="mt-3 block">
-        <span className="text-[0.9rem] text-texte-doux">Ajouter un ingrédient</span>
+        <span className="text-courant text-texte-doux">Ajouter un ingrédient</span>
         <input
           type="search"
           data-visite="ajout-ingredient"
           value={recherche}
           onChange={(e) => onRecherche(e.target.value)}
           placeholder="courgette, œufs, riz…"
-          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[1.05rem] text-texte"
+          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-lecture text-texte"
         />
       </label>
       {propositions.length > 0 && (
@@ -589,7 +589,7 @@ function Ingredients({
               <button
                 type="button"
                 onClick={() => ajouter(aliment.id)}
-                className="flex min-h-tactile w-full items-center px-3 text-left text-[1rem] text-texte"
+                className="flex min-h-tactile w-full items-center px-3 text-left text-lecture text-texte"
               >
                 {aliment.nom}
               </button>
@@ -625,24 +625,24 @@ function Etapes({
 }) {
   return (
     <>
-      <h2 className="mt-8 font-titre text-[1.4rem] text-texte">Étapes</h2>
+      <h2 className="mt-8 font-titre text-titre-m text-texte">Étapes</h2>
       <ol className="mt-3 space-y-2">
         {etapes.map((etape, index) => (
           <li key={index} className="flex items-start gap-2">
-            <span className="mt-3 w-5 shrink-0 text-[0.95rem] tabular-nums text-attenue">{index + 1}.</span>
+            <span className="mt-3 w-5 shrink-0 text-courant tabular-nums text-attenue">{index + 1}.</span>
             <textarea
               value={etape}
               rows={2}
               onChange={(e) => onChange(etapes.map((v, i) => (i === index ? e.target.value : v)))}
               placeholder="Faire revenir les oignons à feu doux."
-              className="min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface p-3 text-[1rem] leading-relaxed text-texte"
+              className="min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface p-3 text-lecture leading-relaxed text-texte"
             />
             {etapes.length > 1 && (
               <button
                 type="button"
                 onClick={() => onChange(etapes.filter((_, i) => i !== index))}
                 aria-label={`Retirer l'étape ${index + 1}`}
-                className="mt-1 flex min-h-tactile w-12 shrink-0 items-center justify-center rounded-[0.6rem] text-[1.2rem] text-texte-doux"
+                className="mt-1 flex min-h-tactile w-12 shrink-0 items-center justify-center rounded-[0.6rem] text-titre-s text-texte-doux"
               >
                 <span aria-hidden="true">✕</span>
               </button>
@@ -653,7 +653,7 @@ function Etapes({
       <button
         type="button"
         onClick={() => onChange([...etapes, ''])}
-        className="mt-2 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux"
+        className="mt-2 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
       >
         Ajouter une étape
       </button>
@@ -666,7 +666,7 @@ function Etapes({
 function Champ({ libelle, children }: { readonly libelle: string; readonly children: React.ReactNode }) {
   return (
     <label className="mt-6 block">
-      <span className="text-[0.9rem] text-texte-doux">{libelle}</span>
+      <span className="text-courant text-texte-doux">{libelle}</span>
       <span className="mt-1 block">{children}</span>
     </label>
   )
@@ -675,7 +675,7 @@ function Champ({ libelle, children }: { readonly libelle: string; readonly child
 function Groupe({ titre, children }: { readonly titre: string; readonly children: React.ReactNode }) {
   return (
     <fieldset className="mt-5">
-      <legend className="text-[0.95rem] text-texte-doux">{titre}</legend>
+      <legend className="text-courant text-texte-doux">{titre}</legend>
       <div className="mt-2">{children}</div>
     </fieldset>
   )
@@ -692,13 +692,13 @@ function Nombre({
 }) {
   return (
     <label className="block">
-      <span className="text-[0.9rem] text-texte-doux">{libelle}</span>
+      <span className="text-courant text-texte-doux">{libelle}</span>
       <input
         type="number"
         min={0}
         value={valeur}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[1.05rem] text-texte"
+        className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-lecture text-texte"
       />
     </label>
   )
@@ -719,7 +719,7 @@ function Pastille({
       onClick={onBasculer}
       aria-pressed={active}
       className={
-        'flex min-h-tactile items-center rounded-[0.7rem] border px-4 text-[0.95rem] font-semibold ' +
+        'flex min-h-tactile items-center rounded-[0.7rem] border px-4 text-courant font-semibold ' +
         (active
           ? 'border-2 border-accent bg-accent-doux text-accent-texte'
           : 'border-bordure-forte bg-fond text-texte-doux')
@@ -745,7 +745,7 @@ function PetiteBascule({
       onClick={onBasculer}
       aria-pressed={active}
       className={
-        'flex min-h-tactile items-center gap-2 rounded-[0.6rem] border px-3 text-[0.9rem] ' +
+        'flex min-h-tactile items-center gap-2 rounded-[0.6rem] border px-3 text-courant ' +
         (active ? 'border-accent bg-accent-doux text-texte' : 'border-bordure-forte bg-fond text-texte-doux')
       }
     >

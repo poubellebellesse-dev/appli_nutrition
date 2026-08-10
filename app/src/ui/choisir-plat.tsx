@@ -155,14 +155,14 @@ export function ChoisirPlat({
           }}
         >
           <label className="block">
-            <span className="text-[0.9rem] text-texte-doux">
+            <span className="text-courant text-texte-doux">
               Ce que vous mangez — « Lasagnes surgelées », « Restaurant italien », « Chez mes parents »
             </span>
             <input
               type="text"
               value={libellePrepare}
               onChange={(e) => setLibellePrepare(e.target.value)}
-              className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[1rem] text-texte"
+              className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-lecture text-texte"
             />
           </label>
 
@@ -170,7 +170,7 @@ export function ChoisirPlat({
               plancher calorique sur toute la journée — une conséquence de sécurité qu'on ne peut pas
               laisser l'utilisateur constater lui-même. Énoncé comme un fait sur ce que
               l'application sait, sans reproche ni prescription (principe 6). */}
-          <p className="mt-3 text-[0.9rem] leading-relaxed text-texte-doux">
+          <p className="mt-3 text-courant leading-relaxed text-texte-doux">
             L’application ne connaîtra pas ce que ce repas apporte. Elle n’en tiendra donc aucun
             compte dans les repères nutritionnels de cette journée, et n’inventera rien à sa place.
           </p>
@@ -178,19 +178,19 @@ export function ChoisirPlat({
           <button
             type="submit"
             disabled={libellePrepare.trim() === ''}
-            className="mt-4 min-h-tactile w-full rounded-[0.7rem] bg-accent-plein px-3 text-[1rem] font-semibold text-white disabled:opacity-45"
+            className="mt-4 min-h-tactile w-full rounded-[0.7rem] bg-accent-plein px-3 text-lecture font-semibold text-white disabled:opacity-45"
           >
             Poser ce plat
           </button>
         </form>
       ) : onglet === 'catalogue' ? (
         <label className="mt-4 block">
-          <span className="text-[0.9rem] text-texte-doux">Nom, ingrédient, cuisine…</span>
+          <span className="text-courant text-texte-doux">Nom, ingrédient, cuisine…</span>
           <input
             type="search"
             value={texte}
             onChange={(e) => setTexte(e.target.value)}
-            className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[1rem] text-texte"
+            className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-lecture text-texte"
           />
         </label>
       ) : aConfirmer ? (
@@ -211,7 +211,7 @@ export function ChoisirPlat({
           />
         </div>
       ) : (
-        <p className="mt-4 text-[0.9rem] leading-relaxed text-texte-doux">
+        <p className="mt-4 text-courant leading-relaxed text-texte-doux">
           {garde.length === 0
             ? 'Vous n’avez rien déclaré dans le frigo. L’écran Frigo sert à dire ce que vous avez ; cette liste s’en servira.'
             : `D’après les ${garde.length} aliment${garde.length > 1 ? 's' : ''} déclaré${garde.length > 1 ? 's' : ''} au frigo, du mieux couvert au moins couvert.`}
@@ -222,7 +222,7 @@ export function ChoisirPlat({
         // ⚠️ NE DIT JAMAIS « aucun résultat » TOUT COURT. Une liste vide après une recherche a deux
         // causes très différentes — le mot cherché, ou les contraintes déclarées — et l'utilisateur
         // ne peut pas les distinguer seul.
-        <p className="mt-4 text-[0.95rem] leading-relaxed text-attenue">
+        <p className="mt-4 text-courant leading-relaxed text-attenue">
           {onglet === 'frigo' && garde.length === 0
             ? ''
             : 'Rien ne correspond. Vos allergies et votre régime écartent aussi des recettes — l’écran Recettes montre lesquelles et pourquoi.'}
@@ -234,14 +234,14 @@ export function ChoisirPlat({
               <button
                 type="button"
                 onClick={() => poser(l.recipeId)}
-                className="min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 py-2 text-left text-[1rem] text-texte hover:bg-accent-doux"
+                className="min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 py-2 text-left text-lecture text-texte hover:bg-accent-doux"
               >
                 <span className="font-titre">{l.nom}</span>
                 {/* ⚠️ « il vous manque » EST UN FAIT, pas un reproche, et surtout PAS un pourcentage.
                     Afficher « couverture 62 % » à côté d'un plat se lirait comme une note — le
                     jugement interdit par le principe 6, exactement comme le score du moteur. */}
                 {l.couverture !== null && (
-                  <span className="mt-0.5 block text-[0.85rem] text-texte-doux">
+                  <span className="mt-0.5 block text-mention text-texte-doux">
                     {l.manquants.length === 0
                       ? 'Vous avez tout ce qu’il faut.'
                       : `Il vous manque : ${l.manquants.slice(0, 4).join(', ')}${l.manquants.length > 4 ? '…' : ''}`}
@@ -271,7 +271,7 @@ function OngletBouton({
       role="tab"
       aria-selected={actif}
       onClick={onClick}
-      className={`min-h-tactile flex-1 rounded-[0.7rem] border px-3 text-[0.95rem] font-semibold ${
+      className={`min-h-tactile flex-1 rounded-[0.7rem] border px-3 text-courant font-semibold ${
         actif ? 'border-accent bg-accent-doux text-accent-texte' : 'border-bordure-forte bg-fond text-texte-doux'
       }`}
     >

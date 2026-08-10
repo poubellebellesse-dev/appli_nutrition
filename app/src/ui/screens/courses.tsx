@@ -493,16 +493,16 @@ export function Courses() {
   if (etat.phase === 'sans_plan') {
     return (
       <section>
-        <h1 data-visite="titre-courses" className="text-[2.1rem] text-texte">
+        <h1 data-visite="titre-courses" className="text-titre-l text-texte">
           Mes courses
         </h1>
         <LienTutoriel parcoursId="courses" />
-        <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+        <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
           La liste se construit à partir de votre semaine.
         </p>
         <a
           href={hashDe('semaine')}
-          className="mt-5 inline-flex min-h-cta items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white no-underline"
+          className="mt-5 inline-flex min-h-cta items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white no-underline"
         >
           Composer ma semaine
         </a>
@@ -512,8 +512,8 @@ export function Courses() {
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">La liste n'a pas pu être construite.</p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="text-lecture font-semibold text-texte">La liste n'a pas pu être construite.</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -526,7 +526,7 @@ export function Courses() {
 
   return (
     <section>
-      <h1 data-visite="titre-courses" className="text-[2.1rem] text-texte">
+      <h1 data-visite="titre-courses" className="text-titre-l text-texte">
         Mes courses
       </h1>
       {/* Enveloppé plutôt que marqué à la source : `LienTutoriel` sert cinq écrans, et le masquer
@@ -536,8 +536,8 @@ export function Courses() {
       </div>
       {/* La semaine d'abord, le compteur EN DESSOUS et sur sa propre ligne : accolés par un point
           médian, on lisait « du 3 au 9 août · 12 sur 40 » comme une seule information. */}
-      <p className="mt-2 text-[0.95rem] leading-relaxed text-attenue">{plageDuPlan(vue.liste)}</p>
-      <p className="mt-1 text-[0.95rem] leading-relaxed text-attenue">
+      <p className="mt-2 text-courant leading-relaxed text-attenue">{plageDuPlan(vue.liste)}</p>
+      <p className="mt-1 text-courant leading-relaxed text-attenue">
         {faits} sur {total} cochés
       </p>
 
@@ -547,7 +547,7 @@ export function Courses() {
           été fait — rien n'a été retiré — et offre de corriger. L'ignorer laisse l'état sûr. */}
       {vue.gardeAConfirmer.length > 0 && (
         <div className="mt-4">
-          <p className="mb-2 text-[0.9rem] leading-relaxed text-texte-doux">
+          <p className="mb-2 text-courant leading-relaxed text-texte-doux">
             {vue.gardeAConfirmer.length === 1
               ? 'Un aliment de votre garde-manger date trop pour qu’on s’y fie : il est resté sur la liste.'
               : `${vue.gardeAConfirmer.length} aliments de votre garde-manger datent trop pour qu’on s’y fie : ils sont restés sur la liste.`}
@@ -565,7 +565,7 @@ export function Courses() {
           produire : les quantités ne sont PAS divisées par le nombre de convives, exprès (voir
           l'en-tête du fichier), et c'est `planLeftovers` qui place ensuite le surplus sur un repas
           de la semaine. On achetait donc pour des restes que rien n'annonçait. */}
-      <p className="mt-3 rounded-[--radius-carte] border border-bordure bg-surface p-3 text-[0.9rem] leading-relaxed text-texte-doux">
+      <p className="mt-3 rounded-[--radius-carte] border border-bordure bg-surface p-3 text-courant leading-relaxed text-texte-doux">
         Les quantités sont celles des recettes entières. Ce qui dépasse d'un repas est replacé sur un
         autre jour —{' '}
         <a href={hashDe('semaine')} className="text-accent-texte">
@@ -579,7 +579,7 @@ export function Courses() {
           sections, les cases vides à cocher — s'imprime, LUI. Voir le bloc `@media print` de
           `theme.css` : c'est un opt-out article par article, pas une règle sur `button`. */}
       <fieldset data-visite="ranger-courses" className="sans-impression mt-5">
-        <legend className="text-[0.9rem] text-texte-doux">Ranger par</legend>
+        <legend className="text-courant text-texte-doux">Ranger par</legend>
         <div className="mt-2 flex gap-2">
           {(['rayon', 'repas', 'jour'] as const).map((valeur) => (
             <button
@@ -588,7 +588,7 @@ export function Courses() {
               onClick={() => setRangement(valeur)}
               aria-pressed={rangement === valeur}
               className={
-                'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-3 text-[0.95rem] font-semibold ' +
+                'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-3 text-courant font-semibold ' +
                 (rangement === valeur
                   ? 'border-2 border-accent bg-accent-doux text-accent-texte'
                   : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -605,7 +605,7 @@ export function Courses() {
           type="button"
           data-visite="ajouter-article"
           onClick={() => setAjoutOuvert((ouvert) => !ouvert)}
-          className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] bg-accent-plein px-4 text-[1rem] font-semibold text-white"
+          className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] bg-accent-plein px-4 text-lecture font-semibold text-white"
         >
           Ajouter un article
         </button>
@@ -628,7 +628,7 @@ export function Courses() {
       {extras.length >= 2 && (
         <a
           href={hashDuFrigo()}
-          className="sans-impression mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-[0.95rem] font-semibold text-accent-texte no-underline"
+          className="sans-impression mt-3 flex min-h-tactile items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-accent-texte no-underline"
         >
           Que cuisiner avec ?
         </a>
@@ -637,7 +637,7 @@ export function Courses() {
       <div className="mt-6 space-y-5">
         {sections.map((section) => (
           <article key={section.titre}>
-            <h2 className="font-titre text-[1.25rem] text-texte">{section.titre}</h2>
+            <h2 className="font-titre text-titre-s text-texte">{section.titre}</h2>
             <ul className="mt-2 divide-y divide-bordure rounded-[--radius-carte] border border-bordure bg-surface">
               {section.items.map((item) => (
                 <Ligne
@@ -691,12 +691,12 @@ export function Courses() {
 function CouvertsParUnReste({ creneaux }: { readonly creneaux: readonly CreneauCouvert[] }) {
   return (
     <section className="mt-6">
-      <h2 className="font-titre text-[1.25rem] text-texte">Couverts par un reste ({creneaux.length})</h2>
+      <h2 className="font-titre text-titre-s text-texte">Couverts par un reste ({creneaux.length})</h2>
       {/* ⚠️ « RIEN À ACHETER POUR EUX » ÉTAIT FAUX, et faux dans le cas NOMINAL — corrigé le
           2026-08-04, deux commits après avoir été écrit. `planLeftovers` ne remplace que le PLAT :
           l'accompagnement du créneau reste une recette entière, qui part dans les courses. Sur un
           plan de sept jours en mode repas, TOUS les créneaux couverts par un reste en portent un. */}
-      <p className="mt-1 text-[0.9rem] leading-relaxed text-attenue">
+      <p className="mt-1 text-courant leading-relaxed text-attenue">
         Ces repas réutilisent un plat déjà cuisiné : il n’est pas dans votre liste.
       </p>
       {/* Même raison que le lien vers le frigo dans « Déjà chez vous » : nommer un effet sans dire
@@ -704,16 +704,16 @@ function CouvertsParUnReste({ creneaux }: { readonly creneaux: readonly CreneauC
           veille » sur le créneau concerné. */}
       <a
         href={hashDe('semaine')}
-        className="mt-2 flex min-h-tactile items-center rounded-[0.7rem] text-[0.92rem] font-semibold text-accent-texte underline"
+        className="mt-2 flex min-h-tactile items-center rounded-[0.7rem] text-courant font-semibold text-accent-texte underline"
       >
         Voir ces repas dans ma semaine
       </a>
       <ul className="mt-2 divide-y divide-bordure rounded-[--radius-carte] border border-bordure bg-surface">
         {creneaux.map((creneau) => (
-          <li key={creneau.cle} className="px-3 py-2 text-[1rem] text-texte-doux">
+          <li key={creneau.cle} className="px-3 py-2 text-lecture text-texte-doux">
             {creneau.titre}
             {creneau.accompagnement !== null && (
-              <span className="block text-[0.88rem] text-attenue">
+              <span className="block text-mention text-attenue">
                 avec {creneau.accompagnement} — à acheter
               </span>
             )}
@@ -748,21 +748,21 @@ function DejaChezVous({
 }) {
   return (
     <section className="mt-6">
-      <h2 className="font-titre text-[1.25rem] text-texte">Déjà chez vous ({items.length})</h2>
-      <p className="mt-1 text-[0.9rem] leading-relaxed text-attenue">
+      <h2 className="font-titre text-titre-s text-texte">Déjà chez vous ({items.length})</h2>
+      <p className="mt-1 text-courant leading-relaxed text-attenue">
         Retirés de la liste parce qu'ils sont dans votre garde-manger.
       </p>
       <a
         href={hashDuFrigo()}
-        className="mt-2 flex min-h-tactile items-center rounded-[0.7rem] text-[0.92rem] font-semibold text-accent-texte underline"
+        className="mt-2 flex min-h-tactile items-center rounded-[0.7rem] text-courant font-semibold text-accent-texte underline"
       >
         Vous ne les avez plus ? Modifiez votre garde-manger
       </a>
       <ul className="mt-2 divide-y divide-bordure rounded-[--radius-carte] border border-bordure bg-surface">
         {items.map((item) => (
           <li key={item.foodId} className="flex items-center gap-3 px-3 py-2">
-            <span className="flex-1 text-[1rem] text-texte-doux">{nomAliment(item.foodId)}</span>
-            <span className="shrink-0 text-[0.9rem] tabular-nums text-attenue">
+            <span className="flex-1 text-lecture text-texte-doux">{nomAliment(item.foodId)}</span>
+            <span className="shrink-0 text-courant tabular-nums text-attenue">
               {quantiteDe(item)}
             </span>
           </li>
@@ -810,14 +810,14 @@ function Ligne({
         <span
           aria-hidden="true"
           className={
-            'flex h-6 w-6 shrink-0 items-center justify-center rounded-[0.35rem] border-2 text-[0.8rem] ' +
+            'flex h-6 w-6 shrink-0 items-center justify-center rounded-[0.35rem] border-2 text-mention ' +
             (coche ? 'border-accent bg-accent text-white' : 'border-bordure-forte')
           }
         >
           {coche ? '✓' : ''}
         </span>
         <span className="flex flex-1 flex-col">
-          <span className={`text-[1rem] ${coche ? 'text-attenue line-through' : 'text-texte'}`}>
+          <span className={`text-lecture ${coche ? 'text-attenue line-through' : 'text-texte'}`}>
             {/* Marqueur TYPOGRAPHIQUE et non une seconde couleur (§4.3) : la couleur est déjà prise
                 par l'accent, et en ajouter une ferait un code couleur là où il n'y a pas de jugement. */}
             {marqueur && <span className="text-attenue">+ </span>}
@@ -827,11 +827,11 @@ function Ligne({
               texte factuel, pas une alerte : la couleur n'est pas le seul porteur de l'information,
               c'est une ligne de texte à part entière. */}
           {noteAllergene != null && (
-            <span className="text-[0.85rem] text-texte-doux">{noteAllergene}</span>
+            <span className="text-mention text-texte-doux">{noteAllergene}</span>
           )}
         </span>
         {quantite !== null && (
-          <span className="shrink-0 text-[0.9rem] tabular-nums text-attenue">{quantite}</span>
+          <span className="shrink-0 text-courant tabular-nums text-attenue">{quantite}</span>
         )}
       </button>
       {onSupprimer !== undefined && (
@@ -841,7 +841,7 @@ function Ligne({
           aria-label={`Retirer ${libelle}`}
           // Le seul bouton de la ligne qui ne s'imprime pas : celui de la case à cocher, lui, DOIT
           // s'imprimer — c'est la case qu'on coche au stylo (voir `@media print`, `theme.css`).
-          className="sans-impression flex min-h-tactile w-12 items-center justify-center text-[1.1rem] text-attenue"
+          className="sans-impression flex min-h-tactile w-12 items-center justify-center text-lecture text-attenue"
         >
           ×
         </button>
@@ -880,7 +880,7 @@ function ArticlesAjoutes({
     <>
       {groupes.map((groupe) => (
         <article key={groupe.titre}>
-          <h2 className="font-titre text-[1.25rem] text-texte">{groupe.titre}</h2>
+          <h2 className="font-titre text-titre-s text-texte">{groupe.titre}</h2>
           <ul className="mt-2 divide-y divide-bordure rounded-[--radius-carte] border border-bordure bg-surface">
             {groupe.items.map((article) => (
               <Ligne
@@ -958,7 +958,7 @@ function FormulaireAjout({
       className="sans-impression mt-4 rounded-[--radius-carte] border border-bordure bg-surface p-4"
     >
       <label className="block">
-        <span className="text-[0.95rem] text-texte-doux">Article</span>
+        <span className="text-courant text-texte-doux">Article</span>
         <input
           type="text"
           value={libelle}
@@ -968,7 +968,7 @@ function FormulaireAjout({
             setAlimentChoisi(null)
           }}
           placeholder="Lessive, pain, croquettes…"
-          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[1rem] text-texte"
+          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-lecture text-texte"
         />
       </label>
       {propositions.length > 0 && (
@@ -983,7 +983,7 @@ function FormulaireAjout({
                   setAlimentChoisi(aliment)
                   setPropositionsVisibles(false)
                 }}
-                className="flex min-h-tactile w-full items-center px-3 text-left text-[1rem] text-texte"
+                className="flex min-h-tactile w-full items-center px-3 text-left text-lecture text-texte"
               >
                 {aliment.nom}
               </button>
@@ -1011,23 +1011,23 @@ function FormulaireAjout({
       )}
 
       <label className="mt-3 block">
-        <span className="text-[0.95rem] text-texte-doux">Quantité (facultatif)</span>
+        <span className="text-courant text-texte-doux">Quantité (facultatif)</span>
         <input
           type="text"
           value={quantite}
           onChange={(e) => setQuantite(e.target.value)}
           placeholder="2 boîtes, un paquet…"
-          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[1rem] text-texte"
+          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-lecture text-texte"
         />
       </label>
       <label className="mt-3 block">
         {/* Présélectionné par le choix d'un aliment ci-dessus, mais toujours modifiable : « calculé
             par l'appli sauf si l'utilisateur veut rentrer dans un rayon précis ». */}
-        <span className="text-[0.95rem] text-texte-doux">Rayon (facultatif)</span>
+        <span className="text-courant text-texte-doux">Rayon (facultatif)</span>
         <select
           value={rayon}
           onChange={(e) => setRayon(e.target.value)}
-          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[1rem] text-texte"
+          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-lecture text-texte"
         >
           <option value="">Autres</option>
           {RAYONS_ALIMENTAIRES.map((r) => (
@@ -1045,14 +1045,14 @@ function FormulaireAjout({
       <div className="mt-4 flex gap-2">
         <button
           type="submit"
-          className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] bg-accent-plein px-4 text-[1rem] font-semibold text-white"
+          className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] bg-accent-plein px-4 text-lecture font-semibold text-white"
         >
           Ajouter
         </button>
         <button
           type="button"
           onClick={onAnnuler}
-          className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[1rem] font-semibold text-texte-doux"
+          className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-lecture font-semibold text-texte-doux"
         >
           Annuler
         </button>
@@ -1092,7 +1092,7 @@ function BoutonPartager({ vue, coches }: { readonly vue: Vue; readonly coches: R
           () => undefined
         )
       }}
-      className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[1rem] font-semibold text-texte-doux"
+      className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-lecture font-semibold text-texte-doux"
     >
       {copie ? 'Copié' : 'Partager'}
     </button>
@@ -1118,7 +1118,7 @@ function BoutonImprimerExporter({ vue }: { readonly vue: Vue }) {
   const periode = plageDuPlan(vue.liste)
 
   const action =
-    'flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[1rem] font-semibold text-texte-doux'
+    'flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-lecture font-semibold text-texte-doux'
 
   return (
     <>
@@ -1129,14 +1129,14 @@ function BoutonImprimerExporter({ vue }: { readonly vue: Vue }) {
         // `basis-full` : sa propre ligne, sous la paire existante. À trois `flex-1` sur un écran de
         // 360 px, chaque libellé se casse en deux — « Ajouter un article », l'action principale,
         // finissait aussi mal lotie que la moins fréquente des trois.
-        className="flex min-h-cta basis-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-[1rem] font-semibold text-texte-doux"
+        className="flex min-h-cta basis-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-lecture font-semibold text-texte-doux"
       >
         Imprimer ou exporter
       </button>
 
       {ouvert && (
         <Panneau titre="Imprimer ou exporter" onFermer={() => setOuvert(false)}>
-          <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+          <p className="text-courant leading-relaxed text-texte-doux">
             La liste part sur votre imprimante ou dans un fichier, sur cet appareil. Rien n'est
             envoyé nulle part.
           </p>
@@ -1178,7 +1178,7 @@ function BoutonImprimerExporter({ vue }: { readonly vue: Vue }) {
           </div>
           {/* Dit ce que le fichier contiendra : le compte à l'écran ne parle que du restant, celui-ci
               parle de tout, cases cochées comprises. La différence surprendrait à l'ouverture. */}
-          <p className="mt-4 text-[0.9rem] leading-relaxed text-attenue">
+          <p className="mt-4 text-courant leading-relaxed text-attenue">
             <span className="tabular-nums">{lignes.length}</span> article
             {lignes.length > 1 ? 's' : ''}, cochés compris.
           </p>

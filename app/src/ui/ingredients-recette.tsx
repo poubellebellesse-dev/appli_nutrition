@@ -70,7 +70,7 @@ export function ListeIngredients({
           grammes: quantites.get(foodId) ?? ingredient.quantiteG,
         })
         return (
-          <li key={foodId} className="flex flex-wrap items-baseline gap-x-2 py-1 text-[1.08rem] text-texte">
+          <li key={foodId} className="flex flex-wrap items-baseline gap-x-2 py-1 text-lecture text-texte">
             {/* Le LIBELLÉ est mis à l'échelle, pas converti en grammes : il porte déjà la bonne
                 unité (pièces, cuillères, centilitres), que le catalogue, lui, ignore. Voir
                 ui/quantites.ts pour la règle et ses limites. */}
@@ -85,16 +85,16 @@ export function ListeIngredients({
                 {nomAliment(foodId)}
               </a>
             )}
-            {ingredient.optionnel && <span className="text-[0.9rem] text-attenue">(facultatif)</span>}
+            {ingredient.optionnel && <span className="text-courant text-attenue">(facultatif)</span>}
             {/* Dire QUAND une quantité ne suit pas les portions, sinon on croit à un bug — c'est
                 précisément ce qui a été signalé quand tout partait en grammes. */}
             {quantite.fige && (
-              <span className="text-[0.85rem] text-attenue">· quantité au goût, non ajustée</span>
+              <span className="text-mention text-attenue">· quantité au goût, non ajustée</span>
             )}
             {/* « Absents du garde-manger signalés DISCRÈTEMENT » (§4.6) : une mention, pas un
                 avertissement — ne rien avoir chez soi est le cas normal, pas un problème. */}
             {manquants?.has(foodId) === true && (
-              <span className="text-[0.85rem] text-attenue">· à acheter</span>
+              <span className="text-mention text-attenue">· à acheter</span>
             )}
           </li>
         )
@@ -155,7 +155,7 @@ export function QuantitesDeLEtape({
   if (employes.length === 0) return null
 
   return (
-    <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[1.02rem] text-texte-doux">
+    <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1 text-lecture text-texte-doux">
       {employes.map((ingredient) => {
         const foodId = ingredient.foodId as string
         const quantite = quantiteAffichee({
@@ -289,28 +289,28 @@ export function SelecteurPortions({
 }) {
   return (
     <div className="mt-6 flex items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface p-3">
-      <span className="text-[1.05rem] text-texte-doux">Pour</span>
+      <span className="text-lecture text-texte-doux">Pour</span>
       <button
         type="button"
         onClick={() => onChange(Math.max(1, portions - 1))}
         disabled={portions <= 1}
         aria-label="Une portion de moins"
-        className="flex min-h-tactile w-12 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-[1.4rem] text-texte disabled:opacity-40"
+        className="flex min-h-tactile w-12 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-titre-m text-texte disabled:opacity-40"
       >
         −
       </button>
-      <span className="min-w-[3ch] text-center text-[1.5rem] font-semibold tabular-nums text-texte">
+      <span className="min-w-[3ch] text-center text-titre-m font-semibold tabular-nums text-texte">
         {portions}
       </span>
       <button
         type="button"
         onClick={() => onChange(portions + 1)}
         aria-label="Une portion de plus"
-        className="flex min-h-tactile w-12 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-[1.4rem] text-texte"
+        className="flex min-h-tactile w-12 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-titre-m text-texte"
       >
         +
       </button>
-      <span className="text-[1.05rem] text-texte-doux">
+      <span className="text-lecture text-texte-doux">
         portion{portions > 1 ? 's' : ''}
         {portions !== base && <span className="text-attenue"> (recette pour {base})</span>}
       </span>

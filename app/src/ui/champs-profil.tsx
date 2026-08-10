@@ -114,7 +114,7 @@ export function Case({
       aria-pressed={cochee}
       data-visite={dataVisite}
       className={
-        'flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border px-4 py-2 text-left text-[1.02rem] ' +
+        'flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border px-4 py-2 text-left text-lecture ' +
         (cochee ? 'border-accent bg-accent-doux text-texte' : 'border-bordure-forte bg-surface text-texte')
       }
     >
@@ -130,7 +130,7 @@ export function Case({
       <span>
         {libelle}
         {description !== undefined && (
-          <span className="block text-[0.88rem] leading-snug text-attenue">{description}</span>
+          <span className="block text-mention leading-snug text-attenue">{description}</span>
         )}
       </span>
     </button>
@@ -152,7 +152,7 @@ export function OptionRadio({
       onClick={onChoisir}
       aria-pressed={choisie}
       className={
-        'flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border px-4 text-left text-[1.02rem] ' +
+        'flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border px-4 text-left text-lecture ' +
         (choisie ? 'border-accent bg-accent-doux text-texte' : 'border-bordure-forte bg-surface text-texte')
       }
     >
@@ -185,7 +185,7 @@ export function Segment({
       onClick={onChoisir}
       aria-pressed={actif}
       className={
-        'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-4 text-[1rem] font-semibold ' +
+        'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-4 text-lecture font-semibold ' +
         (actif
           ? 'border-2 border-accent bg-accent-doux text-accent-texte'
           : 'border border-bordure-forte bg-surface text-texte-doux')
@@ -244,7 +244,7 @@ export function ChoixAllergenes({
         type="button"
         onClick={() => setToutDeplie((d) => !d)}
         aria-expanded={toutDeplie}
-        className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-[0.98rem] font-semibold text-texte-doux"
+        className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
       >
         {toutDeplie ? 'Masquer' : `Voir les ${tous.length} allergènes réglementaires`}
       </button>
@@ -306,7 +306,7 @@ export function ChoixRythme({
 
   return (
     <>
-      <p className="text-[0.95rem] text-attenue">Combien de repas par jour ?</p>
+      <p className="text-courant text-attenue">Combien de repas par jour ?</p>
       <div className="mt-2 flex gap-2">
         {[1, 2, 3, 4].map((n) => (
           <Segment
@@ -318,7 +318,7 @@ export function ChoixRythme({
         ))}
       </div>
 
-      <p className="mt-4 text-[0.95rem] text-attenue">Temps pour cuisiner un repas, en semaine</p>
+      <p className="mt-4 text-courant text-attenue">Temps pour cuisiner un repas, en semaine</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {PALIERS_TEMPS.map((palier) => (
           <Segment
@@ -330,7 +330,7 @@ export function ChoixRythme({
         ))}
       </div>
 
-      <p className="mt-4 text-[0.95rem] text-attenue">Le week-end</p>
+      <p className="mt-4 text-courant text-attenue">Le week-end</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {PALIERS_TEMPS.map((palier) => (
           <Segment
@@ -376,7 +376,7 @@ export function ChoixPiquant({
 
   return (
     <>
-      <p className="text-[0.95rem] text-attenue">Supportez-vous les plats piquants ?</p>
+      <p className="text-courant text-attenue">Supportez-vous les plats piquants ?</p>
       <div className="mt-2 flex flex-col gap-2">
         {positions.map((position) => (
           <Segment
@@ -391,7 +391,7 @@ export function ChoixPiquant({
       <button
         type="button"
         onClick={() => onChange(null)}
-        className="mt-4 flex min-h-tactile items-center text-[0.95rem] font-semibold text-accent-texte"
+        className="mt-4 flex min-h-tactile items-center text-courant font-semibold text-accent-texte"
       >
         Je préfère ne pas répondre
       </button>
@@ -399,7 +399,7 @@ export function ChoixPiquant({
       {/* ⚠️ CETTE PHRASE EST LA CONDITION DU RÉGLAGE, pas un ornement. Il ne PEUT PAS promettre
           mieux : `Recipe.piquant` est renseigné sur les recettes que quelqu'un a annotées, et un
           plat non annoté n'est jamais écarté. Taire cette limite ferait croire à un filtre. */}
-      <p className="mt-5 text-[0.9rem] leading-relaxed text-attenue">
+      <p className="mt-5 text-courant leading-relaxed text-attenue">
         Ce réglage change ce que l'application vous PROPOSE : les plats plus forts que ce que vous
         avez indiqué passent après les autres. Il n'en cache aucun — vous pouvez toujours les
         chercher et les cuisiner — et il ne peut rien dire des recettes dont le piquant n'a pas été

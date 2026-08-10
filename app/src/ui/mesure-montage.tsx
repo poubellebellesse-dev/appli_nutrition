@@ -126,7 +126,7 @@ export function MesureMontage({
       role="status"
       data-mesure-montage={ms === null ? 'en-cours' : ms.toFixed(0)}
       data-mesure-rendu={msRendu === null ? 'en-cours' : msRendu.toFixed(0)}
-      className="mt-2 rounded-[--radius-carte] border border-bordure bg-surface px-3 py-2 font-mono text-[0.95rem] text-texte"
+      className="mt-2 rounded-[--radius-carte] border border-bordure bg-surface px-3 py-2 font-mono text-courant text-texte"
     >
       {texte}
     </p>

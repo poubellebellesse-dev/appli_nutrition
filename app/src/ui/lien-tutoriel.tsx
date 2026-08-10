@@ -19,7 +19,7 @@ export function LienTutoriel({ parcoursId }: { readonly parcoursId: ParcoursId }
     <button
       type="button"
       onClick={() => lancerParcours(parcoursId)}
-      className="mt-1 flex min-h-tactile items-center text-[0.9rem] font-medium text-accent-texte underline"
+      className="mt-1 flex min-h-tactile items-center text-courant font-medium text-accent-texte underline"
     >
       Comment ça marche ?
     </button>

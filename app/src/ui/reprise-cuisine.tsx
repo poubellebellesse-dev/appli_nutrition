@@ -122,22 +122,22 @@ export function RepriseCuisine({ nomDeRecette }: { readonly nomDeRecette?: (id: 
       href={hashDeLaCuisine(resume.recetteId)}
       className="mb-5 flex min-h-tactile items-center justify-between gap-3 rounded-[--radius-carte] border border-accent bg-accent-doux px-4 py-3 text-accent-texte"
     >
-      <span className="text-[1.02rem] leading-snug">
+      <span className="text-lecture leading-snug">
         <span className="font-semibold">Reprendre la cuisson</span> — {nom}
         {/* Le lien ne désigne qu'un plat, mais le mode cuisine rouvre TOUTES les cuissons en base :
             ce compte annonce ce qu'on va retrouver, il ne promet pas un second lien. */}
         {resume.autresPlats > 0 && (
-          <span className="text-[0.9rem]">
+          <span className="text-courant">
             {' '}
             et {resume.autresPlats} autre{resume.autresPlats > 1 ? 's' : ''} plat
             {resume.autresPlats > 1 ? 's' : ''}
           </span>
         )}
-        {resume.depuis !== null && <span className="text-[0.9rem]"> · commencée {resume.depuis}</span>}
+        {resume.depuis !== null && <span className="text-courant"> · commencée {resume.depuis}</span>}
         {/* Dire qu'un minuteur est ÉCHU, sans dire depuis quand : l'ancienneté exacte appartient à
             l'écran de cuisine, qui la calcule minuteur par minuteur. Ici, c'est un appel à revenir. */}
         {resume.minuteursEchus > 0 && (
-          <span className="block text-[0.9rem] font-semibold">
+          <span className="block text-courant font-semibold">
             {resume.minuteursEchus === 1 ? 'Un minuteur est arrivé à terme.' : `${resume.minuteursEchus} minuteurs sont arrivés à terme.`}
           </span>
         )}

@@ -151,9 +151,12 @@ export function Navigation({ courante }: { readonly courante: Onglet }) {
               {onglet.icone}
             </svg>
             {/* ⚠️ Le libellé n'est JAMAIS masqué, quelle que soit la largeur — voir l'en-tête.
-                0,8125rem au lieu des 0,66rem des maquettes : ~10,5 px de libellé sur la barre que
-                tout le monde doit lire contredit la contrainte d'âge du même bloc commun. */}
-            <span className="text-[0.8125rem] font-medium leading-tight lg:text-[0.95rem]">
+                `text-mention` (0,85rem) au lieu des 0,66rem des maquettes : ~10,5 px de libellé sur
+                la barre que tout le monde doit lire contredit la contrainte d'âge du même bloc
+                commun. Ce libellé a longtemps porté 0,8125rem, une valeur choisie à la main pour la
+                même raison ; l'échelle à six pas (`theme.css`) l'a absorbée en montant de 4 %,
+                c'est-à-dire dans le sens que ce commentaire défendait déjà. */}
+            <span className="text-mention font-medium leading-tight lg:text-courant">
               {onglet.libelle}
             </span>
           </a>

@@ -225,11 +225,11 @@ export function Visite({
       >
         {/* Lisible en texte, pas seulement en pastilles, et ANNONCÉ (`role="status"`) à chaque
             changement d'étape — même mécanisme que le bandeau de persistance dans `main.tsx`. */}
-        <p role="status" className="text-[0.85rem] font-medium text-attenue">
+        <p role="status" className="text-mention font-medium text-attenue">
           Étape {etapeIndex + 1} sur {etapes.length}
         </p>
-        <h2 className="mt-1 font-titre text-[1.25rem] text-texte">{etape.titre}</h2>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etape.texte}</p>
+        <h2 className="mt-1 font-titre text-titre-s text-texte">{etape.titre}</h2>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etape.texte}</p>
 
         <div aria-hidden="true" className="mt-3 flex gap-1.5">
           {/* Index en clé, pas `e.cible` : deux étapes d'un même parcours peuvent légitimement
@@ -249,7 +249,7 @@ export function Visite({
           <button
             type="button"
             onClick={onTerminer}
-            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux"
+            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
           >
             Passer
           </button>
@@ -259,7 +259,7 @@ export function Visite({
             <button
               type="button"
               onClick={surSuivant}
-              className="flex min-h-tactile flex-1 items-center justify-center gap-2 rounded-[0.7rem] bg-accent-plein px-4 text-[0.95rem] font-semibold text-white"
+              className="flex min-h-tactile flex-1 items-center justify-center gap-2 rounded-[0.7rem] bg-accent-plein px-4 text-courant font-semibold text-white"
             >
               Suivant
               <span aria-hidden="true">›</span>

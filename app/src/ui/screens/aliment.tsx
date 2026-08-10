@@ -268,13 +268,13 @@ export function Aliment({
   if (etat.phase === 'introuvable') {
     return (
       <section>
-        <h1 className="text-[1.9rem] text-texte">Aliment introuvable</h1>
-        <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+        <h1 className="text-titre-l text-texte">Aliment introuvable</h1>
+        <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
           Il a peut-être disparu d'une mise à jour du catalogue.
         </p>
         <a
           href={hashDe('recettes')}
-          className="mt-5 inline-flex min-h-cta items-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1rem] font-semibold text-white no-underline"
+          className="mt-5 inline-flex min-h-cta items-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white no-underline"
         >
           Voir toutes les recettes
         </a>
@@ -284,8 +284,8 @@ export function Aliment({
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">L'aliment n'a pas pu être lu.</p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="text-lecture font-semibold text-texte">L'aliment n'a pas pu être lu.</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -297,17 +297,17 @@ export function Aliment({
     <article>
       <a
         href={vue.retour.hash}
-        className="inline-flex min-h-tactile items-center text-[0.95rem] font-semibold text-accent-texte no-underline"
+        className="inline-flex min-h-tactile items-center text-courant font-semibold text-accent-texte no-underline"
       >
         {vue.retour.libelle}
       </a>
 
-      <h1 className="mt-2 text-[2.2rem] leading-tight text-texte">{aliment.nom}</h1>
-      <p className="mt-1 text-[1.02rem] text-texte-doux">{aliment.groupe}</p>
+      <h1 className="mt-2 text-titre-l leading-tight text-texte">{aliment.nom}</h1>
+      <p className="mt-1 text-lecture text-texte-doux">{aliment.groupe}</p>
       {/* Les synonymes sont des noms d'USAGE — « lardon », « gambas ». Les dire évite de croire que
           l'aliment cherché manque au catalogue parce qu'il y porte un autre nom. */}
       {aliment.synonymes.length > 0 && (
-        <p className="mt-1 text-[0.95rem] text-attenue">
+        <p className="mt-1 text-courant text-attenue">
           Aussi appelé : {aliment.synonymes.join(', ')}
         </p>
       )}
@@ -355,14 +355,14 @@ export function Aliment({
         )}
       </dl>
 
-      <h2 className="mt-8 text-[1.5rem] text-texte">Pour 100 g</h2>
+      <h2 className="mt-8 text-titre-m text-texte">Pour 100 g</h2>
       {!vue.afficherMacros ? (
-        <p className="mt-2 text-[1rem] leading-relaxed text-texte-doux">
+        <p className="mt-2 text-lecture leading-relaxed text-texte-doux">
           Les teneurs et leur provenance s'affichent si vous cochez « Afficher plus de détails »
           dans les Paramètres.
         </p>
       ) : vue.nutriments.length === 0 ? (
-        <p className="mt-2 text-[1rem] leading-relaxed text-texte-doux">
+        <p className="mt-2 text-lecture leading-relaxed text-texte-doux">
           Le catalogue ne porte aucune teneur pour cet aliment.
         </p>
       ) : (
@@ -373,32 +373,32 @@ export function Aliment({
                 key={ligne.nom}
                 className="flex flex-wrap items-baseline justify-between gap-x-4 py-2"
               >
-                <span className="text-[1.05rem] text-texte">{ligne.nom}</span>
+                <span className="text-lecture text-texte">{ligne.nom}</span>
                 <span className="flex flex-wrap items-baseline gap-x-2">
-                  <span className="tabular-nums text-[1.05rem] text-texte">{ligne.texte}</span>
+                  <span className="tabular-nums text-lecture text-texte">{ligne.texte}</span>
                   {/* La LETTRE seule, jamais habillée d'une phrase : l'ANSES ne définit que les
                       deux bornes de son échelle, et elle les donne dans la note ci-dessous. */}
                   {ligne.cote !== null && (
-                    <span className="text-[0.85rem] text-attenue">· confiance {ligne.cote}</span>
+                    <span className="text-mention text-attenue">· confiance {ligne.cote}</span>
                   )}
                 </span>
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[0.9rem] leading-relaxed text-attenue">{NOTE_CONFIANCE}</p>
-          <p className="mt-2 text-[0.9rem] leading-relaxed text-attenue">{NOTE_ENERGIE}</p>
+          <p className="mt-3 text-courant leading-relaxed text-attenue">{NOTE_CONFIANCE}</p>
+          <p className="mt-2 text-courant leading-relaxed text-attenue">{NOTE_ENERGIE}</p>
         </>
       )}
 
       {vue.recettes.length > 0 && (
         <>
-          <h2 className="mt-8 text-[1.5rem] text-texte">Où il sert</h2>
+          <h2 className="mt-8 text-titre-m text-texte">Où il sert</h2>
           <ul className="mt-3 space-y-1">
             {vue.recettes.map((recette) => (
               <li key={recette.id}>
                 <a
                   href={hashDeRecette(recette.id)}
-                  className="inline-flex min-h-tactile items-center text-[1.05rem] text-accent-texte no-underline"
+                  className="inline-flex min-h-tactile items-center text-lecture text-accent-texte no-underline"
                 >
                   {recette.nom}
                 </a>
@@ -406,7 +406,7 @@ export function Aliment({
             ))}
           </ul>
           {vue.recettesEnTrop > 0 && (
-            <p className="mt-2 text-[0.95rem] text-attenue">
+            <p className="mt-2 text-courant text-attenue">
               et {vue.recettesEnTrop} autre{vue.recettesEnTrop > 1 ? 's' : ''} recette
               {vue.recettesEnTrop > 1 ? 's' : ''}.
             </p>
@@ -421,8 +421,8 @@ export function Aliment({
 function Fait({ terme, valeur }: { readonly terme: string; readonly valeur: string }) {
   return (
     <div className="flex flex-wrap items-baseline gap-x-3">
-      <dt className="text-[0.95rem] font-semibold text-texte-doux">{terme}</dt>
-      <dd className="text-[1.02rem] text-texte">{valeur}</dd>
+      <dt className="text-courant font-semibold text-texte-doux">{terme}</dt>
+      <dd className="text-lecture text-texte">{valeur}</dd>
     </div>
   )
 }

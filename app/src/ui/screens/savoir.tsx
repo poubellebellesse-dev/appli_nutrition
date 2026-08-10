@@ -109,8 +109,8 @@ export function Savoir() {
   if (etat.phase === 'erreur') {
     return (
       <div role="alert">
-        <p className="text-[1.05rem] font-semibold text-texte">Le catalogue n'a pas pu être lu.</p>
-        <p className="mt-2 text-[0.95rem] leading-relaxed text-texte-doux">{etat.message}</p>
+        <p className="text-lecture font-semibold text-texte">Le catalogue n'a pas pu être lu.</p>
+        <p className="mt-2 text-courant leading-relaxed text-texte-doux">{etat.message}</p>
       </div>
     )
   }
@@ -118,7 +118,7 @@ export function Savoir() {
   return (
     <section>
       {/* `data-visite` : ancre inconditionnelle du parcours de tutoriel — voir `ui/parcours.ts`. */}
-      <h1 data-visite="titre-savoir" className="text-[2.1rem] text-texte">
+      <h1 data-visite="titre-savoir" className="text-titre-l text-texte">
         Savoir
       </h1>
       <LienTutoriel parcoursId="savoir" />
@@ -160,7 +160,7 @@ function LeSaviezVous({ tips }: { readonly tips: readonly Tip[] }) {
   if (tips.length === 0) {
     return (
       <Bloc titre="Le saviez-vous ?">
-        <p className="text-[1.02rem] leading-relaxed text-attenue">
+        <p className="text-lecture leading-relaxed text-attenue">
           Aucun fait à afficher pour l'instant.
         </p>
       </Bloc>
@@ -176,16 +176,16 @@ function LeSaviezVous({ tips }: { readonly tips: readonly Tip[] }) {
     <Bloc titre="Le saviez-vous ?">
       <div className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
         {mention !== null && (
-          <p className="mb-2 text-[0.82rem] font-semibold uppercase tracking-wide text-attenue">
+          <p className="mb-2 text-mention font-semibold uppercase tracking-wide text-attenue">
             {mention}
           </p>
         )}
-        <p className="text-[1.08rem] leading-relaxed text-texte">{tip.texte}</p>
+        <p className="text-lecture leading-relaxed text-texte">{tip.texte}</p>
         {/*
           La source est affichée SUR le tip, pas reléguée en pied d'écran. Un fait isolé et
           affirmatif est exactement ce qu'on recopie sans vérifier — le lien doit partir avec lui.
         */}
-        <p className="mt-3 border-t border-bordure pt-2 text-[0.85rem] leading-relaxed text-attenue">
+        <p className="mt-3 border-t border-bordure pt-2 text-mention leading-relaxed text-attenue">
           Source :{' '}
           <a
             href={tip.sourceUrl}
@@ -203,7 +203,7 @@ function LeSaviezVous({ tips }: { readonly tips: readonly Tip[] }) {
           type="button"
           onClick={() => setIndex(index - 1)}
           aria-label="Fait précédent"
-          className="flex min-h-tactile w-14 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-[1.2rem] text-texte-doux"
+          className="flex min-h-tactile w-14 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-titre-s text-texte-doux"
         >
           ←
         </button>
@@ -211,11 +211,11 @@ function LeSaviezVous({ tips }: { readonly tips: readonly Tip[] }) {
           type="button"
           onClick={() => setIndex(index + 1)}
           aria-label="Fait suivant"
-          className="flex min-h-tactile w-14 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-[1.2rem] text-texte-doux"
+          className="flex min-h-tactile w-14 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-titre-s text-texte-doux"
         >
           →
         </button>
-        <span className="text-[0.9rem] tabular-nums text-attenue">
+        <span className="text-courant tabular-nums text-attenue">
           {(((index % tips.length) + tips.length) % tips.length) + 1} sur {tips.length}
         </span>
       </div>
@@ -243,17 +243,17 @@ function Gestes({ lexique }: { readonly lexique: readonly LexiconEntry[] }) {
       {/* `data-visite` sur le LABEL et non sur l'`input` : le contour de la visite doit englober
           l'intitulé, sinon la bulle désigne un rectangle vide sans dire ce qu'on y écrit. */}
       <label data-visite="recherche-gestes" className="block">
-        <span className="text-[0.9rem] text-texte-doux">Chercher un geste</span>
+        <span className="text-courant text-texte-doux">Chercher un geste</span>
         <input
           type="search"
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="blanchir, émincer, chemiser…"
-          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-[1.05rem] text-texte"
+          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-lecture text-texte"
         />
       </label>
 
-      <p className="mt-2 text-[0.9rem] text-attenue">
+      <p className="mt-2 text-courant text-attenue">
         {trouves.length} geste{trouves.length > 1 ? 's' : ''}
       </p>
 
@@ -266,7 +266,7 @@ function Gestes({ lexique }: { readonly lexique: readonly LexiconEntry[] }) {
                 type="button"
                 onClick={() => setOuvert(deplie ? null : entree.id)}
                 aria-expanded={deplie}
-                className="flex min-h-tactile w-full items-center justify-between gap-2 px-3 text-left text-[1.05rem] font-semibold text-texte"
+                className="flex min-h-tactile w-full items-center justify-between gap-2 px-3 text-left text-lecture font-semibold text-texte"
               >
                 {entree.terme}
                 <span aria-hidden="true" className="text-attenue">
@@ -274,7 +274,7 @@ function Gestes({ lexique }: { readonly lexique: readonly LexiconEntry[] }) {
                 </span>
               </button>
               {deplie && (
-                <p className="px-3 pb-3 text-[1rem] leading-relaxed text-texte-doux">
+                <p className="px-3 pb-3 text-lecture leading-relaxed text-texte-doux">
                   {entree.definition}
                 </p>
               )}
@@ -314,7 +314,7 @@ function Comprendre({ fiches }: { readonly fiches: readonly EvidenceSheet[] }) {
   if (fiches.length === 0) {
     return (
       <Bloc titre="Comprendre">
-        <p className="text-[1.02rem] leading-relaxed text-attenue">
+        <p className="text-lecture leading-relaxed text-attenue">
           Aucun chapitre publié pour l'instant.
         </p>
       </Bloc>
@@ -335,10 +335,10 @@ function Comprendre({ fiches }: { readonly fiches: readonly EvidenceSheet[] }) {
             onChange={(e) => setForteSeulement(e.target.checked)}
             className="size-5 shrink-0"
           />
-          <span className="text-[1.02rem] text-texte">Preuve forte seulement</span>
+          <span className="text-lecture text-texte">Preuve forte seulement</span>
         </label>
         {masques > 0 && (
-          <p className="mt-1 text-[0.9rem] text-attenue">
+          <p className="mt-1 text-courant text-attenue">
             {masques} chapitre{masques > 1 ? 's' : ''} masqué{masques > 1 ? 's' : ''} : aucune de leurs
             positions n'atteint ce niveau.
           </p>
@@ -350,7 +350,7 @@ function Comprendre({ fiches }: { readonly fiches: readonly EvidenceSheet[] }) {
         if (dansLaFamille.length === 0) return null
         return (
           <section key={cle} className="mt-5">
-            <h3 className="text-[0.82rem] font-semibold uppercase tracking-wide text-attenue">
+            <h3 className="text-mention font-semibold uppercase tracking-wide text-attenue">
               {libelle}
             </h3>
             <ul className="mt-2 space-y-2">
@@ -389,7 +389,7 @@ function Chapitre({
         aria-expanded={deplie}
         className="flex min-h-tactile w-full items-center justify-between gap-3 px-3 py-2 text-left"
       >
-        <span className="text-[1.08rem] font-semibold leading-snug text-texte">{fiche.titre}</span>
+        <span className="text-lecture font-semibold leading-snug text-texte">{fiche.titre}</span>
         <span aria-hidden="true" className="shrink-0 text-attenue">
           {deplie ? '−' : '+'}
         </span>
@@ -397,7 +397,7 @@ function Chapitre({
 
       {deplie && (
         <div className="border-t border-bordure px-3 py-3">
-          <p className="text-[1.02rem] leading-relaxed text-texte-doux">{fiche.resumeVulgarise}</p>
+          <p className="text-lecture leading-relaxed text-texte-doux">{fiche.resumeVulgarise}</p>
 
           <ul className="mt-4 space-y-3">
             {fiche.positions.map((position) => (
@@ -407,7 +407,7 @@ function Chapitre({
             ))}
           </ul>
 
-          <p className="mt-4 text-[0.85rem] text-attenue">
+          <p className="mt-4 text-mention text-attenue">
             Revue le {formaterDate(fiche.dateRevue)}
             {estAReviser(fiche.dateRevue) && ' — à réviser (plus de 3 ans)'}
           </p>
@@ -440,19 +440,19 @@ function Position({
       >
         <span className="flex flex-wrap items-center gap-2">
           <BadgePreuve niveau={position.niveauPreuve} />
-          <span className="text-[0.88rem] text-attenue">{position.portePar}</span>
+          <span className="text-mention text-attenue">{position.portePar}</span>
         </span>
-        <span className="mt-1 block text-[1.02rem] leading-relaxed text-texte">
+        <span className="mt-1 block text-lecture leading-relaxed text-texte">
           {position.affirmation}
         </span>
-        <span className="mt-1 block text-[0.88rem] text-texte-doux underline">
+        <span className="mt-1 block text-mention text-texte-doux underline">
           {deplie ? 'Replier' : 'Lire le détail et les sources'}
         </span>
       </button>
 
       {deplie && (
         <div className="border-t border-bordure px-3 py-3">
-          <p className="whitespace-pre-line text-[1rem] leading-relaxed text-texte-doux">
+          <p className="whitespace-pre-line text-lecture leading-relaxed text-texte-doux">
             {position.detail}
           </p>
           <ul className="mt-3 space-y-2">
@@ -480,7 +480,7 @@ function Position({
  */
 function Source({ source }: { readonly source: EvidenceSource }) {
   return (
-    <div className="text-[0.9rem] leading-relaxed text-texte-doux">
+    <div className="text-courant leading-relaxed text-texte-doux">
       <a
         href={source.url}
         target="_blank"
@@ -517,7 +517,7 @@ function Source({ source }: { readonly source: EvidenceSource }) {
  */
 function BadgePreuve({ niveau }: { readonly niveau: NiveauPreuve }) {
   return (
-    <span className="rounded-[0.4rem] border border-bordure-forte px-2 py-[0.15rem] text-[0.72rem] font-semibold uppercase tracking-[0.06em] text-texte-doux">
+    <span className="rounded-[0.4rem] border border-bordure-forte px-2 py-[0.15rem] text-mention font-semibold uppercase tracking-[0.06em] text-texte-doux">
       {NIVEAU_LIBELLE[niveau]}
     </span>
   )
@@ -545,7 +545,7 @@ function estAReviser(dateRevue: string): boolean {
 function SourcesEtLimites() {
   return (
     <Bloc titre="Sources et limites" dataVisite="sources-limites">
-      <div className="space-y-3 text-[1.02rem] leading-relaxed text-texte-doux">
+      <div className="space-y-3 text-lecture leading-relaxed text-texte-doux">
         <p>
           Les valeurs nutritionnelles proviennent de la <strong className="text-texte">table
           CIQUAL 2025</strong> de l'ANSES. Elles ne sont jamais saisies à la main : elles sont
@@ -583,7 +583,7 @@ function Bloc({
 }) {
   return (
     <section data-visite={dataVisite} className="mt-8">
-      <h2 className="font-titre text-[1.5rem] text-texte">{titre}</h2>
+      <h2 className="font-titre text-titre-m text-texte">{titre}</h2>
       <div className="mt-3">{children}</div>
     </section>
   )

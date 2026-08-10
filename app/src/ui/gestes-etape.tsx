@@ -59,7 +59,7 @@ export function GestesDeLEtape({
             type="button"
             onClick={() => setOuvert(ouvert === geste.id ? null : geste.id)}
             aria-expanded={ouvert === geste.id}
-            className="flex min-h-tactile items-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-[0.95rem] font-semibold text-accent-texte underline"
+            className="flex min-h-tactile items-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-accent-texte underline"
           >
             {geste.terme}
           </button>
@@ -71,7 +71,7 @@ export function GestesDeLEtape({
         .map((geste) => (
           <p
             key={geste.id}
-            className="mt-3 rounded-[--radius-carte] border border-bordure bg-fond p-3 text-[1rem] leading-relaxed text-texte-doux"
+            className="mt-3 rounded-[--radius-carte] border border-bordure bg-fond p-3 text-lecture leading-relaxed text-texte-doux"
           >
             <span className="font-semibold text-texte">{geste.terme}</span> — {geste.definition}
           </p>

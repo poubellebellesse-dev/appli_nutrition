@@ -156,7 +156,7 @@ export function Accueil({ onTermine }: { readonly onTermine: () => void }) {
         <button
           type="button"
           onClick={() => setEtape(voisine(etape, -1))}
-          className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-[0.98rem] font-semibold text-texte-doux"
+          className="mt-4 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] px-4 text-courant font-semibold text-texte-doux"
         >
           ← Revenir en arrière
         </button>
@@ -182,18 +182,18 @@ function PointDepliable({ point }: { readonly point: PointConsentement }) {
         type="button"
         onClick={() => setOuvert((o) => !o)}
         aria-expanded={ouvert}
-        className="flex min-h-tactile w-full items-center gap-3 p-4 text-left text-[1rem] leading-relaxed text-texte"
+        className="flex min-h-tactile w-full items-center gap-3 p-4 text-left text-lecture leading-relaxed text-texte"
       >
         <span className="flex-1">
           <span className="font-medium">{point.resume}</span>
-          <span className="mt-1 block text-[0.95rem] text-texte-doux">{point.explication}</span>
+          <span className="mt-1 block text-courant text-texte-doux">{point.explication}</span>
         </span>
-        <span aria-hidden="true" className="shrink-0 text-[0.85rem] font-semibold text-attenue">
+        <span aria-hidden="true" className="shrink-0 text-mention font-semibold text-attenue">
           {ouvert ? 'Replier' : 'Tout lire'}
         </span>
       </button>
       {ouvert && (
-        <div className="space-y-2 px-4 pb-4 text-[0.95rem] leading-relaxed text-texte-doux">
+        <div className="space-y-2 px-4 pb-4 text-courant leading-relaxed text-texte-doux">
           {point.detail.map((paragraphe) => (
             <p key={paragraphe}>{paragraphe}</p>
           ))}
@@ -223,11 +223,11 @@ function Engagement({
 
   return (
     <div>
-      <h1 className="text-[2.4rem] text-texte">Bienvenue</h1>
-      <p className="mt-2 text-[1.15rem] leading-relaxed text-texte-doux">
+      <h1 className="text-titre-l text-texte">Bienvenue</h1>
+      <p className="mt-2 text-lecture leading-relaxed text-texte-doux">
         Cuisinez au fil des jours, tranquillement.
       </p>
-      <p className="mt-6 text-[1rem] text-texte-doux">
+      <p className="mt-6 text-lecture text-texte-doux">
         Avant de commencer, quatre choses à savoir. Touchez un point pour tout lire.
       </p>
 
@@ -244,7 +244,7 @@ function Engagement({
         onClick={() => setCompris((c) => !c)}
         aria-pressed={compris}
         className={
-          'mt-6 flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border px-4 text-left text-[1.02rem] ' +
+          'mt-6 flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border px-4 text-left text-lecture ' +
           (compris ? 'border-accent bg-accent-doux text-texte' : 'border-bordure-forte bg-surface text-texte')
         }
       >
@@ -264,7 +264,7 @@ function Engagement({
         type="button"
         onClick={onSuivant}
         disabled={!compris}
-        className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1.05rem] font-semibold text-white disabled:opacity-40"
+        className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white disabled:opacity-40"
       >
         J’ai compris
       </button>
@@ -301,17 +301,17 @@ function Installation({ onSuivant }: { readonly onSuivant: () => void }) {
 
   return (
     <div>
-      <h1 className="text-[2rem] text-texte">Installez l’application sur votre écran d’accueil</h1>
-      <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+      <h1 className="text-titre-l text-texte">Installez l’application sur votre écran d’accueil</h1>
+      <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
         Vous la retrouverez d’un seul geste, et elle fonctionnera hors-ligne.
       </p>
       {/* §7 ARCHITECTURE mesure 2 : le risque est dit EN CLAIR, pas caché derrière « recommandé ». */}
-      <p className="mt-4 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-[0.98rem] leading-relaxed text-alerte-texte">
+      <p className="mt-4 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-courant leading-relaxed text-alerte-texte">
         Sans installation, le navigateur peut effacer vos données pour faire de la place.
       </p>
 
       {invite === null ? (
-        <p className="mt-5 text-[0.98rem] leading-relaxed text-texte-doux">
+        <p className="mt-5 text-courant leading-relaxed text-texte-doux">
           Sur iPhone : touchez le bouton de partage, puis « Sur l’écran d’accueil ». Sur ordinateur,
           l’icône d’installation apparaît dans la barre d’adresse.
         </p>
@@ -321,7 +321,7 @@ function Installation({ onSuivant }: { readonly onSuivant: () => void }) {
           onClick={() => {
             void invite.prompt().catch(() => undefined)
           }}
-          className="mt-5 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1.05rem] font-semibold text-white"
+          className="mt-5 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
         >
           Installer maintenant
         </button>
@@ -330,7 +330,7 @@ function Installation({ onSuivant }: { readonly onSuivant: () => void }) {
       <button
         type="button"
         onClick={onSuivant}
-        className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-5 text-[1.05rem] font-semibold text-texte-doux"
+        className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-5 text-lecture font-semibold text-texte-doux"
       >
         Plus tard
       </button>
@@ -355,8 +355,8 @@ function Allergies({
 
   return (
     <div>
-      <h1 className="text-[2rem] text-texte">Des allergies ?</h1>
-      <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+      <h1 className="text-titre-l text-texte">Des allergies ?</h1>
+      <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
         On écartera systématiquement ces aliments. Vous pourrez les modifier à tout moment dans
         Paramètres.
       </p>
@@ -369,7 +369,7 @@ function Allergies({
         />
       </div>
 
-      <h2 className="mt-8 text-[1.5rem] text-texte">Un régime particulier ?</h2>
+      <h2 className="mt-8 text-titre-m text-texte">Un régime particulier ?</h2>
       <div className="mt-3">
         <ChoixRegime
           catalogue={catalogue}
@@ -381,7 +381,7 @@ function Allergies({
       <button
         type="button"
         onClick={onSuivant}
-        className="mt-6 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1.05rem] font-semibold text-white"
+        className="mt-6 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
       >
         Continuer
       </button>
@@ -402,8 +402,8 @@ function Rythme({
 }) {
   return (
     <div>
-      <h1 className="text-[2rem] text-texte">Votre rythme</h1>
-      <p className="mt-3 text-[1.05rem] leading-relaxed text-texte-doux">
+      <h1 className="text-titre-l text-texte">Votre rythme</h1>
+      <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
         Deux questions, modifiables à tout moment.
       </p>
 
@@ -414,7 +414,7 @@ function Rythme({
       <button
         type="button"
         onClick={onTerminer}
-        className="mt-8 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-[1.05rem] font-semibold text-white"
+        className="mt-8 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
       >
         C’est parti
       </button>

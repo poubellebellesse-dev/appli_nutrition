@@ -120,7 +120,7 @@ function LienParametres({ actif }: { readonly actif: boolean }) {
         href={hashDesParametres()}
         aria-current={actif ? 'page' : undefined}
         className={
-          'flex min-h-tactile items-center gap-2 rounded-[--radius-carte] px-3 text-[0.95rem] font-medium no-underline ' +
+          'flex min-h-tactile items-center gap-2 rounded-[--radius-carte] px-3 text-courant font-medium no-underline ' +
           (actif ? 'text-accent-texte' : 'text-attenue hover:text-texte')
         }
       >
@@ -352,7 +352,7 @@ function Coquille() {
         {alerte !== 'aucune' && (
           <div
             role="status"
-            className="mb-5 flex items-start gap-3 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-[0.95rem] leading-relaxed text-alerte-texte"
+            className="mb-5 flex items-start gap-3 rounded-[--radius-carte] border border-alerte-bordure bg-alerte-fond p-4 text-courant leading-relaxed text-alerte-texte"
           >
             <p className="flex-1">{MESSAGE[alerte]}</p>
             {ECARTABLE[alerte] && (
@@ -372,7 +372,7 @@ function Coquille() {
                 }}
                 // Cible tactile pleine, et un libellé accessible : une croix seule n'annonce rien.
                 aria-label="Masquer cet avertissement"
-                className="-my-2 -mr-2 flex min-h-tactile w-12 shrink-0 items-center justify-center rounded-[0.6rem] text-[1.3rem] leading-none"
+                className="-my-2 -mr-2 flex min-h-tactile w-12 shrink-0 items-center justify-center rounded-[0.6rem] text-titre-s leading-none"
               >
                 <span aria-hidden="true">✕</span>
               </button>
@@ -388,13 +388,13 @@ function Coquille() {
         {appliquerMiseAJour !== null && (
           <div
             role="status"
-            className="mb-5 flex flex-wrap items-center gap-3 rounded-[--radius-carte] border border-bordure-forte bg-surface p-4 text-[0.95rem] leading-relaxed text-texte"
+            className="mb-5 flex flex-wrap items-center gap-3 rounded-[--radius-carte] border border-bordure-forte bg-surface p-4 text-courant leading-relaxed text-texte"
           >
             <p className="flex-1">Une nouvelle version de l’application est prête.</p>
             <button
               type="button"
               onClick={appliquerMiseAJour}
-              className="flex min-h-tactile items-center justify-center rounded-[0.7rem] bg-accent-plein px-4 text-[0.95rem] font-semibold text-white"
+              className="flex min-h-tactile items-center justify-center rounded-[0.7rem] bg-accent-plein px-4 text-courant font-semibold text-white"
             >
               Recharger
             </button>
@@ -406,7 +406,7 @@ function Coquille() {
               type="button"
               onClick={() => setAppliquerMiseAJour(null)}
               aria-label="Plus tard"
-              className="-my-2 -mr-2 flex min-h-tactile w-12 shrink-0 items-center justify-center rounded-[0.6rem] text-[1.3rem] leading-none text-texte-doux"
+              className="-my-2 -mr-2 flex min-h-tactile w-12 shrink-0 items-center justify-center rounded-[0.6rem] text-titre-s leading-none text-texte-doux"
             >
               <span aria-hidden="true">✕</span>
             </button>
@@ -422,7 +422,7 @@ function Coquille() {
           pas d'`aria-haspopup` : elle s'affiche d'elle-même, une fois, à la fin de l'intro. */}
       {etapeVisite === 'invitation' && (
         <Panneau titre="Une visite guidée ?" onFermer={() => repondreInvitation(false)}>
-          <p className="text-[0.95rem] leading-relaxed text-texte-doux">
+          <p className="text-courant leading-relaxed text-texte-doux">
             On vous montre les onglets un par un, et vous les touchez vous-même pour avancer. Deux à
             trois minutes, et vous pouvez la passer à tout moment.
           </p>
@@ -430,14 +430,14 @@ function Coquille() {
             <button
               type="button"
               onClick={() => repondreInvitation(false)}
-              className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-[0.95rem] font-semibold text-texte-doux"
+              className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
             >
               Non merci
             </button>
             <button
               type="button"
               onClick={() => repondreInvitation(true)}
-              className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] bg-accent-plein px-4 text-[0.95rem] font-semibold text-white"
+              className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] bg-accent-plein px-4 text-courant font-semibold text-white"
             >
               Oui, je découvre
             </button>

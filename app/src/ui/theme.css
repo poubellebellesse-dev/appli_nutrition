@@ -75,6 +75,32 @@
   --font-titre: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-texte: 'Instrument Sans', system-ui, -apple-system, sans-serif;
 
+  /* --- Échelle de texte : SIX PAS, ET SIX SEULEMENT ------------------------------------
+   *
+   * ⚠️ CE BLOC REMPLACE 30 TAILLES ARBITRAIRES, mesurées le 2026-08-10 sur 421 occurrences de
+   * `text-[…rem]`. Trente valeurs écrites à la main ne sont pas une échelle : elles ne se
+   * comparent pas, elles ne se retiennent pas, et l'écart entre 0,92 et 0,95 rem — 0,5 px à la
+   * taille de base — n'est visible de personne. Ce qu'il coûtait était réel en revanche : chaque
+   * nouvel écran repartait d'un nombre voisin choisi au jugé, et l'écart s'élargissait.
+   *
+   * Les quatre tailles fréquentes (0,90 · 0,95 · 1,00 · 1,05) sont fondues en DEUX pas. Aucune
+   * paire d'entre elles ne se distingue à l'œil ; les garder toutes les quatre revenait à décider
+   * quatre fois la même chose.
+   *
+   * ⛔ EN REM, JAMAIS EN PX, et pour la raison écrite plus bas sur `html` : la taille de base
+   * appartient à l'utilisateur, via son navigateur ou son système. Une échelle en px la lui
+   * confisquerait, et le bloc commun exige que l'interface tienne à 150 %.
+   *
+   * ⛔ ET ON N'EN AJOUTE PAS UN SEPTIÈME. Le besoin d'un pas intermédiaire est le symptôme d'un
+   * écran qui hiérarchise mal, pas d'une échelle trop courte. `ui/echelle-typo.test.ts` refuse
+   * toute taille littérale hors de cette liste — c'est ce test qui empêche les 30 de revenir. */
+  --text-mention: 0.85rem; /* notes, légendes, mentions secondaires */
+  --text-courant: 0.95rem; /* le texte d'interface par défaut */
+  --text-lecture: 1.05rem; /* paragraphes qu'on lit vraiment : étapes, explications */
+  --text-titre-s: 1.25rem; /* titre de section (`h2`) */
+  --text-titre-m: 1.5rem; /* titre de sous-écran */
+  --text-titre-l: 2.1rem; /* titre d'écran (`h1`) */
+
   /* --- Cibles tactiles, en rem pour suivre l'agrandissement système --------------------- */
   --spacing-tactile: 3rem; /* 48 px — plancher imposé par le bloc commun */
   --spacing-cta: 3.25rem; /* 52 px — bouton d'action dominant */
