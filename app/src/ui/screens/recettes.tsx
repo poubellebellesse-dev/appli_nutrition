@@ -131,10 +131,11 @@ export function Recettes() {
   const rafraichir = useCallback(() => {
     chargerSocle()
       .then((s) => {
-        const utilisateur = readUserState(s.db, {
-          windowDays: FENETRE_HISTORIQUE_JOURS,
-          today: aujourdhuiIso(),
-        })
+        const utilisateur = readUserState(
+          s.db,
+          { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() },
+          s.catalogue.foods
+        )
         setEtat({
           phase: 'pret',
           socle: {

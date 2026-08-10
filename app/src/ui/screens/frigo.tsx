@@ -123,10 +123,11 @@ export function Frigo() {
     chargerSocle()
       .then((s) => {
         if (annule) return
-        const utilisateur = readUserState(s.db, {
-          windowDays: FENETRE_HISTORIQUE_JOURS,
-          today: aujourdhuiIso(),
-        })
+        const utilisateur = readUserState(
+          s.db,
+          { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() },
+          s.catalogue.foods
+        )
         setEtat({
           phase: 'pret',
           socle: { catalogue: s.catalogue, moteur: s.moteur, contraintes: utilisateur.constraints },

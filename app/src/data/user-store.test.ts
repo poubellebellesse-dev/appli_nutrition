@@ -15,6 +15,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import type {
   AllergenId,
   EquipmentId,
+  Food,
   FoodId,
   MealHistoryEntry,
   RecipeId,
@@ -28,6 +29,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { openUserDb, type OpenedUserDb } from './user-store-node.js'
 import type { UserDb } from './user-db.js'
 import { MIGRATIONS, USER_SCHEMA_VERSION, migrate, readSchemaVersion } from './user-schema.js'
+import { makeFood } from '../engine/selection/test-fixtures.js'
 import {
   aConsenti,
   clearCuisson,
@@ -44,6 +46,11 @@ import {
   readDiet,
   readDisplay,
   readExcludedFoodIds,
+  readExcludedFoodIdsDeplies,
+  readExcludedGroupIds,
+  readGroupExceptionFoodIds,
+  writeExcludedGroupIds,
+  writeGroupExceptionFoodIds,
   readFavorites,
   readHistory,
   readPantryDeclareLe,
@@ -90,6 +97,15 @@ const PROFIL: UserProfile = {
 }
 
 const AUJOURDHUI = '2026-07-30'
+
+/**
+ * Catalogue vide, pour les tests qui ne parlent pas de groupes d'origine animale.
+ *
+ * `readConstraints` exige un catalogue depuis la v15 : il lui sert à déplier les groupes retirés.
+ * Sans groupe retiré, il n'est jamais consulté — et le passer vide rend explicite que ces tests-là
+ * n'en dépendent pas. Le dépliage a ses propres tests, plus bas, avec un vrai catalogue.
+ */
+const SANS_CATALOGUE: ReadonlyMap<FoodId, Food> = new Map()
 
 let ouverte: OpenedUserDb
 let db: UserDb
@@ -280,13 +296,13 @@ describe('user-store — profil', () => {
 describe('user-store — contraintes dures', () => {
   it('rend des contraintes vides sur une base neuve, jamais null', () => {
     // Un `HardConstraints` absent obligerait chaque appelant à gérer le cas ; vide est le neutre.
-    expect(readConstraints(db)).toEqual({ allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null })
+    expect(readConstraints(db, SANS_CATALOGUE)).toEqual({ allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null })
   })
 
   it('fait l’aller-retour sur le matériel déclaré', () => {
     writeOwnedEquipmentIds(db, ['four', 'poele'] as EquipmentId[])
     expect(readOwnedEquipmentIds(db)).toEqual(['four', 'poele'])
-    expect(readConstraints(db).ownedEquipmentIds).toEqual(['four', 'poele'])
+    expect(readConstraints(db, SANS_CATALOGUE).ownedEquipmentIds).toEqual(['four', 'poele'])
   })
 
   it('⛔ table vide → `null`, JAMAIS `[]` — la couche `equipement` doit rester inerte', () => {
@@ -314,7 +330,7 @@ describe('user-store — contraintes dures', () => {
       { allergenId: 'gluten', severite: 'allergie' },
       { allergenId: 'lait', severite: null },
     ])
-    expect(readConstraints(db).allergies).toEqual(['gluten', 'lait'])
+    expect(readConstraints(db, SANS_CATALOGUE).allergies).toEqual(['gluten', 'lait'])
   })
 
   it('REMPLACE la liste d’allergènes au lieu de l’enrichir', () => {
@@ -322,7 +338,7 @@ describe('user-store — contraintes dures', () => {
     // et pire, l'utilisateur croit l'avoir retirée.
     writeAllergies(db, [{ allergenId: 'gluten' as AllergenId, severite: null }])
     writeAllergies(db, [{ allergenId: 'lait' as AllergenId, severite: null }])
-    expect(readConstraints(db).allergies).toEqual(['lait'])
+    expect(readConstraints(db, SANS_CATALOGUE).allergies).toEqual(['lait'])
   })
 
   it('fait l’aller-retour sur le régime et sait l’effacer', () => {
@@ -339,6 +355,128 @@ describe('user-store — contraintes dures', () => {
     expect(readExcludedFoodIds(db)).toEqual(['coriandre', 'olive_noire'])
     writeExcludedFoodIds(db, [])
     expect(readExcludedFoodIds(db)).toEqual([])
+  })
+})
+
+// --- Retrait par groupe d'origine animale (v15) -------------------------------------------------
+
+/** Un catalogue de test : deux laitiers (dont une cascade), un œuf, une viande, un légume. */
+function catalogueAnimal(...extra: readonly Food[]): ReadonlyMap<FoodId, Food> {
+  const base = [
+    makeFood('lait', [], { origineAnimale: 'mammifere', provenanceAnimale: 'production' }),
+    makeFood('beurre', [], { deriveDe: 'lait' }),
+    makeFood('oeuf', [], { origineAnimale: 'volaille', provenanceAnimale: 'production' }),
+    makeFood('steak', [], { origineAnimale: 'mammifere', provenanceAnimale: 'corps' }),
+    makeFood('carotte'),
+  ]
+  return new Map([...base, ...extra].map((f) => [f.id, f]))
+}
+
+describe('user-store — retrait par groupe d’origine animale', () => {
+  it('fait l’aller-retour sur les groupes retirés et sur les exceptions', () => {
+    writeExcludedGroupIds(db, ['oeufs', 'laitiers'])
+    expect(readExcludedGroupIds(db)).toEqual(['laitiers', 'oeufs'])
+    writeGroupExceptionFoodIds(db, ['beurre' as FoodId])
+    expect(readGroupExceptionFoodIds(db)).toEqual(['beurre'])
+
+    writeExcludedGroupIds(db, [])
+    writeGroupExceptionFoodIds(db, [])
+    expect(readExcludedGroupIds(db)).toEqual([])
+    expect(readGroupExceptionFoodIds(db)).toEqual([])
+  })
+
+  it('⛔ LE CHECK REFUSE UN GROUPE INCONNU — c’est un fil-piège, pas un garde-fou', () => {
+    // Il ne protège rien à l'exécution (le type `GroupeAnimalId` s'en charge) : il existe pour que
+    // scinder ou renommer un groupe FORCE une reconstruction de table, donc une migration dans
+    // laquelle on réécrira les `groupe_id` déjà stockés. Sans elle, un groupe retiré cesserait
+    // SILENCIEUSEMENT de l'être. Voir l'en-tête de `GroupeAnimalId`.
+    expect(() =>
+      db.run("INSERT INTO user_excluded_group (groupe_id) VALUES ('farine_grillon')")
+    ).toThrow()
+    expect(readExcludedGroupIds(db)).toEqual([])
+  })
+
+  it('un groupe retiré se déplie en TOUS ses aliments, cascades comprises', () => {
+    writeExcludedGroupIds(db, ['laitiers'])
+    // `beurre` ne déclare aucune origine : il la tient de `lait` par `deriveDe`.
+    expect(readExcludedFoodIdsDeplies(db, catalogueAnimal())).toEqual(['beurre', 'lait'])
+  })
+
+  it('⛔ UN ALIMENT AJOUTÉ AU CATALOGUE APRÈS LE COCHAGE ENTRE DANS LE GROUPE DÉJÀ COCHÉ', () => {
+    // C'EST LE TEST QUI PORTE TOUTE LA DÉCISION DE SCHÉMA. Si `user_excluded_group` stockait les
+    // aliments du groupe au moment du geste au lieu du groupe lui-même, ce test serait le seul à
+    // rougir — et sans lui le défaut serait resté muet : pas d'erreur, pas de test rouge, juste un
+    // œuf dans l'assiette de quelqu'un qui avait coché « Œufs ».
+    writeExcludedGroupIds(db, ['oeufs'])
+    expect(readExcludedFoodIdsDeplies(db, catalogueAnimal())).toEqual(['oeuf'])
+
+    const oeufDeCaille = makeFood('oeuf_caille', [], {
+      origineAnimale: 'volaille',
+      provenanceAnimale: 'production',
+    })
+    // AUCUNE écriture entre les deux appels : seul le CATALOGUE a changé.
+    expect(readExcludedFoodIdsDeplies(db, catalogueAnimal(oeufDeCaille))).toEqual([
+      'oeuf',
+      'oeuf_caille',
+    ])
+  })
+
+  it('une exception ré-admet un aliment à l’intérieur d’un groupe retiré', () => {
+    writeExcludedGroupIds(db, ['laitiers'])
+    writeGroupExceptionFoodIds(db, ['beurre' as FoodId])
+    expect(readExcludedFoodIdsDeplies(db, catalogueAnimal())).toEqual(['lait'])
+  })
+
+  it('une exception dont le groupe n’est pas retiré est INERTE, jamais une erreur', () => {
+    // Elle ne devient pas fausse, elle cesse de s'appliquer — et se retrouve telle quelle si le
+    // groupe est recoché, ce qu'attend quelqu'un qui a fait le tri une fois.
+    writeGroupExceptionFoodIds(db, ['beurre' as FoodId])
+    expect(readExcludedFoodIdsDeplies(db, catalogueAnimal())).toEqual([])
+
+    writeExcludedGroupIds(db, ['laitiers'])
+    expect(readExcludedFoodIdsDeplies(db, catalogueAnimal())).toEqual(['lait'])
+  })
+
+  it('⚠️ LA RÉ-ADMISSION S’APPLIQUE EN DERNIER, donc l’emporte sur un aliment coché seul', () => {
+    // L'écriture garde les deux tables disjointes (voir l'écran) ; cette assertion fixe le sens de
+    // la LECTURE quand elles ne le sont pas — une base venue d'ailleurs se lit en rendant à
+    // l'utilisateur ce qu'il a explicitement repris.
+    writeExcludedFoodIds(db, ['beurre' as FoodId])
+    writeExcludedGroupIds(db, ['laitiers'])
+    writeGroupExceptionFoodIds(db, ['beurre' as FoodId])
+    expect(readExcludedFoodIdsDeplies(db, catalogueAnimal())).toEqual(['lait'])
+  })
+
+  it('cumule les groupes retirés et les aliments cochés seuls, sans doublon et trié', () => {
+    writeExcludedGroupIds(db, ['laitiers'])
+    writeExcludedFoodIds(db, ['carotte' as FoodId, 'lait' as FoodId])
+    const exclus = readExcludedFoodIdsDeplies(db, catalogueAnimal())
+    expect(exclus).toEqual(['beurre', 'carotte', 'lait'])
+    expect(new Set(exclus).size).toBe(exclus.length)
+  })
+
+  it('⚠️ UN GROUPE ABSENT DU CATALOGUE NE DÉPLIE RIEN — la dette, mise noir sur blanc', () => {
+    // Ignorance silencieuse habituelle, mais ici dans le sens NON SÛR : l'exclusion s'évapore. Ce
+    // test ne valide pas ce comportement, il l'ENREGISTRE — pour que le jour où `GroupeAnimalId`
+    // change, on sache exactement ce qu'une migration oubliée coûterait.
+    writeExcludedGroupIds(db, ['fruits_de_mer'])
+    expect(readExcludedFoodIdsDeplies(db, catalogueAnimal())).toEqual([])
+  })
+
+  it('⛔ `readExcludedFoodIds` RESTE BRUT — seul le dépliage voit les groupes', () => {
+    // L'écran de réglages a besoin de savoir quelle case est cochée ; s'il lisait le résultat
+    // déplié, cocher un groupe ferait apparaître ses aliments comme cochés un par un, et les
+    // décocher n'aurait plus le même sens.
+    writeExcludedGroupIds(db, ['laitiers'])
+    expect(readExcludedFoodIds(db)).toEqual([])
+  })
+
+  it('`readConstraints` rend le résultat DÉPLIÉ — le moteur ne voit jamais un groupe', () => {
+    // `HardConstraints.excludedFoodIds` est plat et doit le rester : c'est ce qui permet à tout ce
+    // mécanisme de n'ajouter pas une ligne à `engine/`.
+    writeExcludedGroupIds(db, ['laitiers'])
+    writeGroupExceptionFoodIds(db, ['beurre' as FoodId])
+    expect(readConstraints(db, catalogueAnimal()).excludedFoodIds).toEqual(['lait'])
   })
 })
 
@@ -494,7 +632,7 @@ describe('user-store — readUserState', () => {
     writeActiveTopics(db, ['diabete' as TopicId], AUJOURDHUI)
     writePantry(db, [{ foodId: 'farine_ble' as FoodId, quantiteApprox: null }], '2026-08-04')
 
-    const etat = readUserState(db, { windowDays: 21, today: AUJOURDHUI })
+    const etat = readUserState(db, { windowDays: 21, today: AUJOURDHUI }, SANS_CATALOGUE)
 
     expect(etat.profile).toEqual(PROFIL)
     expect(etat.constraints).toEqual({
@@ -515,7 +653,7 @@ describe('user-store — readUserState', () => {
   it('rend un état exploitable sur une base VIDE — profil null, tout le reste neutre', () => {
     // C'est le cas du tout premier lancement : rien ne doit lever, l'UI décide quoi faire du
     // profil manquant (onboarding, ou semis d'un profil par défaut).
-    const etat = readUserState(db, { windowDays: 21, today: AUJOURDHUI })
+    const etat = readUserState(db, { windowDays: 21, today: AUJOURDHUI }, SANS_CATALOGUE)
     expect(etat.profile).toBeNull()
     expect(etat.constraints.allergies).toEqual([])
     expect(etat.preferences.size).toBe(0)
@@ -1184,20 +1322,20 @@ describe('user-store — modifier ses allergies après le premier lancement', ()
 
     expect(readAllergies(db).map((a) => a.allergenId)).toEqual(['lait'])
     // C'est `constraints` que le moteur lit — vérifier `user_allergy` seule ne prouverait rien.
-    expect(readConstraints(db).allergies).toEqual(['lait'])
+    expect(readConstraints(db, SANS_CATALOGUE).allergies).toEqual(['lait'])
   })
 
   it('sait revenir à AUCUNE allergie — « je m’étais trompé » doit être exprimable', () => {
     writeAllergies(db, [{ allergenId: 'arachides' as AllergenId, severite: null }])
     writeAllergies(db, [])
-    expect(readConstraints(db).allergies).toEqual([])
+    expect(readConstraints(db, SANS_CATALOGUE).allergies).toEqual([])
   })
 
   it('propage un ajout tardif jusqu’à readUserState, la source des suggestions', () => {
     // L'onboarding passé, une allergie qui apparaît doit atteindre le moteur sans réinstallation.
-    expect(readUserState(db, { windowDays: 21, today: AUJOURDHUI }).constraints.allergies).toEqual([])
+    expect(readUserState(db, { windowDays: 21, today: AUJOURDHUI }, SANS_CATALOGUE).constraints.allergies).toEqual([])
     writeAllergies(db, [{ allergenId: 'crustaces' as AllergenId, severite: null }])
-    expect(readUserState(db, { windowDays: 21, today: AUJOURDHUI }).constraints.allergies).toEqual([
+    expect(readUserState(db, { windowDays: 21, today: AUJOURDHUI }, SANS_CATALOGUE).constraints.allergies).toEqual([
       'crustaces',
     ])
   })
@@ -1209,7 +1347,7 @@ describe('user-store — modifier ses allergies après le premier lancement', ()
     expect(readDiet(db)).toBe('vegetalien')
     writeDiet(db, null)
     expect(readDiet(db)).toBeNull()
-    expect(readConstraints(db).allergies).toEqual(['gluten'])
+    expect(readConstraints(db, SANS_CATALOGUE).allergies).toEqual(['gluten'])
   })
 })
 

@@ -24,7 +24,23 @@ import type { Food } from './catalog.js'
 import { resolveAnimalOrigin, resolveAnimalProvenance } from './catalog.js'
 import type { FoodId } from './ids.js'
 
-/** Identifiant stable d'un groupe. Ne dépend d'aucun libellé : c'est lui qui se stocke, pas le mot. */
+/**
+ * Identifiant stable d'un groupe. Ne dépend d'aucun libellé : c'est lui qui se stocke, pas le mot.
+ *
+ * ⛔ CHANGER CETTE UNION OBLIGE À UNE MIGRATION DE `user.db`. Ces sept valeurs sont ÉCRITES EN BASE
+ * utilisateur — `user_excluded_group.groupe_id` (data/user-schema.ts, v15) — et le dépliage en
+ * aliments se fait à la lecture, en cherchant l'id dans la sortie de `groupesAnimaux`. Un
+ * `groupe_id` stocké qui ne correspond plus à aucun groupe ne se déplie sur RIEN : il n'exclut plus
+ * rien, en silence, et quelqu'un qui avait retiré un groupe le remange sans qu'aucune erreur ne le
+ * dise. C'est la seule polarité non sûre de ce mécanisme.
+ *
+ * Renommer, scinder ou retirer une valeur (la dette `insecte` → *miel*, plus bas, en est le cas
+ * prévu) exige donc de RÉÉCRIRE les `groupe_id` déjà stockés dans la même migration. Le `CHECK` posé
+ * sur la colonne existe pour rendre cet oubli impossible : il fige les sept valeurs en SQL, si bien
+ * qu'ajouter la huitième force une reconstruction de table, donc une migration qu'on ne peut pas ne
+ * pas écrire. Il ne protège rien à l'exécution — ⛔ NE PAS LE RETIRER POUR AUTANT, c'est un
+ * fil-piège, pas un garde-fou, et son commentaire dans `user-schema.ts` le dit aussi.
+ */
 export type GroupeAnimalId =
   | 'laitiers'
   | 'oeufs'

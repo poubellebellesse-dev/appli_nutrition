@@ -170,10 +170,11 @@ export function DetailRecette({
           setEtat({ phase: 'introuvable' })
           return
         }
-        const utilisateur = readUserState(socle.db, {
-          windowDays: FENETRE_HISTORIQUE_JOURS,
-          today: aujourdhuiIso(),
-        })
+        const utilisateur = readUserState(
+          socle.db,
+          { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() },
+          socle.catalogue.foods
+        )
         setEtat({
           phase: 'pret',
           vue: {

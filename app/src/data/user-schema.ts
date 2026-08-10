@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 14
+export const USER_SCHEMA_VERSION = 15
 
 export interface Migration {
   readonly version: number
@@ -729,6 +729,49 @@ const V14_STATEMENTS: readonly string[] = [
    )`,
 ]
 
+/**
+ * v15 — « les aliments que je ne veux pas », par GROUPE d'origine animale.
+ *
+ * Sert le végétarisme lacto- / ovo- sans toucher au filtre `regime`, qui reste 🔒 critique :
+ * « végétarien » + retrait du groupe « Œufs » donne un lacto-végétarien, et le végétarien qui
+ * refuse la présure retire le roquefort lui-même. Ce qui devient configurable, c'est ce que la
+ * couche `exclusions` LIT — jamais le filtre.
+ *
+ * ⚠️ ON STOCKE LE GROUPE, PAS SES ALIMENTS, et c'est toute la décision. Enregistrer aujourd'hui les
+ * 7 aliments du groupe « Œufs » servirait le huitième, ajouté au catalogue le mois prochain, à
+ * quelqu'un qui avait justement coché « Œufs » — sans erreur, sans test rouge, sans rien à l'écran.
+ * Le dépliage en aliments se fait donc à la LECTURE (`readExcludedFoodIdsDeplies`, user-store.ts),
+ * contre le catalogue du jour.
+ *
+ * ⚠️ `user_group_exception` NE PORTE PAS DE COLONNE DE GROUPE. Un aliment tombe dans exactement un
+ * groupe — invariant vérifié par test (engine/domain/groupes-animaux.test.ts et
+ * tests/groupes-animaux-catalogue.test.ts) — et la stocker dupliquerait un fait dérivable, qui
+ * périmerait au premier aliment reclassé par une mise à jour du catalogue. Une exception dont le
+ * groupe n'est pas coché est INERTE : elle ne devient pas fausse, elle cesse de s'appliquer.
+ *
+ * ⚠️ LE `CHECK` SUR `groupe_id` NE PROTÈGE RIEN À L'EXÉCUTION, ET DOIT RESTER. Le seul id douteux
+ * qui puisse arriver ici a été écrit par une version ANTÉRIEURE de l'app, donc valide au moment de
+ * l'insertion ; une faute de frappe côté code est déjà arrêtée par le type `GroupeAnimalId`. Ce
+ * CHECK est un FIL-PIÈGE, pas un garde-fou : il fige les sept valeurs en SQL, si bien que scinder ou
+ * renommer un groupe force une reconstruction de table — donc une migration qu'on ne peut pas ne pas
+ * écrire, et dans laquelle on réécrira les `groupe_id` déjà stockés. Sans elle, un groupe retiré
+ * cesse SILENCIEUSEMENT de l'être (voir l'en-tête de `GroupeAnimalId`, engine/domain/).
+ *
+ * ⚠️ AUCUN CHECK NI FK SUR `food_id`, comme partout : il désigne `catalog.db`, un autre fichier.
+ * Un aliment devenu inconnu s'ignore en silence à la lecture — ici c'est sans danger, un aliment
+ * absent du catalogue n'est de toute façon proposé par personne.
+ */
+const V15_STATEMENTS: readonly string[] = [
+  `CREATE TABLE user_excluded_group (
+     groupe_id TEXT PRIMARY KEY
+       CHECK (groupe_id IN ('laitiers','oeufs','miel','viande_mammifere','volaille','poisson','fruits_de_mer'))
+   )`,
+
+  `CREATE TABLE user_group_exception (
+     food_id TEXT PRIMARY KEY
+   )`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -744,6 +787,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 12, statements: V12_STATEMENTS },
   { version: 13, statements: V13_STATEMENTS },
   { version: 14, statements: V14_STATEMENTS },
+  { version: 15, statements: V15_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

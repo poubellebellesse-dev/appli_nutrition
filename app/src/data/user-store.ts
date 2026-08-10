@@ -21,7 +21,9 @@ import type {
   CourseKind,
   DietCode,
   EquipmentId,
+  Food,
   FoodId,
+  GroupeAnimalId,
   HardConstraints,
   MealHistory,
   MealHistoryEntry,
@@ -35,6 +37,7 @@ import type {
   UserProfile,
   WeekPlan,
 } from '../engine/domain/index.js'
+import { groupesAnimaux } from '../engine/domain/index.js'
 import { withTransaction, type UserDb } from './user-db.js'
 
 // --- Types de bordure -------------------------------------------------------------------------
@@ -202,6 +205,98 @@ export function writeExcludedFoodIds(db: UserDb, foodIds: readonly FoodId[]): vo
   })
 }
 
+// --- Retrait par GROUPE d'origine animale (v15) ------------------------------------------------
+//
+// ⚠️ CES TROIS TABLES NE SORTENT JAMAIS D'ICI TELLES QUELLES. Le moteur ne connaît qu'un
+// `excludedFoodIds` PLAT (`HardConstraints`, engine/domain/request.ts) : le dépliage groupe →
+// aliments se fait par `readExcludedFoodIdsDeplies`, dans data/, et c'est ce qui permet à tout ce
+// mécanisme de n'ajouter pas une ligne à `engine/`. Les accesseurs bruts ci-dessous servent l'ÉCRAN
+// de réglages, qui doit savoir quelle case est cochée ; jamais une requête au moteur.
+
+/** Les groupes retirés, tels qu'écrits. NON dépliés — voir `readExcludedFoodIdsDeplies`. */
+export function readExcludedGroupIds(db: UserDb): readonly GroupeAnimalId[] {
+  return db
+    .all<{ readonly groupe_id: string }>('SELECT groupe_id FROM user_excluded_group ORDER BY groupe_id')
+    .map((row) => row.groupe_id as GroupeAnimalId)
+}
+
+/** Remplace la liste entière, même raison que `writeAllergies`. */
+export function writeExcludedGroupIds(db: UserDb, groupeIds: readonly GroupeAnimalId[]): void {
+  withTransaction(db, () => {
+    db.run('DELETE FROM user_excluded_group')
+    for (const groupeId of groupeIds) {
+      db.run('INSERT INTO user_excluded_group (groupe_id) VALUES (?)', [groupeId])
+    }
+  })
+}
+
+/**
+ * Les aliments RÉ-ADMIS à l'intérieur d'un groupe retiré — le végétarien qui reprend le roquefort.
+ *
+ * Une exception dont le groupe n'est pas (ou n'est plus) retiré est INERTE : la ligne ne devient pas
+ * fausse, elle cesse simplement de s'appliquer. C'est pourquoi cocher un groupe puis le décocher
+ * puis le recocher retrouve les mêmes exceptions, ce qu'attend quelqu'un qui a fait le tri une fois.
+ */
+export function readGroupExceptionFoodIds(db: UserDb): readonly FoodId[] {
+  return db
+    .all<{ readonly food_id: string }>('SELECT food_id FROM user_group_exception ORDER BY food_id')
+    .map((row) => row.food_id as FoodId)
+}
+
+/** Remplace la liste entière, même raison que `writeAllergies`. */
+export function writeGroupExceptionFoodIds(db: UserDb, foodIds: readonly FoodId[]): void {
+  withTransaction(db, () => {
+    db.run('DELETE FROM user_group_exception')
+    for (const foodId of foodIds) {
+      db.run('INSERT INTO user_group_exception (food_id) VALUES (?)', [foodId])
+    }
+  })
+}
+
+/**
+ * Les aliments écartés, groupes DÉPLIÉS — la seule forme que le moteur reçoive.
+ *
+ *     exclus = ( ⋃ aliments(g) pour g retiré  ∪  aliments cochés seuls )  \  aliments ré-admis
+ *
+ * ⚠️ LE DÉPLIAGE SE FAIT ICI, CONTRE LE CATALOGUE DU JOUR, ET C'EST TOUTE LA DÉCISION. Un aliment
+ * ajouté au catalogue APRÈS le cochage d'un groupe entre dans ce groupe déjà coché : c'est la raison
+ * pour laquelle `user_excluded_group` stocke le groupe et non ses membres. Enregistrer les membres
+ * aurait servi le huitième œuf à quelqu'un qui avait justement coché « Œufs » — sans erreur, sans
+ * test rouge, sans rien à l'écran.
+ *
+ * ⚠️ LA RÉ-ADMISSION EST APPLIQUÉE EN DERNIER, donc elle l'emporte aussi sur un aliment coché seul.
+ * L'écriture, elle, garde les deux tables disjointes (voir l'écran de réglages) ; cet ordre est ce
+ * qui fait qu'une base incohérente venue d'ailleurs se lit quand même dans le sens sûr pour
+ * l'utilisateur — on lui rend ce qu'il a explicitement repris.
+ *
+ * ⚠️ UN `groupe_id` INCONNU DE `groupesAnimaux` NE DÉPLIE RIEN, donc n'exclut rien. Règle d'ignorance
+ * silencieuse habituelle, mais ici elle joue dans le sens NON SÛR — c'est la dette documentée à côté
+ * de `GroupeAnimalId` (engine/domain/groupes-animaux.ts), et le `CHECK` de la v15 est le fil-piège
+ * qui force à la traiter le jour où l'union change.
+ *
+ * Coût : `groupesAnimaux` parcourt les aliments une fois — et n'est appelée QUE si au moins un
+ * groupe est retiré, ce qui est faux pour la quasi-totalité des utilisateurs.
+ */
+export function readExcludedFoodIdsDeplies(
+  db: UserDb,
+  foods: ReadonlyMap<FoodId, Food>
+): readonly FoodId[] {
+  const exclus = new Set<FoodId>(readExcludedFoodIds(db))
+
+  const retires = readExcludedGroupIds(db)
+  if (retires.length > 0) {
+    const coches = new Set<GroupeAnimalId>(retires)
+    for (const groupe of groupesAnimaux(foods)) {
+      if (!coches.has(groupe.id)) continue
+      for (const aliment of groupe.aliments) exclus.add(aliment.id)
+    }
+  }
+
+  for (const foodId of readGroupExceptionFoodIds(db)) exclus.delete(foodId)
+
+  return [...exclus].sort()
+}
+
 /**
  * Le matériel déclaré. `null` = RIEN EN BASE, et la couche `equipement` reste alors inerte.
  *
@@ -236,12 +331,19 @@ export function writeOwnedEquipmentIds(db: UserDb, equipmentIds: readonly Equipm
 /**
  * Les contraintes dures en une lecture. Vides = aucune contrainte — sauf `ownedEquipmentIds`, dont
  * le `null` est porteur de sens (voir `readOwnedEquipmentIds`).
+ *
+ * ⚠️ `foods` EST REQUIS, PAS OPTIONNEL, et c'est délibéré. Le dépliage des groupes retirés (v15) a
+ * besoin du catalogue ; un paramètre facultatif qu'un septième appelant oublierait ne lèverait rien
+ * — ni au type, ni au test, ni à l'écran — et cet utilisateur-là remangerait des œufs sans le
+ * savoir. C'est le piège « un champ déclaré n'est pas un champ branché » (docs/reference/PIEGES.md),
+ * déjà payé trois fois. Le rendre requis fait porter l'oubli au compilateur. Même raisonnement que
+ * `StoredUserState.tolerancePiquant` : un seul point de lecture, un seul point d'oubli possible.
  */
-export function readConstraints(db: UserDb): HardConstraints {
+export function readConstraints(db: UserDb, foods: ReadonlyMap<FoodId, Food>): HardConstraints {
   return {
     allergies: readAllergies(db).map((a) => a.allergenId),
     diet: readDiet(db),
-    excludedFoodIds: readExcludedFoodIds(db),
+    excludedFoodIds: readExcludedFoodIdsDeplies(db, foods),
     ownedEquipmentIds: readOwnedEquipmentIds(db),
   }
 }
@@ -1018,11 +1120,19 @@ export function writeTolerancePiquant(db: UserDb, tolerance: PiquantTolerance | 
  *
  * L'assemblage lui-même reste à l'UI : le créneau, la date, la graine et la limite ne sont pas des
  * données persistées, et les composer ici ferait entrer une notion d'écran dans `data/`.
+ *
+ * `foods` sert le seul dépliage des groupes retirés — voir `readConstraints`, qui explique pourquoi
+ * il est requis et non optionnel. Passer `socle.catalogue.foods` : c'est le catalogue que le moteur
+ * consomme, recettes de l'utilisateur comprises.
  */
-export function readUserState(db: UserDb, window: HistoryWindow): StoredUserState {
+export function readUserState(
+  db: UserDb,
+  window: HistoryWindow,
+  foods: ReadonlyMap<FoodId, Food>
+): StoredUserState {
   return {
     profile: readProfile(db),
-    constraints: readConstraints(db),
+    constraints: readConstraints(db, foods),
     preferences: readPreferences(db),
     favoriteRecipeIds: readFavorites(db),
     history: readHistory(db, window),

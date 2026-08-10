@@ -23,19 +23,31 @@
 // ⚠️ CE N'EST PAS UN SIXIÈME ONGLET (§2 DESIGN, cinq onglets stables) — on y arrive par l'engrenage
 // de l'en-tête, présent sur tous les écrans. Voir `router.tsx`.
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type {
   AllergenId,
   Catalog,
   DietCode,
+  Food,
+  FoodId,
+  GroupeAnimal,
+  GroupeAnimalId,
   MealSlot,
   PiquantTolerance,
 } from '../../engine/domain/index.js'
+import { groupesAnimaux } from '../../engine/domain/index.js'
+import { DIET_CHAIN, regimeExigePar } from '../../engine/selection/index.js'
 import {
   readDisplay,
+  readExcludedFoodIds,
+  readExcludedGroupIds,
+  readGroupExceptionFoodIds,
   readMealTimes,
   writeAllergies,
   writeDiet,
+  writeExcludedFoodIds,
+  writeExcludedGroupIds,
+  writeGroupExceptionFoodIds,
   writeTolerancePiquant,
   readTolerancePiquant,
   writeDisplay,
@@ -87,6 +99,21 @@ interface Vue extends ChoixProfil {
   readonly sauvegarde: EtatSauvegarde
   /** Un onglet en `'partage'` n'enregistre rien : il ne peut pas non plus restaurer. */
   readonly verrou: EtatVerrou
+  /**
+   * « Aliments que je ne veux pas », dans la forme EXACTE où c'est stocké — trois ensembles bruts,
+   * jamais le résultat déplié.
+   *
+   * ⚠️ L'ÉCRAN NE TIENT PAS LA LISTE DÉPLIÉE, ET C'EST STRUCTUREL. Cocher « Œufs » enregistre LE
+   * GROUPE ; les aliments qu'il contient se calculent à la lecture, contre le catalogue du jour
+   * (`readExcludedFoodIdsDeplies`). Recopier ici les membres du groupe reviendrait à figer le
+   * catalogue au moment du geste — le huitième œuf ajouté le mois prochain serait servi à quelqu'un
+   * qui avait justement coché « Œufs », sans erreur ni test rouge.
+   */
+  readonly groupesRetires: ReadonlySet<GroupeAnimalId>
+  /** Aliments cochés SEULS, hors de tout groupe retiré. */
+  readonly alimentsRetires: ReadonlySet<FoodId>
+  /** Aliments ré-admis À L'INTÉRIEUR d'un groupe retiré — le végétarien qui reprend le roquefort. */
+  readonly exceptions: ReadonlySet<FoodId>
 }
 
 type Etat =
@@ -98,6 +125,7 @@ type Etat =
 type PanneauId =
   | 'allergies'
   | 'regime'
+  | 'aliments-ecartes'
   | 'piquant'
   | 'rythme'
   | 'affichage'
@@ -116,6 +144,9 @@ async function lireVue(): Promise<Vue> {
     heures: readMealTimes(socle.db),
     sauvegarde: lireEtatSauvegarde(socle.db),
     verrou: socle.verrou,
+    groupesRetires: new Set(readExcludedGroupIds(socle.db)),
+    alimentsRetires: new Set(readExcludedFoodIds(socle.db)),
+    exceptions: new Set(readGroupExceptionFoodIds(socle.db)),
   }
 }
 
@@ -137,6 +168,21 @@ function resumeAllergenes(catalogue: Catalog, allergenes: ReadonlySet<string>): 
 
 function resumeRegime(regime: DietCode | null): string {
   return regime === null ? 'Aucun' : (LIBELLE_REGIME[regime] ?? regime)
+}
+
+/**
+ * ⚠️ ON RÉSUME CE QUI EST STOCKÉ, PAS CE QUE ÇA RETIRE. « Œufs, Miel » et non « 34 aliments
+ * écartés » : un décompte d'aliments serait faux dès la mise à jour suivante du catalogue, et un
+ * décompte de plats restants est un autre lot (l'avertissement de planning vide). Ici, la ligne dit
+ * la DÉCISION de l'utilisateur, pas sa conséquence.
+ */
+function resumeAlimentsEcartes(vue: Vue, groupes: readonly GroupeAnimal[]): string {
+  const libelles = groupes.filter((g) => vue.groupesRetires.has(g.id)).map((g) => g.libelle)
+  const seuls = vue.alimentsRetires.size
+  if (libelles.length === 0 && seuls === 0) return 'Aucun'
+  const morceaux = [...libelles]
+  if (seuls > 0) morceaux.push(`${seuls} aliment${seuls === 1 ? '' : 's'}`)
+  return morceaux.join(', ')
 }
 
 function resumeRythme(rythme: StoredRythme): string {
@@ -211,6 +257,15 @@ export function Parametres() {
     []
   )
 
+  // Dérivé du catalogue, jamais stocké : les groupes suivent le contenu livré. `useMemo` parce que
+  // `groupesAnimaux` parcourt les 451 aliments et que ce composant se rend à chaque case cochée.
+  // Appelé AVANT les retours anticipés — l'ordre des hooks ne se discute pas.
+  const catalogue = etat.phase === 'pret' ? etat.vue.catalogue : null
+  const groupes = useMemo(
+    () => (catalogue === null ? [] : groupesAnimaux(catalogue.foods)),
+    [catalogue]
+  )
+
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement…</p>
   if (etat.phase === 'erreur') {
     return (
@@ -248,6 +303,11 @@ export function Parametres() {
             libelle="Mon régime"
             valeur={resumeRegime(vue.regime)}
             onOuvrir={() => setPanneauOuvert('regime')}
+          />
+          <LigneOuvrante
+            libelle="Aliments que je ne veux pas"
+            valeur={resumeAlimentsEcartes(vue, groupes)}
+            onOuvrir={() => setPanneauOuvert('aliments-ecartes')}
           />
           <LigneOuvrante
             libelle="Le piquant"
@@ -339,6 +399,50 @@ export function Parametres() {
             catalogue={vue.catalogue}
             choisi={vue.regime}
             onChange={(regime) => appliquer({ ...vue, regime }, (db) => writeDiet(db, regime))}
+          />
+        </Panneau>
+      )}
+
+      {panneauOuvert === 'aliments-ecartes' && (
+        <Panneau titre="Aliments que je ne veux pas" onFermer={fermer}>
+          <AlimentsEcartes
+            groupes={groupes}
+            foods={vue.catalogue.foods}
+            regime={vue.regime}
+            groupesRetires={vue.groupesRetires}
+            alimentsRetires={vue.alimentsRetires}
+            exceptions={vue.exceptions}
+            onGroupe={(groupeId, retire) => {
+              const groupesRetires = new Set(vue.groupesRetires)
+              if (retire) groupesRetires.add(groupeId)
+              else groupesRetires.delete(groupeId)
+              appliquer({ ...vue, groupesRetires }, (db) =>
+                writeExcludedGroupIds(db, [...groupesRetires])
+              )
+            }}
+            onAliment={(foodId, retire, groupeRetire) => {
+              // ⚠️ LES DEUX TABLES D'ALIMENTS RESTENT DISJOINTES À L'ÉCRITURE. Selon que le groupe
+              // est retiré ou non, le MÊME geste s'enregistre dans l'une ou dans l'autre : dans un
+              // groupe retiré, décocher un aliment est une RÉ-ADMISSION ; hors groupe retiré, le
+              // cocher est un retrait. Laisser une ligne dans les deux tables ferait réapparaître
+              // l'aliment comme exclu le jour où l'utilisateur décoche le groupe, alors qu'il venait
+              // justement de le reprendre.
+              const alimentsRetires = new Set(vue.alimentsRetires)
+              const exceptions = new Set(vue.exceptions)
+              if (groupeRetire) {
+                alimentsRetires.delete(foodId)
+                if (retire) exceptions.delete(foodId)
+                else exceptions.add(foodId)
+              } else {
+                exceptions.delete(foodId)
+                if (retire) alimentsRetires.add(foodId)
+                else alimentsRetires.delete(foodId)
+              }
+              appliquer({ ...vue, alimentsRetires, exceptions }, (db) => {
+                writeExcludedFoodIds(db, [...alimentsRetires])
+                writeGroupExceptionFoodIds(db, [...exceptions])
+              })
+            }}
           />
         </Panneau>
       )}
@@ -801,3 +905,149 @@ function APropos() {
  * masquée : une adresse d'exemple qui part sur le Play Store est un contact que personne ne relève.
  */
 const CONTACT = 'contact@example.org'
+/**
+ * « Aliments que je ne veux pas » — les sept groupes d'origine animale, dépliables jusqu'à l'aliment.
+ *
+ * ⚠️ CE N'EST PAS UN ÉCRAN D'ALLERGIES ET IL NE DOIT JAMAIS LE DEVENIR. Un régime est une
+ * préférence, une allergie un fait médical : « Mes allergies » vit à part, se lit dans une autre
+ * table et n'est jamais pondérée (§5.2 ARCHITECTURE). Mélanger les deux ferait déclarer une allergie
+ * à quelqu'un qui n'aime simplement pas ça, et réciproquement.
+ *
+ * ⚠️ COCHER ENREGISTRE LE GROUPE, PAS SES ALIMENTS. C'est la décision structurante du lot : un
+ * aliment ajouté au catalogue APRÈS le cochage entre dans le groupe déjà coché. Le défaut évité est
+ * silencieux — enregistrer les sept œufs d'aujourd'hui aurait servi le huitième, ajouté le mois
+ * prochain, à quelqu'un qui avait justement coché « Œufs ». Le dépliage vit dans
+ * `readExcludedFoodIdsDeplies` (data/user-store.ts), jamais ici.
+ *
+ * ⚠️ LES GROUPES DÉJÀ ÉCARTÉS PAR LE RÉGIME DÉCLARÉ SONT AFFICHÉS, PAS MASQUÉS. Un végétarien doit
+ * VOIR que « Viande de mammifère » est écarté, et par quoi — sinon l'écran ment par omission sur ce
+ * qui filtre ses suggestions. Ils sont montrés comme déjà écartés, sans case : les ré-admettre
+ * toucherait la couche `regime`, qui reste 🔒 critique, et c'est un autre lot.
+ *
+ * ⚠️ AUCUN DÉCOMPTE DE PLATS RESTANTS ICI. « Il vous reste 34 plats » et l'avertissement de planning
+ * vide sont un lot à part ; un chiffre posé sans son avertissement se lirait comme un jugement sur le
+ * choix de l'utilisateur (principe 6).
+ *
+ * Rendu à l'intérieur d'un `Panneau` : pas de titre ici, le panneau le porte déjà dans son en-tête.
+ */
+function AlimentsEcartes({
+  groupes,
+  foods,
+  regime,
+  groupesRetires,
+  alimentsRetires,
+  exceptions,
+  onGroupe,
+  onAliment,
+}: {
+  readonly groupes: readonly GroupeAnimal[]
+  readonly foods: ReadonlyMap<FoodId, Food>
+  readonly regime: DietCode | null
+  readonly groupesRetires: ReadonlySet<GroupeAnimalId>
+  readonly alimentsRetires: ReadonlySet<FoodId>
+  readonly exceptions: ReadonlySet<FoodId>
+  readonly onGroupe: (groupeId: GroupeAnimalId, retire: boolean) => void
+  readonly onAliment: (foodId: FoodId, retire: boolean, groupeRetire: boolean) => void
+}) {
+  const [deplie, setDeplie] = useState<GroupeAnimalId | null>(null)
+
+  return (
+    <>
+      <p className="mb-3 text-courant leading-relaxed text-texte-doux">
+        Ces aliments ne vous seront plus proposés. Cochez un groupe entier, ou dépliez-le pour n'en
+        retirer qu'une partie. Une allergie se déclare ailleurs, dans « Mes allergies ».
+      </p>
+
+      <div className="space-y-2">
+        {groupes.map((groupe) => {
+          const parLeRegime = ecarteParLeRegime(groupe, foods, regime)
+          const retire = groupesRetires.has(groupe.id)
+          const ouvert = deplie === groupe.id
+          const libelle = `${groupe.libelle} (${groupe.aliments.length})`
+
+          return (
+            <div key={groupe.id}>
+              {parLeRegime ? (
+                <p className="rounded-[--radius-carte] border border-bordure bg-fond px-4 py-3 text-lecture text-texte-doux">
+                  {libelle}
+                  <span className="block text-mention leading-snug text-attenue">
+                    Déjà écarté par votre régime : {LIBELLE_REGIME[regime as DietCode] ?? regime}.
+                  </span>
+                </p>
+              ) : (
+                <Case
+                  libelle={libelle}
+                  cochee={retire}
+                  onBasculer={() => onGroupe(groupe.id, !retire)}
+                />
+              )}
+
+              {/* Dépliant INTERNE au panneau, pas un menu : `aria-expanded` est ici légitime, il
+                  décrit une liste qui pousse le contenu, pas l'ouverture d'une fenêtre. Même forme
+                  que « Voir les allergènes réglementaires » juste à côté. */}
+              <button
+                type="button"
+                onClick={() => setDeplie(ouvert ? null : groupe.id)}
+                aria-expanded={ouvert}
+                className="mt-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
+              >
+                {ouvert ? 'Masquer le détail' : `Voir les ${groupe.aliments.length} aliments`}
+              </button>
+
+              {ouvert && (
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {groupe.aliments.map((aliment) =>
+                    parLeRegime ? (
+                      <p
+                        key={aliment.id}
+                        className="rounded-[--radius-carte] border border-bordure bg-fond px-4 py-2 text-lecture text-attenue"
+                      >
+                        {aliment.nom}
+                      </p>
+                    ) : (
+                      <Case
+                        key={aliment.id}
+                        libelle={aliment.nom}
+                        cochee={retire ? !exceptions.has(aliment.id) : alimentsRetires.has(aliment.id)}
+                        onBasculer={() =>
+                          onAliment(
+                            aliment.id,
+                            retire ? exceptions.has(aliment.id) : !alimentsRetires.has(aliment.id),
+                            retire
+                          )
+                        }
+                      />
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
+/**
+ * Ce groupe est-il DÉJÀ écarté en entier par le régime déclaré ?
+ *
+ * ⚠️ AUCUNE RÈGLE DE RÉGIME N'EST RÉÉCRITE ICI : on compose `regimeExigePar` et `DIET_CHAIN`, les
+ * deux exports du moteur qui la portent. Une deuxième version de « le poisson n'est pas végétarien »
+ * dans un composant React divergerait de la première au premier ajustement, et c'est l'écran qui
+ * aurait tort sans que rien ne le dise.
+ *
+ * ⚠️ `every`, PAS `some`, et la polarité est délibérée. Un groupe dont un seul aliment reste
+ * proposable garde sa case : mieux vaut afficher une case qui ne retire presque rien que d'en
+ * désactiver une qui aurait encore un effet.
+ */
+function ecarteParLeRegime(
+  groupe: GroupeAnimal,
+  foods: ReadonlyMap<FoodId, Food>,
+  regime: DietCode | null
+): boolean {
+  if (regime === null) return false
+  const rangDemande = DIET_CHAIN.indexOf(regime)
+  if (rangDemande < 0) return false
+  return groupe.aliments.every((f) => DIET_CHAIN.indexOf(regimeExigePar(f, foods)) > rangDemande)
+}

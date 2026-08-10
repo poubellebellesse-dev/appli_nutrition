@@ -103,7 +103,7 @@ async function suggestions(): Promise<readonly RecipeId[]> {
   const { chargerSocle } = await import('../socle.js')
   const socle = await chargerSocle()
   const { readUserState } = await import('../../data/user-store.js')
-  const etat = readUserState(socle.db, { windowDays: 21, today: '2026-08-01' })
+  const etat = readUserState(socle.db, { windowDays: 21, today: '2026-08-01' }, socle.catalogue.foods)
   return socle.moteur
     .suggestMeals({
       profile: { trancheAge: '30_49', sexe: 'NP', tailleCm: null, poidsKg: null, niveauActivite: 'actif', facteurPortion: 1 },
@@ -179,6 +179,139 @@ describe('parametres — les allergies sont modifiables, et ça compte', () => {
     const panneau = ouvrir('Mes allergies')
     fireEvent.click(panneau.getByText(/Voir les \d+ allergènes réglementaires/))
     expect(panneau.getByText('Sésame')).toBeDefined()
+  })
+})
+
+describe('parametres — « Aliments que je ne veux pas »', () => {
+  /**
+   * Le libellé de la ligne d'un groupe, effectif compris — cherché par REGEX, jamais en dur.
+   *
+   * ⛔ AUCUN EFFECTIF ÉCRIT EN DUR ICI. Quatre tests ont déjà parié sur la taille du catalogue et un
+   * lot de contenu les a cassés. Le nombre attendu se DEMANDE au catalogue de test, comme le fait
+   * l'écran lui-même.
+   */
+  function ligneDuGroupe(libelle: string): RegExp {
+    return new RegExp(`^${libelle} \\(\\d+\\)$`)
+  }
+
+  it('montre les sept groupes, chacun avec son effectif', async () => {
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    for (const libelle of [
+      'Lait et produits laitiers',
+      'Œufs',
+      'Miel',
+      'Viande de mammifère',
+      'Volaille',
+      'Poisson',
+      'Fruits de mer',
+    ]) {
+      expect(panneau.getByText(ligneDuGroupe(libelle)), libelle).toBeDefined()
+    }
+  })
+
+  it('écrit IMMÉDIATEMENT au geste — pas à la fermeture du panneau', async () => {
+    // Le geste est le contrat. Refermer par « ← Retour » n'est pas un « Enregistrer » déguisé : ce
+    // défaut a déjà eu lieu sur les allergies, et c'est la raison d'être de cet écran.
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    fireEvent.click(panneau.getByText(ligneDuGroupe('Œufs')))
+
+    const { readExcludedGroupIds } = await import('../../data/user-store.js')
+    await waitFor(() => expect(readExcludedGroupIds(baseCourante())).toEqual(['oeufs']))
+    expect(screen.queryByText(/Enregistrer/)).toBeNull()
+  })
+
+  it('⛔ COCHER UN GROUPE RETIRE RÉELLEMENT DES PLATS — la chaîne complète', async () => {
+    // Vérifier que la case bascule ne prouverait rien : ce qui compte est que le MOTEUR en tienne
+    // compte, via le dépliage de `readConstraints`.
+    const avant = await suggestions()
+
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    fireEvent.click(panneau.getByText(ligneDuGroupe('Lait et produits laitiers')))
+
+    const { readExcludedGroupIds } = await import('../../data/user-store.js')
+    await waitFor(() => expect(readExcludedGroupIds(baseCourante())).toEqual(['laitiers']))
+
+    const apres = await suggestions()
+    expect(apres.length).toBeLessThan(avant.length)
+  })
+
+  it('⛔ LE GROUPE EST STOCKÉ, PAS SES ALIMENTS — rien n’atterrit dans `user_excluded_food`', () => {
+    // C'est la décision de schéma, vue depuis l'écran : si le cochage recopiait les membres du
+    // groupe, ils apparaîtraient ici — et le huitième œuf ajouté le mois prochain serait servi à
+    // quelqu'un qui avait justement coché « Œufs ».
+    return (async () => {
+      await monter()
+      const panneau = ouvrir('Aliments que je ne veux pas')
+      fireEvent.click(panneau.getByText(ligneDuGroupe('Œufs')))
+
+      const { readExcludedGroupIds, readExcludedFoodIds } = await import('../../data/user-store.js')
+      await waitFor(() => expect(readExcludedGroupIds(baseCourante())).toEqual(['oeufs']))
+      expect(readExcludedFoodIds(baseCourante())).toEqual([])
+    })()
+  })
+
+  it('déplie un groupe jusqu’à l’aliment, et décocher un aliment écrit une EXCEPTION', async () => {
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    fireEvent.click(panneau.getByText(ligneDuGroupe('Œufs')))
+
+    const { readExcludedFoodIds, readGroupExceptionFoodIds } = await import(
+      '../../data/user-store.js'
+    )
+    // ⚠️ SCOPÉ AU GROUPE, pas au panneau : les sept groupes portent tous un bouton « Voir les N
+    // aliments », et prendre le premier venu déplierait les produits laitiers.
+    const groupe = within(panneau.getByText(ligneDuGroupe('Œufs')).closest('div')!)
+    // Le dépliant est INTERNE au panneau : il pousse du contenu, il n'ouvre pas de fenêtre.
+    fireEvent.click(groupe.getByText(/^Voir les \d+ aliments$/))
+
+    // Un aliment du groupe, quel qu'il soit — on ne parie pas sur le contenu du catalogue.
+    const catalogue = catalogueDeTest()
+    const unOeuf = [...catalogue.foods.values()].find(
+      (f) => f.origineAnimale === 'volaille' && f.provenanceAnimale === 'production'
+    )!
+    fireEvent.click(panneau.getByText(unOeuf.nom))
+
+    await waitFor(() => expect(readGroupExceptionFoodIds(baseCourante())).toEqual([unOeuf.id]))
+    // ⚠️ LES DEUX TABLES RESTENT DISJOINTES : une ré-admission n'est pas une exclusion à l'envers.
+    expect(readExcludedFoodIds(baseCourante())).toEqual([])
+  })
+
+  it('⚠️ UN GROUPE DÉJÀ ÉCARTÉ PAR LE RÉGIME EST AFFICHÉ, PAS MASQUÉ — et sans case', async () => {
+    // Un végétarien doit VOIR que « Viande de mammifère » est écarté, et par quoi : sinon l'écran
+    // ment par omission sur ce qui filtre ses suggestions. Le ré-admettre toucherait la couche
+    // `regime`, qui reste 🔒 critique — c'est un autre lot.
+    const { writeDiet } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetarien')
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+
+    const viande = panneau.getByText(ligneDuGroupe('Viande de mammifère'))
+    expect(viande.closest('button')).toBeNull()
+    expect(panneau.getAllByText(/Déjà écarté par votre régime/).length).toBeGreaterThan(0)
+
+    // Et les groupes que le régime laisse passer gardent bien leur case.
+    expect(panneau.getByText(ligneDuGroupe('Œufs')).closest('button')).not.toBeNull()
+  })
+
+  it('⛔ AUCUNE ALLERGIE NE PASSE PAR CET ÉCRAN — un régime est une préférence', async () => {
+    // Un régime est une préférence, une allergie un fait médical : le filtre allergène est le seul
+    // garde-fou CRITIQUE du moteur (§5.2 ARCHITECTURE), il ne se règle pas au même endroit ni avec
+    // la même portée. L'écran a le droit de RENVOYER vers « Mes allergies » — il n'a pas le droit
+    // d'en proposer une, ni d'en écrire une.
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+    for (const allergene of ['Gluten', 'Arachides', 'Sésame']) {
+      expect(panneau.queryByText(allergene), allergene).toBeNull()
+    }
+
+    fireEvent.click(panneau.getByText(ligneDuGroupe('Lait et produits laitiers')))
+    const { readAllergies, readExcludedGroupIds } = await import('../../data/user-store.js')
+    await waitFor(() => expect(readExcludedGroupIds(baseCourante())).toEqual(['laitiers']))
+    // Retirer le lait par goût N'EST PAS déclarer une allergie au lait.
+    expect(readAllergies(baseCourante())).toEqual([])
   })
 })
 

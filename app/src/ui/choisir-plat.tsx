@@ -84,7 +84,8 @@ export function ChoisirPlat({
   useEffect(() => {
     setEntrees(readPantryEntries(socle.db))
     setContraintes(
-      readUserState(socle.db, { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() }).constraints
+      readUserState(socle.db, { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() }, socle.catalogue.foods)
+        .constraints
     )
   }, [socle])
 

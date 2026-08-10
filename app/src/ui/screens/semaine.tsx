@@ -124,7 +124,7 @@ function nombreDeRepas(plan: WeekPlan): number {
 function planifier(socle: Socle, reglages: Reglages, verrous: readonly MealPlanEntry[]): Vue {
   const date = aujourdhuiIso()
   const profil = profilCourant(socle.db, date)
-  const etat = readUserState(socle.db, { windowDays: FENETRE_HISTORIQUE_JOURS, today: date })
+  const etat = readUserState(socle.db, { windowDays: FENETRE_HISTORIQUE_JOURS, today: date }, socle.catalogue.foods)
 
   const brut = socle.moteur.planWeek({
     profile: profil,
@@ -300,10 +300,11 @@ export function Semaine() {
 
       chargerSocle()
         .then((socle) => {
-          const etatUtilisateur = readUserState(socle.db, {
-            windowDays: FENETRE_HISTORIQUE_JOURS,
-            today: aujourdhuiIso(),
-          })
+          const etatUtilisateur = readUserState(
+            socle.db,
+            { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() },
+            socle.catalogue.foods
+          )
           const suivant = socle.moteur.rerollSlot(
             plan,
             slot,
@@ -343,10 +344,11 @@ export function Semaine() {
 
       chargerSocle()
         .then((socle) => {
-          const etatUtilisateur = readUserState(socle.db, {
-            windowDays: FENETRE_HISTORIQUE_JOURS,
-            today: aujourdhuiIso(),
-          })
+          const etatUtilisateur = readUserState(
+            socle.db,
+            { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() },
+            socle.catalogue.foods
+          )
           const suivant = socle.moteur.setSlotRecipe(plan, slot, recipeId, {
             profile: profil,
             constraints: etatUtilisateur.constraints,

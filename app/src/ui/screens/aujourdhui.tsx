@@ -167,7 +167,7 @@ async function calculerVue(
   const socle = await chargerSocle()
   const date = aujourdhuiIso()
   const profil = profilCourant(socle.db, date)
-  const etat = readUserState(socle.db, { windowDays: FENETRE_HISTORIQUE_JOURS, today: date })
+  const etat = readUserState(socle.db, { windowDays: FENETRE_HISTORIQUE_JOURS, today: date }, socle.catalogue.foods)
   const rythme = readRythme(socle.db)
 
   // Le temps choisi À L'ÉCRAN prime sur le rythme déclaré : c'est un « ce soir je suis pressé »,
