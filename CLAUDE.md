@@ -42,26 +42,28 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-09, arbre COMPLET — lane RÉFÉRENCE
-(équipement, repos, piquant, 22 recettes) incluse** : `npm test` → **1 856 passed / 0 failed
-(97 fichiers)** en 28,6 s · typecheck propre · `vite build` ✓ (2,85 s) · `engine:plan-stress`
-**20/20** · `node catalog/build.mjs` → **451 aliments, 330 recettes, 1 548 étapes, 62 gestes,
-73 tips, 8 fiches, 30 équipements (1 473 couples)** · `catalog/audit-mapping.mjs` → 451 mappings,
-9 candidats à relire (inchangé).
+Dernier relevé, **suite réellement exécutée le 2026-08-10, arbre COMPLET — lanes SAUCES (①②③④,
+reconstruit) et MODE CUISINE (durée écoulée, entrelacement, matériel partagé) incluses** :
+`npm test` → **1 953 passed / 0 failed (101 fichiers)** · typecheck propre · `vite build` ✓ (2,80 s) ·
+`engine:plan-stress` **20/20** · `node catalog/build.mjs` → **451 aliments, 330 recettes,
+1 548 étapes, 62 gestes, 73 tips, 8 fiches, 30 équipements (1 473 couples)** ·
+`catalog/audit-mapping.mjs` → 451 mappings, 9 candidats à relire (inchangé).
+⚠️ **`engine:plan-stress` est le témoin de la durée** : le mode cuisine a ajouté une durée ÉCOULÉE
+(actif + repos) sans toucher la durée ACTIVE que lit le solveur. 20/20 à chacun des trois lots le
+prouve. S'il bouge après un lot de cuisine, c'est que les deux durées ont été confondues.
 ⚠️ **UN RUN SUR QUATRE A RENDU 1 754 AU LIEU DE 1 766, VERT DANS LES DEUX CAS.** Constaté le
 2026-08-08, arbre identique, aucun échec ni saut déclaré (`skipIf`/`runIf` : zéro occurrence dans le
 dépôt). Les trois runs suivants, dont deux en `--reporter=json`, ont tous rendu 1 766. **Cause non
 identifiée** ; piste la plus probable : plusieurs fichiers de test lancent `catalog/build.mjs` en
 parallèle et un `beforeAll` qui échoue fait disparaître les tests de son fichier du total au lieu de
-les compter en rouge. **Un compte qui bouge sans rouge est un signal** — si 1 754 réapparaît, c'est
-là qu'il faut chercher, pas dans le lot du jour. ⚠️ **Ces deux nombres sont ceux du 2026-08-08 : la
-base est désormais 1 856.** Le symptôme à guetter est un ÉCART entre deux runs sur le même arbre,
-pas une valeur particulière.
-⚠️ **1 766 → 1 856, et l'écart de FICHIERS ne vient pas de la lane RÉFÉRENCE.** Attribué par
-`git diff --name-only --diff-filter=A`, pas par supposition : cette lane n'a créé **aucun fichier de
-test**, elle en a modifié 15 (dont `selection/equipement.test.ts`, réécrit de l'inertie vers le
-tri-état, et `catalog-loader.test.ts`, 1 → 3 cas sur `Food.piquant`). Les **95 → 97 fichiers**
-viennent d'autres lanes du même jour — `texte-etape`, `import-photos`, `lien-etape-ingredient`.
+les compter en rouge. **Un compte qui bouge sans rouge est un signal** — si un écart réapparaît,
+c'est là qu'il faut chercher, pas dans le lot du jour. ⚠️ **Ces deux nombres sont ceux du
+2026-08-08 : la base est désormais 1 953.** Le symptôme à guetter est un ÉCART entre deux runs sur
+le même arbre, pas une valeur particulière.
+⚠️ **Un écart de compte s'attribue par `git diff --name-only`, jamais par déduction.** Le
+2026-08-09, à trois sessions dans le même arbre, un « +1 » a été attribué à la mauvaise lane :
+chacune voyait l'écart depuis SON relevé précédent et l'imputait par défaut à sa voisine. Personne
+n'avait menti ni mal compté.
 ⚠️ **Un relevé se prend sur l'arbre qu'on commite, pas sur celui d'où l'on est parti.** Le
 2026-08-07, trois documents annonçaient 1 647 tests pendant que l'arbre en contenait 22 de plus :
 ils avaient été mis à jour dans le même lot que le code qu'ils ne comptaient pas encore.
