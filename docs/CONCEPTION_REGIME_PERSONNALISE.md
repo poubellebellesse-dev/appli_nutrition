@@ -49,13 +49,19 @@ découpage : ce qui ressemblait à un chantier de moteur est d'abord un chantier
 
 | Groupe | Aliments | Axes |
 |---|---|---|
-| Lait et produits laitiers | 50 | `mammifere` / `production` |
-| Poisson | 43 | `poisson` / `corps` |
-| Viande de mammifère | 39 | `mammifere` / `corps` |
-| Fruits de mer | 14 | `fruit_de_mer` / `corps` |
-| Volaille | 13 | `volaille` / `corps` |
-| Œufs | 7 | `volaille` / `production` |
-| Miel | 1 | `insecte` / `production` |
+| Lait et produits laitiers | 50 | `mammifere` + `production` |
+| Œufs | 7 | `volaille` + `production` |
+| Miel | 1 | `insecte` — provenance non lue |
+| Viande de mammifère | 39 | `mammifere` + `corps` |
+| Volaille | 13 | `volaille` + `corps` |
+| Poisson | 43 | `poisson` — provenance non lue |
+| Fruits de mer | 14 | `fruit_de_mer` — provenance non lue |
+
+⚠️ **La provenance n'est lue que pour `mammifere` et `volaille`** — c'est la seule branche où elle
+discrimine, exactement comme dans `regimeExigePar`. Des œufs de lompe restent du *poisson* pour qui
+choisit ce qu'il mange. ⚠️ **L'ordre ci-dessus est celui du code, pas celui des effectifs** : ce que
+l'animal produit d'abord, l'animal ensuite. Trier par compte ferait bouger l'écran du lot B à chaque
+lot de contenu, sur des positions que l'utilisateur aura mémorisées. Verrouillé par test.
 
 ⚠️ **C'est ce chiffre qui rend l'écran faisable.** 167 cases à cocher sur un téléphone est
 inutilisable ; **7 groupes est un écran** — et ce sont les mots que les gens emploient déjà pour
@@ -66,7 +72,17 @@ axes livrés par la décision 64.
 
 ## 3. Les lots
 
-### Lot A — les 7 groupes, fonction pure *(préalable)*
+### Lot A — les 7 groupes, fonction pure ✅ **LIVRÉ le 2026-08-10 (`9d4f691`)**
+
+`engine/domain/groupes-animaux.ts` — `groupeAnimalDe` et `groupesAnimaux`, +29 tests. Les 7 comptes
+tombent sur le relevé, total 167/451. ⚠️ **Deux dettes écrites par le lot, aucune garde ne les
+signalera** : (a) `insecte → miel` nomme le seul membre actuel — une farine de grillon en `corps`
+rendrait le libellé faux et obligerait à scinder le groupe ; (b) **aucune cascade `deriveDe` du côté
+carné n'existe dans le catalogue** — les 38 dérivés mènent tous à `lait_entier`, `bouillon_boeuf` et
+consorts déclarent leur propre origine. La branche carnée de la remontée n'est donc couverte que par
+des fixtures. Trou de donnée, pas trou de test ; il se fermera au premier dérivé carné ajouté.
+
+*Énoncé d'origine, conservé :*
 
 Une fonction dans `engine/` : catalogue → les 7 groupes et les aliments de chacun, cascade comprise.
 TypeScript pur, entrées objets → sorties objets, testable sans écran ni base.
