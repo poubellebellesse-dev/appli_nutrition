@@ -201,10 +201,45 @@ défaut de la règle ne peut donc retirer aucun plat à personne.
 
 **P3 — La règle ne sert que là où elle est D'ACCORD avec l'étiquette.** ⭐ *Le cœur du lot.* Avant
 d'admettre, on vérifie que `regimeExigeParIngredients(TOUS les ingrédients)` **égale** l'étiquette
-écrite à la main. Si les deux divergent sur cette recette, la règle n'est pas utilisée et la recette
-reste écartée. **La garantie à l'exécution devient exactement celle que le test de cohérence
-apporte** : la règle est porteuse là où elle est prouvée, et échoue *fermée* ailleurs. C'est ce qui
-désamorce le seul risque réel du lot.
+écrite à la main. Divergence ⇒ la règle n'est pas utilisée, la recette reste écartée.
+
+⛔ **CE QUE P3 ATTRAPE, ET C'EST LE SEUL RISQUE RÉEL DU LOT : le cas où la RÈGLE est plus fausse que
+l'ÉTIQUETTE.** Une recette contient du miel, son étiquette dit `vegetarien` — correct. La règle a un
+défaut et rend `vegetalien` pour cette recette. Un végétalien admet les **œufs**, rien d'autre : le
+recalcul amputé des œufs rend toujours `vegetalien`, la recette passe, **et il reçoit du miel**.
+Principe 1 en défaut — et c'est littéralement le bug du 2026-07-28 qui a fait naître
+`tests/regime-coherence.test.ts` (« Tofu laqué » déclaré `vegetalien`, contenant du miel).
+
+⚠️ **LE TEST DE COHÉRENCE N'EST PAS UNE BARRIÈRE DE BUILD — `npx vite build` n'exécute pas vitest.**
+Les quatre commandes sont une discipline, pas un verrou. P3 convertit cette convention en garantie
+d'EXÉCUTION, pour le prix d'une comparaison. **Une branche P3 qui ne se déclenche jamais est le
+SUCCÈS, pas du code mort.**
+
+⚠️ **LA JUSTIFICATION QU'ON SERAIT TENTÉ DE DONNER EST FAUSSE — ne pas la réécrire.** « Rien ne
+garantit que le `catalog.db` embarqué soit celui qui a passé le test » : si, à peu près. `catalog.db`
+**n'est pas suivi par git**, il est construit depuis les sources YAML dans le même build, et le test
+reconstruit ces mêmes sources par `build.mjs`. Aucun artefact périmé, et aucune mise à jour du
+catalogue indépendante de l'app (`CATALOG_VERSION` est une constante en dur du loader). **Mesuré le
+2026-08-10** : 0 recette sans ingrédient connu, 0 ingrédient orphelin, test vert ⇒ l'étiquette égale
+la règle sur les 330. P3 ne se déclenche jamais aujourd'hui, et c'est très bien.
+
+⛔ **P3 NE S'APPLIQUE QU'AUX RECETTES PORTANT UNE ÉTIQUETTE ÉCRITE À LA MAIN.** `versRecette`
+(`data/user-recipe.ts:143`) **recalcule** le régime d'une recette utilisateur à chaque lecture — rien
+n'est stocké. Son « étiquette » EST la sortie de la règle, sur les ingrédients **non optionnels**.
+Appliquer P3 là reviendrait à comparer la règle à elle-même avec des entrées différentes, et la ferait
+se déclencher sur toute recette utilisateur portant un ingrédient animal **optionnel**, pour une
+raison étrangère à son objet. **Il n'y a rien à recouper là où il n'y a pas de main humaine.**
+
+⚠️ **L'ORACLE DU TEST ET LA FONCTION DE PRODUCTION DOIVENT ÊTRE LE MÊME CODE.** `exigenceRecette`
+(dans le test) réimplémente le calcul et rend `vegetalien` quand aucun ingrédient n'est connu, là où
+`regimeExigeParIngredients` rend `omnivore`. Zéro recette concernée aujourd'hui — mais tant que les
+deux diffèrent, « la garantie de P3 est celle du test » reste approximatif au lieu d'être littéral.
+Le test doit appeler la fonction de production et calculer le nom du coupable à part, pour son seul
+message d'échec.
+
+⚠️ **P3 NE DOIT PAS ÊTRE MUETTE.** Si elle se déclenche, quelqu'un doit pouvoir le savoir : un compte
+exposé côté développement, **jamais à l'écran** (principe 6). Sans témoin, c'est une branche qui
+pourrit sans que rien ne le dise — le seul reproche sérieux qu'on puisse lui faire.
 
 **P4 — L'admission ne touche QUE la couche `regime`.** Jamais lue par la couche allergènes ni par
 `exclusions` : un `miel` admis reste écarté s'il est déclaré allergène, ou s'il a été coché au lot B.
