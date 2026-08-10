@@ -70,10 +70,11 @@ ne pouvait voir** — un identifiant qui contredit sa ligne Ciqual ne fait rougi
 
 **Ce qui reste, par ordre de dépendance :**
 
-1. **📷 La récolte de photos — 88 / 330.** ⛔ **Ce n'est pas un défaut de tri : 94 recettes ont vu
-   plus de dix photos sans qu'aucune soit gardée.** Le goulot est la **source**. Relancer une
-   session sans en changer rendra le même résultat. ⛔ « le build échoue sans photo » : **interdit
-   avant 330/330**.
+1. **📷 La récolte de photos — 116 / 330.** ⛔ **Ce n'est pas un défaut de tri : le bac est de
+   nouveau épuisé, plus une seule candidate non jugée, et 19 recettes n'ont AUCUNE candidate.** Le
+   goulot est la **source**. Relancer une session sans en changer rendra le même résultat. ⛔ « le
+   build échoue sans photo » : **interdit avant 330/330**. ⚠️ **Et à 330/330 le bundle dépasserait
+   les 15 Mo du critère P6 — décision 68, ouverte, à trancher AVANT de produire les 214 restantes.**
 2. **⛔ Relecture par un tiers du contenu Savoir** (`ETAT.md` §8.2 bis) — **bloquante avant
    publication**. Les 73 tips et les 8 fiches sont sourcés un par un, **aucun n'est relu**. Un build
    qui passe ne rend pas le contenu publiable.

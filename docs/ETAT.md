@@ -592,16 +592,23 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   de produire les photos : 241 × (hero ~120 Ko + vignette ~32 Ko) ≈ **36 Mo**, soit hors budget web
   et confortable en binaire. **À trancher avant la prise de vue** — `archive/RECAP_SESSION_8.md` §2.
   ✅ **L'ESTIMATION DE 36 Mo EST CADUQUE — REMPLACÉE PAR UNE MESURE le 2026-08-09.** Une hero AVIF
-  pèse **30 Ko de médiane**, pas 120 : les 88 premières font **3,12 Mo** à elles toutes. Il n'y a
-  **pas de vignette** — la même image sert partout, redimensionnée par le navigateur. Extrapolé à
-  308 : **~10,9 Mo de photos**, et un `dist/` mesuré à **6,61 Mo** aujourd'hui ⇒ **~14,4 Mo à
-  terme**. ⚠️ **Le budget web tient, mais il ne reste que 0,6 Mo de marge sur les 15 Mo du critère
-  P6.** Ce n'est plus une contrainte confortable : toute décision qui alourdit le bundle (une
-  deuxième police, un clip de geste, un `catalog.db` qui double) doit désormais se peser contre les
-  photos. **La prise de vue peut commencer ; le budget, lui, est à surveiller à chaque lot.**
+  pèse **33 Ko de médiane**, pas 120. Il n'y a **pas de vignette** — la même image sert partout,
+  redimensionnée par le navigateur.
+  ⛔ **RE-MESURÉ SUR `dist/` LE 2026-08-10, À 116 PHOTOS, ET LE BUDGET NE TIENT PLUS À TERME.**
+  Décomposition en octets réels : `dist/` = **8,07 Mo**, dont **4,32 Mo de photos** et **3,75 Mo de
+  reste**. À 37,2 Ko la photo, couvrir les **330 recettes** donne **12,3 Mo de photos ⇒ ~16,0 Mo de
+  bundle** — **au-dessus des 15 Mo du critère P6**, et non 0,6 Mo en dessous comme l'annonçait la
+  ligne précédente. ⚠️ **Ce n'est pas une dérive du lot, c'est l'ancienne extrapolation qui était
+  fausse** : elle additionnait un `dist/` de 6,61 Mo qui contenait déjà ses 88 photos avec une
+  projection de photos, donc les comptait deux fois — et retombait sous le seuil par compensation
+  d'erreurs. ⚠️ **L'écart se creusera avec la couverture, pas avec les décisions d'à-côté** : à
+  116/330 il reste 214 photos à produire, soit **~8 Mo de plus**. Une deuxième police ou un clip de
+  geste ne sont plus la variable qui décide. **Le budget devient une décision à trancher — parquée
+  en §4** ; d'ici là, la mesure se reprend à chaque lot de photos et **elle se prend sur `dist/`,
+  jamais sur le bac.**
 - ✅ **ENCODEUR : `sharp` (devDependency), AVIF 1024 px, `quality: 45`, `effort: 6`** — décidé avec
-  l'utilisateur le 2026-08-09, **sur mesure et non au jugé**. Les sources brutes font 19,9 Mo pour
-  88 photos (médiane 189 Ko, max 1 674 Ko, **2 seulement sous 40 Ko**) : le ré-encodage n'est pas une
+  l'utilisateur le 2026-08-09, **sur mesure et non au jugé**. Les sources brutes font 25,9 Mo pour
+  116 photos (médiane 185 Ko, max 1 713 Ko, **2 seulement sous 40 Ko**) : le ré-encodage n'est pas une
   optimisation, c'est ce qui rend le lot expédiable. ⚠️ **LE CHOIX AVIF/WebP NE SE COMPARE PAS À
   `quality` ÉGALE** — les échelles nominales des deux formats ne veulent pas dire la même chose. La
   comparaison a été refaite **à PSNR égal** contre la source redimensionnée, sur 22 photos : AVIF y
@@ -613,7 +620,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   n'appellent JAMAIS `sharp`.** C'est un outil d'atelier à un coup, pas une dépendance de build ;
   `npm audit --omit=dev` rend 0 vulnérabilité. **Si un jour un build appelle `sharp`, cette phrase
   est le signal que quelque chose a dérivé.**
-- ⛔ **66 DES 88 PHOTOS SONT SOUS CC BY OU CC BY-SA : L'ATTRIBUTION EST UNE OBLIGATION LÉGALE, PAS
+- ⛔ **96 DES 116 PHOTOS SONT SOUS CC BY OU CC BY-SA : L'ATTRIBUTION EST UNE OBLIGATION LÉGALE, PAS
   UNE POLITESSE.** Le bloc généré de `catalog/CREDITS.md` (entre les marqueurs `DÉBUT PHOTOS` /
   `FIN PHOTOS`, réécrit par `catalog/import-photos.mjs`) est le seul endroit où elle vit aujourd'hui.
   ⚠️ **Elle doit suivre l'image PARTOUT où l'image est rediffusée** — donc si le `.nutri-recipe` de
@@ -763,6 +770,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 65 | **La table équipement ne débloque PAS la réservation — et on l'a cru** | ⏳ **OUVERTE le 2026-08-10.** Le mode cuisine affiche le matériel partagé (`22d1c74`, « l'écran le dit, il ne le range pas ») et **refuse de réserver**. ⛔ **Bloquée par deux données absentes, pas par le code** : une colonne d'**étape** sur `recipe_equipment` (sans quoi aucun créneau n'est déductible) et une **`capacite`** sur `equipment` (sans quoi la plaque déclencherait **63 % des paires**). Les deux vivent dans `catalog/`. ⚠️ **LE FAIT À RETENIR EST L'ERREUR, PAS LE MANQUE** : livrer les 30 ustensiles et les 1 473 couples a fait conclure « le niveau 3 n'attend plus de contenu, il attend d'être codé ». C'était faux, et ça a été écrit dans deux documents. **Une table qui existe n'est pas une table qui suffit.** ⛔ Une inférence par les `lexicon_ids` (`enfourner` → four) a été envisagée puis **écartée** : elle repose sur une correspondance mot → ustensile écrite dans le code, qu'un lot de contenu casse en silence, **et la capacité manquerait toujours**. Détail : `CONCEPTION_MODE_CUISINE.md` §8 question F |
 | 66 | **L'invariant « origine animale ⟺ provenance animale » se garantit-il par la FORME ?** | ⏳ **OUVERTE le 2026-08-10, sans effet mesurable aujourd'hui.** Le build refuse une origine sans provenance ; **le type, lui, accepte la paire incohérente** et un `Food` de test la porte déjà (`shopping-list.test.ts`, rayon — aucune question de régime n'y est posée, donc aucun faux résultat). ⚠️ **DURCIR LES FABRIQUES NE SUFFIT PAS, C'EST MESURÉ** : ce fichier n'utilise pas `makeFood` mais un helper local qui prend un `Partial<Food>` — un spread produira toujours la paire, quel que soit le nombre de fabriques qui lèvent. ▶ **Issue pressentie** : remplacer les deux champs plats par une paire nullable unique (`sourceAnimale: { origine, provenance } \| null`), ce qui rend l'incohérence **inexprimable** — c'est l'argument de l'acquis 2, « la garantie vient de la forme ». **Coût : ~10 fichiers**, dont le type du domaine et `catalog-loader`. ⛔ **Délibérément EXCLUE du lot qui a fermé la 64** : ce lot faisait déjà 15 fichiers, et c'est sa relisibilité qui a permis à une relecture indépendante d'y trouver un test qui ne testait rien |
 | 67 | **Le régime doit-il être une échelle unique, ou une définition personnalisable ?** | ⏳ **OUVERTE le 2026-08-10 — direction choisie par l'utilisateur, découpage à valider.** Demande : un écran de réglages listant ce que le régime déclaré écarte, avec ajout/retrait **par groupe et par aliment**, plus des **sous-formes de végétarisme**. ⚠️ **CE N'EST PAS UN CONFORT, C'EST LA SEULE FORME POSSIBLE** : `DIET_CHAIN` est un ordre TOTAL et exige que qui déclare un régime mange *réellement* tout ce qui le précède — **lacto-végétarien et ovo-végétarien sont incomparables** (ni l'un ni l'autre ne contient l'autre) et ne peuvent donc pas y entrer sans casser la chaîne. Un jeu de dérogations les exprime, l'échelle non. ✅ **L'écran est faisable parce que la 64 a livré les deux axes** : les 167 aliments à origine animale (cascade comprise) se rangent en **7 groupes** — 50 laitiers, 43 poissons, 39 viandes de mammifère, 14 fruits de mer, 13 volailles, 7 œufs, 1 miel — soit le vocabulaire que les gens emploient déjà. 167 cases à cocher est inutilisable ; 7 groupes est un écran. ⚠️ **Il faut les DEUX sens** : *retirer* (le végétarien qui refuse la présure animale, cas Roquefort / Parmesan / pesto — **non vérifié contre les cahiers des charges AOP**) et *ajouter* (le végétalien qui fait une exception pour le miel). ⛔ **Trois garde-fous non négociables** : (a) **les allergènes ne passent JAMAIS par cet écran** — un régime est une préférence, une allergie un fait médical ; (b) la couche `regime` reste **critique et indésactivable**, ce qui devient configurable est **ce qu'elle lit**, pas le filtre ; (c) l'écran doit **prévenir avant de vider le planning** — « végétalien + sans gluten » a déjà été mesuré à marge zéro. ▶ Un fait `presure: animale \| microbienne` rendrait le groupe cochable d'un geste, mais **n'est pas un préalable** : sans lui l'utilisateur refuse les fromages un par un |
+| 68 | **À 330 recettes photographiées, le bundle dépasse les 15 Mo du critère P6** | ⏳ **OUVERTE le 2026-08-10, sur une MESURE de `dist/` et non sur une projection.** Décomposition en octets réels à 116 photos : `dist/` = **8,07 Mo**, dont **4,32 Mo de photos** (37,2 Ko l'unité) et **3,75 Mo de reste**. Couvrir les 330 recettes ajoute **~8 Mo** ⇒ **~16,0 Mo**, soit **au-dessus du seuil**. ⛔ **LA LIGNE QU'ELLE REMPLACE DISAIT L'INVERSE — « il reste 0,6 Mo de marge » — ET ELLE ÉTAIT FAUSSE PAR DOUBLE COMPTE** : elle additionnait un `dist/` de 6,61 Mo qui contenait déjà ses 88 photos avec une projection de photos. Deux erreurs de sens contraire se compensaient et rendaient un nombre rassurant. ⚠️ **Rien ne presse et rien ne bloque** : à 116/330 le bundle tient largement, et le dépassement n'arrive qu'à couverture complète — donc pas avant que la récolte, aujourd'hui le goulot, n'ait fourni 214 photos de plus. ⚠️ **Mais la décision se prend AVANT de produire les 214**, pas après : ré-encoder deux fois le même lot est le genre de travail qu'on ne refait pas de bon cœur. Pistes, non tranchées : **(a)** baisser `quality` (45 aujourd'hui) ou la largeur (1 024 px) — mesurable en une passe `--dry`, mais le réglage a été fixé à PSNR égal et le rabaisser se paie en netteté sur l'écran Détail, où la photo est censée être dominante ; **(b)** relever le seuil P6 — il a été écrit pour un **premier chargement web**, quand le plafond d'un AAB est de 150 Mo ; il n'a jamais eu de justification mesurée sur appareil ; **(c)** ne pas pré-cacher toutes les photos dans le service worker — mais cela contredit le **principe 5, hors-ligne intégral**, et c'est le seul principe en jeu ici. ⛔ **NE PAS TRANCHER SUR CETTE LIGNE** : elle dit ce qui a été mesuré, pas ce qu'il faut faire. La mesure se reprend à chaque lot de photos, **sur `dist/`, jamais sur le bac** — le bac pèse 25,9 Mo pour ce que `dist/` rend en 4,32 |
 
 ---
 
@@ -909,7 +917,7 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 > | Recettes | **330**, dont **3 sauces** | `SELECT COUNT(*) FROM recipe` · `… WHERE est_sauce=1` |
 > | Aliments | **451** | `SELECT COUNT(*) FROM food` |
 > | Étapes de recette | **1 548** | `SELECT COUNT(*) FROM recipe_step` |
-> | Photos de recette | **88 / 330** | `SELECT COUNT(*) FROM recipe WHERE image_path IS NOT NULL AND image_path <> ''` |
+> | Photos de recette | **116 / 330** | `SELECT COUNT(*) FROM recipe WHERE image_path IS NOT NULL AND image_path <> ''` |
 > | `piquant` renseigné | **330 / 330** (recettes) · **21 / 451** (aliments, et c'est voulu — §8) | `SELECT COUNT(*) FROM recipe WHERE piquant IS NOT NULL` · `… FROM food …` |
 > | Sauces : aliments · attachements · `porte_deja_une_sauce` posé | **10** · **14** · **20** | `food WHERE sous_groupe='sauce'` · `recipe_sauce` · `recipe WHERE porte_deja_une_sauce IS NOT NULL` |
 > | Équipement : référentiel · couples | **30** · **1 473** (357 requis · 38 accélère · 1 078 informatifs) | `equipment` · `recipe_equipment` `GROUP BY niveau` |
@@ -1068,7 +1076,7 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   occurrence de plus, et ne pas « réparer » l'absence de lecteur en dérivant le piquant des recettes.
 - ⚠️ **UN COMMENTAIRE D'`export-recette.ts` EST DEVENU FAUX LE 2026-08-09.**
   `app/src/data/export-recette.ts` porte « `imagePath` toujours `null`, il n'y a rien à embarquer ».
-  Il était vrai jusqu'à l'arrivée des 88 photos ; il ne l'est plus. **Le code, lui, est correct** —
+  Il était vrai jusqu'à l'arrivée des photos ; il ne l'est plus. **Le code, lui, est correct** —
   il n'embarque toujours rien, et c'est le comportement voulu tant que la question de l'attribution
   qui voyage avec l'image n'est pas tranchée (§3 « Média »). **C'est le commentaire qui ment, pas la
   fonction.** Non corrigé ici : le fichier appartient à une autre piste, et le signaler vaut mieux
@@ -1441,12 +1449,12 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - ✅ **Le filtre allergènes a enfin une source.** Jusqu'au 2026-07-30, le garde-fou CRITIQUE et
   incontournable du moteur tournait sur une liste **vide** : aucun écran ne demandait ses allergies.
   Le code était juste, il n'avait pas de données. L'écran 3 du premier lancement les collecte.
-- **Écran 4 du premier lancement (« vos goûts ») — NON FAIT**, deux raisons : les photos ne couvrent que 88 recettes sur 308 (relevé en tête de §8), et surtout `user_preference` travaille par ALIMENT quand l'écran propose des PLATS.
+- **Écran 4 du premier lancement (« vos goûts ») — NON FAIT**, deux raisons : les photos ne couvrent que 116 recettes sur 330 (relevé en tête de §8), et surtout `user_preference` travaille par ALIMENT quand l'écran propose des PLATS.
   Traduire « j'aime ce curry » en préférences d'aliments (ingrédient caractéristique seul ? tous ?
   quelle pondération ?) est une décision de conception absente des docs — à trancher par mesure,
   pas au jugé, sous peine de fausser le démarrage à froid que cet écran existe pour résoudre.
-- **Écran Détail — reste à faire** : **la photo — la donnée est là depuis le 2026-08-09 (88 recettes
-  sur 308, relevé en tête de §8), le pixel non : AUCUN composant ne lit `Recipe.imagePath`.** La
+- **Écran Détail — reste à faire** : **la photo — la donnée est là depuis le 2026-08-09 (116 recettes
+  sur 330, relevé en tête de §8), le pixel non : AUCUN composant ne lit `Recipe.imagePath`.** La
   chaîne est branchée de bout en bout jusqu'au modèle ; l'afficher est une décision §4.1 DESIGN
   (« photo dominante ») et un travail d'écran, pas de catalogue. ⚠️ **Et il faudra décider quoi
   montrer pour les 220 recettes SANS photo** — un trou visuel à côté d'une fiche illustrée se lit
@@ -1562,13 +1570,15 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 
 ### Contenu — constats de l'audit du 2026-07-27, remesurés le 2026-07-29
 
-- **Photos : 88 sur 308** depuis le 2026-08-09 — le compte fait foi en tête de §8, cette ligne ne le
-  recopie plus. Le poste n'est plus « chiffré nulle part » : voir §3 « Média » pour l'encodeur, le
-  poids mesuré et la marge qui reste sur le critère P6. **Il manque 220 photos**, et le goulot est la
-  **récolte**, pas le tri : le bac est vide, et beaucoup des 220 ont déjà vu passer plus de dix
-  candidates sans qu'aucune ne soit gardée. ⛔ **« Le build échoue si une recette n'a pas de photo »
-  reste INTERDIT tant qu'on n'est pas à 308/308** — l'activer maintenant casserait le build de tout
-  le monde pour un travail de contenu qui n'est pas fini.
+- **Photos : 116 sur 330** au 2026-08-10 — le compte fait foi en tête de §8, cette ligne ne le
+  recopie plus. Le poste n'est plus « chiffré nulle part » : voir §3 « Média » pour l'encodeur et le
+  poids mesuré. **Il manque 214 photos**, et le goulot est la **récolte**, pas le tri : le bac est
+  de nouveau épuisé — plus une seule candidate non jugée sur les recettes servables — et beaucoup
+  des 214 ont déjà vu passer plus de dix candidates sans qu'aucune ne soit gardée. ⚠️ **19 recettes
+  n'ont AUCUNE candidate** : aucun tri ne les servira, seule une récolte le peut. ⛔ **« Le build
+  échoue si une recette n'a pas de photo » reste INTERDIT tant qu'on n'est pas à 330/330** —
+  l'activer maintenant casserait le build de tout le monde pour un travail de contenu qui n'est pas
+  fini.
 - ✅ **Lexique — RÉSOLU** (décision 43) : 4 → **62 gestes**, 763 étapes annotées sur 1 097.
   ⚠️ **Reste « illustré »** : §2 ARCHITECTURE promet un lexique *illustré*, les 62 fiches sont du
   texte seul. Dépend des visuels.
