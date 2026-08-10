@@ -32,7 +32,7 @@ import { chargerSocle } from './socle.js'
 import { aConsenti, readDisplay, writeDisplay } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
 import { hashDe, hashDesParametres, useRoute, type Onglet, type SousVue } from './router.js'
-import { enregistrerServiceWorker } from './sw-register.js'
+import { enregistrerServiceWorker, surMiseAJourDisponible } from './sw-register.js'
 import './index.css'
 
 /**
@@ -187,6 +187,15 @@ function Coquille() {
    * aucune ne résoudrait, et la visite se terminerait aussitôt, en silence (voir `parcours.ts`).
    */
   const [parcoursEnAttente, setParcoursEnAttente] = useState<string | null>(null)
+  /**
+   * Le geste qui bascule sur la nouvelle version, ou `null` tant qu'aucune n'attend.
+   *
+   * ⚠️ RANGER UNE FONCTION DANS UN ÉTAT DEMANDE LA FORME `setX(() => f)`. `setX(f)` la prendrait
+   * pour une fonction de mise à jour, l'appellerait avec l'état précédent, et rangerait son
+   * résultat — ici `undefined`. Le bandeau ne s'afficherait jamais, et la bascule partirait au
+   * moment exact où elle devait devenir proposable.
+   */
+  const [appliquerMiseAJour, setAppliquerMiseAJour] = useState<(() => void) | null>(null)
 
   /** Écrit `visite_proposee = 1` puis, selon la réponse, lance la visite ou referme l'invitation. */
   const repondreInvitation = (accepte: boolean) => {
@@ -260,6 +269,19 @@ function Coquille() {
     return () => {
       annule = true
     }
+  }, [])
+
+  /**
+   * L'annonce d'une nouvelle version — voir `ui/sw-register.ts`.
+   *
+   * ⚠️ ON S'ABONNE, ON N'ENREGISTRE PAS. L'enregistrement du service worker reste hors de React (fin
+   * de ce fichier) : l'attacher à un composant le relancerait à chaque montage. Mais l'événement,
+   * lui, doit atteindre l'interface — d'où le canal d'abonnement, exactement comme
+   * `surErreurDePersistance` juste au-dessus. Le tampon de `sw-register.ts` couvre le cas où la
+   * mise à jour est détectée avant que cet effet ait tourné.
+   */
+  useEffect(() => {
+    surMiseAJourDisponible((appliquer) => setAppliquerMiseAJour(() => appliquer))
   }, [])
 
   /**
@@ -355,6 +377,39 @@ function Coquille() {
                 <span aria-hidden="true">✕</span>
               </button>
             )}
+          </div>
+        )}
+        {/* ⚠️ APRÈS les alertes de stockage, jamais avant : celles-là décrivent une perte EN TRAIN
+            de se produire, celle-ci est une PROPOSITION. `role="status"` et non `alert` pour la
+            même raison — rien n'est cassé, rien ne presse.
+            ⛔ ET RECHARGER LA PAGE NE SUFFIRAIT PAS. Le worker en attente ne prend la main qu'une
+            fois tous les onglets de l'origine fermés ; ce bouton lui ENVOIE un message (voir
+            `sw-register.ts`), c'est le seul chemin qui marche depuis un onglet ouvert. */}
+        {appliquerMiseAJour !== null && (
+          <div
+            role="status"
+            className="mb-5 flex flex-wrap items-center gap-3 rounded-[--radius-carte] border border-bordure-forte bg-surface p-4 text-[0.95rem] leading-relaxed text-texte"
+          >
+            <p className="flex-1">Une nouvelle version de l’application est prête.</p>
+            <button
+              type="button"
+              onClick={appliquerMiseAJour}
+              className="flex min-h-tactile items-center justify-center rounded-[0.7rem] bg-accent-plein px-4 text-[0.95rem] font-semibold text-white"
+            >
+              Recharger
+            </button>
+            {/* Écartable, et la distinction est celle d'`ECARTABLE` plus haut : ce message
+                n'annonce aucune perte. Quelqu'un au milieu d'une liste de courses doit pouvoir
+                finir. Écarté pour la session seulement — la mise à jour attend toujours, et le
+                bandeau reviendra à la prochaine ouverture. */}
+            <button
+              type="button"
+              onClick={() => setAppliquerMiseAJour(null)}
+              aria-label="Plus tard"
+              className="-my-2 -mr-2 flex min-h-tactile w-12 shrink-0 items-center justify-center rounded-[0.6rem] text-[1.3rem] leading-none text-texte-doux"
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
           </div>
         )}
         <main ref={refContenu} tabIndex={-1}>

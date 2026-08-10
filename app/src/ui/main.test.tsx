@@ -104,3 +104,60 @@ describe('main — l’invitation à la visite guidée', () => {
     await waitFor(() => expect(readDisplay(baseCourante()).visiteProposee).toBe(true))
   })
 })
+
+/**
+ * ⛔ CE BLOC NE MOCKE PAS `sw-register.js`, ET C'EST TOUT SON INTÉRÊT. Le défaut d'origine n'était
+ * pas dans la logique du worker — elle était juste — mais dans le CÂBLAGE : `main.tsx` appelait
+ * `enregistrerServiceWorker()` sans jamais passer de rappel. Une doublure du module aurait montré
+ * un bandeau qui s'affiche et laissé le trou exactement où il était. On pousse donc l'annonce dans
+ * le VRAI canal, et c'est la vraie coquille qui doit y réagir.
+ */
+describe('main — le bandeau « une nouvelle version est prête »', () => {
+  /** Un worker en attente, branché sur le canal réel. Rend le worker pour lire ce qu'il reçoit. */
+  async function annoncerUneMiseAJour(): Promise<{ readonly recus: unknown[] }> {
+    const sw = await import('./sw-register.js')
+    const recus: unknown[] = []
+    const worker = { postMessage: (m: unknown) => recus.push(m) }
+    const enregistrement = Object.assign(new EventTarget(), { waiting: worker, installing: null })
+    const container = Object.assign(new EventTarget(), { controller: null })
+    act(() => {
+      sw.brancherMiseAJour(
+        container as unknown as ServiceWorkerContainer,
+        enregistrement as unknown as ServiceWorkerRegistration,
+        () => undefined
+      )
+    })
+    return { recus }
+  }
+
+  it('n’apparaît PAS tant qu’aucune version n’attend', async () => {
+    await monterEtTerminerIntro()
+    await screen.findByText('Paramètres')
+    expect(screen.queryByText('Une nouvelle version de l’application est prête.')).toBeNull()
+  })
+
+  it('apparaît dès qu’un worker attend, et « Recharger » lui ENVOIE le message', async () => {
+    await monterEtTerminerIntro()
+    await screen.findByText('Paramètres')
+
+    const worker = await annoncerUneMiseAJour()
+    await screen.findByText('Une nouvelle version de l’application est prête.')
+    // ⚠️ Le message part au CLIC, pas à l'affichage : le bandeau propose, il ne bascule pas.
+    expect(worker.recus).toEqual([])
+
+    clic('Recharger')
+    expect(worker.recus).toEqual([{ type: 'SKIP_WAITING' }])
+  })
+
+  it('« Plus tard » referme le bandeau sans rien envoyer au worker', async () => {
+    await monterEtTerminerIntro()
+    await screen.findByText('Paramètres')
+    const worker = await annoncerUneMiseAJour()
+    await screen.findByText('Une nouvelle version de l’application est prête.')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Plus tard' }))
+
+    expect(screen.queryByText('Une nouvelle version de l’application est prête.')).toBeNull()
+    expect(worker.recus).toEqual([])
+  })
+})
