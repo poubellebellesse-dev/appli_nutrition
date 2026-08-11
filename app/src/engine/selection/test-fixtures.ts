@@ -257,6 +257,8 @@ export function makeRequest(
     readonly excludedFoodIds?: readonly string[]
     /** Absent → `null` (jamais déclaré). `[]` = déclaré vide, ce n'est PAS la même chose. */
     readonly ownedEquipmentIds?: readonly string[] | null
+    /** Exceptions de régime (lot D1). Absent → `[]` : aucune, donc aucune seconde chance. */
+    readonly admittedFoodIds?: readonly string[]
     readonly requiredFoodIds?: readonly string[]
     readonly pantryFoodIds?: readonly string[]
     readonly creneau?: SuggestionRequest['context']['creneau']
@@ -292,6 +294,9 @@ export function makeRequest(
         overrides.ownedEquipmentIds === undefined
           ? null
           : (overrides.ownedEquipmentIds as readonly EquipmentId[] | null),
+      // Vide par défaut = aucune exception de régime → la seconde chance de `dietLayer` n'existe
+      // pas (P1, lot D1). C'est ce défaut-là qui rend toutes les fixtures existantes inchangées.
+      admittedFoodIds: (overrides.admittedFoodIds ?? []) as readonly FoodId[],
     },
     context: {
       creneau: overrides.creneau ?? 'diner',

@@ -25,7 +25,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Catalog, DietCode, Food, FoodId, Recipe } from '../app/src/engine/domain/index.js'
 import { resolveAnimalOrigin, resolveAnimalProvenance } from '../app/src/engine/domain/index.js'
-import { DIET_CHAIN, regimeExigePar } from '../app/src/engine/selection/index.js'
+import { DIET_CHAIN, regimeExigePar, regimeExigeParIngredients } from '../app/src/engine/selection/index.js'
 import { loadCatalog } from '../app/src/data/catalog-loader-node.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -43,16 +43,35 @@ const BUILD_SCRIPT = path.join(REPO_ROOT, 'catalog', 'build.mjs')
 
 const rang = (diet: string) => DIET_CHAIN.indexOf(diet as DietCode)
 
-/** Régime minimal imposé par les ingrédients, avec l'aliment qui l'impose (pour le message d'échec). */
+/**
+ * Régime minimal imposé par les ingrédients, avec l'aliment qui l'impose.
+ *
+ * ⚠️ `diet` VIENT DE LA FONCTION DE PRODUCTION, IL N'EST PLUS RECALCULÉ ICI (lot D1). L'oracle
+ * réimplémentait la boucle et rendait `vegetalien` quand aucun ingrédient n'était connu, là où
+ * `regimeExigeParIngredients` rend `omnivore` — le plus permissif, donc le plus restrictif à
+ * l'usage : en cas d'ignorance on n'affirme rien. Zéro recette concernée aujourd'hui (0 recette
+ * sans ingrédient connu, 0 ingrédient orphelin), mais la divergence rendait approximative la seule
+ * phrase dont P3 dépend : **la garantie de P3 est celle de ce test**. Elle ne l'est littéralement
+ * que si les deux codes sont le même.
+ *
+ * ⚠️ `coupable` NE SERT QU'AU MESSAGE D'ÉCHEC, et c'est pourquoi il est calculé à part : nommer
+ * l'aliment fautif est un service de lisibilité, pas une seconde source de vérité. Il ne participe
+ * à aucune assertion.
+ */
 function exigenceRecette(recipe: Recipe, catalog: Catalog): { diet: DietCode; coupable: string } {
-  let diet: DietCode = 'vegetalien'
+  const diet = regimeExigeParIngredients(
+    recipe.ingredients.map((ingredient) => ingredient.foodId),
+    catalog.foods
+  )
+
   let coupable = '—'
+  let rangCoupable = rang('vegetalien')
   for (const ingredient of recipe.ingredients) {
     const food = catalog.foods.get(ingredient.foodId)
     if (food === undefined) continue
     const exigence = regimeExigePar(food, catalog.foods)
-    if (rang(exigence) > rang(diet)) {
-      diet = exigence
+    if (rang(exigence) > rangCoupable) {
+      rangCoupable = rang(exigence)
       coupable = food.nom
     }
   }

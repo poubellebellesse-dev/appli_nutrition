@@ -20,7 +20,7 @@ function makePlanRequest(overrides: Partial<WeekPlanRequest> = {}): WeekPlanRequ
       poidsKg: 62,
       facteurPortion: 1,
     },
-    constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
+    constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] },
     startDate: '2026-08-03',
     days: 3,
     slots: ['diner'] as readonly MealSlot[],

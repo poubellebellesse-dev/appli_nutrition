@@ -26,7 +26,7 @@
 //
 // Dépendances autorisées : domain/, ./index.js (contrat local) — §2/§3 ENGINE.
 
-import type { DietCode, Food, FoodId, Recipe, RecipeId, RejectionEntry } from '../domain/index.js'
+import type { Catalog, DietCode, Food, FoodId, Recipe, RecipeId, RejectionEntry } from '../domain/index.js'
 import { resolveAnimalOrigin, resolveAnimalProvenance } from '../domain/index.js'
 import type { ExclusionLayerResult, SelectionLayer } from './index.js'
 
@@ -167,6 +167,117 @@ function recipeDiets(recipe: Recipe): readonly DietCode[] {
 export interface DietLayerConfig {
   readonly requestedDiet: DietCode | null
   readonly recipeDiets: ReadonlyMap<RecipeId, readonly DietCode[]>
+  /**
+   * Les recettes que l'étiquette écarte et que la SECONDE CHANCE rattrape (lot D1).
+   *
+   * ⚠️ VIDE DÈS QU'IL N'Y A AUCUNE ADMISSION — c'est P1, et c'est ce qui rend le lot gratuit pour
+   * tous les utilisateurs existants : `apply` ne consulte cet ensemble que dans la branche de
+   * rejet, et il n'y a rien à consulter.
+   */
+  readonly admisesParException: ReadonlySet<RecipeId>
+  /**
+   * TÉMOIN DE P3 — les recettes où la règle DIVERGE de l'étiquette écrite à la main, donc où la
+   * seconde chance a refusé de s'appliquer.
+   *
+   * ⛔ CÔTÉ DÉVELOPPEMENT UNIQUEMENT, JAMAIS À L'ÉCRAN (principe 6). Il est ici parce qu'une
+   * branche de sûreté muette pourrit sans que rien ne le dise — c'est le seul reproche sérieux
+   * qu'on puisse faire à P3. Mesuré : vide sur les 330 recettes du catalogue, et **c'est le
+   * succès attendu, pas du code mort**.
+   */
+  readonly divergencesP3: readonly RecipeId[]
+}
+
+/**
+ * La SECONDE CHANCE : les recettes que l'étiquette écarte mais que la règle admet, une fois les
+ * aliments admis retirés de leurs ingrédients (lot D1, P1 à P4 de
+ * `docs/CONCEPTION_REGIME_PERSONNALISE.md`).
+ *
+ * **P1 — aucune admission ⇒ chemin identique.** Les trois sorties anticipées ci-dessous rendent
+ * deux ensembles vides sans jamais appeler la règle. Zéro utilisateur existant ne change de
+ * comportement, et c'est ce qui rend tout défaut du lot attribuable.
+ *
+ * **P2 — seconde chance uniquement, jamais un refus de plus.** Une recette que l'étiquette ACCEPTE
+ * n'est même pas examinée (`continue` sur la compatibilité). Le recalcul ne peut donc qu'ajouter :
+ * un défaut de la règle ne peut retirer aucun plat à personne.
+ *
+ * **P3 — la règle ne sert que là où elle est D'ACCORD avec l'étiquette.** ⭐ Avant d'admettre, on
+ * vérifie que la règle appliquée à TOUS les ingrédients rend exactement l'étiquette écrite à la
+ * main. ⛔ Ce qu'elle attrape est le seul risque réel du lot : le cas où la RÈGLE est plus fausse
+ * que l'ÉTIQUETTE. Une recette au miel étiquetée `vegetarien` (correct), une règle défectueuse qui
+ * rend `vegetalien` pour elle : un végétalien qui admet les œufs — et rien d'autre — verrait le
+ * recalcul amputé des œufs rendre toujours `vegetalien`, la recette passerait, **et il recevrait du
+ * miel**. C'est littéralement le bug du 2026-07-28 (« Tofu laqué » déclaré `vegetalien`, contenant
+ * du miel) qui a fait naître `tests/regime-coherence.test.ts`.
+ *
+ * ⚠️ ET CE TEST N'EST PAS UNE BARRIÈRE DE BUILD : `npx vite build` n'exécute pas vitest. Les quatre
+ * commandes sont une discipline, pas un verrou. P3 convertit la convention en garantie
+ * d'EXÉCUTION, pour le prix d'une comparaison.
+ *
+ * ⛔ NE PAS RÉÉCRIRE CETTE JUSTIFICATION EN « le `catalog.db` embarqué peut ne pas être celui qui a
+ * passé le test ». C'est faux, et c'est trop plausible pour ne pas revenir : `catalog.db` n'est pas
+ * suivi par git, il est construit depuis les sources YAML dans le même build, et le test reconstruit
+ * ces mêmes sources par `build.mjs`. Aucun artefact périmé, et aucune mise à jour du catalogue
+ * indépendante de l'app.
+ *
+ * ⛔ P3 NE VAUT QUE POUR LES ÉTIQUETTES ÉCRITES À LA MAIN. `versRecette` (`data/user-recipe.ts`)
+ * RECALCULE le régime d'une recette utilisateur à chaque lecture — rien n'est stocké, son
+ * « étiquette » EST la sortie de la règle sur les ingrédients non optionnels. Ce module ne voit que
+ * les recettes du catalogue, étiquetées à la main ; il n'y a rien à recouper là où il n'y a pas de
+ * main humaine, et comparer la règle à elle-même avec des entrées différentes la ferait diverger
+ * sur toute recette utilisateur portant un ingrédient animal optionnel.
+ *
+ * ⚠️ SUR TOUS LES INGRÉDIENTS, SANS FILTRER LES `optionnel`. `user-recipe.ts` les filtre, la
+ * cohérence non — et c'est la cohérence qui fait foi ici. Deux questions différentes : « quel
+ * régime cette recette exige-t-elle » ≠ « cet utilisateur peut-il la manger ».
+ *
+ * ⚠️ UNE ÉTIQUETTE NON UNIQUE VAUT DIVERGENCE. `recipeDiets` rend 0..n valeurs et l'en-tête du
+ * module prévoit le cas vide (« incompatible avec tout régime déclaré ») ; « égaler l'étiquette »
+ * n'a de sens qu'à une. Mesuré : les 330 recettes en portent exactement une, et un test du
+ * catalogue l'exige. Le cas tombe donc du bon côté — écartée — sans dépendre de cette mesure.
+ *
+ * ⚠️ AMPUTER JUSQU'AU VIDE NE FAIT PAS PASSER LA RECETTE. Une liste sans aucun ingrédient connu
+ * fait rendre `omnivore` à `regimeExigeParIngredients`, incompatible avec tout régime déclaré de la
+ * chaîne : le cas échoue FERMÉ, par la règle elle-même, sans garde ajoutée ici.
+ */
+function secondeChance(
+  admittedFoodIds: readonly FoodId[],
+  requestedDiet: DietCode | null,
+  catalog: Catalog,
+  recipeDietsMap: ReadonlyMap<RecipeId, readonly DietCode[]>
+): { admises: ReadonlySet<RecipeId>; divergences: readonly RecipeId[] } {
+  const admises = new Set<RecipeId>()
+  const divergences: RecipeId[] = []
+
+  // P1 — aucune admission, ou aucun régime déclaré : la règle n'est jamais appelée.
+  if (admittedFoodIds.length === 0 || requestedDiet === null) return { admises, divergences }
+  // ⚠️ Uniquement dans la chaîne. `halal` et `sans_gluten` passent par l'égalité stricte
+  // (`isDietCompatible`, cas 1) ; la règle ne les modélise pas et ne doit pas les approcher.
+  if (rangDansChaine(requestedDiet) < 0) return { admises, divergences }
+
+  const admis = new Set<FoodId>(admittedFoodIds)
+
+  for (const recipe of catalog.recipes.values()) {
+    const etiquettes = recipeDietsMap.get(recipe.id) ?? []
+    // P2 — acceptée par l'étiquette : jamais repassée à la règle.
+    if (etiquettes.some((diet) => isDietCompatible(diet, requestedDiet))) continue
+    if (etiquettes.length !== 1) continue
+
+    const etiquette = etiquettes[0] as DietCode
+    const tousLesIngredients = recipe.ingredients.map((ingredient) => ingredient.foodId)
+
+    // P3 — la règle doit être D'ACCORD avec l'étiquette, sinon on ne s'en sert pas.
+    if (regimeExigeParIngredients(tousLesIngredients, catalog.foods) !== etiquette) {
+      divergences.push(recipe.id)
+      continue
+    }
+
+    const ampute = tousLesIngredients.filter((foodId) => !admis.has(foodId))
+    if (isDietCompatible(regimeExigeParIngredients(ampute, catalog.foods), requestedDiet)) {
+      admises.add(recipe.id)
+    }
+  }
+
+  return { admises, divergences }
 }
 
 export const dietLayer: SelectionLayer<DietLayerConfig> = {
@@ -179,7 +290,21 @@ export const dietLayer: SelectionLayer<DietLayerConfig> = {
     const recipeDietsMap = new Map<RecipeId, readonly DietCode[]>()
     for (const recipe of catalog.recipes.values()) recipeDietsMap.set(recipe.id, recipeDiets(recipe))
 
-    return { requestedDiet: req.constraints.diet, recipeDiets: recipeDietsMap }
+    // ⭐ TOUT LE CALCUL DE LA SECONDE CHANCE VIT ICI, `apply` reste une lecture de table. C'est
+    // aussi ce qui rend P1 gratuit : sans admission, `secondeChance` sort avant d'avoir rien lu.
+    const { admises, divergences } = secondeChance(
+      req.constraints.admittedFoodIds,
+      req.constraints.diet,
+      catalog,
+      recipeDietsMap
+    )
+
+    return {
+      requestedDiet: req.constraints.diet,
+      recipeDiets: recipeDietsMap,
+      admisesParException: admises,
+      divergencesP3: divergences,
+    }
   },
 
   apply: (candidates, config): ExclusionLayerResult => {
@@ -195,6 +320,10 @@ export const dietLayer: SelectionLayer<DietLayerConfig> = {
     for (const recipeId of candidates) {
       const diets = config.recipeDiets.get(recipeId) ?? []
       if (diets.some((diet) => isDietCompatible(diet, requestedDiet))) {
+        kept.add(recipeId)
+      } else if (config.admisesParException.has(recipeId)) {
+        // La seconde chance (lot D1). ⚠️ Elle ne peut qu'AJOUTER : la branche est atteinte
+        // UNIQUEMENT après un refus de l'étiquette, ce qui est P2 rendu structurel.
         kept.add(recipeId)
       } else {
         rejected.push({ recipeId, layerId: 'regime', reason: `incompatible avec le régime déclaré : ${requestedDiet}` })

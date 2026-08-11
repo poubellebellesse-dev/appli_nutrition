@@ -39,6 +39,38 @@ export interface HardConstraints {
    * cinquième occurrence en germe du piège « un champ déclaré n'est pas un champ branché ».
    */
   readonly ownedEquipmentIds: readonly EquipmentId[] | null
+  /**
+   * Les aliments que l'utilisateur admet MALGRÉ son régime déclaré — le végétalien qui fait une
+   * exception pour le miel. Lu par la SEULE couche `regime`, qui accorde une seconde chance à une
+   * recette que l'étiquette écarte : si, ces aliments retirés de ses ingrédients, la règle rend un
+   * régime compatible, la recette repasse.
+   *
+   * ⚠️ ICI ET PAS DANS `MealContext` — même cas qu'`ownedEquipmentIds` juste au-dessus, et pour la
+   * raison qui y est écrite : une exception de régime est un réglage DURABLE, on veut justement
+   * qu'un plan de semaine la respecte. Ne pas le lire comme une entorse à l'asymétrie de
+   * `requiredFoodIds` : c'est le cas opposé, déjà tranché ici même.
+   *
+   * ⚠️ REQUIS, ET NON OPTIONNEL. Même parti que `ownedEquipmentIds` et `tolerancePiquant`, pour le
+   * même prix assumé : le compilateur désigne les sites de construction au lieu de les laisser
+   * omettre le champ en silence. Un `?` aurait évité le travail et rouvert le piège « un champ
+   * déclaré n'est pas un champ branché ».
+   *
+   * ⚠️ PAS DE TRI-ÉTAT ICI, contrairement à `ownedEquipmentIds`, et ce n'est pas une incohérence.
+   * Là-bas `null` et `[]` disent deux choses différentes (« jamais déclaré » ≠ « je ne possède
+   * rien »), parce que la couche EXCLUT. Ici la seconde chance ne peut qu'ADMETTRE : « aucune
+   * exception » et « pas encore ouvert l'écran » produisent exactement le même résultat, et un
+   * tri-état sans conséquence est une question de plus à se poser à chaque appel.
+   *
+   * ⛔ L'ADMISSION EST LITTÉRALE, SANS CASCADE `deriveDe` : admettre `lait_entier` n'admet pas le
+   * beurre. On retire l'aliment de la LISTE D'INGRÉDIENTS ; on ne neutralise pas son origine dans
+   * la carte des aliments, ce qui propagerait par la cascade et surprendrait.
+   *
+   * ⛔ JAMAIS LUE PAR LES ALLERGÈNES NI PAR `exclusions`. Un `miel` admis reste écarté s'il est
+   * déclaré allergène, ou s'il a été coché dans « Aliments que je ne veux pas ». Le champ n'est
+   * passé qu'à `dietLayer` ; aucune garde « si allergène alors ignorer l'admission » n'est posée
+   * ailleurs, une telle garde donnerait l'illusion que c'est ELLE qui protège.
+   */
+  readonly admittedFoodIds: readonly FoodId[]
 }
 
 /** Envies exprimées sur les axes sensoriels (pastilles Léger/Chaud/Salé…, §6.5 ENGINE). */

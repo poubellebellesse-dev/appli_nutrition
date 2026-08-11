@@ -185,7 +185,7 @@ describe("engine/api — searchByPantry, condiments seuls ne proposent plus rien
     };
   }
 
-  const constraints = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null };
+  const constraints = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] };
 
   it("garde-manger de condiments seuls, sans rapport → aucune recette", () => {
     // Le poivre n'est présent QU'EN OPTIONNEL dans tout le catalogue de test : aucune recette ne
@@ -231,7 +231,7 @@ describe("engine/api — browseRecipes, l'axe des sauces (`saucesSeules`)", () =
     };
   }
 
-  const constraints = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null };
+  const constraints = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] };
 
   it("sans l'option, les sauces restent hors de la liste — la v14 ne change rien pour qui ne demande rien", () => {
     const engine = createEngine(catalogueMixte());
@@ -340,7 +340,7 @@ describe("engine/api — createEngine (§8 ENGINE)", () => {
         niveauActivite: "actif",
         facteurPortion: 1,
       },
-      constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
+      constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] },
       history: { windowDays: 21, entries: [] },
       activeTopics: [],
   tolerancePiquant: null,
@@ -546,6 +546,7 @@ function ferRequest(
       diet: null,
       excludedFoodIds: overrides.excludedFoodIds ?? [],
       ownedEquipmentIds: null,
+      admittedFoodIds: [],
     },
     context: {
       creneau: "diner",
@@ -1001,7 +1002,7 @@ describe("engine/api — avertissements d'un plan (§6.5)", () => {
       {
         profile: PROFIL_TEST,
         tolerancePiquant: null,
-        constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
+        constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] },
         history: { windowDays: 21, entries: [] },
         activeTopics: [],
         seed: 1,
@@ -1177,7 +1178,7 @@ describe("engine/api — suggestSauces : les couches critiques s'appliquent AUSS
     };
   }
 
-  const sansRegime = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null };
+  const sansRegime = { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] };
   const avec = (diet: string) => ({ ...sansRegime, diet });
 
   it("sans régime déclaré, les deux sauces attachées sont rendues — la couche est INERTE", () => {

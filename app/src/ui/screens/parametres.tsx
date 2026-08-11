@@ -320,6 +320,10 @@ export function Parametres() {
         vueCourante.exceptions
       ),
       ownedEquipmentIds: vueCourante.equipement,
+      // Aucune exception de régime tant que D3 n'a pas posé son panneau — cet écran-ci ne les
+      // coche pas. Le compteur suivra tout seul quand elles existeront (il lit `browseRecipes`),
+      // ⚠️ mais ce n'est branché que le jour où un test le montre.
+      admittedFoodIds: [],
     }
     return platsParCreneau(
       vueCourante.moteur.browseRecipes({ constraints: contraintes }).recipeIds,

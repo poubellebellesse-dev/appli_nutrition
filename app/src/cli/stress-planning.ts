@@ -61,7 +61,7 @@ const SENIOR: UserProfile = { ...FEMME, trancheAge: '65_plus', niveauActivite: '
 function req(o: Partial<WeekPlanRequest> = {}): WeekPlanRequest {
   return {
     profile: FEMME,
-    constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null },
+    constraints: { allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] },
     startDate: '2026-08-03',
     days: 7,
     slots: ['petit_dejeuner', 'dejeuner', 'diner'],
@@ -186,15 +186,15 @@ essai('senior sédentaire', req({ profile: SENIOR }))
 
 // --- Régimes ------------------------------------------------------------------------------------
 for (const diet of ['omnivore', 'pescetarien', 'vegetarien', 'vegetalien'] as DietCode[]) {
-  essai(`régime ${diet}, 14 j × 3`, req({ days: 14, constraints: { allergies: [], diet, excludedFoodIds: [], ownedEquipmentIds: null } }))
+  essai(`régime ${diet}, 14 j × 3`, req({ days: 14, constraints: { allergies: [], diet, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] } }))
 }
 
 // --- Allergènes ---------------------------------------------------------------------------------
-essai('sans gluten', req({ days: 7, constraints: { allergies: ['gluten' as AllergenId], diet: null, excludedFoodIds: [], ownedEquipmentIds: null } }))
-essai('sans lait', req({ days: 7, constraints: { allergies: ['lait' as AllergenId], diet: null, excludedFoodIds: [], ownedEquipmentIds: null } }))
+essai('sans gluten', req({ days: 7, constraints: { allergies: ['gluten' as AllergenId], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] } }))
+essai('sans lait', req({ days: 7, constraints: { allergies: ['lait' as AllergenId], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] } }))
 essai(
   'sans gluten NI lait NI œuf',
-  req({ days: 7, constraints: { allergies: ['gluten', 'lait', 'oeuf'] as AllergenId[], diet: null, excludedFoodIds: [], ownedEquipmentIds: null } })
+  req({ days: 7, constraints: { allergies: ['gluten', 'lait', 'oeuf'] as AllergenId[], diet: null, excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] } })
 )
 
 // --- Cumul le plus dur --------------------------------------------------------------------------
@@ -203,7 +203,7 @@ essai(
   req({
     days: 14,
     slots: ['petit_dejeuner', 'dejeuner', 'gouter', 'diner'],
-    constraints: { allergies: ['gluten' as AllergenId], diet: 'vegetalien', excludedFoodIds: [], ownedEquipmentIds: null },
+    constraints: { allergies: ['gluten' as AllergenId], diet: 'vegetalien', excludedFoodIds: [], ownedEquipmentIds: null , admittedFoodIds: [] },
   })
 )
 

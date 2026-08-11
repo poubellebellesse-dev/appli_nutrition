@@ -296,7 +296,15 @@ describe('user-store — profil', () => {
 describe('user-store — contraintes dures', () => {
   it('rend des contraintes vides sur une base neuve, jamais null', () => {
     // Un `HardConstraints` absent obligerait chaque appelant à gérer le cas ; vide est le neutre.
-    expect(readConstraints(db, SANS_CATALOGUE)).toEqual({ allergies: [], diet: null, excludedFoodIds: [], ownedEquipmentIds: null })
+    expect(readConstraints(db, SANS_CATALOGUE)).toEqual({
+      allergies: [],
+      diet: null,
+      excludedFoodIds: [],
+      ownedEquipmentIds: null,
+      // ⚠️ Toujours vide jusqu'en D2 : la table `user_admitted_food` n'existe pas encore. Cette
+      // assertion EXHAUSTIVE est ce qui obligera à revenir ici le jour où elle existera.
+      admittedFoodIds: [],
+    })
   })
 
   it('fait l’aller-retour sur le matériel déclaré', () => {
@@ -639,6 +647,7 @@ describe('user-store — readUserState', () => {
       allergies: ['gluten'],
       diet: 'vegetarien',
       excludedFoodIds: ['coriandre'],
+      admittedFoodIds: [],
       // Rien n'a été écrit dans `user_equipment` : `null`, donc la couche `equipement` reste
       // inerte. Un `[]` ici retirerait à cet utilisateur toutes les recettes à source de chaleur.
       ownedEquipmentIds: null,

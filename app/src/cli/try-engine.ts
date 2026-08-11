@@ -561,6 +561,8 @@ function buildRequest(opts: CliOptions): SuggestionRequest {
       // Le banc ne déclare aucun matériel : la couche `equipement` doit y rester inerte, sinon
       // les mesures porteraient sur un catalogue amputé de ses recettes à source de chaleur.
       ownedEquipmentIds: null,
+      // Le banc ne déclare aucune exception de régime : la seconde chance reste inerte (P1).
+      admittedFoodIds: [],
     },
     context: {
       creneau: opts.slot,

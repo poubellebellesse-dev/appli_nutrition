@@ -109,6 +109,7 @@ function constraints(allergies: readonly string[]): HardConstraints {
     diet: null,
     excludedFoodIds: [],
     ownedEquipmentIds: null,
+    admittedFoodIds: [],
   };
 }
 

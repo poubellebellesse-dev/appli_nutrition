@@ -343,6 +343,11 @@ export function readConstraints(db: UserDb, foods: ReadonlyMap<FoodId, Food>): H
     diet: readDiet(db),
     excludedFoodIds: readExcludedFoodIdsDeplies(db, foods),
     ownedEquipmentIds: readOwnedEquipmentIds(db),
+    // ⚠️ TOUJOURS VIDE : le lot D1 ne pose que le chemin moteur, la table `user_admitted_food`
+    // arrive en D2 et l'écran en D3. Aucune exception ne peut donc exister aujourd'hui, et la
+    // seconde chance de `dietLayer` reste inerte pour tout le monde (P1). ⛔ Ce `[]` est le point
+    // unique à remplacer en D2 — pas un défaut à contourner ailleurs.
+    admittedFoodIds: [],
   }
 }
 
