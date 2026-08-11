@@ -581,6 +581,48 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 - **Gestes de cuisine** : boucle WebP 3 s pour les gestes simples ; **3 clips MP4 de 3 s**
   (avant/pendant/après) + clip « quand ça rate » pour les gestes à risque ; galeries d'états
   (cuisson, caramel) en photos.
+  ✅ **AMENDÉ LE 2026-08-10, DÉCISION UTILISATEUR — UNE PHOTO FIXE *ET* UN CLIP, PAS L'UN OU
+  L'AUTRE.** La photo retenue devient l'**image d'appel** (poster affiché avant lecture, et seule
+  image si le clip n'est pas chargé) ; le clip se déclenche au clic. La ligne ci-dessus ne parlait
+  que de clips, et une passe de tri avait entre-temps produit 62 photos fixes : le désaccord est
+  tranché en gardant les deux, chacun dans son rôle. ⚠️ **CE QUI MOTIVE LE COUPLAGE N'EST PAS
+  L'ESTHÉTIQUE, C'EST LE BUDGET** : le poster est léger et pré-caché, le clip est un média lourd à
+  la demande au sens du « cache à deux étages » ci-dessous. Un geste sans clip chargé reste donc
+  illustré, hors ligne, sans requête.
+  ⚠️ **CE QU'UNE IMAGE FIXE NE PEUT PAS DIRE, ET C'EST MESURÉ, PAS SUPPOSÉ.** Plusieurs gestes du
+  lexique se définissent l'un CONTRE l'autre par une évolution dans le temps — `suer` est
+  « rendre son eau **sans colorer** », c'est-à-dire `revenir` moins la coloration. Sur les
+  24 candidates photo de `suer`, **aucune** n'était utilisable ; sur 4 clips regardés en quatre
+  images étalées sur leur durée, la coloration se lit d'un coup d'œil et deux candidats se
+  départagent. Même famille de couples : `revenir`/`sauter`/`poeler`, `mijoter`/`braiser`.
+  ⚠️ **RIEN N'EST ENCORE PESÉ CÔTÉ CLIP.** Récolté le 2026-08-10 : **496 candidats sur 62/62 gestes,
+  29 Mo de vignettes d'aperçu, ZÉRO vidéo téléchargée** (`atelier/gestes/moissonner-video.mjs`, qui
+  ne tire que les images `video_pictures` publiées par l'API).
+  ✅ **L'ESTIMATION DE POIDS EST REMPLACÉE PAR UNE MESURE (2026-08-10).** `ffmpeg` 9.0 est installé
+  (winget `Gyan.FFmpeg`, sur ordre explicite de l'utilisateur ; libsvtav1 / libvpx-vp9 / libx264 /
+  libwebp\_anim présents). Deux clips Pexels réellement encodés, 3 s, 480 px de large, 24 i/s, muets :
+  | clip | AV1 (svt, crf 40) | H.264 (crf 28) | VP9 (crf 40) | WebP animé 12 i/s |
+  |---|---|---|---|---|
+  | `monter_blancs` pexels\_01 — **peu de mouvement** | **44,5 Ko** | 48,0 Ko | 45,3 Ko | 275,5 Ko |
+  | `sauter` pexels\_05 — **fort mouvement** (riz projeté) | **100,2 Ko** | 119,0 Ko | — | — |
+  Poster JPEG 720 px extrait du clip : **32–33 Ko** dans les deux cas. **L'estimation « ~400 Ko en
+  H.264 » était fausse d'un facteur 4 à 8** — un clip court, muet et en 480 p pèse beaucoup moins
+  que ce qui avait été avancé en discussion.
+  ⇒ **62 gestes = 2,8 à 6,2 Mo de clips en AV1** (7,4 Mo en H.264 au pire) **+ 2,0 Mo de posters**.
+  ⚠️ **C'est le mouvement qui fixe le poids, pas la durée** : le rapport entre les deux clips mesurés
+  est de **2,3×** à réglage identique. Une projection par « moyenne » sur 62 gestes n'a donc pas de
+  sens tant que les clips retenus ne sont pas connus — c'est une FOURCHETTE, elle se resserrera
+  quand les 62 seront choisis.
+  ⚠️ **AV1 ne peut pas être le seul format livré** : Safari ne le décode que sur matériel récent.
+  Le format de repli est H.264, soit +20 % environ. Le choix « un seul format universel » contre
+  « deux sources dans la balise `<video>` » n'est pas tranché.
+  ⚠️ **WebP animé est écarté par la mesure** : 275 Ko pour le clip le PLUS LÉGER, soit 6× l'AV1,
+  pour 12 i/s au lieu de 24. Il n'a d'intérêt que là où une balise vidéo est impossible.
+  ⚠️ Vérifié à l'œil sur une image extraite de l'encodage AV1 du clip à fort mouvement : le geste
+  reste lisible à ce réglage. **Un CRF ne se choisit pas sur un tableau de poids seul.**
+  ⚠️ **Le lexique n'a toujours AUCUN champ pour porter un média** — ni dans le YAML source, ni dans
+  `catalog/build.mjs`, ni dans `LexiconEntry`, ni à l'écran. Photo et clip sont tous deux sans point
+  d'accroche : c'est un lot de code à part entière, pas la fin du tri.
 - **Recettes** : 1 photo hero par recette ; **vidéo 2-3 s seulement sur les recettes du jour**.
 - **Cache à deux étages (option B)** : socle léger pré-caché (shell + `catalog.db` + boucles +
   photos d'ustensiles), médias lourds à la demande + bouton « tout télécharger ». **Aucun média
