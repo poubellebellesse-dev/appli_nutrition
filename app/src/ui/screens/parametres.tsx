@@ -44,12 +44,14 @@ import type { Engine } from '../../engine/api/index.js'
 import { DEFAULT_PLAN_DAYS } from '../../engine/planning/plan-week.js'
 import { DIET_CHAIN, regimeExigePar } from '../../engine/selection/index.js'
 import {
+  readAdmittedFoodIds,
   readDisplay,
   readExcludedFoodIds,
   readExcludedGroupIds,
   readGroupExceptionFoodIds,
   readMealTimes,
   readOwnedEquipmentIds,
+  writeAdmittedFoodIds,
   writeAllergies,
   writeDiet,
   writeExcludedFoodIds,
@@ -134,6 +136,15 @@ interface Vue extends ChoixProfil {
   readonly alimentsRetires: ReadonlySet<FoodId>
   /** Aliments ré-admis À L'INTÉRIEUR d'un groupe retiré — le végétarien qui reprend le roquefort. */
   readonly exceptions: ReadonlySet<FoodId>
+  /**
+   * « Mes exceptions » — les aliments admis MALGRÉ le régime déclaré (`user_admitted_food`, v16).
+   *
+   * ⛔ RIEN À VOIR AVEC `exceptions` CI-DESSUS, malgré le nom, et les deux sont à trois lignes l'une
+   * de l'autre : `exceptions` RESTREINT un retrait de groupe (couche `exclusions`), celle-ci
+   * ASSOUPLIT le régime (couche `regime`). Le tableau des deux vit au-dessus de la migration 16
+   * (`data/user-schema.ts`). Seule celle-ci peut faire proposer un produit animal à un végétalien.
+   */
+  readonly admissions: ReadonlySet<FoodId>
 }
 
 type Etat =
@@ -146,6 +157,7 @@ type PanneauId =
   | 'allergies'
   | 'regime'
   | 'aliments-ecartes'
+  | 'exceptions-regime'
   | 'piquant'
   | 'rythme'
   | 'affichage'
@@ -169,6 +181,7 @@ async function lireVue(): Promise<Vue> {
     groupesRetires: new Set(readExcludedGroupIds(socle.db)),
     alimentsRetires: new Set(readExcludedFoodIds(socle.db)),
     exceptions: new Set(readGroupExceptionFoodIds(socle.db)),
+    admissions: new Set(readAdmittedFoodIds(socle.db)),
   }
 }
 
@@ -188,8 +201,33 @@ function resumeAllergenes(catalogue: Catalog, allergenes: ReadonlySet<string>): 
     .join(', ')
 }
 
-function resumeRegime(regime: DietCode | null): string {
-  return regime === null ? 'Aucun' : (LIBELLE_REGIME[regime] ?? regime)
+/**
+ * ⚠️ LE RÉGIME DÉCLARÉ PORTE SES EXCEPTIONS PARTOUT OÙ IL S'AFFICHE. « Végétalien » tout court,
+ * alors qu'une exception court depuis trois mois, est la seule façon dont ce chantier pouvait
+ * tromper son propriétaire — un libellé net qui masque une entorse qu'on a soi-même posée, puis
+ * oubliée. Énoncer un fait ne juge personne : le principe 6 reste entier.
+ *
+ * ⚠️ ZÉRO EXCEPTION ⇒ LE LIBELLÉ NE CHANGE PAS. Pas de « végétalien, sauf 0 » : une mention qui
+ * apparaît toujours cesse d'être lue, et c'est exactement ce qu'on cherche à éviter ici.
+ *
+ * ⚠️ ON COMPTE LES EXCEPTIONS QUI AGISSENT, PAS LES LIGNES EN BASE. Une admission sur un aliment
+ * que le régime déclaré n'écarte pas — ou qu'une allergie écarte de toute façon — ne change RIEN aux
+ * suggestions ; l'annoncer ferait mentir le libellé dans l'autre sens. Le compte est exactement
+ * celui des cases cochées et actives du panneau (`admissionsEffectives`).
+ */
+function resumeRegime(regime: DietCode | null, exceptions: number): string {
+  if (regime === null) return 'Aucun'
+  const libelle = LIBELLE_REGIME[regime] ?? regime
+  return exceptions === 0 ? libelle : `${libelle}, sauf ${exceptions}`
+}
+
+/**
+ * ⚠️ ON NOMME LES ALIMENTS, ON NE LES COMPTE PAS — à la différence de « Aliments que je ne veux
+ * pas », qui résume des GROUPES cochés. Ici le geste est déjà par aliment et il est rare par nature :
+ * « Miel » dit ce qu'on a fait, « 1 aliment » oblige à ouvrir le panneau pour le savoir.
+ */
+function resumeExceptions(noms: readonly string[]): string {
+  return noms.length === 0 ? 'Aucune' : noms.join(', ')
 }
 
 /**
@@ -304,6 +342,51 @@ export function Parametres() {
    * même nombre. `platsParCreneau` porte le détail.
    */
   const vueCourante = etat.phase === 'pret' ? etat.vue : null
+
+  // La MÊME règle de dépliage que `readExcludedFoodIdsDeplies`, appelée sur l'état d'écran — qui est
+  // en avance sur la base, `appliquer` écrivant après avoir posé l'état. Sortie du mémo du compteur
+  // parce que « Mes exceptions » en a besoin aussi : deux appels donneraient deux vérités le jour où
+  // l'un des deux oublierait un argument.
+  const exclus = useMemo<readonly FoodId[]>(
+    () =>
+      vueCourante === null
+        ? []
+        : deplierGroupesRetires(
+            groupes,
+            vueCourante.groupesRetires,
+            vueCourante.alimentsRetires,
+            vueCourante.exceptions
+          ),
+    [groupes, vueCourante?.groupesRetires, vueCourante?.alimentsRetires, vueCourante?.exceptions]
+  )
+
+  /**
+   * Ce que « Mes exceptions » peut proposer, et le compte que le libellé du régime affiche.
+   *
+   * ⚠️ `useMemo` POUR LA MÊME RAISON QUE `groupes` JUSTE AU-DESSUS : ce composant se rend à chaque
+   * case cochée, et `groupesAdmissibles` appelle `regimeExigePar` sur les 167 aliments d'origine
+   * animale — dont chacun peut remonter une chaîne `deriveDe`. Le coût est petit, le rendu est
+   * fréquent, et le mémo est gratuit ici puisque ses dépendances sont déjà toutes des références
+   * stables entre deux rendus non concernés.
+   */
+  const admissibles = useMemo(
+    () =>
+      vueCourante === null || catalogue === null
+        ? []
+        : groupesAdmissibles(
+            groupes,
+            catalogue.foods,
+            vueCourante.regime,
+            vueCourante.allergenes,
+            new Set(exclus)
+          ),
+    [groupes, catalogue, vueCourante?.regime, vueCourante?.allergenes, exclus]
+  )
+  const effectives = useMemo(
+    () => (vueCourante === null ? [] : admissionsEffectives(admissibles, vueCourante.admissions)),
+    [admissibles, vueCourante?.admissions]
+  )
+
   const comptes = useMemo<readonly PlatsDuCreneau[]>(() => {
     if (vueCourante === null || catalogue === null) return []
     const contraintes: HardConstraints = {
@@ -311,19 +394,16 @@ export function Parametres() {
       // `ecrireChoixProfil` (ui/profil-enregistre.ts), qui fait le chemin inverse.
       allergies: [...vueCourante.allergenes].map((id) => id as AllergenId),
       diet: vueCourante.regime,
-      // La MÊME règle de dépliage que `readExcludedFoodIdsDeplies`, appelée sur l'état d'écran —
-      // qui est en avance sur la base, `appliquer` écrivant après avoir posé l'état.
-      excludedFoodIds: deplierGroupesRetires(
-        groupes,
-        vueCourante.groupesRetires,
-        vueCourante.alimentsRetires,
-        vueCourante.exceptions
-      ),
+      excludedFoodIds: exclus,
       ownedEquipmentIds: vueCourante.equipement,
-      // Aucune exception de régime tant que D3 n'a pas posé son panneau — cet écran-ci ne les
-      // coche pas. Le compteur suivra tout seul quand elles existeront (il lit `browseRecipes`),
-      // ⚠️ mais ce n'est branché que le jour où un test le montre.
-      admittedFoodIds: [],
+      // ⚠️ TOUTES LES ADMISSIONS, PAS SEULEMENT CELLES QUI AGISSENT (`effectives`) — c'est ce que
+      // `readConstraints` envoie en production, et le compteur doit annoncer ce que les suggestions
+      // feront, pas une variante plus propre. Une admission inerte l'est déjà pour le moteur : la
+      // couche `allergenes` ou `exclusions` écarte le plat de toute façon.
+      // ⚠️ CE `[]` EN DUR ÉTAIT JUSTE TANT QUE PERSONNE NE POUVAIT COCHER. Le panneau existe
+      // maintenant : le laisser aurait affiché « il reste N plats » sous les cases qui le
+      // démentaient, sur le même écran. Verrouillé par un test qui coche et lit le compte.
+      admittedFoodIds: [...vueCourante.admissions],
     }
     return platsParCreneau(
       vueCourante.moteur.browseRecipes({ constraints: contraintes }).recipeIds,
@@ -333,13 +413,11 @@ export function Parametres() {
     )
   }, [
     catalogue,
-    groupes,
+    exclus,
     vueCourante?.moteur,
     vueCourante?.allergenes,
     vueCourante?.regime,
-    vueCourante?.groupesRetires,
-    vueCourante?.alimentsRetires,
-    vueCourante?.exceptions,
+    vueCourante?.admissions,
     vueCourante?.equipement,
     vueCourante?.rythme.repasParJour,
   ])
@@ -379,9 +457,22 @@ export function Parametres() {
           />
           <LigneOuvrante
             libelle="Mon régime"
-            valeur={resumeRegime(vue.regime)}
+            valeur={resumeRegime(vue.regime, effectives.length)}
             onOuvrir={() => setPanneauOuvert('regime')}
           />
+          {/* ⚠️ LA LIGNE N'EXISTE QUE SI LE RÉGIME DÉCLARÉ ÉCARTE QUELQUE CHOSE. Un omnivore — ou
+              quelqu'un sans régime — n'a AUCUNE exception à poser : le panneau s'ouvrirait sur une
+              liste vide, c'est-à-dire sur un réglage qui ne règle rien. ⛔ Ce n'est pas le même cas
+              que « Aliments que je ne veux pas », qui affiche les groupes déjà écartés plutôt que de
+              les masquer : là-bas, cacher aurait tu CE QUI FILTRE les suggestions ; ici il n'y a rien
+              à taire, il n'y a rien à régler. */}
+          {admissibles.length > 0 && (
+            <LigneOuvrante
+              libelle="Mes exceptions"
+              valeur={resumeExceptions(effectives.map((f) => f.nom))}
+              onOuvrir={() => setPanneauOuvert('exceptions-regime')}
+            />
+          )}
           <LigneOuvrante
             libelle="Aliments que je ne veux pas"
             valeur={resumeAlimentsEcartes(vue, groupes)}
@@ -478,6 +569,17 @@ export function Parametres() {
             choisi={vue.regime}
             onChange={(regime) => appliquer({ ...vue, regime }, (db) => writeDiet(db, regime))}
           />
+          {/* ⚠️ ICI LES EXCEPTIONS SONT NOMMÉES, PAS COMPTÉES. La ligne du dessous dit « sauf 1 »
+              parce qu'elle tient sur une ligne ; l'écran du régime, lui, est le seul endroit où on
+              vient VÉRIFIER ce qu'on a déclaré — un compte y laisserait la question ouverte. ⛔ Aucune
+              case ici : on se contente de rappeler, le geste vit dans « Mes exceptions ». */}
+          {effectives.length > 0 && (
+            <p className="mt-3 rounded-[--radius-carte] border border-bordure bg-fond px-4 py-3 text-courant leading-relaxed text-texte-doux">
+              Vous acceptez malgré ce régime :{' '}
+              <span className="text-texte">{effectives.map((f) => f.nom).join(', ')}</span>. Ça se
+              modifie dans « Mes exceptions ».
+            </p>
+          )}
         </Panneau>
       )}
 
@@ -534,6 +636,24 @@ export function Parametres() {
                 writeExcludedFoodIds(db, [...alimentsRetires])
                 writeGroupExceptionFoodIds(db, [...exceptions])
               })
+            }}
+          />
+        </Panneau>
+      )}
+
+      {panneauOuvert === 'exceptions-regime' && (
+        <Panneau titre="Mes exceptions" onFermer={fermer}>
+          <ExceptionsRegime
+            groupes={admissibles}
+            regime={vue.regime}
+            admissions={vue.admissions}
+            comptes={comptes}
+            onAliment={(foodId, admis) => {
+              // « Le geste est le contrat » : on écrit AU CLIC, jamais à la fermeture du panneau.
+              const admissions = new Set(vue.admissions)
+              if (admis) admissions.add(foodId)
+              else admissions.delete(foodId)
+              appliquer({ ...vue, admissions }, (db) => writeAdmittedFoodIds(db, [...admissions]))
             }}
           />
         </Panneau>
@@ -1148,6 +1268,117 @@ function AlimentsEcartes({
 }
 
 /**
+ * « Mes exceptions » — les aliments admis MALGRÉ le régime déclaré (lot D3).
+ *
+ * ⛔ UN SECOND PANNEAU, SÉPARÉ DE « ALIMENTS QUE JE NE VEUX PAS », ET C'EST STRUCTUREL. Décision
+ * utilisateur : le même écran qui laisse RÉADMETTRE le miel ne doit jamais laisser réadmettre
+ * l'arachide. Les deux panneaux vont en sens inverse — l'un retire, l'autre reprend — et fusionner
+ * deux directions opposées dans une liste de cases rendrait la confusion plus dure à défaire qu'une
+ * vigilance. C'est le garde-fou 1 (« les allergènes ne passent jamais par ces écrans ») rendu
+ * structurel plutôt que rappelé.
+ *
+ * ⛔ AUCUNE CASE DE GROUPE, ET LE SCHÉMA L'A DÉCIDÉ AVANT L'ÉCRAN : `user_admitted_food` stocke un
+ * `food_id`, il n'existe aucune table d'admission par groupe. Le groupe ne sert qu'à NAVIGUER.
+ *
+ * ⛔ AUCUNE CASE SANS EFFET. Deux causes, deux motifs affichés, jamais une case grisée qui promettrait
+ * quelque chose : l'allergène (garde-fou 1, P4 du lot D1) et le retrait personnel (préséance tranchée
+ * en D2). ⚠️ ON AFFICHE PLUTÔT QUE DE MASQUER — même parti que le panneau voisin : quelqu'un qui
+ * cherche « Miel » et ne le trouve nulle part conclut à un bug ; le lire « déjà écarté par votre
+ * allergie » lui dit ce qui filtre et OÙ ça se règle.
+ *
+ * ⚠️ LE COMPTEUR EST RAPPELÉ ICI, et il monte au lieu de descendre — c'est le seul panneau où cocher
+ * AJOUTE des plats. Il reste un cardinal, jamais une note (principe 6).
+ *
+ * Rendu à l'intérieur d'un `Panneau` : pas de titre ici, le panneau le porte déjà dans son en-tête.
+ */
+function ExceptionsRegime({
+  groupes,
+  regime,
+  admissions,
+  comptes,
+  onAliment,
+}: {
+  readonly groupes: readonly GroupeAdmissible[]
+  readonly regime: DietCode | null
+  readonly admissions: ReadonlySet<FoodId>
+  readonly comptes: readonly PlatsDuCreneau[]
+  readonly onAliment: (foodId: FoodId, admis: boolean) => void
+}) {
+  const [deplie, setDeplie] = useState<GroupeAnimalId | null>(null)
+
+  return (
+    <>
+      <p className="mb-3 text-courant leading-relaxed text-texte-doux">
+        Ces aliments-là vous seront proposés malgré votre régime
+        {regime === null ? '' : ` (${LIBELLE_REGIME[regime] ?? regime})`}. Dépliez un groupe et cochez
+        aliment par aliment. Une allergie ne se reprend pas ici : elle se règle dans « Mes allergies ».
+      </p>
+
+      <ComptesParCreneau comptes={comptes} />
+
+      <div className="space-y-2">
+        {groupes.map((groupe) => {
+          const ouvert = deplie === groupe.id
+          const admis = groupe.aliments.filter((a) => a.blocage === null && admissions.has(a.food.id))
+
+          return (
+            <div key={groupe.id}>
+              {/* ⚠️ UN INTITULÉ, PAS UNE CASE. Le groupe n'est pas cochable, il ouvre. */}
+              <p className="rounded-[--radius-carte] border border-bordure bg-fond px-4 py-3 text-lecture text-texte">
+                {groupe.libelle} ({groupe.aliments.length})
+                {admis.length > 0 && (
+                  <span className="block text-mention leading-snug text-attenue">
+                    Vous acceptez : {admis.map((a) => a.food.nom).join(', ')}.
+                  </span>
+                )}
+              </p>
+
+              {/* Dépliant INTERNE au panneau, pas un menu : `aria-expanded` est légitime ici, il
+                  décrit une liste qui pousse le contenu. Même forme que le panneau voisin. */}
+              <button
+                type="button"
+                onClick={() => setDeplie(ouvert ? null : groupe.id)}
+                aria-expanded={ouvert}
+                className="mt-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
+              >
+                {ouvert ? 'Masquer le détail' : `Voir les ${groupe.aliments.length} aliments`}
+              </button>
+
+              {ouvert && (
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {groupe.aliments.map(({ food, blocage }) =>
+                    blocage === null ? (
+                      <Case
+                        key={food.id}
+                        libelle={food.nom}
+                        cochee={admissions.has(food.id)}
+                        onBasculer={() => onAliment(food.id, !admissions.has(food.id))}
+                      />
+                    ) : (
+                      <p
+                        key={food.id}
+                        className="rounded-[--radius-carte] border border-bordure bg-fond px-4 py-2 text-lecture text-attenue"
+                      >
+                        {food.nom}
+                        <span className="block text-mention leading-snug">
+                          {blocage === 'allergene'
+                            ? 'Écarté par une allergie que vous avez déclarée. Ça se règle dans « Mes allergies ».'
+                            : 'Vous l’avez retiré dans « Aliments que je ne veux pas ».'}
+                        </span>
+                      </p>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
+/**
  * Ce groupe est-il DÉJÀ écarté en entier par le régime déclaré ?
  *
  * ⚠️ AUCUNE RÈGLE DE RÉGIME N'EST RÉÉCRITE ICI : on compose `regimeExigePar` et `DIET_CHAIN`, les
@@ -1164,10 +1395,114 @@ function ecarteParLeRegime(
   foods: ReadonlyMap<FoodId, Food>,
   regime: DietCode | null
 ): boolean {
+  return groupe.aliments.every((f) => alimentEcarteParLeRegime(f, foods, regime))
+}
+
+/**
+ * Le même test, POUR UN SEUL ALIMENT — c'est lui qui décide ce que « Mes exceptions » propose.
+ *
+ * ⚠️ EXTRAIT DE `ecarteParLeRegime`, PAS RÉÉCRIT À CÔTÉ. Les deux répondent à la même question à
+ * deux granularités ; en écrire deux versions les aurait fait diverger au premier ajustement, et
+ * l'un des deux écrans aurait eu tort sans que rien ne le dise. La règle elle-même reste dans le
+ * moteur (`regimeExigePar` + `DIET_CHAIN`), on ne fait que la composer.
+ */
+function alimentEcarteParLeRegime(
+  food: Food,
+  foods: ReadonlyMap<FoodId, Food>,
+  regime: DietCode | null
+): boolean {
   if (regime === null) return false
   const rangDemande = DIET_CHAIN.indexOf(regime)
   if (rangDemande < 0) return false
-  return groupe.aliments.every((f) => DIET_CHAIN.indexOf(regimeExigePar(f, foods)) > rangDemande)
+  return DIET_CHAIN.indexOf(regimeExigePar(food, foods)) > rangDemande
+}
+
+/**
+ * Pourquoi cet aliment n'est PAS proposé à l'admission, quand il ne l'est pas.
+ *
+ * ⛔ `'allergene'` NE DONNE JAMAIS DE CASE. Garde-fou 1 : les allergènes ne passent pas par cet
+ * écran, sous aucune forme. P4 (lot D1) garantit qu'admettre n'atteint pas la couche `allergenes` —
+ * une case cochable ici promettrait donc quelque chose qu'elle ne tient pas, ce qui est pire que son
+ * absence. Elle se règle dans « Mes allergies », et la ligne le dit.
+ *
+ * ⛔ `'ecarte'` NON PLUS. D2 a tranché la préséance `exclusion personnelle > admission`, et
+ * DÉLIBÉRÉMENT sans arbitrage à la lecture — le moteur reçoit les deux listes pour que P4 reste
+ * testable. Côté écran, la conséquence est qu'une case y serait sans effet.
+ */
+type BlocageException = 'allergene' | 'ecarte' | null
+
+function blocageDe(
+  food: Food,
+  allergenesDeclares: ReadonlySet<string>,
+  exclus: ReadonlySet<FoodId>
+): BlocageException {
+  // L'ordre compte : un aliment à la fois allergène et écarté se nomme par le motif le plus fort.
+  // ⚠️ `certitude` N'EST PAS CONSULTÉE, et c'est la couche `allergenes` qui l'a décidé : « traces »
+  // exclut au même titre que « contient ». Lire ce champ ici rouvrirait l'écart entre l'écran et le
+  // moteur que ce fichier passe son temps à éviter.
+  if (food.allergenes.some((a) => allergenesDeclares.has(a.allergenId))) return 'allergene'
+  if (exclus.has(food.id)) return 'ecarte'
+  return null
+}
+
+/** Un aliment de « Mes exceptions », avec la raison de son absence de case s'il y en a une. */
+interface AlimentAdmissible {
+  readonly food: Food
+  readonly blocage: BlocageException
+}
+
+/** Un groupe de « Mes exceptions » — mêmes libellés que « Aliments que je ne veux pas ». */
+interface GroupeAdmissible {
+  readonly id: GroupeAnimalId
+  readonly libelle: string
+  readonly aliments: readonly AlimentAdmissible[]
+}
+
+/**
+ * Ce que « Mes exceptions » a le droit de montrer : les aliments que le RÉGIME DÉCLARÉ écarte, et
+ * eux seuls, regroupés comme dans le panneau voisin.
+ *
+ * ⛔ LE GROUPE NE SERT QU'À NAVIGUER. Il n'y a pas de case de groupe et il n'y en aura pas : le
+ * schéma l'a déjà décidé — `user_admitted_food` stocke un `food_id`, il n'existe aucune table
+ * d'admission par groupe. « Admettre tous les produits laitiers » ferait d'un végétalien autre chose
+ * qu'un végétalien ; ça ne s'appelle pas une exception, ça s'appelle changer de régime, et « Mon
+ * régime » est là pour ça. 167 cases à plat sont illisibles, 7 groupes dépliables sont un écran.
+ *
+ * ⚠️ UN GROUPE PARTIELLEMENT ÉCARTÉ NE GARDE QUE SES ALIMENTS ÉCARTÉS. Le filtre est par aliment,
+ * pas par groupe : un pescétarien voit les viandes, pas les poissons, et la question ne se pose même
+ * pas pour un groupe où tout reste proposable — il disparaît de la liste.
+ */
+function groupesAdmissibles(
+  groupes: readonly GroupeAnimal[],
+  foods: ReadonlyMap<FoodId, Food>,
+  regime: DietCode | null,
+  allergenesDeclares: ReadonlySet<string>,
+  exclus: ReadonlySet<FoodId>
+): readonly GroupeAdmissible[] {
+  return groupes.flatMap((groupe) => {
+    const aliments = groupe.aliments
+      .filter((food) => alimentEcarteParLeRegime(food, foods, regime))
+      .map((food) => ({ food, blocage: blocageDe(food, allergenesDeclares, exclus) }))
+    return aliments.length === 0 ? [] : [{ id: groupe.id, libelle: groupe.libelle, aliments }]
+  })
+}
+
+/**
+ * Les admissions qui AGISSENT — celles dont la case existe et est cochée.
+ *
+ * ⚠️ CE N'EST PAS `vue.admissions`. Une ligne en base peut survivre à un changement de régime, à une
+ * allergie déclarée après coup ou à un retrait dans « Aliments que je ne veux pas » ; elle est alors
+ * inerte, et c'est voulu (rien n'est effacé dans le dos de l'utilisateur — décocher « végétalien »
+ * puis le recocher retrouve ses exceptions). Mais l'annoncer dans le libellé du régime le ferait
+ * mentir. Ce que le moteur reçoit reste `vue.admissions`, en entier : ici on ne fait qu'AFFICHER.
+ */
+function admissionsEffectives(
+  admissibles: readonly GroupeAdmissible[],
+  admissions: ReadonlySet<FoodId>
+): readonly Food[] {
+  return admissibles.flatMap((groupe) =>
+    groupe.aliments.filter((a) => a.blocage === null && admissions.has(a.food.id)).map((a) => a.food)
+  )
 }
 
 /**

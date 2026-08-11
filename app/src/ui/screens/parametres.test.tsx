@@ -23,7 +23,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import type { AllergenId, RecipeId } from '../../engine/domain/index.js'
+import type { AllergenId, FoodId, RecipeId } from '../../engine/domain/index.js'
 import { readAllergies, readDisplay, readMealTimes, writeAllergies } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
 import { remplacerLeFichier } from '../user-source.js'
@@ -477,6 +477,240 @@ describe('parametres — « Aliments que je ne veux pas »', () => {
       "SELECT name FROM sqlite_master WHERE type = 'table'"
     )
     expect(tables.some((t) => /preselection|preset/i.test(t.name))).toBe(false)
+  })
+})
+
+// --- « Mes exceptions » (lot D3) ----------------------------------------------------------------
+
+describe('parametres — « Mes exceptions »', () => {
+  /** Même précaution que le panneau voisin : l'effectif se DEMANDE, il ne s'écrit pas en dur. */
+  function ligneDuGroupe(libelle: string): RegExp {
+    return new RegExp(`^${libelle} \\(\\d+\\)$`)
+  }
+
+  /** Déplie un groupe DEPUIS SA PROPRE LIGNE — tous les groupes portent le même bouton. */
+  function deplier(panneau: ReturnType<typeof within>, libelle: string) {
+    const groupe = within(panneau.getByText(ligneDuGroupe(libelle)).closest('div')!)
+    fireEvent.click(groupe.getByText(/^Voir les \d+ aliments$/))
+  }
+
+  /**
+   * Ce que le moteur laisse passer, et ce qu'il écarte AVEC LA COUCHE QUI L'A FAIT — lu à travers
+   * `readConstraints`, donc par le même chemin que la production.
+   *
+   * ⚠️ `browseRecipes` PLUTÔT QUE `suggestMeals` ICI, ET C'EST MESURÉ, PAS PRÉFÉRÉ : les recettes
+   * qu'admettre le miel débloque sont au petit-déjeuner, au goûter et au déjeuner, aucune au dîner.
+   * `suggestions()` interroge le seul dîner — le bout-en-bout y aurait été VERT SANS RIEN PROUVER.
+   * `browseRecipes` applique exactement les mêmes couches d'exclusion, sans axe de créneau, et c'est
+   * aussi lui que le compteur « il reste N plats » interroge.
+   */
+  async function passeDExclusion(): Promise<{
+    visibles: ReadonlySet<RecipeId>
+    ecarteesParLeRegime: ReadonlySet<RecipeId>
+  }> {
+    const { chargerSocle } = await import('../socle.js')
+    const socle = await chargerSocle()
+    const { readConstraints } = await import('../../data/user-store.js')
+    const result = socle.moteur.browseRecipes({
+      constraints: readConstraints(socle.db, socle.catalogue.foods),
+    })
+    return {
+      visibles: new Set(result.recipeIds),
+      ecarteesParLeRegime: new Set(
+        result.entonnoir.entries.filter((e) => e.layerId === 'regime').map((e) => e.recipeId)
+      ),
+    }
+  }
+
+  it('⛔ AUCUNE LIGNE SANS RÉGIME NI POUR UN OMNIVORE — il n’y a rien à excepter', async () => {
+    // Un panneau qui s'ouvrirait sur une liste vide est un réglage qui ne règle rien. ⚠️ Ce n'est PAS
+    // le cas du panneau voisin, qui affiche les groupes déjà écartés au lieu de les masquer : là-bas
+    // cacher aurait tu ce qui FILTRE les suggestions ; ici il n'y a rien à taire.
+    await monter()
+    expect(screen.queryByText('Mes exceptions')).toBeNull()
+
+    cleanup()
+    const { writeDiet } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'omnivore')
+    await monter()
+    expect(screen.queryByText('Mes exceptions')).toBeNull()
+  })
+
+  it('ne liste QUE ce que le régime déclaré écarte — un pescétarien ne voit pas les poissons', async () => {
+    const { writeDiet } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'pescetarien')
+    await monter()
+    const panneau = ouvrir('Mes exceptions')
+
+    expect(panneau.getByText(ligneDuGroupe('Viande de mammifère'))).toBeDefined()
+    expect(panneau.getByText(ligneDuGroupe('Volaille'))).toBeDefined()
+    // Le pescétarien mange déjà du poisson : la question ne se pose pas, le groupe n'est pas là.
+    expect(panneau.queryByText(ligneDuGroupe('Poisson'))).toBeNull()
+    expect(panneau.queryByText(ligneDuGroupe('Fruits de mer'))).toBeNull()
+  })
+
+  it('⛔ AUCUNE CASE DE GROUPE — le groupe ouvre, il ne coche pas', async () => {
+    // Le schéma l'a décidé avant l'écran : `user_admitted_food` stocke un `food_id`, il n'existe
+    // aucune table d'admission par groupe. « Admettre tous les produits laitiers » ferait d'un
+    // végétalien autre chose qu'un végétalien — ça s'appelle changer de régime, pas excepter.
+    const { writeDiet } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetalien')
+    await monter()
+    const panneau = ouvrir('Mes exceptions')
+
+    for (const libelle of ['Miel', 'Lait et produits laitiers', 'Œufs']) {
+      expect(panneau.getByText(ligneDuGroupe(libelle)).closest('button'), libelle).toBeNull()
+    }
+  })
+
+  it('écrit IMMÉDIATEMENT au geste — pas à la fermeture du panneau', async () => {
+    const { writeDiet, readAdmittedFoodIds } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetalien')
+    await monter()
+    const panneau = ouvrir('Mes exceptions')
+    deplier(panneau, 'Miel')
+    fireEvent.click(panneau.getByText('Miel'))
+
+    await waitFor(() => expect(readAdmittedFoodIds(baseCourante())).toEqual(['miel']))
+    expect(screen.queryByText(/Enregistrer/)).toBeNull()
+
+    // Et le geste s'annule du même clic — une exception se retire aussi simplement qu'elle se pose.
+    fireEvent.click(panneau.getByText('Miel'))
+    await waitFor(() => expect(readAdmittedFoodIds(baseCourante())).toEqual([]))
+  })
+
+  it('⛔ UN ALIMENT PORTEUR D’UN ALLERGÈNE DÉCLARÉ N’A PAS DE CASE — garde-fou 1', async () => {
+    // P4 (lot D1) garantit qu'admettre n'atteint jamais la couche `allergenes` : une case ici
+    // promettrait ce qu'elle ne tient pas, ce qui est PIRE que son absence. On l'affiche quand même,
+    // avec le motif et l'endroit où ça se règle — masquer ferait conclure à un bug.
+    const { writeDiet, writeAllergies } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetalien')
+    writeAllergies(baseCourante(), [{ allergenId: 'lait' as AllergenId, severite: null }])
+
+    // L'aliment se DEMANDE au catalogue de test, il ne s'écrit pas en dur.
+    const laitier = [...catalogueDeTest().foods.values()].find((f) =>
+      f.allergenes.some((a) => a.allergenId === 'lait')
+    )!
+
+    await monter()
+    const panneau = ouvrir('Mes exceptions')
+    deplier(panneau, 'Lait et produits laitiers')
+
+    expect(panneau.getByText(laitier.nom).closest('button')).toBeNull()
+    expect(panneau.getAllByText(/Écarté par une allergie que vous avez déclarée/).length)
+      .toBeGreaterThan(0)
+  })
+
+  it('⛔ UN ALIMENT DÉJÀ RETIRÉ DANS « Aliments que je ne veux pas » N’A PAS DE CASE NON PLUS', async () => {
+    // D2 a tranché : l'exclusion personnelle l'emporte sur l'admission, et DÉLIBÉRÉMENT sans
+    // arbitrage à la lecture — le moteur reçoit les deux listes pour que P4 reste testable. Côté
+    // écran, la conséquence est qu'une case y serait sans effet.
+    const { writeDiet, writeExcludedFoodIds } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetalien')
+    writeExcludedFoodIds(baseCourante(), ['miel' as FoodId])
+
+    await monter()
+    const panneau = ouvrir('Mes exceptions')
+    deplier(panneau, 'Miel')
+
+    expect(panneau.getByText('Miel').closest('button')).toBeNull()
+    expect(panneau.getByText(/Vous l’avez retiré dans « Aliments que je ne veux pas »/)).toBeDefined()
+  })
+
+  it('⭐ LE LIBELLÉ DU RÉGIME PORTE SES EXCEPTIONS — et rien de plus quand il n’y en a pas', async () => {
+    const { writeDiet, readAdmittedFoodIds } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetalien')
+    await monter()
+
+    // ⚠️ Zéro exception ⇒ le libellé ne change pas. Pas de « végétalien, sauf 0 ».
+    expect(screen.getByText('Végétalien')).toBeDefined()
+
+    const panneau = ouvrir('Mes exceptions')
+    deplier(panneau, 'Miel')
+    fireEvent.click(panneau.getByText('Miel'))
+    await waitFor(() => expect(readAdmittedFoodIds(baseCourante())).toEqual(['miel']))
+    retour()
+
+    await waitFor(() => expect(screen.getByText('Végétalien, sauf 1')).toBeDefined())
+    // Et l'écran du régime les NOMME, là où la ligne se contente de les compter.
+    const regime = ouvrir('Mon régime')
+    expect(regime.getByText(/Vous acceptez malgré ce régime/)).toBeDefined()
+    expect(regime.getByText('Miel')).toBeDefined()
+  })
+
+  it('⛔ UNE ADMISSION QUI N’AGIT PAS N’EST PAS COMPTÉE — le libellé ne ment pas dans l’autre sens', async () => {
+    // Une ligne en base survit à un changement de régime, et c'est voulu : rien n'est effacé dans le
+    // dos de l'utilisateur. Mais un pescétarien mange déjà du miel — annoncer « Pescétarien, sauf 1 »
+    // serait faux. Le compte suit les cases ACTIVES, pas les lignes stockées.
+    const { writeDiet, writeAdmittedFoodIds, readAdmittedFoodIds } = await import(
+      '../../data/user-store.js'
+    )
+    writeDiet(baseCourante(), 'pescetarien')
+    writeAdmittedFoodIds(baseCourante(), ['miel' as FoodId])
+    await monter()
+
+    expect(screen.getByText('Pescétarien')).toBeDefined()
+    expect(screen.queryByText(/Pescétarien, sauf/)).toBeNull()
+    // ⚠️ Et la ligne n'a PAS été effacée : elle redeviendra active si le régime redevient végétalien.
+    expect(readAdmittedFoodIds(baseCourante())).toEqual(['miel'])
+  })
+
+  it('⭐ COCHER « Miel » FAIT RÉAPPARAÎTRE DES PLATS AU MIEL — la chaîne complète', async () => {
+    // ⛔ Le test du lot. Vérifier que la case bascule ne prouverait rien : ce qui compte est que le
+    // MOTEUR change d'avis, à travers `readConstraints`.
+    const { writeDiet, readAdmittedFoodIds } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetalien')
+    const avant = await passeDExclusion()
+
+    await monter()
+    const panneau = ouvrir('Mes exceptions')
+    deplier(panneau, 'Miel')
+    fireEvent.click(panneau.getByText('Miel'))
+    await waitFor(() => expect(readAdmittedFoodIds(baseCourante())).toEqual(['miel']))
+
+    const apres = await passeDExclusion()
+
+    // ⚠️ UNE RELATION, JAMAIS UN COMPTE : le prochain lot de contenu ne doit pas casser ce test.
+    const perdues = [...avant.visibles].filter((id) => !apres.visibles.has(id))
+    expect(perdues, 'admettre ne retire jamais un plat (P2)').toEqual([])
+
+    const gagnees = [...apres.visibles].filter((id) => !avant.visibles.has(id))
+    expect(gagnees.length, 'au moins un plat au miel redevient visible').toBeGreaterThan(0)
+
+    // Et ce sont bien des plats AU MIEL — pas n'importe quel effet de bord.
+    const catalogue = catalogueDeTest()
+    for (const id of gagnees) {
+      const recette = catalogue.recipes.get(id)!
+      expect(
+        recette.ingredients.some((i) => i.foodId === 'miel'),
+        recette.nom
+      ).toBe(true)
+      // ⛔ Et « pourquoi pas ce plat » ne l'attribue plus au régime : elle n'est plus écartée du tout.
+      expect(avant.ecarteesParLeRegime.has(id), recette.nom).toBe(true)
+      expect(apres.ecarteesParLeRegime.has(id), recette.nom).toBe(false)
+    }
+  })
+
+  it('le compteur « il reste N plats » suit les exceptions — il ne reste pas sur l’ancien chiffre', async () => {
+    // ⚠️ LE `[]` EN DUR QUE CE TEST REMPLACE ÉTAIT JUSTE tant que personne ne pouvait cocher. Le
+    // panneau existant, le laisser aurait affiché un compte que les cases d'à côté démentaient, sur
+    // le même écran. C'est le piège « un champ déclaré n'est pas un champ branché ».
+    const { writeDiet } = await import('../../data/user-store.js')
+    writeDiet(baseCourante(), 'vegetalien')
+    await monter()
+    const panneau = ouvrir('Mes exceptions')
+
+    const compte = () =>
+      [...panneau.getByText('Il reste, avec vos choix :').closest('div')!.querySelectorAll('li')]
+        .map((li) => Number(/(\d+) plat/.exec(li.textContent ?? '')?.[1] ?? -1))
+        .reduce((a, b) => a + b, 0)
+
+    const avant = compte()
+    deplier(panneau, 'Miel')
+    fireEvent.click(panneau.getByText('Miel'))
+
+    // ⚠️ Une relation, pas un nombre : admettre ne peut qu'AJOUTER (P2).
+    await waitFor(() => expect(compte()).toBeGreaterThan(avant))
   })
 })
 
