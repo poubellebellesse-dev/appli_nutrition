@@ -219,16 +219,29 @@ export interface DietLayerConfig {
  * ces mêmes sources par `build.mjs`. Aucun artefact périmé, et aucune mise à jour du catalogue
  * indépendante de l'app.
  *
- * ⛔ P3 NE VAUT QUE POUR LES ÉTIQUETTES ÉCRITES À LA MAIN. `versRecette` (`data/user-recipe.ts`)
- * RECALCULE le régime d'une recette utilisateur à chaque lecture — rien n'est stocké, son
- * « étiquette » EST la sortie de la règle sur les ingrédients non optionnels. Ce module ne voit que
- * les recettes du catalogue, étiquetées à la main ; il n'y a rien à recouper là où il n'y a pas de
- * main humaine, et comparer la règle à elle-même avec des entrées différentes la ferait diverger
- * sur toute recette utilisateur portant un ingrédient animal optionnel.
+ * ⛔ P3 NE VAUT QUE POUR LES ÉTIQUETTES ÉCRITES À LA MAIN, ET LE LOT D1 L'AVAIT ÉCRIT SANS LE FAIRE.
+ * Il affirmait ici « ce module ne voit que les recettes du catalogue » : c'est FAUX. `socle.ts`
+ * fusionne les recettes de l'utilisateur DANS le catalogue avant de construire le moteur, et c'est
+ * la décision qui rend la fonctionnalité tenable (voir `assembler`). Elles arrivent donc ici comme
+ * les autres, avec une facette `regime` — mais `versRecette` (`data/user-recipe.ts`) la RECALCULE à
+ * chaque lecture sur les ingrédients NON OPTIONNELS. Leur « étiquette » EST la sortie de la règle.
  *
- * ⚠️ SUR TOUS LES INGRÉDIENTS, SANS FILTRER LES `optionnel`. `user-recipe.ts` les filtre, la
- * cohérence non — et c'est la cohérence qui fait foi ici. Deux questions différentes : « quel
- * régime cette recette exige-t-elle » ≠ « cet utilisateur peut-il la manger ».
+ * Les recouper serait comparer la règle à elle-même avec deux entrées différentes : toute recette
+ * personnelle portant un ingrédient animal OPTIONNEL plus restrictif que ses non-optionnels aurait
+ * divergé — poisson en option sur un plat végétarien — et se serait vu refuser la seconde chance
+ * sans raison. Le défaut tombe du côté FERMÉ (une recette de moins, jamais une de trop), et il était
+ * INATTEIGNABLE tant que `admittedFoodIds` restait vide partout ; la table de la v16 le rend
+ * atteignable, d'où sa correction ici et pas plus tard.
+ *
+ * ⚠️ SUR TOUS LES INGRÉDIENTS POUR LE CATALOGUE, SUR LES NON-OPTIONNELS POUR L'UTILISATEUR — dans
+ * les deux cas, EXACTEMENT le jeu dont l'étiquette a été tirée. C'est ce qui rend l'amputation
+ * comparable à l'étiquette qu'elle corrige.
+ *
+ * ⛔ NE PAS « SIMPLIFIER » EN COMPARANT PARTOUT SUR LES NON-OPTIONNELS. Au catalogue, l'étiquette est
+ * écrite à la main CONTRE TOUS les ingrédients (`tests/regime-coherence.test.ts` en fait foi) : P3
+ * cesserait de voir la divergence, et laisserait passer une recette dont l'ingrédient animal le plus
+ * restrictif est optionnel. Deux questions différentes, deux jeux d'ingrédients — « quel régime
+ * cette recette exige-t-elle » ≠ « cet utilisateur peut-il la manger ».
  *
  * ⚠️ UNE ÉTIQUETTE NON UNIQUE VAUT DIVERGENCE. `recipeDiets` rend 0..n valeurs et l'en-tête du
  * module prévoit le cas vide (« incompatible avec tout régime déclaré ») ; « égaler l'étiquette »
@@ -263,15 +276,26 @@ function secondeChance(
     if (etiquettes.length !== 1) continue
 
     const etiquette = etiquettes[0] as DietCode
-    const tousLesIngredients = recipe.ingredients.map((ingredient) => ingredient.foodId)
 
-    // P3 — la règle doit être D'ACCORD avec l'étiquette, sinon on ne s'en sert pas.
-    if (regimeExigeParIngredients(tousLesIngredients, catalog.foods) !== etiquette) {
+    // L'étiquette d'une recette PERSONNELLE est déjà la sortie de la règle sur les non-optionnels
+    // (`versRecette`) ; celle d'une recette du catalogue est écrite à la main contre TOUS les
+    // ingrédients. On travaille sur le jeu dont l'étiquette a été tirée, et sur lui seul.
+    const ecriteALaMain = recipe.origine !== 'utilisateur' && recipe.origine !== 'partagee'
+    const ingredientsDeLEtiquette = recipe.ingredients
+      .filter((ingredient) => ecriteALaMain || !ingredient.optionnel)
+      .map((ingredient) => ingredient.foodId)
+
+    // P3 — la règle doit être D'ACCORD avec l'étiquette, sinon on ne s'en sert pas. Sans objet là où
+    // l'étiquette EST la règle : il n'y a pas de main humaine à recouper.
+    if (
+      ecriteALaMain &&
+      regimeExigeParIngredients(ingredientsDeLEtiquette, catalog.foods) !== etiquette
+    ) {
       divergences.push(recipe.id)
       continue
     }
 
-    const ampute = tousLesIngredients.filter((foodId) => !admis.has(foodId))
+    const ampute = ingredientsDeLEtiquette.filter((foodId) => !admis.has(foodId))
     if (isDietCompatible(regimeExigeParIngredients(ampute, catalog.foods), requestedDiet)) {
       admises.add(recipe.id)
     }

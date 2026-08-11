@@ -295,6 +295,44 @@ export function readExcludedFoodIdsDeplies(
   )
 }
 
+// --- Admission par EXCEPTION au régime (v16) ---------------------------------------------------
+//
+// ⛔ CE N'EST PAS `user_group_exception`. Le tableau des deux « exceptions » vit au-dessus de la
+// migration 16 (`user-schema.ts`) et c'est là qu'il faut le lire avant de toucher à l'une des deux :
+// celle-ci ASSOUPLIT le régime (couche `regime`), l'autre RESTREINT un retrait de groupe (couche
+// `exclusions`). Seule celle-ci peut faire entrer un produit animal chez qui a déclaré n'en pas
+// manger — c'est un geste explicite de l'utilisateur, et il n'existe qu'ici.
+
+/**
+ * Les aliments que l'utilisateur s'autorise MALGRÉ son régime — le végétalien qui mange du miel.
+ *
+ * ⚠️ PAS DE TRI-ÉTAT, contrairement à `readOwnedEquipmentIds` juste en dessous, et l'asymétrie est
+ * voulue. Là-bas `null` et `[]` disent deux choses opposées parce que la couche EXCLUT ; ici la
+ * seconde chance ne peut qu'ADMETTRE (P2, lot D1), donc « jamais déclaré » et « déclaré vide »
+ * produisent le même ensemble de recettes. Un tri-état sans conséquence observable ne serait qu'une
+ * question de plus à chaque appelant.
+ *
+ * ⚠️ UN `food_id` INCONNU DU CATALOGUE EST RENDU TEL QUEL, et c'est SANS DANGER — pas un oubli. Il
+ * n'est comparé qu'aux `foodId` des ingrédients d'une recette (`secondeChance`, engine/selection/
+ * regime.ts) : un identifiant que plus aucune recette ne cite n'ampute rien et n'admet rien. Le
+ * filtrer contre le catalogue obligerait à passer `foods` ici pour zéro différence observable.
+ */
+export function readAdmittedFoodIds(db: UserDb): readonly FoodId[] {
+  return db
+    .all<{ readonly food_id: string }>('SELECT food_id FROM user_admitted_food ORDER BY food_id')
+    .map((row) => row.food_id as FoodId)
+}
+
+/** Remplace la liste entière, même raison que `writeAllergies`. */
+export function writeAdmittedFoodIds(db: UserDb, foodIds: readonly FoodId[]): void {
+  withTransaction(db, () => {
+    db.run('DELETE FROM user_admitted_food')
+    for (const foodId of foodIds) {
+      db.run('INSERT INTO user_admitted_food (food_id) VALUES (?)', [foodId])
+    }
+  })
+}
+
 /**
  * Le matériel déclaré. `null` = RIEN EN BASE, et la couche `equipement` reste alors inerte.
  *
@@ -343,11 +381,13 @@ export function readConstraints(db: UserDb, foods: ReadonlyMap<FoodId, Food>): H
     diet: readDiet(db),
     excludedFoodIds: readExcludedFoodIdsDeplies(db, foods),
     ownedEquipmentIds: readOwnedEquipmentIds(db),
-    // ⚠️ TOUJOURS VIDE : le lot D1 ne pose que le chemin moteur, la table `user_admitted_food`
-    // arrive en D2 et l'écran en D3. Aucune exception ne peut donc exister aujourd'hui, et la
-    // seconde chance de `dietLayer` reste inerte pour tout le monde (P1). ⛔ Ce `[]` est le point
-    // unique à remplacer en D2 — pas un défaut à contourner ailleurs.
-    admittedFoodIds: [],
+    // ⚠️ AUCUN ARBITRAGE ICI CONTRE `excludedFoodIds`, ALORS QUE LES DEUX LISTES PEUVENT NOMMER LE
+    // MÊME ALIMENT. La préséance `exclusion > admission` est rendue par les COUCHES : `exclusions`
+    // écarte la recette quoi que `regime` en dise, et P4 (lot D1) garantit que l'admission ne
+    // l'atteint jamais. Soustraire ici l'une de l'autre donnerait l'illusion que c'est ce calcul qui
+    // protège, et une régression de P4 passerait alors inaperçue. Vérifié sur la passe COMPLÈTE.
+    // L'écran de D3 reste libre d'empêcher de cocher les deux ; c'est du confort, pas la garantie.
+    admittedFoodIds: readAdmittedFoodIds(db),
   }
 }
 

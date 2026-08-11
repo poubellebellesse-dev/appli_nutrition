@@ -250,9 +250,13 @@ describe('lot D1 — P3 : la règle ne sert que là où elle est d’accord avec
 
 describe('lot D1 — P4 : l’admission ne touche QUE la couche `regime`', () => {
   it('⛔ un aliment admis reste écarté s’il est dans `excludedFoodIds`', () => {
-    // La garantie vient de la FORME : `admittedFoodIds` n'est passé qu'à `dietLayer`, et la couche
-    // `exclusions` ne le lit pas. ⛔ Aucune garde « si exclu alors ignorer l'admission » n'est
-    // posée — elle donnerait l'illusion que c'est ELLE qui protège.
+    // ⚠️ CE N'EST PAS UNE GARANTIE DE FORME, ET LE LOT D1 L'AVAIT ÉCRIT AINSI À TORT : `configure`
+    // reçoit la requête ENTIÈRE, donc `exclusions` POURRAIT lire `admittedFoodIds`. Ce qui tient,
+    // c'est qu'elle ne le fait pas — vérifié par ce test, et par le fil-piège sur le texte source
+    // (`tests/engine-boundaries.test.ts`, volet 3) qui rend tout franchissement bruyant.
+    // ⛔ Aucune garde « si exclu alors ignorer l'admission » n'est posée pour autant : elle
+    // donnerait l'illusion que c'est ELLE qui protège, et masquerait la régression le jour venu.
+    // C'est la préséance `exclusion personnelle > admission` (v16, `user-schema.ts`).
     const recette = tofuLaque()
     const catalog = makeCatalog([recette], ALIMENTS)
     const req = makeRequest({
@@ -289,5 +293,88 @@ describe('lot D1 — P4 : l’admission ne touche QUE la couche `regime`', () =>
     expect(
       runExclusionPass(catalog, req, undefined, new Set([recette.id])).candidates.has(recette.id)
     ).toBe(false)
+  })
+})
+
+describe('lot D2 — P3 ne s’applique PAS aux recettes de l’utilisateur', () => {
+  // ⚠️ LE DÉFAUT QUE CE BLOC EXISTE POUR ATTRAPER. `socle.ts` fusionne les recettes personnelles
+  // DANS le catalogue avant de construire le moteur : elles arrivent donc à `secondeChance` comme
+  // les autres. Mais leur facette `regime` n'est pas écrite à la main — `versRecette` la RECALCULE
+  // sur les ingrédients NON OPTIONNELS. Recouper la règle sur TOUS les ingrédients contre une
+  // étiquette tirée des seuls non-optionnels, c'est comparer la règle à elle-même avec deux
+  // entrées différentes : toute recette perso portant un ingrédient animal OPTIONNEL plus
+  // restrictif divergeait, et perdait sa seconde chance sans raison.
+  //
+  // ⚠️ Le défaut tombait du côté FERMÉ — une recette de moins, jamais une de trop — et il était
+  // INATTEIGNABLE tant qu'aucune admission n'existait (P1). La table de la v16 le rend atteignable.
+
+  /**
+   * Le cas exact : végétarienne par son miel NON optionnel, avec du poisson EN OPTION. `versRecette`
+   * l'étiquette `vegetarien` (les non-optionnels) ; la règle sur TOUT rendrait `pescetarien`.
+   */
+  function persoAuPoissonOptionnel() {
+    return makeRecipe('perso_tofu_miel', {
+      origine: 'utilisateur',
+      facettes: regimeFacette('vegetarien'),
+      ingredients: [
+        makeIngredient('tofu'),
+        makeIngredient('miel'),
+        makeIngredient('sardine', { optionnel: true }),
+      ],
+    })
+  }
+
+  const SARDINE = makeFood('sardine', [], { groupe: 'poissons', origineAnimale: 'poisson' })
+
+  it('⭐ admettre le miel rend une recette PERSO visible à un végétalien, malgré un poisson optionnel', () => {
+    const recette = persoAuPoissonOptionnel()
+    const catalog = makeCatalog([recette], [...ALIMENTS, SARDINE])
+
+    const config = dietLayer.configure(
+      makeRequest({ diet: 'vegetalien', admittedFoodIds: ['miel'] }),
+      catalog
+    )
+
+    expect(asExclusionResult(dietLayer.apply(new Set([recette.id]), config)).kept).toEqual(
+      new Set([recette.id])
+    )
+    // Et elle n'est PAS comptée en divergence : il n'y avait rien à recouper.
+    expect(config.divergencesP3).toEqual([])
+  })
+
+  it('la même recette, déclarée du CATALOGUE, reste écartée — P3 s’applique là où il y a une main', () => {
+    // L'oracle de l'inverse : seul `origine` change entre les deux tests. Il prouve que c'est bien
+    // le cadrage qui agit, et non une propriété accidentelle de la fixture.
+    const recette = makeRecipe('perso_tofu_miel', {
+      facettes: regimeFacette('vegetarien'),
+      ingredients: [
+        makeIngredient('tofu'),
+        makeIngredient('miel'),
+        makeIngredient('sardine', { optionnel: true }),
+      ],
+    })
+    const catalog = makeCatalog([recette], [...ALIMENTS, SARDINE])
+
+    const config = dietLayer.configure(
+      makeRequest({ diet: 'vegetalien', admittedFoodIds: ['miel'] }),
+      catalog
+    )
+
+    expect(asExclusionResult(dietLayer.apply(new Set([recette.id]), config)).kept.size).toBe(0)
+    expect(config.divergencesP3).toEqual([recette.id])
+  })
+
+  it('⛔ l’ingrédient OPTIONNEL d’une recette perso n’a pas besoin d’être admis, et n’ouvre rien', () => {
+    // ⚠️ L'amputation d'une recette perso porte sur les non-optionnels, exactement le jeu dont son
+    // étiquette est tirée. Admettre le seul poisson optionnel ne fait donc rien : le miel, lui,
+    // reste. C'est ce qui empêche l'alignement d'être une porte dérobée.
+    const recette = persoAuPoissonOptionnel()
+    const catalog = makeCatalog([recette], [...ALIMENTS, SARDINE])
+
+    const config = dietLayer.configure(
+      makeRequest({ diet: 'vegetalien', admittedFoodIds: ['sardine'] }),
+      catalog
+    )
+    expect(asExclusionResult(dietLayer.apply(new Set([recette.id]), config)).kept.size).toBe(0)
   })
 })

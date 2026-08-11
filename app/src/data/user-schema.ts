@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 15
+export const USER_SCHEMA_VERSION = 16
 
 export interface Migration {
   readonly version: number
@@ -772,6 +772,44 @@ const V15_STATEMENTS: readonly string[] = [
    )`,
 ]
 
+/**
+ * v16 — `user_admitted_food` : l'ALIMENT ADMIS PAR EXCEPTION AU RÉGIME. Le végétalien qui mange du
+ * miel, le végétarien qui garde les huîtres. Lot D2 de `docs/CONCEPTION_REGIME_PERSONNALISE.md` ;
+ * le chemin moteur est arrivé en D1 (`HardConstraints.admittedFoodIds`, couche `regime`).
+ *
+ * ⛔ NE PAS CONFONDRE AVEC `user_group_exception` (v15). Les deux mots « exception » se ressemblent
+ * assez pour être lus l'un pour l'autre, et une seule des deux peut faire manger un produit animal
+ * à quelqu'un qui a déclaré ne pas en manger :
+ *
+ *   | Table                       | Sens                                          | Direction   | Couche lue   |
+ *   |-----------------------------|-----------------------------------------------|-------------|--------------|
+ *   | `user_group_exception` (v15)| « j'ai coché le groupe Œufs, SAUF la caille » | RESTREINT   | `exclusions` |
+ *   | `user_admitted_food`  (v16) | « je suis végétalien, SAUF le miel »          | ASSOUPLIT   | `regime`     |
+ *
+ * La première retire moins d'aliments à quelqu'un qui en avait retiré un groupe entier ; elle ne
+ * touche jamais le filtre de régime. La seconde rend la couche 🔒 `regime` moins stricte, et elle
+ * seule. Fusionner les deux tables reviendrait à faire circuler une admission de régime dans le
+ * mécanisme d'exclusion, où P4 (lot D1) garantit précisément qu'elle n'entre pas.
+ *
+ * ⚠️ PRÉSÉANCE : `exclusion personnelle > admission`. Un aliment à la fois admis ici et exclu par
+ * `user_excluded_food` (ou par un groupe coché) reste EXCLU. Rien n'est arbitré au stockage ni à la
+ * lecture : les deux listes partent au moteur telles quelles, et ce sont les COUCHES qui tranchent —
+ * `exclusions` écarte la recette quoi qu'en dise `regime`. Un arbitrage ici donnerait l'illusion que
+ * c'est lui qui protège, et masquerait une régression de P4 le jour où il en surviendrait une.
+ *
+ * ⚠️ AUCUN `CHECK` NI FK SUR `food_id`, comme partout. Un `food_id` est une donnée de `catalog.db`,
+ * un autre fichier, remplacé en bloc à chaque release : le figer en SQL imposerait une migration à
+ * chaque aliment ajouté au catalogue. Le vocabulaire fermé (`groupe_id` en v15, `cible_type`,
+ * `niveau_activite`) porte un CHECK parce qu'il est fermé ; celui-ci est ouvert.
+ * Un aliment admis puis retiré du catalogue s'ignore alors en silence : la ligne survit, et plus
+ * aucune recette ne cite cet identifiant, donc l'admission ne rattrape rien. Ni erreur, ni effet.
+ */
+const V16_STATEMENTS: readonly string[] = [
+  `CREATE TABLE user_admitted_food (
+     food_id TEXT PRIMARY KEY
+   )`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -788,6 +826,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 13, statements: V13_STATEMENTS },
   { version: 14, statements: V14_STATEMENTS },
   { version: 15, statements: V15_STATEMENTS },
+  { version: 16, statements: V16_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

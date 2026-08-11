@@ -118,12 +118,18 @@ export function makeRecipe(
     /** Decision 35 — `null` = non renseigne, JAMAIS « doux ». */
     readonly piquant?: Recipe['piquant']
     readonly equipements?: readonly RecipeEquipment[]
+    /**
+     * Defaut `'maison'` = recette du CATALOGUE, etiquetee a la main. `'utilisateur'`/`'partagee'`
+     * designent une recette composee dans l'appli, dont la facette `regime` est RECALCULEE a chaque
+     * lecture (`data/user-recipe.ts`) — distinction lue par la seconde chance de `regime.ts`.
+     */
+    readonly origine?: Recipe['origine']
   } = {}
 ): Recipe {
   return {
     id: id as RecipeId,
     nom: id,
-    origine: 'maison',
+    origine: overrides.origine ?? 'maison',
     description: '',
     tempsPrepMin: min(overrides.tempsPrepMin ?? 10),
     tempsCuissonMin: min(overrides.tempsCuissonMin ?? 10),

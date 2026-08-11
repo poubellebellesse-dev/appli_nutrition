@@ -172,3 +172,56 @@ describe('engine/ — le détecteur repère chaque catégorie interdite (fixture
     expect(findForbiddenImports(FAKE_FILE, source)).toEqual([])
   })
 })
+
+// ----------------------------------------------------------------------------
+// 3. FIL-PIÈGE — `admittedFoodIds` ne circule que dans la couche `regime` (lot D2).
+// ----------------------------------------------------------------------------
+//
+// ⚠️ CE N'EST PAS UNE INEXPRIMABILITÉ, ET LE DIRE PLUS FORT SERAIT L'ERREUR QUE CE TEST CORRIGE.
+// L'acquis n° 2 (`requiredFoodIds` dans `MealContext`) tient par la FORME : l'exigence est
+// structurellement inécrivable dans un plan de semaine. Ici, rien de tel. `SelectionLayer.configure`
+// reçoit la requête ENTIÈRE (`(req: SuggestionRequest, catalog: Catalog)`, selection/index.ts), donc
+// `allergenes.ts` PEUT lire `admittedFoodIds` — le contrat ne l'en empêche pas.
+//
+// Le lot D1 a écrit « la garantie vient de la forme » à propos de sa propriété P4. C'était faux : la
+// garantie venait d'une convention que rien ne vérifiait. Ce test est ce qui la vérifie — un
+// fil-piège, qui rend le franchissement BRUYANT au lieu de l'empêcher. Un allergène ou une exclusion
+// qui se mettrait à consulter les admissions ferait rougir ce fichier, et il faudrait alors le
+// justifier ici, pas le contourner.
+//
+// ⚠️ LE SCAN LIT LE TEXTE SOURCE, COMMENTAIRES COMPRIS. Une mention en commentaire dans un autre
+// fichier fera donc échouer ce test. C'est délibéré et c'est le sens sûr : un faux positif est
+// bruyant et se règle en une ligne, alors qu'exclure les commentaires demanderait de parser le
+// TypeScript — et offrirait un endroit où loger une lecture qui n'en aurait pas l'air.
+
+const SELECTION_DIR = path.join(ENGINE_DIR, 'selection')
+
+/** Les fichiers de `dir` (récursif) dont le TEXTE SOURCE cite l'identifiant, en chemins relatifs. */
+function fichiersCitant(dir: string, identifiant: string): string[] {
+  const motif = new RegExp(`\\b${identifiant}\\b`)
+  return listTsFilesRecursively(dir)
+    .filter((file) => motif.test(readFileSync(file, 'utf8')))
+    .map((file) => path.relative(dir, file).split(path.sep).join('/'))
+    .sort()
+}
+
+describe('engine/selection — `admittedFoodIds` ne sort pas de la couche `regime` (P4, lot D1)', () => {
+  it('n’est cité que par `regime.ts`, son test et les fixtures de requête', () => {
+    // `test-fixtures.ts` construit des `HardConstraints` complets : il doit nommer TOUS les champs,
+    // c'est le prix du champ requis et non le signe d'une fuite. `regime-admission.test.ts` est le
+    // test de la propriété elle-même. Toute autre entrée dans cette liste est une couche qui s'est
+    // mise à lire une admission de régime — le cas que P4 interdit.
+    expect(fichiersCitant(SELECTION_DIR, 'admittedFoodIds')).toEqual([
+      'regime-admission.test.ts',
+      'regime.ts',
+      'test-fixtures.ts',
+    ])
+  })
+
+  it('le détecteur sait échouer — il repère une citation, et n’en invente pas', () => {
+    // ⚠️ Une assertion de texte source qui ne sait pas échouer est une décoration. On prouve les
+    // deux sens sur le dossier réel, avec un identifiant présent et un identifiant absent.
+    expect(fichiersCitant(SELECTION_DIR, 'excludedFoodIds').length).toBeGreaterThan(0)
+    expect(fichiersCitant(SELECTION_DIR, 'admittedFoodIdsQuiNExistePas')).toEqual([])
+  })
+})

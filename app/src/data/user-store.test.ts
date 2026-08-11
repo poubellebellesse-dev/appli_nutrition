@@ -39,6 +39,8 @@ import {
   writeCuisson,
   writeHeureService,
   readActiveTopics,
+  readAdmittedFoodIds,
+  writeAdmittedFoodIds,
   readAllergies,
   readConstraints,
   readOwnedEquipmentIds,
@@ -152,6 +154,7 @@ describe('user-schema — migrations', () => {
       'shopping_list',
       'shopping_list_item',
       'user_active_topic',
+      'user_admitted_food',
       'user_allergy',
       'user_diet',
       'user_display',
@@ -216,6 +219,45 @@ describe('user-schema — migrations', () => {
     )[0]
     expect(display?.afficher_macros).toBe(1)
     expect(display?.visite_proposee).toBe(0)
+  })
+
+  it('v15 → v16 : ajoute `user_admitted_food` sans toucher aux données déjà là', () => {
+    // ⚠️ SUR UNE BASE PEUPLÉE, pas sur une base neuve. Une migration qui ne casse que là où il y a
+    // des données ne se voit pas autrement — et `user.db` n'est jamais remplacé en bloc : une
+    // migration ratée est une perte définitive, pas un rebuild (en-tête de user-schema.ts).
+    const sqlite = new DatabaseSync(':memory:')
+    const brute: UserDb = {
+      all: <T,>(sql: string, params: readonly (string | number | null)[] = []) =>
+        sqlite.prepare(sql).all(...params) as unknown as readonly T[],
+      run: (sql: string, params: readonly (string | number | null)[] = []) => {
+        sqlite.prepare(sql).run(...params)
+      },
+    }
+    for (const migration of MIGRATIONS.filter((m) => m.version <= 15)) {
+      readSchemaVersion(brute) // bootstrappe app_meta au premier appel
+      for (const sql of migration.statements) brute.run(sql)
+      brute.run('UPDATE app_meta SET schema_version = ? WHERE id = 1', [migration.version])
+    }
+    expect(readSchemaVersion(brute)).toBe(15)
+
+    // Un utilisateur végétalien qui a déjà retiré un groupe et repris un aliment dedans — donc les
+    // DEUX « exceptions » de la v15, celles qu'il ne faut pas confondre avec celle de la v16.
+    brute.run(`INSERT INTO user_diet (id, code) VALUES (1, 'vegetalien')`)
+    brute.run(`INSERT INTO user_excluded_group (groupe_id) VALUES ('laitiers')`)
+    brute.run(`INSERT INTO user_group_exception (food_id) VALUES ('roquefort')`)
+
+    expect(() => migrate(brute)).not.toThrow()
+    expect(readSchemaVersion(brute)).toBe(USER_SCHEMA_VERSION)
+
+    expect(readDiet(brute)).toBe('vegetalien')
+    expect(readExcludedGroupIds(brute)).toEqual(['laitiers'])
+    expect(readGroupExceptionFoodIds(brute)).toEqual(['roquefort'])
+    // La table neuve existe et est VIDE : personne n'hérite d'une admission qu'il n'a pas demandée.
+    expect(readAdmittedFoodIds(brute)).toEqual([])
+
+    // Et elle est utilisable dans la foulée, sur la base migrée.
+    writeAdmittedFoodIds(brute, ['miel' as FoodId])
+    expect(readAdmittedFoodIds(brute)).toEqual(['miel'])
   })
 })
 
@@ -301,8 +343,10 @@ describe('user-store — contraintes dures', () => {
       diet: null,
       excludedFoodIds: [],
       ownedEquipmentIds: null,
-      // ⚠️ Toujours vide jusqu'en D2 : la table `user_admitted_food` n'existe pas encore. Cette
-      // assertion EXHAUSTIVE est ce qui obligera à revenir ici le jour où elle existera.
+      // ⚠️ `[]`, PAS `null`, et l'asymétrie avec `ownedEquipmentIds` juste au-dessus est voulue :
+      // la seconde chance ne peut qu'ADMETTRE, « jamais déclaré » et « déclaré vide » donnent donc
+      // le même résultat (voir `readAdmittedFoodIds`). Cette assertion EXHAUSTIVE est le fil-piège
+      // qui a forcé à revenir ici en D2 ; elle reste exhaustive pour la même raison.
       admittedFoodIds: [],
     })
   })
@@ -363,6 +407,63 @@ describe('user-store — contraintes dures', () => {
     expect(readExcludedFoodIds(db)).toEqual(['coriandre', 'olive_noire'])
     writeExcludedFoodIds(db, [])
     expect(readExcludedFoodIds(db)).toEqual([])
+  })
+})
+
+// --- Admission par exception au régime (v16) ----------------------------------------------------
+
+describe('user-store — admission par exception au régime', () => {
+  it('fait l’aller-retour sur les aliments admis, et remplace la liste entière', () => {
+    writeAdmittedFoodIds(db, ['miel' as FoodId, 'huitre' as FoodId])
+    expect(readAdmittedFoodIds(db)).toEqual(['huitre', 'miel']) // ORDER BY food_id
+    expect(readConstraints(db, SANS_CATALOGUE).admittedFoodIds).toEqual(['huitre', 'miel'])
+
+    writeAdmittedFoodIds(db, ['miel' as FoodId])
+    expect(readAdmittedFoodIds(db)).toEqual(['miel'])
+  })
+
+  it('rend `[]` sur une base neuve — PAS `null`, contrairement au matériel', () => {
+    // La seconde chance ne peut qu'ADMETTRE : « jamais déclaré » et « déclaré vide » produisent le
+    // même ensemble de recettes, donc un tri-état n'aurait rien à distinguer. `ownedEquipmentIds`
+    // en a un parce que sa couche EXCLUT, et que s'y tromper retirerait tout le catalogue à four.
+    expect(readAdmittedFoodIds(db)).toEqual([])
+    expect(readConstraints(db, SANS_CATALOGUE).admittedFoodIds).toEqual([])
+  })
+
+  it('⛔ UN `food_id` INCONNU DU CATALOGUE PASSE SANS ERREUR — il n’ampute rien, il n’admet rien', () => {
+    // Même règle que partout : `user.db` n'a aucune clé étrangère vers `catalog.db`, et un catalogue
+    // mis à jour peut avoir retiré un aliment que l'utilisateur avait admis. Aucun filtrage n'est
+    // fait ici : l'identifiant n'est comparé qu'aux ingrédients des recettes (`secondeChance`), donc
+    // un identifiant que plus personne ne cite est inerte par construction.
+    expect(() => writeAdmittedFoodIds(db, ['aliment_disparu_du_catalogue' as FoodId])).not.toThrow()
+    expect(readAdmittedFoodIds(db)).toEqual(['aliment_disparu_du_catalogue'])
+    expect(readConstraints(db, catalogueAnimal()).admittedFoodIds).toEqual([
+      'aliment_disparu_du_catalogue',
+    ])
+  })
+
+  it('⛔ N’ARBITRE PAS CONTRE `user_excluded_food` — les deux listes sortent telles quelles', () => {
+    // ⚠️ La préséance `exclusion personnelle > admission` est rendue par les COUCHES, pas ici : la
+    // couche `exclusions` écarte la recette quoi que `regime` en dise. La vérification sur la passe
+    // COMPLÈTE vit dans `engine/selection/regime-admission.test.ts` (P4) — celle-ci ne prouve que la
+    // non-ingérence du magasin. Soustraire l'une de l'autre ici masquerait une régression de P4.
+    writeExcludedFoodIds(db, ['miel' as FoodId])
+    writeAdmittedFoodIds(db, ['miel' as FoodId])
+
+    const contraintes = readConstraints(db, SANS_CATALOGUE)
+    expect(contraintes.excludedFoodIds).toEqual(['miel'])
+    expect(contraintes.admittedFoodIds).toEqual(['miel'])
+  })
+
+  it('⛔ N’EST PAS `user_group_exception` — les deux tables ne se voient pas', () => {
+    // Les deux mots « exception » se ressemblent assez pour être lus l'un pour l'autre (tableau
+    // au-dessus de la migration 16). Écrire dans l'une ne doit jamais rien mettre dans l'autre :
+    // celle-ci ASSOUPLIT le régime, l'autre RESTREINT un retrait de groupe.
+    writeAdmittedFoodIds(db, ['miel' as FoodId])
+    expect(readGroupExceptionFoodIds(db)).toEqual([])
+
+    writeGroupExceptionFoodIds(db, ['beurre' as FoodId])
+    expect(readAdmittedFoodIds(db)).toEqual(['miel'])
   })
 })
 
@@ -629,6 +730,7 @@ describe('user-store — readUserState', () => {
     writeAllergies(db, [{ allergenId: 'gluten' as AllergenId, severite: null }])
     writeDiet(db, 'vegetarien')
     writeExcludedFoodIds(db, ['coriandre' as FoodId])
+    writeAdmittedFoodIds(db, ['huitre' as FoodId])
     writePreference(db, 'poulet' as FoodId, 2)
     setFavorite(db, 'r1' as RecipeId, true, AUJOURDHUI)
     recordMeal(db, {
@@ -647,7 +749,10 @@ describe('user-store — readUserState', () => {
       allergies: ['gluten'],
       diet: 'vegetarien',
       excludedFoodIds: ['coriandre'],
-      admittedFoodIds: [],
+      // ⚠️ REMONTE JUSQU'ICI, et c'est ce que cette assertion vérifie : `readUserState` est le seul
+      // chemin par lequel les contraintes atteignent le moteur en production. Un champ lu par
+      // `readConstraints` mais perdu ici serait le piège « déclaré ≠ branché », quatrième occurrence.
+      admittedFoodIds: ['huitre'],
       // Rien n'a été écrit dans `user_equipment` : `null`, donc la couche `equipement` reste
       // inerte. Un `[]` ici retirerait à cet utilisateur toutes les recettes à source de chaleur.
       ownedEquipmentIds: null,
