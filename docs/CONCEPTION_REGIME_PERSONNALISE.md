@@ -282,13 +282,35 @@ rendent la confusion structurellement plus dure. Il ne liste que les aliments qu
 (lot A). **Fini quand** : cocher *Miel* en végétalien fait réapparaître un plat au miel, et
 « pourquoi ce plat » ne l'attribue plus au régime.
 
+✅ **LIVRÉ le 2026-08-11 (`98b452c`).** ⛔ **UNE CASE QUI N'AGIT PAS N'EST PAS PROPOSÉE COMME SI ELLE
+AGISSAIT** : `groupesAdmissibles` croise les **trois** sources — régime, allergènes déclarés,
+exclusions — et affiche le blocage AVEC sa raison plutôt qu'une case inerte. ⚠️ **Le brief disait
+« pour un omnivore : rien » ; la mesure a rendu plus fort** : `LIBELLE_REGIME` ne connaît que
+pescétarien / végétarien / végétalien — « je mange de tout » vaut `null`, il n'y a donc même pas de
+libellé à qualifier.
+⚠️ **LA SECONDE MOITIÉ DU « FINI QUAND » N'EST PAS DÉMONTRÉE PAR UN TEST.** La première l'est, et sur
+le catalogue réel (`regime-admission.test.ts`, 16 cas ; `tests/regime-admission-catalogue-reel.test.ts`,
+4 cas) : un aliment admis fait bien réapparaître les plats qui le portent. Mais **aucun test n'assied
+« pourquoi ce plat » n'attribue plus au régime** — c'est plausible par l'acquis 3 (une couche qui ne
+discrimine pas n'est jamais citée), et *plausible n'est pas mesuré*. À reprendre si l'explication est
+retouchée.
+
 **D4 — le compteur et le document.** Le compteur du lot C lit `browseRecipes`, donc il suit
 automatiquement — ⚠️ **mais ce n'est pas branché tant qu'un test ne le montre pas** (« un champ
 déclaré n'est pas un champ branché », trois occurrences payées).
 
-📌 **Ouvert, à poser à D3 quand l'écran existera** : faut-il signaler qu'une admission rend le régime
-déclaré trompeur — « végétalien » affiché alors que la personne mange du miel ? Choix de produit,
-pas correction.
+✅ **LIVRÉ le 2026-08-11, REPLIÉ DANS D3** par la session qui l'a écrit, et c'était le bon appel : le
+compteur ne pouvait pas rester sur son `[]` en dur une fois les cases cochables. ⛔ **ET IL ENVOIE
+TOUTES LES ADMISSIONS, PAS SEULEMENT CELLES QUI AGISSENT** (`parametres.tsx:389-412`) — c'est ce que
+`readConstraints` envoie en production, donc le compte annonce ce que les suggestions FERONT, pas une
+version plus propre. Les deux sens sont verrouillés : `parametres.test.tsx:694` (le compteur suit les
+exceptions) et `:641` (le libellé ne compte pas une admission inerte).
+
+✅ **TRANCHÉ le 2026-08-11 — la question parquée a sa réponse.** « Faut-il signaler qu'une admission
+rend le régime déclaré trompeur ? » **Oui, et par le LIBELLÉ, pas par un avertissement** :
+« végétalien, sauf 1 » (`resumeRegime`) informe sans juger — un bandeau d'alerte aurait fait du choix
+de la personne une anomalie, ce que le principe 6 interdit. Le compte affiché est celui des
+admissions **effectives**, verrouillé par `parametres.test.tsx:641`.
 
 ### Lot E — le fait « présure » *(contenu, indépendant, optionnel)*
 
@@ -305,8 +327,13 @@ vérifiée**. Le cas certain est le parmesan du pesto.
 ## 4. Ordre
 
 ```
-A  →  B  →  C  ✅ livrés le 2026-08-10       D1 → D2 → D3 → D4        E : indépendant, optionnel
+A  →  B  →  C  ✅ livrés le 2026-08-10       D1 → D2 → D3 → D4  ✅ livrés le 2026-08-11
+                  C-bis ✅ (non-changement)   D4 replié dans D3   E : indépendant, optionnel, non entrepris
 ```
+
+✅ **LE CHANTIER EST CLOS le 2026-08-11** — décision 67 barrée dans `ETAT.md` §4. ⛔ **`E` NE ROUVRE
+PAS LA 67** : s'il est un jour repris, il ouvre sa propre décision. Ce qui reste ici est un plan
+livré, pas un état — l'état vit dans `ETAT.md`, et lui seul.
 
 ⚠️ **`D` n'est plus « après, et seulement si le besoin se confirme »** — la raison technique qui le
 mettait en quarantaine était fausse (voir sa section). Il reste conditionné à la **demande**, pas au
