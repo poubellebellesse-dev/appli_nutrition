@@ -974,7 +974,7 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 > | Recettes | **330**, dont **3 sauces** | `SELECT COUNT(*) FROM recipe` · `… WHERE est_sauce=1` |
 > | Aliments | **451** | `SELECT COUNT(*) FROM food` |
 > | Étapes de recette | **1 548** | `SELECT COUNT(*) FROM recipe_step` |
-> | Photos de recette | **116 / 330** | `SELECT COUNT(*) FROM recipe WHERE image_path IS NOT NULL AND image_path <> ''` |
+> | Photos de recette | **116 / 330** importées · **129** décidées par l'humain (**13 en attente d'import**) · **201** recettes n'ont aucune photo jugée bonne | `SELECT COUNT(*) FROM recipe WHERE image_path IS NOT NULL AND image_path <> ''` · pour les deux autres, compter les `decision === 'oui'` de `atelier/photos/etat/decisions.json` (hors dépôt) |
 > | `piquant` renseigné | **330 / 330** (recettes) · **21 / 451** (aliments, et c'est voulu — §8) | `SELECT COUNT(*) FROM recipe WHERE piquant IS NOT NULL` · `… FROM food …` |
 > | Sauces : aliments · attachements · `porte_deja_une_sauce` posé | **10** · **14** · **20** | `food WHERE sous_groupe='sauce'` · `recipe_sauce` · `recipe WHERE porte_deja_une_sauce IS NOT NULL` |
 > | Équipement : référentiel · couples | **30** · **1 473** (357 requis · 38 accélère · 1 078 informatifs) | `equipment` · `recipe_equipment` `GROUP BY niveau` |
@@ -1514,8 +1514,10 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   sur 330, relevé en tête de §8), le pixel non : AUCUN composant ne lit `Recipe.imagePath`.** La
   chaîne est branchée de bout en bout jusqu'au modèle ; l'afficher est une décision §4.1 DESIGN
   (« photo dominante ») et un travail d'écran, pas de catalogue. ⚠️ **Et il faudra décider quoi
-  montrer pour les 220 recettes SANS photo** — un trou visuel à côté d'une fiche illustrée se lit
-  comme un défaut de l'application. ✅ **La section « Matériel » est LIVRÉE le 2026-08-09** — cette
+  montrer pour les 214 recettes SANS photo** — un trou visuel à côté d'une fiche illustrée se lit
+  comme un défaut de l'application. ⚠️ **Ce nombre est celui des `image_path` vides, pas celui des
+  recettes non triées** : 13 des 214 ont une photo décidée qui n'est pas encore importée, et
+  **201** n'ont aucune candidate retenue. Les trois ne se remplacent pas. ✅ **La section « Matériel » est LIVRÉE le 2026-08-09** — cette
   phrase disait « reste aussi la section Matériel (le catalogue n'a aucune table équipement — c'est
   aussi pourquoi la couche `equipement` est inerte depuis P1a) » : les deux moitiés sont périmées,
   voir §3 Moteur. Restent les alternatives d'ingrédients (`suggestAlternatives` exige une `SuggestionRequest` complète
@@ -1627,7 +1629,7 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 
 ### Contenu — constats de l'audit du 2026-07-27, remesurés le 2026-07-29
 
-- **Photos : 116 sur 330** au 2026-08-10 — le compte fait foi en tête de §8, cette ligne ne le
+- **Photos : 116 sur 330** au 2026-08-11 — le compte fait foi en tête de §8, cette ligne ne le
   recopie plus. Le poste n'est plus « chiffré nulle part » : voir §3 « Média » pour l'encodeur et le
   poids mesuré. **Il manque 214 photos**, et le goulot est la **récolte**, pas le tri : le bac est
   de nouveau épuisé — plus une seule candidate non jugée sur les recettes servables — et beaucoup
@@ -1636,6 +1638,22 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   échoue si une recette n'a pas de photo » reste INTERDIT tant qu'on n'est pas à 330/330** —
   l'activer maintenant casserait le build de tout le monde pour un travail de contenu qui n'est pas
   fini.
+  ⚠️ **13 PHOTOS SONT DÉCIDÉES ET PAS IMPORTÉES au 2026-08-11**, donc l'écart entre 116 et 129 n'est
+  pas du tri à faire mais un **import à relancer** — `node catalog/import-photos.mjs`, qui écrit dans
+  `catalog/recipes/*.yaml` (lane Référence) et n'a pas été relancé depuis le lot du 2026-08-10.
+  ⛔ **NE PAS LE RELANCER AVANT D'AVOIR BRANCHÉ LE CADRE** (ci-dessous) : `hareng-pommes-terre-tiedes`
+  est à la fois dans les 13 et la seule photo portant un recadrage validé — l'importer maintenant
+  graverait la version non recadrée, et rien ne signalerait la perte.
+  ▶ **RECADRAGE CARRÉ, livré à l'atelier le 2026-08-11, PAS ENCORE LU À L'IMPORT.** L'écran de
+  relecture (`atelier/photos/ui/index.html`) permet de tracer un carré sur la photo ; le serveur le
+  refuse s'il n'est pas carré **en pixels** (`verifierCadre`, `atelier/photos/serveur.mjs`) et le
+  range en fractions `{x,y,w,h}` + `source:{l,h}` dans `decisions.json`. ⚠️ **`catalog/import-photos.mjs`
+  ne contient aujourd'hui ni `cadre` ni `extract` — vérifié au `grep`** : un cadre posé à l'écran ne
+  change donc **rien** dans l'application tant que l'import ne l'applique pas. C'est le lot suivant
+  de la lane photos. **3 cadres posés à ce jour**, dont 1 sur un `oui`.
+  ⚠️ **Le serveur valide la FORME du cadre, pas sa TAILLE** : un carré de 26 px de côté a été accepté
+  (sur une décision `retirer`, donc sans conséquence). L'écran affiche un avertissement sous 800 px,
+  le serveur non. À décider quand l'import lira le cadre — refuser, ou agrandir et l'assumer.
 - ✅ **Lexique — RÉSOLU** (décision 43) : 4 → **62 gestes**, 763 étapes annotées sur 1 097.
   ⚠️ **Reste « illustré »** : §2 ARCHITECTURE promet un lexique *illustré*, les 62 fiches sont du
   texte seul. Dépend des visuels.
