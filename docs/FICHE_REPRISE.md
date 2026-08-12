@@ -4,101 +4,82 @@
 > Avancement, décisions et dette : [ETAT.md](./ETAT.md) · Index : [README.md](./README.md) · Font
 > foi : [ENGINE.md](./ENGINE.md) (moteur), [ARCHITECTURE.md](./ARCHITECTURE.md) (le reste).
 > ⛔ **RÈGLE DE SURVIE, APPRISE AUX DÉPENS DE CETTE PAGE : un lot fini pose son fait dans `ETAT.md`
-> ou dans son document de chantier, JAMAIS ici.** Sinon elle grossit seule — chaque lot ajoute son
-> récit, aucun n'en repart, et à plusieurs sessions le solde est positif : 207 → 239 lignes le
-> 2026-08-09, puis **268** le 2026-08-10, sans qu'aucune session se soit trompée. Dégonflée cinq
-> fois ; les blocs sortis sont recopiés verbatim en archive, qui dit **où leur fait vit désormais**
-> et **lesquels avaient tort** (voir la dernière ligne du tableau ci-dessous).
+> ou dans son document de chantier, JAMAIS ici.** Sinon elle grossit seule, et **le critère de tri
+> n'est pas l'âge mais le doublon**. Dégonflée six fois ; les blocs sortis sont en archive, dernière
+> ligne du tableau ci-dessous — elle dit où leur fait vit et lesquels avaient tort.
 
 ## Le projet
 
 Planificateur de repas **100 % local, sans IA, sans compte**. Moteur TypeScript pur, catalogue
-SQLite construit au build, PWA React servie en statique.
+SQLite construit au build, PWA React servie en statique. La boucle complète tourne : s'installer →
+allergies → suggestion → semaine → liste de courses → cuisiner.
 
 ## Où on en est
 
 ```
-MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 9 ÉCRANS ✅ ─ TESTS D'ÉCRAN ✅ ─▶ CONTENU & DISTRIBUTION ▓▓
+MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─ TESTS D'ÉCRAN ✅ ─▶ CONTENU & DISTRIBUTION ▓▓
                                                                                           ⬅ ICI
 ```
 
-✅ **SUITE VERTE EN ENTIER — RELEVÉ DU 2026-08-10, SUR L'ARBRE COMMITÉ** (`1918626`) :
-`npm test` → **1 953 passed / 0 failed**, **101 fichiers** · `npm run typecheck` propre ·
-`npx vite build` ✓ (2,80 s) · `npm run engine:plan-stress` → **20/20**.
+✅ **SUITE VERTE EN ENTIER — RELEVÉ DU 2026-08-11, SUR L'ARBRE COMMITÉ** (`95fbbc0`) :
+`npm test` → **2 124 passed / 0 failed**, **109 fichiers** · typecheck propre · `npx vite build` ✓
+(3,79 s) · `engine:plan-stress` → **20/20**. ⚠️ **Cette ligne annonçait « 1 953, toujours valable »
+ce matin, à tort et sans que personne se trompe** : une autre lane livrait le régime, **+171 tests**.
 
-⚠️ **`git status -sb` donne l'état, jamais cette page.** Un nombre écrit ici est faux dès le commit
-suivant. ⚠️ **Piège de relevé** : `npm test 2>&1 | tail -25` rend le code de sortie du **pipe**,
-donc 0. Lire le compte `Tests N failed`, jamais `$?`.
-
-**L'application fait sa boucle complète** : s'installer → déclarer ses allergies → voir une
-suggestion → planifier sa semaine → sortir sa liste de courses → cuisiner. Plus « partir de ce
-qu'on a », un lexique de 62 gestes, et l'onglet Savoir complet.
+⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
+tail -25` rend le code de sortie du **pipe**, donc 0. Lire `Tests N failed`, jamais `$?`.
+⚠️ **Le compte d'écrans se lit en `ETAT.md` §5, qui en porte TROIS et interdit de les uniformiser** :
+**8 spécifiés**, **12 codés**, **11 testés**. Ni « neuf » ni « dix » n'était juste.
 
 ## ⛔ Travailler à plusieurs sessions dans cet arbre
 
 **Cinq incidents payés, dont un qui a vidé l'arbre entier.** Trois gestes, sans exception :
 
 1. **Jamais `git commit -a`** — commiter ses fichiers nommés un par un. L'index est partagé : un
-   `git add` trop large a fait déclarer livré, en août, un lot dont **aucune ligne de code
-   n'existait**.
-2. **Jamais `git stash`** — il n'a pas de forme sûre ici. `-- <chemins>` limite ce qu'on remise,
-   **rien ne limite ce qu'on rend**. Committer son lot est le seul geste qui ne prend pas l'arbre
-   des autres en otage. Si le mal est fait : `git stash list` **avant** `git reflog`, puis
-   `git checkout stash@{0} -- <chemins>`, jamais `pop`.
+   `git add` trop large a fait déclarer livré un lot dont **aucune ligne de code n'existait**.
+2. **Jamais `git stash`** — `-- <chemins>` limite ce qu'on remise, **rien ne limite ce qu'on rend**.
+   Si le mal est fait : `git stash list` **avant** `git reflog`, puis `git checkout stash@{0} --
+   <chemins>`, jamais `pop`.
 3. **`git status -sb` avant chaque commit.**
 
-⛔ **AUCUN ✅ SANS `git log --all -S` SUR UN IDENTIFIANT DU CODE CONCERNÉ.** Un compte de tests vert
-ne prouve rien : celui de 1 940 était vrai sur un arbre qui n'existe plus. **Un écart de compte
-s'attribue par `git diff --name-only`, jamais par déduction** — à trois sessions, chacune voit
-l'écart depuis SON relevé et l'impute par défaut à sa voisine.
-⚠️ **HEAD est EN AVANCE sur `origin/main`.** Claude committe, l'utilisateur pousse — le shell agent
-ne peut pas s'authentifier auprès de GitHub.
-▶ Méthode complète, découpage et contre-exemples : **[reference/PIEGES.md](./reference/PIEGES.md)**.
+⛔ **AUCUN ✅ SANS `git log --all -S` SUR UN IDENTIFIANT DU CODE CONCERNÉ.** Un compte vert ne prouve
+rien : celui de 1 940 était vrai sur un arbre qui n'existe plus. **Un écart de compte s'attribue par
+`git diff --name-only`, jamais par déduction.** ⚠️ **HEAD est EN AVANCE sur `origin/main`** : Claude
+committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md](./reference/PIEGES.md)**.
 
 ## ▶ La prochaine étape
 
-⚠️ **ACTION RÉCURRENTE** : `node catalog/audit-mapping.mjs` — balayage identifiant ⇄ nom Ciqual,
-**451 mappings, 9 candidats** au 2026-08-10. **À relancer À LA MAIN après chaque lot de contenu**,
-et **uniquement dans l'arbre principal** : `documents Ciqual/` est gitignoré, donc ça ne peut ni
-devenir un test ni tourner dans un worktree. Premier passage : deux mappings faux que **aucun test
-ne pouvait voir** — un identifiant qui contredit sa ligne Ciqual ne fait rougir personne.
+⛔ **LE BLOCAGE N'EST PLUS LA RÉCOLTE, C'EST L'ACCROCHE** — les médias existent, rien ne les porte.
 
-✅ **QUATRE CHANTIERS DE CODE SE SONT FERMÉS** — sauces (①②③④), mode cuisine (L0→L4 **plus** durée
-écoulée, entrelacement actif/passif, matériel partagé), référence (équipement, repos, piquant,
-22 recettes), photos (encodage et import). Détail en `ETAT.md` §8 et
-[CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md) §4.3.
+1. **⛔ Le lexique n'a AUCUN champ pour porter un média** — ni YAML source, ni
+   `catalog/build.mjs`, ni dans `LexiconEntry`, ni à l'écran. **Lot de code, 4 fichiers au moins,
+   non entamé** : sans lui, les 98 clips et les photos restent sur le disque sans accroche. ▶ Détail :
+   [archive/RECAP_SESSION_2026-08-11_clips-gestes.md](./archive/RECAP_SESSION_2026-08-11_clips-gestes.md) §7.
+2. **🎬 Les clips de gestes sont FAITS** — 62/62 jugés, **51 illustrés, 98 segments de 3 s encodés**
+   (AV1 + H.264 + poster, 22,4 Mo), sourcés un par un. **7 gestes n'ont aucun candidat** (`piquer`,
+   `blanchir`, `essorer`, `effeuiller`, `gratiner`, `chinois`, `ecosser`) : homonymes, cause nommée
+   pour chacun — ⛔ ne pas relancer une moisson sans changer la requête.
+3. **📷 Photos — 116 importées · 13 décidées non importées · 201 recettes sans rien.** ⛔ **Pas un
+   défaut de tri : bac épuisé, 19 recettes sans AUCUNE candidate** — goulot = la source. ⛔ Build-
+   qui-échoue-sans-photo **interdit avant 330/330**. ▶ **Recadrage carré livré, PAS lu à l'import.**
+4. **⛔ Relecture par un tiers du contenu Savoir** (`ETAT.md` §8.2 bis) — **bloquante avant
+   publication**. 73 tips et 8 fiches sourcés un par un, **aucun relu**.
+5. **Vérifier sur un vrai téléphone** — protocole et seuil fixés à l'avance :
+   [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) §0. ⚠️ Le chrono de `#/recettes`, seul
+   chiffre qui manque pour fermer la décision 61, **n'a toujours pas été pris** — jamais en jsdom.
+6. **Empaquetage Capacitor, puis Play** — `capacitor.config.ts` en place, `npx cap add android`
+   jamais lancé (pas de SDK). Le web reste le seul chemin vers un iPhone sans Mac.
 
-**Ce qui reste, par ordre de dépendance :**
+**Contenu qui reste** : photos, 27 tips sur la centaine visée, 8 fiches sur les 60-100.
+⚠️ **Deux trous sanitaires, non comblés** : céphalopodes et cuisson de l'œuf, qu'aucune autorité lue
+ne donne.
 
-1. **📷 La récolte de photos — 116 / 330.** ⛔ **Ce n'est pas un défaut de tri : le bac est de
-   nouveau épuisé, plus une seule candidate non jugée, et 19 recettes n'ont AUCUNE candidate.** Le
-   goulot est la **source**. Relancer une session sans en changer rendra le même résultat. ⛔ « le
-   build échoue sans photo » : **interdit avant 330/330**. ⚠️ **Et à 330/330 le bundle dépasserait
-   les 15 Mo du critère P6 — décision 68, ouverte, à trancher AVANT de produire les 214 restantes.**
-2. **⛔ Relecture par un tiers du contenu Savoir** (`ETAT.md` §8.2 bis) — **bloquante avant
-   publication**. Les 73 tips et les 8 fiches sont sourcés un par un, **aucun n'est relu**. Un build
-   qui passe ne rend pas le contenu publiable.
-3. **Vérifier sur un vrai téléphone.** `npx vite build && npx vite preview --host`, puis installer :
-   service worker et installation **ne s'activent qu'en build de production**. ⚠️ L'essai du
-   2026-08-05 était partiel — Chrome et non la WebView, **sur une maquette** : audio validé,
-   vibration morte, **pari `rem` à 150 % NON MESURÉ**, le seul dont l'échec toucherait les neuf
-   écrans. L'écran réel existe : `#/cuisine/chakchouka`, **en HTTPS** (`http://` fait disparaître
-   `navigator.wakeLock`, et l'échec ressemble à un défaut d'appareil). ▶ **Deux relevés dans le même
-   passage** : le chrono d'apparition de `#/recettes`, seul chiffre qui manque pour clore la
-   décision 61 et **que personne n'a jamais pris** ; et un Profiler sur appareil, seule façon de
-   trancher le re-rendu supposé. ⚠️ **Jamais par une mesure jsdom** — elle ne fait ni mise en page
-   ni peinture, et elle a déjà fait conclure faux ici même.
-4. **Empaquetage Capacitor, puis Play.** ⚠️ La cible n'est plus TWA/Bubblewrap (2026-08-01).
-   `capacitor.config.ts` et `@capacitor/*` sont en place ; `npx cap add android` n'a jamais été
-   lancé (pas de SDK sur la machine). Le web reste le seul chemin vers un iPhone sans Mac.
-
-**Contenu qui reste** : photos, lexique illustré, 27 tips pour la centaine visée, 8 fiches sur les
-60-100 visées. ⚠️ **Deux trous sanitaires déclarés, non comblés** : les céphalopodes (`calamar`,
-`poulpe`) et le critère de cuisson de l'œuf, qu'aucune autorité lue ne donne.
-
-**Trois questions attendent un arbitrage** — `ETAT.md` §4 : décision **64** (un dérivé de viande
-servi à un végétarien — 5 aliments, mesuré, non corrigé), **65** (la réservation d'équipement,
-bloquée par deux colonnes absentes du catalogue), et les **366 doublons d'affichage**, jamais posés.
+**Cinq arbitrages attendent** — `ETAT.md` §4. ⚠️ **64 et 67 en sont SORTIES** (fermées les 08-10 et
+08-11) : **66** (invariant origine ⟺ provenance), **65** (⛔ **plus « deux colonnes » mais une TABLE
+d'occupations** · [plan](./CONCEPTION_RESERVATION_MATERIEL.md)), **68** (budget P6 — ⚠️ **forcée depuis le
+2026-08-11** : photos + clips ≈ 27,6 Mo contre un critère de 15, mais ce seuil visait un **premier
+chargement web**, avant le cache à deux étages et Capacitor), **69** (licence Pexels « Standalone »),
+et les **366 doublons d'affichage**, jamais posés.
 
 ## Où chercher le reste
 
@@ -111,8 +92,9 @@ Les **cinq acquis à ne pas défaire** et les **quatre commandes qui font foi** 
 | Couches, algorithmes, API du moteur | [ENGINE.md](./ENGINE.md) |
 | Périmètre produit, données, cadre légal · Écrans et jetons visuels | [ARCHITECTURE.md](./ARCHITECTURE.md) · [DESIGN.md](./DESIGN.md) |
 | **Pièges, impasses payées, règle de sourçage** — à ouvrir avant de rouvrir un chantier | [reference/PIEGES.md](./reference/PIEGES.md) |
+| **Licences des médias embarqués** — clauses citées, et ce qui n'a PAS pu être vérifié | [reference/LICENCES_MEDIAS.md](./reference/LICENCES_MEDIAS.md) |
 | **Mode cuisine** : lots, questions ouvertes, essai sur appareil | [CONCEPTION_MODE_CUISINE.md](./CONCEPTION_MODE_CUISINE.md) |
 | Écriture du contenu Savoir · Distribution | [tips](../catalog/tips/README.md) · [evidence](../catalog/evidence/README.md) · [STRATEGIE](./STRATEGIE_DISTRIBUTION.md) |
-| Tri des photos : barème, décisions, régénération | `../atelier/photos/REPRISE.md` (hors dépôt) |
+| Tri des photos et des clips : barème, décisions, outils | `../atelier/photos/REPRISE.md` · `../atelier/gestes/` (hors dépôt) |
 | Ce qui a été essayé **et écarté** | [archive/](./archive/) — [README](./archive/README.md) apparie les pistes parallèles |
-| **Blocs sortis de cette fiche, et lesquels avaient tort** | [08-10](./archive/FICHE_REPRISE_extraits_2026-08-10.md) · [08-09](./archive/FICHE_REPRISE_extraits_2026-08-09.md) · [08-07](./archive/FICHE_REPRISE_extraits_2026-08-07.md) · [08-03](./archive/FICHE_REPRISE_extraits_2026-08-03.md) |
+| **Blocs sortis de cette fiche, et lesquels avaient tort** | [08-11](./archive/FICHE_REPRISE_extraits_2026-08-11.md) · [08-10](./archive/FICHE_REPRISE_extraits_2026-08-10.md) · [08-09](./archive/FICHE_REPRISE_extraits_2026-08-09.md) · [08-07](./archive/FICHE_REPRISE_extraits_2026-08-07.md) · [08-03](./archive/FICHE_REPRISE_extraits_2026-08-03.md) |

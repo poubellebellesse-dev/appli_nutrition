@@ -42,9 +42,9 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-10, arbre COMPLET — lanes SAUCES (①②③④,
-reconstruit) et MODE CUISINE (durée écoulée, entrelacement, matériel partagé) incluses** :
-`npm test` → **1 953 passed / 0 failed (101 fichiers)** · typecheck propre · `vite build` ✓ (2,80 s) ·
+Dernier relevé, **suite réellement exécutée le 2026-08-11, arbre COMPLET — lane RÉGIME (chantier
+personnalisable A→D4, décision 67 fermée) incluse** :
+`npm test` → **2 124 passed / 0 failed (109 fichiers)** · typecheck propre · `vite build` ✓ (3,79 s) ·
 `engine:plan-stress` **20/20** · `node catalog/build.mjs` → **451 aliments, 330 recettes,
 1 548 étapes, 62 gestes, 73 tips, 8 fiches, 30 équipements (1 473 couples)** ·
 `catalog/audit-mapping.mjs` → 451 mappings, 9 candidats à relire (inchangé).
@@ -58,8 +58,10 @@ identifiée** ; piste la plus probable : plusieurs fichiers de test lancent `cat
 parallèle et un `beforeAll` qui échoue fait disparaître les tests de son fichier du total au lieu de
 les compter en rouge. **Un compte qui bouge sans rouge est un signal** — si un écart réapparaît,
 c'est là qu'il faut chercher, pas dans le lot du jour. ⚠️ **Ces deux nombres sont ceux du
-2026-08-08 : la base est désormais 1 953.** Le symptôme à guetter est un ÉCART entre deux runs sur
-le même arbre, pas une valeur particulière.
+2026-08-08 : la base est désormais 2 124.** Le symptôme à guetter est un ÉCART entre deux runs sur
+le même arbre, pas une valeur particulière. ⚠️ **Aucun écart n'a été revu depuis** — quatre runs
+complets le 2026-08-11 ont tous rendu 2 124. Ne pas conclure que la cause est morte : elle n'a
+jamais été identifiée, seulement pas réapparue.
 ⚠️ **Un écart de compte s'attribue par `git diff --name-only`, jamais par déduction.** Le
 2026-08-09, à trois sessions dans le même arbre, un « +1 » a été attribué à la mauvaise lane :
 chacune voyait l'écart depuis SON relevé précédent et l'imputait par défaut à sa voisine. Personne
@@ -167,3 +169,75 @@ Spécifique à ce projet : `testeur` lit la section « Vérifier » ci-dessus et
 - Rien hors du périmètre de la tâche n'a changé.
 - Si un document et le code divergent : corriger le document, et le dire dans le message de commit.
 - Si tu as dû rediscuter une décision de `ETAT.md` §3 : t'arrêter et demander, pas trancher seul.
+
+## La mécanique — ce qui applique les règles ci-dessus
+
+Tout ce qui précède était de la prose : une consigne qu'un modèle suit quand il y pense.
+`.claude/hooks/garde.mjs` la rend exécutable. Trois refus, et rien d'autre.
+
+| Ce qui est refusé | Pourquoi |
+|---|---|
+| écrire dans `docs/archive/` | ce sont des instantanés datés. On ne les réécrit jamais. |
+| écrire dans `tests/scelles/` quand un lot est scellé | les tests ont été écrits **avant** le code, depuis le « Fini quand ». Les corriger pour les faire passer, c'est truquer l'examen. |
+| toucher à `app/src/` ou `catalog/` sans lot ouvert | le « Fini quand » s'écrit **avant**. C'est ce qui supprime les allers-retours. |
+| conclure sans avoir relancé les **quatre commandes** depuis la dernière modification | « ça devrait passer » n'est pas une mesure. La garde les exige toutes les quatre, pas seulement `npm test`. |
+
+**Le cycle, quatre commandes :**
+
+```
+/brief D2     → « Fini quand » + tests scellés + sceau, AVANT la première ligne de code
+   … code …
+/fin          → rapport court, sans jargon, une seule décision demandée
+/libre        → coupe la garde (et dis pourquoi)   /strict → la rallume
+```
+
+En cas d'erreur interne, la garde **laisse passer**. Elle ne bloquera jamais un travail
+légitime par accident — mais elle ne rattrapera pas tout non plus.
+
+**Les tests scellés vivent dans `tests/scelles/`.** Écrits depuis le « Fini quand », contre
+`catalog.db` réel et jamais contre une fixture, et ils doivent **échouer le jour où on les
+écrit**. Un test d'acceptation qui passe avant que le code existe ne prouve rien.
+
+⚠️ La garde ne remplace pas `node catalog/audit-mapping.mjs` — cinquième commande, à la main,
+dépôt principal uniquement (`documents Ciqual/` est gitignoré, donc absent des worktrees).
+
+## Plusieurs terminaux en parallèle
+
+**Un terminal qui écrit = un worktree.** Deux sessions dans le même arbre, c'est exactement
+le défaut du 2026-08-09 : un « +1 » attribué à la mauvaise lane, chacune voyant l'écart
+depuis SON relevé. Personne n'avait menti ni mal compté.
+
+```bash
+git worktree add ../wt-<lot> -b lot/<lot>     # un par terminal qui code
+```
+
+Le terminal **planificateur ne code pas** : il lit, il écrit des documents de conception,
+il reste sur l'arbre principal. Les merges se font **un par un**, jamais en parallèle, et
+les quatre commandes sont relancées sur l'arbre principal **après chaque merge** — un lot
+vert seul n'est pas un lot vert ensemble.
+
+## Un seul terminal, qui délègue
+
+Si tu ne veux tenir qu'une session : garde-la comme **unique écrivain** et sous-traite le
+reste. La règle ne change pas — plusieurs agents peuvent lire, chercher, critiquer, mesurer ;
+**un seul écrit**. Deux sous-agents qui éditent en parallèle partagent le même arbre et ne se
+voient pas : c'est pire que deux terminaux, il n'y a même pas de worktree pour les séparer.
+
+**Délègue systématiquement, c'est du contexte sauvé, pas du temps gagné :**
+
+| Quand | À qui | Pourquoi |
+|---|---|---|
+| avant de lire un document de plus de 30 Ko | `chercheur` / `Explore` | `ETAT.md` fait 300 Ko, `ARCHITECTURE.md` 83 Ko, `PIEGES.md` 55 Ko. Les ouvrir en entier tue la session. Demande la réponse, pas le fichier. |
+| lancer les quatre commandes | `testeur` | tu veux le verdict et les échecs, pas 2 124 lignes de vitest. |
+| relire le lot avant `/fin` | `relecteur`, `critique` | un regard qui n'a pas écrit le code. |
+| écrire le bilan de fin de lot | `rapporteur` | **un agent qui note sa propre copie se met toujours une bonne note.** |
+
+Le **codeur, c'est toi** — la session principale. Tu ne délègues pas l'écriture du code : tu
+perdrais le fil du lot pour ne gagner que du parallélisme dont tu n'as pas besoin.
+
+⚠️ **Un nom d'agent sans fichier ne produit aucune erreur** : la délégation retombe
+silencieusement sur la session principale, au prix fort. Vérifier avec `@` — l'autocomplétion
+ne propose que les agents réellement découverts.
+
+La garde (`.claude/hooks/garde.mjs`) s'applique **aussi aux sous-agents** : un sous-agent ne
+peut pas écrire dans `docs/archive/` ni dans un test scellé.
