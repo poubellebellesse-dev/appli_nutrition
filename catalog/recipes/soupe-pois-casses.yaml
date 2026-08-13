@@ -7,7 +7,7 @@ temps_prep_min: 10
 temps_cuisson_min: 60
 difficulte: 1
 portions_base: 4
-image_path: null
+image_path: /catalog/images/soupe-pois-casses.avif
 types_repas: [diner]
 service: plat
 piquant: 0

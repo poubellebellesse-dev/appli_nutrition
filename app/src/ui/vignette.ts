@@ -1,10 +1,15 @@
 // ui/vignette.ts — l'aplat de couleur qui tient la place des photos.
 //
-// ⚠️ BOUCHE-TROU ASSUMÉ, PAS UNE FAUSSE PHOTO. Le catalogue compte 241 recettes et ZÉRO image
-// (`recipe.image_path` est renseigné nulle part), alors que §4.1 DESIGN veut « photo dominante ».
-// Concevoir la carte plein écran en attendant les vraies images imposait un choix : un grand
-// rectangle vide, qui donne une application cassée — ou une image d'illustration générique, qui
-// ment sur le plat. D'où cet aplat : visiblement décoratif, jamais confondu avec une photo.
+// ⚠️ BOUCHE-TROU ASSUMÉ, PAS UNE FAUSSE PHOTO. Concevoir la carte plein écran sans image imposait
+// un choix : un grand rectangle vide, qui donne une application cassée — ou une image
+// d'illustration générique, qui ment sur le plat. D'où cet aplat : visiblement décoratif, jamais
+// confondu avec une photo.
+//
+// ⚠️ CE N'EST PLUS LE SEUL CAS, C'EST LE REPLI — et l'en-tête a mis longtemps à le dire. Elle a
+// affirmé « le catalogue compte 241 recettes et ZÉRO image » jusqu'au 2026-08-13, alors que 116
+// photos étaient livrées dans le paquet depuis des jours. Personne ne les voyait parce qu'aucun
+// écran ne lisait `imagePath`, pas parce qu'elles manquaient. Aujourd'hui `aujourdhui.tsx` rend la
+// photo quand elle existe, et retombe ici sinon — 201 recettes sur 330.
 //
 // ⚠️ L'APLAT EST `aria-hidden` ET NE PORTE AUCUNE INFORMATION. Le nom du plat, son score et ses
 // explications sont du VRAI texte, sous l'aplat. C'est ce qui dispense la lettre affichée dessus du
