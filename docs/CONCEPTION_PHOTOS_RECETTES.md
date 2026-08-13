@@ -40,10 +40,10 @@ au carré s'est mesuré à **×1,5 à ×2,0** sur les clips de gestes. Écarté 
 
 ## Lot 1 — l'affichage, et le cadre honoré ✅ **LIVRÉ le 2026-08-13**
 
-⚠️ **PAS ENCORE COMMITÉ au moment où cette ligne est écrite — donc aucun hash.** Le travail vit sur
-la branche `lot/photo-affichage` (worktree `../wt-photo-affichage`). **Cette ligne est incomplète
-tant que le hash n'y est pas** : un lot annoncé livré sans hash est exactement ce que la règle
-« aucun ✅ sans `git log --all -S` » interdit de croire sur parole.
+**Commité en `f3d4fa1`**, branche `lot/photo-affichage` (worktree `../wt-photo-affichage`).
+⚠️ **PAS ENCORE FUSIONNÉ dans `main`** — le lot est vert seul, ce qui ne prouve pas qu'il est vert
+ensemble. Les quatre commandes se relancent sur l'arbre principal APRÈS le merge, pas avant.
+Vérifiable : `git log --all -S rectangleDuCadre --oneline`.
 
 **Le « Fini quand » est démontré en entier** par `tests/scelles/photo-affichage.test.ts`, 7/7 vert :
 129 `image_path` non nuls, chacun sur un fichier présent, aucune image orpheline, la photo cadrée
