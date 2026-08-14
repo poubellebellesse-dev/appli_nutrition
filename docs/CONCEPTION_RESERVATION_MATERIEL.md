@@ -157,11 +157,12 @@ faire **à la main entre A et B**, et rien ne le rappellera.
 
 ---
 
-## ✅ 65a — LIVRÉ le 2026-08-13, cinq lots · pas encore commité
+## ✅ 65a — LIVRÉ le 2026-08-13, cinq lots · commit `faf115c` sur `main`
 
-**Aucun hash de commit : rien n'a été commité.** Ce bloc décrit l'arbre de travail. Le hash
-s'écrit ici au moment du commit, pas avant — sinon ce document annonce une livraison qui n'existe
-dans aucun objet git, ce qui s'est déjà produit dans ce dépôt.
+⚠️ **Ce commit emporte aussi le texte de la lane MÉDIA dans `ETAT.md`**, et c'était prévu : elle
+avait écrit son état sans commiter parce que cette lane tenait le fichier, et laissé un bandeau
+demandant au committeur de le relire puis de le retirer. **Son code, lui, n'est pas dedans** — il
+vit sur `lot/photo-affichage` (`f3d4fa1`), non fusionné.
 
 **Le total qui manquait est mesuré : 92.** `recipe_step_equipment` porte **92 occupations sur
 85 recettes — 4 déclarées, 88 dérivées**. Les 98 du lot A étaient des lignes **par étape** ; le

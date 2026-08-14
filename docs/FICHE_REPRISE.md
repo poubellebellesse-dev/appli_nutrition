@@ -21,7 +21,7 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-✅ **SUITE VERTE EN ENTIER — RELEVÉ DU 2026-08-13, SUR L'ARBRE DE TRAVAIL, NON COMMITÉ** :
+✅ **SUITE VERTE EN ENTIER — RELEVÉ DU 2026-08-13, SUR L'ARBRE COMMITÉ** (`faf115c`) :
 `npm test` → **2 136 passed / 0 failed**, **110 fichiers** · typecheck propre · `npx vite build` ✓
 (3,34 s) · `engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé).
 ⚠️ **LE COMPTE A BAISSÉ (2 144 → 2 136) SANS AUCUN ROUGE, ET C'EST EXPLIQUÉ, PAS SUBI** : −11 par la
