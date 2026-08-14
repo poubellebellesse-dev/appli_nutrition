@@ -52,7 +52,6 @@ function food(id: string, kcalPer100g: number): Food {
     quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
-    provenanceAnimale: null,
     deriveDe: null,
   };
 }
@@ -408,7 +407,6 @@ function ferFood(id: string, ferPer100g: number): Food {
     quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
-    provenanceAnimale: null,
     deriveDe: null,
   };
 }

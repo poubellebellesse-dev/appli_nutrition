@@ -226,17 +226,21 @@ describe('catalogue réel — la chaîne `deriveDe` (origine animale en cascade)
     }
     // Et le beurre, qui ne déclare RIEN : il tient `production` de `lait_entier` par la cascade.
     const beurre = catalog.foods.get('beurre_doux' as FoodId)!
-    expect(beurre.provenanceAnimale).toBeNull()
+    expect(beurre.origineAnimale).toBeNull()
     expect(resolveAnimalProvenance(beurre, catalog.foods)).toBe('production')
     expect(regimeExigePar(beurre, catalog.foods)).toBe('vegetarien')
   })
 
-  it('provenance et origine sont nulles ENSEMBLE, sur les 451 aliments', () => {
-    // L'invariant qui rend la couche sûre. Le build le garantit à l'écriture ; ce test le vérifie
-    // APRÈS le passage par SQLite et le loader — « un champ déclaré n'est pas un champ branché ».
+  it('provenance et origine arrivent ENSEMBLE ou pas du tout, après SQLite et le chargeur', () => {
+    // L'invariant qui rend la couche sûre. Depuis le lot 66 le TYPE l'impose — mais le type ne dit
+    // rien de ce que le CHARGEUR fabrique à partir de deux colonnes SQL toujours séparées, et c'est
+    // là que ce test garde tout son sens : « un champ déclaré n'est pas un champ branché ».
+    // Un chargeur qui ne testerait que `origine_animale` et prendrait la provenance telle quelle
+    // produirait ici une moitié de paire, sans que `tsc` n'ait rien à redire.
     const incoherents = [...catalog.foods.values()]
-      .filter((f) => (f.origineAnimale === null) !== (f.provenanceAnimale === null))
-      .map((f) => `${f.id} : origine=${f.origineAnimale} provenance=${f.provenanceAnimale}`)
+      .filter((f) => f.origineAnimale !== null)
+      .filter((f) => f.origineAnimale?.origine == null || f.origineAnimale.provenance == null)
+      .map((f) => `${f.id} : ${JSON.stringify(f.origineAnimale)}`)
 
     expect(incoherents).toEqual([])
   })

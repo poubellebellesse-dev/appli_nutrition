@@ -270,7 +270,7 @@ describe('parametres — « Aliments que je ne veux pas »', () => {
     // Un aliment du groupe, quel qu'il soit — on ne parie pas sur le contenu du catalogue.
     const catalogue = catalogueDeTest()
     const unOeuf = [...catalogue.foods.values()].find(
-      (f) => f.origineAnimale === 'volaille' && f.provenanceAnimale === 'production'
+      (f) => f.origineAnimale?.origine === 'volaille' && f.origineAnimale.provenance === 'production'
     )!
     fireEvent.click(panneau.getByText(unOeuf.nom))
 

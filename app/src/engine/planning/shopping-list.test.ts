@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { arrondiAchat, buildShoppingList, rayonDe } from './shopping-list.js'
 import { makeCatalog, makeFood, makeIngredient, makeRecipe } from '../selection/test-fixtures.js'
 import type { Catalog, Food, FoodId, MealPlanEntry, MealSlot, RecipeId, WeekPlan } from '../domain/index.js'
+import { venantDe } from '../domain/index.js'
 
 function food(id: string, groupe: string, extra: Partial<Food> = {}): Food {
   return { ...makeFood(id), groupe, ...extra }
@@ -208,7 +209,11 @@ describe('planning/shopping-list — rayon', () => {
     foods.set(f.id, f)
     return f
   }
-  const lait = ajoute(food('lait_entier', 'lait et produits laitiers', { origineAnimale: 'mammifere' }))
+  const lait = ajoute(
+    food('lait_entier', 'lait et produits laitiers', {
+      origineAnimale: venantDe('mammifere', 'production'),
+    })
+  )
 
   it('regroupe fruits et légumes, boucherie, poissonnerie, crèmerie, épicerie, cave', () => {
     expect(rayonDe(food('carotte', 'légumes'), foods)).toBe('fruits et légumes')

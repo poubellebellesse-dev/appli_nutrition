@@ -1,0 +1,7 @@
+{
+  "// pourquoi DEUX fichiers ici": "L'un ampute la paire neuve, l'autre garde l'ancienne valeur scalaire. Ils sont dans le MÊME projet parce que le test exige que la sortie de `tsc` nomme les DEUX fichiers : si une seule des deux formes était acceptée, un seul nom apparaîtrait et le test rougirait. C'est ça qui distingue « le type est resserré » de « le type a juste changé de nom ».",
+  "extends": "../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": ["sonde-paire-incomplete.ts", "sonde-scalaire-nu.ts"]
+}

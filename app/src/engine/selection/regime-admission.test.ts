@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from 'vitest'
 import type { AllergenId } from '../domain/index.js'
+import { venantDe } from '../domain/index.js'
 import { DIET_CHAIN, dietLayer } from './regime.js'
 import { runExclusionPass } from './index.js'
 import {
@@ -24,18 +25,15 @@ import {
 
 const MIEL = makeFood('miel', [], {
   groupe: 'produits sucrés',
-  origineAnimale: 'insecte',
-  provenanceAnimale: 'production',
+  origineAnimale: venantDe('insecte', 'production'),
 })
 const OEUF = makeFood('oeuf', [], {
   groupe: 'œufs',
-  origineAnimale: 'volaille',
-  provenanceAnimale: 'production',
+  origineAnimale: venantDe('volaille', 'production'),
 })
 const LAIT = makeFood('lait_entier', [], {
   groupe: 'lait et produits laitiers',
-  origineAnimale: 'mammifere',
-  provenanceAnimale: 'production',
+  origineAnimale: venantDe('mammifere', 'production'),
 })
 /** Dérivé du lait SANS le déclarer — c'est la cascade `deriveDe` (acquis n° 5). */
 const BEURRE = makeFood('beurre_doux', [], { groupe: 'matières grasses', deriveDe: 'lait_entier' })
@@ -279,8 +277,7 @@ describe('lot D1 — P4 : l’admission ne touche QUE la couche `regime`', () =>
     // Le cas qui compte le plus : le principe 1 ne se négocie pas par un réglage de régime.
     const mielAllergene = makeFood('miel', [{ allergenId: 'fruits_a_coque' as AllergenId, certitude: 'contient' }], {
       groupe: 'produits sucrés',
-      origineAnimale: 'insecte',
-      provenanceAnimale: 'production',
+      origineAnimale: venantDe('insecte', 'production'),
     })
     const recette = tofuLaque()
     const catalog = makeCatalog([recette], [mielAllergene, OEUF, LAIT, BEURRE, TOFU])
@@ -324,7 +321,7 @@ describe('lot D2 — P3 ne s’applique PAS aux recettes de l’utilisateur', ()
     })
   }
 
-  const SARDINE = makeFood('sardine', [], { groupe: 'poissons', origineAnimale: 'poisson' })
+  const SARDINE = makeFood('sardine', [], { groupe: 'poissons', origineAnimale: venantDe('poisson', 'corps') })
 
   it('⭐ admettre le miel rend une recette PERSO visible à un végétalien, malgré un poisson optionnel', () => {
     const recette = persoAuPoissonOptionnel()

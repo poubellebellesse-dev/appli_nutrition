@@ -73,7 +73,6 @@ export function makeFood(
     quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: null,
-    provenanceAnimale: null,
     deriveDe: null,
   };
 }

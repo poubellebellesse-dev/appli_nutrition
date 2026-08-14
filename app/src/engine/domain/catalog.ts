@@ -113,6 +113,47 @@ export type AnimalOrigin = 'mammifere' | 'volaille' | 'poisson' | 'fruit_de_mer'
  */
 export type AnimalProvenance = 'corps' | 'production'
 
+/**
+ * Ce qu'un aliment tient de l'animal, **en un seul objet**. Les deux faits ne se séparent jamais :
+ * `mammifere` sans `corps`/`production` ne dit pas si c'est du bœuf ou du lait, et `production`
+ * sans origine ne dit pas de quel animal. Les tenir ensemble rend la moitié inexprimable.
+ *
+ * ⛔ C'EST LA FORME QUI PORTE L'INVARIANT, PAS UNE VALIDATION. Avant le lot 66, `Food` portait deux
+ * champs nullables indépendants et « provenance nulle si et seulement si origine nulle » n'était
+ * garanti que par quatre refus de `catalog/build.mjs` — c'est-à-dire pour le catalogue livré, et
+ * pour lui seul. Une fixture de test, une recette perso, un objet construit à la main pouvaient
+ * écrire la paire incohérente sans qu'aucun type, aucun test ni aucun écran ne bronche. Les refus
+ * du build RESTENT ; la forme les double d'un côté qu'ils ne voyaient pas.
+ *
+ * ⚠️ NE PAS RENDRE `provenance` OPTIONNELLE, ET NE PAS ÉLARGIR LE TYPE EN
+ * `AnimalOrigin | AnimalSource`. Ces deux « compatibilités » rouvrent exactement le trou que le
+ * type ferme — `tests/scelles/sondes-66/` existe pour les refuser, et le test scellé lit le message
+ * de `tsc`, pas seulement son silence.
+ *
+ * ⛔ ET NE PAS LA RENDRE NULLABLE NON PLUS — `provenance: AnimalProvenance | null`. C'EST LE SEUL
+ * DES TROIS QU'AUCUN TEST SCELLÉ N'ATTRAPE, trouvé par une relecture indépendante APRÈS le sceau et
+ * vérifié sur banc isolé. Une clé REQUISE mais NULLABLE laisse `sonde-paire-incomplete.ts` refusée
+ * (TypeScript exige la clé, quel que soit son type) et `sonde-scalaire-nu.ts` refusée aussi : **les
+ * six tests scellés restent verts** pendant que `{ origine: 'mammifere', provenance: null }`
+ * redevient écrivable — l'incohérence réintroduite un cran plus bas. Les sondes n'exercent pas ce
+ * littéral. **Ici, la seule garde est cette phrase.**
+ */
+export interface AnimalSource {
+  readonly origine: AnimalOrigin
+  readonly provenance: AnimalProvenance
+}
+
+/**
+ * Le SEUL constructeur de la paire dans tout le dépôt — production comprise, `catalog-loader.ts`
+ * y passe aussi. Un littéral rendrait exactement le même objet ; l'uniformité est le but, pas la
+ * correction. Sans règle, la moitié du dépôt écrit la paire d'une façon et l'autre moitié d'une
+ * autre, et la conversion suivante coûte le double.
+ */
+export const venantDe = (origine: AnimalOrigin, provenance: AnimalProvenance): AnimalSource => ({
+  origine,
+  provenance,
+})
+
 // --- Aliments (table `food` + `food_nutrient` + `food_allergen`) -----------------------------
 
 export interface Food {
@@ -225,20 +266,18 @@ export interface Food {
    */
   readonly conditionnementG: number | null
   /**
-   * Origine animale DIRECTE (§ `AnimalOrigin`). `null` = végétal, minéral, **ou dérivé** — dans ce
-   * dernier cas l'origine se lit sur `deriveDe`. Toujours passer par `resolveAnimalOrigin`, jamais
-   * lire ce champ seul : le beurre a `origineAnimale: null` et vient pourtant d'un mammifère.
-   */
-  readonly origineAnimale: AnimalOrigin | null
-  /**
-   * Provenance animale DIRECTE (§ `AnimalProvenance`) — `corps` ou `production`. Toujours `null`
-   * quand `origineAnimale` l'est, et jamais `null` quand elle ne l'est pas : le build refuse l'un
-   * sans l'autre.
+   * Ce que l'aliment tient DIRECTEMENT de l'animal, origine et provenance ensemble
+   * (§ `AnimalSource`). `null` = végétal, minéral, **ou dérivé** — dans ce dernier cas la paire se
+   * lit sur `deriveDe`. Toujours passer par `resolveAnimalOrigin` / `resolveAnimalProvenance`,
+   * jamais lire ce champ seul : le beurre a `origineAnimale: null` et vient pourtant du lait d'un
+   * mammifère.
    *
-   * Mêmes précautions que `origineAnimale` : ne jamais lire ce champ seul, passer par
-   * `resolveAnimalProvenance`. Le beurre le porte à `null` et vient pourtant d'une production.
+   * ⚠️ UN SEUL CHAMP POUR DEUX FAITS, ET C'EST LE LOT 66. Les deux vivaient côte à côte, nullables
+   * séparément, et rien dans le type n'empêchait d'en écrire un sans l'autre. Le nom n'a pas
+   * changé exprès : le type, lui, change, donc tout lecteur resté sur l'ancienne forme casse à la
+   * compilation au lieu de passer inaperçu.
    */
-  readonly provenanceAnimale: AnimalProvenance | null
+  readonly origineAnimale: AnimalSource | null
   /**
    * Aliment dont celui-ci est TIRÉ — `beurre_doux` → `lait_entier`. L'origine animale se propage le
    * long de cette chaîne : le beurre vient du lait, qui vient d'un mammifère, donc le beurre vient
@@ -260,7 +299,7 @@ export function resolveAnimalOrigin(
   food: Food | undefined,
   foods: ReadonlyMap<FoodId, Food>
 ): AnimalOrigin | null {
-  return sourceAnimale(food, foods)?.origineAnimale ?? null
+  return sourceAnimale(food, foods)?.origineAnimale?.origine ?? null
 }
 
 /**
@@ -276,7 +315,7 @@ export function resolveAnimalProvenance(
   food: Food | undefined,
   foods: ReadonlyMap<FoodId, Food>
 ): AnimalProvenance | null {
-  return sourceAnimale(food, foods)?.provenanceAnimale ?? null
+  return sourceAnimale(food, foods)?.origineAnimale?.provenance ?? null
 }
 
 /**

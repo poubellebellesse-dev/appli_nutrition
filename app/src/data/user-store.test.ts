@@ -25,6 +25,7 @@ import type {
   MealSlot,
   ShoppingList,
 } from '../engine/domain/index.js'
+import { venantDe } from '../engine/domain/index.js'
 import { DatabaseSync } from 'node:sqlite'
 import { openUserDb, type OpenedUserDb } from './user-store-node.js'
 import type { UserDb } from './user-db.js'
@@ -472,10 +473,10 @@ describe('user-store — admission par exception au régime', () => {
 /** Un catalogue de test : deux laitiers (dont une cascade), un œuf, une viande, un légume. */
 function catalogueAnimal(...extra: readonly Food[]): ReadonlyMap<FoodId, Food> {
   const base = [
-    makeFood('lait', [], { origineAnimale: 'mammifere', provenanceAnimale: 'production' }),
+    makeFood('lait', [], { origineAnimale: venantDe('mammifere', 'production') }),
     makeFood('beurre', [], { deriveDe: 'lait' }),
-    makeFood('oeuf', [], { origineAnimale: 'volaille', provenanceAnimale: 'production' }),
-    makeFood('steak', [], { origineAnimale: 'mammifere', provenanceAnimale: 'corps' }),
+    makeFood('oeuf', [], { origineAnimale: venantDe('volaille', 'production') }),
+    makeFood('steak', [], { origineAnimale: venantDe('mammifere', 'corps') }),
     makeFood('carotte'),
   ]
   return new Map([...base, ...extra].map((f) => [f.id, f]))
@@ -520,8 +521,7 @@ describe('user-store — retrait par groupe d’origine animale', () => {
     expect(readExcludedFoodIdsDeplies(db, catalogueAnimal())).toEqual(['oeuf'])
 
     const oeufDeCaille = makeFood('oeuf_caille', [], {
-      origineAnimale: 'volaille',
-      provenanceAnimale: 'production',
+      origineAnimale: venantDe('volaille', 'production'),
     })
     // AUCUNE écriture entre les deux appels : seul le CATALOGUE a changé.
     expect(readExcludedFoodIdsDeplies(db, catalogueAnimal(oeufDeCaille))).toEqual([

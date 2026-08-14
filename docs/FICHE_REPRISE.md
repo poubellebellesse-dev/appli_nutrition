@@ -21,13 +21,18 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-✅ **SUITE VERTE EN ENTIER — RELEVÉ DU 2026-08-13, SUR L'ARBRE COMMITÉ** (`faf115c`) :
-`npm test` → **2 136 passed / 0 failed**, **110 fichiers** · typecheck propre · `npx vite build` ✓
-(3,34 s) · `engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé).
-⚠️ **LE COMPTE A BAISSÉ (2 144 → 2 136) SANS AUCUN ROUGE, ET C'EST EXPLIQUÉ, PAS SUBI** : −11 par la
-suppression d'un fichier de test dont la fonction testée a disparu, +3 ajoutés à un test scellé.
-Une baisse sans rouge s'attribue par `git diff --name-only`, jamais par déduction — et ce relevé
-dit sur quel arbre il a été pris, parce que le précédent ne le disait pas.
+⚠️ **RELEVÉ DU 2026-08-14, SUR L'ARBRE DE TRAVAIL — LOT 66 CODÉ, PAS ENCORE COMMITÉ** :
+`npm test` → **2 147 tests, 2 143 passed / 4 failed**, **112 fichiers** · typecheck propre ·
+`npx vite build` ✓ (2,98 s) · `engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats
+(inchangé).
+⛔ **LES 4 ROUGES NE SONT PAS UNE RÉGRESSION : ce sont les tests scellés de la lane média**
+(`gestes-champ-media.test.ts`), écrits avant leur code, donc rouges par construction. **Les six
+tests scellés du lot 66 sont verts.** Ne pas lire ce relevé comme un arbre cassé.
+⚠️ **LE COMPTE EST MONTÉ DE 2 136 À 2 147 SANS QU'AUCUN TEST DE PRODUCTION NE DISPARAISSE** : +6
+pour les scellés du 66, +5 pour ceux de la lane média, sur 2 fichiers nouveaux. Un écart de compte
+s'attribue par `git diff --name-only`, jamais par déduction — et ce relevé dit sur quel arbre il a
+été pris, parce qu'un relevé du 2026-08-07 ne le disait pas et annonçait 22 tests de moins que
+l'arbre.
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
 tail -25` rend le code de sortie du **pipe**, donc 0. Lire `Tests N failed`, jamais `$?`.
@@ -54,9 +59,13 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 
 ⛔ **LE BLOCAGE N'EST PLUS LA RÉCOLTE, C'EST L'ACCROCHE** — les médias existent, rien ne les porte.
 
-1. **⛔ Le lexique n'a AUCUN champ pour porter un média** — ni YAML source, ni
-   `catalog/build.mjs`, ni dans `LexiconEntry`, ni à l'écran. **Lot de code, 4 fichiers au moins,
-   non entamé** : sans lui, les 98 clips et les photos restent sur le disque sans accroche. ▶ Détail :
+1. **▶ LE CHANTIER EST CADRÉ ET DÉBLOQUÉ — commencer par `/brief gestes-champ-media`.** Le lexique
+   n'a toujours **aucun champ pour porter un média** (ni YAML, ni `catalog/build.mjs`, ni
+   `LexiconEntry`, ni écran), mais le plan en 4 lots existe et **deux décisions sont tranchées**
+   (2026-08-14) : **les deux formats vidéo** et **binaires versionnés dans git**. ▶ Plan, « Fini
+   quand » et décisions restantes : **[CONCEPTION_GESTES_ILLUSTRES.md](./CONCEPTION_GESTES_ILLUSTRES.md)**.
+   ✅ **Le lot 1 ne dépend d'aucune décision** ; ⛔ le motif « montrer un écran à Pexels » a été
+   **écarté** — le chantier se fait pour lui-même. ▶ Historique :
    [archive/RECAP_SESSION_2026-08-11_clips-gestes.md](./archive/RECAP_SESSION_2026-08-11_clips-gestes.md) §7.
 2. **🎬 Les clips de gestes sont FAITS** — 62/62 jugés, **51 illustrés, 98 segments de 3 s encodés**
    (AV1 + H.264 + poster, 22,4 Mo), sourcés un par un. **7 gestes n'ont aucun candidat** (`piquer`,

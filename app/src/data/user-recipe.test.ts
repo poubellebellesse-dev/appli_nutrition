@@ -9,7 +9,7 @@
 
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { Food, FoodId, Recipe, RecipeId } from '../engine/domain/index.js'
-import { g, min } from '../engine/domain/index.js'
+import { g, min, venantDe } from '../engine/domain/index.js'
 import { openUserDb, type OpenedUserDb } from './user-store-node.js'
 import type { UserDb } from './user-db.js'
 import {
@@ -35,16 +35,17 @@ import {
  * en silence, et c'est exactement ce qui a laissé six aliments passer pour végétariens jusqu'au
  * 2026-08-10 (voir engine/selection/regime.ts).
  */
+// ⚠️ LE GARDE-FOU D'EXÉCUTION A DISPARU AVEC LE LOT 66, ET C'EST UN GAIN, PAS UNE PERTE. Cette
+// fabrique levait une exception quand une origine arrivait sans provenance. `origineAnimale` étant
+// désormais une PAIRE, le cas ne s'écrit plus : `tsc` le refuse à la compilation au lieu d'un test
+// qui explose à l'exécution. Ne pas remettre la vérification — elle porterait sur un état devenu
+// inatteignable.
 function aliment(
   id: string,
   groupe: string,
-  origine: Food['origineAnimale'],
-  provenance: Food['provenanceAnimale'] = null,
+  source: Food['origineAnimale'],
   deriveDe: string | null = null
 ): Food {
-  if (origine !== null && provenance === null) {
-    throw new Error(`fixture '${id}' : origine '${origine}' déclarée sans provenance animale`)
-  }
   return {
     id: id as FoodId,
     codeCiqual: `T-${id}`,
@@ -62,8 +63,7 @@ function aliment(
     fondDePlacard: false,
     quantiteFigee: false,
     conditionnementG: null,
-    origineAnimale: origine,
-    provenanceAnimale: provenance,
+    origineAnimale: source,
     deriveDe: deriveDe === null ? null : (deriveDe as FoodId),
   }
 }
@@ -72,12 +72,12 @@ const ALIMENTS: ReadonlyMap<FoodId, Food> = new Map(
   [
     aliment('tomate', 'legumes', null),
     aliment('riz', 'cereales', null),
-    aliment('lait', 'produits_laitiers', 'mammifere', 'production'),
-    aliment('beurre', 'matieres_grasses', null, null, 'lait'), // dérivé : les deux faits remontent la chaîne
-    aliment('miel', 'produits_sucres', 'insecte', 'production'),
-    aliment('saumon', 'poissons', 'poisson', 'corps'),
-    aliment('boeuf', 'viandes', 'mammifere', 'corps'),
-    aliment('poulet', 'viandes', 'volaille', 'corps'),
+    aliment('lait', 'produits_laitiers', venantDe('mammifere', 'production')),
+    aliment('beurre', 'matieres_grasses', null, 'lait'), // dérivé : la paire remonte la chaîne
+    aliment('miel', 'produits_sucres', venantDe('insecte', 'production')),
+    aliment('saumon', 'poissons', venantDe('poisson', 'corps')),
+    aliment('boeuf', 'viandes', venantDe('mammifere', 'corps')),
+    aliment('poulet', 'viandes', venantDe('volaille', 'corps')),
   ].map((f) => [f.id, f])
 )
 

@@ -78,7 +78,7 @@ import type {
   StepNature,
   TimerType,
 } from '../engine/domain/index.js'
-import { g, min } from '../engine/domain/index.js'
+import { g, min, venantDe } from '../engine/domain/index.js'
 
 /** Pas de table de version dans catalog.db aujourd'hui (voir en-tête du fichier). */
 const CATALOG_VERSION = '1.0.0'
@@ -394,6 +394,17 @@ function loadFoods(db: SqlSource): Map<FoodId, Food> {
       certitude: a.certitude as AllergenCertitude,
     }))
 
+    // Deux colonnes SQL, un seul champ : le SCHÉMA garde les faits séparés (une colonne composite
+    // n'existe pas en SQLite), le TYPE les recolle. C'est le SEUL endroit de production qui
+    // construit la paire, et il passe par `venantDe` comme tout le reste du dépôt.
+    //
+    // ⚠️ LES DEUX COLONNES SONT TESTÉES, PAS SEULEMENT L'ORIGINE. `catalog/build.mjs` refuse déjà
+    // l'une sans l'autre, mais ce chargeur ouvre AUSSI des bases construites ailleurs — une
+    // sauvegarde d'une version antérieure, une base bricolée à la main. Recoller une paire à moitié
+    // vide reproduirait à l'intérieur du type ce que le lot 66 rend justement inexprimable.
+    const origineDeclaree = (row.origine_animale as AnimalOrigin | null) ?? null
+    const provenanceDeclaree = (row.provenance_animale as AnimalProvenance | null) ?? null
+
     map.set(id, {
       id,
       codeCiqual: row.code_ciqual,
@@ -407,8 +418,10 @@ function loadFoods(db: SqlSource): Map<FoodId, Food> {
       fondDePlacard: row.fond_de_placard !== 0,
       quantiteFigee: row.quantite_figee !== 0,
       conditionnementG: row.conditionnement_g ?? null,
-      origineAnimale: (row.origine_animale as AnimalOrigin | null) ?? null,
-      provenanceAnimale: (row.provenance_animale as AnimalProvenance | null) ?? null,
+      origineAnimale:
+        origineDeclaree === null || provenanceDeclaree === null
+          ? null
+          : venantDe(origineDeclaree, provenanceDeclaree),
       deriveDe: (row.derive_de as FoodId | null) ?? null,
       nutrimentsPour100g,
       allergenes,

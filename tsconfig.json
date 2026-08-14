@@ -26,5 +26,6 @@
     "app/src/**/*.ts",
     "app/src/**/*.tsx"
   ],
-  "exclude": ["node_modules", "app/public"]
+  "// tests/scelles/sondes-66": "EXCLU EXPRÈS, et il faut que ça reste vrai. Ce dossier contient des fichiers dont on mesure la COMPILATION : l'un d'eux est écrit pour ÉCHOUER. S'il rentrait ici, `npm run typecheck` serait rouge en permanence et la seule façon de le rendre vert serait de défaire le lot 66. `tests/scelles/66.test.ts` les compile lui-même, avec leurs propres tsconfig.",
+  "exclude": ["node_modules", "app/public", "tests/scelles/sondes-66"]
 }

@@ -93,8 +93,13 @@ const ORDRE: readonly { readonly id: GroupeAnimalId; readonly libelle: string }[
  * polarité que `regimeExigePar`, qui rend `omnivore` en cas d'ignorance plutôt que `vegetarien` :
  * l'erreur qui retire un aliment de trop est réparable par l'utilisateur, celle qui en laisse passer
  * un ne se voit pas. Le build refuse une origine sans provenance (`catalog/build.mjs`), donc le cas
- * ne vient pas du catalogue — mais rien dans le TYPE `Food` ne l'interdit, et cette fonction tourne
- * aussi sur des aliments montés à la main.
+ * ne vient pas du catalogue, et **depuis le lot 66 le TYPE `Food` ne le laisse plus écrire non
+ * plus** : `origineAnimale` est une paire, la moitié de paire est inexprimable.
+ *
+ * ⛔ CE REPLI RESTE, ET CE N'EST PAS DU CODE MORT. Cette fonction tourne aussi sur des aliments
+ * montés à la main — recettes perso, contre un `user.db` qui n'a aucune clé étrangère vers le
+ * catalogue — et sur des bases construites ailleurs. Le type garantit ce qu'on ÉCRIT, pas ce qui
+ * ARRIVE. `groupes-animaux.test.ts` mesure encore la polarité, par cast explicite et commenté.
  *
  * ⚠️ `insecte` → *miel* NOMME LE SEUL MEMBRE ACTUEL. Le jour où un insecte comestible entre au
  * catalogue en `corps` (farine de grillon), ce libellé devient faux et il faudra scinder le groupe.

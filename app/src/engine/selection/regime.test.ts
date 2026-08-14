@@ -2,7 +2,8 @@
 // docs/ARCHITECTURE.md §5.2).
 
 import { describe, expect, it } from 'vitest'
-import type { Food, FoodId } from '../domain/index.js'
+import type { AnimalSource, Food, FoodId } from '../domain/index.js'
+import { venantDe } from '../domain/index.js'
 import { DIET_CHAIN, dietLayer, regimeExigePar } from './regime.js'
 import { asExclusionResult, makeCatalog, makeFood, makeRecipe, makeRequest } from './test-fixtures.js'
 
@@ -140,8 +141,7 @@ describe('selection/regime — regimeExigePar lit la PROVENANCE, jamais le group
   it('un CORPS hors du groupe « viandes » exige omnivore', () => {
     const bouillon = makeFood('bouillon_boeuf', [], {
       groupe: 'condiments',
-      origineAnimale: 'mammifere',
-      provenanceAnimale: 'corps',
+      origineAnimale: venantDe('mammifere', 'corps'),
     })
     expect(regimeDe(bouillon)).toBe('omnivore')
   })
@@ -151,8 +151,7 @@ describe('selection/regime — regimeExigePar lit la PROVENANCE, jamais le group
     // quiconque réintroduit `groupe` dans la décision, et il ne peut échouer pour rien d'autre.
     const impossible = makeFood('lait_mal_range', [], {
       groupe: 'viandes',
-      origineAnimale: 'mammifere',
-      provenanceAnimale: 'production',
+      origineAnimale: venantDe('mammifere', 'production'),
     })
     expect(regimeDe(impossible)).toBe('vegetarien')
   })
@@ -164,7 +163,7 @@ describe('selection/regime — regimeExigePar lit la PROVENANCE, jamais le group
     ['bouillon_volaille', 'condiments', 'volaille'],
     ['graisse_canard', 'matières grasses', 'volaille'],
   ] as const)('%s (%s) vient d’un corps animal : omnivore', (id, groupe, origine) => {
-    const aliment = makeFood(id, [], { groupe, origineAnimale: origine, provenanceAnimale: 'corps' })
+    const aliment = makeFood(id, [], { groupe, origineAnimale: venantDe(origine, 'corps') })
     expect(regimeDe(aliment)).toBe('omnivore')
   })
 
@@ -176,8 +175,7 @@ describe('selection/regime — regimeExigePar lit la PROVENANCE, jamais le group
   ] as const)('%s est produit PAR l’animal : végétarien', (id, groupe, origine) => {
     const aliment = makeFood(id, [], {
       groupe,
-      origineAnimale: origine,
-      provenanceAnimale: 'production',
+      origineAnimale: venantDe(origine, 'production'),
     })
     expect(regimeDe(aliment)).toBe('vegetarien')
   })
@@ -185,8 +183,7 @@ describe('selection/regime — regimeExigePar lit la PROVENANCE, jamais le group
   it('la provenance se PROPAGE le long de deriveDe, comme l’origine', () => {
     const lait = makeFood('lait_entier', [], {
       groupe: 'lait et produits laitiers',
-      origineAnimale: 'mammifere',
-      provenanceAnimale: 'production',
+      origineAnimale: venantDe('mammifere', 'production'),
     })
     // Le beurre ne déclare RIEN : il tient les deux faits de son ascendant.
     const beurre = makeFood('beurre_doux', [], { groupe: 'matières grasses', deriveDe: 'lait_entier' })
@@ -194,8 +191,7 @@ describe('selection/regime — regimeExigePar lit la PROVENANCE, jamais le group
 
     const boeuf = makeFood('boeuf_paleron', [], {
       groupe: 'viandes',
-      origineAnimale: 'mammifere',
-      provenanceAnimale: 'corps',
+      origineAnimale: venantDe('mammifere', 'corps'),
     })
     const fond = makeFood('fond_de_boeuf', [], { groupe: 'condiments', deriveDe: 'boeuf_paleron' })
     expect(regimeDe(fond, boeuf)).toBe('omnivore')
@@ -204,13 +200,11 @@ describe('selection/regime — regimeExigePar lit la PROVENANCE, jamais le group
   it('les autres origines sont inchangées — le poisson et le miel ne dépendent pas de la provenance', () => {
     const thon = makeFood('thon_frais', [], {
       groupe: 'poissons',
-      origineAnimale: 'poisson',
-      provenanceAnimale: 'corps',
+      origineAnimale: venantDe('poisson', 'corps'),
     })
     const miel = makeFood('miel', [], {
       groupe: 'produits sucrés',
-      origineAnimale: 'insecte',
-      provenanceAnimale: 'production',
+      origineAnimale: venantDe('insecte', 'production'),
     })
     const carotte = makeFood('carotte', [], { groupe: 'légumes' })
 
@@ -225,10 +219,15 @@ describe('selection/regime — regimeExigePar lit la PROVENANCE, jamais le group
   // catalogue. En l'absence du fait, on n'affirme pas « végétarien » — on rend le plus permissif,
   // donc le plus restrictif à l'usage, comme le fait déjà `regimeExigeParIngredients` sans
   // ingrédient connu.
+  // ⚠️ LE CAST EST LA CONSÉQUENCE DU LOT 66, PAS UN CONTOURNEMENT. `origineAnimale` est une paire
+  // depuis ce lot : une origine sans provenance ne s'écrit plus, et c'était le but. La polarité
+  // reste mesurée parce que `regimeDe` tourne aussi sur des recettes perso, contre un `user.db` qui
+  // n'a aucune clé étrangère vers le catalogue — le cas d'entrée décrit juste au-dessus.
   it('une origine animale SANS provenance ne conclut pas à végétarien', () => {
+    const sansProvenance = { origine: 'mammifere' } as AnimalSource
     const inconnu = makeFood('extrait_mystere', [], {
       groupe: 'condiments',
-      origineAnimale: 'mammifere',
+      origineAnimale: sansProvenance,
     })
     expect(regimeDe(inconnu)).toBe('omnivore')
   })

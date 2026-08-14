@@ -1,0 +1,7 @@
+{
+  "// à quoi sert ce projet-là": "Il ne contient QUE la paire interdite. `tsc` doit en sortir en erreur, et l'erreur doit nommer `provenanceAnimale`. Un projet séparé, parce qu'on mesure un exit code : mélangé aux sondes valides, on ne saurait pas laquelle a échoué.",
+  "extends": "../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": ["sonde-incoherente.ts"]
+}

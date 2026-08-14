@@ -1,0 +1,7 @@
+{
+  "// pourquoi include: []": "Sans ça, l'`include` du tsconfig racine est hérité et résolu depuis la racine — il ramènerait tout `app/src` ET les trois sondes, dont celle qui doit échouer. On le vide et on nomme les fichiers un par un.",
+  "extends": "../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": ["sonde-vegetal.ts", "sonde-animal.ts"]
+}

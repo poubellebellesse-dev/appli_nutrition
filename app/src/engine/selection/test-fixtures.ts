@@ -14,8 +14,7 @@
 
 import type {
   AllergenId,
-  AnimalOrigin,
-  AnimalProvenance,
+  AnimalSource,
   Catalog,
   CatalogIndexes,
   CourseKind,
@@ -64,8 +63,7 @@ export function makeFood(
     readonly sousFamille?: string
     readonly synonymes?: readonly string[]
     readonly groupe?: string
-    readonly origineAnimale?: AnimalOrigin | null
-    readonly provenanceAnimale?: AnimalProvenance | null
+    readonly origineAnimale?: AnimalSource | null
     readonly deriveDe?: string | null
   } = {}
 ): Food {
@@ -87,7 +85,6 @@ export function makeFood(
     quantiteFigee: false,
     conditionnementG: null,
     origineAnimale: opts.origineAnimale ?? null,
-    provenanceAnimale: opts.provenanceAnimale ?? null,
     deriveDe: (opts.deriveDe ?? null) as FoodId | null,
   }
 }
