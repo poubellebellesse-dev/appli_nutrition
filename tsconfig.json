@@ -18,6 +18,13 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["catalog/**/*.ts", "tests/**/*.ts", "app/src/**/*.ts", "app/src/**/*.tsx"],
+  "// tests/**/*.tsx": "AJOUTÉ LE 2026-08-13. Le motif se termine par `.ts`, donc TypeScript le prend au pied de la lettre : `tests/**/*.ts` ne ramassait PAS les `.tsx`. `tests/scelles/65a-ecran.test.tsx` échappait à `npm run typecheck` — un test scellé hors de portée d'une des quatre commandes. Vérifié : l'ajout ne révèle aucune erreur, il ferme un angle mort.",
+  "include": [
+    "catalog/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
+    "app/src/**/*.ts",
+    "app/src/**/*.tsx"
+  ],
   "exclude": ["node_modules", "app/public"]
 }
