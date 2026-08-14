@@ -6,7 +6,7 @@
 
 ---
 
-## ✅ 66 — LIVRÉ le 2026-08-14 · 15 fichiers · commit `<à écrire au commit>`
+## ✅ 66 — LIVRÉ le 2026-08-14 · commit `ad1ad47` sur `main`
 
 Les six tests scellés sont verts. `Food.origineAnimale` est une paire `{ origine, provenance }` ou
 `null` ; `Food.provenanceAnimale` n'existe plus nulle part dans le dépôt. Une origine animale sans

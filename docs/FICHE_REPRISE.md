@@ -21,7 +21,7 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-14, SUR L'ARBRE DE TRAVAIL — LOT 66 CODÉ, PAS ENCORE COMMITÉ** :
+⚠️ **RELEVÉ DU 2026-08-14, SUR L'ARBRE COMMITÉ** (`ad1ad47`, lot 66) :
 `npm test` → **2 147 tests, 2 143 passed / 4 failed**, **112 fichiers** · typecheck propre ·
 `npx vite build` ✓ (2,98 s) · `engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats
 (inchangé).
