@@ -32,6 +32,7 @@ function recette(id: string, prep: number, cuisson: number, nom = id): Recipe {
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: [],
+    occupations: [],
   }
 }
 

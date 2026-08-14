@@ -392,6 +392,29 @@ export type TimerType = 'cuisson' | 'repos'
  */
 export type StepNature = 'geste' | 'avertissement'
 
+/**
+ * D'où vient une occupation d'ustensile.
+ *
+ * ⚠️ DEUX VALEURS, PAS TROIS. `RecipeStepIngredient` en a une troisième, `herite`, parce qu'un
+ * pronom reprend l'étape d'avant (« les blanchir »). Un ustensile est toujours NOMMÉ : il n'hérite
+ * de rien. Ajouter la troisième par symétrie serait copier une valeur qui n'a aucun cas.
+ */
+export type OccupationOrigin = 'declare' | 'derive'
+
+/**
+ * Un ustensile occupé, de l'étape `ordreDebut` à l'étape `ordreFin` INCLUSES.
+ *
+ * ⚠️ `ordreFin === ordreDebut` est le cas normal — une occupation d'une seule étape. Une plage plus
+ * longue signifie que la chose reste DEDANS pendant qu'on fait autre chose, et cela ne se déduit
+ * pas du texte : ça se déclare (`occupe:` dans le YAML).
+ */
+export interface RecipeOccupation {
+  readonly equipmentId: EquipmentId
+  readonly ordreDebut: number
+  readonly ordreFin: number
+  readonly origine: OccupationOrigin
+}
+
 export interface RecipeStep {
   readonly ordre: number
   readonly texte: string
@@ -502,6 +525,19 @@ export interface Recipe {
   readonly axes: SensoryAxes
   readonly ingredients: readonly RecipeIngredient[]
   readonly etapes: readonly RecipeStep[]
+  /**
+   * Quels ustensiles la recette occupe, et SUR QUELLE PLAGE D'ÉTAPES. Dérivé du texte au build par
+   * `catalog/lien-etape-equipement.mjs`, sauf déclaration explicite dans le YAML.
+   *
+   * ⚠️ UNE PLAGE, PAS UNE ÉTAPE, et `oeufs_cocotte_epinards` est la raison : le plat d'eau du
+   * bain-marie entre au four à l'étape 1 et n'en ressort qu'à la 5. Une occupation par étape aurait
+   * déclaré le four LIBRE au milieu — et **dire « libre » à tort fait rater un plat**, alors que
+   * dire « pris » à tort ne fait qu'agacer.
+   *
+   * ⚠️ DEUX OCCUPATIONS DU MÊME USTENSILE NE SONT PAS UN CONFLIT quand elles viennent du même plat :
+   * `colin_four_fenouil` enfourne, sort le plat, remet. C'est une séquence, pas une dispute.
+   */
+  readonly occupations: readonly RecipeOccupation[]
   readonly facettes: readonly RecipeFacet[]
   /**
    * TYPE DE RECETTE (§ `CourseKind`) — le rôle joué dans un repas, INDÉPENDANT de `typesRepas`.
@@ -639,11 +675,25 @@ export interface LexiconEntry {
  * ⚠️ AUCUN NIVEAU ICI, volontairement — voir `RecipeEquipment`. Le référentiel dit ce qu'est un
  * wok ; il ne dit pas s'il est indispensable, parce que ça dépend du plat.
  */
+/**
+ * Deux plats peuvent-ils occuper cet ustensile EN MÊME TEMPS ?
+ *
+ * ⚠️ TROIS ÉTATS, PAS DEUX. `selon_quantite` nomme la plaque sans encore répondre : une plaque à
+ * 2 feux et une plaque à 5 ne sont pas le même objet, et **le catalogue ne sait pas laquelle la
+ * personne possède**. C'est ce troisième état qui rend la coupe 65a/65b possible — 65a s'arrête à
+ * ce qui est indivisible, 65b ajoutera la quantité côté utilisateur.
+ *
+ * ⛔ CE N'EST PAS UNE QUANTITÉ. La propriété est celle de l'OBJET ; combien la personne en possède
+ * vit dans `user_equipment` et ne descend jamais jusqu'ici.
+ */
+export type EquipmentSharing = 'jamais' | 'selon_quantite' | 'toujours'
+
 export interface Equipment {
   readonly id: EquipmentId
   readonly code: string
   readonly terme: string
   readonly definition: string
+  readonly partageable: EquipmentSharing
 }
 
 // --- Fiches scientifiques (tables `evidence_*`, §8.2 ARCHITECTURE, §4.7 DESIGN) ---------------

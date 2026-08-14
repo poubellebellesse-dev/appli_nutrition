@@ -14,7 +14,11 @@ export default defineConfig({
   test: {
     // Racine = dépôt. `tests/` (frontières, catalogue réel) et `catalog/` (build) vivent hors de app/.
     root: '.',
-    include: ['app/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,mjs}', 'catalog/**/*.test.{ts,mjs}'],
+    // ⚠️ `tsx` AJOUTÉ SUR `tests/` LE 2026-08-13, et c'est le sens INVERSE de la régression ci-dessus.
+    // Un test scellé d'écran (`tests/scelles/65a-ecran.test.tsx`) a besoin de JSX ; sans `tsx` ici il
+    // n'était pas ramassé — vitest répondait « No test files found » sur son propre chemin. Un test
+    // scellé qui ne s'exécute jamais est pire que pas de test : il a l'air de garder quelque chose.
+    include: ['app/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,tsx,mjs}', 'catalog/**/*.test.{ts,mjs}'],
 
     // ⚠️ CE DÉLAI CORRIGE DE LA CONTENTION, PAS UNE LENTEUR — ne pas le lire comme l'aveu d'un test
     // lent. Le budget de Vitest est du temps d'HORLOGE, pas du temps CPU : avec 85 fichiers lancés

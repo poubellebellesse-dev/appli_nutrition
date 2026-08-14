@@ -152,6 +152,9 @@ export function makeRecipe(
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: overrides.equipements ?? [],
+    // Pas dans les `overrides` : la sélection ne lit jamais les occupations — c'est le mode cuisine
+    // qui les exploite. Les ouvrir ici donnerait un levier à des tests qui n'en ont pas l'usage.
+    occupations: [],
   }
 }
 
@@ -161,7 +164,7 @@ export function requiert(code: string, niveau: EquipmentLevel): RecipeEquipment 
 }
 
 export function makeEquipment(code: string): Equipment {
-  return { id: code as EquipmentId, code, terme: code, definition: `définition de ${code}` }
+  return { id: code as EquipmentId, code, terme: code, definition: `définition de ${code}`, partageable: 'toujours' }
 }
 
 /**

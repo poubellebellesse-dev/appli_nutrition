@@ -21,10 +21,13 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-✅ **SUITE VERTE EN ENTIER — RELEVÉ DU 2026-08-11, SUR L'ARBRE COMMITÉ** (`95fbbc0`) :
-`npm test` → **2 124 passed / 0 failed**, **109 fichiers** · typecheck propre · `npx vite build` ✓
-(3,79 s) · `engine:plan-stress` → **20/20**. ⚠️ **Cette ligne annonçait « 1 953, toujours valable »
-ce matin, à tort et sans que personne se trompe** : une autre lane livrait le régime, **+171 tests**.
+✅ **SUITE VERTE EN ENTIER — RELEVÉ DU 2026-08-13, SUR L'ARBRE DE TRAVAIL, NON COMMITÉ** :
+`npm test` → **2 136 passed / 0 failed**, **110 fichiers** · typecheck propre · `npx vite build` ✓
+(3,34 s) · `engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé).
+⚠️ **LE COMPTE A BAISSÉ (2 144 → 2 136) SANS AUCUN ROUGE, ET C'EST EXPLIQUÉ, PAS SUBI** : −11 par la
+suppression d'un fichier de test dont la fonction testée a disparu, +3 ajoutés à un test scellé.
+Une baisse sans rouge s'attribue par `git diff --name-only`, jamais par déduction — et ce relevé
+dit sur quel arbre il a été pris, parce que le précédent ne le disait pas.
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
 tail -25` rend le code de sortie du **pipe**, donc 0. Lire `Tests N failed`, jamais `$?`.
@@ -75,8 +78,9 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 ne donne.
 
 **Cinq arbitrages attendent** — `ETAT.md` §4. ⚠️ **64 et 67 en sont SORTIES** (fermées les 08-10 et
-08-11) : **66** (invariant origine ⟺ provenance), **65** (⛔ **plus « deux colonnes » mais une TABLE
-d'occupations** · [plan](./CONCEPTION_RESERVATION_MATERIEL.md)), **68** (budget P6 — ⚠️ **forcée depuis le
+08-11) : **66** (invariant origine ⟺ provenance), **65** (⚠️ **réduite le 2026-08-13 : 65a est livré, la
+table d'occupations et le partage existent ; ne reste que la quantité de feux possédés** ·
+[plan](./CONCEPTION_RESERVATION_MATERIEL.md) · état : `ETAT.md` §3 et §4), **68** (budget P6 — ⚠️ **forcée depuis le
 2026-08-11** : photos + clips ≈ 27,6 Mo contre un critère de 15, mais ce seuil visait un **premier
 chargement web**, avant le cache à deux étages et Capacitor), **69** (licence Pexels « Standalone »),
 et les **366 doublons d'affichage**, jamais posés.

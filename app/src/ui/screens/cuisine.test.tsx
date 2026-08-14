@@ -728,7 +728,11 @@ describe('cuisine — la barre d’onglets (plusieurs plats)', () => {
     expect(boutons[1]?.textContent).toContain(chak.nom)
   })
 
-  it('deux plats au four : l’écran le NOMME, sans rien déplacer (L3)', async () => {
+  // ⚠️ RÉÉCRIT PAR LE LOT 65a-E (2026-08-13) : CE TEST VÉRIFIAIT L'ANCIEN COMPORTEMENT. Il exigeait
+  // que le constat contienne les NOMS des deux plats — « Four — utilisé par les pêches et le chèvre
+  // chaud ». C'est exactement la formulation que le chantier remplace : nommer sans dater produisait
+  // 63 % de fausses alertes. L'écran dit désormais QUAND, et les noms des plats n'y sont plus.
+  it('deux plats au four : l’écran NOMME l’ustensile et dit QUAND, sans rien déplacer (L3)', async () => {
     const cat = catalogueDeTest()
     const peches = cat.recipes.get('peches_sirop_erable' as RecipeId)
     const chevre = cat.recipes.get('chevre_chaud_miel_thym' as RecipeId)
@@ -744,8 +748,11 @@ describe('cuisine — la barre d’onglets (plusieurs plats)', () => {
     await monterPlusieurs(peches.id, chevre.id)
     const constat = screen.getByRole('status')
     expect(constat.textContent).toContain('Four')
-    expect(constat.textContent).toContain(peches.nom)
-    expect(constat.textContent).toContain(chevre.nom)
+    // ⚠️ FORMAT RELATIF ICI, et ce n'est pas un repli approximatif : ce harnais ne pose aucune heure
+    // de service, et §6.2 du plan interdit d'en deviner une. L'écran dit donc « de 24 à 5 min avant
+    // le service » — vrai, utile, et sans horloge inventée. Le format horloge se vérifie dans
+    // `tests/scelles/65a-ecran.test.tsx`, où le harnais POSE l'heure.
+    expect(constat.textContent).toMatch(/\d+\s*à\s*\d+\s*min avant le service/)
   })
 
   it('⛔ DEUX PLATS SUR LA PLAQUE NE DÉCLENCHENT RIEN — sinon le constat parlerait tout le temps', () => {

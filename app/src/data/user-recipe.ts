@@ -227,6 +227,12 @@ export function versRecette(stockee: StoredUserRecipe, foods: ReadonlyMap<FoodId
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: [],
+    // ⚠️ VIDE POUR UNE RAISON DE FOND, pas par manque d'écran : les occupations d'ustensile sont
+    // DÉRIVÉES AU BUILD du catalogue (`catalog/lien-etape-equipement.mjs`), et une recette écrite par
+    // la personne ne passe jamais par le build. La réservation ne dira donc rien de ses plats à elle
+    // — se taire est le bon défaut ici : annoncer un four libre à tort ferait rater un plat, mais ne
+    // rien annoncer laisse simplement la personne s'organiser comme avant.
+    occupations: [],
   }
 }
 

@@ -3,3 +3,6 @@ code: four
 terme: "Four"
 definition: >
   Enceinte fermée qui chauffe par le haut, le bas ou les deux. Cuit sans retourner ni remuer, et colore la surface.
+
+# Un seul plat à la fois : l'enceinte est unique et sa température est commune.
+partageable: jamais

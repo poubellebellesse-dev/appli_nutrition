@@ -91,6 +91,7 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: [],
+    occupations: [],
   };
 }
 
@@ -452,6 +453,7 @@ function ferRecipe(id: string, foodId: string): Recipe {
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: [],
+    occupations: [],
   };
 }
 

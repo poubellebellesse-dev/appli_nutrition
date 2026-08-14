@@ -56,6 +56,12 @@ etapes:
     lexicon_ids: [bain_marie, prechauffer]
     timer_s: null
     timer_type: null
+    # Le plat d'eau entre au four ICI et n'en ressort qu'à l'étape 5 : le four est pris tout du long,
+    # y compris pendant qu'on fait tomber les épinards à la poêle. Sans cette ligne, il serait
+    # annoncé LIBRE aux étapes 2, 3 et 4 — et dire « libre » à tort fait rater un plat.
+    occupe:
+      - code: four
+        jusqu_a: 5
   - ordre: 2
     texte: "Faire tomber les épinards au beurre, les égoutter en pressant, puis les hacher et les saler."
     lexicon_ids: [hacher, egoutter]

@@ -36,12 +36,13 @@
 // tombe. C'était le dernier manque de cet écran qui ne réclamait AUCUNE donnée nouvelle.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Catalog, Recipe, RecipeId, RecipeStep } from '../../engine/domain/index.js'
+import type { Catalog, EquipmentId, Recipe, RecipeId, RecipeStep } from '../../engine/domain/index.js'
 import type { UserDb } from '../../data/user-db.js'
 import {
   clearCuisson,
   clearToutesLesCuissons,
   readCuissons,
+  readHeureService,
   writeCuisson,
   type StoredCuisineSession,
   type StoredCuisineTimer,
@@ -49,7 +50,7 @@ import {
 import { ordonnancerCuissons } from '../../engine/cuisine/ordonnancement.js'
 import { dureeEcouleeMin } from '../../engine/cuisine/duree.js'
 import { segmentsDeLaRecette } from '../../engine/cuisine/segments.js'
-import { equipementsDisputes } from '../../engine/cuisine/equipement-partage.js'
+import { capaciteDepuisPartage, conflitsDEquipement } from '../../engine/cuisine/reservation.js'
 import { chargerSocle } from '../socle.js'
 import type { PlatACuisiner } from '../router.js'
 import { hashDeRecette } from '../router.js'
@@ -534,7 +535,7 @@ export function Cuisine({
         />
       )}
 
-      <MaterielPartage plats={etat.plats} catalogue={catalogue} />
+      <MaterielPartage plats={etat.plats} catalogue={catalogue} db={etat.db} />
 
       <h1 className="mt-3 font-titre text-[1.6rem] leading-tight text-texte">{recette.nom}</h1>
 
@@ -868,37 +869,78 @@ function decompteDeLOnglet(
 function MaterielPartage({
   plats,
   catalogue,
+  db,
 }: {
   readonly plats: readonly PlatEnCuisine[]
   readonly catalogue: Catalog
+  readonly db: UserDb
 }): React.JSX.Element | null {
-  const disputes = equipementsDisputes(
-    plats.map((p) => ({ recipeId: p.recette.id, equipements: p.recette.equipements })),
-    (id) => catalogue.equipment.get(id)?.code ?? null,
+  // ⚠️ MÉMOÏSÉS TOUS LES DEUX : cet écran se re-rend à chaque battement de seconde (`maintenant`),
+  // soit 3 600 fois par heure sur le seul écran conçu pour rester allumé. Une requête SQL et une
+  // passe moteur par battement, c'est la régression que l'en-tête de ce fichier documente déjà.
+  const heureServiceMs = useMemo(() => readHeureService(db), [db])
+  const conflits = useMemo(
+    () =>
+      conflitsDEquipement(
+        plats.map((p) => p.recette),
+        (code) =>
+          capaciteDepuisPartage(catalogue.equipment.get(code as EquipmentId)?.partageable ?? null),
+      ),
+    [plats, catalogue],
   )
-  if (disputes.length === 0) return null
 
-  const nomDuPlat = (id: string): string =>
-    plats.find((p) => p.recette.id === id)?.recette.nom ?? id
+  if (conflits.length === 0) return null
 
   return (
     <div role="status" className="mt-3 rounded-[--radius-carte] border border-bordure bg-surface p-3">
-      {disputes.map((d) => (
-        <p key={d.equipmentId} className="text-[0.95rem] text-texte">
+      {conflits.map((c, i) => (
+        <p key={`${c.equipmentId}-${i}`} className="text-[0.95rem] text-texte">
           {/* Le terme du référentiel, jamais le code : « Four à micro-ondes », pas `micro_ondes`. */}
-          {catalogue.equipment.get(d.equipmentId)?.terme ?? d.equipmentId} — utilisé par{' '}
-          {enumerer(d.recipeIds.map(nomDuPlat))}.
+          {catalogue.equipment.get(c.equipmentId)?.terme ?? c.equipmentId} — pris{' '}
+          {quandEstCePris(c.debutAvantServiceMin, c.finAvantServiceMin, heureServiceMs)}.
         </p>
       ))}
     </div>
   )
 }
 
-/** « A », « A et B », « A, B et C » — l'énumération française, avec la conjonction avant le dernier. */
-function enumerer(noms: readonly string[]): string {
-  if (noms.length <= 1) return noms[0] ?? ''
-  return `${noms.slice(0, -1).join(', ')} et ${noms[noms.length - 1]!}`
+/**
+ * La fenêtre en toutes lettres — en heures d'horloge si l'on sait à quelle heure on mange, en
+ * minutes avant le service sinon.
+ *
+ * ⛔ DEUX FORMATS PARCE QUE §6.2 DU PLAN INTERDIT DE DEVINER UNE HEURE. `heure_service_ms` est
+ * NULLABLE par conception : « personne n'a choisi d'heure » est l'état de quiconque lance une
+ * cuisson sans viser un horaire, et c'est le cas le plus fréquent. Prendre `Date.now()` comme ancre
+ * serait une valeur par défaut déguisée, et l'écran afficherait une heure que personne n'a dite.
+ *
+ * ⛔ ET NE PAS SE TAIRE NON PLUS quand l'heure manque : la fenêtre reste vraie et utile en relatif.
+ * Cacher un fait exact pour une raison de mise en forme, c'est perdre l'information au moment
+ * précis où elle sert.
+ *
+ * ⚠️ AUCUN JUGEMENT DANS CETTE PHRASE — pas de « conflit », pas de « attention », pas de couleur.
+ * Un fait et une plage ; la personne a choisi ces plats, elle décide (principe 6).
+ */
+function quandEstCePris(
+  debutAvantServiceMin: number,
+  finAvantServiceMin: number,
+  heureServiceMs: number | null,
+): string {
+  if (heureServiceMs === null) {
+    return `de ${debutAvantServiceMin} à ${finAvantServiceMin} min avant le service`
+  }
+  return `de ${enHorloge(heureServiceMs, debutAvantServiceMin)} à ${enHorloge(heureServiceMs, finAvantServiceMin)}`
 }
+
+/** `minutes` avant le service → « 19h43 ». Heure locale, comme tout ce que cet écran affiche. */
+function enHorloge(heureServiceMs: number, minutesAvantService: number): string {
+  const d = new Date(heureServiceMs - minutesAvantService * 60_000)
+  return `${d.getHours()}h${String(d.getMinutes()).padStart(2, '0')}`
+}
+
+// ⛔ `enumerer` A ÉTÉ RETIRÉE D'ICI avec le lot 65a-E. Elle servait à écrire « utilisé par le colin,
+// le gratin et la tarte » — une liste de noms sans la moindre heure. C'est cette formulation que le
+// chantier remplace : nommer sans dater produisait 63 % de fausses alertes. La phrase dit désormais
+// QUAND, et deux noms n'y apparaissent plus.
 
 /**
  * Les onglets des plats en cours, dans l'ordre de départ décidé par le moteur.

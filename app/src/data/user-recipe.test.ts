@@ -213,6 +213,7 @@ function recetteDeBase(): Recipe {
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: [],
+    occupations: [],
   }
 }
 

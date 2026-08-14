@@ -3,3 +3,8 @@ code: plaque_cuisson
 terme: "Plaque de cuisson"
 definition: >
   Le feu du dessus : gaz, plaque électrique, vitrocéramique ou induction. Tout ce qui se cuit dans une poêle ou une casserole passe par elle.
+
+# ⚠️ NI « jamais » NI « toujours » : une plaque à 2 feux et une plaque à 5 ne sont pas le même objet,
+# et le catalogue ne sait pas laquelle la personne possède. La quantité vit côté utilisateur (65b) ;
+# tant qu'elle manque, le moteur SE TAIT plutôt que de supposer 1.
+partageable: selon_quantite

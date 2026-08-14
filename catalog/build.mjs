@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url'
 import { parse as parseYaml } from 'yaml'
 import { DatabaseSync } from 'node:sqlite'
 import { liensDeLaRecette } from './lien-etape-ingredient.mjs'
+import { occupationsDeLaRecette } from './lien-etape-equipement.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -1219,6 +1220,30 @@ CREATE TABLE recipe_step_ingredient (
   FOREIGN KEY (recipe_id, ordre) REFERENCES recipe_step(recipe_id, ordre)
 );
 
+-- Quel ustensile une etape occupe, et JUSQU'A QUELLE ETAPE. Derive du texte au build par
+-- catalog/lien-etape-equipement.mjs, sauf quand la recette le declare (cle « occupe » dans le YAML).
+--
+-- ⚠️ UNE PORTEE, PAS UNE ETAPE, et c'est oeufs_cocotte_epinards qui l'a impose : le plat d'eau du
+-- bain-marie entre au four a l'etape 1 et n'en sort pas avant la 5. Une ligne par etape aurait
+-- declare le four LIBRE pendant qu'on fait tomber les epinards.
+--
+-- ⛔ LE SENS DE L'ERREUR N'EST PAS SYMETRIQUE : annoncer le four pris alors qu'il est libre agace,
+-- annoncer le four libre alors qu'il est pris FAIT RATER UN PLAT.
+--
+-- ⚠️ DEUX ORIGINES, PAS TROIS. recipe_step_ingredient en a trois a cause des pronoms (« les
+-- blanchir » reprend l'etape d'avant). Un ustensile est toujours NOMME : il n'herite de rien.
+-- Ajouter 'herite' ici par symetrie serait copier une valeur qui n'a pas de cas.
+CREATE TABLE recipe_step_equipment (
+  recipe_id    TEXT NOT NULL,
+  ordre_debut  INTEGER NOT NULL,
+  ordre_fin    INTEGER NOT NULL,
+  equipment_id TEXT NOT NULL REFERENCES equipment(id),
+  origine      TEXT NOT NULL CHECK (origine IN ('declare', 'derive')),
+  CHECK (ordre_fin >= ordre_debut),
+  PRIMARY KEY (recipe_id, ordre_debut, equipment_id),
+  FOREIGN KEY (recipe_id, ordre_debut) REFERENCES recipe_step(recipe_id, ordre)
+);
+
 CREATE TABLE recipe_facet (
   recipe_id TEXT NOT NULL REFERENCES recipe(id),
   facette TEXT NOT NULL CHECK (facette IN ('cuisine', 'regime', 'occasion', 'style')),
@@ -1269,11 +1294,27 @@ CREATE TABLE tip (
 --    equipement : un robot est 'accelere' pour une pate et 'requis' pour une glace. Le porter sur
 --    l'ustensile rendrait l'exemple canonique de §6.5 ENGINE inexprimable. Il vit donc sur
 --    recipe_equipment, plus bas, et nulle part ailleurs — une seule source de verite.
+-- partageable : deux plats peuvent-ils occuper cet ustensile EN MEME TEMPS ?
+--
+--   'jamais'         = un seul plat a la fois, quoi qu'il arrive (four, micro-ondes).
+--   'selon_quantite' = ca depend de ce que la personne possede — une plaque a 2 feux et une plaque
+--                      a 5 ne sont pas le meme objet, et le catalogue NE SAIT PAS laquelle.
+--   'toujours'       = aucune limite utile (un saladier, un couteau).
+--
+-- ⚠️ TROIS ETATS, PAS DEUX, ET C'EST CE QUI REND LA COUPE 65a/65b POSSIBLE. Avec un booleen, la
+-- plaque aurait du etre 'jamais' (faux : on cuisine a deux casseroles) ou 'toujours' (faux aussi).
+-- 'selon_quantite' NOMME l'ustensile sans encore repondre — 65b ajoutera la quantite cote
+-- utilisateur, et le moteur SE TAIT tant qu'elle manque.
+--
+-- ⛔ CETTE COLONNE EST DU CATALOGUE, PAS DE L'UTILISATEUR. Elle dit une propriete de l'objet, jamais
+-- combien la personne en possede : ca, c'est user_equipment, et ca ne descend pas ici.
 CREATE TABLE equipment (
   id TEXT PRIMARY KEY,
   code TEXT NOT NULL UNIQUE,
   terme TEXT NOT NULL,
-  definition TEXT NOT NULL
+  definition TEXT NOT NULL,
+  partageable TEXT NOT NULL DEFAULT 'toujours'
+    CHECK (partageable IN ('jamais', 'selon_quantite', 'toujours'))
 );
 
 -- Quel equipement cette recette demande, et a quel titre.
@@ -1464,10 +1505,19 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment = []
     // (cle etrangere non DEFERRABLE — le referentiel se lit en entier avant la premiere recette,
     // contrairement a recipe_sauce ou une recette peut viser une recette definie plus loin).
     const insertEquipment = db.prepare(
-      'INSERT INTO equipment (id, code, terme, definition) VALUES (?, ?, ?, ?)'
+      'INSERT INTO equipment (id, code, terme, definition, partageable) VALUES (?, ?, ?, ?, ?)'
     )
     for (const item of equipment) {
-      insertEquipment.run(item.code, item.code, item.terme, String(item.definition).trim())
+      // ⚠️ `toujours` PAR DÉFAUT, ET C'EST LE BON SENS DE L'ERREUR ICI : un ustensile qu'on a oublié
+      // de qualifier ne déclenchera aucune alerte, il restera muet. L'inverse ferait signaler un
+      // conflit de saladiers.
+      insertEquipment.run(
+        item.code,
+        item.code,
+        item.terme,
+        String(item.definition).trim(),
+        item.partageable ?? 'toujours'
+      )
     }
     const insertRecipeEquipment = db.prepare(
       'INSERT INTO recipe_equipment (recipe_id, equipment_id, niveau) VALUES (?, ?, ?)'
@@ -1499,6 +1549,10 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment = []
     const insertFacet = db.prepare('INSERT INTO recipe_facet (recipe_id, facette, valeur) VALUES (?, ?, ?)')
     const insertStepIngredient = db.prepare(`
       INSERT INTO recipe_step_ingredient (recipe_id, ordre, food_id, origine) VALUES (?, ?, ?, ?)
+    `)
+    const insertStepEquipment = db.prepare(`
+      INSERT INTO recipe_step_equipment (recipe_id, ordre_debut, ordre_fin, equipment_id, origine)
+      VALUES (?, ?, ?, ?, ?)
     `)
     // La dérivation lit `groupe` et `synonymes` : elle a besoin de l'aliment ENTIER, pas de son id.
     const alimentsParId = new Map(foods.map((f) => [f.id, f]))
@@ -1567,6 +1621,10 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment = []
         for (const foodId of lien.ids) {
           insertStepIngredient.run(recipe.id, ordre, foodId, lien.origine)
         }
+      }
+      // Même contrainte d'ordre : `(recipe_id, ordre_debut)` vise une ligne de `recipe_step`.
+      for (const occ of occupationsDeLaRecette(recipe)) {
+        insertStepEquipment.run(recipe.id, occ.ordreDebut, occ.ordreFin, occ.code, occ.origine)
       }
       for (const facette of recipe.facettes ?? []) {
         insertFacet.run(recipe.id, facette.facette, facette.valeur)
@@ -1752,6 +1810,22 @@ async function main() {
   console.log(
     `recipe_step_ingredient : ${lignes} liens sur ${gestesLies}/${gestesToutes} gestes (${pourcent} %) — ` +
       `${parOrigine.declare} déclarés, ${parOrigine.derive} dérivés, ${parOrigine.herite} hérités.`
+  )
+  // ⚠️ ON COMPTE LES RECETTES, PAS LES LIGNES, et c'est le total qui est scellé. Sous le modèle à
+  // portée, deux étapes détectées qui se rejoignent ne font plus qu'une ligne : le nombre de lignes
+  // dépend du nombre de continuités, qui n'a jamais été mesuré. Le nombre de recettes, lui, est
+  // stable. Il est affiché ici pour qu'un écart se voie au build, pas trois jours plus tard.
+  const occOrigine = { declare: 0, derive: 0 }
+  const recettesOccupees = new Set()
+  for (const recipe of recipes) {
+    for (const occ of occupationsDeLaRecette(recipe)) {
+      occOrigine[occ.origine] += 1
+      recettesOccupees.add(recipe.id)
+    }
+  }
+  console.log(
+    `recipe_step_equipment : ${occOrigine.declare + occOrigine.derive} occupations sur ` +
+      `${recettesOccupees.size} recettes — ${occOrigine.declare} déclarées, ${occOrigine.derive} dérivées.`
   )
   console.log(`→ ${OUT_PATH}`)
 }

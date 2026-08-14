@@ -64,6 +64,10 @@ etapes:
     lexicon_ids: [bain_marie, chinois]
     timer_s: 3000
     timer_type: cuisson
+    # Bain-marie AU FOUR (160 °C), et c'est pour ça qu'il se déclare : le geste `bain_marie` ne dit
+    # pas OÙ. Celui de `mousse_chocolat` est une casserole sur la plaque. Seul l'auteur sait.
+    occupe:
+      - code: four
 
 equipements:
   - code: four

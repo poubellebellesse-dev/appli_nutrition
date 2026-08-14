@@ -43,3 +43,6 @@ docs/_avant_decoupe_*/
 atelier/
 capture/
 .codeboarding/
+
+# état local de la garde (hooks) — ne se partage pas
+.claude/etat-garde.json

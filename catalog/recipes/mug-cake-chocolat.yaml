@@ -73,6 +73,10 @@ etapes:
     timer_type: null
   - ordre: 4
     texte: "Cuire au micro-ondes à pleine puissance, en surveillant : le gâteau doit monter puis retomber à peine."
+    # ⚠️ LA SEULE OCCUPATION DE MICRO-ONDES DU CATALOGUE. Le détecteur ne connaît que des gestes de
+    # four ; en ajouter un pour un cas unique aurait été une règle écrite pour une seule recette.
+    occupe:
+      - code: micro_ondes
     lexicon_ids: []
     timer_s: 100
     timer_type: cuisson

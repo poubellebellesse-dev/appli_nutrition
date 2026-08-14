@@ -55,6 +55,8 @@ import type {
   Equipment,
   EquipmentId,
   EquipmentLevel,
+  EquipmentSharing,
+  OccupationOrigin,
   LexiconEntry,
   LexiconEntryId,
   MealSlot,
@@ -218,6 +220,15 @@ interface EquipmentRow {
   readonly code: string
   readonly terme: string
   readonly definition: string
+  readonly partageable: string
+}
+
+interface RecipeStepEquipmentRow {
+  readonly recipe_id: string
+  readonly ordre_debut: number
+  readonly ordre_fin: number
+  readonly equipment_id: string
+  readonly origine: string
 }
 
 interface RecipeEquipmentRow {
@@ -423,7 +434,15 @@ function loadEquipment(db: SqlSource): Map<EquipmentId, Equipment> {
   const map = new Map<EquipmentId, Equipment>()
   for (const row of rows) {
     const id = row.id as EquipmentId
-    map.set(id, { id, code: row.code, terme: row.terme, definition: row.definition })
+    // La colonne est NOT NULL DEFAULT 'toujours' avec un CHECK côté build : le repli ne sert qu'à un
+    // `catalog.db` d'avant la colonne, jamais à du contenu neuf.
+    map.set(id, {
+      id,
+      code: row.code,
+      terme: row.terme,
+      definition: row.definition,
+      partageable: (row.partageable ?? 'toujours') as EquipmentSharing,
+    })
   }
   return map
 }
@@ -523,6 +542,13 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
     ),
     (r) => `${r.recipe_id}|${r.ordre}`
   )
+  const occupationsByRecipe = groupByKey(
+    queryAll<RecipeStepEquipmentRow>(
+      db,
+      'SELECT * FROM recipe_step_equipment ORDER BY recipe_id, ordre_debut, equipment_id'
+    ),
+    (r) => r.recipe_id
+  )
   const facetsByRecipe = groupByKey(queryAll<RecipeFacetRow>(db, 'SELECT * FROM recipe_facet'), (r) => r.recipe_id)
   const sourcesByRecipe = groupByKey(
     queryAll<RecipeSourceRow>(db, 'SELECT * FROM recipe_source ORDER BY recipe_id, titre'),
@@ -611,6 +637,12 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
       equipements: (equipmentByRecipe.get(row.id) ?? []).map((e) => ({
         equipmentId: e.equipment_id as EquipmentId,
         niveau: e.niveau as EquipmentLevel,
+      })),
+      occupations: (occupationsByRecipe.get(row.id) ?? []).map((o) => ({
+        equipmentId: o.equipment_id as EquipmentId,
+        ordreDebut: o.ordre_debut,
+        ordreFin: o.ordre_fin,
+        origine: o.origine as OccupationOrigin,
       })),
     })
   }

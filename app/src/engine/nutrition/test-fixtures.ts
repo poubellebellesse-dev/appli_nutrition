@@ -123,6 +123,7 @@ export function makeRecipe(
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: [],
+    occupations: [],
   };
 }
 

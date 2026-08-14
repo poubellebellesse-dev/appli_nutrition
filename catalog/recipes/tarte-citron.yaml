@@ -52,6 +52,10 @@ etapes:
     lexicon_ids: [etaler]
     timer_s: 1200
     timer_type: cuisson
+    # Cuisson à blanc = 20 min de four, mais aucun geste ne le dit : l'étape est annotée `etaler`,
+    # qui est bien le geste à expliquer au lecteur. Le four se déclare donc à la main.
+    occupe:
+      - code: four
   - ordre: 2
     texte: "Sans cette cuisson à blanc, la crème détremperait le fond : la tarte au citron ne cuit pas garnie."
     lexicon_ids: [tremper]
