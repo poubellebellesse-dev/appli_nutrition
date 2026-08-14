@@ -1082,14 +1082,22 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 
 ### Défauts de contenu repérés et non corrigés
 
-- ⚠️ **`flan_oeufs_caramel` compte un refroidissement comme une cuisson.** Repéré le 2026-08-10 par
-  la lane mode cuisine, en branchant la durée écoulée : l'étape « refroidir plusieurs heures » porte
-  `timer_type: cuisson`, si bien que **c'est le bain-marie qui est compté** comme temps de four.
-  Effet : la recette occupe un équipement qu'elle a libéré depuis longtemps, et sa durée active est
-  gonflée. **Non corrigé** — la lane qui l'a vu ne possédait pas `catalog/`. ▶ Une étape de repos se
-  déclare `timer_type: repos`, c'est la seule chose à changer. ⚠️ **Chercher les jumelles avant de
-  refermer** : le défaut vient d'un geste d'écriture, pas d'un accident ; il y en a probablement
-  d'autres du même moule.
+- ⚠️ **`flan_oeufs_caramel` fond une cuisson et un repos de plusieurs heures dans UNE seule étape.**
+  ⛔ **CETTE ENTRÉE DISAIT AUTRE CHOSE, ET C'ÉTAIT FAUX — mesuré et réécrit le 2026-08-13.** Elle
+  annonçait « c'est le bain-marie qui est compté comme temps de four » et « la recette occupe un
+  équipement qu'elle a libéré depuis longtemps ». **Non** : l'étape 5 porte `timer_s: 3000`, soit
+  50 minutes — c'est la cuisson au bain-marie elle-même, pas le refroidissement. `timer_type:
+  cuisson` est donc **juste**, et l'occupation de four que 65a en dérive est **juste** aussi. La
+  lane qui l'a signalé n'avait pas ouvert le YAML ; elle a lu le texte de l'étape et déduit le
+  reste. ▶ **Le vrai défaut** : le texte dit « cuire au bain-marie à 160 °C, **puis refroidir
+  plusieurs heures** avant de démouler », et aucun minuteur ne porte ces heures-là. La durée
+  ÉCOULÉE de la recette les ignore. Correction : couper l'étape en deux, la seconde en
+  `timer_type: repos`. ✅ **Les jumelles ont été cherchées, et il n'y en a pas.** Sur les
+  **6 étapes** du catalogue dont le texte annonce un repos long (« plusieurs heures », « une
+  nuit », « N h »), **5 portent déjà `timer_type: repos`**. `flan_oeufs_caramel` est le seul cas.
+  L'entrée précédente supposait « un geste d'écriture, donc probablement d'autres du même moule » —
+  la mesure dit l'inverse. ⚠️ **Rejouer** : parcourir `catalog/recipes/*.yaml`, croiser le texte
+  des étapes avec `timer_type`. **Un défaut supposé systémique se compte avant de se traiter.**
 
 ### Calibrations non faites (pas des bugs)
 
