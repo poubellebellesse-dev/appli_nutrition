@@ -42,12 +42,17 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-11, arbre COMPLET — lane RÉGIME (chantier
-personnalisable A→D4, décision 67 fermée) incluse** :
-`npm test` → **2 124 passed / 0 failed (109 fichiers)** · typecheck propre · `vite build` ✓ (3,79 s) ·
-`engine:plan-stress` **20/20** · `node catalog/build.mjs` → **451 aliments, 330 recettes,
-1 548 étapes, 62 gestes, 73 tips, 8 fiches, 30 équipements (1 473 couples)** ·
+Dernier relevé, **suite réellement exécutée le 2026-08-14, arbre COMPLET, commit `17b7700`
+(lot 66b)** :
+`npm test` → **2 146 passed / 6 failed (2 152 tests, 113 fichiers)** en ~41 s · typecheck propre ·
+`vite build` ✓ (2,95 s) · `engine:plan-stress` **20/20** · `node catalog/build.mjs` → **451 aliments,
+330 recettes, 1 548 étapes, 62 gestes, 73 tips, 8 fiches, 30 équipements (1 473 couples)** ·
 `catalog/audit-mapping.mjs` → 451 mappings, 9 candidats à relire (inchangé).
+⛔ **LES 6 ROUGES NE SONT PAS UNE RÉGRESSION, ET NE PAS LES LIRE COMME UN ARBRE CASSÉ** : ils sont
+tous dans `tests/scelles/gestes-champ-media.test.ts` (**7 tests, 6 rouges**), les tests scellés de la
+lane média — écrits AVANT leur code, donc rouges par construction, exactement comme la méthode
+l'exige. « Vert » veut dire ici : vert partout sauf ce fichier. Il redeviendra vert quand son lot
+sera codé.
 ⚠️ **`engine:plan-stress` est le témoin de la durée** : le mode cuisine a ajouté une durée ÉCOULÉE
 (actif + repos) sans toucher la durée ACTIVE que lit le solveur. 20/20 à chacun des trois lots le
 prouve. S'il bouge après un lot de cuisine, c'est que les deux durées ont été confondues.
@@ -58,10 +63,11 @@ identifiée** ; piste la plus probable : plusieurs fichiers de test lancent `cat
 parallèle et un `beforeAll` qui échoue fait disparaître les tests de son fichier du total au lieu de
 les compter en rouge. **Un compte qui bouge sans rouge est un signal** — si un écart réapparaît,
 c'est là qu'il faut chercher, pas dans le lot du jour. ⚠️ **Ces deux nombres sont ceux du
-2026-08-08 : la base est désormais 2 124.** Le symptôme à guetter est un ÉCART entre deux runs sur
+2026-08-08 : la base est désormais 2 152.** Le symptôme à guetter est un ÉCART entre deux runs sur
 le même arbre, pas une valeur particulière. ⚠️ **Aucun écart n'a été revu depuis** — quatre runs
-complets le 2026-08-11 ont tous rendu 2 124. Ne pas conclure que la cause est morte : elle n'a
-jamais été identifiée, seulement pas réapparue.
+complets le 2026-08-11, puis deux le 2026-08-14 à 40 min d'intervalle, ont tous rendu le même
+compte. Ne pas conclure que la cause est morte : elle n'a jamais été identifiée, seulement pas
+réapparue.
 ⚠️ **Un écart de compte s'attribue par `git diff --name-only`, jamais par déduction.** Le
 2026-08-09, à trois sessions dans le même arbre, un « +1 » a été attribué à la mauvaise lane :
 chacune voyait l'écart depuis SON relevé précédent et l'imputait par défaut à sa voisine. Personne
@@ -69,20 +75,16 @@ n'avait menti ni mal compté.
 ⚠️ **Un relevé se prend sur l'arbre qu'on commite, pas sur celui d'où l'on est parti.** Le
 2026-08-07, trois documents annonçaient 1 647 tests pendant que l'arbre en contenait 22 de plus :
 ils avaient été mis à jour dans le même lot que le code qu'ils ne comptaient pas encore.
-✅ **LE DERNIER SIGNAL DU BANC EST ÉTEINT** (lot « 8 plats végétaliens sans gluten ») — « végétalien
-+ sans gluten » passe de **27/28 à 28/28 accompagnements**, plancher 1 302 → 1 530 kcal. La cause
-mesurée n'était pas « il manque 1 plat » mais **marge zéro** : le catalogue portait exactement
-28 plats végétaliens ET sans gluten utilisables au déjeuner ou au dîner pour exactement 28 créneaux,
-si bien qu'une seule exclusion par une autre contrainte suffisait à vider un créneau. Ils sont **36**.
 ⚠️ **Une cinquième commande, qu'aucun test ne remplacera** : `node catalog/audit-mapping.mjs`, à
 lancer À LA MAIN après chaque lot de contenu et **uniquement dans le dépôt principal** —
 `documents Ciqual/` est gitignoré, donc absent de tout worktree.
-✅ **LES 2 ÉCHECS D'`aujourdhui.test.tsx` SONT FERMÉS** (`70e2493`) — quatre tests pariaient sur la
-taille du catalogue, un lot de contenu les a cassés. **La suite est verte en entier.** Ne pas
-recopier d'ancienne mention « 2 failed » : elle a survécu deux jours de plus que le défaut.
 ⚠️ **Piège de relevé** : `npm test 2>&1 | tail -25` rend le code de sortie du **pipe**, donc 0. Lire
 le compte `Tests N failed`, jamais `$?`.
 ⚠️ Ce compte bougera : **la sortie réelle fait foi, pas cette ligne.**
+📦 **Deux alertes fermées ont été retirées d'ici le 2026-08-14** — le plancher « végétalien + sans
+gluten » (28/28, marge portée de 0 à 8 plats) et les 2 échecs d'`aujourdhui.test.tsx` (`70e2493`).
+Elles annonçaient un défaut qui n'existe plus. ▶ Le récit est dans
+`docs/archive/RECAP_SESSION_2026-08-14_invariant-origine-animale.md` §Ménage.
 
 **Une tâche n'est finie que quand ces quatre-là sont verts et que la sortie est collée dans la
 réponse.** Pas « ça devrait passer ». La sortie, ou ce n'est pas fini.
@@ -114,7 +116,7 @@ contournée dans le code.
 **Règle d'unicité : chaque fait vit à un seul endroit.** Un fait d'état va dans `ETAT.md`, pas
 dans la fiche de reprise. Une décision tranchée va dans `ETAT.md` §3, ouverte dans §4.
 
-## Les cinq acquis à ne pas défaire
+## Les six acquis à ne pas défaire
 
 1. **`habit` ne compte que les entrées `choisi`** (un reste n'est pas une préférence), **`variety`
    lit toutes les origines** (un reste lasse quand même). Asymétrie volontaire, verrouillée par test.
@@ -125,6 +127,13 @@ dans la fiche de reprise. Une décision tranchée va dans `ETAT.md` §3, ouverte
    `recipeFamilySignature` (replié par sous-famille) sert la RÉCENCE.
 5. **Une recette déclare UN SEUL régime**, le plus restrictif qu'elle respecte. **L'origine animale
    est un fait, pas un régime** : `Food.origineAnimale` + `deriveDe`, propagés en cascade.
+6. **L'origine animale est une PAIRE indivisible ou rien** (lots 66/66b) : `origineAnimale` vaut
+   `{ origine, provenance }` ou `null`, jamais une moitié. La garantie vient de la **forme**, pas
+   d'une validation — un seul constructeur, `venantDe`, production comprise. ⛔ Ne pas rendre l'un
+   des deux champs optionnel ni nullable, ne pas élargir en `AnimalOrigin | AnimalSource` : chacune
+   de ces « compatibilités » rouvre le trou, et `tests/scelles/sondes-66/` existe pour les refuser.
+   ⚠️ **Trois cases sur quatre sont verrouillées ; « origine optionnelle » ne l'est pas encore** —
+   mesuré, `ETAT.md` §8, lot 66c.
 
 ## Les pièges qui ont déjà coûté
 

@@ -860,10 +860,17 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 > HUIT : 2, 5, 6, 11, 52, 58, 65, 68.** Compté sur les numéros non barrés de cette table, pas de
 > mémoire. Sa fermeture n'ouvre aucune dette de code ; elle en ferme une, ouverte par la 64.
 >
-> ⚠️ **LE LOT 66b, LE MÊME JOUR, N'OUVRE ET NE FERME AUCUN NUMÉRO — LE COMPTE RESTE À HUIT.** Il ne
-> tranche rien : il pose le verrou de test d'une décision déjà tranchée (la 66). Un lot qui ne
-> change aucune ligne de production ne déplace aucun arbitrage. **Ne pas le compter ici** ; ce qu'il
-> a fermé est une dette de §8, pas une décision.
+> ⚠️ **LE LOT 66b, LE MÊME JOUR, N'OUVRE ET NE FERME AUCUN NUMÉRO.** Il ne tranche rien : il pose le
+> verrou de test d'une décision déjà tranchée (la 66). Un lot qui ne change aucune ligne de
+> production ne déplace aucun arbitrage. **Ne pas le compter ici** ; ce qu'il a fermé est une dette
+> de §8, pas une décision.
+>
+> ⛔ **LE COMPTE JUSTE AU 2026-08-14 EST NEUF, PAS HUIT : 2, 5, 6, 11, 52, 58, 65, 68, 70.** Recompté
+> sur les numéros non barrés de la colonne de gauche, à la commande, pas de mémoire. ⚠️ **Les deux
+> lignes ci-dessus disaient HUIT parce qu'elles ont été écrites le même jour que l'entrée de la 70,
+> chacune ignorant l'autre** — la 69 se fermait pendant que la 70 s'ouvrait, et seul le retrait a été
+> compté. **C'est le défaut du 2026-08-04 sous une autre forme : l'index se met à jour à la main,
+> donc il dérive.** Le compte se recompte, il ne se déduit pas du compte précédent.
 >
 > ⚠️ **AU 2026-08-13, LA 65 EST TOUJOURS DANS CETTE LISTE — mais elle ne bloque plus le code.** Sa
 > partie codable (65a) est livrée ; ce qui reste ouvert est la seule question de la quantité

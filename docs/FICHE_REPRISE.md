@@ -21,19 +21,12 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-14, SUR L'ARBRE DU LOT 66b — PAS ENCORE COMMITÉ à l'écriture de cette
-ligne** (base : `ad1ad47`, lot 66) : `npm test` → **2 152 tests, 2 146 passed / 6 failed**,
-**113 fichiers** (39,9 s) · typecheck propre · `npx vite build` ✓ (3,00 s) · `engine:plan-stress`
-→ **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé, le catalogue n'a pas bougé).
-⛔ **LES 6 ROUGES NE SONT PAS UNE RÉGRESSION : ce sont les tests scellés de la lane média**
-(`gestes-champ-media.test.ts` — 7 tests, 6 rouges), écrits avant leur code, donc rouges par
-construction. **Les 6 scellés du lot 66 et les 3 du 66b sont verts.** Ne pas lire ce relevé comme un
-arbre cassé.
-⚠️ **LE COMPTE EST MONTÉ DE 2 147 À 2 152, ATTRIBUÉ FICHIER PAR FICHIER** : +3 pour les scellés du
-66b (fichier neuf), +2 ajoutés au sien par la lane média pendant ce temps. Un écart de compte
-s'attribue par `git diff --name-only`, jamais par déduction — et ce relevé dit sur quel arbre il a
-été pris, parce qu'un relevé du 2026-08-07 ne le disait pas et annonçait 22 tests de moins que
-l'arbre.
+⚠️ **RELEVÉ DU 2026-08-14, SUR L'ARBRE COMMITÉ** (`17b7700`, lot 66b) : `npm test` → **2 146 passed
+/ 6 failed (2 152 tests, 113 fichiers)** en ~41 s · typecheck propre · `vite build` ✓ (2,95 s) ·
+`engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé).
+⛔ **LES 6 ROUGES NE SONT PAS UNE RÉGRESSION — ne pas lire ce relevé comme un arbre cassé** : tous
+dans `gestes-champ-media.test.ts` (7 tests, 6 rouges), scellés de la lane média écrits avant leur
+code. Écart 2 147 → 2 152 attribué fichier par fichier : +3 le fichier neuf du 66b, +2 la lane média.
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
 tail -25` rend le code de sortie du **pipe**, donc 0. Lire `Tests N failed`, jamais `$?`.
@@ -60,18 +53,28 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 
 ⛔ **LE BLOCAGE N'EST PLUS LA RÉCOLTE, C'EST L'ACCROCHE** — les médias existent, rien ne les porte.
 
-1. **▶ LE CHANTIER EST CADRÉ ET DÉBLOQUÉ — commencer par `/brief gestes-champ-media`.** Le lexique
-   n'a toujours **aucun champ pour porter un média** (ni YAML, ni `catalog/build.mjs`, ni
-   `LexiconEntry`, ni écran), mais le plan en 4 lots existe et **deux décisions sont tranchées**
-   (2026-08-14) : **les deux formats vidéo** et **binaires versionnés dans git**. ▶ Plan, « Fini
-   quand » et décisions restantes : **[CONCEPTION_GESTES_ILLUSTRES.md](./CONCEPTION_GESTES_ILLUSTRES.md)**.
-   ✅ **Le lot 1 ne dépend d'aucune décision** ; ⛔ le motif « montrer un écran à Pexels » a été
-   **écarté** — le chantier se fait pour lui-même. ▶ Historique :
-   [archive/RECAP_SESSION_2026-08-11_clips-gestes.md](./archive/RECAP_SESSION_2026-08-11_clips-gestes.md) §7.
-2. **🎬 Les clips de gestes sont FAITS** — 62/62 jugés, **51 illustrés, 98 segments de 3 s encodés**
-   (AV1 + H.264 + poster, 22,4 Mo), sourcés un par un. **7 gestes n'ont aucun candidat** (`piquer`,
-   `blanchir`, `essorer`, `effeuiller`, `gratiner`, `chinois`, `ecosser`) : homonymes, cause nommée
-   pour chacun — ⛔ ne pas relancer une moisson sans changer la requête.
+1. **▶ LE BRIEF EST ÉCRIT, RELU DEUX FOIS ET IL ATTEND `/sceller gestes-champ-media`.** ⛔ **Rien à
+   rebriefer** : `tests/scelles/gestes-champ-media.test.ts` porte **7 tests, 6 rouges** — rouges par
+   construction, le code n'existe pas. **Cinq des sept viennent des relectures, pas de la première
+   rédaction** ; la plus grosse a montré qu'un chargeur oubliant de filtrer par geste passait tout.
+   ⚠️ **Le sceau est une commande de l'utilisateur, pas de Claude.**
+   ▶ Plan, « Fini quand » des 4 lots, décisions et pièges nommés :
+   **[CONCEPTION_GESTES_ILLUSTRES.md](./CONCEPTION_GESTES_ILLUSTRES.md)**.
+   ✅ **Le lot 1 ne dépend d'aucune décision ouverte.** **Quatre sont tranchées** (2026-08-14) :
+   les deux formats vidéo, les binaires versionnés dans git, un poster par segment, et **la mise en
+   page — variante D + vignettes**, tranchée sur
+   [maquettes construites avec les vrais clips](https://claude.ai/code/artifact/f2cf92ae-eb53-47a3-a6fc-3e4623986277).
+   ⛔ Le motif « montrer un écran à Pexels » a été **écarté** — le chantier se fait pour lui-même.
+   ▶ Ce qui a été trouvé, et **ce qui était faux** :
+   [archive/RECAP_SESSION_2026-08-15_maquettes-et-brief-gestes.md](./archive/RECAP_SESSION_2026-08-15_maquettes-et-brief-gestes.md).
+2. **🎬 Clips : le travail est FAIT** (compte en `ETAT.md`). ⛔ Reste actionnable : **7 gestes sans
+   aucun candidat** (`piquer`, `blanchir`, `essorer`, `effeuiller`, `gratiner`, `chinois`,
+   `ecosser`) — homonymes, cause nommée pour chacun. **Ne pas relancer de moisson à requête
+   identique.** ⛔ **Et `suer` n'est PAS dans cette liste : il a 24 candidates et zéro segment
+   encodé** — or c'est le geste qui justifiait le chantier (« suer » contre « revenir »). **La paire
+   ne sera pas montrable à la fin des 4 lots.** ⚠️ **11 codes du lexique n'ont aucun dossier de
+   clips, et 3 de plus n'y tombent qu'au tiret près** (`bain-marie`/`bain_marie`, `monter-blancs`,
+   `tailler-des`) — c'est le lot 2 qui paiera, pas le lot 1.
 3. **📷 Photos — 116 importées · 13 décidées non importées · 201 recettes sans rien.** ⛔ **Pas un
    défaut de tri : bac épuisé, 19 recettes sans AUCUNE candidate** — goulot = la source. ⛔ Build-
    qui-échoue-sans-photo **interdit avant 330/330**. ▶ **Recadrage carré livré, PAS lu à l'import.**
@@ -82,12 +85,19 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
    chiffre qui manque pour fermer la décision 61, **n'a toujours pas été pris** — jamais en jsdom.
 6. **Empaquetage Capacitor, puis Play** — `capacitor.config.ts` en place, `npx cap add android`
    jamais lancé (pas de SDK). Le web reste le seul chemin vers un iPhone sans Mac.
+7. **`/brief 66c` — une case de l'invariant origine/provenance reste ouverte, et elle est mesurée.**
+   `origine` rendue **optionnelle** laisse les neuf tests scellés verts pendant qu'une source animale
+   sans origine compile. Une 8ᵉ sonde + un projet `tsc`, à poser **à côté** des scellés du 66/66b,
+   qui sont fermés. ⚠️ Ne coûte rien à personne d'autre : aucun code de production. ▶ `ETAT.md` §8 ·
+   [archive/RECAP_SESSION_2026-08-14_invariant-origine-animale.md](./archive/RECAP_SESSION_2026-08-14_invariant-origine-animale.md).
 
-**Contenu qui reste** : photos, 27 tips sur la centaine visée, 8 fiches sur les 60-100.
-⚠️ **Deux trous sanitaires, non comblés** : céphalopodes et cuisson de l'œuf, qu'aucune autorité lue
-ne donne.
+⚠️ **Deux trous sanitaires bloquent la publication au même titre que la relecture** : céphalopodes et
+cuisson de l'œuf, qu'aucune autorité lue ne donne — le principe 3 interdit d'écrire sans source.
+Comptes du contenu restant : `ETAT.md`.
 
-**Trois arbitrages attendent** — `ETAT.md` §4. ⚠️ **64, 67, 66 et 69 en sont SORTIES** (fermées les
+**NEUF questions ouvertes en `ETAT.md` §4** (2, 5, 6, 11, 52, 58, 65, 68, 70 — recomptées à la
+commande le 2026-08-14). ⚠️ **Trois seulement bloquent quelque chose de concret, les voici ; ne pas
+lire « trois » comme le total.** **64, 67, 66 et 69 en sont SORTIES** (fermées les
 08-10, 08-11, 08-14 et 08-14) : **65** (⚠️ **réduite le 2026-08-13 : 65a est livré, la
 table d'occupations et le partage existent ; ne reste que la quantité de feux possédés** ·
 [plan](./CONCEPTION_RESERVATION_MATERIEL.md) · état : `ETAT.md` §3 et §4), **68** (budget P6 — ⚠️ **forcée depuis le
@@ -98,7 +108,7 @@ elle ne bloque aucun lot, elle doit être tranchée avant celui qui en dépendra
 
 ## Où chercher le reste
 
-Les **cinq acquis à ne pas défaire** et les **quatre commandes qui font foi** vivent dans
+Les **six acquis à ne pas défaire** et les **quatre commandes qui font foi** vivent dans
 **[../CLAUDE.md](../CLAUDE.md)**, chargé à chaque session — plus recopiés ici.
 
 | Question | Document |
@@ -112,4 +122,5 @@ Les **cinq acquis à ne pas défaire** et les **quatre commandes qui font foi** 
 | Écriture du contenu Savoir · Distribution | [tips](../catalog/tips/README.md) · [evidence](../catalog/evidence/README.md) · [STRATEGIE](./STRATEGIE_DISTRIBUTION.md) |
 | Tri des photos et des clips : barème, décisions, outils | `../atelier/photos/REPRISE.md` · `../atelier/gestes/` (hors dépôt) |
 | Ce qui a été essayé **et écarté** | [archive/](./archive/) — [README](./archive/README.md) apparie les pistes parallèles |
-| **Blocs sortis de cette fiche, et lesquels avaient tort** | [08-11](./archive/FICHE_REPRISE_extraits_2026-08-11.md) · [08-10](./archive/FICHE_REPRISE_extraits_2026-08-10.md) · [08-09](./archive/FICHE_REPRISE_extraits_2026-08-09.md) · [08-07](./archive/FICHE_REPRISE_extraits_2026-08-07.md) · [08-03](./archive/FICHE_REPRISE_extraits_2026-08-03.md) |
+| **Blocs sortis de cette fiche, et lesquels avaient tort** | [08-14](./archive/FICHE_REPRISE_extraits_2026-08-14.md) · [08-11](./archive/FICHE_REPRISE_extraits_2026-08-11.md) · [08-10](./archive/FICHE_REPRISE_extraits_2026-08-10.md) · [08-09](./archive/FICHE_REPRISE_extraits_2026-08-09.md) · [08-07](./archive/FICHE_REPRISE_extraits_2026-08-07.md) · [08-03](./archive/FICHE_REPRISE_extraits_2026-08-03.md) |
+| **Récit de la session 66/66b — la paire origine/provenance** | [RECAP 08-14](./archive/RECAP_SESSION_2026-08-14_invariant-origine-animale.md) |

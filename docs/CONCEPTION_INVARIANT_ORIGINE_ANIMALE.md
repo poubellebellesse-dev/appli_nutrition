@@ -375,7 +375,7 @@ ne doit **pas** bouger — si un test disparaît, c'est qu'un fichier a été co
 
 ## 7. Lot 66b — fermer le trou que les six tests scellés ne voient pas
 
-## ✅ 66b — LIVRÉ le 2026-08-14 · commit `<non enregistré à l'heure de cette ligne>`
+## ✅ 66b — LIVRÉ le 2026-08-14 · commit `17b7700` sur `main`
 
 > Ouvert le 2026-08-14, **après** la livraison du 66 (`ad1ad47`), sur une relecture indépendante de
 > l'implémentation. **Aucune ligne de code de production ne change.** Ce lot n'achète pas une
