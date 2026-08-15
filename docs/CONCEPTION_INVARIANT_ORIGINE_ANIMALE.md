@@ -370,3 +370,169 @@ node catalog/build.mjs → 451 aliments, 330 recettes, 1 548 étapes, 30 équipe
 
 ⚠️ **`npm test` bougera de +N** : les tests scellés du lot s'ajoutent. Le compte de production, lui,
 ne doit **pas** bouger — si un test disparaît, c'est qu'un fichier a été converti en le supprimant.
+
+---
+
+## 7. Lot 66b — fermer le trou que les six tests scellés ne voient pas
+
+## ✅ 66b — LIVRÉ le 2026-08-14 · commit `<non enregistré à l'heure de cette ligne>`
+
+> Ouvert le 2026-08-14, **après** la livraison du 66 (`ad1ad47`), sur une relecture indépendante de
+> l'implémentation. **Aucune ligne de code de production ne change.** Ce lot n'achète pas une
+> correction : il achète l'impossibilité de défaire la correction en silence.
+
+### Les six points du « Fini quand », un par un — ce qui les démontre, et ce qui ne les démontre pas
+
+| # | Démontré par | Verdict |
+|---|---|---|
+| 1 | `66b.test.ts` test 1 → `tsconfig.refuse-nullable` → `sonde-provenance-nulle.ts` | ✅ vert |
+| 2 | `66b.test.ts` test 2 → `tsconfig.refuse-origine-nulle` → `sonde-origine-nulle.ts` | ✅ vert |
+| 3 | `66b.test.ts` test 3 → `tsconfig.accepte` (LU, jamais modifié — il appartient au 66) | ✅ vert |
+| 4 | la structure des deux `tsconfig` du lot : `"files"` à un seul élément chacun | ✅ par construction |
+| 5 | `66.test.ts` : 6 tests, verts, aucun fichier de ses trois projets touché | ✅ vert |
+| 6 | relevé ci-dessous | ✅ hors lane média |
+
+⛔ **CE QUE CE TABLEAU NE DIT PAS, ET QUI COMPTE AUTANT : la preuve par mutation n'est pas dans le
+dépôt.** Ce qui établit que ces trois tests DISCRIMINENT — qu'ils deviennent rouges quand le type
+se relâche — a été fait **à la main**, deux fois, en cassant `catalog.ts` puis en le remettant. Rien
+ne rejouera ça tout seul. C'est le pendant exact du défaut du lot D3 : la moitié d'un critère qui
+n'est démontrée par aucun test.
+
+**Le relevé de clôture, arbre complet, pris le 2026-08-14 :** `npm test` → **2 152 tests,
+2 146 verts, 6 rouges** (113 fichiers, 39,87 s) · typecheck **0 erreur** · `vite build` **✓ 3,00 s**
+· `plan-stress` **20/20**. ⚠️ **Les 6 rouges sont TOUS dans `tests/scelles/gestes-champ-media.test.ts`
+(7 tests, 6 rouges), qui appartient à la lane média et non à ce lot.** Aucun rouge n'est imputable au
+66b. Le catalogue n'a pas bougé : `audit-mapping` non relancé, sans objet ici.
+
+⚠️ **Écart de compte depuis le relevé du 66 : +5, attribué fichier par fichier et jamais par
+déduction** — +3 pour les trois tests d'ici (fichier neuf), +2 pour des tests que la lane média a
+ajoutés au sien pendant ce temps. C'est exactement la méthode que le défaut du 2026-08-09 avait
+imposée.
+
+### ⛔ CE LOT NE FERME PAS LE SUJET — LA QUATRIÈME VOIE EST OUVERTE, ET MESURÉE
+
+**Le 66b a été attaqué une seconde fois, après sa clôture.** La question posée exprès — « reste-t-il
+une quatrième façon de rouvrir le trou ? » — a de nouveau rendu **oui**. Le lot a fermé la
+**nullabilité** des deux champs. Il n'a rien fermé sur l'**optionnalité** :
+
+```ts
+readonly origine?: AnimalOrigin      // optionnelle, PAS nullable
+```
+
+⚠️ **Mesuré dans les deux sens, pas déduit.** Avec ce type : les **NEUF** tests scellés restent
+VERTS, et `origineAnimale: { provenance: 'corps' }` — une source animale **sans origine du tout** —
+compile (`tsc` exit 0). Type remis à l'identique : la même sonde est refusée
+`TS2741: Property 'origine' is missing`, `git diff` vide.
+
+⛔ **POURQUOI PERSONNE NE LA VOIT : `sonde-paire-incomplete.ts` teste « origine seule, provenance
+absente » — jamais l'inverse.** La symétrie que ce lot croyait établir ne portait que sur l'axe
+*valeur*. Sur l'axe *présence*, la paire n'est testée que d'un côté depuis le lot 66.
+
+⛔ **LA LEÇON, DANS SA FORME COMPLÈTE, ET C'EST LA TROISIÈME FOIS QU'ON LA PAIE : UNE PAIRE A DEUX
+CHAMPS ET DEUX AXES — PRÉSENCE ET VALEUR. QUATRE CASES. Le 66 en a fermé une, le 66b deux, il en
+reste une.** ▶ Huitième sonde + un projet de compilation : **lot 66c, à briefer**. Ne pas la poser
+dans les scellés du 66 ni du 66b, qui sont fermés. Le `README.md` des sondes présente les sept
+comme exhaustives — il est scellé lui aussi, sa correction appartient au 66c.
+
+### Le problème, en une phrase
+
+Le lot 66 a rendu la moitié de paire inexprimable en supprimant le champ jumeau et en refusant
+l'origine nue. Il reste **une troisième façon de rouvrir exactement le même trou**, un cran plus
+bas — et les six tests scellés du 66 la laissent passer :
+
+```ts
+readonly provenance: AnimalProvenance | null    // clé REQUISE, valeur NULLABLE
+```
+
+### Pourquoi aucune sonde existante ne l'attrape — mesuré, pas supposé
+
+Les cinq sondes du 66 mesurent toutes la **présence** de la clé, jamais sa **valeur**. TypeScript
+exige une clé requise même quand son type inclut `null`, donc les trois refus tiennent encore sous
+l'hypothèse nullable, et le littéral fautif passe :
+
+```
+interface Source { readonly origine: …; readonly provenance: Prov | null }
+
+{ origine: 'mammifere' }                    → TS2741 refusé   (sonde-paire-incomplete : verte)
+'mammifere'                                 → TS2322 refusé   (sonde-scalaire-nu      : verte)
+{ origine: 'mammifere', provenance: null }  → COMPILE          ← aucune sonde ne l'exerce
+```
+
+⛔ **VÉRIFIÉ EN MUTANT LE TYPE LIVRÉ, PAS EN RAISONNANT.** Avec `provenance: AnimalProvenance | null`
+posé dans `catalog.ts` : **`tests/scelles/66.test.ts` reste VERT en entier — six tests sur six** —
+et `66b.test.ts` devient rouge. Le fichier de production a ensuite été remis à l'identique
+(`git diff` vide sur `catalog.ts`). **C'est la seule preuve qui compte** : elle montre à la fois que
+le trou est réel et que le nouveau test le voit.
+
+### ⛔ Le brief ne portait qu'une moitié — l'attaque a trouvé la symétrique
+
+**Première version de ce §7 : la provenance seule.** Le critique a demandé « reste-t-il une
+quatrième façon de rouvrir le trou ? » et l'a trouvée en une ligne — **l'autre champ de la paire** :
+
+```ts
+readonly origine: AnimalOrigin | null    // jamais exercé par aucune sonde
+```
+
+⚠️ **Vérifié par mutation avant d'être cru : les HUIT tests d'alors — les six scellés du 66 et les
+deux premiers du 66b — sont restés VERTS**, pendant que `{ origine: null, provenance: 'corps' }`
+redevenait écrivable partout. Les six sondes exerçaient la clé `provenance` (présence, puis valeur)
+et la forme entière ; **aucune n'exerçait la VALEUR de `origine`.**
+
+⛔ **LA LEÇON DÉPASSE CE LOT, ET C'EST LA VRAIE PRISE DE LA JOURNÉE : fermer un trou sur un champ ne
+dit RIEN de son jumeau.** Le 66 a fermé la présence, la première version du 66b fermait la valeur
+d'un seul côté, et il a fallu qu'on demande explicitement « et l'autre côté ? » pour que la question
+se pose. **Une paire de champs se teste des deux côtés, ou elle n'est testée qu'à moitié.**
+
+### **Fini quand**
+
+1. Une sonde écrit `origineAnimale: { origine: 'mammifere', provenance: null }` et **`tsc` la
+   refuse**, en nommant le fichier, la valeur rejetée (`Type 'null' is not assignable`) et le type
+   qui la rejette (`AnimalProvenance`) — pas seulement en refusant.
+2. **La sonde symétrique** écrit `{ origine: null, provenance: 'corps' }` et est refusée de la même
+   façon, `AnimalOrigin` nommé.
+3. **La paire complète compile toujours**, vérifié dans le même fichier de test : sans cette moitié,
+   le critère se satisfait en rendant la paire carrément inexprimable, emportant avec elle tous les
+   aliments à source animale.
+4. **Chaque sonde a son PROPRE projet de compilation** — l'inverse du choix du 66, pour une raison
+   opposée. Le 66 groupe deux sondes parce que son test exige que les deux noms apparaissent ; ici
+   les assertions lisent le TEXTE du diagnostic, et deux sondes dans un même projet ne garantiraient
+   pas que le fichier, la valeur rejetée et le type qui la rejette viennent de la **même** erreur.
+5. Les **six tests scellés du lot 66 restent verts et intouchés**, ainsi que leurs trois projets de
+   compilation.
+6. Les quatre commandes sont vertes, hors les rouges de la lane média.
+
+### Les deux mutations, rejouées à la main après l'ajout de la sonde symétrique
+
+```
+type livré (sain)              → 66 : 6 verts · 66b : 3 verts        (9 au total)
+origine    rendue nullable     → 66 : 6 verts · 66b : « ORIGINE NULLE » rouge
+provenance rendue nullable     → 66 : 6 verts · 66b : « PROVENANCE NULLE » rouge
+```
+
+⚠️ **Chaque moitié est vue par SON test, pas par l'autre** — c'est ce qui distingue « le lot couvre
+la paire » de « le lot couvre un cas et l'autre par accident ». `catalog.ts` a été remis à
+l'identique après chaque mutation (`git diff` vide).
+
+⚠️ **CE TEST PASSE DÈS LE PREMIER ESSAI, ET C'EST LA SEULE ENTORSE ASSUMÉE À LA RÈGLE DU SCEAU.**
+« Un test scellé doit échouer le jour où on l'écrit » vise les tests d'**acceptation** : celui qui
+passe avant que le code existe ne prouve rien. Ici il n'y a pas de code à écrire — le type livré est
+déjà juste. Un garde-fou de **régression** qui passe tout de suite prouve exactement ce qu'il
+annonce. La démonstration qu'il sait échouer est la mutation ci-dessus, pas un rouge de départ.
+
+### Ce que le lot ne touche pas
+
+`tests/scelles/66.test.ts` et ses trois `tsconfig.*.json` — **scellés et clos** · toute la
+production, `catalog.ts` compris · le schéma SQL, le YAML, `catalog/build.mjs` · la lane média.
+
+### Les témoins d'avant, relevés sur `685d263`
+
+```
+npm test              → 2 147 tests, 2 143 passed / 4 failed, 112 fichiers
+                        (les 4 rouges = tests scellés de la lane média, rouges par construction)
+npm run typecheck     → propre
+npx vite build        → ✓ 2,93 s
+engine:plan-stress    → 20/20
+```
+
+⚠️ **`npm test` doit monter de +2 exactement**, et le compte de production ne doit pas bouger d'un
+test. Le catalogue n'est pas reconstruit : aucun YAML ni schéma n'est touché.

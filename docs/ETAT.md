@@ -239,6 +239,21 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   `user.db` sans clé étrangère vers le catalogue. ⛔ **NE PAS RENDRE `provenance` OPTIONNELLE NI
   ÉLARGIR LE TYPE EN `AnimalOrigin | AnimalSource`** : ces deux « compatibilités » rouvrent
   exactement le trou, et `tests/scelles/sondes-66/` existe pour les refuser.
+- ✅ **NI L'ORIGINE NI LA PROVENANCE NE PEUVENT ÊTRE PRÉSENTES ET NULLES** (lot 66b, livré le
+  2026-08-14). C'est la troisième façon de rouvrir le trou du 66, un cran plus bas que les deux
+  ci-dessus : **une clé requise dont le TYPE inclut `null`**. TypeScript exige une clé requise quel
+  que soit son type, donc les six tests scellés du 66 la laissaient passer en entier. ⚠️ **MESURÉ
+  PAR MUTATION, JAMAIS DÉDUIT — et c'est ce qui a révélé que le trou était deux fois plus large que
+  le brief ne le disait** : le brief ne portait que la provenance, et avec `origine` rendue nullable
+  les **huit** tests d'alors sont restés VERTS. ⛔ **LA LEÇON DÉPASSE LE MOTEUR ET VAUT POUR TOUT LE
+  DÉPÔT : FERMER UN TROU SUR UN CHAMP NE DIT RIEN DE SON JUMEAU. Une paire se teste des DEUX côtés,
+  ou elle n'est testée qu'à moitié.** ⚠️ **ET CETTE PHRASE ELLE-MÊME ÉTAIT TROP COURTE : elle ne
+  parle que de l'axe VALEUR.** Sur l'axe PRÉSENCE, la paire n'est toujours testée que d'un côté —
+  `origine` rendue OPTIONNELLE laisse les neuf tests verts. Trou ouvert, mesuré, en §8 ; lot 66c. ⚠️ **AUCUNE LIGNE DE CODE DE PRODUCTION N'A CHANGÉ** — le type
+  livré par le 66 était déjà juste. Ce lot n'achète pas une correction, il achète l'impossibilité de
+  la défaire en silence. ⚠️ **CE QUI PROUVE QUE CES TESTS DISCRIMINENT N'EST PAS DANS LE DÉPÔT** :
+  ils passent au premier essai, et seule la mutation manuelle les distingue d'assertions
+  décoratives — voir §8.
 
 ### Design
 - **5 onglets** stables v1→v2 : Aujourd'hui · Semaine · Courses · Recettes · Savoir.
@@ -845,6 +860,11 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 > HUIT : 2, 5, 6, 11, 52, 58, 65, 68.** Compté sur les numéros non barrés de cette table, pas de
 > mémoire. Sa fermeture n'ouvre aucune dette de code ; elle en ferme une, ouverte par la 64.
 >
+> ⚠️ **LE LOT 66b, LE MÊME JOUR, N'OUVRE ET NE FERME AUCUN NUMÉRO — LE COMPTE RESTE À HUIT.** Il ne
+> tranche rien : il pose le verrou de test d'une décision déjà tranchée (la 66). Un lot qui ne
+> change aucune ligne de production ne déplace aucun arbitrage. **Ne pas le compter ici** ; ce qu'il
+> a fermé est une dette de §8, pas une décision.
+>
 > ⚠️ **AU 2026-08-13, LA 65 EST TOUJOURS DANS CETTE LISTE — mais elle ne bloque plus le code.** Sa
 > partie codable (65a) est livrée ; ce qui reste ouvert est la seule question de la quantité
 > possédée. **Le compte de DIX ne bouge pas**, une décision réduite n'est pas une décision fermée.
@@ -1128,16 +1148,21 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 
 ### Ce que le lot 66 laisse derrière lui (2026-08-14)
 
-- ⛔ **LE TROU QUE LES SIX TESTS SCELLÉS NE VOIENT PAS : `provenance` RENDUE NULLABLE.** Trouvé par
-  une relecture indépendante **après** le sceau, vérifié sur banc isolé hors du dépôt. Si
+- ✅ ~~**LE TROU QUE LES SIX TESTS SCELLÉS NE VOIENT PAS : `provenance` RENDUE NULLABLE.**~~
+  **FERMÉ PAR LE LOT 66b le 2026-08-14** — et il était deux fois plus large qu'annoncé ici. Le
+  diagnostic ci-dessous était juste mais **ne portait qu'un des deux champs de la paire** :
+  `origine: AnimalOrigin | null` rouvrait exactement le même trou de l'autre côté, et personne ne
+  l'avait vu jusqu'à ce qu'on attaque le brief du 66b. ⚠️ **Mesuré par mutation, pas déduit : les
+  HUIT tests d'alors sont restés VERTS.** ▶ Fermé par **deux** sondes (`sonde-provenance-nulle.ts`,
+  `sonde-origine-nulle.ts`), chacune dans son propre projet de compilation, et trois tests dans
+  `tests/scelles/66b.test.ts`. Les scellés du 66 n'ont pas été touchés. ⛔ **LA LEÇON SURVIT AU
+  LOT, ET ELLE EST GÉNÉRALE : fermer un trou sur un champ ne dit RIEN de son jumeau. Une paire se
+  teste des DEUX côtés, ou elle n'est testée qu'à moitié.**
+  <br>*Diagnostic d'origine, conservé parce qu'il explique le mécanisme :* si
   `AnimalSource.provenance` était typé `AnimalProvenance | null` — clé **requise**, type
   **nullable** — les deux sondes de refus resteraient refusées (TypeScript exige une clé présente
-  quel que soit son type), donc **les six tests scellés du lot resteraient verts**, pendant que
-  `{ origine: 'mammifere', provenance: null }` redeviendrait écrivable partout. C'est l'incohérence
-  du lot 66, réintroduite un cran plus bas. **Aucune sonde n'exerce ce littéral.** ⚠️ **Le code
-  livré est juste** (`readonly provenance: AnimalProvenance`) — ce qui manque est le verrou, pas la
-  correction. **La seule garde aujourd'hui est un commentaire** en tête de `AnimalSource`. ▶ Se
-  fermerait par une sixième sonde ; ne pas le faire en modifiant les scellés du 66, qui sont fermés.
+  quel que soit son type), donc les six tests scellés du 66 resteraient verts, pendant que
+  `{ origine: 'mammifere', provenance: null }` redeviendrait écrivable partout.
 - ⚠️ **TROIS CASTS SONT LE SEUL ENDROIT DU DÉPÔT OÙ LA FORME INTERDITE EXISTE ENCORE, ET C'EST
   VOULU.** `groupes-animaux.test.ts` (origine orpheline, provenance orpheline) et `regime.test.ts`
   (origine sans provenance) montent la moitié de paire par `as AnimalSource` pour mesurer une
@@ -1163,6 +1188,54 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   remonterait qu'un seul niveau, serait juste sur la totalité du catalogue réel. C'est pourquoi un
   test scellé du lot est adossé à une fixture à trois aliments et deux maillons — **le seul du
   lot**. Le trou se fermera au premier dérivé carné ajouté au catalogue.
+
+### Ce que le lot 66b laisse derrière lui (2026-08-14)
+
+- ⛔ **IL RESTE UNE QUATRIÈME VOIE, ET ELLE EST OUVERTE : `origine` RENDUE OPTIONNELLE.** Trouvée en
+  attaquant le 66b **après** sa clôture, sur la question posée exprès « reste-t-il une quatrième
+  façon ? ». Le lot a fermé la **nullabilité** des deux champs ; il n'a rien fermé sur
+  l'**optionnalité** :
+  ```ts
+  readonly origine?: AnimalOrigin      // optionnelle, PAS nullable — aucune sonde ne l'exerce
+  ```
+  ⚠️ **MESURÉ DEUX FOIS, DANS LES DEUX SENS, PAS DÉDUIT.** Avec ce type posé dans `catalog.ts` :
+  les **NEUF** tests scellés (6 du 66 + 3 du 66b) restent **VERTS**, et une sonde
+  `origineAnimale: { provenance: 'corps' }` — source animale **sans origine du tout** — **COMPILE**
+  (`tsc` exit 0). Type remis à l'identique, la même sonde est refusée `TS2741: Property 'origine' is
+  missing`, et `git diff` sur `catalog.ts` est vide.
+  ⛔ **POURQUOI AUCUNE SONDE NE LA VOIT, ET C'EST LA LEÇON : `sonde-paire-incomplete.ts` (lot 66,
+  scellé) teste « origine seule, provenance absente » — JAMAIS l'inverse.** La symétrie que le 66b
+  croyait avoir établie ne portait que sur l'axe *valeur nulle*. Sur l'axe *clé absente*, la paire
+  n'est toujours testée que d'un seul côté, depuis le lot 66, et c'est une prémisse silencieuse
+  portée par du code scellé qu'on ne peut plus modifier.
+  ⛔ **LA LEÇON DE FOND, TROIS FOIS PAYÉE MAINTENANT : une paire a DEUX champs ET DEUX AXES —
+  présence et valeur. Quatre cases. Fermer trois cases ne ferme pas la quatrième.**
+  ▶ Se fermerait par une **huitième sonde** (`{ provenance }` sans `origine`) et un projet de
+  compilation de plus — **lot 66c, à briefer**. Ne pas le faire en modifiant les scellés du 66 ni
+  ceux du 66b, qui sont fermés. ⚠️ **Le `README.md` des sondes présente les 7 sondes comme
+  exhaustives** — il est dans `tests/scelles/`, donc scellé : sa correction appartient au 66c.
+- ⛔ **CE QUI PROUVE QUE LES TROIS TESTS DU 66b DISCRIMINENT N'EST PAS DANS LE DÉPÔT.** Ces tests
+  passent au premier essai — c'est assumé, ce sont des garde-fous de régression et non des tests
+  d'acceptation. Mais alors la règle « un test scellé doit échouer le jour où on l'écrit » ne les
+  filtre plus, et **la seule chose qui distingue un vrai verrou d'une assertion décorative est la
+  preuve par MUTATION** : relâcher le type dans `catalog.ts`, voir le test devenir rouge, remettre.
+  Elle a été faite **deux fois à la main**, chaque moitié vue par son seul test, `git diff` vide
+  après chaque essai. **Rien ne la rejouera tout seul.** ▶ C'est le même défaut que le lot D3 : la
+  moitié d'un critère qui n'est démontrée par aucun test. Ne pas le découvrir une troisième fois.
+- ⚠️ **LES ASSERTIONS DU 66b LISENT LE TEXTE EXACT DES MESSAGES DE `tsc`** —
+  `"Type 'null' is not assignable"`, `AnimalProvenance`, `AnimalOrigin`. C'est délibéré : sans ça,
+  une faute de frappe dans une sonde ou un import cassé produirait un refus qui validerait le test
+  en laissant le trou ouvert. Le prix est un couplage à la formulation de TypeScript. ▶ **Une
+  montée de version de TypeScript peut les casser sans qu'aucun invariant n'ait bougé.** Si ça
+  arrive, la réponse est de mettre le texte attendu à jour — jamais de retirer l'assertion.
+- ⚠️ **LE TROISIÈME TEST DU 66b LIT `tsconfig.accepte.json`, QUI APPARTIENT AUX SCELLÉS DU 66.**
+  Il le lit et ne le modifie pas, mais le couplage existe : un futur lot qui ajouterait un fichier
+  à ce projet changerait ce que le 66b mesure sans toucher au 66b. ▶ Le README des sondes l'écrit ;
+  c'est la seule garde.
+- ⚠️ **LE LOT A OUVERT LE CODE DE PRODUCTION À L'ÉCRITURE SANS EN AVOIR L'USAGE.** `garde.mjs sceau`
+  fait les deux gestes d'un coup : il ferme `tests/scelles/` et il ouvre `app/src/`. Un lot qui ne
+  doit toucher à aucune ligne de production ouvre donc quand même la porte. Rien n'y a été écrit —
+  `git diff` sur `app/src/` est vide. ▶ Dette de l'outil, pas du lot.
 
 ### Ce que le lot 65a laisse derrière lui (2026-08-13)
 

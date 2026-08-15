@@ -1,0 +1,7 @@
+{
+  "// pourquoi un projet à part": "Les trois autres tsconfig appartiennent aux tests SCELLÉS du lot 66, qui sont clos. Ajouter un fichier dans l'un d'eux changerait ce qu'un test scellé mesure — interdit. Celui-ci est le projet du lot 66b, et il ne porte qu'une sonde : le refus qu'il produit ne peut donc venir de rien d'autre.",
+  "extends": "../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": ["sonde-provenance-nulle.ts"]
+}

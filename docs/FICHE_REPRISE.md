@@ -21,15 +21,16 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-14, SUR L'ARBRE COMMITÉ** (`ad1ad47`, lot 66) :
-`npm test` → **2 147 tests, 2 143 passed / 4 failed**, **112 fichiers** · typecheck propre ·
-`npx vite build` ✓ (2,98 s) · `engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats
-(inchangé).
-⛔ **LES 4 ROUGES NE SONT PAS UNE RÉGRESSION : ce sont les tests scellés de la lane média**
-(`gestes-champ-media.test.ts`), écrits avant leur code, donc rouges par construction. **Les six
-tests scellés du lot 66 sont verts.** Ne pas lire ce relevé comme un arbre cassé.
-⚠️ **LE COMPTE EST MONTÉ DE 2 136 À 2 147 SANS QU'AUCUN TEST DE PRODUCTION NE DISPARAISSE** : +6
-pour les scellés du 66, +5 pour ceux de la lane média, sur 2 fichiers nouveaux. Un écart de compte
+⚠️ **RELEVÉ DU 2026-08-14, SUR L'ARBRE DU LOT 66b — PAS ENCORE COMMITÉ à l'écriture de cette
+ligne** (base : `ad1ad47`, lot 66) : `npm test` → **2 152 tests, 2 146 passed / 6 failed**,
+**113 fichiers** (39,9 s) · typecheck propre · `npx vite build` ✓ (3,00 s) · `engine:plan-stress`
+→ **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé, le catalogue n'a pas bougé).
+⛔ **LES 6 ROUGES NE SONT PAS UNE RÉGRESSION : ce sont les tests scellés de la lane média**
+(`gestes-champ-media.test.ts` — 7 tests, 6 rouges), écrits avant leur code, donc rouges par
+construction. **Les 6 scellés du lot 66 et les 3 du 66b sont verts.** Ne pas lire ce relevé comme un
+arbre cassé.
+⚠️ **LE COMPTE EST MONTÉ DE 2 147 À 2 152, ATTRIBUÉ FICHIER PAR FICHIER** : +3 pour les scellés du
+66b (fichier neuf), +2 ajoutés au sien par la lane média pendant ce temps. Un écart de compte
 s'attribue par `git diff --name-only`, jamais par déduction — et ce relevé dit sur quel arbre il a
 été pris, parce qu'un relevé du 2026-08-07 ne le disait pas et annonçait 22 tests de moins que
 l'arbre.
@@ -86,13 +87,14 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 ⚠️ **Deux trous sanitaires, non comblés** : céphalopodes et cuisson de l'œuf, qu'aucune autorité lue
 ne donne.
 
-**Cinq arbitrages attendent** — `ETAT.md` §4. ⚠️ **64 et 67 en sont SORTIES** (fermées les 08-10 et
-08-11) : **66** (invariant origine ⟺ provenance), **65** (⚠️ **réduite le 2026-08-13 : 65a est livré, la
+**Trois arbitrages attendent** — `ETAT.md` §4. ⚠️ **64, 67, 66 et 69 en sont SORTIES** (fermées les
+08-10, 08-11, 08-14 et 08-14) : **65** (⚠️ **réduite le 2026-08-13 : 65a est livré, la
 table d'occupations et le partage existent ; ne reste que la quantité de feux possédés** ·
 [plan](./CONCEPTION_RESERVATION_MATERIEL.md) · état : `ETAT.md` §3 et §4), **68** (budget P6 — ⚠️ **forcée depuis le
 2026-08-11** : photos + clips ≈ 27,6 Mo contre un critère de 15, mais ce seuil visait un **premier
-chargement web**, avant le cache à deux étages et Capacitor), **69** (licence Pexels « Standalone »),
-et les **366 doublons d'affichage**, jamais posés.
+chargement web**, avant le cache à deux étages et Capacitor), et les **366 doublons d'affichage**,
+jamais posés. ⚠️ **La 70 est ENTRÉE le 2026-08-14** (export utilisateur *vs* médias du catalogue) :
+elle ne bloque aucun lot, elle doit être tranchée avant celui qui en dépendra.
 
 ## Où chercher le reste
 

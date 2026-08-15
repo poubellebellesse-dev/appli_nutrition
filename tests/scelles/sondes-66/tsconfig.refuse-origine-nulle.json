@@ -1,0 +1,7 @@
+{
+  "// pourquoi UN SEUL fichier par projet ici": "Le lot 66 groupe deux sondes dans `tsconfig.refuse-neuve.json` parce que son test exige que les DEUX noms apparaissent — c'est ce qui distingue « le type est resserré » de « le type a juste changé de nom ». Le 66b fait l'inverse, un projet par sonde, pour une raison opposée et tout aussi précise : ses assertions lisent le TEXTE du diagnostic (`Type 'null' is not assignable`, `AnimalOrigin`). Avec deux sondes dans un même projet, rien ne garantirait que ces morceaux viennent de la MÊME erreur. Un fichier, une erreur, aucune ambiguïté.",
+  "extends": "../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": ["sonde-origine-nulle.ts"]
+}
