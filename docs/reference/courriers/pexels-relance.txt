@@ -1,0 +1,44 @@
+Hello,
+
+Thank you for the clear answer. I want to check one fact that my first
+message did not make explicit, because I think your answer turns on it.
+
+We never ship the original Pexels files.
+
+Videos: we download the source video, cut a single 3-second segment from it,
+crop it, and re-encode it to AV1 and H.264, plus one still frame as a
+poster. The result is 98 three-second segments derived from 51 source
+videos. A 25-second Pexels video cannot be recovered from what we ship.
+What could be extracted is a 3-second cropped fragment at reduced quality.
+
+Photos: same principle. Each photo is re-encoded to AVIF and capped at
+1024 px wide, at a compression level well below the source. 16 of the 129
+recipe photos we ship come from Pexels.
+
+How they are used:
+
+- Each video segment illustrates one cooking technique in a glossary entry,
+  next to its written definition. It loops, muted, for a few seconds.
+- Each photo illustrates one recipe, and is always shown with the recipe
+  name next to it.
+- The app has no download, no export and no save function for any of this
+  media. There is no gallery, and no way to browse the media on its own.
+- We ship attribution for every item in a credits file, including where the
+  licence does not require it.
+
+Why we cannot stream them: the application is fully offline by design. It
+has no server and no account, and it must work with no connection at all.
+That is a core constraint of the project, not a preference.
+
+So my question is a narrow one: for the purposes of the Standalone use
+clause, does a 3-second cropped re-encode, or a 1024 px re-encoded photo,
+still count as "the original Pexels file"?
+
+If it does, is there a form of incorporation you would consider acceptable
+for an application that must work offline?
+
+And if the answer is that we should not ship them in any form, we will
+remove the Pexels material and say so. I would rather ask now than be wrong
+later.
+
+Thank you for your time.

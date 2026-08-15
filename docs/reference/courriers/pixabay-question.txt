@@ -1,0 +1,43 @@
+Subject: License question - photos used inside an offline recipe application
+
+
+Hello,
+
+I would like to confirm one point of the Pixabay Content License before
+shipping, rather than after.
+
+I am building a free, offline recipe and meal-planning application. It has
+no server, no account, no tracking and no ads. Ten of the recipe photos it
+ships come from Pixabay, each credited to its author in a credits file.
+
+Section 5 of your Terms distinguishes two cases, and I want to be sure I am
+reading it the way you intend. It says that resizing or cropping alone
+remains Standalone use, but that using Content "with a combination of
+images, videos, audio files, other media, text, illustrations, background
+features and editing techniques is not Standalone use, so long as the
+combined effect is to make a 'new' creative work."
+
+Here is exactly how each photo appears in the app:
+
+- It always sits inside a recipe page, next to the recipe name, the
+  ingredient list with quantities, the preparation steps, the cooking and
+  preparation times, and the portion count. It is never shown on its own.
+- The app has no gallery, no image browser, no download, no export and no
+  save function. There is no screen where a photo can be viewed by itself.
+- Each photo is re-encoded to AVIF and capped at 1024 px wide. I understand
+  from your terms that this alone does not change the answer, and I am not
+  relying on it.
+- Attribution and licence are shipped with the app, in a credits file, for
+  every photo.
+
+The photos are part of the application package rather than loaded from a
+server, because the app must work fully offline with no connection at all.
+That is a core constraint of the project, not a preference.
+
+So my question is narrow: does a photo used this way fall under the
+"combination ... new creative work" case, rather than Standalone use?
+
+If it does not, I will remove the Pixabay photos and say so. I would rather
+ask now than be wrong later.
+
+Thank you for your time.
