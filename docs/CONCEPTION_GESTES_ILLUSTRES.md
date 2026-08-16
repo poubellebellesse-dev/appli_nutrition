@@ -351,15 +351,212 @@ n'importe laquelle des quatre.
 `<video>` sous jsdom, où `HTMLMediaElement.play()` lève. Il n'existe **aucun précédent de test
 d'affichage de média** — `imagePath` n'étant lu par aucun écran, il n'y a rien à copier.
 
-### Lot 4 — le hors-ligne
+### Lot 4 — le hors-ligne ✅ **LIVRÉ le 2026-08-16** — *sans hash : pas encore commité*
 
-**Fini quand** :
-1. `tests/zero-requete-reseau.test.ts` vérifie que **les posters sont pré-cachés** et que **les
-   clips ne le sont pas**.
-2. Les clips entrent dans le service worker par le **balayage de dossier** existant, jamais par une
-   liste écrite à la main — sinon l'échec est silencieux.
-3. Un nom de fichier porte une **empreinte de contenu** : piège déjà payé, « hacher les noms
-   n'invalide pas un cache ».
+> ⚠️ **PAS DE HASH, ET C'EST UNE INFORMATION.** Le travail n'a pas été commité : sur ce dépôt, Claude
+> ne commite que sur ordre explicite. Tant que la ligne est vide, **la livraison n'est rattachée à
+> rien** — c'est vrai pour ce lot comme pour tout autre. À remplir au commit, pas avant.
+>
+> ✅ **Les 12 critères sont verts** — 11 tests, `tests/scelles/gestes-hors-ligne.test.ts`.
+> ⚠️ **Le sceau a été levé une fois APRÈS la livraison du code**, sur décision de l'auteur, pour
+> quatre corrections qui ne touchent **aucune ligne de production** : armer le piège anti-proxy du
+> critère 5 (qui échouait sur sa propre pré-condition, donc ne jugeait rien), exercer le prédicat en
+> profondeur (critère 6), interdire un nom de cache versionné (critère 9), et rendre l'oubli de
+> `.clone()` observable. Les quatre venaient de la **troisième** attaque. Le sceau a été remis.
+
+> ⛔ **CE BRIEF A ÉTÉ ATTAQUÉ DEUX FOIS LE 2026-08-16, ET IL EST TOMBÉ DEUX FOIS.** Verdict identique
+> les deux fois : *« ils ne discriminent pas »*. Ce qui suit est la **troisième** version.
+>
+> **Première attaque** — le balayage (1, 2, 3, 8) résistait ; **la conservation au runtime, sujet
+> même du lot, se trichait trois fois** (5 par la taille du fichier, 6 par deux URL en dur, 7 parce
+> qu'il lisait du TEXTE au lieu d'un comportement), dont le critère 7 censé être le garde-fou. Et
+> elle a fait apparaître le critère **9**, qui n'existait pas : un trou de **conception**, pas de
+> mesure, que rien n'aurait révélé avant la production.
+>
+> **Seconde attaque** — deux touches plus dures : **rien n'obligeait `generateBundle` à APPELER
+> `mediasDeGestes`** (une liste des 6 URL réelles avec leurs empreintes collées passait 1 et 2 —
+> quatrième occurrence du piège « déclaré ≠ branché », que le critère 7 fermait pour le prédicat et
+> laissait ouvert pour le balayage) ; et le **critère 9 dégénérait** si l'on rangeait les clips dans
+> `CACHE` lui-même, l'assertion devenant vraie par construction. Plus trois touches moins graves :
+> `mtimeMs` remplaçait la taille au critère 5, un `cache.put` **détaché** passait le 7, et
+> `includes('brouillons')` remplaçait un calcul de profondeur au 3 bis.
+>
+> ⚠️ **Ce qui a changé est écrit dans chaque critère concerné, en toutes lettres.** On ne réécrit pas
+> un critère cassé en silence : sinon la même triche revient au lot suivant.
+>
+> ⚠️ **Le « Fini quand » d'origine faisait trois lignes et n'était pas chiffré.** Réécrit au brief,
+> après avoir mesuré l'état réel du service worker. Les trois points sont conservés ; ce qui change
+> est qu'ils sont devenus falsifiables, et qu'un **quatrième sujet a été trouvé** : la conservation
+> après première lecture, exigée par `ARCHITECTURE.md` §7.1 l.982 et absente du plan.
+
+**Ce que la mesure a trouvé, et qui n'était écrit nulle part** (relevé du 2026-08-16, `vite build`
+réel) :
+
+- ⛔ **`catalog/gestes` apparaît ZÉRO fois dans `dist/sw.js`.** Les 18 fichiers sont bien copiés dans
+  `dist/`, mais **aucun n'est pré-caché ni ne compte dans la version du cache**. ⇒ **Hors ligne, les
+  vignettes du lexique sont cassées** — c'est le lot 3 qui a introduit ce trou, et personne ne
+  l'aurait vu en ligne.
+- ⛔ **Le service worker ne fait AUCUN `cache.put`.** Il sert depuis le cache, et va au réseau quand
+  il n'a rien — sans rien garder. ⇒ **Un clip regardé en ligne est perdu hors ligne**, alors que
+  §7.1 l.982 dit « à la 1ʳᵉ consultation, **puis conservé** ».
+- ⚠️ **Le critère « un nom de fichier porte une empreinte de contenu » CONTREDIT le mécanisme en
+  place**, dont l'en-tête dit exactement l'inverse : « LA VERSION DU CACHE HACHE LE CONTENU, PAS LES
+  NOMS ». **Tranché au brief : c'est le contenu qui est haché, pas le nom renommé** — voir critère 5.
+- ⚠️ **Écart constaté et NON corrigé ici** : §7.1 range les **photos de recettes** dans l'étage « à la
+  demande », mais `imagesPubliques()` les **pré-cache toutes** (116 aujourd'hui), avec un motif écrit.
+  Le code dévie du document depuis le 2026-07-30. **Ce lot ne tranche pas cette déviation** ; il s'y
+  conforme pour les posters, qui sont dans le même cas — 62 vignettes au montage de l'écran Savoir.
+
+**Fini quand** — tout se vérifie sur un `vite build` **réel**, sur une fonction pure contre un dossier
+temporaire, ou sur le **worker émis EXÉCUTÉ** dans un `node:vm` — **jamais sur une fixture qui
+redirait la même chose, et jamais en lisant un texte quand un comportement est mesurable** :
+
+1. ⛔ **LE BUILD TOURNE SUR UN `publicDir` TÉMOIN, ET DÉCOUVRE UN GESTE INVENTÉ.** `app/public` est
+   copié dans un dossier temporaire (8,3 Mo), on y ajoute un geste `zzz-build-temoin` qui n'existe
+   pas au catalogue, et Vite build là-dessus via son **API JS** en réutilisant `vite.config.ts` tel
+   quel — seul `publicDir` change. `A_PRECACHER` doit contenir le poster de ce geste, tous les autres
+   `*.jpg`, et **aucun** `.mp4`. ⚠️ **C'est ce qui oblige `generateBundle` à APPELER `mediasDeGestes`.**
+   Sans ce point, une liste des 6 URL réelles avec leurs empreintes sha-256 collées une fois passait
+   les critères 1 et 2 sans rien balayer — quatrième occurrence du piège « déclaré ≠ branché ».
+   ⚠️ **Aucune écriture dans le dépôt** : modifier `app/public/` le temps d'un build aurait été plus
+   court, et faux — les autres fichiers de test buildent en parallèle.
+2. **Le compte monte exactement du nombre de posters, et pas d'une entrée de plus** : **131 → 137**
+   sur l'arbre du 2026-08-16, **138 sur le `publicDir` témoin** (le geste inventé en ajoute un).
+   ⛔ Plus haut veut dire qu'un clip est entré ; ce critère est ce qui distingue « les posters sont
+   dedans » de « le dossier entier est dedans ». Le nombre se **compte sur le disque**, jamais gravé.
+3. ⛔ **LE BALAYAGE EST PROUVÉ SUR UN DOSSIER INVENTÉ, PAS SUR LES SIX VRAIS.** Une fonction pure
+   exportée, testée contre un dossier temporaire portant des gestes qui n'existent pas au catalogue,
+   rend leurs posters et **pas** leurs clips. ⚠️ **C'est LE critère qui tue la triche** : une liste
+   des 6 posters écrite à la main satisfait les critères 1 et 2 sans balayer quoi que ce soit.
+   ▶ Précédent exact à copier : `imagesPubliques` et ses tests, `version-cache-sw.test.ts:85-137`.
+3 bis. ⛔ **Exactement UN niveau de sous-dossiers sous `catalog/gestes/`**, un dossier par code de
+   geste — assertion **de forme** : toute URL rendue vaut `/catalog/gestes/<geste>/<fichier>`.
+   **Deux** sous-dossiers profonds attendent, de noms différents (`brouillons/` et `archive/`), et le
+   second porte un nom de fichier parfaitement légitime. ⚠️ **Un `if (!chemin.includes('brouillons'))`
+   passait la version précédente sans jamais compter un niveau** ; il tombe sur `archive/`. Et un
+   dossier `catalog/gestes/` **absent** rend deux listes vides sans lever — même choix
+   qu'`imagesPubliques`, sinon le build casse chez quiconque n'a pas lancé l'import.
+3 ter. **Les deux listes sont INDÉPENDANTES : aucun appariement n'est supposé.** Le bac témoin porte
+   un geste avec un clip et **sans** poster, et un geste avec un poster et **sans** clip. Cas ni
+   exercé ni tranché jusqu'ici ; il l'est maintenant, et c'est le cas réel de `suer` (24 candidates,
+   zéro segment encodé) qui arrivera un jour à l'envers.
+4. ⛔ **Une LISTE BLANCHE d'extensions, pas une liste noire de noms.** Posters : `.jpg`. Clips :
+   `.mp4`. **Six** intrus de six familles distinctes sont plantés dans le dossier témoin —
+   `Thumbs.db`, `notes.txt`, `.DS_Store`, `desktop.ini`, `zzz-…jpg.bak`, `LISEZMOI` (sans extension)
+   — et le test assère **positivement** que toute URL rendue porte une extension autorisée.
+   ⚠️ **Deux intrus suffisaient à faire passer `if (nom === 'Thumbs.db' || nom === 'notes.txt')`**,
+   qui n'exclut rien d'autre. ⚠️ Ce n'est pas théorique : `EXTENSIONS_IMAGE` existe déjà parce que
+   l'explorateur Windows dépose des `Thumbs.db` dans les dossiers d'images.
+5. ⛔ **Le CONTENU d'un clip entre dans la version du cache, à nom, TAILLE et MTIME identiques.**
+   Ré-encoder un clip sans le renommer **doit** changer `versionDuCache`. **L'empreinte se calcule
+   avec `empreinteDeFichier` (sha-256 des octets), pas avec un proxy.** ⚠️ **Trois proxys sont
+   neutralisés, un par attaque successive** : le nom ne bouge pas ; la **taille** est identique des
+   deux côtés (`String(statSync(f).size)` passait la v1, et deux ré-encodages de même poids sont
+   banals en vidéo) ; le **mtime** est **restauré** après écriture (`String(statSync(f).mtimeMs)`
+   passait la v2 — un `touch` aurait alors invalidé le cache pour rien, pendant qu'un checkout git
+   uniformisant les dates aurait masqué un vrai changement). ⇒ **Il ne reste que le contenu.**
+   ⚠️ **C'est la lecture retenue de « empreinte de contenu », et l'autre est refusée** : hacher le
+   *nom* d'un `.mp4` ferait entrer un fichier de plus dans l'historique git à **chaque** ré-encodage,
+   or D4 les y grave définitivement.
+6. **Un clip consulté une fois est conservé** (§7.1 l.982). La décision « ce qui se conserve au
+   runtime » est une **fonction pure exportée** de `vite-plugin-sw.ts`, comme `imagesPubliques` et
+   `versionDuCache`. Elle rend **oui** pour les **12 clips réels du disque** *et* pour des clips de
+   gestes **inventés** (`suer`, `blanchir`, les témoins) ; **non** pour un poster, `catalog.db`, une
+   photo, un bundle `assets/`, une police, `/index.html`, `/`, et pour un `.mp4` **hors** du dossier
+   des gestes. ⚠️ **Les gestes inventés sont ce qui tue la liste en dur** : deux URL littérales
+   satisfaisaient la première version. C'est le levier du critère 3, appliqué au prédicat.
+7. ⛔ **LE WORKER ÉMIS EST EXÉCUTÉ, PAS LU.** `dist/sw.js` est chargé dans un `node:vm` gréé en faux
+   `ServiceWorkerGlobalScope` (`caches`, `self`, `fetch` bouchonnés), puis reçoit de vrais
+   événements. **Le cache y est vide**, donc chaque requête atteint le point de décision. Attendu :
+   un `cache.put` pour le clip, **zéro** pour le poster, `catalog.db`, un bundle, `/index.html`, une
+   autre origine, et **zéro sur une réponse 404**. ⚠️ **La première version de ce critère lisait du
+   TEXTE** — `sw.js.includes(source)` plus une regex `cache.put(` — et une constante jamais appelée
+   plus un `put` **inconditionnel** la passaient au vert **en cachant tout**. Le garde-fou anti-triche
+   était le plus facile à tricher. ⚠️ Piège nommé, payé trois fois ici, dont `imagePath` : un champ
+   déclaré n'est pas un champ branché.
+7 bis. ⛔ **L'ÉCRITURE EST MAINTENUE EN VIE, PAS DÉTACHÉE.** Le `cache.put` doit être **attendu dans
+   la chaîne rendue à `respondWith`** *ou* **confié à `event.waitUntil`** — les deux styles sont
+   acceptés, un `caches.open(…).then(c => c.put(…))` lâché dans le vide ne l'est pas : un vrai
+   navigateur a le droit de le tuer dès la réponse rendue, et le clip ne serait jamais conservé.
+   ⚠️ **Rendu observable par la forme du harnais** : `caches.open` et `cache.put` y résolvent sur
+   **macrotâche**, comme une vraie entrée-sortie. Ce qui a fini avant qu'on lâche la main est
+   protégé ; ce qui n'apparaît qu'après était détaché. **Vérifié dans les deux sens** — les deux
+   styles corrects passent, le détaché tombe.
+8. **Rien de l'existant ne régresse** : les **116** photos restent pré-cachées, et
+   `tests/zero-requete-reseau.test.ts` et `tests/version-cache-sw.test.ts` restent verts **sans être
+   modifiés**. Le lot **ajoute** un balayage, il n'en remplace aucun.
+9. ⛔ **LE CACHE DES CLIPS EST NON VERSIONNÉ, ET SURVIT À UNE MONTÉE DE VERSION.** `activate` reçoit
+   un cache périmé, le cache courant et le cache des clips : seul le périmé disparaît. **Le nom du
+   cache des clips n'est pas imposé** — le test le découvre en regardant où le worker range le clip —
+   **mais il doit différer du cache versionné**, et le test l'assère. ⚠️ **Sans cette inégalité le
+   critère DÉGÉNÈRE** : ranger les clips dans `CACHE` lui-même réduit le triplet à un doublet, et
+   l'assertion devient vraie par construction, pendant qu'à la montée de version suivante ce même
+   cache devient l'ancien et se fait purger comme n'importe quel périmé. ⚠️ **Trou de CONCEPTION, pas
+   de mesure, trouvé en attaquant ce brief** : `activate` supprime aujourd'hui tout cache dont le nom
+   diffère du courant (`vite-plugin-sw.ts:146-155`). ⇒ **Règle positive à coder** : `activate` purge
+   tout cache **sauf** le `CACHE` courant **et** le cache de conservation. C'est le seul critère qui
+   vient d'un défaut, pas d'un manque.
+
+**Ce que le brief PRESCRIT désormais, et que le codeur n'a plus à deviner** — chaque devinette est un
+aller-retour payé plus tard, et ces cinq-là ont été trouvées en attaquant la première version :
+
+| Ce qui manquait | Tranché |
+|---|---|
+| extensions des clips (pas d'équivalent d'`EXTENSIONS_IMAGE`) | **`.mp4` pour les clips, `.jpg` pour les posters** — liste blanche, critère 4 |
+| profondeur du balayage | **un seul niveau** de sous-dossiers, un par code de geste — critère 3 bis |
+| clip sans poster, poster sans clip | **les deux listes sont indépendantes**, aucun appariement — critère 3 ter |
+| méthode de hachage de l'empreinte | **`empreinteDeFichier` imposé**, sha-256 des octets. Pas la taille, pas la date — critère 5 |
+| `generateBundle` doit-il *appeler* `mediasDeGestes` | **oui**, et le build sur `publicDir` témoin l'y oblige — critère 1 |
+| ce que reçoit `doitEtreConserve` | **le chemin** (`url.pathname`), pas l'URL absolue |
+| nom du cache runtime des clips | **libre mais NON VERSIONNÉ**, et `activate` l'épargne explicitement — critère 9 |
+| le `cache.put` doit-il être protégé | **oui** : attendu dans `respondWith` **ou** confié à `waitUntil` — critère 7 bis |
+| filtrage des réponses avant `cache.put` | **une réponse en erreur ne se conserve pas** (404 testé) — critère 7 |
+
+**Les tests d'acceptation** — `tests/scelles/gestes-hors-ligne.test.ts`, écrits le 2026-08-16 depuis
+les critères seuls, **avant toute ligne de code**. **11 tests pour 12 critères** : `3 ter` est
+vérifié dans le test du critère 3 (les listes du bac témoin le portent) et `7 bis` dans celui du
+critère 7 (même consultation, deux constats). ⚠️ **Nommé d'après le lot et non `4.test.ts`** :
+sur ce dépôt le nom du fichier scellé **est** le nom du lot, c'est ce qui a permis de retrouver le
+lot 1 sous `gestes-champ-media`. ⚠️ **La moitié « sans être modifiés » du critère 8 n'est vérifiable
+par aucun test** — elle se lit au `git diff --name-only` avant `/fin`, et nulle part ailleurs.
+
+**Ce que le lot NE touche PAS** — hors périmètre, et le dire ferme la porte à l'élargissement :
+
+- **`app/src/` en entier.** Le lot vit dans `vite-plugin-sw.ts`, à la racine. ⛔ Ni `savoir.tsx`, ni
+  `catalog-loader.ts`, ni le moteur.
+- **Le catalogue.** Aucun YAML, aucun `catalog/build.mjs`, aucun `.mp4` ni `.jpg` ajouté ou retiré.
+  Les 6 posters et 12 clips du lot 2 sont pris **tels quels** ; les 51 gestes manquants restent
+  manquants, c'est le lot 2 et il est arrêté par décision.
+- **Le bouton « Tout télécharger pour le mode avion »** (§7.1 l.984). Il n'existe pas, ce lot ne le
+  crée pas. Le pré-cache reste automatique, la conservation reste implicite à la consultation.
+- **La déviation photos de recettes** (§7.1 « à la demande » *vs* `imagesPubliques` qui pré-cache les
+  116). Constatée ci-dessus, **non tranchée ici** — la trancher changerait le premier chargement de
+  tout le monde, et c'est une décision, pas un effet de bord.
+- **La question 68** (budget P6 : 27,6 Mo contre un critère de 15). Le lot ajoute ~1,5 Mo de posters
+  au pré-cache et laisse les clips hors pré-cache, ce qui va dans le sens du budget sans le fermer.
+- **L'éviction LRU** nommée par §7.1. Conserver n'est pas gérer un quota ; un cache qui grossit sans
+  limite est un défaut connu que ce lot laisse ouvert, et il vaut mieux l'écrire que le découvrir.
+- **La sensibilité à la casse des noms entre Windows et Linux.** Signalée par la seconde attaque,
+  écartée **sciemment** : il n'y a pas de CI Linux sur ce dépôt, les quatre commandes tournent sous
+  Windows, et un critère pour une plateforme qui n'existe pas ici serait du bruit qui aurait l'air
+  d'une garantie. ⚠️ **À rouvrir le jour où une CI Linux apparaît**, pas avant.
+
+**Les témoins d'avant** — relevés le 2026-08-16, arbre `de2ba39` **plus le seul fichier de tests
+scellés** (aucun code de production ajouté) :
+
+| Témoin | Avant le lot 4 |
+|---|---|
+| `npm test` | **2 158 passed / 9 failed (2 167 tests, 115 fichiers)** en 39,84 s |
+| dont le fichier scellé du lot 4 | **11 tests : 9 rouges, 2 verts** — les 2 verts sont les garde-fous (« sw.js est lisible », critère 8 de non-régression), qui doivent **rester** verts |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ 2,83 s |
+| `npm run engine:plan-stress` | **20/20** |
+| `node catalog/build.mjs` | 451 aliments · 330 recettes · 1 548 étapes · 62 gestes · 73 tips · 8 fiches · 30 équipements — **hors périmètre, ne doit pas bouger** |
+| `dist/sw.js` | **0** occurrence de `catalog/gestes` · 116 de `catalog/images` · **131 entrées** de pré-cache · version `nutrition-a35ffc368e04` |
+| `dist/catalog/gestes` | 18 fichiers (6 `.jpg` + 12 `.mp4`), 2,1 Mo · `dist/` total 11 Mo |
+
+⚠️ **L'écart 2 156 → 2 167 est attribué au fichier, pas déduit** : +11 tests et +1 fichier, tous dans
+`tests/scelles/gestes-hors-ligne.test.ts`. Aucun autre fichier de test n'a été touché.
 
 ---
 

@@ -50,10 +50,12 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 
 ## ▶ La prochaine étape
 
-⛔ **L'ACCROCHE EXISTE ET PORTE. CE QUI BLOQUE MAINTENANT, C'EST LE HORS-LIGNE ET LE CONTENU.**
+⛔ **LE HORS-LIGNE EST FERMÉ. CE QUI BLOQUE MAINTENANT, C'EST LE CONTENU.**
 
-1. **▶ LOTS 1 ET 3 LIVRÉS le 2026-08-16** (`e259bcb` le champ média, `de2ba39` l'affichage).
-   **▶ LE LOT 4 — LE HORS-LIGNE — EST LA PROCHAINE ÉTAPE** : seul lot débloqué du chantier.
+1. **▶ LOTS 1, 3 ET 4 LIVRÉS le 2026-08-16** (`e259bcb` le champ média, `de2ba39` l'affichage, le
+   hors-ligne **pas encore commité**). ⛔ **Il ne reste AUCUN lot débloqué dans ce chantier** : le
+   lot 2 est le seul ouvert, et il est arrêté par décision. **La suite du chantier est un choix, pas
+   une étape.** ▶ Ce que le lot 4 laisse derrière lui : `ETAT.md` §8.
    ⏳ **Le lot 2 est ARRÊTÉ À 3 GESTES SUR 51, volontairement** (`803fc42`, décision de l'auteur du
    2026-08-16) — D4 grave les binaires dans l'historique git **pour toujours**, et 22,43 Mo ne se
    dégravent pas. **Le rouvrir est une décision, pas une suite.**

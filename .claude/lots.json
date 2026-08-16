@@ -41,7 +41,8 @@
       "id": "Lot 4",
       "chantier": "gestes illustrés",
       "titre": "le hors-ligne",
-      "etat": "a_faire",
+      "etat": "fait",
+      "le": "2026-08-16",
       "bloque_par": "Lot 3"
     },
     {

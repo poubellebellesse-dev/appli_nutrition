@@ -743,6 +743,21 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   ⛔ **UNE TABLE FILLE, PAS DES COLONNES PLATES** : un geste porte 1 à 3 segments, trois colonnes
   auraient écrasé le deuxième en silence.
   ⛔ **`moment` EST UNE DONNÉE, PAS UN DÉRIVÉ DU RANG** — `CHECK` SQL et union littérale côté type.
+  ✅ **LE HORS-LIGNE EST FERMÉ DEPUIS LE 2026-08-16 (lot 4)** — les posters entrent dans le pré-cache
+  et dans la version du cache, les clips **seulement dans la version**, et un clip consulté une fois
+  est conservé. Avant ce lot, `catalog/gestes` apparaissait **ZÉRO fois** dans `dist/sw.js` : les
+  18 fichiers étaient copiés dans `dist/` sans être pré-cachés, donc **les vignettes du lexique
+  étaient cassées hors ligne** — trou ouvert par le lot 3, invisible en ligne.
+  ⛔ **DEUX CACHES, ET LE SECOND NE PORTE PAS DE VERSION.** `nutrition-<empreinte>` est purgé à
+  chaque activation, comme avant ; `nutrition-clips` en est **explicitement exempté**. Un clip a été
+  téléchargé parce que quelqu'un l'a REGARDÉ : le purger à la mise à jour suivante ferait payer deux
+  fois la même vidéo, et « puis conservé » (§7.1 ARCHITECTURE) ne conserverait rien. ⚠️ Un nom
+  versionné (`nutrition-clips-<version>`) aurait le même défaut d'un cran plus loin — il change à
+  chaque build et le worker suivant le purgerait comme un inconnu. **Verrouillé par test.**
+  ⛔ **LE CONTENU DES CLIPS ENTRE DANS LA VERSION DU CACHE, PAS LEUR NOM.** Un `.mp4` a un nom fixe :
+  sans cela un clip ré-encodé n'atteindrait jamais quelqu'un ayant installé l'application. C'est le
+  défaut du 2026-07-30 sur `catalog.db`, à l'identique. **L'empreinte est un sha-256 des octets** —
+  ni la taille, ni la date : les deux ont été essayées comme triches et sont refusées par test.
   ✅ **TRANCHÉ LE 2026-08-16, DÉCISION UTILISATEUR — L'IMPORT S'ARRÊTE À TROIS GESTES**, pas 51 :
   `deglacer`, `emincer`, `reduire`, soit **6 segments, 18 fichiers, 2,1 Mo** (`803fc42`). Motif :
   D4 est irréversible, et **22,43 Mo gravés dans l'historique git ne se dégravent pas**. L'échantillon
@@ -1177,6 +1192,35 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 > ⚠️ **Un audit automatique ne dispense pas de vérifier** : celui du 2026-08-07 a rendu
 > « déjeuner = 199 » là où la mesure directe donne **159**. Les verdicts d'un agent sont une piste,
 > pas un relevé.
+
+### Ce que le lot 4 des gestes illustrés laisse derrière lui (2026-08-16)
+
+- ⛔ **Le cache des clips n'a AUCUNE limite de taille.** §7.1 ARCHITECTURE nomme une « éviction
+  LRU » ; elle n'existe pas. Un utilisateur qui regarde beaucoup de clips accumule sans plafond, et
+  sur un appareil sous pression c'est `user.db` que le navigateur évince en premier. **Hors périmètre
+  du lot, écrit plutôt que découvert.** Aucun signal de réouverture n'est fixé — ni un quota atteint,
+  ni un nombre de clips. À trancher avant la publication, pas avant.
+- ⛔ **`cache.addAll` est ATOMIQUE à l'installation, et rien ne le rattrape.** Une seule des ~137 URL
+  du pré-cache qui échoue à se télécharger fait échouer l'`install` entier : le service worker ne
+  s'active jamais, et l'application n'est pas installable hors ligne. ⚠️ **Défaut PRÉEXISTANT**, pas
+  introduit par ce lot — il est là depuis le premier service worker. Le lot 4 ajoute 6 entrées à un
+  pré-cache qui en portait 131, donc il augmente la surface sans changer la nature du problème.
+  Aucun test ne le couvre.
+- ⚠️ **Le bouton « Tout télécharger pour le mode avion »** (§7.1) n'existe toujours pas. Le
+  pré-cache reste automatique et la conservation reste implicite à la consultation.
+- ⚠️ **La déviation « photos de recettes » n'est pas tranchée.** §7.1 les range « à la demande » ;
+  le code les pré-cache toutes depuis le 2026-07-30, avec un motif écrit. Le lot 4 s'y **conforme**
+  pour les posters de gestes, qui sont dans le même cas, sans trancher la question de fond.
+- ⚠️ **La sensibilité à la casse des noms de fichiers côté SERVEUR de production n'est pas
+  vérifiée.** Écartée sciemment pour la CI (il n'y en a pas sous Linux) ; la question du serveur est
+  **différente** et reste ouverte. Aucun coût tant que la distribution n'est pas choisie.
+- ⚠️ **Un critère du « Fini quand » n'est démontré par aucun test** : « les tests existants restent
+  verts **sans être modifiés** ». La moitié « verts » est mesurée ; la moitié « sans être modifiés »
+  se lit au `git diff --name-only` avant livraison, et nulle part ailleurs.
+- 📌 **Le brief a été attaqué TROIS fois avant d'être accepté**, et les trois passes ont rendu « ils
+  ne discriminent pas ». Douze triches fermées au total. ⚠️ **La plus instructive n'était pas une
+  triche** : un test qui échouait sur sa propre pré-condition ne jugeait plus rien — ni dans un sens,
+  ni dans l'autre. **Un critère toujours rouge ne discrimine pas mieux qu'un critère toujours vert.**
 
 ### Ce que le lot 66 laisse derrière lui (2026-08-14)
 
