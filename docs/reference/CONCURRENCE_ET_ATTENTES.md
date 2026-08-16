@@ -1,8 +1,13 @@
 # Ce que les gens demandent aux applications comparables
 
-> Relevé le **2026-08-04**. Avis App Store, Google Play, tests indépendants et blogs comparatifs.
+> Relevé le **2026-08-04** (§1 à §5, les **attentes**). **Réactualisé le 2026-08-16** (§6, le
+> **paysage concurrentiel**). Avis App Store, Google Play, tests indépendants et blogs comparatifs.
 > Réactualiser avant d'engager un chantier qui s'appuie dessus : un avis de 2025 sur une application
 > qui a été refondue depuis ne dit plus rien d'utile.
+>
+> ⛔ **Le §6 porte le changement d'argumentaire le plus important du document** : ne plus vendre
+> « sans IA », vendre **déterministe, auditable, sûr sur les allergies**. Et il porte les **trous** de
+> sa propre passe (Reddit, Trustpilot et Google Play inaccessibles) — les lire avant de citer.
 
 ## ⚠️ Fiabilité des sources — à lire avant de citer un chiffre
 
@@ -97,6 +102,111 @@ suppose une reconnaissance qui n'existe pas sans IA générative** — interdite
 la version serveur enverrait une photo de votre cuisine ailleurs, ce que le principe 2 interdit.
 Notre réponse au §1 ne peut donc pas être « automatiser la saisie » : elle est « ne pas prétendre que
 la donnée est fraîche ».
+
+## 6. Réactualisation du 2026-08-16 — le marché, douze jours plus tard
+
+> Passe de re-vérification par recherche web. **Rien de ce qui précède n'est démenti** ; §1 à §5
+> restent valides. Ce qui suit ajoute le paysage concurrentiel, absent du relevé du 04-08 qui ne
+> portait que sur les **attentes**.
+>
+> ⛔ **Fiabilité — à lire avant de citer.** Reddit, Trustpilot et Google Play ont **bloqué tous les
+> accès**. Ce relevé repose presque entièrement sur l'**API publique de l'App Store iOS** (source
+> primaire et datée, mais un seul canal, majoritairement marché **US**). **Aucun verbatim Reddit** :
+> le rejet communautaire de l'« AI slop », attendu, n'a été **ni confirmé ni infirmé**.
+
+### 6.1 Notre case est vide — et c'est le fait le plus utile de cette passe
+
+**Aucune application trouvée ne combine : gratuite, sans compte, 100 % locale sur mobile, hors-ligne
+intégral.**
+
+- **Mealie, Tandoor, Grocy** sont gratuits, libres et « locaux » — mais **auto-hébergés**. C'est un
+  serveur Docker qu'on fait tourner soi-même, pas une appli sur le téléphone de tout le monde.
+  ⚠️ **Ne pas les compter comme des concurrents directs**, et ne pas se rassurer non plus : ils
+  prouvent que la demande existe chez les techniciens.
+- **Paprika** est le plus proche du modèle local (**achat unique 4,99 $ par plateforme**, pas
+  d'abonnement, très bien reçu pour ça — « Buy once, have forever », 11/08/2026, 4,9/5 sur 53 466
+  avis) mais il est **payant** et adossé à sa sync cloud.
+- Toutes les applis françaises grand public (**Jow, Marmiton, 750g, Cuisine AZ**) exigent un compte
+  cloud.
+
+⚠️ **Le « sans IA » pur se raréfie même chez les libres** : **Mealie et Tandoor ont tous deux ajouté
+de l'IA** (import de recette depuis une image ou une vidéo, extraction nutritionnelle) — en opt-in,
+avec une clé API fournie par l'utilisateur.
+
+### 6.2 « Vider le frigo » : promesse partout, exécution nulle part
+
+C'est notre créneau, et il est **mal tenu par tout le monde** :
+
+| Appli | État au 16/08/2026 |
+|---|---|
+| **SuperCook** | 4,82/5 sur 21 647 avis, mais plaintes récentes : « Not helpful — it's not allowing me to confirm ingredients » (20/05/2026), « Pure garbage » (02/04/2026) |
+| **MyFridgeFood** | **3,23/5 sur 69 avis** — à l'abandon |
+| **Cooklist** (le plus installé du créneau, ~11 300 avis) | Démoli sur la **qualité des données** : « half of the recipes are not completed either with ingredients or directions » (13/08/2026), « ingrédients manquants dans les listes d'achat » (13/08/2026) |
+| **3 entrants IA « photo du frigo »** (2025-2026) | **0, 1 et 2 avis.** Aucune traction |
+| **Frigo Magic** | Toujours gratuit et sans compte, mais copyright 2025 affiché — maintenance possiblement ralentie |
+
+**Ce que ça dit** : le besoin est identifié par le marché (la vague d'imitation le prouve), et
+personne ne l'exécute. Les défauts cités chez Cooklist — recettes incomplètes, doublons, ingrédients
+manquants — sont exactement ceux qu'un **catalogue éditorialisé et un moteur déterministe** évitent
+par construction.
+
+### 6.3 ⛔ Le changement d'argumentaire : arrêter de vendre « sans IA »
+
+**Le marché ne rejette pas l'IA.** Samsung Food, Tasty et SuperCook la revendiquent, avec de bonnes
+notes. Vendre le principe 4 comme un refus de principe ne portera pas — et sonnera passéiste.
+
+**Mais les échecs documentés de l'IA en production sont exactement ceux que le moteur empêche :**
+
+> **Tasty a suggéré des crevettes à une utilisatrice ayant coché « éviter les crustacés »** — avis
+> App Store du **27/07/2026**. Une IA qui ignore une allergie déclarée.
+
+C'est notre argument, et il est **factuel, pas idéologique** : **déterministe, auditable, sûr sur les
+allergies**, chaque suggestion explicable en une phrase (principes 1, 3 et 4 réunis). Formulation à
+reprendre dans `STRATEGIE_DISTRIBUTION.md` §2 — pas « je refuse l'IA », mais **« je ne peux pas me
+tromper sur ton allergie »**.
+
+### 6.4 Deux fermetures à garder en réserve
+
+- **Yummly est mort** : équipe licenciée en **avril 2024**, service coupé en **décembre 2024**, le
+  domaine redirige vers KitchenAid (Whirlpool). Confirmé aussi par son absence des résultats App
+  Store en 2026.
+- Hors périmètre recettes mais même leçon : **Encircle Home Inventory** (17/12/2025) et **Centriq**
+  ont fermé en moins d'un an, avec export imposé et perte des photos non téléchargées une par une.
+
+→ L'argument **« local = jamais de fermeture, jamais d'export en urgence »** est désormais étayé par
+des faits datés, au lieu d'être une conviction.
+
+### 6.5 ⚠️ Jow — signal fort, NON CONFIRMÉ
+
+Le flux d'avis officiel d'Apple montre une concentration de **1 étoile les 12-14 août 2026** :
+
+> « Après des années à utiliser Jow gratuitement, on nous réclame un abonnement pour continuer. Cette
+> perte de fonctionnalité est honteuse, on perd accès à des années de recettes et listes. »
+> — *Jujumaze, 1★, 14/08/2026*
+>
+> « Je ne peux plus accéder à mes catégories et listes enregistrées sans souscrire un abonnement. »
+> — *Mawinu, 1★, 12/08/2026*
+
+⛔ **Une vérification ciblée n'a rien corroboré** : pas de communiqué Jow, `jow.fr/premium` en 404,
+aucune couverture presse trouvée, Reddit et Trustpilot bloqués. Une fiche App Store montrait des
+paliers de **2,99 €/mois à 34,99 €/an**, mais avec un contenu probablement en cache.
+
+**À traiter comme un signal daté, pas comme un fait acquis** — et à revérifier à la main. Si ça se
+confirme, le leader français du meal-planning gratuit vient de faire payer.
+
+### 6.6 Sources ajoutées le 2026-08-16
+
+- Paprika — [avis App Store (flux RSS officiel)](https://itunes.apple.com/us/rss/customerreviews/id=1303222868/sortBy=mostRecent/json)
+- Cooklist — [avis App Store](https://itunes.apple.com/us/rss/customerreviews/id=1352600944/sortBy=mostRecent/json)
+- Tasty (cas de l'allergie) — [avis App Store](https://itunes.apple.com/us/rss/customerreviews/id=1217456898/sortBy=mostRecent/json)
+- SuperCook — [avis App Store](https://itunes.apple.com/us/rss/customerreviews/id=1477747816/sortBy=mostRecent/json)
+- Jow — [avis App Store FR](https://itunes.apple.com/fr/rss/customerreviews/id=1301257625/sortBy=mostRecent/json) · [jow.fr](https://jow.fr)
+- Yummly (fermeture) — [Wikipedia](https://en.wikipedia.org/wiki/Yummly)
+- Mealie (IA) — [docs.mealie.io](https://docs.mealie.io/documentation/getting-started/features/) ·
+  Tandoor (IA) — [docs.tandoor.dev](https://docs.tandoor.dev/features/ai/)
+- Contexte complet et limites de la passe : `G:\Claude\strategie_applis\sessions\RECAP_2026-08-16.md` §9.1
+
+---
 
 ## Sources
 
