@@ -42,17 +42,20 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-14, arbre COMPLET, commit `17b7700`
-(lot 66b)** :
-`npm test` → **2 146 passed / 6 failed (2 152 tests, 113 fichiers)** en ~41 s · typecheck propre ·
-`vite build` ✓ (2,95 s) · `engine:plan-stress` **20/20** · `node catalog/build.mjs` → **451 aliments,
+Dernier relevé, **suite réellement exécutée le 2026-08-16, arbre COMPLET, commit `de2ba39`
+(lot 3 des gestes illustrés)** :
+`npm test` → **2 156 passed / 0 failed (2 156 tests, 114 fichiers)** en ~42 s · typecheck propre ·
+`vite build` ✓ (2,82 s) · `engine:plan-stress` **20/20** · `node catalog/build.mjs` → **451 aliments,
 330 recettes, 1 548 étapes, 62 gestes, 73 tips, 8 fiches, 30 équipements (1 473 couples)** ·
 `catalog/audit-mapping.mjs` → 451 mappings, 9 candidats à relire (inchangé).
-⛔ **LES 6 ROUGES NE SONT PAS UNE RÉGRESSION, ET NE PAS LES LIRE COMME UN ARBRE CASSÉ** : ils sont
-tous dans `tests/scelles/gestes-champ-media.test.ts` (**7 tests, 6 rouges**), les tests scellés de la
-lane média — écrits AVANT leur code, donc rouges par construction, exactement comme la méthode
-l'exige. « Vert » veut dire ici : vert partout sauf ce fichier. Il redeviendra vert quand son lot
-sera codé.
+✅ **L'ARBRE EST VERT EN ENTIER — les 6 rouges de la lane média sont éteints.** Ils vivaient dans
+`tests/scelles/gestes-champ-media.test.ts` (7 tests), écrits AVANT leur code, donc rouges par
+construction, exactement comme la méthode l'exige ; le **lot 1 les a fermés le 2026-08-16**.
+Écart de compte attribué fichier par fichier : 2 152 → 2 156 = **+4, tous `savoir.test.tsx`**
+(lot 3), et 113 → 114 fichiers pour la même raison. Les 7 scellés étaient **déjà comptés**.
+⚠️ **`node catalog/build.mjs` sort une alerte qui n'est de personne aujourd'hui** : fiche
+`calcium-fractures`, source `critique-zhao-2018` **sans auteurs vérifiés**. C'est du contenu Savoir
+— elle tombe avec la relecture par un tiers, pas avec un lot de code.
 ⚠️ **`engine:plan-stress` est le témoin de la durée** : le mode cuisine a ajouté une durée ÉCOULÉE
 (actif + repos) sans toucher la durée ACTIVE que lit le solveur. 20/20 à chacun des trois lots le
 prouve. S'il bouge après un lot de cuisine, c'est que les deux durées ont été confondues.

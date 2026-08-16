@@ -21,17 +21,16 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-14, SUR L'ARBRE COMMITÉ** (`17b7700`, lot 66b) : `npm test` → **2 146 passed
-/ 6 failed (2 152 tests, 113 fichiers)** en ~41 s · typecheck propre · `vite build` ✓ (2,95 s) ·
-`engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé).
-⛔ **LES 6 ROUGES NE SONT PAS UNE RÉGRESSION — ne pas lire ce relevé comme un arbre cassé** : tous
-dans `gestes-champ-media.test.ts` (7 tests, 6 rouges), scellés de la lane média écrits avant leur
-code. Écart 2 147 → 2 152 attribué fichier par fichier : +3 le fichier neuf du 66b, +2 la lane média.
+⚠️ **RELEVÉ DU 2026-08-16, SUR L'ARBRE COMMITÉ** (`de2ba39`, lot 3 des gestes) : `npm test` →
+**2 156 passed / 0 failed (2 156 tests, 114 fichiers)** en ~42 s · typecheck propre · `vite build` ✓
+(2,82 s) · `engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé).
+✅ **LES 6 ROUGES SONT ÉTEINTS** — le lot 1 a fermé les scellés de `gestes-champ-media.test.ts`.
+Écart 2 152 → 2 156 attribué fichier par fichier : **+4, tous dans `savoir.test.tsx`** (lot 3).
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
 tail -25` rend le code de sortie du **pipe**, donc 0. Lire `Tests N failed`, jamais `$?`.
 ⚠️ **Le compte d'écrans se lit en `ETAT.md` §5, qui en porte TROIS et interdit de les uniformiser** :
-**8 spécifiés**, **12 codés**, **11 testés**. Ni « neuf » ni « dix » n'était juste.
+**8 spécifiés**, **12 codés**, **12 testés** — `savoir` était le dernier sans test, livré le 08-16.
 
 ## ⛔ Travailler à plusieurs sessions dans cet arbre
 
@@ -51,22 +50,17 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 
 ## ▶ La prochaine étape
 
-⛔ **LE BLOCAGE N'EST PLUS LA RÉCOLTE, C'EST L'ACCROCHE** — les médias existent, rien ne les porte.
+⛔ **L'ACCROCHE EXISTE ET PORTE. CE QUI BLOQUE MAINTENANT, C'EST LE HORS-LIGNE ET LE CONTENU.**
 
-1. **▶ LE BRIEF EST ÉCRIT, RELU DEUX FOIS ET IL ATTEND `/sceller gestes-champ-media`.** ⛔ **Rien à
-   rebriefer** : `tests/scelles/gestes-champ-media.test.ts` porte **7 tests, 6 rouges** — rouges par
-   construction, le code n'existe pas. **Cinq des sept viennent des relectures, pas de la première
-   rédaction** ; la plus grosse a montré qu'un chargeur oubliant de filtrer par geste passait tout.
-   ⚠️ **Le sceau est une commande de l'utilisateur, pas de Claude.**
+1. **▶ LOTS 1 ET 3 LIVRÉS le 2026-08-16** (`e259bcb` le champ média, `de2ba39` l'affichage).
+   **▶ LE LOT 4 — LE HORS-LIGNE — EST LA PROCHAINE ÉTAPE** : seul lot débloqué du chantier.
+   ⏳ **Le lot 2 est ARRÊTÉ À 3 GESTES SUR 51, volontairement** (`803fc42`, décision de l'auteur du
+   2026-08-16) — D4 grave les binaires dans l'historique git **pour toujours**, et 22,43 Mo ne se
+   dégravent pas. **Le rouvrir est une décision, pas une suite.**
+   ⚠️ **Le sceau de `gestes-champ-media.test.ts` a été levé, confirmé** : deux assertions sur le
+   *contenu du catalogue* retirées, le pouvoir de détection gardé. Motif dans le lot 1 du plan.
    ▶ Plan, « Fini quand » des 4 lots, décisions et pièges nommés :
    **[CONCEPTION_GESTES_ILLUSTRES.md](./CONCEPTION_GESTES_ILLUSTRES.md)**.
-   ✅ **Le lot 1 ne dépend d'aucune décision ouverte.** **Quatre sont tranchées** (2026-08-14) :
-   les deux formats vidéo, les binaires versionnés dans git, un poster par segment, et **la mise en
-   page — variante D + vignettes**, tranchée sur
-   [maquettes construites avec les vrais clips](https://claude.ai/code/artifact/f2cf92ae-eb53-47a3-a6fc-3e4623986277).
-   ⛔ Le motif « montrer un écran à Pexels » a été **écarté** — le chantier se fait pour lui-même.
-   ▶ Ce qui a été trouvé, et **ce qui était faux** :
-   [archive/RECAP_SESSION_2026-08-15_maquettes-et-brief-gestes.md](./archive/RECAP_SESSION_2026-08-15_maquettes-et-brief-gestes.md).
 2. **🎬 Clips : le travail est FAIT** (compte en `ETAT.md`). ⛔ Reste actionnable : **7 gestes sans
    aucun candidat** (`piquer`, `blanchir`, `essorer`, `effeuiller`, `gratiner`, `chinois`,
    `ecosser`) — homonymes, cause nommée pour chacun. **Ne pas relancer de moisson à requête

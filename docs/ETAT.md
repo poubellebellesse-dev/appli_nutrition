@@ -735,9 +735,31 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   pour 12 i/s au lieu de 24. Il n'a d'intérêt que là où une balise vidéo est impossible.
   ⚠️ Vérifié à l'œil sur une image extraite de l'encodage AV1 du clip à fort mouvement : le geste
   reste lisible à ce réglage. **Un CRF ne se choisit pas sur un tableau de poids seul.**
-  ⚠️ **Le lexique n'a toujours AUCUN champ pour porter un média** — ni dans le YAML source, ni dans
-  `catalog/build.mjs`, ni dans `LexiconEntry`, ni à l'écran. Photo et clip sont tous deux sans point
-  d'accroche : c'est un lot de code à part entière, pas la fin du tri.
+  ✅ **LE POINT D'ACCROCHE EXISTE ET PORTE, DEPUIS LE 2026-08-16** — cette ligne disait « le lexique
+  n'a toujours AUCUN champ pour porter un média », et c'est faux depuis les lots 1 et 3. Livré :
+  table **`lexicon_clip`** fille de `lexicon_entry` (`poster_path`, `av1_path`, `h264_path`,
+  `moment`, `ordre`, **PK composite**, FK), type **`LexiconClip`** dans `engine/domain/catalog.ts`,
+  mapping groupé dans `catalog-loader.ts`, et l'écran Savoir qui l'affiche (`e259bcb`, `de2ba39`).
+  ⛔ **UNE TABLE FILLE, PAS DES COLONNES PLATES** : un geste porte 1 à 3 segments, trois colonnes
+  auraient écrasé le deuxième en silence.
+  ⛔ **`moment` EST UNE DONNÉE, PAS UN DÉRIVÉ DU RANG** — `CHECK` SQL et union littérale côté type.
+  ✅ **TRANCHÉ LE 2026-08-16, DÉCISION UTILISATEUR — L'IMPORT S'ARRÊTE À TROIS GESTES**, pas 51 :
+  `deglacer`, `emincer`, `reduire`, soit **6 segments, 18 fichiers, 2,1 Mo** (`803fc42`). Motif :
+  D4 est irréversible, et **22,43 Mo gravés dans l'historique git ne se dégravent pas**. L'échantillon
+  prouve la chaîne de bout en bout sans engager le lot complet. ⇒ **Le lot 2 reste OUVERT** et son
+  « Fini quand » (51/62) n'est pas atteint ; le rouvrir est une décision, pas une suite.
+  ⛔ **ET `suer` N'EST PAS DEDANS — c'est le geste qui justifiait le chantier** (« suer » contre
+  « revenir »), 24 candidates photo et **zéro segment encodé**. La démonstration reste non montrable.
+  ✅ **TRANCHÉ LE MÊME JOUR — LE SCEAU DE `gestes-champ-media.test.ts` EST LEVÉ, CONFIRMÉ.** Deux
+  assertions retirées, toutes deux sur le **contenu du catalogue** et non sur le sujet du lot : « les
+  62 fiches portent `clips` **et il est vide** » et « les 60 autres gestes ont **zéro** clip ». Le
+  « Fini quand » disait « vide **tant que le lot 2 n'a pas tourné** » ; le test ne portait pas la
+  condition et rendait le lot 1 **structurellement incompatible avec l'existence d'un import**.
+  Gardé : chaque fiche porte un **tableau** jamais `null`, et aucun geste n'hérite des **témoins
+  plantés** — détection intacte, et désormais **indépendante de ce que le catalogue contient**.
+  ✅ **L'ÉCART « 99 DÉCIDÉS / 98 ENCODÉS » EST EXPLIQUÉ** (mesuré par l'import) : ce n'est pas un
+  segment jamais produit, c'est un **2→1 sur `emincer`**, ré-encodé en un seul segment sans que la
+  décision soit reprise. ⇒ **Le fichier de décisions n'est pas un index de ce qui existe.**
 - **Recettes** : 1 photo hero par recette ; **vidéo 2-3 s seulement sur les recettes du jour**.
 - **Cache à deux étages (option B)** : socle léger pré-caché (shell + `catalog.db` + boucles +
   photos d'ustensiles), médias lourds à la demande + bouton « tout télécharger ». **Aucun média
@@ -1001,10 +1023,13 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 > ⚠️ **Le tableau ci-dessous suit la numérotation de `DESIGN.md` §4, qui s'arrête à huit.** Le code
 > en porte **douze** : s'y ajoutent **Paramètres** et **Éditeur de recette** (2026-08-01,
 > `archive/RECAP_SESSION_7.md`), le **mode cuisine** (§5bis ARCHITECTURE) et la **fiche aliment**
-> (2026-08-07, décision 33). **Onze sont couverts par des tests d'écran** — `savoir.tsx` ne l'est
-> pas, le chantier « Comprendre » y étant en cours au moment où les tests ont été écrits. Les trois
-> comptes — 8 spécifiés, 12 codés, 11 testés — sont justes ; ne pas les uniformiser sans traiter la
-> cause (`DESIGN.md` n'a pas suivi).
+> (2026-08-07, décision 33). ✅ **LES DOUZE SONT COUVERTS PAR DES TESTS D'ÉCRAN DEPUIS LE
+> 2026-08-16** — `savoir.tsx` était le dernier sans test, le chantier « Comprendre » y étant en cours
+> au moment où les autres ont été écrits ; le lot 3 des gestes illustrés a livré
+> `savoir.test.tsx` (`de2ba39`). Les trois comptes — **8 spécifiés, 12 codés, 12 testés** — restent
+> à ne pas uniformiser sans traiter la cause (`DESIGN.md` n'a pas suivi et s'arrête toujours à huit).
+> ⚠️ **Recompté à la commande le 2026-08-16**, pas déduit : `ls app/src/ui/screens/*.tsx` rend 12
+> écrans et 12 `*.test.tsx`.
 > ⚠️ **Ce compte disait « dix codés, neuf testés » jusqu'au 2026-08-07, et il était faux depuis le
 > 2026-08-06** : le mode cuisine avait été livré sans que la ligne bouge. Le recompter demande de
 > lister `app/src/ui/screens/*.tsx`, pas de faire confiance à la phrase précédente.

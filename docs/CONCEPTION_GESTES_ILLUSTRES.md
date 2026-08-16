@@ -1,7 +1,11 @@
 # Conception — le lexique des gestes illustré
 
-> Cadrage du 2026-08-14. **Aucune ligne de code n'a été écrite.** Rien n'est scellé.
+> Cadrage du 2026-08-14. **Lots 1 et 3 LIVRÉS le 2026-08-16** (`e259bcb`, `de2ba39`) · **lot 2
+> PARTIEL, et volontairement** (`803fc42` — 3 gestes sur 51, décision de l'auteur) · **lot 4 à faire**.
 > L'état chiffré vit dans `ETAT.md` ; ce document ne porte que le découpage et les questions.
+> ⚠️ **Cet en-tête a annoncé « aucune ligne de code n'a été écrite » pendant que les lots 1 à 3
+> étaient codés, verts et posés dans l'arbre.** Corrigé le 2026-08-16, au moment de leur commit.
+> L'en-tête d'un document de conception se corrige dans le lot qui le dément, pas plus tard.
 
 ---
 
@@ -173,14 +177,26 @@ Trois conséquences, toutes portées ailleurs dans ce document :
    coût nommé de la variante C au moment du choix ; il a été accepté. Ce n'est pas une dette, c'est
    un prix payé les yeux ouverts. **Ne pas rouvrir ce point sans un fait nouveau.**
 
-### D5 — Combien de gestes illustrés au premier passage ?
+### ~~D5~~ — Combien de gestes illustrés au premier passage ? ✅ TRANCHÉE le 2026-08-16 : **TROIS**
 
-⚠️ **Non tranchée, mais NON BLOQUANTE** — l'import peut tourner sur ce qui existe. Les
-98 segments couvrent **51 gestes sur 62**. Les **11 restants** n'ont pas de clip décidé. Le lot 2
-livre donc **51/62**, et il faut que le « Fini quand » le dise plutôt que d'annoncer une couverture
-complète. ⚠️ **Écart connu et non expliqué** : le fichier de décisions porte **99** segments, la
-documentation en annonce **98 encodés**. Un segment décidé n'a pas été produit — sans conséquence,
-mais à ne pas laisser silencieux.
+⛔ **CE DOCUMENT A ANNONCÉ 51/62 JUSQU'AU 2026-08-16. C'EST TROIS** — `deglacer`, `emincer`,
+`reduire`, soit 6 segments et 18 fichiers. **Décision de l'auteur**, prise devant le coût
+irréversible de D4 : chaque segment importé pèse dans l'historique git **pour toujours**, et les
+98 segments font 22,43 Mo. L'échantillon prouve la chaîne de bout en bout sans graver le lot complet.
+
+⇒ **Le lot 2 reste donc OUVERT**, et son « Fini quand » (51/62, 196 vidéos, 98 posters) n'est **pas**
+atteint. Ce n'est pas un échec du lot : c'est sa portée qui a été réduite, les yeux ouverts.
+
+⛔ **`suer` N'EST PAS DANS L'ÉCHANTILLON, ET C'EST LE GESTE QUI JUSTIFIAIT LE CHANTIER** (§1 :
+« suer » contre « revenir »). 24 candidates photo, **zéro segment encodé**. La démonstration qui a
+motivé tout ce travail n'est toujours pas montrable — ce n'est pas le lot 2 qui la livrera.
+
+✅ **L'ÉCART « 99 DÉCIDÉS / 98 ENCODÉS » EST EXPLIQUÉ**, mesuré par l'import le 2026-08-16 : ce n'est
+**pas** un segment jamais produit, c'est un **2→1 sur `emincer`**. La décision porte `debut` +
+`milieu` ; le bac contient un unique `emincer-unique`, ré-encodé en un seul segment sans que la
+décision soit reprise. ⇒ **Le fichier de décisions n'est pas un index de ce qui existe** : il dit
+*si* on importe et *à qui* appartient la vidéo, le dossier `encode/` dit *ce qui existe*. Les
+confondre importerait des chemins vers des fichiers absents.
 
 ---
 
@@ -188,7 +204,17 @@ mais à ne pas laisser silencieux.
 
 ⚠️ Chaque « Fini quand » se vérifie **contre `catalog.db` réel**, jamais contre une fixture.
 
-### Lot 1 — le champ média du lexique (données, aucun pixel)
+### Lot 1 — le champ média du lexique (données, aucun pixel) ✅ **LIVRÉ le 2026-08-16 (`e259bcb`)**
+
+⚠️ **LE SCEAU A ÉTÉ LEVÉ SUR `gestes-champ-media.test.ts`, SUR DÉCISION DE L'AUTEUR, CONFIRMÉE.**
+Deux assertions retirées — « les 62 fiches portent `clips` **et il est vide** » (critère 4) et « les
+60 autres gestes ont **zéro** clip » (critère 6). Toutes deux portaient sur le **contenu du
+catalogue**, jamais sur le sujet du lot : le « Fini quand » disait « vide partout **tant que le lot 2
+n'a pas tourné** », le test ne portait pas la condition, et rendait donc le lot 1 structurellement
+incompatible avec l'existence même d'un import. **Ce qui est gardé est ce qu'elles prouvaient
+vraiment** : chaque fiche porte un **tableau**, jamais `null` ni absent ; et aucun geste n'hérite des
+**témoins plantés**. Le pouvoir de détection est intact et devient **indépendant de ce que le
+catalogue contient** — donc encore valable après le lot 2.
 
 **Fini quand** :
 1. `LexiconEntry` porte `clips: readonly LexiconClip[]` et `npm run typecheck` est propre.
@@ -266,7 +292,12 @@ mais à ne pas laisser silencieux.
 ⚠️ **Piège nommé** : « un champ déclaré n'est pas un champ branché » — trois occurrences déjà payées
 dans ce dépôt, dont `imagePath` lui-même. Ce lot déclare ; il ne prétend rien afficher.
 
-### Lot 2 — l'import des clips (débloqué : D2 et D4 sont tranchées)
+### Lot 2 — l'import des clips ⏳ **PARTIEL le 2026-08-16 (`803fc42`) — LE LOT RESTE OUVERT**
+
+⛔ **LE SCRIPT EST FINI, L'IMPORT NE L'EST PAS.** `catalog/import-clips.mjs` existe et fait les trois
+gestes ensemble (copie, YAML, crédits) ; il n'a tourné que sur **3 gestes sur 51** — voir D5,
+tranchée le 2026-08-16. Le « Fini quand » ci-dessous est **celui du lot complet** et n'est pas
+atteint : il reste la référence du jour où l'import complet sera lancé, pas une promesse tenue.
 
 **Fini quand** :
 1. `node catalog/import-clips.mjs` copie les segments du bac vers `app/public/catalog/gestes/`,
@@ -279,7 +310,12 @@ dans ce dépôt, dont `imagePath` lui-même. Ce lot déclare ; il ne prétend ri
    ⚠️ la règle « la mesure se prend sur `dist/`, jamais sur le bac » a déjà été enfreinte une fois
    par le lot qui l'avait écrite.
 
-### Lot 3 — l'affichage (dépend du lot 1 et du lot 2)
+### Lot 3 — l'affichage ✅ **LIVRÉ le 2026-08-16 (`de2ba39`)** *(dépendait du lot 1 et du lot 2)*
+
+⚠️ **UN CRITÈRE RESTE DÛ, ET IL NE SE PREND PAS ICI : le n° 7**, le nombre de requêtes au premier
+affichage de l'écran Savoir. La vignette dans la ligne fait passer **62 images** au montage contre
+**une** avant. Ni jsdom ni un navigateur de bureau ne le mesurent — il se prend **avec le chrono de
+`#/recettes`**, sur le même appareil, au même moment. ▶ `RETOUR_ESSAI_TELEPHONE.md` §0.
 
 ⛔ **La mise en page n'est plus à décider : D6 l'a fixée le 2026-08-14** —
 [maquettes](https://claude.ai/code/artifact/f2cf92ae-eb53-47a3-a6fc-3e4623986277), variante D plus
@@ -331,16 +367,19 @@ d'affichage de média** — `imagePath` n'étant lu par aucun écran, il n'y a r
 
 ```
 ✅ D2 (deux formats)  ─┐
-✅ D4 (versionné git) ─┼─→ Lot 2 (import) ─→ Lot 3 (affichage) ─→ Lot 4 (hors-ligne)
-   D3 (posters, opt.) ─┤        ▲
-   D5 (51/62, opt.)   ─┘        │
-                         Lot 1 (champ) ───┘
+✅ D4 (versionné git) ─┼─→ ⏳ Lot 2 (import) ─→ ✅ Lot 3 (affichage) ─→ ▶ Lot 4 (hors-ligne)
+✅ D3 (un par segment)─┤     3 gestes / 51           de2ba39              À FAIRE — c'est ICI
+✅ D5 (trois, 08-16)  ─┘        ▲
+                         ✅ Lot 1 (champ) ──┘
+                            e259bcb
 
 ⏳ D1 (budget P6 / décision 68) ── ne bloque AUCUN lot, mais doit être tranchée
                                    avant de dire que le chantier est fini.
 ```
 
-**Le lot 1 démarre maintenant, sans aucune décision.** Le lot 2 est débloqué par D2 et D4.
+⛔ **LE LOT 4 EST LE SEUL LOT DÉBLOQUÉ DU CHANTIER, ET C'EST LA PROCHAINE ÉTAPE.** Le lot 2 n'est
+pas *bloqué* : il est **volontairement arrêté à 3 gestes** (D5). Le rouvrir est une décision, pas
+une suite.
 
 ⚠️ **D1 (la décision 68) a changé de statut : elle ne bloque plus l'ordre des lots.** Les clips sont
 des **médias à la demande** au sens de `ARCHITECTURE.md` §7.1 — ils n'entrent pas dans le premier
@@ -348,21 +387,29 @@ chargement. Ce qui reste à trancher est **ce que le critère P6 mesure**, pas s
 ⛔ **Mais elle doit être tranchée avant de déclarer le chantier livré** : sinon on aura ajouté
 22,4 Mo à un budget dépassé sans jamais dire ce que le budget compte.
 
-**Témoins à garder stables** — relevé du **2026-08-15**, **à revérifier au démarrage, pas à
-recopier** (le précédent, du 08-11, annonçait 2 124 / 109 fichiers) :
+**Témoins à garder stables** — relevé du **2026-08-16**, **à revérifier au démarrage, pas à
+recopier** (les précédents : 2 146/6 le 08-15, 2 124 / 109 fichiers le 08-11) :
 
 | Témoin | Valeur attendue |
 |---|---|
-| `npm test` | **2 146 passed / 6 failed** — 2 152 tests, 113 fichiers |
+| `npm test` | **2 156 passed / 0 failed** — 2 156 tests, 114 fichiers, ~42 s |
 | `npm run typecheck` | propre |
-| `npx vite build` | ✓ |
+| `npx vite build` | ✓ (2,82 s) |
 | `npm run engine:plan-stress` | **20/20** |
 | `node catalog/build.mjs` | 451 aliments · 330 recettes · 1 548 étapes · **62 gestes** · 73 tips · 8 fiches · 30 équipements |
+| `node catalog/audit-mapping.mjs` | 451 mappings · 9 candidats à relire |
 
-⛔ **LES 6 ROUGES SONT CEUX DE CE CHANTIER, ET C'EST L'ÉTAT ATTENDU.** Ils vivent tous dans
-`tests/scelles/gestes-champ-media.test.ts` (**7 tests, 6 rouges**), écrits avant leur code.
-**« Vert » veut dire ici : vert partout sauf ce fichier.** Le jour où le lot 1 est codé, ce témoin
-devient **2 152 passed / 0 failed** — et si un rouge subsiste ailleurs, c'est le lot qui a débordé.
+✅ **LES 6 ROUGES SONT ÉTEINTS — le lot 1 les a fermés, comme annoncé.** Ils vivaient tous dans
+`tests/scelles/gestes-champ-media.test.ts` (7 tests), écrits avant leur code. **Aucun rouge ailleurs :
+le lot n'a pas débordé.**
+
+**Écart de compte attribué fichier par fichier, jamais déduit** : 2 152 → 2 156 = **+4**, et
+113 → 114 fichiers = **+1**, les deux étant `app/src/ui/screens/savoir.test.tsx` (lot 3). Les
+7 tests scellés étaient **déjà comptés** dans les 2 152 ; seul leur résultat a changé.
+
+⚠️ **`build.mjs` sort une alerte qui n'est PAS de ce chantier** : fiche `calcium-fractures`, source
+`critique-zhao-2018` sans auteurs vérifiés. Aucun fichier de `catalog/evidence/` n'a été touché —
+c'est du contenu Savoir, à traiter avec la relecture par un tiers.
 
 ⚠️ **`engine:plan-stress` est le témoin de la durée** : aucun lot de ce chantier ne touche au
 solveur, donc **20/20 doit rester 20/20**. S'il bouge, c'est qu'on a touché à autre chose que ce
