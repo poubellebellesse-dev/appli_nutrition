@@ -24,13 +24,15 @@
 // ⚠️ LES GESTES SONT DU TEXTE SEUL. §4.7 prévoit « définition simple + animation muette en boucle »
 // et §8.5 annonce un lexique illustré : il n'existe ni image ni clip. L'écran ne fait pas semblant.
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type {
   Catalog,
   EvidenceCategorie,
   EvidencePosition,
   EvidenceSheet,
   EvidenceSource,
+  LexiconClip,
+  LexiconClipMoment,
   LexiconEntry,
   NiveauPreuve,
   Tip,
@@ -223,6 +225,97 @@ function LeSaviezVous({ tips }: { readonly tips: readonly Tip[] }) {
   )
 }
 
+/**
+ * Le nom lisible d'un moment. La bande NOMME ce qu'elle montre au lieu de numéroter : `deglacer`
+ * ne porte que `milieu` et `fin`, et « 1 » devant un milieu serait faux (décision D6).
+ */
+const NOM_MOMENT: Record<LexiconClipMoment, string> = {
+  debut: 'Début',
+  milieu: 'Milieu',
+  fin: 'Fin',
+  unique: 'Le geste',
+}
+
+/**
+ * Le cadre vidéo d'un geste, plus sa bande de moments — variante D de la décision D6.
+ *
+ * ⚠️ LECTURE AU CLIC, JAMAIS EN AUTOMATIQUE. Un écran de lexique qui démarre seul six vidéos dès
+ * qu'on le déplie consomme la batterie et surprend ; le poster tient lieu d'aperçu jusqu'au clic.
+ *
+ * ⚠️ NI CONTRÔLES NATIFS NI TÉLÉCHARGEMENT (`controlsList="nodownload"`, pas de `controls`). C'est
+ * la contrepartie explicite de la décision 69 : on embarque des médias sous licence Pexels, et le
+ * produit n'offre aucun bouton pour les ressortir. ⛔ Ne pas ajouter `controls` « pour le confort » :
+ * le menu natif rouvre exactement la porte que cette ligne ferme.
+ *
+ * ⚠️ `play()` PEUT ÉCHOUER, ET CE N'EST PAS UN CAS D'ÉCOLE : jsdom ne l'implémente pas du tout, et
+ * un navigateur refuse la lecture hors d'un geste utilisateur. La promesse est donc avalée — un
+ * refus laisse le poster à l'écran, ce qui est un repli correct, pas une panne.
+ */
+function CadreClip({ clips, terme }: { readonly clips: readonly LexiconClip[]; readonly terme: string }) {
+  const [index, setIndex] = useState(0)
+  const video = useRef<HTMLVideoElement>(null)
+  const clip = clips[index] ?? clips[0]!
+
+  const lire = () => {
+    try {
+      void video.current?.play()?.catch(() => {})
+    } catch {
+      /* jsdom, ou lecture refusée : le poster reste, et c'est le bon repli. */
+    }
+  }
+
+  return (
+    <div className="px-3 pb-3">
+      {/* `key` sur le chemin : changer de segment doit REMONTER l'élément, sinon le navigateur
+          garde la source précédente et la bande semble ne rien faire. */}
+      <button
+        type="button"
+        onClick={lire}
+        aria-label={`Lire le geste « ${terme} » — ${NOM_MOMENT[clip.moment]}`}
+        className="block w-full overflow-hidden rounded-[--radius-carte] border border-bordure bg-fond"
+      >
+        <video
+          key={clip.av1Path}
+          ref={video}
+          poster={clip.posterPath}
+          muted
+          loop
+          playsInline
+          preload="none"
+          controlsList="nodownload"
+          disablePictureInPicture
+          className="block w-full"
+        >
+          <source src={clip.av1Path} type="video/mp4; codecs=av01.0.05M.08" />
+          <source src={clip.h264Path} type="video/mp4; codecs=avc1.42E01E" />
+        </video>
+      </button>
+
+      {/* ⛔ PAS DE BANDE À UN SEUL ÉLÉMENT — 22 des 51 gestes illustrés n'ont qu'un segment, et une
+          bande qui ne distingue rien n'est que du bruit sous le cadre (décision D6). */}
+      {clips.length > 1 && (
+        <ul className="mt-2 flex flex-wrap gap-2">
+          {clips.map((c, i) => (
+            <li key={c.posterPath}>
+              <button
+                type="button"
+                onClick={() => setIndex(i)}
+                aria-current={i === index}
+                className={`flex min-h-tactile items-center gap-2 rounded-[0.6rem] border px-2 text-courant ${
+                  i === index ? 'border-bordure-forte text-texte' : 'border-bordure text-texte-doux'
+                }`}
+              >
+                <img src={c.posterPath} alt="" aria-hidden="true" className="size-8 rounded-[0.35rem] object-cover" />
+                {NOM_MOMENT[c.moment]}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 /** Grille des gestes de cuisine, avec recherche et définition dépliable. */
 function Gestes({ lexique }: { readonly lexique: readonly LexiconEntry[] }) {
   const [recherche, setRecherche] = useState('')
@@ -266,17 +359,40 @@ function Gestes({ lexique }: { readonly lexique: readonly LexiconEntry[] }) {
                 type="button"
                 onClick={() => setOuvert(deplie ? null : entree.id)}
                 aria-expanded={deplie}
-                className="flex min-h-tactile w-full items-center justify-between gap-2 px-3 text-left text-lecture font-semibold text-texte"
+                className="flex min-h-tactile w-full items-center gap-2 px-3 text-left text-lecture font-semibold text-texte"
               >
-                {entree.terme}
+                {/* ⛔ LA VIGNETTE N'EST PAS UNE CIBLE CLIQUABLE DISTINCTE — elle vit DANS le bouton
+                    du rang (décision D6). Un second bouton imbriqué serait du HTML invalide et
+                    donnerait deux cibles pour une seule intention.
+                    ⚠️ Les gestes sans clip portent un carré VIDE, pas rien : c'est le coût nommé de
+                    la variante C, accepté au moment du choix. Sans lui, les termes ne s'alignent
+                    plus d'une ligne à l'autre. */}
+                {entree.clips.length > 0 ? (
+                  <img
+                    src={entree.clips[0]!.posterPath}
+                    alt=""
+                    aria-hidden="true"
+                    className="size-tactile shrink-0 rounded-[0.4rem] object-cover"
+                  />
+                ) : (
+                  <span aria-hidden="true" className="size-tactile shrink-0 rounded-[0.4rem] bg-fond" />
+                )}
+                <span className="grow">{entree.terme}</span>
                 <span aria-hidden="true" className="text-attenue">
                   {deplie ? '−' : '+'}
                 </span>
               </button>
               {deplie && (
-                <p className="px-3 pb-3 text-lecture leading-relaxed text-texte-doux">
-                  {entree.definition}
-                </p>
+                <>
+                  <p className="px-3 pb-3 text-lecture leading-relaxed text-texte-doux">
+                    {entree.definition}
+                  </p>
+                  {/* Un geste SANS média se déplie exactement comme avant : ni cadre, ni bande, ni
+                      trou. Le composant n'est pas monté du tout. */}
+                  {entree.clips.length > 0 && (
+                    <CadreClip clips={entree.clips} terme={entree.terme} />
+                  )}
+                </>
               )}
             </li>
           )
