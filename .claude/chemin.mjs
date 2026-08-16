@@ -41,7 +41,7 @@
  *    plutôt que d'inventer une priorité.
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { join, dirname, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -190,7 +190,8 @@ function etat() {
       nom: g.nom,
       lots: g.lots.map((l) => ({
         id: l.id, titre: l.titre ?? '', etat: l.etat ?? 'a_faire',
-        bloque_par: l.bloque_par ?? null, optionnel: !!l.optionnel, le: l.le ?? null,
+        bloque_par: l.bloque_par ?? null, optionnel: !!l.optionnel,
+        le: l.le ?? null, commit: l.commit ?? null,
       })),
     })),
     courant: manuel ?? auto,
@@ -262,6 +263,139 @@ if (['--etat', '--poser', '--reculer', '--plan'].some((v) => argv.includes(v))) 
   process.exit(0);
 }
 
+// ── le résumé ────────────────────────────────────────────────────────────────
+/**
+ * Le texte du panneau vient des DOCUMENTS, jamais d'ici. Rien n'est rédigé, rien
+ * n'est résumé par un modèle : on retrouve le titre du lot dans les fichiers que
+ * `lots.json` déclare sous `sources` — il en est recopié mot pour mot — puis on
+ * rend ce qui l'entoure. Un lot introuvable reste sans texte : la page le dit.
+ *
+ * Deux formes de documents, deux façons de lire :
+ *   tableau — la description est DANS la cellule, il n'y a rien « après ».
+ *   section — le titre est seul sur sa ligne, le texte est au bloc suivant.
+ */
+const NETTOYER = (s) => s
+  .replace(/`([^`]*)`/g, '$1')                 // code
+  .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')   // liens
+  .replace(/[*_~]{2,3}/g, '')                  // gras, barré
+  .replace(/<[^>]+>/g, '')                     // html
+  .replace(/^\s*[>#\-+]+\s*/gm, '')            // citation, titre, puce
+  .replace(/\s+/g, ' ')
+  .trim();
+
+// Comparaison indulgente : ni la casse, ni la ponctuation, ni un accent oublié
+// ne doivent décider qu'un titre n'est pas le sien. L'index écrit « deja clos »
+// là où le document écrit « déjà clos » — un lot y perdait son texte.
+const CLE = (s) => NETTOYER(s).toLowerCase()
+  .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  .replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+
+function couper(s, max = 460) {
+  if (s.length <= max) return s;
+  const bout = s.slice(0, max);
+  const fin = Math.max(bout.lastIndexOf('. '), bout.lastIndexOf(' — '), bout.lastIndexOf(' · '));
+  return (fin > max * 0.55 ? bout.slice(0, fin + 1) : bout).trim() + ' […]';
+}
+
+/**
+ * Découpe un bloc en articles de liste. Une liste numérotée n'a pas de ligne
+ * vide entre ses points : sans cette descente, sept étapes d'affilée rendent
+ * toutes le même texte — celui de la première. C'est arrivé.
+ */
+function articles(bloc) {
+  const out = [];
+  for (const l of bloc.split(/\r?\n/)) {
+    if (!out.length || /^[ \t]{0,3}(\d+[.)]|[-*+])\s/.test(l)) out.push(l);
+    else out[out.length - 1] += '\n' + l;
+  }
+  return out;
+}
+
+function chercherDansTexte(texte, titre, cible) {
+  const blocs = texte.split(/\r?\n[ \t]*\r?\n/);
+
+  for (let i = 0; i < blocs.length; i++) {
+    if (!CLE(blocs[i]).includes(cible)) continue;
+    const brut = blocs[i].trim();
+
+    // Un encadré ASCII récapitule TOUS les lots d'un document : il contient donc
+    // le titre cherché sans rien en dire. Cinq lots y ont pris le même texte.
+    if (/[┌┐└┘│├┤┬┴┼─═║╔╗╚╝]/.test(brut) || brut.startsWith('```')) continue;
+
+    if (brut.startsWith('|')) {
+      const ligne = blocs[i].split(/\r?\n/).find((l) => CLE(l).includes(cible));
+      const cellules = (ligne ?? '').split('|').map(NETTOYER)
+        .filter((c) => c.length > 2).sort((a, b) => b.length - a.length);
+      let t = cellules[0];
+      // La plus longue cellule est parfois le titre lui-même. Seul, il ne dit
+      // rien de plus que la ligne déjà lue à gauche : on lui adjoint la suivante.
+      if (t && CLE(t) === cible && cellules[1] && cellules[1].length > 15)
+        t += ' — ' + cellules[1];
+      if (t) return t;
+    }
+
+    const items = articles(blocs[i]);
+    if (items.length > 1) {
+      const item = items.find((a) => CLE(a).includes(cible));
+      // Le « 6. » en tête numérote la liste, pas le lot.
+      const t = item ? NETTOYER(item).replace(/^\d+[.)]\s*/, '') : '';
+      if (t.length > 40) return t;
+    }
+
+    const propre = NETTOYER(brut);
+    const seul = /^#{1,6}\s/.test(brut) || propre.length < NETTOYER(titre).length + 60;
+    if (seul) {
+      for (let j = i + 1; j < blocs.length && j <= i + 3; j++) {
+        const suivant = blocs[j].trim();
+        if (suivant.startsWith('|') || /^#{1,6}\s/.test(suivant)) continue;
+        const s = NETTOYER(suivant);
+        if (s.length > 40) return s;
+      }
+    }
+    if (propre.length > 40) return propre;
+  }
+  return null;
+}
+
+function calculerResumes(index) {
+  const fichiers = [];
+  for (const rel of index.sources) {
+    if (!/\.md$/i.test(rel)) continue;      // l'état de la garde n'est pas de la prose
+    try { fichiers.push([rel, readFileSync(join(REPO, rel), 'utf8')]); } catch { /* absent */ }
+  }
+  const out = {};
+  for (const l of index.lots) {
+    if (!l.titre) continue;
+    // Deux clés, de la plus sûre à la moins sûre. « LOT 1 — la table » se
+    // reconnaît par la paire ; « la table » seul matcherait n'importe quelle
+    // phrase du document. Le titre seul ne sert que s'il est assez long pour
+    // ne désigner qu'un lot.
+    const cles = [CLE(l.id + ' ' + l.titre)];
+    if (CLE(l.titre).length >= 10) cles.push(CLE(l.titre));
+
+    chercher: for (const cle of cles) {
+      for (const [rel, texte] of fichiers) {
+        const t = chercherDansTexte(texte, l.titre, cle);
+        if (t) { out[l.id] = { texte: couper(t), source: rel }; break chercher; }
+      }
+    }
+  }
+  return out;
+}
+
+// Relire 300 Ko de documents à chaque battement de la page serait absurde : ils
+// ne bougent qu'à l'écriture. L'empreinte, ce sont les dates de modification.
+let cacheResumes = null;
+function resumes() {
+  const index = lireLots();
+  const empreinte = [F_LOTS, ...index.sources.map((r) => join(REPO, r))]
+    .map((f) => { try { return statSync(f).mtimeMs; } catch { return 0; } }).join('|');
+  if (cacheResumes?.empreinte === empreinte) return cacheResumes.valeur;
+  const valeur = { resumes: calculerResumes(index), sources: index.sources };
+  cacheResumes = { empreinte, valeur };
+  return valeur;
+}
+
 // ── la page ──────────────────────────────────────────────────────────────────
 // Le code client construit ses nœuds à la main (createElement) : ça évite
 // d'imbriquer des gabarits de chaîne dans celui-ci, où ils se marcheraient
@@ -293,7 +427,8 @@ const GABARIT = `<!doctype html>
     font: 15px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
-  .page { max-width: 760px; margin: 0 auto; }
+  .page { max-width: 1140px; margin: 0 auto; }
+  .duo { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 32px; align-items: start; }
 
   /* ── en-tête ── */
   header { padding: 34px 0 4px; }
@@ -394,9 +529,42 @@ const GABARIT = `<!doctype html>
   li.ici .titre { color: var(--encre); font-weight: 600; white-space: normal; }
   li.ici .voie::before, li.ici .voie::after { background: var(--accent); }
 
+  /* ── le panneau : ce que disent les documents, jamais autre chose ── */
+  .fiche {
+    position: sticky; top: 28px; margin-top: 34px;
+    background: var(--carte); border: 1px solid var(--trait); border-radius: 5px;
+    padding: 17px 19px 19px;
+  }
+  .fiche .oeil {
+    font: 700 11px/1 ui-monospace, "Cascadia Mono", Consolas, monospace;
+    letter-spacing: .13em; text-transform: uppercase; color: var(--pale);
+  }
+  .fiche .cle {
+    margin-top: 13px; word-break: break-word; color: var(--accent);
+    font: 600 13px/1.4 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+  .fiche h3 { margin: 5px 0 0; font-size: 16px; font-weight: 600; line-height: 1.42; }
+  .fiche .puces { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .fiche .puce {
+    font-size: 11.5px; padding: 3px 9px; border-radius: 20px;
+    border: 1px solid var(--trait-fort); color: var(--gris); white-space: nowrap;
+  }
+  .fiche .puce.vif { border-color: var(--accent); color: var(--accent); background: var(--accent-pale); }
+  .fiche .puce.mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+  .fiche p { margin: 14px 0 0; font-size: 14px; line-height: 1.62; }
+  .fiche p.muet { color: var(--gris); font-style: italic; }
+  .fiche .doc {
+    margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--trait); word-break: break-all;
+    font: 11.5px/1.55 ui-monospace, "Cascadia Mono", Consolas, monospace; color: var(--pale);
+  }
+
   footer {
     margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--trait);
     font: 12px/1.7 ui-monospace, "Cascadia Mono", Consolas, monospace; color: var(--pale);
+  }
+  @media (max-width: 900px) {
+    .duo { grid-template-columns: 1fr; gap: 0; }
+    .fiche { position: static; margin: 28px 0 0; }
   }
   @media (max-width: 520px) {
     .lot { grid-template-columns: 30px 56px 1fr; }
@@ -406,21 +574,26 @@ const GABARIT = `<!doctype html>
 </head>
 <body>
 <div class="page">
-  <header>
-    <div class="depot" id="depot">…</div>
-    <h1>Le chemin des lots</h1>
-    <div class="compte" id="compte"></div>
-    <div class="barre"><i id="jauge" style="width:0%"></i></div>
-    <div class="cmds">
-      <button id="b-refresh" title="Relire .claude/lots.json maintenant">Rafraîchir</button>
-      <button id="b-reculer" title="Déplacer le repère d'un cran en arrière">&larr; Revenir en arrière</button>
-      <button id="b-plan" title="Laisser le plan décider où on en est">Suivre le plan</button>
-      <span class="info" id="pouls"></span>
+  <div class="duo">
+    <div>
+      <header>
+        <div class="depot" id="depot">…</div>
+        <h1>Le chemin des lots</h1>
+        <div class="compte" id="compte"></div>
+        <div class="barre"><i id="jauge" style="width:0%"></i></div>
+        <div class="cmds">
+          <button id="b-refresh" title="Relire .claude/lots.json maintenant">Rafraîchir</button>
+          <button id="b-reculer" title="Déplacer le repère d'un cran en arrière">&larr; Revenir en arrière</button>
+          <button id="b-plan" title="Laisser le plan décider où on en est">Suivre le plan</button>
+          <span class="info" id="pouls"></span>
+        </div>
+        <div id="mots"></div>
+      </header>
+      <main id="chemin"></main>
+      <footer id="pied"></footer>
     </div>
-    <div id="mots"></div>
-  </header>
-  <main id="chemin"></main>
-  <footer id="pied"></footer>
+    <aside class="fiche" id="fiche"></aside>
+  </div>
 </div>
 <script>
 'use strict';
@@ -475,11 +648,83 @@ function ligne(lot, courant) {
   b.appendChild(marque);
 
   b.addEventListener('click', function () { poser(lot.id); });
+  // Le survol LIT, le clic DÉPLACE. Sans ça on ne pourrait pas consulter un lot
+  // sans y poser son repère. Le focus fait la même chose pour le clavier.
+  b.addEventListener('mouseenter', function () { montrer(lot.id); });
+  b.addEventListener('focus', function () { montrer(lot.id); });
   li.appendChild(b);
   return li;
 }
 
+// ── le panneau ───────────────────────────────────────────────────────────────
+var RESUMES = {};      // id -> { texte, source }, lu depuis les documents
+var LOTS = {};         // id -> lot, reconstruit à chaque dessin
+var VU = null;         // le lot affiché à droite
+var COURANT = null;    // le lot où en est le chemin
+var GENERE = false;    // dernier genere_le vu : les documents n'ont bougé que s'il change
+
+function montrer(id) {
+  if (!LOTS[id]) return;
+  VU = id;
+  fiche();
+}
+
+function puce(hote, texte, vif, mono) {
+  var p = el('span', 'puce' + (vif ? ' vif' : '') + (mono ? ' mono' : ''), texte);
+  hote.appendChild(p);
+}
+
+function fiche() {
+  var hote = document.getElementById('fiche');
+  hote.textContent = '';
+  var lot = LOTS[VU];
+  if (!lot) {
+    hote.appendChild(el('div', 'oeil', 'le lot'));
+    hote.appendChild(el('p', 'muet', 'Aucun lot à montrer.'));
+    return;
+  }
+
+  // ⚠️ Guillemets DOUBLES pour toute chaîne client portant une apostrophe. Tout
+  // ce bloc vit dans un gabarit de chaîne du serveur : une apostrophe échappée
+  // y redevient une apostrophe nue et referme la chaîne côté navigateur. Le
+  // script entier meurt alors, et la page ne dessine plus un seul lot.
+  // Aucun backtick ici non plus, pour la même raison.
+  hote.appendChild(el('div', 'oeil', VU === COURANT ? "où j'en suis" : 'le lot'));
+  hote.appendChild(el('div', 'cle', lot.id));
+  hote.appendChild(el('h3', null, lot.titre || '—'));
+
+  var puces = el('div', 'puces');
+  puce(puces, ETIQUETTES[lot.etat] || lot.etat, lot.etat === 'en_cours' || VU === COURANT);
+  if (lot.optionnel) puce(puces, 'optionnel');
+  if (lot.bloque_par && lot.etat !== 'fait') puce(puces, 'après ' + lot.bloque_par);
+  if (lot.le) puce(puces, lot.le, false, true);
+  if (lot.commit) puce(puces, lot.commit, false, true);
+  hote.appendChild(puces);
+
+  var r = RESUMES[lot.id];
+  if (r && r.texte) {
+    hote.appendChild(el('p', null, r.texte));
+    hote.appendChild(el('div', 'doc', r.source));
+  } else {
+    hote.appendChild(el('p', 'muet',
+      "Aucun texte trouvé pour ce lot dans les documents. Rien n'est inventé ici : "
+      + "tout ce qui s'affiche est recopié d'un fichier."));
+  }
+}
+
 function dessiner(e) {
+  // Le panneau suit le repère tant qu'on n'a rien survolé, et lâche prise dès
+  // qu'un lot disparaît de l'index plutôt que d'afficher un fantôme.
+  var avant = COURANT;
+  COURANT = e.courant;
+  LOTS = {};
+  for (var q = 0; q < e.groupes.length; q++)
+    for (var w = 0; w < e.groupes[q].lots.length; w++)
+      LOTS[e.groupes[q].lots[w].id] = e.groupes[q].lots[w];
+  if (!VU || !LOTS[VU] || VU === avant) VU = e.courant;
+
+  if (e.genere_le !== GENERE) { GENERE = e.genere_le; chargerResumes(); }
+
   document.getElementById('depot').textContent = e.depot;
   document.getElementById('compte').textContent =
     e.total + ' lots · ' + e.faits + ' faits · ' + (e.total - e.faits) + ' devant';
@@ -538,6 +783,8 @@ function dessiner(e) {
 
   document.getElementById('pouls').textContent = 'relu à ' + new Date(e.lu_le)
     .toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  fiche();
 }
 
 function charger() {
@@ -545,6 +792,16 @@ function charger() {
     .then(function (r) { return r.json(); })
     .then(dessiner)
     .catch(function () { document.getElementById('pouls').textContent = 'serveur arrêté'; });
+}
+
+// Les documents pèsent des centaines de Ko et ne bougent qu'à l'écriture : on ne
+// les relit pas au rythme de la page, seulement quand l'index a été régénéré ou
+// qu'on a cliqué « Rafraîchir ».
+function chargerResumes() {
+  return fetch('/api/resumes', { cache: 'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (r) { RESUMES = (r && r.resumes) || {}; fiche(); })
+    .catch(function () { /* le chemin reste lisible sans les résumés */ });
 }
 
 function agir(chemin) {
@@ -556,7 +813,8 @@ function agir(chemin) {
 
 function poser(id) { agir('/api/courant?id=' + encodeURIComponent(id)); }
 
-document.getElementById('b-refresh').addEventListener('click', charger);
+document.getElementById('b-refresh')
+  .addEventListener('click', function () { GENERE = false; charger(); });
 document.getElementById('b-reculer').addEventListener('click', function () { agir('/api/reculer'); });
 document.getElementById('b-plan').addEventListener('click', function () { agir('/api/plan'); });
 
@@ -584,6 +842,7 @@ const serveur = createServer((req, res) => {
 
   try {
     if (url.pathname === '/api/etat') return json(etat());
+    if (url.pathname === '/api/resumes') return json(resumes());
     if (req.method === 'POST' && url.pathname === '/api/courant')
       return json(poserCourant(url.searchParams.get('id') ?? ''));
     if (req.method === 'POST' && url.pathname === '/api/plan') return json(suivreLePlan());
@@ -601,6 +860,22 @@ const serveur = createServer((req, res) => {
   }
 });
 
+// Le succès s'annonce UNE fois, et depuis le port réellement obtenu.
+// `listen(port, host, cb)` pose cb en `once('listening')` — mais un EADDRINUSE
+// ne le retire pas. Un cb par tentative, et le jour où un port finit par
+// répondre ils partent TOUS : deux bannières, deux navigateurs, dont un sur le
+// port du voisin. C'est ce qui a ouvert les lots d'un dépôt dans l'onglet de
+// l'autre.
+serveur.on('listening', () => {
+  const adresse = `http://127.0.0.1:${serveur.address().port}/`;
+  console.log(`\n  Le chemin des lots — ${basename(REPO)}`);
+  console.log(`  ${adresse}\n`);
+  console.log('  Ctrl+C pour arrêter.\n');
+  if (!OUVRIR) return;
+  if (process.platform === 'win32') execFile('cmd', ['/c', 'start', '', adresse], () => {});
+  else if (process.platform === 'darwin') execFile('open', [adresse], () => {});
+});
+
 function ecouter(port, restants) {
   serveur.once('error', (e) => {
     if (e.code === 'EADDRINUSE' && restants > 0) {
@@ -610,15 +885,7 @@ function ecouter(port, restants) {
     console.error(`Impossible d'ouvrir le port ${port} : ${e.message}`);
     process.exit(1);
   });
-  serveur.listen(port, '127.0.0.1', () => {
-    const adresse = `http://127.0.0.1:${port}/`;
-    console.log(`\n  Le chemin des lots — ${basename(REPO)}`);
-    console.log(`  ${adresse}\n`);
-    console.log('  Ctrl+C pour arrêter.\n');
-    if (!OUVRIR) return;
-    if (process.platform === 'win32') execFile('cmd', ['/c', 'start', '', adresse], () => {});
-    else if (process.platform === 'darwin') execFile('open', [adresse], () => {});
-  });
+  serveur.listen(port, '127.0.0.1');
 }
 
 ecouter(PORT, 10);
