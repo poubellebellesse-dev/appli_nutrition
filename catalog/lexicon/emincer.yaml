@@ -4,3 +4,10 @@ terme: "Émincer"
 definition: >
   Couper un aliment en tranches ou en lamelles fines et régulières, à l'aide d'un couteau
   bien affûté, en général pour raccourcir un temps de cuisson ou obtenir une texture homogène.
+
+# Segments vidéo — bloc généré par catalog/import-clips.mjs, ne pas éditer à la main.
+clips:
+  - moment: unique
+    poster_path: /catalog/gestes/emincer/emincer-unique.jpg
+    av1_path: /catalog/gestes/emincer/emincer-unique.av1.mp4
+    h264_path: /catalog/gestes/emincer/emincer-unique.h264.mp4

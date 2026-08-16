@@ -3,3 +3,18 @@ code: reduire
 terme: "Réduire"
 definition: >
   Laisser un liquide s'évaporer à découvert pour le concentrer et l'épaissir. On réduit une sauce, jamais un aliment solide.
+
+# Segments vidéo — bloc généré par catalog/import-clips.mjs, ne pas éditer à la main.
+clips:
+  - moment: debut
+    poster_path: /catalog/gestes/reduire/reduire-debut.jpg
+    av1_path: /catalog/gestes/reduire/reduire-debut.av1.mp4
+    h264_path: /catalog/gestes/reduire/reduire-debut.h264.mp4
+  - moment: milieu
+    poster_path: /catalog/gestes/reduire/reduire-milieu.jpg
+    av1_path: /catalog/gestes/reduire/reduire-milieu.av1.mp4
+    h264_path: /catalog/gestes/reduire/reduire-milieu.h264.mp4
+  - moment: fin
+    poster_path: /catalog/gestes/reduire/reduire-fin.jpg
+    av1_path: /catalog/gestes/reduire/reduire-fin.av1.mp4
+    h264_path: /catalog/gestes/reduire/reduire-fin.h264.mp4

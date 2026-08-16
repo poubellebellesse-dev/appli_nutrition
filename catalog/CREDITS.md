@@ -221,6 +221,29 @@ partout où elle est redistribuée — y compris dans un partage `.nutri-recipe`
 
 ---
 
+<!-- DÉBUT CLIPS — bloc généré par catalog/import-clips.mjs, ne pas éditer à la main -->
+
+## Clips de gestes
+
+**6 segments vidéo** sur **3 gestes**, découpés à 3 s et ré-encodés
+en AV1 et H.264 par `catalog/import-clips.mjs`, plus une image fixe par segment. Les vidéos
+d'origine ne sont pas versionnées ; ce tableau et le bloc `clips` de chaque geste sont la seule
+trace de leur provenance.
+
+⚠️ L'attribution ci-dessous est portée **même là où la licence ne l'exige pas**. La licence
+Pexels autorise l'usage sans crédit ; le projet en pose un quand même, parce qu'un média
+embarqué dont on ne sait plus dire d'où il vient ne peut plus être retiré proprement.
+
+| Geste | Segments | Auteur | Licence | Source |
+|---|---|---|---|---|
+| `deglacer` | 2 | [Pixabay](https://www.pexels.com/@pixabay) | Pexels License | [Pexels](https://www.pexels.com/video/cooking-with-style-854565/) |
+| `emincer` | 1 | [RDNE Stock project](https://www.pexels.com/@rdne) | Pexels License | [Pexels](https://www.pexels.com/video/a-person-chopping-red-onions-10432009/) |
+| `reduire` | 3 | [cottonbro studio](https://www.pexels.com/@cottonbro) | Pexels License | [Pexels](https://www.pexels.com/video/a-person-cooking-food-in-a-pan-on-a-stove-4253336/) |
+
+<!-- FIN CLIPS -->
+
+---
+
 ## À compléter avant publication
 
 - **Photos de recettes** — aucune à ce jour (0 sur 241). Chaque photo devra porter son auteur, sa

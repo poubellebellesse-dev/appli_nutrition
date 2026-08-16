@@ -4,3 +4,14 @@ terme: "Déglacer"
 definition: >
   Verser un liquide (eau, jus, vin) dans une poêle ou une cocotte chaude après une cuisson,
   et gratter les sucs attachés au fond avec une spatule pour les dissoudre dans le liquide.
+
+# Segments vidéo — bloc généré par catalog/import-clips.mjs, ne pas éditer à la main.
+clips:
+  - moment: milieu
+    poster_path: /catalog/gestes/deglacer/deglacer-milieu.jpg
+    av1_path: /catalog/gestes/deglacer/deglacer-milieu.av1.mp4
+    h264_path: /catalog/gestes/deglacer/deglacer-milieu.h264.mp4
+  - moment: fin
+    poster_path: /catalog/gestes/deglacer/deglacer-fin.jpg
+    av1_path: /catalog/gestes/deglacer/deglacer-fin.av1.mp4
+    h264_path: /catalog/gestes/deglacer/deglacer-fin.h264.mp4
