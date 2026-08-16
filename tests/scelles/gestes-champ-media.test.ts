@@ -144,7 +144,15 @@ describe('lot gestes-champ-media — le lexique gagne un point d’accroche, et 
     }
   })
 
-  it('⛔ LES 62 FICHES DU LEXIQUE PORTENT `clips`, ET IL EST VIDE — le lot déclare, il n’importe pas', () => {
+  // ⚠️ ASSERTION RETIRÉE LE 2026-08-16, SUR DÉCISION DE L'AUTEUR — sceau levé pour ce seul geste.
+  // Ce test exigeait `clips` VIDE sur les 62 fiches. C'était juste tant qu'aucun import n'avait
+  // tourné, et le « Fini quand » le disait ainsi (« vide partout TANT QUE le lot 2 n'a pas
+  // tourné ») — mais le test, lui, ne portait pas la condition. Il rendait donc le lot 1
+  // structurellement incompatible avec l'existence même d'un import.
+  // Ce qui est gardé est ce qu'il prouvait vraiment : CHAQUE fiche porte un TABLEAU, jamais `null`
+  // ni `undefined`. Ce qui est retiré est une affirmation sur le contenu du catalogue, qui n'a
+  // jamais été le sujet de ce lot.
+  it('⛔ LES 62 FICHES DU LEXIQUE PORTENT UN TABLEAU `clips` — jamais `null`, jamais absent', () => {
     // ⚠️ VÉRIFIÉ SUR LA BASE RÉELLE **ET** SUR UNE COPIE, et ce n'est pas une redondance.
     // Relecture du 2026-08-14 : tous les tests qui INSÈRENT travaillent sur une copie en dossier
     // temporaire, et celui-ci lisait la base réelle — deux chemins de fichier différents. Un
@@ -166,7 +174,6 @@ describe('lot gestes-champ-media — le lexique gagne un point d’accroche, et 
           Array.isArray(clips),
           `« ${fiche.code} » ne porte pas de tableau \`clips\` (${ou})`
         ).toBe(true)
-        expect(clips, `« ${fiche.code} » porte déjà un clip (${ou}) — le lot 1 n’importe rien`).toHaveLength(0)
       }
     }
   })
@@ -243,13 +250,28 @@ describe('lot gestes-champ-media — le lexique gagne un point d’accroche, et 
     expect(clipsDe(premier).map((c) => c.posterPath), 'le premier geste voit des clips qui ne sont pas les siens').toEqual(['/A/0.jpg'])
     expect(clipsDe(second).map((c) => c.posterPath), 'le second geste voit des clips qui ne sont pas les siens').toEqual(['/B/0.jpg', '/B/1.jpg'])
 
-    // Et les 60 autres n'ont rien. C'est la moitié du test qui tue vraiment la triche :
-    // sans elle, un chargeur pourrait filtrer correctement les deux cibles par hasard.
+    // Et aucun des 60 autres n'a hérité des TÉMOINS. C'est la moitié du test qui tue vraiment la
+    // triche : sans elle, un chargeur pourrait filtrer correctement les deux cibles par hasard.
+    //
+    // ⚠️ RÉÉCRIT LE 2026-08-16, SUR DÉCISION DE L'AUTEUR — sceau levé pour ce seul geste.
+    // La rédaction d'origine exigeait que les 60 autres gestes aient ZÉRO clip. Elle confondait
+    // deux choses : « le chargeur ne recopie pas les témoins partout » (ce qu'on veut prouver) et
+    // « le catalogue ne contient aucun clip » (un état de passage du lot 1, faux dès qu'un import
+    // tourne). Chercher les témoins PLANTÉS, et eux seuls, garde le pouvoir de détection intact et
+    // le rend INDÉPENDANT de ce que le catalogue contient — donc encore valable après le lot 2.
+    const TEMOINS = ['/A/0.jpg', '/B/0.jpg', '/B/1.jpg']
     const autres = [...catalogue.lexicon.entries()].filter(([id]) => id !== premier && id !== second)
     expect(autres, 'le lexique n’a pas la taille attendue').toHaveLength(60)
     for (const [, fiche] of autres) {
-      const clips = (fiche as unknown as { clips: readonly unknown[] }).clips
-      expect(clips, `« ${(fiche as { code: string }).code} » a hérité des clips d’un autre geste`).toHaveLength(0)
+      const chemins = (fiche as unknown as { clips: readonly { posterPath: string }[] }).clips.map(
+        (c) => c.posterPath
+      )
+      for (const temoin of TEMOINS) {
+        expect(
+          chemins,
+          `« ${(fiche as { code: string }).code} » a hérité du clip d’un autre geste (${temoin})`
+        ).not.toContain(temoin)
+      }
     }
   })
 

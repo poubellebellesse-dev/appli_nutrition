@@ -700,11 +700,50 @@ export interface Tip {
   readonly sourceUrl: string
 }
 
+/**
+ * Le nom du moment qu'un segment montre. **Union littérale et non `string`**, pour deux raisons qui
+ * se tiennent : elle s'accorde au `CHECK` SQL de `lexicon_clip`, et la compilation échoue le jour où
+ * un cinquième nom apparaîtrait dans les fichiers encodés sans que personne n'ait traité son rendu.
+ *
+ * ⚠️ NE SE DÉDUIT PAS DU RANG. `deglacer` ne porte que `milieu` et `fin` : numéroter la bande 1-2-3
+ * afficherait « 1 » devant un milieu. Le nom est une donnée, pas un calcul (§4 D6 de
+ * `docs/CONCEPTION_GESTES_ILLUSTRES.md`).
+ */
+export type LexiconClipMoment = 'debut' | 'milieu' | 'fin' | 'unique'
+
+/**
+ * Un segment vidéo qui montre un geste (table `lexicon_clip`, fille de `lexicon_entry`).
+ *
+ * **Deux formats obligatoires, jamais un seul** (décision D2) : Safari ne décode l'AV1 que sur
+ * matériel récent, et sans repli H.264 un iPhone un peu ancien n'afficherait que l'image fixe
+ * **sans que l'utilisateur sache qu'il manque quelque chose**. Les deux chemins sont donc `NOT NULL`
+ * en base, et non optionnels ici.
+ *
+ * ⚠️ **`ordre` n'est PAS exposé, volontairement.** Le tableau est déjà rangé par le chargeur ;
+ * publier le rang inviterait l'écran à retrier et à diverger de la base. Le numéro affiché par la
+ * bande de vignettes est la position dans le tableau, pas une colonne.
+ */
+export interface LexiconClip {
+  /** Image fixe montrée avant lecture. Un poster PAR SEGMENT — la bande les distingue (D3). */
+  readonly posterPath: string
+  readonly av1Path: string
+  readonly h264Path: string
+  readonly moment: LexiconClipMoment
+}
+
 export interface LexiconEntry {
   readonly id: LexiconEntryId
   readonly code: string
   readonly terme: string
   readonly definition: string
+  /**
+   * Les segments du geste, **dans l'ordre de la colonne `ordre`** — début, milieu, fin.
+   *
+   * **Vide = ce geste n'a aucun clip**, et c'est un fait sur lui, pas une absence de chargement :
+   * 11 des 62 gestes n'ont pas de segment décidé. Un tableau, jamais `null` — une relation
+   * un-à-plusieurs vide se dit `[]`.
+   */
+  readonly clips: readonly LexiconClip[]
 }
 
 /**

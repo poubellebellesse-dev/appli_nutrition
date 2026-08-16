@@ -57,6 +57,8 @@ import type {
   EquipmentLevel,
   EquipmentSharing,
   OccupationOrigin,
+  LexiconClip,
+  LexiconClipMoment,
   LexiconEntry,
   LexiconEntryId,
   MealSlot,
@@ -213,6 +215,15 @@ interface LexiconRow {
   readonly code: string
   readonly terme: string
   readonly definition: string
+}
+
+interface LexiconClipRow {
+  readonly lexicon_entry_id: string
+  readonly ordre: number
+  readonly poster_path: string
+  readonly av1_path: string
+  readonly h264_path: string
+  readonly moment: string
 }
 
 interface EquipmentRow {
@@ -434,10 +445,29 @@ function loadFoods(db: SqlSource): Map<FoodId, Food> {
 
 function loadLexicon(db: SqlSource): Map<LexiconEntryId, LexiconEntry> {
   const rows = queryAll<LexiconRow>(db, 'SELECT * FROM lexicon_entry')
+  // ⚠️ UNE REQUÊTE GLOBALE TRIÉE, REGROUPÉE EN `Map` — et ce n'est pas un choix de style :
+  // `SqlSource` n'expose que `all(sql)`, sans paramètre lié. On ne PEUT pas requêter geste par
+  // geste. Le tri est fait par SQL sur `ordre` INTEGER, donc numérique : un tri en chaîne rendrait
+  // 0, 10, 2. Et le regroupement par `lexicon_entry_id` est justement ce qu'on oublie — sans lui,
+  // les 62 fiches recevraient toutes le même tableau.
+  const clipsByEntry = groupByKey(
+    queryAll<LexiconClipRow>(db, 'SELECT * FROM lexicon_clip ORDER BY lexicon_entry_id, ordre'),
+    (r) => r.lexicon_entry_id
+  )
   const map = new Map<LexiconEntryId, LexiconEntry>()
   for (const row of rows) {
     const id = row.id as LexiconEntryId
-    map.set(id, { id, code: row.code, terme: row.terme, definition: row.definition })
+    // `ordre` n'est volontairement PAS reporté dans `LexiconClip` : le tableau est déjà rangé, et
+    // publier le rang inviterait l'écran à retrier. La colonne sert au tri, pas à l'affichage.
+    const clips: LexiconClip[] = (clipsByEntry.get(row.id) ?? []).map((c) => ({
+      posterPath: c.poster_path,
+      av1Path: c.av1_path,
+      h264Path: c.h264_path,
+      // Le `CHECK` SQL de `lexicon_clip` est la garantie ; ce cast ne fait que la refléter côté
+      // type, comme `EquipmentSharing` juste en dessous.
+      moment: c.moment as LexiconClipMoment,
+    }))
+    map.set(id, { id, code: row.code, terme: row.terme, definition: row.definition, clips })
   }
   return map
 }

@@ -1340,6 +1340,28 @@ CREATE TABLE lexicon_entry (
   definition TEXT NOT NULL
 );
 
+-- Segments video d'un geste (docs/CONCEPTION_GESTES_ILLUSTRES.md §5, lot 1).
+--
+-- UNE TABLE FILLE, PAS DES COLONNES SUR lexicon_entry : un geste porte 1 a 3 segments (22 gestes
+-- en ont 1, 11 en ont 2, 18 en ont 3). Trois colonnes plates ecraseraient le deuxieme en silence.
+--
+-- LES DEUX FORMATS SONT NOT NULL (decision D2). Safari ne decode l'AV1 que sur materiel recent :
+-- sans repli H.264, un iPhone un peu ancien n'afficherait que l'image fixe SANS que l'utilisateur
+-- sache qu'il manque quelque chose. Un segment sans son H.264 est donc inutilisable, pas degrade.
+--
+-- La colonne moment EST UNE DONNEE, PAS UN DERIVE DU RANG : deglacer ne porte que milieu et fin,
+-- et une bande numerotee 1-2-3 afficherait « 1 » devant un milieu. Le CHECK suit la convention des
+-- autres colonnes-enumerations du build (origine, niveau, niveau_preuve).
+CREATE TABLE lexicon_clip (
+  lexicon_entry_id TEXT NOT NULL REFERENCES lexicon_entry(id),
+  ordre INTEGER NOT NULL,
+  poster_path TEXT NOT NULL,
+  av1_path TEXT NOT NULL,
+  h264_path TEXT NOT NULL,
+  moment TEXT NOT NULL CHECK (moment IN ('debut', 'milieu', 'fin', 'unique')),
+  PRIMARY KEY (lexicon_entry_id, ordre)
+);
+
 -- Fiches scientifiques (§8.2 ARCHITECTURE, §4.7 DESIGN). Sources editables : catalog/evidence/*.md
 --
 -- ECART ASSUME AU §4.2 ARCHITECTURE, qui prevoyait UN niveau de preuve par fiche. Exposer plusieurs
@@ -1497,8 +1519,27 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment = []
     const insertLexicon = db.prepare(
       'INSERT INTO lexicon_entry (id, code, terme, definition) VALUES (?, ?, ?, ?)'
     )
+    // APRES lexicon_entry : la cle etrangere n'est pas DEFERRABLE, la ligne parente doit exister.
+    const insertLexiconClip = db.prepare(
+      'INSERT INTO lexicon_clip (lexicon_entry_id, ordre, poster_path, av1_path, h264_path, moment) VALUES (?, ?, ?, ?, ?, ?)'
+    )
     for (const entry of lexicon) {
       insertLexicon.run(entry.code, entry.code, entry.terme, entry.definition)
+      // AUCUN YAML DE LEXIQUE NE PORTE `clips` AUJOURD'HUI, et c'est l'etat attendu du lot 1 : il
+      // ouvre le point d'accroche, il n'importe rien. La boucle est branchee des maintenant pour que
+      // catalog/import-clips.mjs (lot 2) n'ait qu'a ecrire dans les YAML — « un champ declare n'est
+      // pas un champ branche » a deja ete paye trois fois ici, dont une sur Recipe.imagePath.
+      let ordre = 0
+      for (const clip of entry.clips ?? []) {
+        insertLexiconClip.run(
+          entry.code,
+          ordre++,
+          String(clip.poster_path),
+          String(clip.av1_path),
+          String(clip.h264_path),
+          String(clip.moment)
+        )
+      }
     }
 
     // AVANT les recettes : `recipe_equipment.equipment_id` vise une ligne qui doit deja exister
