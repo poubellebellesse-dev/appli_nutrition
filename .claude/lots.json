@@ -1,29 +1,40 @@
 {
-  "avertissement": "AMORCE À CONFIRMER PAR L'AUTEUR, posée le 2026-08-16. Ce dépôt n'avait aucun index de lots : celui-ci a été reconstitué à la lecture des documents cités sous « sources », et il n'a été relu par personne. Les titres sont RECOPIÉS des documents, jamais inventés — mais le découpage en chantiers, lui, est une proposition. CACHE DÉRIVÉ, jamais une source : la vérité reste dans docs/. ⚠️ Contrairement au dépôt ecriture, RIEN NE TIENT CE FICHIER À JOUR : appli_nutrition n'a ni .claude/lots.mjs ni commande /plan. Il s'édite à la main, ou la mécanique d'écriture se copie depuis l'autre dépôt.",
-  "genere_le": "2026-08-16T14:37:57",
+  "avertissement": "CACHE DÉRIVÉ, jamais une source. La vérité est dans les fichiers listés sous « sources ». Toute édition à la main sera écrasée à la prochaine réconciliation (/plan). « genere_le » date la dernière lecture des documents ; les états ont pu bouger depuis, par /sceller ou /fin.",
+  "genere_le": "2026-08-16T16:39:47",
   "sources": [
     "docs/FICHE_REPRISE.md",
+    "docs/ETAT.md",
     "docs/CONCEPTION_GESTES_ILLUSTRES.md",
-    "docs/ETAT.md"
+    "docs/CONCEPTION_INVARIANT_ORIGINE_ANIMALE.md",
+    "docs/CONCEPTION_RESERVATION_MATERIEL.md",
+    "docs/CONCEPTION_B_VIN_REPAS.md",
+    "docs/CONCEPTION_MODE_CUISINE.md",
+    "docs/CONCEPTION_REGIME_PERSONNALISE.md",
+    ".claude/etat-garde.json"
   ],
   "lots": [
     {
       "id": "Lot 1",
       "chantier": "gestes illustrés",
-      "titre": "le champ média du lexique (données, aucun pixel) — attend /sceller gestes-champ-media",
-      "etat": "a_faire"
+      "titre": "le champ média du lexique (données, aucun pixel)",
+      "etat": "fait",
+      "le": "2026-08-16",
+      "commit": "e259bcb"
     },
     {
       "id": "Lot 2",
       "chantier": "gestes illustrés",
       "titre": "l'import des clips",
-      "etat": "a_faire"
+      "etat": "en_cours",
+      "commit": "803fc42"
     },
     {
       "id": "Lot 3",
       "chantier": "gestes illustrés",
       "titre": "l'affichage",
-      "etat": "a_faire",
+      "etat": "fait",
+      "le": "2026-08-16",
+      "commit": "de2ba39",
       "bloque_par": "Lot 2"
     },
     {
@@ -35,22 +46,14 @@
     },
     {
       "id": "clips-7-gestes",
-      "chantier": "gestes illustrés",
+      "chantier": "clips",
       "titre": "7 gestes sans aucun candidat (piquer, blanchir, essorer, effeuiller, gratiner, chinois, ecosser)",
       "etat": "a_faire"
     },
     {
-      "id": "photo-affichage",
-      "chantier": "photos",
-      "titre": "afficher les photos de recette",
-      "etat": "fait",
-      "le": "2026-08-13",
-      "commit": "f3d4fa1"
-    },
-    {
       "id": "photos-source",
       "chantier": "photos",
-      "titre": "201 recettes sans rien — le goulot est la source, pas le tri",
+      "titre": "bac épuisé, 19 recettes sans AUCUNE candidate — goulot = la source",
       "etat": "a_faire"
     },
     {
@@ -74,14 +77,15 @@
     {
       "id": "66",
       "chantier": "origine animale",
-      "titre": "l'origine animale est une paire indivisible ou rien",
+      "titre": "l'invariant « origine animale ⟺ provenance animale », garanti par la forme",
       "etat": "fait",
-      "le": "2026-08-14"
+      "le": "2026-08-14",
+      "commit": "ad1ad47"
     },
     {
       "id": "66b",
       "chantier": "origine animale",
-      "titre": "fermer le trou de l'autre côté de la paire",
+      "titre": "fermer le trou que les six tests scellés ne voient pas",
       "etat": "fait",
       "le": "2026-08-14",
       "commit": "17b7700"
@@ -89,15 +93,171 @@
     {
       "id": "66c",
       "chantier": "origine animale",
-      "titre": "origine rendue optionnelle — la case encore ouverte, et elle est mesurée",
+      "titre": "une case de l'invariant origine/provenance reste ouverte, et elle est mesurée",
       "etat": "a_faire"
     },
     {
       "id": "65a",
       "chantier": "réservation matériel",
-      "titre": "la table d'occupations et le partage",
+      "titre": "A → B → C′ → D → E — le four et le micro-ondes",
       "etat": "fait",
-      "le": "2026-08-13"
+      "le": "2026-08-13",
+      "commit": "faf115c"
+    },
+    {
+      "id": "65b",
+      "chantier": "réservation matériel",
+      "titre": "C″ — user_equipment.quantite + l'écran de réglage — la plaque de cuisson",
+      "etat": "a_faire"
+    },
+    {
+      "id": "rang 0",
+      "chantier": "vin et repas",
+      "titre": "Migration user.db : service sur meal_plan_entry + origine choisi/reste sur MealHistoryEntry",
+      "etat": "fait"
+    },
+    {
+      "id": "rang 1",
+      "chantier": "vin et repas",
+      "titre": "Facette service (schéma + build + loader + type) et annotation des recettes de test",
+      "etat": "a_faire"
+    },
+    {
+      "id": "rang 2",
+      "chantier": "vin et repas",
+      "titre": "composeMeal + rerollCourse + score d'accord + banc CLI",
+      "etat": "a_faire"
+    },
+    {
+      "id": "rang 3",
+      "chantier": "vin et repas",
+      "titre": "recipe_pairing + règle miroir + lexique d'incitation au test bloquant",
+      "etat": "a_faire",
+      "bloque_par": "rang 2"
+    },
+    {
+      "id": "rang 4",
+      "chantier": "vin et repas",
+      "titre": "Affichage : section « Accords », réglage, message sanitaire",
+      "etat": "a_faire"
+    },
+    {
+      "id": "L0",
+      "chantier": "mode cuisine",
+      "titre": "prérequis B, recipe_step.nature, 18 recettes marquées",
+      "etat": "fait",
+      "le": "2026-08-05"
+    },
+    {
+      "id": "L1",
+      "chantier": "mode cuisine",
+      "titre": "écran mono-recette : écran allumé, étape courante, minuteurs parallèles, alarme au premier plan, reprise (schéma v10 + bandeau)",
+      "etat": "fait",
+      "le": "2026-08-05",
+      "bloque_par": "L0"
+    },
+    {
+      "id": "L1bis",
+      "chantier": "mode cuisine",
+      "titre": "la liste complète des ingrédients et leurs quantités, en fenêtre, depuis n'importe quelle étape (schéma v11 pour les portions)",
+      "etat": "fait",
+      "le": "2026-08-06",
+      "bloque_par": "L1"
+    },
+    {
+      "id": "L1ter",
+      "chantier": "mode cuisine",
+      "titre": "les gestes du lexique dépliés sur place, dans l'étape courante. Aucun schéma, aucune donnée",
+      "etat": "fait",
+      "le": "2026-08-07",
+      "bloque_par": "L1"
+    },
+    {
+      "id": "L2",
+      "chantier": "mode cuisine",
+      "titre": "le lien est dérivé au build, pas annoté. Les 1 101 (devenus 1 350) saisies n'ont jamais eu lieu",
+      "etat": "fait",
+      "le": "2026-08-07"
+    },
+    {
+      "id": "L3",
+      "chantier": "mode cuisine",
+      "titre": "« n'afficher QUE les ingrédients de l'étape » ferait mentir l'écran par omission. À la place : la ligne de quantités sous l'étape",
+      "etat": "abandonne"
+    },
+    {
+      "id": "L4",
+      "chantier": "mode cuisine",
+      "titre": "v1.5, plusieurs plats à la fois : barre d'onglets, ordre de départ décidé par engine/cuisine/ordonnancement.ts, N cuissons en base",
+      "etat": "fait",
+      "le": "2026-08-09",
+      "bloque_par": "L1"
+    },
+    {
+      "id": "la durée",
+      "chantier": "mode cuisine",
+      "titre": "La durée ÉCOULÉE (active + repos chiffrés) remplace la somme prépa + cuisson dans l'ordonnancement",
+      "etat": "fait",
+      "le": "2026-08-10"
+    },
+    {
+      "id": "l'entrelacement",
+      "chantier": "mode cuisine",
+      "titre": "Une recette devient une suite de segments actifs et passifs ; deux gestes ne se recouvrent jamais, un repos ne gêne personne",
+      "etat": "fait",
+      "le": "2026-08-10"
+    },
+    {
+      "id": "le matériel",
+      "chantier": "mode cuisine",
+      "titre": "Le four réclamé par deux plats est NOMMÉ. La réservation, elle, reste non livrable",
+      "etat": "fait",
+      "le": "2026-08-10"
+    },
+    {
+      "id": "Lot A",
+      "chantier": "régime personnalisé",
+      "titre": "les 7 groupes, fonction pure",
+      "etat": "fait",
+      "le": "2026-08-10",
+      "commit": "9d4f691"
+    },
+    {
+      "id": "Lot B",
+      "chantier": "régime personnalisé",
+      "titre": "l'écran de retrait, sur la plomberie existante",
+      "etat": "fait",
+      "le": "2026-08-10",
+      "commit": "5ef356d"
+    },
+    {
+      "id": "Lot C",
+      "chantier": "régime personnalisé",
+      "titre": "le garde-fou de vide, et les présélections nommées",
+      "etat": "fait",
+      "le": "2026-08-10",
+      "commit": "eacb065"
+    },
+    {
+      "id": "Lot C-bis",
+      "chantier": "régime personnalisé",
+      "titre": "la correction demandée n'était pas un défaut",
+      "etat": "fait",
+      "commit": "8dcaa8f"
+    },
+    {
+      "id": "Lot D",
+      "chantier": "régime personnalisé",
+      "titre": "la direction « admettre »",
+      "etat": "fait",
+      "le": "2026-08-11"
+    },
+    {
+      "id": "Lot E",
+      "chantier": "régime personnalisé",
+      "titre": "le fait « présure »",
+      "etat": "a_faire",
+      "optionnel": true
     }
   ]
 }
