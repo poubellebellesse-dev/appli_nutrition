@@ -351,11 +351,11 @@ n'importe laquelle des quatre.
 `<video>` sous jsdom, où `HTMLMediaElement.play()` lève. Il n'existe **aucun précédent de test
 d'affichage de média** — `imagePath` n'étant lu par aucun écran, il n'y a rien à copier.
 
-### Lot 4 — le hors-ligne ✅ **LIVRÉ le 2026-08-16** — *sans hash : pas encore commité*
+### Lot 4 — le hors-ligne ✅ **LIVRÉ le 2026-08-16 (`00f8e38`)**
 
-> ⚠️ **PAS DE HASH, ET C'EST UNE INFORMATION.** Le travail n'a pas été commité : sur ce dépôt, Claude
-> ne commite que sur ordre explicite. Tant que la ligne est vide, **la livraison n'est rattachée à
-> rien** — c'est vrai pour ce lot comme pour tout autre. À remplir au commit, pas avant.
+> ⚠️ **Le hash a été posé au commit, pas avant.** Le rapport de fin a été rendu sans lui : sur ce
+> dépôt, Claude ne commite que sur ordre explicite, et **une livraison non commitée n'est rattachée
+> à rien**. Le commit porte les 6 fichiers du lot et rien d'autre.
 >
 > ✅ **Les 12 critères sont verts** — 11 tests, `tests/scelles/gestes-hors-ligne.test.ts`.
 > ⚠️ **Le sceau a été levé une fois APRÈS la livraison du code**, sur décision de l'auteur, pour

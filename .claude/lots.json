@@ -43,7 +43,8 @@
       "titre": "le hors-ligne",
       "etat": "fait",
       "le": "2026-08-16",
-      "bloque_par": "Lot 3"
+      "bloque_par": "Lot 3",
+      "commit": "00f8e38"
     },
     {
       "id": "clips-7-gestes",
