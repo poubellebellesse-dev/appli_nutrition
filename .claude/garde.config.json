@@ -1,0 +1,11 @@
+{
+  "proteges": ["docs/archive/**"],
+  "scelles": ["tests/scelles/**"],
+  "source": ["app/src/**", "catalog/**"],
+  "verifications": [
+    { "nom": "npm test", "motifs": ["npm test", "vitest"] },
+    { "nom": "npm run typecheck", "motifs": ["typecheck", "tsc --noEmit"] },
+    { "nom": "npx vite build", "motifs": ["vite build"] },
+    { "nom": "npm run engine:plan-stress", "motifs": ["plan-stress"] }
+  ]
+}

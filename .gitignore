@@ -46,3 +46,6 @@ capture/
 
 # état local de la garde (hooks) — ne se partage pas
 .claude/etat-garde.json
+
+# repère du chemin des lots (.claude/chemin.mjs) — propre à la machine
+.claude/chemin.json

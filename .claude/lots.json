@@ -1,0 +1,103 @@
+{
+  "avertissement": "AMORCE À CONFIRMER PAR L'AUTEUR, posée le 2026-08-16. Ce dépôt n'avait aucun index de lots : celui-ci a été reconstitué à la lecture des documents cités sous « sources », et il n'a été relu par personne. Les titres sont RECOPIÉS des documents, jamais inventés — mais le découpage en chantiers, lui, est une proposition. CACHE DÉRIVÉ, jamais une source : la vérité reste dans docs/. ⚠️ Contrairement au dépôt ecriture, RIEN NE TIENT CE FICHIER À JOUR : appli_nutrition n'a ni .claude/lots.mjs ni commande /plan. Il s'édite à la main, ou la mécanique d'écriture se copie depuis l'autre dépôt.",
+  "genere_le": "2026-08-16T14:37:57",
+  "sources": [
+    "docs/FICHE_REPRISE.md",
+    "docs/CONCEPTION_GESTES_ILLUSTRES.md",
+    "docs/ETAT.md"
+  ],
+  "lots": [
+    {
+      "id": "Lot 1",
+      "chantier": "gestes illustrés",
+      "titre": "le champ média du lexique (données, aucun pixel) — attend /sceller gestes-champ-media",
+      "etat": "a_faire"
+    },
+    {
+      "id": "Lot 2",
+      "chantier": "gestes illustrés",
+      "titre": "l'import des clips",
+      "etat": "a_faire"
+    },
+    {
+      "id": "Lot 3",
+      "chantier": "gestes illustrés",
+      "titre": "l'affichage",
+      "etat": "a_faire",
+      "bloque_par": "Lot 2"
+    },
+    {
+      "id": "Lot 4",
+      "chantier": "gestes illustrés",
+      "titre": "le hors-ligne",
+      "etat": "a_faire",
+      "bloque_par": "Lot 3"
+    },
+    {
+      "id": "clips-7-gestes",
+      "chantier": "gestes illustrés",
+      "titre": "7 gestes sans aucun candidat (piquer, blanchir, essorer, effeuiller, gratiner, chinois, ecosser)",
+      "etat": "a_faire"
+    },
+    {
+      "id": "photo-affichage",
+      "chantier": "photos",
+      "titre": "afficher les photos de recette",
+      "etat": "fait",
+      "le": "2026-08-13",
+      "commit": "f3d4fa1"
+    },
+    {
+      "id": "photos-source",
+      "chantier": "photos",
+      "titre": "201 recettes sans rien — le goulot est la source, pas le tri",
+      "etat": "a_faire"
+    },
+    {
+      "id": "relecture-savoir",
+      "chantier": "avant publication",
+      "titre": "Relecture par un tiers du contenu Savoir — bloquante avant publication",
+      "etat": "a_faire"
+    },
+    {
+      "id": "essai-telephone",
+      "chantier": "avant publication",
+      "titre": "Vérifier sur un vrai téléphone",
+      "etat": "a_faire"
+    },
+    {
+      "id": "capacitor",
+      "chantier": "avant publication",
+      "titre": "Empaquetage Capacitor, puis Play",
+      "etat": "a_faire"
+    },
+    {
+      "id": "66",
+      "chantier": "origine animale",
+      "titre": "l'origine animale est une paire indivisible ou rien",
+      "etat": "fait",
+      "le": "2026-08-14"
+    },
+    {
+      "id": "66b",
+      "chantier": "origine animale",
+      "titre": "fermer le trou de l'autre côté de la paire",
+      "etat": "fait",
+      "le": "2026-08-14",
+      "commit": "17b7700"
+    },
+    {
+      "id": "66c",
+      "chantier": "origine animale",
+      "titre": "origine rendue optionnelle — la case encore ouverte, et elle est mesurée",
+      "etat": "a_faire"
+    },
+    {
+      "id": "65a",
+      "chantier": "réservation matériel",
+      "titre": "la table d'occupations et le partage",
+      "etat": "fait",
+      "le": "2026-08-13"
+    }
+  ]
+}
