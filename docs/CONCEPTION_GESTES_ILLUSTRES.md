@@ -1,9 +1,15 @@
 # Conception — le lexique des gestes illustré
 
-> Cadrage du 2026-08-14. **Lots 1 et 3 LIVRÉS le 2026-08-16** (`e259bcb`, `de2ba39`) · **lot 2
-> PARTIEL, et volontairement** (`803fc42` — 3 gestes sur 51, décision de l'auteur) · **lot 4 à faire**.
+> Cadrage du 2026-08-14. **Lots geste 1, geste 3 et geste 4 LIVRÉS le 2026-08-16** (`e259bcb`,
+> `de2ba39`, `00f8e38`) · **lot geste 2 PARTIEL, et volontairement** (`803fc42` — 3 gestes sur 51,
+> décision de l'auteur).
+> ⛔ **LES LOTS DE CE CHANTIER S'APPELLENT « lot geste N » DEPUIS LE 2026-08-17, ET C'EST STRUCTUREL :**
+> le chantier des photos avait lui aussi des « Lot 1/2/3 », et `.claude/lots.json` résout un
+> identifiant en prenant **le premier trouvé**, sans le dire. ⚠️ **Quatre fichiers de
+> `tests/scelles/` citent encore les anciens noms dans leurs commentaires** — ils sont scellés, on
+> ne les rouvre pas pour une question de nom.
 > L'état chiffré vit dans `ETAT.md` ; ce document ne porte que le découpage et les questions.
-> ⚠️ **Cet en-tête a annoncé « aucune ligne de code n'a été écrite » pendant que les lots 1 à 3
+> ⚠️ **Cet en-tête a annoncé « aucune ligne de code n'a été écrite » pendant que les lots geste 1 à geste 3
 > étaient codés, verts et posés dans l'arbre.** Corrigé le 2026-08-16, au moment de leur commit.
 > L'en-tête d'un document de conception se corrige dans le lot qui le dément, pas plus tard.
 
@@ -41,7 +47,7 @@ lui-même, comme n'importe quel autre.** Cette section reste écrite parce que l
 **⇒ Ce chantier ne doit PAS être fait pour répondre à un courriel.** Il a sa propre justification,
 écrite au §1, et c'est la seule qui décide de son ordonnancement. ⚠️ **Corollaire à ne pas perdre :
 la réponse à Pexels est désormais indépendante de ce chantier.** Elle se donne avec ce qui existe
-et une phrase honnête sur ce qui n'existe pas — pas en attendant que le lot 3 soit livré.
+et une phrase honnête sur ce qui n'existe pas — pas en attendant que le lot geste 3 soit livré.
 
 ---
 
@@ -131,7 +137,7 @@ de bande passante en moins sur les appareils récents seulement.**
 que sur matériel récent (`ETAT.md:655-657`) ; sans repli, un iPhone un peu ancien n'aurait affiché
 que l'image fixe, **sans que l'utilisateur sache qu'il manque quelque chose**.
 
-⚠️ **Conséquence pour le lot 2** : l'import copie **deux fichiers par segment**, pas un. Le compte
+⚠️ **Conséquence pour le lot geste 2** : l'import copie **deux fichiers par segment**, pas un. Le compte
 attendu est donc **196 fichiers vidéo + 98 posters**, et non 98 + 98.
 
 ### ~~D4~~ — Les binaires vidéo dans git ? ✅ TRANCHÉE le 2026-08-14 : **OUI, comme les photos**
@@ -169,7 +175,7 @@ Quatre mises en page ont été maquettées **avec les clips réels**, pas décri
 Trois conséquences, toutes portées ailleurs dans ce document :
 
 1. **D3 est fermée** — un poster par segment, ci-dessus.
-2. **Le schéma du lot 1 gagne une colonne `moment`.** La bande nomme ce qu'elle montre. Numéroter
+2. **Le schéma du lot geste 1 gagne une colonne `moment`.** La bande nomme ce qu'elle montre. Numéroter
    1-2-3 ne suffit pas : **`deglacer` ne porte que `milieu` et `fin`**, il afficherait « 1 » devant
    un milieu. Le nom existe déjà dans les fichiers encodés — **29 `debut`, 23 `milieu`, 25 `fin`,
    21 `unique`, 98 en tout** — il ne manque que la place où le poser.
@@ -184,12 +190,12 @@ Trois conséquences, toutes portées ailleurs dans ce document :
 irréversible de D4 : chaque segment importé pèse dans l'historique git **pour toujours**, et les
 98 segments font 22,43 Mo. L'échantillon prouve la chaîne de bout en bout sans graver le lot complet.
 
-⇒ **Le lot 2 reste donc OUVERT**, et son « Fini quand » (51/62, 196 vidéos, 98 posters) n'est **pas**
+⇒ **Le lot geste 2 reste donc OUVERT**, et son « Fini quand » (51/62, 196 vidéos, 98 posters) n'est **pas**
 atteint. Ce n'est pas un échec du lot : c'est sa portée qui a été réduite, les yeux ouverts.
 
 ⛔ **`suer` N'EST PAS DANS L'ÉCHANTILLON, ET C'EST LE GESTE QUI JUSTIFIAIT LE CHANTIER** (§1 :
 « suer » contre « revenir »). 24 candidates photo, **zéro segment encodé**. La démonstration qui a
-motivé tout ce travail n'est toujours pas montrable — ce n'est pas le lot 2 qui la livrera.
+motivé tout ce travail n'est toujours pas montrable — ce n'est pas le lot geste 2 qui la livrera.
 
 ✅ **L'ÉCART « 99 DÉCIDÉS / 98 ENCODÉS » EST EXPLIQUÉ**, mesuré par l'import le 2026-08-16 : ce n'est
 **pas** un segment jamais produit, c'est un **2→1 sur `emincer`**. La décision porte `debut` +
@@ -204,17 +210,17 @@ confondre importerait des chemins vers des fichiers absents.
 
 ⚠️ Chaque « Fini quand » se vérifie **contre `catalog.db` réel**, jamais contre une fixture.
 
-### Lot 1 — le champ média du lexique (données, aucun pixel) ✅ **LIVRÉ le 2026-08-16 (`e259bcb`)**
+### Lot geste 1 — le champ média du lexique (données, aucun pixel) ✅ **LIVRÉ le 2026-08-16 (`e259bcb`)**
 
 ⚠️ **LE SCEAU A ÉTÉ LEVÉ SUR `gestes-champ-media.test.ts`, SUR DÉCISION DE L'AUTEUR, CONFIRMÉE.**
 Deux assertions retirées — « les 62 fiches portent `clips` **et il est vide** » (critère 4) et « les
 60 autres gestes ont **zéro** clip » (critère 6). Toutes deux portaient sur le **contenu du
-catalogue**, jamais sur le sujet du lot : le « Fini quand » disait « vide partout **tant que le lot 2
-n'a pas tourné** », le test ne portait pas la condition, et rendait donc le lot 1 structurellement
+catalogue**, jamais sur le sujet du lot : le « Fini quand » disait « vide partout **tant que le lot geste 2
+n'a pas tourné** », le test ne portait pas la condition, et rendait donc le lot geste 1 structurellement
 incompatible avec l'existence même d'un import. **Ce qui est gardé est ce qu'elles prouvaient
 vraiment** : chaque fiche porte un **tableau**, jamais `null` ni absent ; et aucun geste n'hérite des
 **témoins plantés**. Le pouvoir de détection est intact et devient **indépendant de ce que le
-catalogue contient** — donc encore valable après le lot 2.
+catalogue contient** — donc encore valable après le lot geste 2.
 
 **Fini quand** :
 1. `LexiconEntry` porte `clips: readonly LexiconClip[]` et `npm run typecheck` est propre.
@@ -232,7 +238,7 @@ catalogue contient** — donc encore valable après le lot 2.
    (aliments, recettes, gestes). Casser le chargement des tips serait passé au vert. **Une promesse
    qui ne vit que dans la sortie console de `build.mjs` n'est lue par aucune machine.**
 4. Un test lit `catalog.db` réel et vérifie que **les 62 fiches portent un tableau `clips`**,
-   **vide** partout tant que le lot 2 n'a pas tourné.
+   **vide** partout tant que le lot geste 2 n'a pas tourné.
    ⚠️ **Un tableau vide, pas `null`** — corrigé le 2026-08-14 : la première rédaction disait
    « valant `null` », ce qui ne veut rien dire pour une relation un-à-plusieurs.
 5. ⛔ **Un test plante un clip À LA MAIN dans une COPIE de `catalog.db` et vérifie qu'il ressort
@@ -292,7 +298,7 @@ catalogue contient** — donc encore valable après le lot 2.
 ⚠️ **Piège nommé** : « un champ déclaré n'est pas un champ branché » — trois occurrences déjà payées
 dans ce dépôt, dont `imagePath` lui-même. Ce lot déclare ; il ne prétend rien afficher.
 
-### Lot 2 — l'import des clips ⏳ **PARTIEL le 2026-08-16 (`803fc42`) — LE LOT RESTE OUVERT**
+### Lot geste 2 — l'import des clips ⏳ **PARTIEL le 2026-08-16 (`803fc42`) — LE LOT RESTE OUVERT**
 
 ⛔ **LE SCRIPT EST FINI, L'IMPORT NE L'EST PAS.** `catalog/import-clips.mjs` existe et fait les trois
 gestes ensemble (copie, YAML, crédits) ; il n'a tourné que sur **3 gestes sur 51** — voir D5,
@@ -310,7 +316,7 @@ atteint : il reste la référence du jour où l'import complet sera lancé, pas 
    ⚠️ la règle « la mesure se prend sur `dist/`, jamais sur le bac » a déjà été enfreinte une fois
    par le lot qui l'avait écrite.
 
-### Lot 3 — l'affichage ✅ **LIVRÉ le 2026-08-16 (`de2ba39`)** *(dépendait du lot 1 et du lot 2)*
+### Lot geste 3 — l'affichage ✅ **LIVRÉ le 2026-08-16 (`de2ba39`)** *(dépendait du lot geste 1 et du lot geste 2)*
 
 ⚠️ **UN CRITÈRE RESTE DÛ, ET IL NE SE PREND PAS ICI : le n° 7**, le nombre de requêtes au premier
 affichage de l'écran Savoir. La vignette dans la ligne fait passer **62 images** au montage contre
@@ -351,7 +357,7 @@ n'importe laquelle des quatre.
 `<video>` sous jsdom, où `HTMLMediaElement.play()` lève. Il n'existe **aucun précédent de test
 d'affichage de média** — `imagePath` n'étant lu par aucun écran, il n'y a rien à copier.
 
-### Lot 4 — le hors-ligne ✅ **LIVRÉ le 2026-08-16 (`00f8e38`)**
+### Lot geste 4 — le hors-ligne ✅ **LIVRÉ le 2026-08-16 (`00f8e38`)**
 
 > ⚠️ **Le hash a été posé au commit, pas avant.** Le rapport de fin a été rendu sans lui : sur ce
 > dépôt, Claude ne commite que sur ordre explicite, et **une livraison non commitée n'est rattachée
@@ -394,7 +400,7 @@ réel) :
 
 - ⛔ **`catalog/gestes` apparaît ZÉRO fois dans `dist/sw.js`.** Les 18 fichiers sont bien copiés dans
   `dist/`, mais **aucun n'est pré-caché ni ne compte dans la version du cache**. ⇒ **Hors ligne, les
-  vignettes du lexique sont cassées** — c'est le lot 3 qui a introduit ce trou, et personne ne
+  vignettes du lexique sont cassées** — c'est le lot geste 3 qui a introduit ce trou, et personne ne
   l'aurait vu en ligne.
 - ⛔ **Le service worker ne fait AUCUN `cache.put`.** Il sert depuis le cache, et va au réseau quand
   il n'a rien — sans rien garder. ⇒ **Un clip regardé en ligne est perdu hors ligne**, alors que
@@ -517,7 +523,7 @@ les critères seuls, **avant toute ligne de code**. **11 tests pour 12 critères
 vérifié dans le test du critère 3 (les listes du bac témoin le portent) et `7 bis` dans celui du
 critère 7 (même consultation, deux constats). ⚠️ **Nommé d'après le lot et non `4.test.ts`** :
 sur ce dépôt le nom du fichier scellé **est** le nom du lot, c'est ce qui a permis de retrouver le
-lot 1 sous `gestes-champ-media`. ⚠️ **La moitié « sans être modifiés » du critère 8 n'est vérifiable
+lot geste 1 sous `gestes-champ-media`. ⚠️ **La moitié « sans être modifiés » du critère 8 n'est vérifiable
 par aucun test** — elle se lit au `git diff --name-only` avant `/fin`, et nulle part ailleurs.
 
 **Ce que le lot NE touche PAS** — hors périmètre, et le dire ferme la porte à l'élargissement :
@@ -525,8 +531,8 @@ par aucun test** — elle se lit au `git diff --name-only` avant `/fin`, et null
 - **`app/src/` en entier.** Le lot vit dans `vite-plugin-sw.ts`, à la racine. ⛔ Ni `savoir.tsx`, ni
   `catalog-loader.ts`, ni le moteur.
 - **Le catalogue.** Aucun YAML, aucun `catalog/build.mjs`, aucun `.mp4` ni `.jpg` ajouté ou retiré.
-  Les 6 posters et 12 clips du lot 2 sont pris **tels quels** ; les 51 gestes manquants restent
-  manquants, c'est le lot 2 et il est arrêté par décision.
+  Les 6 posters et 12 clips du lot geste 2 sont pris **tels quels** ; les 51 gestes manquants restent
+  manquants, c'est le lot geste 2 et il est arrêté par décision.
 - **Le bouton « Tout télécharger pour le mode avion »** (§7.1 l.984). Il n'existe pas, ce lot ne le
   crée pas. Le pré-cache reste automatique, la conservation reste implicite à la consultation.
 - **La déviation photos de recettes** (§7.1 « à la demande » *vs* `imagesPubliques` qui pré-cache les
@@ -544,10 +550,10 @@ par aucun test** — elle se lit au `git diff --name-only` avant `/fin`, et null
 **Les témoins d'avant** — relevés le 2026-08-16, arbre `de2ba39` **plus le seul fichier de tests
 scellés** (aucun code de production ajouté) :
 
-| Témoin | Avant le lot 4 |
+| Témoin | Avant le lot geste 4 |
 |---|---|
 | `npm test` | **2 158 passed / 9 failed (2 167 tests, 115 fichiers)** en 39,84 s |
-| dont le fichier scellé du lot 4 | **11 tests : 9 rouges, 2 verts** — les 2 verts sont les garde-fous (« sw.js est lisible », critère 8 de non-régression), qui doivent **rester** verts |
+| dont le fichier scellé du lot geste 4 | **11 tests : 9 rouges, 2 verts** — les 2 verts sont les garde-fous (« sw.js est lisible », critère 8 de non-régression), qui doivent **rester** verts |
 | `npm run typecheck` | propre |
 | `npx vite build` | ✓ 2,83 s |
 | `npm run engine:plan-stress` | **20/20** |
@@ -564,17 +570,17 @@ scellés** (aucun code de production ajouté) :
 
 ```
 ✅ D2 (deux formats)  ─┐
-✅ D4 (versionné git) ─┼─→ ⏳ Lot 2 (import) ─→ ✅ Lot 3 (affichage) ─→ ▶ Lot 4 (hors-ligne)
+✅ D4 (versionné git) ─┼─→ ⏳ Lot geste 2 (import) ─→ ✅ Lot geste 3 (affichage) ─→ ▶ Lot geste 4 (hors-ligne)
 ✅ D3 (un par segment)─┤     3 gestes / 51           de2ba39              À FAIRE — c'est ICI
 ✅ D5 (trois, 08-16)  ─┘        ▲
-                         ✅ Lot 1 (champ) ──┘
+                         ✅ Lot geste 1 (champ) ──┘
                             e259bcb
 
 ⏳ D1 (budget P6 / décision 68) ── ne bloque AUCUN lot, mais doit être tranchée
                                    avant de dire que le chantier est fini.
 ```
 
-⛔ **LE LOT 4 EST LE SEUL LOT DÉBLOQUÉ DU CHANTIER, ET C'EST LA PROCHAINE ÉTAPE.** Le lot 2 n'est
+⛔ **LE LOT GESTE 4 EST LE SEUL LOT DÉBLOQUÉ DU CHANTIER, ET C'EST LA PROCHAINE ÉTAPE.** Le lot geste 2 n'est
 pas *bloqué* : il est **volontairement arrêté à 3 gestes** (D5). Le rouvrir est une décision, pas
 une suite.
 
@@ -596,12 +602,12 @@ recopier** (les précédents : 2 146/6 le 08-15, 2 124 / 109 fichiers le 08-11) 
 | `node catalog/build.mjs` | 451 aliments · 330 recettes · 1 548 étapes · **62 gestes** · 73 tips · 8 fiches · 30 équipements |
 | `node catalog/audit-mapping.mjs` | 451 mappings · 9 candidats à relire |
 
-✅ **LES 6 ROUGES SONT ÉTEINTS — le lot 1 les a fermés, comme annoncé.** Ils vivaient tous dans
+✅ **LES 6 ROUGES SONT ÉTEINTS — le lot geste 1 les a fermés, comme annoncé.** Ils vivaient tous dans
 `tests/scelles/gestes-champ-media.test.ts` (7 tests), écrits avant leur code. **Aucun rouge ailleurs :
 le lot n'a pas débordé.**
 
 **Écart de compte attribué fichier par fichier, jamais déduit** : 2 152 → 2 156 = **+4**, et
-113 → 114 fichiers = **+1**, les deux étant `app/src/ui/screens/savoir.test.tsx` (lot 3). Les
+113 → 114 fichiers = **+1**, les deux étant `app/src/ui/screens/savoir.test.tsx` (lot geste 3). Les
 7 tests scellés étaient **déjà comptés** dans les 2 152 ; seul leur résultat a changé.
 
 ⚠️ **`build.mjs` sort une alerte qui n'est PAS de ce chantier** : fiche `calcium-fractures`, source
@@ -613,4 +619,4 @@ solveur, donc **20/20 doit rester 20/20**. S'il bouge, c'est qu'on a touché à 
 qui est écrit ici.
 
 ⚠️ **Cinquième commande, à la main et dans le dépôt principal uniquement** :
-`node catalog/audit-mapping.mjs`, après le lot 2 — c'est le seul qui touche au contenu.
+`node catalog/audit-mapping.mjs`, après le lot geste 2 — c'est le seul qui touche au contenu.

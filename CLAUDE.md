@@ -43,16 +43,16 @@ npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
 Dernier relevé, **suite réellement exécutée le 2026-08-16, arbre COMPLET, commit `de2ba39`
-(lot 3 des gestes illustrés)** :
+(lot geste 3)** :
 `npm test` → **2 156 passed / 0 failed (2 156 tests, 114 fichiers)** en ~42 s · typecheck propre ·
 `vite build` ✓ (2,82 s) · `engine:plan-stress` **20/20** · `node catalog/build.mjs` → **451 aliments,
 330 recettes, 1 548 étapes, 62 gestes, 73 tips, 8 fiches, 30 équipements (1 473 couples)** ·
 `catalog/audit-mapping.mjs` → 451 mappings, 9 candidats à relire (inchangé).
 ✅ **L'ARBRE EST VERT EN ENTIER — les 6 rouges de la lane média sont éteints.** Ils vivaient dans
 `tests/scelles/gestes-champ-media.test.ts` (7 tests), écrits AVANT leur code, donc rouges par
-construction, exactement comme la méthode l'exige ; le **lot 1 les a fermés le 2026-08-16**.
+construction, exactement comme la méthode l'exige ; le **lot geste 1 les a fermés le 2026-08-16**.
 Écart de compte attribué fichier par fichier : 2 152 → 2 156 = **+4, tous `savoir.test.tsx`**
-(lot 3), et 113 → 114 fichiers pour la même raison. Les 7 scellés étaient **déjà comptés**.
+(lot geste 3), et 113 → 114 fichiers pour la même raison. Les 7 scellés étaient **déjà comptés**.
 ⚠️ **`node catalog/build.mjs` sort une alerte qui n'est de personne aujourd'hui** : fiche
 `calcium-fractures`, source `critique-zhao-2018` **sans auteurs vérifiés**. C'est du contenu Savoir
 — elle tombe avec la relecture par un tiers, pas avec un lot de code.

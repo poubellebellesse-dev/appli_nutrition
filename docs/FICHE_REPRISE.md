@@ -21,11 +21,11 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-16, SUR L'ARBRE COMMITÉ** (`de2ba39`, lot 3 des gestes) : `npm test` →
+⚠️ **RELEVÉ DU 2026-08-16, SUR L'ARBRE COMMITÉ** (`de2ba39`, lot geste 3) : `npm test` →
 **2 156 passed / 0 failed (2 156 tests, 114 fichiers)** en ~42 s · typecheck propre · `vite build` ✓
 (2,82 s) · `engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé).
-✅ **LES 6 ROUGES SONT ÉTEINTS** — le lot 1 a fermé les scellés de `gestes-champ-media.test.ts`.
-Écart 2 152 → 2 156 attribué fichier par fichier : **+4, tous dans `savoir.test.tsx`** (lot 3).
+✅ **LES 6 ROUGES SONT ÉTEINTS** — le lot geste 1 a fermé les scellés de `gestes-champ-media.test.ts`.
+Écart 2 152 → 2 156 attribué fichier par fichier : **+4, tous dans `savoir.test.tsx`** (lot geste 3).
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
 tail -25` rend le code de sortie du **pipe**, donc 0. Lire `Tests N failed`, jamais `$?`.
@@ -52,15 +52,15 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 
 ⛔ **LE HORS-LIGNE EST FERMÉ. CE QUI BLOQUE MAINTENANT, C'EST LE CONTENU.**
 
-1. **▶ LOTS 1, 3 ET 4 LIVRÉS le 2026-08-16** (`e259bcb` le champ média, `de2ba39` l'affichage,
-   `00f8e38` le hors-ligne). ⛔ **Il ne reste AUCUN lot débloqué dans ce chantier** : le
-   lot 2 est le seul ouvert, et il est arrêté par décision. **La suite du chantier est un choix, pas
-   une étape.** ▶ Ce que le lot 4 laisse derrière lui : `ETAT.md` §8.
-   ⏳ **Le lot 2 est ARRÊTÉ À 3 GESTES SUR 51, volontairement** (`803fc42`, décision de l'auteur du
+1. **▶ LOTS GESTE 1, GESTE 3 ET GESTE 4 LIVRÉS le 2026-08-16** (`e259bcb` le champ média, `de2ba39`
+   l'affichage, `00f8e38` le hors-ligne). ⛔ **Il ne reste AUCUN lot débloqué dans ce chantier** : le
+   lot geste 2 est le seul ouvert, et il est arrêté par décision. **La suite du chantier est un choix,
+   pas une étape.** ▶ Ce que le lot geste 4 laisse derrière lui : `ETAT.md` §8.
+   ⏳ **Le lot geste 2 est ARRÊTÉ À 3 GESTES SUR 51, volontairement** (`803fc42`, décision de l'auteur du
    2026-08-16) — D4 grave les binaires dans l'historique git **pour toujours**, et 22,43 Mo ne se
    dégravent pas. **Le rouvrir est une décision, pas une suite.**
    ⚠️ **Le sceau de `gestes-champ-media.test.ts` a été levé, confirmé** : deux assertions sur le
-   *contenu du catalogue* retirées, le pouvoir de détection gardé. Motif dans le lot 1 du plan.
+   *contenu du catalogue* retirées, le pouvoir de détection gardé. Motif dans le lot geste 1 du plan.
    ▶ Plan, « Fini quand » des 4 lots, décisions et pièges nommés :
    **[CONCEPTION_GESTES_ILLUSTRES.md](./CONCEPTION_GESTES_ILLUSTRES.md)**.
 2. **🎬 Clips : le travail est FAIT** (compte en `ETAT.md`). ⛔ Reste actionnable : **7 gestes sans
@@ -70,13 +70,14 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
    encodé** — or c'est le geste qui justifiait le chantier (« suer » contre « revenir »). **La paire
    ne sera pas montrable à la fin des 4 lots.** ⚠️ **11 codes du lexique n'ont aucun dossier de
    clips, et 3 de plus n'y tombent qu'au tiret près** (`bain-marie`/`bain_marie`, `monter-blancs`,
-   `tailler-des`) — c'est le lot 2 qui paiera, pas le lot 1.
+   `tailler-des`) — c'est le lot geste 2 qui paiera, pas le lot geste 1.
 3. **📷 Photos — elles s'AFFICHENT, et le cadre est lu à l'import** (`f3d4fa1`, fusionné dans `main`
    le 2026-08-17 — ⚠️ **le lot était vert SEUL depuis le 13, invisible sur l'arbre principal
    pendant quatre jours**). **129 sur 330** ; les 201 autres gardent l'aplat. ⛔ **La fiche détail
-   d'une recette n'en montre toujours aucune** — prochain lot, et c'est l'écran qu'on lit en
-   cuisinant. ⛔ **Le gisement de cadres est vide : 1 posé sur 129**, donc « carré » n'existe que sur
-   une photo. ⛔ Bac épuisé, 19 recettes sans AUCUNE candidate — goulot = la source, pas le tri.
+   d'une recette en montre une depuis le lot photo 3, livré le 2026-08-17 — plus aucun écran n'ignore la
+   photo.** ⛔ **Ce qui reste bloque sur la SOURCE, pas sur le code** : le gisement de cadres est
+   vide (**1 posé sur 129**, donc « carré » n'existe que sur une photo), le bac est épuisé et 19
+   recettes n'ont AUCUNE candidate. ⛔ Bac épuisé — goulot = la source, pas le tri.
    ⛔ Build-qui-échoue-sans-photo **interdit avant 330/330**.
    ▶ [CONCEPTION_PHOTOS_RECETTES.md](./CONCEPTION_PHOTOS_RECETTES.md).
 4. **⛔ Relecture par un tiers du contenu Savoir** (`ETAT.md` §8.2 bis) — **bloquante avant

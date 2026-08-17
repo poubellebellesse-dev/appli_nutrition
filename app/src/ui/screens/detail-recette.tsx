@@ -11,8 +11,14 @@
 // aujourd'hui », un objectif présenté comme cible et un code couleur rouge/vert ne le sont pas.
 // Ne jamais ajouter ici de cumul de la journée, de barre de progression, ni de couleur de jugement.
 //
-// PÉRIMÈTRE — ce que §4.6 décrit et qui n'est PAS ici : la photo (`imagePath` n'est lu nulle part
-// dans cet écran), les alternatives d'ingrédients (`suggestAlternatives` exige
+// ⚠️ LA PHOTO EST ICI DEPUIS LE 2026-08-17, et cette ligne disait le contraire jusque-là. Elle a
+// dit vrai quatre mois, ce qui est exactement ce qui la rendait dangereuse : quatre en-têtes de ce
+// dépôt ont affirmé « `imagePath` n'est lu nulle part » longtemps après que ce fût faux ailleurs.
+// Le motif est celui de `aujourdhui.tsx`, appliqué, pas réinventé ; le repli est l'aplat de
+// `ui/vignette.ts`, à la place exacte de la photo.
+//
+// PÉRIMÈTRE — ce que §4.6 décrit et qui n'est PAS ici : les alternatives d'ingrédients
+// (`suggestAlternatives` exige
 // une `SuggestionRequest` complète pour que les substitutions repassent les filtres d'allergènes —
 // un lot, pas un bouton), les notes locales, la roue des goûts, et « Ajouter à ma semaine ».
 
@@ -51,6 +57,7 @@ import {
 import { formesDeLAliment } from '../texte-etape.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
+import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
 
 /**
  * Retour contextuel (§ « Retour contextuel depuis la fiche recette ») : le lien du haut ramène là
@@ -318,9 +325,51 @@ export function DetailRecette({
 
   return (
     <article>
+      {/* La « photo dominante » de §4.1 DESIGN, sur le dernier écran qui n'en montrait aucune.
+          ⚠️ MÊME MOTIF QUE LA CARTE DU JOUR (`aujourdhui.tsx`), PAS UN SECOND. Deux traitements de
+          la même image sur deux écrans divergent à la première retouche — c'est la raison d'être de
+          ce lot, pas un détail de forme.
+          ⚠️ `alt=""` ET `aria-hidden` : le nom du plat est du VRAI texte, dans le `<h1>` juste
+          dessous (§3.1 DESIGN, règle 1). Un `alt` qui le répéterait le ferait annoncer deux fois.
+          ⛔ LE `src` SE LIT, IL NE SE FABRIQUE PAS. `/catalog/images/${id.replace(/_/g, '-')}.avif`
+          tombe juste sur 127 des 129 recettes pourvues, et se tait sur les deux autres.
+          ⛔ ET L'APLAT RESTE EN TÊTE, à la place exacte de la photo : 201 recettes sur 330 n'en ont
+          pas, et un repli posé ailleurs n'est plus un repli, c'est un rectangle au milieu d'une
+          recette. */}
+      {recette.imagePath !== null && recette.imagePath !== '' ? (
+        <img
+          src={recette.imagePath}
+          alt=""
+          aria-hidden="true"
+          // `object-cover` et non `contain` : la hauteur est imposée et les photos n'ont pas toutes
+          // le même format — `contain` poserait des bandes vides. On rogne, on ne déforme jamais.
+          className="mt-2 h-[40vh] min-h-[12rem] w-full rounded-[--radius-carte] object-cover"
+          // Première image de l'écran : `lazy` la ferait apparaître APRÈS le texte (§3.1 DESIGN).
+          decoding="async"
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          style={{ backgroundColor: couleurDeRecette(recette.id) }}
+          className="mt-2 flex h-[40vh] min-h-[12rem] items-center justify-center rounded-[--radius-carte]"
+        >
+          {/* Même exception que sur la carte du jour : ce n'est pas du texte, c'est un motif —
+              `aria-hidden` deux lignes plus haut. `ui/echelle-typo.test.ts` la nomme. */}
+          <span className="font-titre text-[5rem] leading-none text-white/70">
+            {initialeDeRecette(recette.nom)}
+          </span>
+        </div>
+      )}
+
+      {/* ⛔ LE RETOUR VIENT APRÈS LA PHOTO, et l'ordre n'est pas cosmétique : §4.6 DESIGN écrit
+          « Photo, retour, favori · nom », la photo EN PREMIER. Le lot photo 3 l'avait d'abord rendu
+          au-dessus — la critique du 2026-08-17 l'a relevé, aucun des 23 tests scellés ne le voyait
+          (ils n'exigent que « la photo précède le titre », vrai dans les deux dispositions).
+          ⚠️ Ce placement n'est donc verrouillé par AUCUN test : le prochain qui remonte ce lien ne
+          cassera rien. Le jour où le favori de §4.6 arrivera, c'est ici qu'il se posera, à côté. */}
       <a
         href={retour.hash}
-        className="inline-flex min-h-tactile items-center text-courant font-semibold text-accent-texte no-underline"
+        className="mt-2 inline-flex min-h-tactile items-center text-courant font-semibold text-accent-texte no-underline"
       >
         {retour.libelle}
       </a>

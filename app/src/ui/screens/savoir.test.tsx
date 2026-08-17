@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 //
 // ui/screens/savoir.test.tsx — le lexique des gestes illustré (docs/CONCEPTION_GESTES_ILLUSTRES.md
-// §5, lot 3 — variante D de la décision D6).
+// §5, lot geste 3 — variante D de la décision D6).
 //
 // ⚠️ CE FICHIER EXISTE POUR EMPÊCHER LE DÉFAUT SIGNATURE DU PROJET DE SE REFERMER : « un champ
 // déclaré n'est pas un champ branché », déjà payé trois fois, dont une sur `Recipe.imagePath`
 // lui-même — importé, stocké, chargé jusqu'au `Catalog`, et lu par aucun écran pendant des jours.
-// Le lot 1 a déclaré `LexiconEntry.clips` ; sans ce fichier, rien ne prouverait qu'un chemin de
+// Le lot geste 1 a déclaré `LexiconEntry.clips` ; sans ce fichier, rien ne prouverait qu'un chemin de
 // clip atteint réellement un attribut du DOM.
 //
 // ⚠️ LES VALEURS ASSERTÉES VIENNENT DU CATALOGUE DU DÉPÔT, jamais d'une fixture : `catalogueDeTest()`

@@ -1,10 +1,11 @@
 {
   "avertissement": "CACHE DÉRIVÉ, jamais une source. La vérité est dans les fichiers listés sous « sources ». Toute édition à la main sera écrasée à la prochaine réconciliation (/plan). « genere_le » date la dernière lecture des documents ; les états ont pu bouger depuis, par /sceller ou /fin.",
-  "genere_le": "2026-08-16T16:39:47",
+  "genere_le": "2026-08-17T13:22:00",
   "sources": [
     "docs/FICHE_REPRISE.md",
     "docs/ETAT.md",
     "docs/CONCEPTION_GESTES_ILLUSTRES.md",
+    "docs/CONCEPTION_PHOTOS_RECETTES.md",
     "docs/CONCEPTION_INVARIANT_ORIGINE_ANIMALE.md",
     "docs/CONCEPTION_RESERVATION_MATERIEL.md",
     "docs/CONCEPTION_B_VIN_REPAS.md",
@@ -14,7 +15,7 @@
   ],
   "lots": [
     {
-      "id": "Lot 1",
+      "id": "Lot geste 1",
       "chantier": "gestes illustrés",
       "titre": "le champ média du lexique (données, aucun pixel)",
       "etat": "fait",
@@ -22,28 +23,28 @@
       "commit": "e259bcb"
     },
     {
-      "id": "Lot 2",
+      "id": "Lot geste 2",
       "chantier": "gestes illustrés",
       "titre": "l'import des clips",
       "etat": "en_cours",
+      "le": "2026-08-16",
       "commit": "803fc42"
     },
     {
-      "id": "Lot 3",
+      "id": "Lot geste 3",
       "chantier": "gestes illustrés",
       "titre": "l'affichage",
       "etat": "fait",
       "le": "2026-08-16",
       "commit": "de2ba39",
-      "bloque_par": "Lot 2"
+      "bloque_par": "Lot geste 2"
     },
     {
-      "id": "Lot 4",
+      "id": "Lot geste 4",
       "chantier": "gestes illustrés",
       "titre": "le hors-ligne",
       "etat": "fait",
       "le": "2026-08-16",
-      "bloque_par": "Lot 3",
       "commit": "00f8e38"
     },
     {
@@ -53,8 +54,30 @@
       "etat": "a_faire"
     },
     {
+      "id": "Lot photo 1",
+      "chantier": "photos recettes",
+      "titre": "l'affichage, et le cadre honoré",
+      "etat": "fait",
+      "le": "2026-08-13",
+      "commit": "f3d4fa1"
+    },
+    {
+      "id": "Lot photo 2",
+      "chantier": "photos recettes",
+      "titre": "poser les 128 cadres manquants",
+      "etat": "a_faire",
+      "bloque_par": "Lot photo 1"
+    },
+    {
+      "id": "Lot photo 3",
+      "chantier": "photos recettes",
+      "titre": "la photo sur la fiche détail",
+      "etat": "fait",
+      "le": "2026-08-17"
+    },
+    {
       "id": "photos-source",
-      "chantier": "photos",
+      "chantier": "photos recettes",
       "titre": "bac épuisé, 19 recettes sans AUCUNE candidate — goulot = la source",
       "etat": "a_faire"
     },
@@ -134,8 +157,7 @@
       "id": "rang 3",
       "chantier": "vin et repas",
       "titre": "recipe_pairing + règle miroir + lexique d'incitation au test bloquant",
-      "etat": "a_faire",
-      "bloque_par": "rang 2"
+      "etat": "a_faire"
     },
     {
       "id": "rang 4",
@@ -177,14 +199,14 @@
     {
       "id": "L2",
       "chantier": "mode cuisine",
-      "titre": "le lien est dérivé au build, pas annoté. Les 1 101 (devenus 1 350) saisies n'ont jamais eu lieu",
+      "titre": "le lien est dérivé au build, pas annoté. Les 1 101 (devenus 1 350) saisies n'ont jamais eu lieu. food_ids survit en correction facultative",
       "etat": "fait",
       "le": "2026-08-07"
     },
     {
       "id": "L3",
       "chantier": "mode cuisine",
-      "titre": "« n'afficher QUE les ingrédients de l'étape » ferait mentir l'écran par omission. À la place : la ligne de quantités sous l'étape",
+      "titre": "« n'afficher QUE les ingrédients de l'étape » ferait mentir l'écran par omission. À la place : la ligne de quantités sous l'étape, qui ajoute sans retrancher",
       "etat": "abandonne"
     },
     {

@@ -743,11 +743,11 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   ⛔ **UNE TABLE FILLE, PAS DES COLONNES PLATES** : un geste porte 1 à 3 segments, trois colonnes
   auraient écrasé le deuxième en silence.
   ⛔ **`moment` EST UNE DONNÉE, PAS UN DÉRIVÉ DU RANG** — `CHECK` SQL et union littérale côté type.
-  ✅ **LE HORS-LIGNE EST FERMÉ DEPUIS LE 2026-08-16 (lot 4)** — les posters entrent dans le pré-cache
+  ✅ **LE HORS-LIGNE EST FERMÉ DEPUIS LE 2026-08-16 (lot geste 4)** — les posters entrent dans le pré-cache
   et dans la version du cache, les clips **seulement dans la version**, et un clip consulté une fois
   est conservé. Avant ce lot, `catalog/gestes` apparaissait **ZÉRO fois** dans `dist/sw.js` : les
   18 fichiers étaient copiés dans `dist/` sans être pré-cachés, donc **les vignettes du lexique
-  étaient cassées hors ligne** — trou ouvert par le lot 3, invisible en ligne.
+  étaient cassées hors ligne** — trou ouvert par le lot geste 3, invisible en ligne.
   ⛔ **DEUX CACHES, ET LE SECOND NE PORTE PAS DE VERSION.** `nutrition-<empreinte>` est purgé à
   chaque activation, comme avant ; `nutrition-clips` en est **explicitement exempté**. Un clip a été
   téléchargé parce que quelqu'un l'a REGARDÉ : le purger à la mise à jour suivante ferait payer deux
@@ -761,15 +761,15 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   ✅ **TRANCHÉ LE 2026-08-16, DÉCISION UTILISATEUR — L'IMPORT S'ARRÊTE À TROIS GESTES**, pas 51 :
   `deglacer`, `emincer`, `reduire`, soit **6 segments, 18 fichiers, 2,1 Mo** (`803fc42`). Motif :
   D4 est irréversible, et **22,43 Mo gravés dans l'historique git ne se dégravent pas**. L'échantillon
-  prouve la chaîne de bout en bout sans engager le lot complet. ⇒ **Le lot 2 reste OUVERT** et son
+  prouve la chaîne de bout en bout sans engager le lot complet. ⇒ **Le lot geste 2 reste OUVERT** et son
   « Fini quand » (51/62) n'est pas atteint ; le rouvrir est une décision, pas une suite.
   ⛔ **ET `suer` N'EST PAS DEDANS — c'est le geste qui justifiait le chantier** (« suer » contre
   « revenir »), 24 candidates photo et **zéro segment encodé**. La démonstration reste non montrable.
   ✅ **TRANCHÉ LE MÊME JOUR — LE SCEAU DE `gestes-champ-media.test.ts` EST LEVÉ, CONFIRMÉ.** Deux
   assertions retirées, toutes deux sur le **contenu du catalogue** et non sur le sujet du lot : « les
   62 fiches portent `clips` **et il est vide** » et « les 60 autres gestes ont **zéro** clip ». Le
-  « Fini quand » disait « vide **tant que le lot 2 n'a pas tourné** » ; le test ne portait pas la
-  condition et rendait le lot 1 **structurellement incompatible avec l'existence d'un import**.
+  « Fini quand » disait « vide **tant que le lot geste 2 n'a pas tourné** » ; le test ne portait pas la
+  condition et rendait le lot geste 1 **structurellement incompatible avec l'existence d'un import**.
   Gardé : chaque fiche porte un **tableau** jamais `null`, et aucun geste n'hérite des **témoins
   plantés** — détection intacte, et désormais **indépendante de ce que le catalogue contient**.
   ✅ **L'ÉCART « 99 DÉCIDÉS / 98 ENCODÉS » EST EXPLIQUÉ** (mesuré par l'import) : ce n'est pas un
@@ -1040,7 +1040,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 > `archive/RECAP_SESSION_7.md`), le **mode cuisine** (§5bis ARCHITECTURE) et la **fiche aliment**
 > (2026-08-07, décision 33). ✅ **LES DOUZE SONT COUVERTS PAR DES TESTS D'ÉCRAN DEPUIS LE
 > 2026-08-16** — `savoir.tsx` était le dernier sans test, le chantier « Comprendre » y étant en cours
-> au moment où les autres ont été écrits ; le lot 3 des gestes illustrés a livré
+> au moment où les autres ont été écrits ; le lot geste 3 des gestes illustrés a livré
 > `savoir.test.tsx` (`de2ba39`). Les trois comptes — **8 spécifiés, 12 codés, 12 testés** — restent
 > à ne pas uniformiser sans traiter la cause (`DESIGN.md` n'a pas suivi et s'arrête toujours à huit).
 > ⚠️ **Recompté à la commande le 2026-08-16**, pas déduit : `ls app/src/ui/screens/*.tsx` rend 12
@@ -1175,7 +1175,7 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 > | Recettes | **330**, dont **3 sauces** | `SELECT COUNT(*) FROM recipe` · `… WHERE est_sauce=1` |
 > | Aliments | **451** | `SELECT COUNT(*) FROM food` |
 > | Étapes de recette | **1 548** | `SELECT COUNT(*) FROM recipe_step` |
-> | Photos de recette | **129 / 330** importées **et affichées depuis le 2026-08-13** (`f3d4fa1`, branche `lot/photo-affichage`) · **0 en attente** — les 13 qui dormaient sont entrées · **201** recettes n'ont aucune photo jugée bonne, et le bac est épuisé | `SELECT COUNT(*) FROM recipe WHERE image_path IS NOT NULL AND image_path <> ''` · pour les deux autres, compter les `decision === 'oui'` de `atelier/photos/etat/decisions.json` (hors dépôt) |
+> | Photos de recette | **129 / 330** importées **et affichées sur l'écran Aujourd'hui** — codées le 2026-08-13 (`f3d4fa1`), ⚠️ **fusionnées dans `main` seulement le 2026-08-17** (`147a45b`) : entre les deux, cette case disait « affichées » d'un arbre qui ne les affichait pas · ✅ **et sur la fiche détail depuis le 2026-08-17** (lot photo 3) · **0 en attente** — les 13 qui dormaient sont entrées · **201** recettes n'ont aucune photo jugée bonne, et le bac est épuisé | `SELECT COUNT(*) FROM recipe WHERE image_path IS NOT NULL AND image_path <> ''` · pour les deux autres, compter les `decision === 'oui'` de `atelier/photos/etat/decisions.json` (hors dépôt) |
 > | `piquant` renseigné | **330 / 330** (recettes) · **21 / 451** (aliments, et c'est voulu — §8) | `SELECT COUNT(*) FROM recipe WHERE piquant IS NOT NULL` · `… FROM food …` |
 > | Sauces : aliments · attachements · `porte_deja_une_sauce` posé | **10** · **14** · **20** | `food WHERE sous_groupe='sauce'` · `recipe_sauce` · `recipe WHERE porte_deja_une_sauce IS NOT NULL` |
 > | Équipement : référentiel · couples | **30** · **1 473** (357 requis · 38 accélère · 1 078 informatifs) | `equipment` · `recipe_equipment` `GROUP BY niveau` |
@@ -1193,7 +1193,32 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 > « déjeuner = 199 » là où la mesure directe donne **159**. Les verdicts d'un agent sont une piste,
 > pas un relevé.
 
-### Ce que le lot 4 des gestes illustrés laisse derrière lui (2026-08-16)
+### ⛔ Un lot vert SEUL n'est pas un lot livré — quatre jours payés le 2026-08-17
+
+`f3d4fa1` a codé l'affichage des photos le 2026-08-13, sur la branche `lot/photo-affichage` :
+document de chantier, 7 tests scellés, « Fini quand » démontré, tout était juste. **Il n'a jamais
+été fusionné.** Pendant quatre jours, cette page a annoncé les photos « affichées depuis le
+2026-08-13 » et `FICHE_REPRISE.md` l'a répété — vrai de la branche, faux de l'arbre principal.
+Fusionné le 2026-08-17 en `147a45b` : un seul conflit, dans la fiche de reprise, et rien d'autre.
+
+- ⛔ **CE QUI A ÉCHOUÉ N'EST NI LE CODE NI LA MESURE, C'EST LA PHRASE.** « Livré » et « livré sur
+  `main` » avaient été écrits pareil. Le lot avait pourtant écrit lui-même, dans son document,
+  « ⚠️ PAS ENCORE FUSIONNÉ — le lot est vert seul, ce qui ne prouve pas qu'il est vert ensemble » :
+  **l'avertissement existait, il était juste, et il vivait dans le seul document que personne
+  n'ouvre depuis `main`** — puisque ce document n'était, lui non plus, que sur la branche.
+- ⚠️ **Le prix réel a été payé dehors** : la question de licence posée à Pexels le 2026-08-16 leur a
+  décrit un écran qui affiche les photos, mesuré sur `main`, où il ne l'affichait pas. La réponse
+  envoyée était exacte ; c'est l'état du dépôt qui ne l'était pas.
+- ▶ **Ce qui l'attrape** : `git branch -a` avant de déclarer un lot fait, et `git merge-base
+  --is-ancestor <hash> HEAD`. Une case d'état ne se lit jamais comme une preuve — c'est déjà la
+  règle « AUCUN ✅ SANS `git log --all -S` » de `FICHE_REPRISE.md`, qui a été suivie **pour le code**
+  et pas **pour la branche**.
+- ⚠️ **Un rouge non reproduit, écrit plutôt qu'oublié** : la première suite après la fusion a rendu
+  `1 failed | 2 180 passed` sur un total de 2 181 — un test rouge, pas un test disparu. Les quatre
+  suites suivantes sont vertes à **2 181 / 116**. Le nom du test n'a pas été capturé, la sortie
+  était tronquée. ⛔ **Ce n'est PAS la dérive de compte du 2026-08-08**, qui ne montrait aucun rouge.
+
+### Ce que le lot geste 4 des gestes illustrés laisse derrière lui (2026-08-16)
 
 - ⛔ **Le cache des clips n'a AUCUNE limite de taille.** §7.1 ARCHITECTURE nomme une « éviction
   LRU » ; elle n'existe pas. Un utilisateur qui regarde beaucoup de clips accumule sans plafond, et
@@ -1203,13 +1228,13 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - ⛔ **`cache.addAll` est ATOMIQUE à l'installation, et rien ne le rattrape.** Une seule des ~137 URL
   du pré-cache qui échoue à se télécharger fait échouer l'`install` entier : le service worker ne
   s'active jamais, et l'application n'est pas installable hors ligne. ⚠️ **Défaut PRÉEXISTANT**, pas
-  introduit par ce lot — il est là depuis le premier service worker. Le lot 4 ajoute 6 entrées à un
+  introduit par ce lot — il est là depuis le premier service worker. Le lot geste 4 ajoute 6 entrées à un
   pré-cache qui en portait 131, donc il augmente la surface sans changer la nature du problème.
   Aucun test ne le couvre.
 - ⚠️ **Le bouton « Tout télécharger pour le mode avion »** (§7.1) n'existe toujours pas. Le
   pré-cache reste automatique et la conservation reste implicite à la consultation.
 - ⚠️ **La déviation « photos de recettes » n'est pas tranchée.** §7.1 les range « à la demande » ;
-  le code les pré-cache toutes depuis le 2026-07-30, avec un motif écrit. Le lot 4 s'y **conforme**
+  le code les pré-cache toutes depuis le 2026-07-30, avec un motif écrit. Le lot geste 4 s'y **conforme**
   pour les posters de gestes, qui sont dans le même cas, sans trancher la question de fond.
 - ⚠️ **La sensibilité à la casse des noms de fichiers côté SERVEUR de production n'est pas
   vérifiée.** Écartée sciemment pour la CI (il n'y en a pas sous Linux) ; la question du serveur est
@@ -1865,16 +1890,39 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   Traduire « j'aime ce curry » en préférences d'aliments (ingrédient caractéristique seul ? tous ?
   quelle pondération ?) est une décision de conception absente des docs — à trancher par mesure,
   pas au jugé, sous peine de fausser le démarrage à froid que cet écran existe pour résoudre.
-- **Écran Détail — reste à faire** : ⛔ **LA PHOTO — et c'est désormais le SEUL écran qui n'en montre
-  aucune.** L'écran Aujourd'hui les affiche depuis le 2026-08-13 (`f3d4fa1`) ; `detail-recette.tsx`
-  déclare la photo hors de son périmètre dans son propre en-tête et n'a pas bougé. C'est la décision
-  §4.1 DESIGN (« photo dominante ») appliquée à moitié, **sur l'écran qu'on lit en cuisinant**.
+- **Écran Détail — reste à faire** : ✅ **LA PHOTO EST LIVRÉE le 2026-08-17 (lot photo 3), et cette entrée
+  disait le contraire jusque-là.** Plus aucun écran n'ignore `imagePath` : Aujourd'hui depuis le
+  2026-08-13 (`f3d4fa1`, **sur `main` depuis le 2026-08-17** seulement), la fiche détail depuis le
+  lot photo 3 — photo pour les **129** pourvues, aplat de `ui/vignette.ts` pour les **201** autres, à la
+  place exacte de la photo. §4.1 DESIGN (« photo dominante ») n'est plus appliquée à moitié.
+  « Fini quand » chiffré et **23 tests scellés** écrits avant le code (19 rouges le jour même), dans
+  [CONCEPTION_PHOTOS_RECETTES.md](./CONCEPTION_PHOTOS_RECETTES.md).
+  ⛔ **Deux trous fermés sur attaque avant tout code** : un chemin de photo FABRIQUÉ depuis
+  l'identifiant tombait juste sur **127 des 129**, et rien n'exigeait que l'aplat soit en tête —
+  photo en tête, aplat après les étapes passait, sur **201 recettes sur 330**.
+  ⛔ **Et un troisième trouvé sur le code FINI, celui-là** : le lien de retour était rendu au-dessus
+  de la photo, contre §4.6 DESIGN (« Photo, retour, favori · nom ») que le brief citait lui-même.
+  Corrigé le jour même. ⚠️ **Aucun des 23 tests ne le voyait, aucun ne le verra** : ils exigent
+  « la photo précède le `<h1>` », vrai dans les deux dispositions. Ce placement tient par un
+  commentaire. ⚠️ **Et ces 23 tests ne distinguent pas « lit le champ » de « connaît les 7 témoins »** :
+  une table constante indexée sur ces sept identifiants les passe tous. C'est structurel à un examen
+  d'écran sur échantillon — les **124** autres pourvues ne sont ni testées ni testables ici. Le code
+  livré lit bien le champ (vérifié à la relecture, pas par la suite). ⛔ **Fermer ce trou exigerait
+  de modifier un test scellé : ça ne se fait pas.**
+  ⚠️ **Dette assumée du lot photo 3, à ne pas laisser grandir** : l'aplat est écrit **deux fois**
+  (`aujourdhui.tsx` et `detail-recette.tsx`), faute de pouvoir sortir un composant partagé sans
+  transformer `ui/vignette.ts` en `.tsx` — hors périmètre déclaré. `ui/echelle-typo.test.ts` nomme
+  les deux exceptions ; **une TROISIÈME occurrence n'est pas une exception à ajouter, c'est le signal
+  que le composant doit exister**. ⚠️ Rien ne se replie si un `image_path` pointe un fichier absent :
+  le navigateur montre une image cassée, pas l'aplat. Personne ne l'a demandé, personne ne l'a
+  décidé — c'est un défaut, pas un choix.
   ⚠️ **La phrase « AUCUN composant ne lit `Recipe.imagePath` » a été vraie du 2026-08-09 au
   2026-08-13 et ne l'est plus** — elle a induit en erreur une lecture du 2026-08-13, en compagnie de
   quatre en-têtes de code qui affirmaient la même chose. Le repli des 201 recettes sans photo est
   tranché et livré : l'aplat de couleur + initiale (`ui/vignette.ts`), qui n'est plus le cas unique
-  mais le cas par défaut. ⚠️ **Il reste à décider si ce repli tient en PLEINE PAGE sur la fiche
-  détail** — il a été jugé sur une carte, pas sur un écran entier. ✅ **La section « Matériel » est LIVRÉE le 2026-08-09** — cette
+  mais le cas par défaut. ✅ **« Ce repli tient-il en PLEINE PAGE sur la fiche détail ? » est
+  TRANCHÉ le 2026-08-17 — oui, à l'identique de la carte du jour**, avec le motif refusé à côté
+  (« Photo à venir » n'y sera pas). Motif et contrepartie : lot photo 3 du document de chantier. ✅ **La section « Matériel » est LIVRÉE le 2026-08-09** — cette
   phrase disait « reste aussi la section Matériel (le catalogue n'a aucune table équipement — c'est
   aussi pourquoi la couche `equipement` est inerte depuis P1a) » : les deux moitiés sont périmées,
   voir §3 Moteur. Restent les alternatives d'ingrédients (`suggestAlternatives` exige une `SuggestionRequest` complète
@@ -2008,7 +2056,7 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
   ⛔ **MAIS LE GISEMENT EST VIDE : 3 cadres posés en tout, dont UN SEUL sur un `oui`** — la chaîne
   complète cadre → fichier carré n'a donc qu'**un témoin réel** (`hareng-pommes-terre-tiedes`,
   894×894 depuis une source 1280×960). **Poser les 128 cadres manquants est une passe de tri, pas du
-  code** — voir `docs/CONCEPTION_PHOTOS_RECETTES.md` lot 2.
+  code** — voir `docs/CONCEPTION_PHOTOS_RECETTES.md` lot photo 2.
   ⛔ **LE CARRÉ N'EST PAS APPLIQUÉ PAR DÉFAUT, ET NE DOIT PAS L'ÊTRE** — voir §3 « Média ».
   ⚠️ **Le serveur valide la FORME du cadre, pas sa TAILLE** : un carré de 26 px de côté a été accepté
   (sur une décision `retirer`, donc sans conséquence). L'écran affiche un avertissement sous 800 px,
@@ -2118,6 +2166,6 @@ Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
 - ⛔ **DETTE DU LOT PHOTOS (2026-08-13, `f3d4fa1`) — la moitié « cadrage » n'a qu'UN témoin réel.**
   `rectangleDuCadre` est couvert par 5 tests unitaires, mais la chaîne complète cadre → fichier
   carré ne s'exerce que sur `hareng-pommes-terre-tiedes`, **seul cadre posé sur 129 photos servies**.
-  Ce n'est pas un défaut de code, c'est un gisement vide : la preuve arrivera avec le lot 2 de
+  Ce n'est pas un défaut de code, c'est un gisement vide : la preuve arrivera avec le lot photo 2 de
   `docs/CONCEPTION_PHOTOS_RECETTES.md`. **Même famille que la moitié non mesurée du lot D3** — écrit
   ici pour qu'on n'ait pas à le redécouvrir.

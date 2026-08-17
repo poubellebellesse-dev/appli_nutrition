@@ -35,10 +35,17 @@ function pasDeclares(): readonly string[] {
  * grandes tailles sont tolérées ») rouvrirait la porte en grand.
  *
  * `aujourdhui.tsx` : l'initiale d'une vignette sans photo — `aria-hidden`, un aplat de couleur, pas
- * du texte. 242 recettes sur 330 n'ont pas d'image ; cette lettre est ce qui tient la place.
+ * du texte. 201 recettes sur 330 n'ont pas d'image ; cette lettre est ce qui tient la place.
+ *
+ * `detail-recette.tsx` : le MÊME aplat, sur la fiche détail, entré le 2026-08-17 avec le lot photo 3. ⚠️ Deux fichiers pour un seul motif, et c'est assumé faute de mieux : sortir l'aplat en
+ * composant partagé demande de transformer `ui/vignette.ts` en `.tsx`, ce que le lot photo 3 s'est
+ * explicitement interdit de toucher. ⛔ **Une TROISIÈME occurrence n'est pas une exception à
+ * ajouter, c'est le signal que le composant doit exister** — la liste ci-dessous n'est pas
+ * l'endroit où l'on répond à ça.
  */
 const EXCEPTIONS: Readonly<Record<string, readonly string[]>> = {
   'ui/screens/aujourdhui.tsx': ['5rem'],
+  'ui/screens/detail-recette.tsx': ['5rem'],
   // ⚠️ `cuisine.tsx` N'EST PAS UNE EXCEPTION DE PRINCIPE, c'est un fichier qui appartenait à une
   // autre lane le jour du balayage (28 occurrences). Il doit passer à l'échelle au prochain lot qui
   // le touche — cette ligne est une DETTE, pas une dispense, et c'est pour ça qu'elle est datée.
