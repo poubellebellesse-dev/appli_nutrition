@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from 'vitest'
 // @ts-expect-error — module .mjs sans déclaration de types, importé pour ses fonctions pures.
-import { choisirPhotos, normaliserLicence, poserImagePath, poserBlocCredits } from './import-photos.mjs'
+import { choisirPhotos, normaliserLicence, poserImagePath, poserBlocCredits, rectangleDuCadre } from './import-photos.mjs'
 
 describe('choisirPhotos', () => {
   it('ne retient que les `oui` rattachés à une recette', () => {
@@ -145,5 +145,44 @@ describe('poserBlocCredits', () => {
     const md = '# Crédits\n\n## À compléter avant publication\n\n- reste\n'
     const une = poserBlocCredits(md, 'BLOC')
     expect(poserBlocCredits(une, 'BLOC')).toBe(une)
+  })
+})
+
+describe('rectangleDuCadre', () => {
+  it('convertit les fractions en pixels, sur les dimensions REDRESSÉES', () => {
+    // Le cadre réel de `hareng-pommes-terre-tiedes`, seul posé à la main au 2026-08-13 : un carré
+    // de 894 px pris dans une source 1280×960.
+    const cadre = { x: 0.12861200586455976, y: 0.06888054913794597, w: 0.6983395881465405, h: 0.931119450862054 }
+    expect(rectangleDuCadre(cadre, 1280, 960)).toEqual({ left: 165, top: 66, width: 894, height: 894 })
+  })
+
+  it('⛔ EST INDÉPENDANT DE LA RÉSOLUTION — les fractions, pas les pixels du bac', () => {
+    // La même photo fournie deux fois plus grande doit rendre le MÊME cadrage, à l'échelle. C'est
+    // ce qui interdit de se fier au champ `source` que l'atelier écrit à côté du cadre.
+    const cadre = { x: 0.25, y: 0.25, w: 0.5, h: 0.5 }
+    expect(rectangleDuCadre(cadre, 1000, 800)).toEqual({ left: 250, top: 200, width: 500, height: 400 })
+    expect(rectangleDuCadre(cadre, 2000, 1600)).toEqual({ left: 500, top: 400, width: 1000, height: 800 })
+  })
+
+  it('ramène dans l’image un cadre qui déborde — `sharp.extract` lève pour un seul pixel de trop', () => {
+    const rect = rectangleDuCadre({ x: 0.9, y: 0.9, w: 0.5, h: 0.5 }, 1000, 1000)
+    expect(rect).not.toBeNull()
+    expect(rect.left + rect.width).toBeLessThanOrEqual(1000)
+    expect(rect.top + rect.height).toBeLessThanOrEqual(1000)
+  })
+
+  it('rend `null` quand il n’y a rien à recadrer — pas de cadre, cadre vide, ou cadre plein', () => {
+    expect(rectangleDuCadre(null, 800, 600)).toBeNull()
+    expect(rectangleDuCadre(undefined, 800, 600)).toBeNull()
+    // Plein cadre : recadrer rendrait la même image, l'appel n'ajouterait qu'un mode d'échec.
+    expect(rectangleDuCadre({ x: 0, y: 0, w: 1, h: 1 }, 800, 600)).toBeNull()
+    // Surface nulle après arrondi.
+    expect(rectangleDuCadre({ x: 0.5, y: 0.5, w: 0, h: 0.4 }, 800, 600)).toBeNull()
+  })
+
+  it('rend `null` sur une entrée abîmée plutôt que de calculer n’importe quoi', () => {
+    expect(rectangleDuCadre({ x: 0.1, y: 0.1, w: 'oui', h: 0.5 }, 800, 600)).toBeNull()
+    expect(rectangleDuCadre({ x: NaN, y: 0.1, w: 0.5, h: 0.5 }, 800, 600)).toBeNull()
+    expect(rectangleDuCadre({ x: 0.1, y: 0.1, w: 0.5, h: 0.5 }, 0, 600)).toBeNull()
   })
 })

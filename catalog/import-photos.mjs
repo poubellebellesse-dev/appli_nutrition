@@ -108,6 +108,43 @@ export function choisirPhotos(decisions) {
   return new Map([...retenues].sort(([a], [b]) => a.localeCompare(b)).map(([id, v]) => [id, v.cle]))
 }
 
+/**
+ * Le rectangle à extraire d'une photo, en pixels, depuis le cadre posé à l'atelier.
+ *
+ * ⚠️ LE CADRE EST EN FRACTIONS, PAS EN PIXELS, et c'est ce qui le rend robuste : `{x, y, w, h}` sont
+ * des parts de la largeur et de la hauteur, donc valables quelle que soit la résolution du fichier
+ * source. Le champ `source` que l'atelier écrit à côté est INFORMATIF — il dit sur quelle taille le
+ * cadre a été posé, il ne sert pas au calcul. S'y fier ferait échouer le recadrage le jour où le bac
+ * fournirait la même photo dans une autre définition.
+ *
+ * ⚠️ ON BORNE, ON NE FAIT PAS CONFIANCE. `sharp.extract` lève si le rectangle sort de l'image ne
+ * serait-ce que d'un pixel, et un arrondi suffit à le faire sortir. Le cadre est donc ramené dans
+ * l'image, et un rectangle qui n'aurait plus de surface rend `null` — l'appelant recadre alors
+ * comme avant, il ne produit pas une image vide.
+ *
+ * @param {{x: number, y: number, w: number, h: number} | null | undefined} cadre
+ * @param {number} largeur  largeur de l'image APRÈS application de l'orientation EXIF
+ * @param {number} hauteur  hauteur de l'image APRÈS application de l'orientation EXIF
+ * @returns {{left: number, top: number, width: number, height: number} | null}
+ */
+export function rectangleDuCadre(cadre, largeur, hauteur) {
+  if (!cadre) return null
+  const { x, y, w, h } = cadre
+  if (![x, y, w, h].every((v) => typeof v === 'number' && Number.isFinite(v))) return null
+  if (!(largeur > 0) || !(hauteur > 0)) return null
+
+  const left = Math.max(0, Math.min(largeur - 1, Math.round(x * largeur)))
+  const top = Math.max(0, Math.min(hauteur - 1, Math.round(y * hauteur)))
+  const width = Math.max(0, Math.min(largeur - left, Math.round(w * largeur)))
+  const height = Math.max(0, Math.min(hauteur - top, Math.round(h * hauteur)))
+
+  if (width < 1 || height < 1) return null
+  // Un cadre qui couvre toute l'image ne recadre rien : autant ne pas appeler `extract`, la sortie
+  // serait identique à l'octet et l'appel n'ajouterait qu'un mode d'échec.
+  if (left === 0 && top === 0 && width === largeur && height === hauteur) return null
+  return { left, top, width, height }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Crédits
 // ─────────────────────────────────────────────────────────────────────────────
@@ -244,7 +281,11 @@ async function main(argv) {
   if (!existsSync(DECISIONS)) throw new ErreurImport(`decisions.json introuvable : ${DECISIONS}\nLe bac de l'atelier est hors du dépôt ; poser BAC_PHOTOS si besoin.`)
   if (!existsSync(PHOTOS)) throw new ErreurImport(`Le bac de photos est introuvable : ${PHOTOS}\nPoser BAC_PHOTOS pour le désigner.`)
 
-  const choisies = choisirPhotos(JSON.parse(readFileSync(DECISIONS, 'utf8')))
+  // Gardé en variable, et plus consommé à la volée : le CADRE de chaque photo se relit ici, à la
+  // clé de l'image. `choisirPhotos` n'a pas à changer de signature pour ça — elle répond à « quelle
+  // photo pour quelle recette », le cadrage est une autre question posée à la même donnée.
+  const decisions = JSON.parse(readFileSync(DECISIONS, 'utf8'))
+  const choisies = choisirPhotos(decisions)
   const credits = chargerCredits()
   const connues = new Set(readdirSync(RECETTES).filter((f) => f.endsWith('.yaml')).map((f) => f.slice(0, -5)))
 
@@ -283,10 +324,32 @@ async function main(argv) {
     const destination = path.join(SORTIE, nom)
     attendus.add(nom)
 
+    // ⚠️ L'ORIENTATION EXIF D'ABORD, LE CADRE ENSUITE — et l'ordre n'est pas négociable. Le cadre a
+    // été posé sur l'image TELLE QU'ELLE S'AFFICHE, donc déjà redressée. L'extraire avant la
+    // rotation découperait dans une image couchée : un cadrage juste à l'écran, faux dans le
+    // fichier, et rien ne le signalerait. `.rotate()` appelé avant `.extract()` garantit cet ordre.
+    const meta = await sharp(source).metadata()
+    // Les orientations EXIF 5 à 8 sont les quarts de tour : après redressement, largeur et hauteur
+    // ont échangé. Le cadre étant en fractions de l'image REDRESSÉE, c'est sur ces valeurs-là qu'il
+    // se calcule.
+    const quartDeTour = (meta.orientation ?? 1) >= 5
+    const largeurVue = quartDeTour ? meta.height : meta.width
+    const hauteurVue = quartDeTour ? meta.width : meta.height
+
+    const cadre = decisions[cle]?.cadre ?? null
+    const rectangle = rectangleDuCadre(cadre, largeurVue, hauteurVue)
+    if (cadre && rectangle === null) {
+      // Un cadre posé à la main qui ne produit aucun rectangle est une ANOMALIE, pas un cas normal :
+      // quelqu'un a passé du temps à le poser. On importe quand même — une photo non recadrée vaut
+      // mieux que pas de photo — mais on le dit.
+      problemes.push(`${recette} : cadre posé mais inexploitable — photo importée SANS recadrage`)
+    }
+
     // `.rotate()` sans argument applique l'orientation EXIF puis laisse `sharp` jeter les
     // métadonnées — dont les coordonnées GPS, que personne n'a demandé à embarquer (principe 2).
-    const encodee = await sharp(source)
-      .rotate()
+    let pipeline = sharp(source).rotate()
+    if (rectangle) pipeline = pipeline.extract(rectangle)
+    const encodee = await pipeline
       .resize({ width: ENCODAGE.largeurMax, withoutEnlargement: true })
       .avif({ quality: ENCODAGE.qualite, effort: ENCODAGE.effort })
       .toBuffer()

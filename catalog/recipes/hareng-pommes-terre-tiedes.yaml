@@ -7,7 +7,7 @@ temps_prep_min: 20
 temps_cuisson_min: 25
 difficulte: 1
 portions_base: 4
-image_path: null
+image_path: /catalog/images/hareng-pommes-terre-tiedes.avif
 types_repas: [dejeuner]
 service: plat
 piquant: 0

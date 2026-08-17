@@ -1,10 +1,13 @@
 // ui/export-recette.ts — export d'une recette perso en fichier autonome `.nutri-recipe` (§8.7
 // ARCHITECTURE : « Partage P2P »).
 //
-// ⚠️ V1 SANS PHOTO. §8.7 décrit « recette + photo embarquée + notes de l'auteur », mais aucune
-// recette — catalogue ou perso — ne porte de photo aujourd'hui (`imagePath` toujours `null`, voir
-// `versRecette` dans `data/user-recipe.ts`). Ce module n'en fabrique donc aucune : ce n'est pas un
-// oubli, il n'y a rien à embarquer tant que la saisie de photo n'existe pas.
+// ⚠️ V1 SANS PHOTO, ET LA RAISON S'EST RÉTRÉCIE. §8.7 décrit « recette + photo embarquée + notes de
+// l'auteur ». Ce module n'exporte que des recettes PERSO, et celles-là ne portent toujours aucune
+// photo : `versRecette` (`data/user-recipe.ts`) pose `imagePath: null` en dur, faute d'écran de
+// saisie. Il n'y a donc rien à embarquer — ce n'est pas un oubli.
+// ⛔ EN REVANCHE « aucune recette, CATALOGUE ou perso » était faux, et l'est resté longtemps après
+// le premier import : 129 recettes du catalogue portent une photo. Ça ne change rien à ce module,
+// qui n'exporte pas de recette de catalogue — mais la phrase, elle, a servi d'argument ailleurs.
 //
 // ⚠️ EXPORT SEUL, PAS D'IMPORT. Le fichier produit est un `StoredUserRecipe` sérialisé, versionné
 // par `schemaVersion` — en théorie réimportable proprement. Mais aucune fonction de LECTURE n'existe

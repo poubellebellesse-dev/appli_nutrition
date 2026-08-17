@@ -71,9 +71,14 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
    ne sera pas montrable à la fin des 4 lots.** ⚠️ **11 codes du lexique n'ont aucun dossier de
    clips, et 3 de plus n'y tombent qu'au tiret près** (`bain-marie`/`bain_marie`, `monter-blancs`,
    `tailler-des`) — c'est le lot 2 qui paiera, pas le lot 1.
-3. **📷 Photos — 116 importées · 13 décidées non importées · 201 recettes sans rien.** ⛔ **Pas un
-   défaut de tri : bac épuisé, 19 recettes sans AUCUNE candidate** — goulot = la source. ⛔ Build-
-   qui-échoue-sans-photo **interdit avant 330/330**. ▶ **Recadrage carré livré, PAS lu à l'import.**
+3. **📷 Photos — elles s'AFFICHENT, et le cadre est lu à l'import** (`f3d4fa1`, fusionné dans `main`
+   le 2026-08-17 — ⚠️ **le lot était vert SEUL depuis le 13, invisible sur l'arbre principal
+   pendant quatre jours**). **129 sur 330** ; les 201 autres gardent l'aplat. ⛔ **La fiche détail
+   d'une recette n'en montre toujours aucune** — prochain lot, et c'est l'écran qu'on lit en
+   cuisinant. ⛔ **Le gisement de cadres est vide : 1 posé sur 129**, donc « carré » n'existe que sur
+   une photo. ⛔ Bac épuisé, 19 recettes sans AUCUNE candidate — goulot = la source, pas le tri.
+   ⛔ Build-qui-échoue-sans-photo **interdit avant 330/330**.
+   ▶ [CONCEPTION_PHOTOS_RECETTES.md](./CONCEPTION_PHOTOS_RECETTES.md).
 4. **⛔ Relecture par un tiers du contenu Savoir** (`ETAT.md` §8.2 bis) — **bloquante avant
    publication**. 73 tips et 8 fiches sourcés un par un, **aucun relu**.
 5. **Vérifier sur un vrai téléphone** — protocole et seuil fixés à l'avance :

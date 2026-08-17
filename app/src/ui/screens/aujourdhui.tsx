@@ -13,9 +13,11 @@
 //
 // PÉRIMÈTRE — ce que §4.1 décrit et qui n'est PAS ici, volontairement :
 //   - la GALERIE de photos (taper l'image pour la voir en grand, défiler entre plusieurs) :
-//     `Recipe.imagePath` est UNE chaîne, pas une liste, et vaut `null` sur les 241 recettes. Une
-//     galerie d'aplats de couleur ne serait pas une fonctionnalité dégradée, elle n'aurait aucun
-//     sens. À reprendre avec les vraies photos, et il faudra une table `recipe_image`.
+//     `Recipe.imagePath` est UNE chaîne, pas une liste. Une galerie exige une table `recipe_image`,
+//     donc une migration du catalogue — un lot, pas un bouton.
+//     ⚠️ CETTE LIGNE A ANNONCÉ « vaut `null` sur les 241 recettes » BIEN APRÈS QUE C'EST DEVENU
+//     FAUX, et elle a fait conclure à une lecture du 2026-08-13 que la chaîne n'était pas branchée.
+//     Elle l'était de bout en bout ; seul le rendu manquait. 129 recettes sur 330 portent une photo.
 //   - la poignée « le reste de la journée », la carte « Le saviez-vous ? » et la carte occasion.
 //   - les tags cliquables sous la photo : ils réorientent la sélection, ce que fait déjà — mieux et
 //     explicitement — l'encart « Dites-moi ce que vous cherchez ».
@@ -144,6 +146,9 @@ function construireRequete(
 interface Vue {
   readonly suggestions: readonly ScoredSuggestion[]
   readonly nomDe: (id: string) => string
+  /** Le chemin de la photo d'un plat, ou `null` s'il n'en a pas. Même forme que `nomDe` exprès : ce
+   *  sont les deux seules choses que l'écran demande au catalogue à partir d'un identifiant. */
+  readonly photoDe: (id: string) => string | null
   readonly nbRetenus: number
   readonly creneau: MealSlot
   /** Les créneaux du rythme DÉCLARÉ (`creneauxDuRythme`) — jamais les quatre en dur : c'est ce qui
@@ -199,6 +204,9 @@ async function calculerVue(
   return {
     suggestions: resultat.suggestions,
     nomDe: (id) => socle.catalogue.recipes.get(id as never)?.nom ?? id,
+    // `?? null` et non `?? ''` : l'absence de photo est un CAS, pas une chaîne vide à tester. C'est
+    // ce `null` qui déclenche l'aplat, sur 201 des 330 recettes.
+    photoDe: (id) => socle.catalogue.recipes.get(id as never)?.imagePath ?? null,
     nbRetenus: etat.history.entries.length,
     creneau,
     creneaux,
@@ -460,6 +468,7 @@ export function Aujourdhui() {
       <CarteRepas
         suggestion={courante}
         nom={vue.nomDe(courante.recipeId)}
+        photo={vue.photoDe(courante.recipeId)}
         balayageActif={vue.balayageActif}
         surPrecedent={position > 0 ? () => deplacer(-1, total) : null}
         surSuivant={position < total - 1 ? () => deplacer(1, total) : null}
@@ -470,6 +479,7 @@ export function Aujourdhui() {
       <PlatsProches
         ids={vue.prochesDe(courante.recipeId as RecipeId)}
         nomDe={vue.nomDe}
+        photoDe={vue.photoDe}
       />
 
       {vue.nbRetenus > 0 && (
@@ -494,6 +504,7 @@ const SEUIL_BALAYAGE_PX = 60
 function CarteRepas({
   suggestion,
   nom,
+  photo,
   balayageActif,
   surPrecedent,
   surSuivant,
@@ -502,6 +513,8 @@ function CarteRepas({
 }: {
   readonly suggestion: ScoredSuggestion
   readonly nom: string
+  /** Le chemin de la photo, ou `null` — auquel cas l'aplat de `ui/vignette.ts` tient la place. */
+  readonly photo: string | null
   readonly balayageActif: boolean
   readonly surPrecedent: (() => void) | null
   readonly surSuivant: (() => void) | null
@@ -531,22 +544,40 @@ function CarteRepas({
       onTouchStart={balayageActif ? (e) => setDepartX(e.touches[0]?.clientX ?? null) : undefined}
       onTouchEnd={balayageActif ? (e) => finBalayage(e.changedTouches[0]?.clientX ?? 0) : undefined}
     >
-      {/* L'aplat qui tient la place de la photo. `aria-hidden` : purement décoratif, tout ce qui
-          compte est en texte dessous. Voir `ui/vignette.ts`. */}
-      <div
-        aria-hidden="true"
-        style={{ backgroundColor: couleurDeRecette(suggestion.recipeId) }}
-        className="flex h-[40vh] min-h-[12rem] items-center justify-center"
-      >
-        {/* ⛔ LA SEULE TAILLE LITTÉRALE QUI SUBSISTE HORS DE L'ÉCHELLE (`theme.css`), et elle est
-            `aria-hidden` deux lignes plus haut : ce n'est pas du texte, c'est un aplat de couleur
-            portant une initiale, là où une photo manquera toujours (242 recettes sur 330). Lui
-            donner un pas de l'échelle de LECTURE serait prétendre que quelqu'un la lit.
-            `ui/echelle-typo.test.ts` la nomme comme exception unique. */}
-        <span className="font-titre text-[5rem] leading-none text-white/70">
-          {initialeDeRecette(nom)}
-        </span>
-      </div>
+      {/* La « photo dominante » de §4.1 DESIGN — enfin servie. L'aplat n'a pas disparu : il est
+          devenu le REPLI des 201 recettes qui n'ont pas encore de photo, sur 330.
+          ⚠️ `alt=""` ET `aria-hidden`, pour la même raison que l'aplat : le nom du plat est du VRAI
+          texte, dans le `<h2>` juste dessous. Un `alt` qui répéterait ce nom le ferait annoncer deux
+          fois de suite par un lecteur d'écran. La photo illustre, elle n'informe pas seule. */}
+      {photo !== null ? (
+        <img
+          src={photo}
+          alt=""
+          aria-hidden="true"
+          // ⚠️ `object-cover` et non `contain` : la hauteur est imposée (40vh) et les photos n'ont
+          // pas toutes le même format — `contain` poserait des bandes vides de couleur variable au
+          // milieu de l'écran. On rogne, on ne déforme jamais.
+          className="h-[40vh] min-h-[12rem] w-full object-cover"
+          // Cette image est la première chose visible de l'écran : la charger paresseusement la
+          // ferait apparaître APRÈS le texte, ce qui donne une carte qui sursaute.
+          decoding="async"
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          style={{ backgroundColor: couleurDeRecette(suggestion.recipeId) }}
+          className="flex h-[40vh] min-h-[12rem] items-center justify-center"
+        >
+          {/* ⛔ LA SEULE TAILLE LITTÉRALE QUI SUBSISTE HORS DE L'ÉCHELLE (`theme.css`), et elle est
+              `aria-hidden` trois lignes plus haut : ce n'est pas du texte, c'est un aplat de couleur
+              portant une initiale, là où une photo manque encore (201 recettes sur 330). Lui donner
+              un pas de l'échelle de LECTURE serait prétendre que quelqu'un la lit.
+              `ui/echelle-typo.test.ts` la nomme comme exception unique. */}
+          <span className="font-titre text-[5rem] leading-none text-white/70">
+            {initialeDeRecette(nom)}
+          </span>
+        </div>
+      )}
 
       <div className="p-4">
         {/* ⚠️ AUCUNE NOTE CHIFFRÉE ICI, PLUS JAMAIS. Cet emplacement affichait
@@ -570,7 +601,11 @@ function CarteRepas({
           </p>
         )}
 
-        <p className="mt-3 text-mention text-attenue">Photo à venir</p>
+        {/* ⚠️ SEULEMENT SANS PHOTO. Cette mention est ce qui empêche l'aplat de passer pour une
+            illustration ratée : elle dit que le trou est connu. Au-dessus d'une VRAIE photo elle
+            devenait un mensonge — elle s'affichait sans condition, et le seul test qui la lisait ne
+            s'en apercevait pas parce que le premier plat suggéré n'avait pas de photo ce jour-là. */}
+        {photo === null && <p className="mt-3 text-mention text-attenue">Photo à venir</p>}
 
         {/* Les flèches. Toujours présentes, jamais réduites à une icône nue.
             `data-visite` : cible stable pour `ui/visite.tsx`, indépendante des classes Tailwind
@@ -751,9 +786,11 @@ function Pastille({
 function PlatsProches({
   ids,
   nomDe,
+  photoDe,
 }: {
   readonly ids: readonly RecipeId[]
   readonly nomDe: (id: string) => string
+  readonly photoDe: (id: string) => string | null
 }) {
   if (ids.length === 0) return null
 
@@ -767,13 +804,29 @@ function PlatsProches({
               href={hashDeRecette(id, 'aujourdhui')}
               className="flex min-h-tactile items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface p-2 text-courant text-texte no-underline"
             >
-              <span
-                aria-hidden="true"
-                style={{ backgroundColor: couleurDeRecette(id) }}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.6rem] font-titre text-titre-s text-white/70"
-              >
-                {initialeDeRecette(nomDe(id))}
-              </span>
+              {/* Même règle que la grande carte : la photo si elle existe, l'aplat sinon. Ici la
+                  vignette est carrée et minuscule (44 px) — c'est le seul endroit où le recadrage
+                  carré posé à l'atelier se voit vraiment. */}
+              {photoDe(id) !== null ? (
+                <img
+                  src={photoDe(id)!}
+                  alt=""
+                  aria-hidden="true"
+                  // `lazy` ici, contrairement à la grande carte : ces vignettes sont sous la ligne
+                  // de flottaison et il y en a plusieurs.
+                  loading="lazy"
+                  decoding="async"
+                  className="h-11 w-11 shrink-0 rounded-[0.6rem] object-cover"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  style={{ backgroundColor: couleurDeRecette(id) }}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.6rem] font-titre text-titre-s text-white/70"
+                >
+                  {initialeDeRecette(nomDe(id))}
+                </span>
+              )}
               <span className="leading-snug">{nomDe(id)}</span>
             </a>
           </li>

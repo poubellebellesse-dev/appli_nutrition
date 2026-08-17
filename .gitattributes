@@ -1,0 +1,47 @@
+# .gitattributes — les fins de ligne, fixées une fois pour toutes.
+#
+# ⚠️ POURQUOI CE FICHIER EXISTE, ET CE QU'IL A COÛTÉ DE NE PAS L'AVOIR. `core.autocrlf` vaut `true`
+# en configuration globale sur la machine de développement. Sans le fichier présent, TOUT worktree
+# créé et TOUT clone frais naissent en CRLF pendant que l'arbre principal, lui, est en LF — et trois
+# choses cassent d'un coup, sans qu'aucun message ne désigne la cause :
+#
+#   1. `catalog/import-photos.test.ts` ne se compile plus. Vitest rend « SyntaxError: Invalid or
+#      unexpected token » en pointant la ligne d'import — 16 tests disparaissent du total, et le
+#      message ne parle jamais de fins de ligne. C'est le symptôme le plus cher : un compte de tests
+#      qui baisse est censé être un signal, et là il a une cause qu'aucune lecture du code ne donne.
+#   2. Normaliser l'arbre à la main répare le premier point, mais `git status` affiche alors les
+#      842 fichiers suivis comme « modifiés » pendant que `git diff` reste VIDE. C'est exactement le
+#      bruit qui a déjà fait emporter le travail d'une autre session par un `git add` trop large.
+#      Le remède est `git add --renormalize .`, qui rafraîchit l'index sans rien mettre en scène —
+#      vérifié le 2026-08-13 : 843 fichiers signalés, 3 après, et les 3 étaient des fichiers neufs.
+#
+# Constaté le 2026-08-13 en créant le worktree du lot « photo-affichage ».
+#
+# ⚠️ UNE TROISIÈME CASSE A ÉTÉ ANNONCÉE ICI PAR ERREUR, PUIS RETIRÉE : « le `.gitignore` cesse de
+# filtrer ». Elle venait d'une mauvaise lecture de `git check-ignore -v` sur un DOSSIER, qui rend une
+# ligne d'apparence positive là où le fichier, lui, n'est pas ignoré. `tests/scelles/` n'a jamais été
+# dans `.gitignore` : ces tests ne sont pas ignorés, ils sont seulement NON SUIVIS. L'effet des CRLF
+# sur les motifs de `.gitignore` n'a donc jamais été mesuré, et n'est pas affirmé ici.
+#
+# ⚠️ CE FICHIER FAIT AUTORITÉ SUR `core.autocrlf` — c'est tout l'intérêt : la règle vit dans le
+# dépôt, elle suit les clones, et elle ne dépend plus de la configuration d'une machine.
+
+# LF partout, dans le dépôt ET dans la copie de travail. Le projet cible Linux (CI, build) autant
+# que Windows, et l'outillage (vitest, esbuild, node) lit du LF sans discuter.
+* text=auto eol=lf
+
+# Ce qui ne doit JAMAIS être touché par une conversion de fin de ligne. `text=auto` détecte déjà le
+# binaire par heuristique, mais une base SQLite ou une police mal classée se corrompt en silence —
+# on ne laisse pas ça à une heuristique.
+*.avif  binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.ico   binary
+*.db    binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.mp4   binary
+*.zip   binary

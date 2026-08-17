@@ -77,6 +77,41 @@ async function ouvrirEncartParIndecision() {
   await screen.findByText(/Rien n'est obligatoire/)
 }
 
+/** L'image de la carte, ou `null` si c'est l'aplat qui tient la place. Enfants DIRECTS de la carte. */
+const imageDeLaCarte = () => document.querySelector('article > img') as HTMLImageElement | null
+const aplatDeLaCarte = () => document.querySelector('article > div[aria-hidden]') as HTMLElement | null
+
+/**
+ * Ce que le CATALOGUE annonce pour le plat affiché : son `imagePath`, ou `null`.
+ *
+ * ⚠️ On interroge le catalogue réel, pas le DOM — c'est ce qui rend le test capable de dire que
+ * l'écran affiche autre chose que ce que la donnée contient.
+ */
+function photoAttendue(): string | null {
+  const nom = platAffiche()
+  for (const r of catalogueDeTest().recipes.values()) if (r.nom === nom) return r.imagePath
+  throw new Error(`plat affiché introuvable au catalogue : ${nom}`)
+}
+
+/**
+ * Fait défiler jusqu'à un plat dont la photo satisfait `veut`, et ÉCHOUE si la liste n'en contient
+ * aucun.
+ *
+ * ⛔ NE PAS REMPLACER PAR UN INDICE FIXE. Quel plat porte une photo dépend du CONTENU (129 recettes
+ * sur 330 au 2026-08-13) et du classement du moteur — deux choses qui bougent à chaque lot. Le test
+ * qui vivait ici lisait la PREMIÈRE carte et supposait qu'elle n'avait pas de photo : il passait par
+ * coïncidence, et serait devenu rouge le jour où le moteur aurait proposé un plat photographié en
+ * tête. Même famille que `ouvrirEncartParIndecision` ci-dessus.
+ */
+function allerVersPlat(veut: (photo: string | null) => boolean): void {
+  const n = tailleListe()
+  for (let i = 0; i < n; i++) {
+    if (veut(photoAttendue())) return
+    if (i < n - 1) fireEvent.click(bouton(/Suivant/))
+  }
+  throw new Error('aucun plat de la liste du créneau ne satisfait le critère demandé')
+}
+
 /** Parcourt la liste du créneau courant en entier et rend les plats dans l'ordre affiché. */
 function listeDuCreneau(): readonly string[] {
   const plats = [platAffiche()]
@@ -96,12 +131,49 @@ describe('aujourdhui — la carte', () => {
     expect(['Ce matin', 'Ce midi', 'Ce soir', 'Pour le goûter']).toContain(titre)
   })
 
-  it('affiche un aplat de couleur et l’annonce comme un bouche-trou', async () => {
+  it('affiche un aplat de couleur et l’annonce comme un bouche-trou, sur un plat SANS photo', async () => {
     await monter()
-    const aplat = document.querySelector('article div[aria-hidden]') as HTMLElement
+    allerVersPlat((photo) => photo === null)
+
+    const aplat = aplatDeLaCarte()
     expect(aplat).not.toBeNull()
-    expect(aplat.style.backgroundColor).not.toBe('')
+    expect(aplat!.style.backgroundColor).not.toBe('')
     expect(screen.getByText('Photo à venir')).toBeDefined()
+    expect(imageDeLaCarte()).toBeNull()
+  })
+
+  it('affiche la VRAIE photo quand la recette en porte une — et retire « Photo à venir »', async () => {
+    await monter()
+    allerVersPlat((photo) => photo !== null)
+
+    const img = imageDeLaCarte()
+    expect(img, 'aucune image sur un plat qui porte pourtant un imagePath').not.toBeNull()
+    expect(img!.getAttribute('src')).toBe(photoAttendue())
+    // `alt` VIDE et non descriptif : le nom du plat est le `<h2>` juste dessous. Un `alt` qui le
+    // répéterait le ferait annoncer deux fois par un lecteur d'écran.
+    expect(img!.getAttribute('alt')).toBe('')
+    expect(aplatDeLaCarte(), 'l’aplat cohabite avec la photo').toBeNull()
+    expect(screen.queryByText('Photo à venir'), '« Photo à venir » au-dessus d’une vraie photo').toBeNull()
+  })
+
+  it('⛔ JAMAIS LES DEUX, JAMAIS AUCUN — sur TOUTE la liste, l’écran suit ce que dit le catalogue', async () => {
+    // L'invariant qui ne dépend d'aucun contenu : quelle que soit la liste du jour, chaque carte
+    // montre exactement une chose, et c'est celle que la donnée annonce. C'est ce test qui
+    // attraperait un `photoDe` branché sur le mauvais champ, ou un repli qui ne se déclenche plus.
+    await monter()
+    const n = tailleListe()
+
+    for (let i = 0; i < n; i++) {
+      const attendue = photoAttendue()
+      const img = imageDeLaCarte()
+      const aplat = aplatDeLaCarte()
+
+      expect(img === null, `${platAffiche()} : ni photo ni aplat`).not.toBe(aplat === null)
+      if (attendue === null) expect(img, `${platAffiche()} : photo affichée sans imagePath`).toBeNull()
+      else expect(img?.getAttribute('src'), `${platAffiche()} : mauvaise source`).toBe(attendue)
+
+      if (i < n - 1) fireEvent.click(bouton(/Suivant/))
+    }
   })
 
   it('désactive « Précédent » sur la première carte, jamais « Suivant »', async () => {

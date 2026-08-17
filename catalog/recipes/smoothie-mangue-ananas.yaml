@@ -7,7 +7,7 @@ temps_prep_min: 10
 temps_cuisson_min: 0
 difficulte: 1
 portions_base: 2
-image_path: null
+image_path: /catalog/images/smoothie-mangue-ananas.avif
 types_repas: [petit_dejeuner, gouter]
 service: dessert
 piquant: 0
