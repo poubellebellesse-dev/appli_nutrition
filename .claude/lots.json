@@ -73,7 +73,8 @@
       "chantier": "photos recettes",
       "titre": "la photo sur la fiche détail",
       "etat": "fait",
-      "le": "2026-08-17"
+      "le": "2026-08-17",
+      "commit": "77ca4dc"
     },
     {
       "id": "photos-source",

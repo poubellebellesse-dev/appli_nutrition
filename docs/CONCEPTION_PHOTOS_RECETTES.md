@@ -107,11 +107,11 @@ devient utile qu'une fois le lot photo 1 livré, puisque le cadre ne fait rien a
 **Fini quand** : chaque photo servie porte un cadre posé à la main, ou une raison écrite de ne pas
 en porter.
 
-## Lot photo 3 — la photo sur la fiche détail — ✅ LIVRÉ le 2026-08-17
+## Lot photo 3 — la photo sur la fiche détail — ✅ LIVRÉ le 2026-08-17 · commit `77ca4dc` sur `main`
 
-⚠️ **Sans hash : le lot est vert dans l'arbre de travail, il n'est pas commité.** Cette ligne dit
-donc que la livraison n'est rattachée à rien — c'est une information, pas un oubli à combler au
-jugé. Elle se remplit au commit, pas avant.
+⚠️ **Ce hash a été écrit APRÈS le commit, pas avant.** Cette ligne a d'abord dit « sans hash : le lot
+est vert dans l'arbre de travail, il n'est pas commité » — c'était une information, pas un oubli.
+▶ Motif : §8 d'`ETAT.md`, « Un lot vert SEUL n'est pas un lot livré ».
 
 **Relevé sur l'arbre livré** : `npm test` **2 204 passed / 117 fichiers** (2 181 → **+23**, tous
 dans `photo-fiche-detail.test.tsx`, **+1 fichier**) · `typecheck` propre · `vite build` ✓ 2,92 s ·
