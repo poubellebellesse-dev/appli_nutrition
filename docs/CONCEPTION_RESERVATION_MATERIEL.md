@@ -222,7 +222,7 @@ possède rien ». Le tri-état ne se devine plus, il se déclare. Aucune ligne d
 
 ---
 
-### Lot 65b — l'écran de matériel et l'interrupteur ✅ LIVRÉ le 2026-08-18
+### Lot 65b — l'écran de matériel et l'interrupteur ✅ LIVRÉ le 2026-08-18 · commit `d0c4bb3`
 
 `user.db` passe en **v17** avec un interrupteur singleton (patron de `user_diet` : `id = 1`), éteint
 par défaut. `readConstraints` ne transmet le matériel déclaré **que** si l'interrupteur est allumé.
