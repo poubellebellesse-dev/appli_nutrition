@@ -786,10 +786,20 @@ Les deux seules occurrences hors périmètre sont dans `app/dist/` et `dist/` �
 le build**, pas des sources, et régénéré à chaque `vite build`. Mais le libellé promet plus que le
 code ne tient.
 
-⛔ **CE DÉFAUT NE SERA PAS CORRIGÉ DANS CE LOT : le test est SCELLÉ.** La règle du dépôt dit qu'un
-test scellé qui paraît faux se signale et arrête le travail — il ne se corrige pas, ne se contourne
-pas, et ne se double pas d'un second test. **C'est une décision de l'auteur, pas de la session.**
-Deux issues, aucune prise ici : élargir les racines dans un lot 66d, ou requalifier le libellé.
+✅ **LIBELLÉ REQUALIFIÉ LE 2026-08-18, SUR DÉCISION DE L'AUTEUR — le titre nomme désormais les trois
+racines.** La session ne l'avait pas fait d'elle-même : la règle du dépôt veut qu'un test scellé qui
+paraît faux se signale et arrête le travail, il ne se corrige pas et ne se double pas d'un second
+test. **La décision appartenait à l'auteur, et elle a été prise deux fois.**
+
+⚠️ **SEULS LE TITRE ET LE MESSAGE ONT CHANGÉ.** Assertion, motif et racines scannées sont identiques
+au caractère près, et le relevé de discrimination a été **rejoué à l'identique** après la
+requalification — les trois gardes rougissent toujours sur leur propre intrus, 7/8 à chaque fois.
+On a corrigé un mensonge, pas une mesure.
+
+⛔ **CE QUE ÇA NE RÉPARE PAS : la couverture.** Élargir les racines reste à faire et serait un autre
+lot. ⛔ **Et la leçon dépasse ce test : UN INTITULÉ FAIT PARTIE DE CE QU'UN TEST AFFIRME.** Celui-ci
+mesurait juste et se décrivait faux ; une suite verte ne l'aurait jamais dit. Seule une relecture
+qui lit les titres l'a vu.
 
 ### Ce que le lot ne touche pas
 

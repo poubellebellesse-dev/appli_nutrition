@@ -1338,15 +1338,19 @@ Fusionné le 2026-08-17 en `147a45b` : un seul conflit, dans la fiche de reprise
   INVÉRIFIABLES PAR UN TIERS**, au même titre que ceux du 66b. ▶ Se fermerait en posant ces scripts
   **dans** le dépôt, hors de `tests/scelles/` (scellé) et hors des quatre commandes (ils ne doivent
   pas les ralentir). **Non décidé.**
-- ⛔ **UN TEST SCELLÉ DU 66c PORTE UN LIBELLÉ SURDIT, ET IL EST RESTÉ TEL QUEL.** Son titre annonce
-  que `as any` reste à zéro « dans tout le dépôt » ; son scanner ne parcourt que `app/src`,
-  `catalog` et `tests`. `atelier/`, `vite.config.ts`, `vitest.config.ts`, `.claude/*.mjs` et la
-  racine ne sont vus par aucune des trois gardes du gel. ⚠️ **Sans effet mesuré au 2026-08-17** :
-  aucune source hors de ces trois racines ne mentionne `AnimalSource` ni `origineAnimale`, et il
-  n'existe aucun `as any` où que ce soit — les deux seules occurrences hors périmètre sont dans
-  `dist/`, du code généré. ⛔ **La correction du libellé a été DÉCIDÉE par l'auteur le 2026-08-17
-  puis NON APPLIQUÉE** : elle exige de lever le sceau, geste qui n'a pas été fait. Le test mesure
-  donc juste et se décrit faux. **Ne pas le corriger sans décision explicite renouvelée.**
+- ⚠️ **LES TROIS GARDES DU GEL (66c) NE VOIENT QUE `app/src`, `catalog` ET `tests`.** `atelier/`,
+  `vite.config.ts`, `vitest.config.ts`, `.claude/*.mjs` et la racine leur échappent. ⚠️ **Sans effet
+  mesuré au 2026-08-17** : aucune source hors de ces trois racines ne mentionne `AnimalSource` ni
+  `origineAnimale`, et il n'existe aucun `as any` où que ce soit — les deux seules occurrences hors
+  périmètre sont dans `dist/`, du code généré à chaque build. ▶ Élargir les racines reste à faire ;
+  ce serait un autre lot, et **rien ne le rend urgent tant qu'aucune source n'apparaît hors des
+  trois**. ✅ **LE LIBELLÉ, LUI, EST CORRIGÉ le 2026-08-18** : le titre du test annonçait « dans
+  tout le dépôt », ce que le code n'a jamais fait. Corrigé **après le sceau**, sur décision
+  explicite de l'auteur, en ne touchant QUE le titre et le message — assertion, motif et racines
+  identiques au caractère près, et le relevé de discrimination rejoué à l'identique pour le prouver.
+  ⛔ **La leçon vaut au-delà de ce test : un intitulé fait partie de ce qu'un test affirme.** Celui-ci
+  mesurait juste et se décrivait faux ; il aurait fait croire à une couverture inexistante au
+  premier lecteur pressé. Trouvé par une relecture indépendante, jamais par la suite verte.
 - ⚠️ **LES ASSERTIONS DU 66b LISENT LE TEXTE EXACT DES MESSAGES DE `tsc`** —
   `"Type 'null' is not assignable"`, `AnimalProvenance`, `AnimalOrigin`. C'est délibéré : sans ça,
   une faute de frappe dans une sonde ou un import cassé produirait un refus qui validerait le test

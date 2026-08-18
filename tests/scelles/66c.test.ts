@@ -248,13 +248,28 @@ describe('lot 66c — les trois cases que le modèle « deux axes » ne voyait p
     ).toEqual(ASSERTIONS_GELEES)
   })
 
-  it("⛔ ET `as any` RESTE À ZÉRO DANS TOUT LE DÉPÔT — la porte la plus large de toutes", () => {
-    // Relevé le 2026-08-17 : le dépôt n'en contient AUCUN. C'est un fait rare et il se garde
-    // gratuitement — zéro liste blanche à maintenir. `origineAnimale: {} as any` contournerait les
-    // six cases d'un coup, sans qu'aucune sonde ne bronche.
+  it("⛔ ET `as any` RESTE À ZÉRO DANS `app/src`, `catalog` ET `tests` — la porte la plus large", () => {
+    // Relevé le 2026-08-17 : ces trois racines n'en contiennent AUCUN. C'est un fait rare et il se
+    // garde gratuitement — zéro liste blanche à maintenir. `origineAnimale: {} as any` contournerait
+    // les six cases d'un coup, sans qu'aucune sonde ne bronche.
+    //
+    // ⛔ CE TITRE A DIT « DANS TOUT LE DÉPÔT », ET C'ÉTAIT FAUX — corrigé APRÈS le sceau, sur
+    // décision explicite de l'auteur (2026-08-17), livraison `e552ca1`. Le scanner n'a JAMAIS
+    // parcouru que les trois racines nommées ci-dessus : `atelier/`, `vite.config.ts`,
+    // `vitest.config.ts`, `.claude/*.mjs` et la racine du dépôt lui échappent, pour les trois
+    // gardes du gel. Le libellé promettait une couverture que le code n'a jamais eue.
+    //
+    // ⚠️ SEULS LE TITRE ET LE MESSAGE ONT CHANGÉ. L'assertion, le motif et les racines scannées
+    // sont identiques au caractère près : le pouvoir de détection est le même qu'au sceau, et le
+    // relevé de discrimination reste valide. On corrige un mensonge, pas une mesure.
+    //
+    // ⚠️ Ce que ça ne répare pas : la couverture. Élargir les racines reste à faire, et ce serait
+    // un autre lot. ▶ `ETAT.md` §8.
     expect(
       scannerMotif(/\bas\s+any\b/g),
-      "un `as any` est apparu. Il contourne l'invariant origine/provenance en entier, et tout le reste avec."
+      "un `as any` est apparu dans `app/src`, `catalog` ou `tests`. Il contourne l'invariant " +
+        "origine/provenance en entier, et tout le reste avec. ⚠️ Hors de ces trois racines, ce test " +
+        'ne voit rien — voir la 3ᵉ limite du §8.'
     ).toEqual({})
   })
 
