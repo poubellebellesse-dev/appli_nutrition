@@ -1,0 +1,7 @@
+{
+  "// pourquoi UN SEUL fichier": "L'assertion lit le TEXTE du diagnostic (`undefined`, `AnimalProvenance`). Un projet par sonde, comme tous ceux du 66b et du 66c : le refus que celui-ci produit ne peut venir de rien d'autre.",
+  "extends": "../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": ["sonde-provenance-indefinie.ts"]
+}

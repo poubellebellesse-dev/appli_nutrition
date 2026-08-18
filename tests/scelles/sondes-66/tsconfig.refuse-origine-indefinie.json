@@ -1,0 +1,7 @@
+{
+  "// pourquoi UN SEUL fichier": "L'assertion lit le TEXTE du diagnostic (`undefined`, `AnimalOrigin`). Deux sondes dans un même projet et ces morceaux pourraient venir de deux erreurs différentes — l'assertion serait satisfaite par coïncidence.",
+  "extends": "../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": ["sonde-origine-indefinie.ts"]
+}

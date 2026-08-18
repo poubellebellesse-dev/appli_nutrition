@@ -249,7 +249,9 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   DÉPÔT : FERMER UN TROU SUR UN CHAMP NE DIT RIEN DE SON JUMEAU. Une paire se teste des DEUX côtés,
   ou elle n'est testée qu'à moitié.** ⚠️ **ET CETTE PHRASE ELLE-MÊME ÉTAIT TROP COURTE : elle ne
   parle que de l'axe VALEUR.** Sur l'axe PRÉSENCE, la paire n'est toujours testée que d'un côté —
-  `origine` rendue OPTIONNELLE laisse les neuf tests verts. Trou ouvert, mesuré, en §8 ; lot 66c. ⚠️ **AUCUNE LIGNE DE CODE DE PRODUCTION N'A CHANGÉ** — le type
+  `origine` rendue OPTIONNELLE laisse les neuf tests verts. ✅ **FERMÉ PAR LE 66c LE 2026-08-17, ET
+  IL Y AVAIT TROIS TROUS, PAS UN** : un troisième axe existait, `undefined`, distinct de `null` et
+  d'une clé absente sous `exactOptionalPropertyTypes`. Six cases, pas quatre — voir §8. ⚠️ **AUCUNE LIGNE DE CODE DE PRODUCTION N'A CHANGÉ** — le type
   livré par le 66 était déjà juste. Ce lot n'achète pas une correction, il achète l'impossibilité de
   la défaire en silence. ⚠️ **CE QUI PROUVE QUE CES TESTS DISCRIMINENT N'EST PAS DANS LE DÉPÔT** :
   ils passent au premier essai, et seule la mutation manuelle les distingue d'assertions
@@ -1311,10 +1313,15 @@ Fusionné le 2026-08-17 en `147a45b` : un seul conflit, dans la fiche de reprise
   portée par du code scellé qu'on ne peut plus modifier.
   ⛔ **LA LEÇON DE FOND, TROIS FOIS PAYÉE MAINTENANT : une paire a DEUX champs ET DEUX AXES —
   présence et valeur. Quatre cases. Fermer trois cases ne ferme pas la quatrième.**
-  ▶ Se fermerait par une **huitième sonde** (`{ provenance }` sans `origine`) et un projet de
-  compilation de plus — **lot 66c, à briefer**. Ne pas le faire en modifiant les scellés du 66 ni
-  ceux du 66b, qui sont fermés. ⚠️ **Le `README.md` des sondes présente les 7 sondes comme
-  exhaustives** — il est dans `tests/scelles/`, donc scellé : sa correction appartient au 66c.
+  ✅ **FERMÉ PAR LE LOT 66c LE 2026-08-17 — ET « QUATRE CASES » ÉTAIT FAUX : IL Y EN A SIX.**
+  Le modèle ci-dessus ignorait un troisième axe, **`undefined`**, qui sous
+  `exactOptionalPropertyTypes: true` n'est ni `null` ni une clé absente. Il n'en restait donc pas
+  une case ouverte mais **trois**, dont **deux sur des champs que ce paragraphe déclarait clos**.
+  Mesuré : sous chacune des trois, les neuf tests d'alors restaient VERTS. Le 66c pose trois sondes
+  de plus et leurs trois projets. ⚠️ **La leçon n'est PAS « il manquait une case » — c'est que le
+  MODÈLE d'analyse était incomplet, pour la troisième fois sur le même invariant. Une énumération
+  qui se déclare exhaustive n'est jamais une preuve d'exhaustivité ; seule la mutation en est une.**
+  ▶ Détail, tableaux de mutation et bijection : `CONCEPTION_INVARIANT_ORIGINE_ANIMALE.md` §8.
 - ⛔ **CE QUI PROUVE QUE LES TROIS TESTS DU 66b DISCRIMINENT N'EST PAS DANS LE DÉPÔT.** Ces tests
   passent au premier essai — c'est assumé, ce sont des garde-fous de régression et non des tests
   d'acceptation. Mais alors la règle « un test scellé doit échouer le jour où on l'écrit » ne les
@@ -1323,6 +1330,23 @@ Fusionné le 2026-08-17 en `147a45b` : un seul conflit, dans la fiche de reprise
   Elle a été faite **deux fois à la main**, chaque moitié vue par son seul test, `git diff` vide
   après chaque essai. **Rien ne la rejouera tout seul.** ▶ C'est le même défaut que le lot D3 : la
   moitié d'un critère qui n'est démontrée par aucun test. Ne pas le découvrir une troisième fois.
+  ⛔ **ET C'EST EXACTEMENT CE QUI S'EST REPRODUIT AU LOT 66c, LE 2026-08-17.** Son document a
+  d'abord annoncé que la mutation était « scriptée et rejouable », donc que ce défaut était corrigé.
+  **Faux** : les scripts vivaient dans un répertoire temporaire de session, hors du dépôt, et
+  disparaissent avec elle. Relevé par une relecture indépendante **après le sceau**, puis rétracté
+  dans le document. ⚠️ **Les tableaux de mutation du 66c sont donc des mesures réelles mais
+  INVÉRIFIABLES PAR UN TIERS**, au même titre que ceux du 66b. ▶ Se fermerait en posant ces scripts
+  **dans** le dépôt, hors de `tests/scelles/` (scellé) et hors des quatre commandes (ils ne doivent
+  pas les ralentir). **Non décidé.**
+- ⛔ **UN TEST SCELLÉ DU 66c PORTE UN LIBELLÉ SURDIT, ET IL EST RESTÉ TEL QUEL.** Son titre annonce
+  que `as any` reste à zéro « dans tout le dépôt » ; son scanner ne parcourt que `app/src`,
+  `catalog` et `tests`. `atelier/`, `vite.config.ts`, `vitest.config.ts`, `.claude/*.mjs` et la
+  racine ne sont vus par aucune des trois gardes du gel. ⚠️ **Sans effet mesuré au 2026-08-17** :
+  aucune source hors de ces trois racines ne mentionne `AnimalSource` ni `origineAnimale`, et il
+  n'existe aucun `as any` où que ce soit — les deux seules occurrences hors périmètre sont dans
+  `dist/`, du code généré. ⛔ **La correction du libellé a été DÉCIDÉE par l'auteur le 2026-08-17
+  puis NON APPLIQUÉE** : elle exige de lever le sceau, geste qui n'a pas été fait. Le test mesure
+  donc juste et se décrit faux. **Ne pas le corriger sans décision explicite renouvelée.**
 - ⚠️ **LES ASSERTIONS DU 66b LISENT LE TEXTE EXACT DES MESSAGES DE `tsc`** —
   `"Type 'null' is not assignable"`, `AnimalProvenance`, `AnimalOrigin`. C'est délibéré : sans ça,
   une faute de frappe dans une sonde ou un import cassé produirait un refus qui validerait le test

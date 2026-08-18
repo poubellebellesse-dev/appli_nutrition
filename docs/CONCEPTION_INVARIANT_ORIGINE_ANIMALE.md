@@ -536,3 +536,295 @@ engine:plan-stress    → 20/20
 
 ⚠️ **`npm test` doit monter de +2 exactement**, et le compte de production ne doit pas bouger d'un
 test. Le catalogue n'est pas reconstruit : aucun YAML ni schéma n'est touché.
+
+---
+
+## 8. Lot 66c — la case qui restait en cachait deux autres
+
+## ✅ 66c — LIVRÉ le 2026-08-17 · **PAS ENCORE COMMITÉ, donc sans hash**
+
+⚠️ **Le hash manque parce que le commit n'a pas été demandé, pas parce qu'on l'a oublié.** Un lot
+fait sans hash reste sans hash : c'est une information, elle dit que la livraison n'est rattachée à
+rien. Les neuf fichiers sont dans l'arbre de travail, non indexés.
+
+⛔ **DEUX MOITIÉS DE CRITÈRE NE SONT PAS TENUES, ET C'EST ÉCRIT ICI PARCE QUE C'EST EXACTEMENT CE
+QUI EST ARRIVÉ AU LOT D3** — un « Fini quand » dont la seconde moitié n'était démontrée par rien :
+
+1. **La preuve par mutation n'est pas dans le dépôt** (voir plus bas, encadré rétracté). Les
+   tableaux sont réels et invérifiables par un tiers.
+2. **Le libellé du test nº 9 est surdit** et n'a pas été corrigé : la décision a été prise, la
+   levée de sceau qu'elle exige ne l'a pas été. ▶ `ETAT.md` §8.
+
+> Ouvert le 2026-08-17. **Aucune ligne de code de production ne change** — le type livré est déjà
+> juste, et il l'était déjà quand le 66b s'est clos. Ce lot n'achète pas une correction : il achète
+> l'impossibilité de la défaire en silence, sur les axes que le 66b croyait avoir couverts.
+
+### ⛔ LE MODÈLE « DEUX CHAMPS × DEUX AXES = QUATRE CASES » ÉTAIT FAUX. IL Y EN A SIX.
+
+Le §7 se clôt sur « le 66 en a fermé une, le 66b deux, il en reste une ». **Mesuré le 2026-08-17,
+il en restait trois.** L'axe manquant n'est pas *présence* ni *valeur nulle* : c'est **`undefined`**,
+qui sous `exactOptionalPropertyTypes: true` est un type distinct de `null` **et** distinct d'une clé
+absente. Trois axes, deux champs, six cases :
+
+| # | Champ | Axe | Sonde | Fermée par |
+|---|---|---|---|---|
+| 1 | `provenance` | clé absente | `sonde-paire-incomplete.ts` | lot 66 |
+| 2 | `provenance` | valeur `null` | `sonde-provenance-nulle.ts` | lot 66b |
+| 3 | `origine` | valeur `null` | `sonde-origine-nulle.ts` | lot 66b |
+| 4 | **`origine`** | **clé absente** | `sonde-origine-absente.ts` | **66c** |
+| 5 | **`origine`** | **valeur `undefined`** | `sonde-origine-indefinie.ts` | **66c** |
+| 6 | **`provenance`** | **valeur `undefined`** | `sonde-provenance-indefinie.ts` | **66c** |
+
+⛔ **LES CASES 5 ET 6 N'ÉTAIENT ÉCRITES NULLE PART** — ni dans le §7, ni dans `ETAT.md`, ni dans le
+`README.md` des sondes. La case 6 porte sur `provenance`, que les trois documents déclarent close.
+**Ce n'est pas une case oubliée par distraction : c'est le modèle d'analyse qui était incomplet.**
+
+### La preuve par mutation, relevée le 2026-08-17 — la diagonale
+
+`accepte` = `tsc` compile le projet. Pour une sonde de refus, `accepte` veut dire **trou ouvert**.
+
+```
+mutation de AnimalSource   refuse  neuve  nullable  orig-nulle  ACCEPTE | absente  orig-indéf  prov-indéf
+                            (66)   (66)     (66b)     (66b)      (66)   |  (66c)     (66c)       (66c)
+type livré (sain)          REFUSE REFUSE   REFUSE    REFUSE     accepte | REFUSE    REFUSE      REFUSE
+origine?:                  REFUSE REFUSE   REFUSE    REFUSE     accepte | accepte   REFUSE      REFUSE
+origine   | undefined      REFUSE REFUSE   REFUSE    REFUSE     accepte | REFUSE    accepte     REFUSE
+provenance | undefined     REFUSE REFUSE   REFUSE    REFUSE     accepte | REFUSE    REFUSE      accepte
+```
+
+⛔ **LA COLONNE DE GAUCHE NE BOUGE JAMAIS : les NEUF tests scellés du 66 et du 66b restent VERTS
+sous les trois mutations.** Relevé indépendamment par exécution des deux fichiers scellés — 9/9
+verts pour chacune des trois. Seul `provenance?:` les fait rougir, et c'est la case 1, déjà close.
+
+### La bijection — la preuve, et elle est plus forte que la diagonale ci-dessus
+
+Le tableau `tsc` dit ce que le compilateur accepte. Celui-ci dit ce que les **tests** voient, et
+c'est la seule chose qui protège le dépôt. Les **dix-sept** tests scellés (66 : 6 · 66b : 3 ·
+66c : 8) lancés sous chacune des **six** mutations, une par case :
+
+```
+type livré (sain)       → 17/17 verts · AUCUN ROUGE
+origine?:               → 16/17 verts · ROUGE : 66c « provenance sans origine »
+origine    | undefined  → 16/17 verts · ROUGE : 66c « origine undefined »
+provenance | undefined  → 16/17 verts · ROUGE : 66c « provenance undefined »
+provenance?:            → 16/17 verts · ROUGE : 66  « la paire amputée »
+origine    | null       → 16/17 verts · ROUGE : 66b « origine nulle »
+provenance | null       → 16/17 verts · ROUGE : 66b « provenance nulle »
+```
+
+⚠️ **CE TABLEAU A D'ABORD ÉTÉ ÉCRIT SUR 14, ET C'ÉTAIT LE DÉFAUT QUE `CLAUDE.md` DÉCRIT EN TOUTES
+LETTRES** — « un document mis à jour dans le même lot que le code qu'il ne compte pas encore ».
+Le lot est passé de 5 à 8 tests quand le gel des assertions a été décidé ; la table est restée à
+son dénominateur d'avant. Trouvé par une relecture indépendante, **après le sceau**. Corrigé en
+**re-mesurant**, jamais en rectifiant l'arithmétique : la bijection tient, un seul rouge par
+mutation, mais ce n'est pas parce qu'on l'a déduit — c'est parce qu'on l'a relancé.
+
+⛔ **SIX MUTATIONS, SIX ROUGES, UN PAR TEST, JAMAIS DEUX.** C'est une bijection, et c'est ce qui
+distingue « le lot couvre six cas » de « le lot couvre un cas et cinq par accident ». Aucun test ne
+compte sur son voisin pour discriminer — la leçon que `66.test.ts` porte en en-tête depuis le
+premier lot. Aucune des trois sondes neuves n'est redondante : chacune est la **seule** garde de sa
+case, et sa suppression rouvrirait un trou que rien d'autre ne verrait.
+
+⚠️ **Ce que cette table ne dit pas** : elle couvre les six cases du modèle à trois axes. Elle ne
+prouve pas qu'il n'existe pas de quatrième axe — c'est précisément l'erreur que le 66 et le 66b ont
+faite tous les deux. Elle prouve que les six connues sont gardées, rien de plus.
+
+⚠️ `catalog.ts` a été remis à l'identique après chaque mutation, `git diff --stat` **vide**, vérifié
+par le script lui-même dans un `finally` — pas à la main, pas de confiance accordée à l'opérateur.
+
+### Les diagnostics exacts, lus sur `tsc`, jamais devinés
+
+```
+sonde-origine-absente.ts(36,3):     error TS2741: Property 'origine' is missing in type
+                                    '{ provenance: "production"; }' but required in type 'AnimalSource'.
+sonde-origine-indefinie.ts(38,21):  error TS2322: Type 'undefined' is not assignable to type 'AnimalOrigin'.
+sonde-provenance-indefinie.ts(37,43): error TS2322: Type 'undefined' is not assignable to type 'AnimalProvenance'.
+```
+
+### **Fini quand**
+
+1. `origineAnimale: { provenance: 'production' }` — **une source animale sans aucune origine** — est
+   refusée par `tsc`, et le refus nomme le fichier de la sonde, le code **`TS2741`** et la propriété
+   **`origine`**. Pas seulement « refusé » : le texte du diagnostic est lu.
+2. `{ origine: undefined, provenance: 'production' }` est refusée, et le refus nomme le fichier, le
+   code **`TS2322`**, la valeur rejetée (`Type 'undefined' is not assignable`) et le type qui la
+   rejette (**`AnimalOrigin`**).
+3. `{ origine: 'mammifere', provenance: undefined }` est refusée de la même façon, **`AnimalProvenance`**
+   nommé. Sans cette moitié, le lot fermerait `origine` des deux côtés en laissant son jumeau ouvert
+   sur l'axe neuf — exactement la faute que le §7 dit avoir payée trois fois.
+4. **Chacun des trois refus est le SEUL diagnostic de son projet** : `tsc` sort exactement une ligne
+   `error TS`. Sans ce point, une faute de frappe, un import cassé ou un `any` sur le chemin
+   refuseraient aussi — et le test resterait vert le trou grand ouvert.
+5. **La paire complète compile toujours**, vérifié dans le même fichier via `tsconfig.accepte.json`,
+   qui appartient au 66 et n'est que LU. Sans cette moitié, le critère se satisfait en rendant la
+   paire carrément inexprimable, emportant tous les aliments à source animale.
+6. **`tsconfig.json` à la racine exclut toujours `tests/scelles/sondes-66`**, vérifié en lisant le
+   fichier. Le lot fait passer ce dossier de 2 à 5 fichiers qui ne compilent pas volontairement : si
+   l'exclusion saute, `npm run typecheck` devient rouge en permanence et la seule façon de le
+   reverdir est de défaire le lot.
+7. Les **neuf tests scellés du 66 et du 66b restent verts et intouchés**, ainsi que leurs cinq
+   projets de compilation. ⚠️ **Ce point n'est PAS auto-porté par `66c.test.ts`** : rien dans ce
+   fichier ne lance ses deux voisins. Il se démontre par le run complet, et par lui seul.
+8. **La liste des SEPT assertions capables de fabriquer une paire est GELÉE**, par fichier et par
+   nombre : `groupes-animaux.test.ts` 3, `regime.test.ts` 1, `66.test.ts` 3. Une huitième fait
+   rougir. ⚠️ **Sans numéros de ligne, délibérément** : les geler rendrait le test rouge au premier
+   commentaire ajouté au-dessus, et un test qui crie pour rien finit désarmé.
+9. **`as any` reste à ZÉRO dans tout le dépôt** — relevé à la commande, le dépôt n'en contient
+   aucun. Il contournerait les six cases d'un coup ; il se garde sans liste blanche à maintenir.
+10. **Aucune directive `@ts-ignore` / `@ts-expect-error` dans `sondes-66/`.** Elle supprimerait le
+    diagnostic que les tests lisent, et ils resteraient verts sur un dossier devenu muet. Le lot 66
+    le demandait **en prose** dans son en-tête ; ce point le rend exécutable.
+11. `npm test` rend **2 212 passed / 0 failed**, typecheck propre, `vite build` ✓, `plan-stress`
+   20/20. ⚠️ **Écrit en chiffres exprès** : « les quatre commandes sont vertes » n'a de sens que
+   rapporté à une convention externe — le 66 et le 66b devaient tous deux excepter les rouges de la
+   lane média. Cette lane est éteinte depuis le 2026-08-16, donc **ici zéro rouge, sans exception à
+   accorder**. Un lecteur du seul §8 n'a rien à aller chercher ailleurs.
+
+### ⚠️ CE TEST PASSE DÈS LE PREMIER ESSAI — même entorse assumée qu'au 66b, même raison
+
+« Un test scellé doit échouer le jour où on l'écrit » vise les tests d'**acceptation** : celui qui
+passe avant que le code existe ne prouve rien. Ici il n'y a **pas de code à écrire**. Ce qu'on pose
+est un garde-fou de **régression**, et sa démonstration qu'il sait échouer est la diagonale
+ci-dessus, pas un rouge de départ.
+
+⛔ **ET LA PREUVE PAR MUTATION N'EST TOUJOURS PAS DANS LE DÉPÔT — LE 66c REPRODUIT LE DÉFAUT DU 66b
+AU LIEU DE LE CORRIGER.** Une première version de ce paragraphe annonçait le contraire : « cette
+fois la mutation est scriptée et rejouable ». **C'était faux, et c'est une relecture indépendante
+qui l'a relevé, après le sceau.** Les scripts existent — ils ont produit tous les tableaux
+ci-dessus — mais ils vivent dans un **répertoire temporaire de session**, hors du dépôt, et ils
+disparaîtront avec elle. Conséquence, écrite sans l'adoucir :
+
+> **Personne d'autre que la session qui les a écrits ne peut rejouer ces chiffres.** Les tableaux
+> `tsc`, la bijection et le relevé de discrimination sont des mesures réelles, prises et restaurées
+> proprement — mais **invérifiables par un tiers**. Exactement le reproche que le §7 s'adressait à
+> lui-même, mot pour mot, un lot plus tôt.
+
+▶ Le rendre vrai demanderait de poser ces scripts **dans** le dépôt — hors de `tests/scelles/`, qui
+est scellé, et hors des quatre commandes, qu'ils ne doivent pas ralentir. **Ce n'est pas fait, ce
+n'est pas décidé, et ça ne doit pas être présenté comme acquis.**
+
+### ⛔ CE QUE CE LOT NE FERME PAS — écrit ici pour qu'un lecteur du seul §8 ne croie pas le type étanche
+
+Le brief a été attaqué avant d'être scellé. L'attaque **n'a trouvé aucune implémentation fausse**
+qui rouvrirait le trou en laissant les 14 tests verts — six élargissements de plus ont été mutés
+pour vérifier, au-delà des six cases :
+
+```
+AnimalSource | { origine }         →  7/14 verts · trou fermé
+Partial<AnimalSource> sur le champ → 12/14 verts · TROU OUVERT, vu par 2 tests
+signature d'index [k: string]      → 14/14 verts · trou fermé (rien à garder)
+readonly retiré                    → 14/14 verts · trou fermé
+AnimalSource | AnimalOrigin        →  7/14 verts · trou fermé
+champ en `any`                     →  8/14 verts · TROU OUVERT, vu par 6 tests
+```
+
+⚠️ **`readonly` retiré ne rouvre PAS cet invariant — mesuré, pas supposé.** La relecture le
+soupçonnait d'ouvrir une « dérive temporelle » ; le champ garde son type strict, `delete` est refusé
+sur une propriété requise, et une réaffectation ne peut produire qu'une autre valeur **valide**.
+`readonly` protège l'immuabilité, pas la paire. C'est une autre propriété, et aucun lot ne la garde.
+
+⛔ **MAIS LE TROU PAR `as` RESTE GRAND OUVERT, ET IL N'EST PAS THÉORIQUE.** Le §4 le nomme « le trou
+connu de ce critère » ; le §8 doit le redire, parce que **le dépôt en contient quatre occurrences
+vivantes aujourd'hui**, relevées à la commande :
+
+```
+app/src/engine/domain/groupes-animaux.test.ts:72   { provenance: 'corps' } as unknown as AnimalSource
+app/src/engine/domain/groupes-animaux.test.ts:122  { origine: 'mammifere' } as AnimalSource
+app/src/engine/domain/groupes-animaux.test.ts:123  { origine: 'volaille' }  as AnimalSource
+app/src/engine/selection/regime.test.ts:227        { origine: 'mammifere' } as AnimalSource
+```
+
+La première est **exactement la case 4** que `sonde-origine-absente.ts` rend inexprimable. Elle est
+écrite, elle compile, et elle est légitime : ces tests vérifient que la résolution encaisse une
+paire cassée. **Le type garantit la forme pour le code honnête ; il ne garantit rien contre une
+assertion.**
+
+✅ **DÉCISION PRISE LE 2026-08-17 PAR L'AUTEUR : la liste est GELÉE**, points 8 à 10 du « Fini
+quand ». Le lot ne condamne pas ces sept assertions — elles sont légitimes — il les **compte**, pour
+que la huitième soit une décision et non une découverte trois lots plus tard. Deux gardes gratuites
+sont venues avec, l'inventaire ayant montré qu'elles ne coûtaient aucune liste blanche : **`as any`
+à zéro dans tout le dépôt**, et **aucune directive de suppression dans `sondes-66/`**.
+
+### ⚠️ Ce que le gel a appris en étant vérifié — deux défauts trouvés en le mesurant, pas en le relisant
+
+1. **Le scanner s'est attrapé lui-même.** Les motifs surveillés apparaissent dans les titres et les
+   messages d'erreur de `66c.test.ts` : `sansCommentaires` retire les commentaires, pas les chaînes.
+   `66c.test.ts` s'exclut donc **nommément** — un seul chemin, un fichier scellé donc figé. Retirer
+   aussi les chaînes aurait demandé de gérer `'`, `"`, les gabarits et les échappements, et **un
+   bug là-dedans produit un faux négatif**, c'est-à-dire une assertion réelle rendue invisible. Un
+   trou d'un fichier nommé vaut mieux qu'un trou silencieux de taille inconnue.
+2. ⛔ **LE TEST DES DIRECTIVES ÉTAIT INCAPABLE DE ROUGIR, ET IL A FALLU LE PROUVER POUR LE VOIR.**
+   Écrit sur la source nettoyée, il cherchait `@ts-expect-error` — qui vit **toujours** dans un
+   commentaire, donc effacé avant d'être cherché. Vert par construction, pour toujours. **Un test
+   qui ne peut pas échouer est pire qu'un test absent : il occupe la place d'une garde.** Corrigé
+   par un drapeau qui lit aussi les commentaires. ▶ Relevé de discrimination, les trois gels :
+
+```
+aucun intrus (témoin)            → 8/8 verts · AUCUN ROUGE
+8ᵉ assertion `as AnimalSource`   → 7/8 verts · ROUGE : le gel des sept
+un `as any`                      → 7/8 verts · ROUGE : `as any` à zéro
+une directive dans une sonde     → 7/8 verts · ROUGE : pas de bâillon
+```
+
+⚠️ **Ce que le gel ne couvre PAS**, et il faut que ce soit écrit sous peine de répéter la faute de
+ce lot : `satisfies`, une interface étendue localement, un `JSON.parse` non typé, et le canal
+parallèle ci-dessous. **Une énumération qui se déclare exhaustive n'est jamais une preuve
+d'exhaustivité.**
+
+⚠️ **Deuxième limite, du même genre** : rien n'interdit qu'un futur champ de `Food` reporte
+l'information animale **à côté** de `origineAnimale`. Un canal parallèle contournerait les six
+cases sans en toucher aucune. Non testé, non testable à peu de frais, nommé ici pour ne pas être
+redécouvert au lot suivant.
+
+⛔ **TROISIÈME LIMITE, ET ELLE CONTREDIT LE LIBELLÉ D'UN TEST SCELLÉ.** Le test nº 6 s'intitule
+« `as any` reste à zéro **dans tout le dépôt** ». C'est **surdit** : `scannerMotif` ne parcourt que
+`app/src`, `catalog` et `tests`. En sont absents `atelier/`, `vite.config.ts`, `vitest.config.ts`,
+`.claude/*.mjs` et la racine — les trois gardes du gel (assertions, `as any`, directives) n'y voient
+rien. ⚠️ **Sans effet aujourd'hui, vérifié à la commande** : aucune **source** hors de ces trois
+racines ne mentionne `AnimalSource` ni `origineAnimale`, et aucun `as any` n'existe où que ce soit.
+Les deux seules occurrences hors périmètre sont dans `app/dist/` et `dist/` — du **code généré par
+le build**, pas des sources, et régénéré à chaque `vite build`. Mais le libellé promet plus que le
+code ne tient.
+
+⛔ **CE DÉFAUT NE SERA PAS CORRIGÉ DANS CE LOT : le test est SCELLÉ.** La règle du dépôt dit qu'un
+test scellé qui paraît faux se signale et arrête le travail — il ne se corrige pas, ne se contourne
+pas, et ne se double pas d'un second test. **C'est une décision de l'auteur, pas de la session.**
+Deux issues, aucune prise ici : élargir les racines dans un lot 66d, ou requalifier le libellé.
+
+### Ce que le lot ne touche pas
+
+`tests/scelles/66.test.ts`, `66b.test.ts` et leurs cinq `tsconfig.*.json` — **scellés et clos** ·
+les sept sondes existantes · toute la production, `catalog.ts` compris · le schéma SQL, le YAML,
+`catalog/build.mjs` · le catalogue, qui n'est pas reconstruit · la lane média · la lane photo.
+**Seul écrit hors fichiers neufs : le `README.md` des sondes**, dont le tableau annonce sept sondes
+exhaustives — le §7 assigne explicitement sa correction à ce lot.
+
+### Les témoins, relevés sur `f5fb7ea` — arbre complet, sortie réelle
+
+```
+npm test              → 2 212 passed / 0 failed  (2 212 tests, 118 fichiers) en 42,55 s
+npm run typecheck     → propre
+npx vite build        → ✓ 2,76 s
+engine:plan-stress    → 20/20
+```
+
+⛔ **LA BASE DOCUMENTÉE ÉTAIT PÉRIMÉE DE TROIS LOTS, ET IL A FALLU L'ATTRIBUER AVANT DE CONCLURE.**
+`CLAUDE.md` et `FICHE_REPRISE.md` annonçaient **2 156 / 114**, relevé sur `de2ba39`. L'écart brut
+était donc de **+53**, très au-dessus des +5 attendus — exactement le symptôme que le dépôt traite
+comme un signal. Attribué par `git diff --name-only de2ba39..HEAD`, jamais par déduction :
+
+| Fichier | Tests | Fichiers | Lot |
+|---|---|---|---|
+| `tests/scelles/gestes-hors-ligne.test.ts` | +11 | +1 | geste 4 (`00f8e38`) |
+| `tests/scelles/photo-affichage.test.ts` | +7 | +1 | merge lot photo 1 (`147a45b`) |
+| `tests/scelles/photo-fiche-detail.test.tsx` | +23 | +1 | lot photo 3 (`77ca4dc`) |
+| `echelle-typo` · `aujourdhui` · `savoir` (modifiés) | +7 | — | mêmes lots |
+| **`tests/scelles/66c.test.ts`** | **+8** | **+1** | **ce lot** |
+| | **= 2 212** | **= 118** | |
+
+✅ **Le compte tombe juste au test près et au fichier près. Aucune anomalie** — ce n'est pas le
+défaut du 2026-08-08 qui reviendrait, c'est une base de référence qui n'avait pas suivi trois
+livraisons. ⚠️ **La base à citer désormais est 2 204 / 117 avant ce lot**, pas 2 156 / 114.
+
+⚠️ Le compte de production ne bouge pas d'un test : le lot n'ajoute que des fichiers scellés. Le
+catalogue n'est pas reconstruit — `audit-mapping` est sans objet ici.

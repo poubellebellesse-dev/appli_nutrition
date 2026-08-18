@@ -87,11 +87,13 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
    chiffre qui manque pour fermer la décision 61, **n'a toujours pas été pris** — jamais en jsdom.
 6. **Empaquetage Capacitor, puis Play** — `capacitor.config.ts` en place, `npx cap add android`
    jamais lancé (pas de SDK). Le web reste le seul chemin vers un iPhone sans Mac.
-7. **`/brief 66c` — une case de l'invariant origine/provenance reste ouverte, et elle est mesurée.**
-   `origine` rendue **optionnelle** laisse les neuf tests scellés verts pendant qu'une source animale
-   sans origine compile. Une 8ᵉ sonde + un projet `tsc`, à poser **à côté** des scellés du 66/66b,
-   qui sont fermés. ⚠️ Ne coûte rien à personne d'autre : aucun code de production. ▶ `ETAT.md` §8 ·
-   [archive/RECAP_SESSION_2026-08-14_invariant-origine-animale.md](./archive/RECAP_SESSION_2026-08-14_invariant-origine-animale.md).
+7. **✅ LOT 66c LIVRÉ le 2026-08-17 — l'invariant origine/provenance est clos sur les six cases
+   connues.** ⚠️ **PAS ENCORE COMMITÉ : neuf fichiers dans l'arbre de travail, non indexés.**
+   ⛔ **Il n'y avait pas une case ouverte mais TROIS** — un troisième axe existait (`undefined`), et
+   deux des trois trous portaient sur des champs que trois documents déclaraient clos. **Aucune
+   ligne de production n'a changé.** ⛔ **Deux moitiés de critère ne sont pas tenues** (preuve par
+   mutation hors dépôt, libellé d'un test scellé surdit) — elles sont en dette, pas en suspens.
+   ▶ `ETAT.md` §8 · [CONCEPTION_INVARIANT_ORIGINE_ANIMALE.md](./CONCEPTION_INVARIANT_ORIGINE_ANIMALE.md) §8.
 
 ⚠️ **Deux trous sanitaires bloquent la publication au même titre que la relecture** : céphalopodes et
 cuisson de l'œuf, qu'aucune autorité lue ne donne — le principe 3 interdit d'écrire sans source.
