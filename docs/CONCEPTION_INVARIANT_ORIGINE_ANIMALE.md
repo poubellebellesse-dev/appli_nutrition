@@ -541,11 +541,11 @@ test. Le catalogue n'est pas reconstruit : aucun YAML ni schéma n'est touché.
 
 ## 8. Lot 66c — la case qui restait en cachait deux autres
 
-## ✅ 66c — LIVRÉ le 2026-08-17 · **PAS ENCORE COMMITÉ, donc sans hash**
+## ✅ 66c — LIVRÉ le 2026-08-17 · commit `e552ca1` sur `main`
 
-⚠️ **Le hash manque parce que le commit n'a pas été demandé, pas parce qu'on l'a oublié.** Un lot
-fait sans hash reste sans hash : c'est une information, elle dit que la livraison n'est rattachée à
-rien. Les neuf fichiers sont dans l'arbre de travail, non indexés.
+⚠️ **Le commit a été posé le 2026-08-18, le travail et le relevé datent du 17.** La date qui fait
+foi pour le lot est celle du relevé ; celle du commit est dans `git log`. Douze fichiers,
+826 insertions, **aucune de production**.
 
 ⛔ **DEUX MOITIÉS DE CRITÈRE NE SONT PAS TENUES, ET C'EST ÉCRIT ICI PARCE QUE C'EST EXACTEMENT CE
 QUI EST ARRIVÉ AU LOT D3** — un « Fini quand » dont la seconde moitié n'était démontrée par rien :

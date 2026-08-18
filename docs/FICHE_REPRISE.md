@@ -88,7 +88,8 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 6. **Empaquetage Capacitor, puis Play** — `capacitor.config.ts` en place, `npx cap add android`
    jamais lancé (pas de SDK). Le web reste le seul chemin vers un iPhone sans Mac.
 7. **✅ LOT 66c LIVRÉ le 2026-08-17 — l'invariant origine/provenance est clos sur les six cases
-   connues.** ⚠️ **PAS ENCORE COMMITÉ : neuf fichiers dans l'arbre de travail, non indexés.**
+   connues.** Commit `e552ca1` sur `main`, posé le 2026-08-18. ⚠️ **HEAD est en avance sur
+   `origin/main` : à pousser.**
    ⛔ **Il n'y avait pas une case ouverte mais TROIS** — un troisième axe existait (`undefined`), et
    deux des trois trous portaient sur des champs que trois documents déclaraient clos. **Aucune
    ligne de production n'a changé.** ⛔ **Deux moitiés de critère ne sont pas tenues** (preuve par

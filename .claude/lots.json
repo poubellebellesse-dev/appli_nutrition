@@ -121,7 +121,8 @@
       "chantier": "origine animale",
       "titre": "une case de l'invariant origine/provenance reste ouverte, et elle est mesurée",
       "etat": "fait",
-      "le": "2026-08-17"
+      "le": "2026-08-17",
+      "commit": "e552ca1"
     },
     {
       "id": "65a",
