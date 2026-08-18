@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 16
+export const USER_SCHEMA_VERSION = 17
 
 export interface Migration {
   readonly version: number
@@ -810,6 +810,39 @@ const V16_STATEMENTS: readonly string[] = [
    )`,
 ]
 
+/**
+ * v17 — L'INTERRUPTEUR DU FILTRE MATÉRIEL. Lot 65b,
+ * `docs/CONCEPTION_RESERVATION_MATERIEL.md` § « La redéfinition du 2026-08-18 ».
+ *
+ * ⛔ CETTE TABLE EXISTE POUR QUE DÉCLARER SON MATÉRIEL N'ENLÈVE AUCUNE RECETTE. Décision de
+ * l'auteur du 2026-08-18. `user_equipment` était lue sans condition par `readConstraints`, donc la
+ * couche `equipement` se serait allumée à la première case cochée du premier écran qui écrit cette
+ * table — et l'écran du lot 65b est justement le premier. Mesuré sur le catalogue du jour : cocher
+ * le seul four aurait fait disparaître 264 recettes sur 330, en silence. Le filtre reste donc
+ * ÉTEINT tant que la personne ne l'allume pas.
+ *
+ * ✅ ET ELLE FERME UN TROU QUE `user-store.ts` DEMANDAIT DE FERMER. `readOwnedEquipmentIds` ne sait
+ * pas distinguer « n'a jamais ouvert l'écran » de « a tout décoché » : une table vide dit les deux.
+ * Son en-tête annonçait qu'il faudrait un marqueur de déclaration le jour où un écran permettrait
+ * de décocher — c'est ce jour-là. L'interrupteur EST ce marqueur, et il ne coûte pas une table de
+ * plus : éteint ⇒ `null` ⇒ couche inerte ; allumé ⇒ la liste, FÛT-ELLE VIDE ⇒ « je ne possède
+ * rien ». Le tri-état cesse de se deviner, il se déclare.
+ *
+ * ⚠️ SINGLETON `id = 1`, patron de `user_diet` et de `user_display`. La ligne est absente sur une
+ * base migrée : `readFiltreEquipement` lit alors `false`, ce qui est le défaut voulu — personne
+ * n'hérite d'un filtre qu'il n'a pas demandé.
+ *
+ * ⚠️ AUCUNE COLONNE `quantite` ICI. Elle appartenait au 65b d'origine et en a été SORTIE le
+ * 2026-08-18 : aucune recette du catalogue ne déclare occuper la plaque, donc la quantité de feux
+ * n'aurait rien affiché. Elle part au lot 65c, avec la détection qui lui manque.
+ */
+const V17_STATEMENTS: readonly string[] = [
+  `CREATE TABLE user_equipment_filter (
+     id INTEGER PRIMARY KEY CHECK (id = 1),
+     actif INTEGER NOT NULL DEFAULT 0 CHECK (actif IN (0,1))
+   )`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -827,6 +860,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 14, statements: V14_STATEMENTS },
   { version: 15, statements: V15_STATEMENTS },
   { version: 16, statements: V16_STATEMENTS },
+  { version: 17, statements: V17_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

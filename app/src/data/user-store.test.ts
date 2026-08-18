@@ -46,6 +46,8 @@ import {
   readConstraints,
   readOwnedEquipmentIds,
   writeOwnedEquipmentIds,
+  readFiltreEquipement,
+  writeFiltreEquipement,
   readDiet,
   readDisplay,
   readExcludedFoodIds,
@@ -355,7 +357,34 @@ describe('user-store — contraintes dures', () => {
   it('fait l’aller-retour sur le matériel déclaré', () => {
     writeOwnedEquipmentIds(db, ['four', 'poele'] as EquipmentId[])
     expect(readOwnedEquipmentIds(db)).toEqual(['four', 'poele'])
+  })
+
+  /**
+   * ⛔ CETTE ASSERTION A CHANGÉ DE SENS AU LOT 65b, LE 2026-08-18, ET CE N'EST PAS UNE CORRECTION
+   * DE TEST POUR FAIRE PASSER DU CODE. Elle exigeait auparavant que `readConstraints` transmette le
+   * matériel déclaré SANS CONDITION. C'est exactement ce que le lot supprime : tant que ce chemin
+   * existait, le premier écran capable d'écrire `user_equipment` allumait la couche `equipement` —
+   * mesuré sur le catalogue du jour, cocher le seul four retirait 264 recettes sur 330, en silence.
+   * Décision de l'auteur : déclarer INFORME, filtrer se DEMANDE.
+   *
+   * ⚠️ Le contrat scellé du lot vit dans `tests/scelles/65b.test.ts` ; ce test-ci n'en est pas un
+   * doublon mais la version unitaire, sans catalogue.
+   */
+  it('⛔ ne transmet le matériel au moteur QUE si le filtre est allumé (65b)', () => {
+    writeOwnedEquipmentIds(db, ['four', 'poele'] as EquipmentId[])
+
+    // Éteint par défaut : la déclaration est en base, elle ne descend pas au moteur.
+    expect(readFiltreEquipement(db)).toBe(false)
+    expect(readConstraints(db, SANS_CATALOGUE).ownedEquipmentIds).toBeNull()
+
+    writeFiltreEquipement(db, true)
     expect(readConstraints(db, SANS_CATALOGUE).ownedEquipmentIds).toEqual(['four', 'poele'])
+
+    // ⚠️ ALLUMÉ SUR UNE TABLE VIDE : `[]`, jamais `null`. L'interrupteur est le marqueur de
+    // déclaration que `readOwnedEquipmentIds` réclamait — « je ne possède rien » est une réponse.
+    writeOwnedEquipmentIds(db, [])
+    expect(readOwnedEquipmentIds(db)).toBeNull()
+    expect(readConstraints(db, SANS_CATALOGUE).ownedEquipmentIds).toEqual([])
   })
 
   it('⛔ table vide → `null`, JAMAIS `[]` — la couche `equipement` doit rester inerte', () => {

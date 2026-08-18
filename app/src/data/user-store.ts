@@ -365,6 +365,36 @@ export function writeOwnedEquipmentIds(db: UserDb, equipmentIds: readonly Equipm
 }
 
 /**
+ * Le filtre matériel est-il ALLUMÉ ? (lot 65b, `docs/CONCEPTION_RESERVATION_MATERIEL.md`)
+ *
+ * ⛔ `false` PAR DÉFAUT, ET C'EST LA DÉCISION DU LOT, pas une commodité. Déclarer son matériel
+ * n'enlève aucune recette tant que la personne n'a pas allumé ce réglage elle-même. Une ligne
+ * absente — toute base migrée depuis la v16 — vaut donc « éteint ».
+ *
+ * ⚠️ CE BOOLÉEN EST AUSSI LE MARQUEUR DE DÉCLARATION que `readOwnedEquipmentIds` réclamait juste
+ * au-dessus. Allumé, il rend `[]` signifiant : « j'ai regardé, et je ne possède rien ».
+ */
+export function readFiltreEquipement(db: UserDb): boolean {
+  const row = db.all<{ readonly actif: number }>('SELECT actif FROM user_equipment_filter WHERE id = 1')[0]
+  return row?.actif === 1
+}
+
+/**
+ * Allume ou éteint le filtre matériel.
+ *
+ * ⚠️ `ON CONFLICT DO UPDATE`, jamais `INSERT OR REPLACE` : la seconde forme SUPPRIME la ligne avant
+ * de la réinsérer et déclencherait les `ON DELETE CASCADE` d'éventuelles filles (piège documenté du
+ * dépôt). Cette table n'en a pas aujourd'hui ; la règle ne se relâche pas pour autant.
+ */
+export function writeFiltreEquipement(db: UserDb, actif: boolean): void {
+  db.run(
+    `INSERT INTO user_equipment_filter (id, actif) VALUES (1, ?)
+       ON CONFLICT (id) DO UPDATE SET actif = excluded.actif`,
+    [actif ? 1 : 0]
+  )
+}
+
+/**
  * Les contraintes dures en une lecture. Vides = aucune contrainte — sauf `ownedEquipmentIds`, dont
  * le `null` est porteur de sens (voir `readOwnedEquipmentIds`).
  *
@@ -380,7 +410,18 @@ export function readConstraints(db: UserDb, foods: ReadonlyMap<FoodId, Food>): H
     allergies: readAllergies(db).map((a) => a.allergenId),
     diet: readDiet(db),
     excludedFoodIds: readExcludedFoodIdsDeplies(db, foods),
-    ownedEquipmentIds: readOwnedEquipmentIds(db),
+    // ⛔ LE MATÉRIEL DÉCLARÉ NE DESCEND AU MOTEUR QUE SI LA PERSONNE A ALLUMÉ LE FILTRE (lot 65b).
+    // Sans cette condition, le premier écran qui écrit `user_equipment` allumerait la couche
+    // `equipement` : mesuré le 2026-08-18, cocher le seul four retirerait 264 recettes sur 330,
+    // sans que personne ne l'ait demandé. La décision de l'auteur est que déclarer INFORME, et que
+    // filtrer se demande.
+    //
+    // ⚠️ `?? []` ET NON `?? null` QUAND LE FILTRE EST ALLUMÉ, et c'est tout ce que l'interrupteur
+    // apporte : `readOwnedEquipmentIds` rend `null` sur une table vide, faute de savoir distinguer
+    // « jamais ouvert » de « tout décoché ». Le filtre allumé tranche — c'est « je ne possède
+    // rien », donc `[]`, donc les recettes à ustensile `requis` tombent. Replier ce cas sur `null`
+    // rendrait le filtre silencieusement inopérant pour qui décoche tout.
+    ownedEquipmentIds: readFiltreEquipement(db) ? (readOwnedEquipmentIds(db) ?? []) : null,
     // ⚠️ AUCUN ARBITRAGE ICI CONTRE `excludedFoodIds`, ALORS QUE LES DEUX LISTES PEUVENT NOMMER LE
     // MÊME ALIMENT. La préséance `exclusion > admission` est rendue par les COUCHES : `exclusions`
     // écarte la recette quoi que `regime` en dise, et P4 (lot D1) garantit que l'admission ne

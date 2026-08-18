@@ -157,6 +157,241 @@ faire **à la main entre A et B**, et rien ne le rappellera.
 
 ---
 
+## La redéfinition du 2026-08-18 — 65b change de contenu, et 65c naît
+
+⭐ **CE QUI SUIT REMPLACE LA LIGNE « 65b » DU TABLEAU DE LA COUPE.** Elle annonçait
+`user_equipment.quantite` + l'écran de réglage, et disait que ça « débloque la plaque de cuisson ».
+**Mesuré le 2026-08-18 : c'est faux, et il manquait une pièce que personne n'avait nommée.**
+
+### Les trois écarts mesurés — sur `catalog.db` réel et sur l'arbre, jamais déduits
+
+⛔ **(1) LA QUANTITÉ NE DÉBLOQUE RIEN, PARCE QU'AUCUNE RECETTE N'OCCUPE LA PLAQUE.**
+`conflitsDEquipement` ne parle que de ce que `recipe_step_equipment` porte. Compté :
+
+| ustensile | occupations | recettes |
+|---|---|---|
+| `four` | 91 | 84 |
+| `micro_ondes` | 1 | 1 |
+| **`plaque_cuisson`** | **0** | **0** |
+
+Le détecteur du build ne sait détecter **que le four** — sa fonction s'appelle
+`etapeOccupeLeFour`. La plaque n'entre que par une déclaration `occupe:` écrite à la main, et aucune
+recette n'en porte. **La quantité de feux, livrée seule, resterait invisible à l'écran.** Elle
+n'appartient donc plus à 65b : voir 65c.
+
+⛔ **(2) L'ÉCRAN N'EXISTE PAS, ET IL N'EN EXISTE MÊME PAS LA MOITIÉ.** `writeOwnedEquipmentIds`
+(`app/src/data/user-store.ts`) n'a **aucun appelant de production** — seul son propre test unitaire
+l'appelle. `user_equipment` est donc vide chez tout le monde depuis P1a. 65b ne pose pas une
+quantité sur un écran existant : **il crée le premier écran qui déclare du matériel.**
+
+⛔ **(3) ET CET ÉCRAN ALLUMERAIT UNE COUCHE D'EXCLUSION QUI DORT.** `readConstraints`
+(`app/src/data/user-store.ts:378`) branche `ownedEquipmentIds` **sans condition**. La couche
+`equipement` est écrite, testée, documentée en `ENGINE.md` §6.5, et inerte pour une seule raison :
+la table est vide. **À la première ligne écrite, les recettes commencent à tomber.** Mesuré sur les
+330 recettes du catalogue :
+
+| ce que la personne possède | recettes écartées | il en reste |
+|---|---|---|
+| rien de coché, filtre allumé | **271** | **59** |
+| le seul `four` | **264** | **66** |
+
+⚠️ **271 sur 330 portent au moins un ustensile `requis`** — dont `plaque_cuisson` sur 260 et `four`
+sur 82. Un écran qui écrirait la table sans rien d'autre viderait donc le catalogue aux quatre
+cinquièmes, en silence, dès la première case cochée.
+
+### Ce que l'auteur a tranché le 2026-08-18
+
+1. **L'écran de déclaration du matériel se fait**, dans les Paramètres, **optionnel**.
+2. **Déclarer son matériel n'enlève aucune recette.** Le filtrage existe, mais il est **allumé par la
+   personne**, jamais par défaut.
+3. **Une recette écartée suit le comportement DÉJÀ EN PLACE des autres couches** : l'entonnoir
+   chiffré (« 330 recettes → équipement −264 = 66 disponibles ») et le bloc « pourquoi pas ce
+   plat ? » sur recherche. ⛔ **Aucun affichage neuf n'est à inventer** — `LIBELLE_COUCHE` de
+   `app/src/ui/screens/recettes.tsx` porte déjà l'entrée `equipement: 'équipement'`, écrite et
+   jamais atteinte.
+4. **Les ustensiles d'une recette sont déjà affichés** — section « Matériel » de la fiche détail,
+   sans aucun niveau, exactement l'indicatif demandé. **Rien à faire de ce côté**, et surtout pas
+   les dériver des gestes : le lien recette × ustensile est une donnée saisie (1 473 couples), pas
+   une devinette à refaire.
+
+✅ **L'INTERRUPTEUR FERME UN TROU QUE `user-store.ts` DEMANDAIT DE FERMER.** Son en-tête prévient
+qu'une table vide ne distingue pas « jamais ouvert l'écran » de « tout décoché », et qu'il faudra un
+marqueur de déclaration le jour où un écran permettra de décocher. **L'interrupteur EST ce
+marqueur** : éteint ⇒ `null` ⇒ couche inerte ; allumé ⇒ la liste, **fût-elle vide**, ⇒ « je ne
+possède rien ». Le tri-état ne se devine plus, il se déclare. Aucune ligne datée à ajouter.
+
+---
+
+### Lot 65b — l'écran de matériel et l'interrupteur ✅ LIVRÉ le 2026-08-18
+
+`user.db` passe en **v17** avec un interrupteur singleton (patron de `user_diet` : `id = 1`), éteint
+par défaut. `readConstraints` ne transmet le matériel déclaré **que** si l'interrupteur est allumé.
+Un écran de Paramètres coche les 30 ustensiles du référentiel et écrit `user_equipment`.
+
+**Fini quand** — les huit clauses, vérifiées contre `catalog.db` réel et une `user.db` réelle :
+
+1. Sur une base neuve, l'interrupteur est **éteint** et `readConstraints` rend
+   `ownedEquipmentIds === null`.
+2. Sur une base où `user_equipment` porte des lignes et l'interrupteur est **éteint**,
+   `readConstraints` rend **toujours `null`**.
+3. Interrupteur **allumé**, `user_equipment` portant exactement `four` : `readConstraints` rend une
+   liste de longueur 1 contenant `four`.
+4. Interrupteur **allumé**, `user_equipment` **vide** : `readConstraints` rend `[]`, jamais `null` —
+   « je ne possède rien » est une réponse, pas une absence de réponse.
+5. Le compte de recettes disponibles est **strictement identique** entre « rien de déclaré » et
+   « **le seul `four`** déclaré, interrupteur éteint » : **330 dans les deux cas**, zéro recette
+   écartée par la couche `equipement`. ⛔ **La déclaration doit être PARTIELLE, et c'est tout
+   l'intérêt de la clause.** Déclarer les 30 ustensiles laisserait 330 recettes **même filtre
+   allumé** — la clause serait alors satisfaite par une implémentation qui ignore l'interrupteur, et
+   ne prouverait rien. Écrite avec le seul `four`, elle forme une tenaille avec la clause 6 : mêmes
+   données, interrupteur seul à changer, **330 contre 66**.
+6. Interrupteur **allumé** avec le seul `four` coché, la couche `equipement` écarte **exactement
+   264 recettes** — et l'ensemble écarté est **exactement** celui que `recipe_equipment` désigne
+   (`niveau = 'requis'`, code ≠ `four`), identifiant par identifiant, pas seulement en nombre.
+7. L'écran des Paramètres **écrit réellement** : cocher un ustensile puis relire la base par un
+   autre chemin rend cet ustensile. ⛔ Un test qui lirait le source du fichier ou compterait des
+   cases à cocher ne compte pas — c'est l'attaque exacte qui a fait tomber la première version des
+   tests du lot E.
+8. Allumer l'interrupteur avec **zéro** ustensile coché ouvre un `Panneau` (`role="dialog"`) qui
+   annonce le nombre de recettes qui disparaîtraient, et **l'interrupteur reste éteint** tant que
+   personne n'a confirmé.
+
+⚠️ **CE QUI RENDRAIT CE CRITÈRE FAUX**, et c'est ce qui en fait un critère : une implémentation qui
+rendrait `null` en toutes circonstances passerait 1, 2 et 5 et **échouerait 3, 4 et 6** ; une qui
+transmettrait toujours la liste passerait 3, 4 et 6 et **échouerait 1, 2 et 5**. Les deux moitiés se
+tiennent en tenaille — aucune constante ne satisfait les deux.
+
+⛔ **LE GARDE-FOU N'EST PAS DU CONFORT.** Sans lui, un interrupteur allumé sur une table vide laisse
+**59 recettes sur 330**. C'est le même défaut que le lot C de `CONCEPTION_REGIME_PERSONNALISE.md`
+évitait : un écran qui peut vider le catalogue prévient **avant**, pas après.
+
+**Ce que 65b ne touche pas** : `catalog/` (aucun YAML, aucune table, aucun rebuild), `engine/cuisine/`,
+la couche `equipement` elle-même (son code est juste et reste tel quel — on change ce qui l'alimente),
+la fiche détail d'une recette, et `equipment.partageable`.
+
+#### Ce que la livraison a réellement posé — 2026-08-18
+
+`user.db` v17, table singleton `user_equipment_filter (id, actif)`. `readFiltreEquipement` /
+`writeFiltreEquipement` dans le store, et **une seule ligne changée dans `readConstraints`** :
+`ownedEquipmentIds: readFiltreEquipement(db) ? (readOwnedEquipmentIds(db) ?? []) : null`. Section
+« Ma cuisine » et panneau `ReglageMateriel` dans les Paramètres. **Aucune ligne du moteur n'a bougé.**
+
+✅ **PREUVE PAR MUTATION, JOUÉE SUR LES 20 TESTS SCELLÉS**, `user-store.ts` remis à l'identique après
+chaque essai :
+
+| mutation de `readConstraints` | rouges | lesquels |
+|---|---|---|
+| témoin, arbre sain | **0** | 20/20 verts |
+| `ownedEquipmentIds: null` — ignore la déclaration | **4** | clauses 3, 4, 6, 6 bis |
+| `readOwnedEquipmentIds(db)` — ignore l'interrupteur | **6** | clauses 2, 4, 5, 5 bis, 6 bis, migration |
+| `? readOwnedEquipmentIds(db) :` — replie `[]` sur `null` | **2** | clauses 4 et 6 bis |
+
+⚠️ **LA TROISIÈME MUTATION N'AVAIT PAS ÉTÉ PRÉVUE**, et elle n'est vue que par DEUX tests, tous deux
+sur le cas « allumé, table vide ». La clause 4 porte donc du poids à elle seule : la retirer rendrait
+le `?? []` indéfendable.
+
+⛔ **UN TEST UNITAIRE ORDINAIRE A CHANGÉ DE SENS, ET CE N'ÉTAIT PAS UN SCELLÉ.**
+`app/src/data/user-store.test.ts` exigeait que `readConstraints` transmette le matériel **sans
+condition** — c'est-à-dire exactement ce que le lot supprime. Il a été **scindé en deux** (aller-retour
+en base d'un côté, contrat de l'interrupteur de l'autre), avec l'en-tête qui dit la date et la
+décision. **Il n'a pas été mis en silence** : sa version neuve assert les trois cas.
+
+⛔ **ET LE SCEAU LAISSE UN TROU, NOMMÉ PAR LA RELECTURE INDÉPENDANTE.** Aucun des 20 tests ne
+vérifie que l'interrupteur **survit à la fermeture de l'application**. Une implémentation qui
+garderait l'état dans une `WeakMap` indexée par l'objet `UserDb` passerait les vingt : aucun test ne
+lit `user_equipment_filter` en SQL brut, et aucun ne rouvre la même base physique. ⚠️ **Le code
+livré n'a PAS ce défaut — mesuré à part** : fichier écrit, fermé, rouvert, la table contient
+`{id: 1, actif: 1}` et le moteur revoit `["four"]`. **C'est l'examen qui est incomplet, pas la
+copie.** Inscrit en dette sur décision de l'auteur ▶ lot **65b-bis**.
+
+---
+
+### Lot 65b-bis — l'interrupteur survit à la fermeture, et le sceau le dit ⏳ BRIEF OUVERT le 2026-08-18
+
+Dette du 65b, inscrite sur décision de l'auteur plutôt que corrigée à chaud. Le lot 65b a livré un
+interrupteur qui **persiste réellement** — mesuré — mais dont **aucun des 20 tests scellés n'exige la
+persistance**. C'est l'examen qui est incomplet, pas la copie.
+
+⛔ **LA FAILLE, NOMMÉE PAR LA RELECTURE, EN TROIS LIGNES :**
+
+```
+const cache = new WeakMap<UserDb, boolean>()      // clé = l'OBJET db, jamais la table SQL
+readFiltreEquipement  = (db) => cache.get(db) ?? false
+writeFiltreEquipement = (db, actif) => cache.set(db, actif)
+```
+
+Elle passe les vingt tests du 65b. Aucun ne lit `user_equipment_filter` en SQL brut, aucun ne rouvre
+la même base **physique**. En production, l'utilisateur retrouverait son filtre éteint à chaque
+lancement **pendant que son matériel, lui, survivrait** — l'asymétrie la plus déroutante possible.
+
+⛔ **CE LOT VIOLE LA RÈGLE « UN TEST SCELLÉ DOIT ÊTRE ROUGE LE JOUR OÙ ON L'ÉCRIT », ET IL FAUT LE
+DIRE PLUTÔT QUE DE LE MAQUILLER.** Le code est déjà juste : ses tests seront **verts d'emblée**. Ce
+n'est pas un test d'acceptation, c'est un **garde de régression**, et le repère habituel ne s'y
+applique pas. ⚠️ **Ce qui le remplace, et qui vaut mieux : la MUTATION.** Un garde qui ne rougit pas
+quand on casse le code ne garde rien. La preuve de sortie n'est donc pas « il était rouge hier »,
+c'est « il devient rouge sous la fausse implémentation nommée ci-dessus ». **Aucun autre argument
+n'est recevable pour ce lot.**
+
+✅ **L'AUTEUR A VALIDÉ CE REMPLACEMENT LE 2026-08-18.** La question lui a été posée telle quelle :
+« acceptes-tu que ce lot sorte sur la preuve par mutation au lieu du rouge du premier jour ? ».
+Réponse : oui. ⚠️ **La dérogation vaut pour CE lot et pour ce motif** — un garde de régression posé
+après coup sur du code déjà juste. Elle ne se cite pas pour un lot d'acceptation ordinaire, où le
+rouge du premier jour reste la seule preuve que le test mesure quelque chose qui n'existait pas.
+
+**Fini quand** — cinq clauses, sur un **vrai fichier** `user.db`, jamais `:memory:` :
+
+1. Filtre allumé, base **fermée puis rouverte** : il est toujours allumé. ⛔ `:memory:` est
+   interdit ici — une base en mémoire meurt avec sa connexion, le test ne mesurerait rien.
+2. Filtre **éteint explicitement** puis rouvert : toujours éteint. La valeur revient, pas le défaut.
+3. `user_equipment_filter` contient réellement `{id: 1, actif: 1}`, **lu en SQL brut**, sans passer
+   par le store — un chemin indépendant de celui qu'on teste.
+4. Après réouverture, `readConstraints` rend toujours la liste : **c'est la chaîne entière** qui
+   survit, pas seulement le drapeau.
+5. Une base **jamais réglée** n'a **aucune ligne** dans `user_equipment_filter`. ⛔ Sans cette
+   clause, écrire `actif = 0` au démarrage passerait les quatre autres — et transformerait « n'a
+   jamais répondu » en « a répondu non », ce que tout le 65b a construit pour distinguer.
+6. **La preuve par mutation est jouée et écrite ici** : sous la fausse implémentation `WeakMap`, les
+   clauses 1 à 4 rougissent. Si l'une d'elles reste verte, elle ne garde rien et sort du lot.
+
+**LA PREUVE PAR MUTATION, JOUÉE LE 2026-08-18 — clause 6 remplie.** La fausse implémentation ci-
+dessus a remplacé les deux fonctions du store, la suite a tourné, le fichier a été restauré :
+
+| tests scellés | arbre sain | sous la `WeakMap` |
+|---|---|---|
+| `65b.test.ts` + `65b-ecran.test.tsx` | 20/20 verts | **20/20 verts** — la faille passe intacte |
+| `65b-bis.test.ts` | 5/5 verts | **1/5 vert, 4 rouges** — clauses 1, 2, 3, 4 |
+
+⛔ **LA PREMIÈRE LIGNE EST LE CONSTAT, PAS UN DÉTAIL.** Vingt tests d'acceptation, écrits avant le
+code et attaqués par un relecteur, ne voient rien passer. Ce n'est pas qu'ils étaient mal écrits :
+ils gardaient une AUTRE question — « le filtre change-t-il ce que le moteur reçoit ? » — et ils y
+répondent toujours. La persistance est une question distincte, et une question non posée n'a pas de
+réponse fausse : elle n'a pas de réponse.
+
+⚠️ **La clause 5 reste verte sous la mutation, et c'est correct.** Elle mesure qu'une base jamais
+réglée ne porte AUCUNE ligne ; une `WeakMap` n'écrit rien en base, donc zéro ligne aussi. Elle ne
+garde pas contre cette faille-là, elle garde contre l'écriture d'un `actif = 0` au démarrage — la
+confusion « n'a rien dit » / « a dit non ». Deux gardes, deux fautes différentes.
+**Ce que 65b-bis ne touche pas** : aucun code de production. **Pas une ligne.** Si ce lot modifie
+`app/src/`, c'est qu'il a cessé d'être ce qu'il est — dis-le et arrête-toi.
+
+---
+
+### Lot 65c — la quantité de feux et les occupations de plaque ⏳ NON OUVERT
+
+**Les deux ensemble, jamais l'une sans l'autre**, et c'est la leçon de l'écart (1) ci-dessus :
+`user_equipment.quantite` sans occupation de plaque au catalogue ne produit **aucun** affichage, et
+des occupations de plaque sans quantité laissent le moteur se taire — `capaciteDepuisPartage` rend
+`null` pour `selon_quantite`, par construction.
+
+**Fini quand** : à écrire au moment d'ouvrir le lot. ⛔ **Ne pas le rédiger d'avance** — le nombre
+d'occupations de plaque n'a jamais été mesuré, et écrire un chiffre pour avoir l'air précis est
+exactement l'erreur que le palier de 98 a déjà coûtée plus haut.
+
+⚠️ **Rien ne presse ce lot, et `ETAT.md` le dit** : « ce silence est un état stable, pas un
+provisoire — il ne coûte aucune fausse alerte, donc rien ne le forcera à se refermer. »
+
+---
+
 ## ✅ 65a — LIVRÉ le 2026-08-13, cinq lots · commit `faf115c` sur `main`
 
 ⚠️ **Ce commit emporte aussi le texte de la lane MÉDIA dans `ETAT.md`**, et c'était prévu : elle

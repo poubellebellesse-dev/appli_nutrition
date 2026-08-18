@@ -51,6 +51,9 @@ import {
   readGroupExceptionFoodIds,
   readMealTimes,
   readOwnedEquipmentIds,
+  readFiltreEquipement,
+  writeFiltreEquipement,
+  writeOwnedEquipmentIds,
   writeAdmittedFoodIds,
   writeAllergies,
   writeDiet,
@@ -114,6 +117,14 @@ interface Vue extends ChoixProfil {
    * de plats restants. `null` = jamais déclaré, la couche `equipement` reste inerte (tri-état).
    */
   readonly equipement: readonly EquipmentId[] | null
+  /**
+   * Le filtre matériel est-il allumé ? (lot 65b)
+   *
+   * ⛔ SÉPARÉ DE `equipement` CI-DESSUS, ET C'EST TOUT LE LOT. La liste dit ce qu'on POSSÈDE, ce
+   * booléen dit si ça doit RETIRER des recettes. Les confondre — c'est-à-dire dériver le second du
+   * premier — ferait disparaître 264 plats sur 330 à la première case cochée.
+   */
+  readonly filtreEquipement: boolean
   readonly affichage: StoredDisplay
   readonly heures: HeuresDeRepas
   /** Décision 35. `null` = jamais déclarée — la couche `piquant` du moteur reste alors inerte. */
@@ -157,6 +168,7 @@ type PanneauId =
   | 'allergies'
   | 'regime'
   | 'aliments-ecartes'
+  | 'materiel'
   | 'exceptions-regime'
   | 'piquant'
   | 'rythme'
@@ -174,6 +186,7 @@ async function lireVue(): Promise<Vue> {
     catalogue: socle.catalogue,
     moteur: socle.moteur,
     equipement: readOwnedEquipmentIds(socle.db),
+    filtreEquipement: readFiltreEquipement(socle.db),
     affichage: readDisplay(socle.db),
     heures: readMealTimes(socle.db),
     sauvegarde: lireEtatSauvegarde(socle.db),
@@ -243,6 +256,43 @@ function resumeAlimentsEcartes(vue: Vue, groupes: readonly GroupeAnimal[]): stri
   const morceaux = [...libelles]
   if (seuls > 0) morceaux.push(`${seuls} aliment${seuls === 1 ? '' : 's'}`)
   return morceaux.join(', ')
+}
+
+/**
+ * « Aucun ustensile déclaré » · « 4 déclarés — n'écarte aucune recette » · « 4 déclarés — écarte 12 ».
+ *
+ * ⛔ LE RÉSUMÉ DIT L'EFFET, PAS L'ÉTAT. « Filtre activé » ne veut rien dire pour qui n'a pas lu le
+ * panneau ; « écarte 12 recettes » se comprend sans l'ouvrir. Principe 6 — informer, pas juger : on
+ * annonce un nombre, on ne qualifie pas la cuisine de la personne.
+ */
+function resumeMateriel(vue: Vue): string {
+  const combien = vue.equipement?.length ?? 0
+  if (combien === 0 && !vue.filtreEquipement) return 'Aucun ustensile déclaré'
+  const declares = combien === 0 ? 'Aucun ustensile déclaré' : `${combien} ustensile${combien > 1 ? 's' : ''} déclaré${combien > 1 ? 's' : ''}`
+  if (!vue.filtreEquipement) return `${declares} — n'écarte aucune recette`
+  const perdues = recettesEcarteesPar(vue.catalogue, new Set(vue.equipement ?? []))
+  return `${declares} — écarte ${perdues} recette${perdues > 1 ? 's' : ''}`
+}
+
+/**
+ * Combien de recettes le filtre écarterait avec CE matériel — le même calcul que la couche
+ * `equipement` du moteur : une recette tombe dès qu'un ustensile de niveau `requis` manque.
+ *
+ * ⚠️ RECOMPTÉ ICI PLUTÔT QUE DEMANDÉ AU MOTEUR, et c'est l'exception assumée à la règle de `Vue`.
+ * Le compteur « il reste N plats » interroge `browseRecipes` parce qu'il annonce le résultat de
+ * TOUTES les couches ; celui-ci doit répondre « et si j'allumais ? » sur des contraintes que
+ * personne n'a encore enregistrées. Passer par le moteur exigerait d'écrire d'abord — donc de
+ * retirer les recettes avant d'avoir posé la question, ce que le garde-fou existe pour empêcher.
+ */
+function recettesEcarteesPar(catalogue: Catalog, possedes: ReadonlySet<EquipmentId>): number {
+  let n = 0
+  for (const recette of catalogue.recipes.values()) {
+    const manque = recette.equipements.some(
+      (e) => e.niveau === 'requis' && !possedes.has(e.equipmentId)
+    )
+    if (manque) n += 1
+  }
+  return n
 }
 
 function resumeRythme(rythme: StoredRythme): string {
@@ -491,6 +541,19 @@ export function Parametres() {
         </div>
       </Section>
 
+      {/* ⛔ PAS DANS « OPTIONS NUTRITION ». Le matériel ne dit rien de ce qu'on mange : le ranger
+          sous la nutrition laisserait entendre qu'un four est une question diététique. */}
+      <Section titre="Ma cuisine">
+        <div className="space-y-2">
+          <LigneOuvrante
+            libelle="Matériel"
+            valeur={resumeMateriel(vue)}
+            onOuvrir={() => setPanneauOuvert('materiel')}
+            dataVisite="materiel"
+          />
+        </div>
+      </Section>
+
       <Section titre="Affichage">
         <div className="space-y-2">
           <LigneOuvrante
@@ -541,6 +604,24 @@ export function Parametres() {
       <div className="mt-8">
         <LigneOuvrante libelle="À propos" valeur="" onOuvrir={() => setPanneauOuvert('apropos')} />
       </div>
+
+      {panneauOuvert === 'materiel' && (
+        <Panneau titre="Matériel" onFermer={fermer}>
+          <ReglageMateriel
+            catalogue={vue.catalogue}
+            possedes={new Set(vue.equipement ?? [])}
+            filtreActif={vue.filtreEquipement}
+            onMateriel={(ids) =>
+              appliquer({ ...vue, equipement: ids.length === 0 ? null : ids }, (db) =>
+                writeOwnedEquipmentIds(db, ids)
+              )
+            }
+            onFiltre={(actif) =>
+              appliquer({ ...vue, filtreEquipement: actif }, (db) => writeFiltreEquipement(db, actif))
+            }
+          />
+        </Panneau>
+      )}
 
       {panneauOuvert === 'allergies' && (
         <Panneau titre="Mes allergies" onFermer={fermer}>
@@ -1065,6 +1146,139 @@ function Sauvegarde({
         <p role="alert" className="mt-4 text-courant leading-relaxed text-texte">
           {phase.motif}
         </p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * « Matériel » — ce que je possède, et si ça doit filtrer les recettes.
+ *
+ * ⛔ DEUX GESTES DISTINCTS, ET C'EST LA DÉCISION DU LOT 65b. Déclarer un ustensile INFORME ;
+ * allumer l'interrupteur FILTRE. Les lier — « cocher = filtrer » — retirerait 264 recettes sur 330
+ * à quelqu'un qui vient de cocher son four, sans qu'il l'ait demandé. Mesuré, pas supposé.
+ *
+ * ⛔ LE GARDE-FOU N'EST PAS DU CONFORT. Allumer sans rien avoir coché veut dire « je ne possède
+ * rien » : 271 recettes tombent, il en reste 59. C'est le même défaut que le lot C du régime
+ * personnalisé évitait — un écran qui peut vider le catalogue prévient AVANT, pas après. Et il ne
+ * prévient QUE dans ce cas : une fenêtre à chaque bascule cesserait d'être lue.
+ *
+ * ⚠️ RIEN N'EST ÉCRIT TANT QUE LA QUESTION EST POSÉE. `onFiltre` n'est appelé qu'à la confirmation :
+ * écrire d'abord aurait déjà retiré les recettes au moment où la fenêtre s'affiche.
+ */
+function ReglageMateriel({
+  catalogue,
+  possedes,
+  filtreActif,
+  onMateriel,
+  onFiltre,
+}: {
+  readonly catalogue: Catalog
+  readonly possedes: ReadonlySet<EquipmentId>
+  readonly filtreActif: boolean
+  readonly onMateriel: (ids: readonly EquipmentId[]) => void
+  readonly onFiltre: (actif: boolean) => void
+}) {
+  const [confirmation, setConfirmation] = useState(false)
+
+  const ustensiles = [...catalogue.equipment.values()].sort((a, b) =>
+    a.terme.localeCompare(b.terme, 'fr')
+  )
+
+  function basculer(id: EquipmentId): void {
+    const suivant = new Set(possedes)
+    if (suivant.has(id)) suivant.delete(id)
+    else suivant.add(id)
+    onMateriel([...suivant].sort())
+  }
+
+  function basculerLeFiltre(): void {
+    // Éteindre ne retire jamais rien : aucune question à poser.
+    if (filtreActif) {
+      onFiltre(false)
+      return
+    }
+    if (possedes.size === 0) {
+      setConfirmation(true)
+      return
+    }
+    onFiltre(true)
+  }
+
+  const perdues = recettesEcarteesPar(catalogue, possedes)
+  const restantes = catalogue.recipes.size - perdues
+
+  return (
+    <div>
+      <p className="mb-3 text-courant leading-relaxed text-texte-doux">
+        Cochez ce que vous avez. Par défaut, ça ne change rien à ce qui vous est proposé — c'est
+        seulement une information.
+      </p>
+
+      <button
+        type="button"
+        role="switch"
+        aria-checked={filtreActif}
+        onClick={basculerLeFiltre}
+        className="flex min-h-tactile w-full items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface px-4 py-3 text-left"
+      >
+        <span className="flex-1">
+          <span className="block text-lecture font-medium text-texte">
+            N'afficher que ce que je peux cuisiner
+          </span>
+          <span className="mt-0.5 block text-courant leading-snug text-attenue">
+            {filtreActif
+              ? `${perdues} recette${perdues > 1 ? 's' : ''} sur ${catalogue.recipes.size} sont écartées`
+              : 'Aucune recette n’est écartée'}
+          </span>
+        </span>
+      </button>
+
+      <ul className="mt-4 flex flex-wrap gap-2">
+        {ustensiles.map((ustensile) => (
+          <li key={ustensile.id}>
+            <button
+              type="button"
+              aria-pressed={possedes.has(ustensile.id)}
+              onClick={() => basculer(ustensile.id)}
+              className="min-h-tactile rounded-[0.7rem] border border-bordure bg-fond px-3 text-courant text-texte-doux"
+            >
+              {ustensile.terme}
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      {confirmation && (
+        <Panneau titre="Aucun ustensile coché" onFermer={() => setConfirmation(false)}>
+          <p className="text-lecture leading-relaxed text-texte">
+            Vous n’avez coché aucun ustensile. Si vous activez ce réglage maintenant,{' '}
+            <span className="font-medium">{perdues} recettes</span> seront écartées et il vous en
+            restera {restantes} sur {catalogue.recipes.size}.
+          </p>
+          <p className="mt-3 text-courant leading-relaxed text-texte-doux">
+            Cochez d’abord ce que vous possédez, ou activez quand même.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirmation(false)}
+              className="min-h-tactile rounded-[0.7rem] border border-bordure-forte bg-surface px-4 text-lecture text-texte"
+            >
+              Cocher d’abord
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmation(false)
+                onFiltre(true)
+              }}
+              className="min-h-tactile rounded-[0.7rem] border border-bordure bg-fond px-4 text-lecture text-texte-doux"
+            >
+              Activer quand même
+            </button>
+          </div>
+        </Panneau>
       )}
     </div>
   )
