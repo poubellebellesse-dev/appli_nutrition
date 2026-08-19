@@ -94,7 +94,7 @@ recopiée au deuxième écran qui en a besoin, et les deux copies divergeront.
 **Fini quand** : la fonction rend les 7 groupes avec les comptes ci-dessus sur le catalogue réel, et
 un test le vérifie contre `catalog.db` — pas contre une fixture qui redirait la même chose.
 
-### Lot B — l'écran de retrait, sur la plomberie existante ⭐
+### Lot B — l'écran de retrait, sur la plomberie existante ⭐ ✅ **LIVRÉ le 2026-08-10 (`5ef356d`)**
 
 Les 7 groupes, leur compte, dépliables jusqu'à l'aliment. Cocher écrit `excludedFoodIds` par le
 magasin existant.
@@ -132,7 +132,7 @@ livre l'essentiel :
    décoche jamais : même polarité que le reste du chantier, l'erreur qui retire un aliment de trop
    se voit et se répare, celle qui en réadmet un en silence ne se voit pas.
 
-#### Lot C-bis — la correction demandée n'était pas un défaut ⛔ **NON APPLIQUÉE, ET C'EST LA CONCLUSION**
+#### Lot C-bis — la correction demandée n'était pas un défaut ⛔ **NON APPLIQUÉE, ET C'EST LA CONCLUSION** · commit `8dcaa8f` du 2026-08-10
 
 Le lot C-bis devait fermer un défaut supposé : `platsParCreneau` compte des recettes que
 `pickForSlot` refuse — les `entree`, `accompagnement`, `fromage` et `dessert` au déjeuner et au

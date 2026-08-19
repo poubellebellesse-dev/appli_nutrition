@@ -1,6 +1,6 @@
 {
   "avertissement": "CACHE DÉRIVÉ, jamais une source. La vérité est dans les fichiers listés sous « sources ». Toute édition à la main sera écrasée à la prochaine réconciliation (/plan). « genere_le » date la dernière lecture des documents ; les états ont pu bouger depuis, par /sceller ou /fin.",
-  "genere_le": "2026-08-17T13:22:00",
+  "genere_le": "2026-08-19T12:00:38",
   "sources": [
     "docs/FICHE_REPRISE.md",
     "docs/ETAT.md",
@@ -119,7 +119,7 @@
     {
       "id": "66c",
       "chantier": "origine animale",
-      "titre": "une case de l'invariant origine/provenance reste ouverte, et elle est mesurée",
+      "titre": "la case qui restait en cachait deux autres",
       "etat": "fait",
       "le": "2026-08-17",
       "commit": "e552ca1"
@@ -135,10 +135,25 @@
     {
       "id": "65b",
       "chantier": "réservation matériel",
-      "titre": "C″ — user_equipment.quantite + l'écran de réglage — la plaque de cuisson",
+      "titre": "l'écran de matériel et l'interrupteur",
       "etat": "fait",
       "le": "2026-08-18",
       "commit": "d0c4bb3"
+    },
+    {
+      "id": "65b-bis",
+      "chantier": "réservation matériel",
+      "titre": "l'interrupteur survit à la fermeture, et le sceau le dit",
+      "etat": "fait",
+      "le": "2026-08-19",
+      "commit": "d0c4bb3",
+      "bloque_par": "65b"
+    },
+    {
+      "id": "65c",
+      "chantier": "réservation matériel",
+      "titre": "la quantité de feux et les occupations de plaque",
+      "etat": "a_faire"
     },
     {
       "id": "rang 0",
@@ -162,7 +177,8 @@
       "id": "rang 3",
       "chantier": "vin et repas",
       "titre": "recipe_pairing + règle miroir + lexique d'incitation au test bloquant",
-      "etat": "a_faire"
+      "etat": "a_faire",
+      "bloque_par": "rang 2"
     },
     {
       "id": "rang 4",
@@ -212,7 +228,8 @@
       "id": "L3",
       "chantier": "mode cuisine",
       "titre": "« n'afficher QUE les ingrédients de l'étape » ferait mentir l'écran par omission. À la place : la ligne de quantités sous l'étape, qui ajoute sans retrancher",
-      "etat": "abandonne"
+      "etat": "abandonne",
+      "bloque_par": "L2"
     },
     {
       "id": "L4",
@@ -272,7 +289,8 @@
       "chantier": "régime personnalisé",
       "titre": "la correction demandée n'était pas un défaut",
       "etat": "fait",
-      "commit": "8dcaa8f"
+      "commit": "8dcaa8f",
+      "le": "2026-08-10"
     },
     {
       "id": "Lot D",
