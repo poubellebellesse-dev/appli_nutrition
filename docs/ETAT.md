@@ -1396,7 +1396,11 @@ Fusionné le 2026-08-17 en `147a45b` : un seul conflit, dans la fiche de reprise
   filtre éteint à chaque lancement pendant que son matériel, lui, survivrait.
   ⚠️ **Le code livré n'a PAS ce défaut, et ça a été MESURÉ, pas supposé** : fichier écrit, fermé,
   rouvert — `user_equipment_filter` contient `{id: 1, actif: 1}` et le moteur revoit `["four"]`.
-  **C'est l'examen qui est incomplet, pas la copie.** ▶ Lot **65b-bis**, ouvert le 2026-08-18.
+  **C'est l'examen qui est incomplet, pas la copie.**
+  ✅ **FERMÉ le 2026-08-19 par le lot 65b-bis** — cinq clauses scellées sur un vrai fichier `user.db`,
+  jamais `:memory:`, dont une lecture SQL brute qui n'emprunte pas le chemin qu'elle teste. La
+  `WeakMap` en fait rougir quatre. ⚠️ **Ce qui est fermé, c'est l'examen, pas un défaut** : le code
+  n'a jamais eu le trou, seule la garantie manquait.
 - ⚠️ **DÉCOCHER UN USTENSILE FILTRE ALLUMÉ NE REPASSE PAR AUCUN GARDE-FOU**, et c'est un choix, pas
   un oubli : la ligne de l'interrupteur affiche en direct « N recettes sur 330 sont écartées », et le
   nombre bouge à chaque case. Le garde-fou existe pour le seul moment où **271 recettes disparaissent
@@ -1413,6 +1417,24 @@ Fusionné le 2026-08-17 en `147a45b` : un seul conflit, dans la fiche de reprise
   marqueur… »). Le marqueur existe désormais, mais **ailleurs** — c'est l'interrupteur, et c'est
   `readConstraints` qui les recolle. Rien n'est faux ; c'est une lecture qui demande deux fichiers
   là où elle en demandait un.
+
+### Ce que le lot 65b-bis laisse derrière lui (2026-08-19)
+
+- ⚠️ **VINGT TESTS D'ACCEPTATION N'ONT RIEN VU PASSER, ET CE N'EST PAS QU'ILS ÉTAIENT MAUVAIS.** Ils
+  gardaient une autre question — « le filtre change-t-il ce que le moteur reçoit ? » — et ils y
+  répondent toujours. La persistance était une question **non posée**, et une question non posée n'a
+  pas de réponse fausse : elle n'a pas de réponse. ▶ **Le repère qui s'en déduit** : un « Fini
+  quand » énumère des effets, jamais leur survie à une fermeture. Aucun autre lot n'a été audité sous
+  cet angle — **rien ne dit que 65b était le seul.**
+- ⚠️ **LA PREUVE PAR MUTATION VIT HORS DÉPÔT**, une fois de plus. Le tableau 20/20 verts sous la
+  fausse implémentation contre 4 rouges sur 5 n'est rejouable que sur la machine qui l'a produit.
+  ▶ **Quatrième occurrence de la même dette** — avec `atelier/mesure-occupation-four.mjs` (65a), les
+  scripts du 66c et ceux du 65b : **à trancher ensemble, pas séparément.**
+- ⚠️ **CE LOT N'A PAS DE COMMIT À LUI.** Son fichier de test est parti dans `d0c4bb3`, le commit du
+  65b, avant que le lot ne soit ouvert : un `git log -S` renvoie au 65b et non à une livraison
+  distincte. Rien n'est faux dans l'historique, mais **la règle « aucun ✅ sans `git log -S` » rend
+  ici un résultat qui se lit de travers si on ne le sait pas.** ▶ Motif complet :
+  [CONCEPTION_RESERVATION_MATERIEL.md](./CONCEPTION_RESERVATION_MATERIEL.md) § lot 65b-bis.
 
 ### Ce que le lot 65a laisse derrière lui (2026-08-13)
 

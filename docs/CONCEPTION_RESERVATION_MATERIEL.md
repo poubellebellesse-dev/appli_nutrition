@@ -306,7 +306,7 @@ copie.** Inscrit en dette sur décision de l'auteur ▶ lot **65b-bis**.
 
 ---
 
-### Lot 65b-bis — l'interrupteur survit à la fermeture, et le sceau le dit ⏳ BRIEF OUVERT le 2026-08-18
+### Lot 65b-bis — l'interrupteur survit à la fermeture, et le sceau le dit ✅ LIVRÉ le 2026-08-19 · commit `d0c4bb3`
 
 Dette du 65b, inscrite sur décision de l'auteur plutôt que corrigée à chaud. Le lot 65b a livré un
 interrupteur qui **persiste réellement** — mesuré — mais dont **aucun des 20 tests scellés n'exige la
@@ -373,6 +373,18 @@ garde pas contre cette faille-là, elle garde contre l'écriture d'un `actif = 0
 confusion « n'a rien dit » / « a dit non ». Deux gardes, deux fautes différentes.
 **Ce que 65b-bis ne touche pas** : aucun code de production. **Pas une ligne.** Si ce lot modifie
 `app/src/`, c'est qu'il a cessé d'être ce qu'il est — dis-le et arrête-toi.
+
+**CLÔTURE DU 2026-08-19.** Les cinq clauses sont écrites et vertes ; la sixième — la mutation —
+était déjà jouée à la rédaction, et son tableau ci-dessus n'a pas été retouché. Relevé sur l'arbre
+fermé : `npm test` → **2 238 passed / 0 failed (121 fichiers)** en 66,9 s · typecheck propre ·
+`npx vite build` ✓ (2,98 s) · `engine:plan-stress` **20/20**. `audit-mapping` **non relancé, et
+c'est justifié** : ce lot ne touche à aucune ligne de catalogue.
+
+⛔ **CE LOT N'A PAS DE COMMIT À LUI, ET IL FAUT LE SAVOIR POUR LE RETROUVER.** Son fichier de test
+est parti **dans `d0c4bb3`**, le commit du 65b, avant même que le lot ne soit ouvert. Un
+`git log -S` sur un identifiant du 65b-bis renvoie donc au 65b et non à une livraison distincte —
+ce n'est pas une anomalie de l'historique, c'est l'ordre dans lequel les choses se sont faites.
+Seule la présente clôture porte un commit propre, et il ne contient que des documents.
 
 ---
 

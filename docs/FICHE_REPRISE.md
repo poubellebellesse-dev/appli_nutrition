@@ -21,11 +21,13 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-16, SUR L'ARBRE COMMITÉ** (`de2ba39`, lot geste 3) : `npm test` →
-**2 156 passed / 0 failed (2 156 tests, 114 fichiers)** en ~42 s · typecheck propre · `vite build` ✓
-(2,82 s) · `engine:plan-stress` → **20/20** · `audit-mapping` → 451 / 9 candidats (inchangé).
-✅ **LES 6 ROUGES SONT ÉTEINTS** — le lot geste 1 a fermé les scellés de `gestes-champ-media.test.ts`.
-Écart 2 152 → 2 156 attribué fichier par fichier : **+4, tous dans `savoir.test.tsx`** (lot geste 3).
+⚠️ **RELEVÉ DU 2026-08-19, SUR L'ARBRE COMMITÉ** (`2398471`, clôture du 65b-bis) : `npm test` →
+**2 238 passed / 0 failed (121 fichiers)** en 66,9 s · typecheck propre · `vite build` ✓ (2,98 s) ·
+`engine:plan-stress` → **20/20**. `audit-mapping` **non relancé** : aucun lot depuis le 08-16 n'a
+touché au catalogue, donc 451 / 9 candidats **tient par absence de cause**, pas par mesure du jour.
+⚠️ **L'écart 2 156 → 2 238 couvre TROIS lots, pas un** (photo 3, 66c, 65b) : le relevé précédent
+datait du 08-16. **Attribué fichier par fichier dans [../CLAUDE.md](../CLAUDE.md), pas ici** — avec
+le piège qui a failli le fausser.
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
 tail -25` rend le code de sortie du **pipe**, donc 0. Lire `Tests N failed`, jamais `$?`.
@@ -97,14 +99,15 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
    ▶ `ETAT.md` §8 · [CONCEPTION_INVARIANT_ORIGINE_ANIMALE.md](./CONCEPTION_INVARIANT_ORIGINE_ANIMALE.md) §8.
 
 8. **✅ LOT 65b LIVRÉ le 2026-08-18 — on déclare son matériel dans les Paramètres, et ça n'enlève
-   aucune recette tant qu'on n'a pas allumé le filtre.** ⚠️ **Pas encore commité.**
+   aucune recette tant qu'on n'a pas allumé le filtre.** Commit `d0c4bb3` sur `main`.
    ⛔ **CE LOT N'EST PAS CELUI QUI ÉTAIT ÉCRIT.** Il annonçait la quantité de feux et « débloque la
    plaque de cuisson » : mesuré, **aucune recette ne déclare occuper la plaque**, la quantité seule
    n'aurait rien affiché. Elle est partie au **65c**. Et deux pièces manquaient au plan — l'écran
    n'existait pas du tout (rien n'écrivait `user_equipment`), et l'écrire aurait réveillé une couche
    d'exclusion endormie : **264 recettes sur 330 retirées à la première case cochée.**
-   ⏳ **Il reste UNE dette, et elle a son lot** : le sceau ne vérifie pas que l'interrupteur survit à
-   la fermeture de l'appli. Le code, lui, le fait — mesuré. ▶ lot **65b-bis**.
+   ✅ **LA DETTE DU SCEAU EST FERMÉE le 2026-08-19 — lot 65b-bis.** Le réglage du filtre traverse
+   désormais la fermeture de l'appli **sous garantie**, et pas seulement en fait. ⚠️ **Aucune ligne de
+   production n'a changé** : ce lot n'a ajouté qu'un examen à un code qui était déjà juste.
    ▶ `ETAT.md` §3, §4 (décision 65) et §8 · [CONCEPTION_RESERVATION_MATERIEL.md](./CONCEPTION_RESERVATION_MATERIEL.md).
 
 ⚠️ **Deux trous sanitaires bloquent la publication au même titre que la relecture** : céphalopodes et

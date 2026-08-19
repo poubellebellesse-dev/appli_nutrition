@@ -42,17 +42,25 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-16, arbre COMPLET, commit `de2ba39`
-(lot geste 3)** :
-`npm test` → **2 156 passed / 0 failed (2 156 tests, 114 fichiers)** en ~42 s · typecheck propre ·
-`vite build` ✓ (2,82 s) · `engine:plan-stress` **20/20** · `node catalog/build.mjs` → **451 aliments,
-330 recettes, 1 548 étapes, 62 gestes, 73 tips, 8 fiches, 30 équipements (1 473 couples)** ·
-`catalog/audit-mapping.mjs` → 451 mappings, 9 candidats à relire (inchangé).
+Dernier relevé, **suite réellement exécutée le 2026-08-19, arbre COMPLET, commit `2398471`
+(clôture du lot 65b-bis)** :
+`npm test` → **2 238 passed / 0 failed (121 fichiers)** en 66,9 s · typecheck propre ·
+`vite build` ✓ (2,98 s) · `engine:plan-stress` **20/20**.
+⚠️ **`node catalog/build.mjs` ET `audit-mapping.mjs` N'ONT PAS ÉTÉ RELANCÉS LE 2026-08-19** —
+aucun lot depuis le 08-16 n'a touché au catalogue. Leurs chiffres, **451 aliments, 330 recettes,
+1 548 étapes, 62 gestes, 73 tips, 8 fiches, 30 équipements (1 473 couples)** et **451 mappings /
+9 candidats à relire**, sont donc ceux du 2026-08-16 : ils tiennent **par absence de cause**, pas
+par mesure du jour. ⛔ Ne pas les citer comme un relevé frais.
 ✅ **L'ARBRE EST VERT EN ENTIER — les 6 rouges de la lane média sont éteints.** Ils vivaient dans
 `tests/scelles/gestes-champ-media.test.ts` (7 tests), écrits AVANT leur code, donc rouges par
 construction, exactement comme la méthode l'exige ; le **lot geste 1 les a fermés le 2026-08-16**.
-Écart de compte attribué fichier par fichier : 2 152 → 2 156 = **+4, tous `savoir.test.tsx`**
-(lot geste 3), et 113 → 114 fichiers pour la même raison. Les 7 scellés étaient **déjà comptés**.
+⚠️ **L'ÉCART 2 156 → 2 238 COUVRE TROIS LOTS, PAS UN** (photo 3, 66c, 65b) : le relevé précédent
+datait du 08-16 et trois lots ont été livrés depuis. Attribué fichier par fichier, jamais déduit —
+**+74 dans 7 fichiers scellés neufs** (13 · 5 · 7 · 7 · 8 · 23 · 11) et **+8 dans 4 fichiers
+ordinaires modifiés** ; total 82, et 114 → 121 fichiers pour les mêmes 7.
+⚠️ **COMPTER LES TESTS AU `grep` SOUS-ESTIME, ET LE PIÈGE A FAILLI PASSER** : sur
+`photo-fiche-detail`, `grep -c "it("` rend **8** là où vitest en exécute **23**. Un écart attribué
+au grep se serait déclaré incomplet à tort. **Seule la sortie de vitest compte.**
 ⚠️ **`node catalog/build.mjs` sort une alerte qui n'est de personne aujourd'hui** : fiche
 `calcium-fractures`, source `critique-zhao-2018` **sans auteurs vérifiés**. C'est du contenu Savoir
 — elle tombe avec la relecture par un tiers, pas avec un lot de code.
@@ -66,7 +74,7 @@ identifiée** ; piste la plus probable : plusieurs fichiers de test lancent `cat
 parallèle et un `beforeAll` qui échoue fait disparaître les tests de son fichier du total au lieu de
 les compter en rouge. **Un compte qui bouge sans rouge est un signal** — si un écart réapparaît,
 c'est là qu'il faut chercher, pas dans le lot du jour. ⚠️ **Ces deux nombres sont ceux du
-2026-08-08 : la base est désormais 2 152.** Le symptôme à guetter est un ÉCART entre deux runs sur
+2026-08-08 : la base est désormais 2 238.** Le symptôme à guetter est un ÉCART entre deux runs sur
 le même arbre, pas une valeur particulière. ⚠️ **Aucun écart n'a été revu depuis** — quatre runs
 complets le 2026-08-11, puis deux le 2026-08-14 à 40 min d'intervalle, ont tous rendu le même
 compte. Ne pas conclure que la cause est morte : elle n'a jamais été identifiée, seulement pas
