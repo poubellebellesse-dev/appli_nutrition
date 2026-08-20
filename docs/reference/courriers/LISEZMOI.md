@@ -7,7 +7,34 @@
 | Fichier | Destinataire | Où | État |
 |---|---|---|---|
 | `pexels-relance.txt` | Pexels | **répondre DANS LE FIL** de leur message du 2026-08-14 | à envoyer |
+| `pexels-media-in-place.html` | Pexels | **pièce jointe** de `pexels-relance.txt` | à envoyer avec |
 | `pixabay-question.txt` | Pixabay | `info@pixabay.com` — adresse en clair dans leurs conditions, vérifiée le 2026-08-14. Formulaire équivalent : `pixabay.com/service/contact/` | à envoyer |
+
+## La pièce jointe — `pexels-media-in-place.html`
+
+**C'est la démonstration, pas une illustration.** La page montre les fichiers **réellement livrés
+par l'application** — pas un rendu approchant : deux polices, 6 photos AVIF, 16 images JPEG et
+**8 clips** avec leurs deux encodages (AV1 et H.264), tous encastrés en `data:` URI. Les vidéos se
+lisent dans la page, avec leurs commandes.
+
+Elle pèse **4,76 Mo**. À joindre en **pièce jointe** : aucun client mail n'affichera un HTML de
+cette taille dans le corps du message. Le destinataire la télécharge et l'ouvre dans son navigateur.
+
+Les **seuls liens sortants** sont les liens d'attribution vers les pages Pexels d'origine — c'est
+voulu, c'est ce qui leur permet de retrouver chaque fichier source. Aucun CSS, aucun script externe.
+
+⚠️ **La page a une roue de secours** : si un navigateur refuse une vidéo servie en `data:`, un
+script la reconvertit en `blob:` et réessaie, sans casser la lecture. Ne pas la retirer en croyant
+à du code mort.
+
+⚠️ **Elle est aussi publiée en artefact** :
+`https://claude.ai/code/artifact/6e0642d3-21f5-45e5-ab5e-23d48a98de97` (version du 2026-08-17).
+Il en existe une **plus ancienne au même titre** (`1b5cc692-…`, du 08-16) : c'est le brouillon, ne
+pas l'envoyer.
+
+⚠️ **Le gabarit et le script qui la fabriquent ne sont PAS dans le dépôt.** Ils vivent dans un
+dossier temporaire, donc effaçable : cette page-ci est la seule copie durable. La refabriquer
+demanderait de les réécrire.
 
 ⚠️ **La relance Pexels part dans le fil existant, pas en nouveau message.** Un fil neuf repartirait
 de zéro et rendrait la même réponse générique — celle qui parle des « fichiers originaux » et qui
