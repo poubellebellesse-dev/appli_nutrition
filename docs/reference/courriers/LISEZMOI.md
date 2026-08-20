@@ -6,8 +6,8 @@
 
 | Fichier | Destinataire | Où | État |
 |---|---|---|---|
-| `pexels-relance.txt` | Pexels | **répondre DANS LE FIL** de leur message du 2026-08-14 | à envoyer |
-| `pexels-media-in-place.html` | Pexels | **pièce jointe** de `pexels-relance.txt` | à envoyer avec |
+| `pexels-relance.txt` | Pexels | répondu DANS LE FIL de leur message du 2026-08-14 | ✅ **envoyée — réponse FAVORABLE le 2026-08-20** |
+| `pexels-media-in-place.html` | Pexels | partie **en pièce jointe** de la relance | ✅ **envoyée — c'est elle qui a emporté la décision** |
 | `pixabay-question.txt` | Pixabay | `info@pixabay.com` — adresse en clair dans leurs conditions, vérifiée le 2026-08-14. Formulaire équivalent : `pixabay.com/service/contact/` | à envoyer |
 
 ## La pièce jointe — `pexels-media-in-place.html`
@@ -35,6 +35,15 @@ pas l'envoyer.
 ⚠️ **Le gabarit et le script qui la fabriquent ne sont PAS dans le dépôt.** Ils vivent dans un
 dossier temporaire, donc effaçable : cette page-ci est la seule copie durable. La refabriquer
 demanderait de les réécrire.
+
+✅ **PEXELS A RÉPONDU FAVORABLEMENT LE 2026-08-20** — verbatim, limites de la réponse et ce
+qu'elle n'autorise pas : [`../LICENCES_MEDIAS.md`](../LICENCES_MEDIAS.md) §3 bis. **Ne pas la
+relire comme un avis sur la clause « Standalone use » : ils parlent de leurs conditions d'API.**
+⛔ **Et ne pas relancer pour faire préciser** — le motif est écrit là-bas.
+
+⛔ **PIXABAY N'A JAMAIS ÉTÉ CONTACTÉ.** Vérifié le 2026-08-20 : le message est rédigé depuis le
+2026-08-14 et n'est pas parti. **Ne pas écrire « sans réponse »** — on ne leur a rien demandé. Les
+10 photos Pixabay ne sont couvertes par rien.
 
 ⚠️ **La relance Pexels part dans le fil existant, pas en nouveau message.** Un fil neuf repartirait
 de zéro et rendrait la même réponse générique — celle qui parle des « fichiers originaux » et qui

@@ -5,6 +5,13 @@ message did not make explicit, because I think your answer turns on it.
 
 We never ship the original Pexels files.
 
+I have attached a page showing the app screens, with the clips and photos
+in place. The videos play in the page - open it in a browser.
+
+Nothing there is a mock-up: every image and every clip is the exact file
+the application ships, embedded in the page the same way it is embedded
+in the app.
+
 Videos: we download the source video, cut a single 3-second segment from it,
 crop it, and re-encode it to AV1 and H.264, plus one still frame as a
 poster. The result is 98 three-second segments derived from 51 source

@@ -78,6 +78,56 @@ paquet d'une application hors ligne distribuée gratuitement. Voir `ETAT.md` §4
 
 ---
 
+## 3 bis. Pexels a examiné l'implémentation et l'a approuvée — 2026-08-20
+
+**C'est le seul texte de ce document qui ne vient pas d'une page publique mais d'un échange direct**,
+et c'est ce qui lui donne sa valeur : il porte sur CE projet, pas sur un cas général.
+
+**Le fil, en quatre temps :**
+
+| Date | Qui | Quoi |
+|---|---|---|
+| 2026-08-13 | nous → Pexels | première demande |
+| 2026-08-14 | Pexels → nous | « we **wouldn't recommend** bundling the original Pexels video files directly into the application package » — une recommandation, pas une règle. Objection nommée : « could be extracted separately ». Concède l'œuvre combinée. |
+| 2026-08-14 | nous → Pexels | relance **dans le même fil**, sur un seul fait : ce qui est embarqué n'est jamais le fichier d'origine |
+| 2026-08-20 | Pexels → nous | **favorable** ⬇ |
+
+**Réponse du 2026-08-20, verbatim :**
+> « Thanks for sending this over and showing us the final experience.
+>
+> We've reviewed the implementation, and based on what you've shared, **the program meets our API
+> requirements**. We appreciate you taking the time to provide the additional details and
+> **demonstrate exactly how the Pexels photos and videos are incorporated into the application**. »
+
+▶ **Ce qui a emporté la décision est la pièce jointe, pas l'argumentaire.** Une page autonome
+montrant les fichiers **réellement livrés** — clips lisibles dans la page, photos et polices
+encastrées : `courriers/pexels-media-in-place.html`. Leur phrase le dit : « showing us the final
+experience », « demonstrate exactly how ». Deux courriers d'explication n'avaient pas suffi.
+
+⚠️ **CE QUE CETTE RÉPONSE NE DIT PAS, ET QUI NE DOIT PAS ÊTRE COMBLÉ EN LA RELISANT.** Ils écrivent
+« our **API requirements** ». La question posée portait sur la clause **« Standalone use »** de la
+licence de contenu (§3 ci-dessus) — **deux documents distincts**. Ils ont approuvé l'application ;
+ils n'ont rendu **aucun avis sur la clause**. Le §3 reste donc vrai mot pour mot : aucun texte
+officiel ne tranche le cas. Ce qui a changé n'est pas la lecture de la clause, c'est qu'on détient
+l'accord écrit de l'ayant droit sur l'implémentation réelle.
+
+⛔ **NE PAS RELANCER POUR FAIRE PRÉCISER.** Redemander la même chose en termes juridiques différents
+fait relire le dossier plus prudemment : tout à perdre, rien à gagner, l'accord portant déjà sur ce
+qui est réellement expédié. Se rouvre sur un fait nouveau — mise en demeure, changement de clause
+daté — pas sur une inquiétude.
+
+⚠️ **L'ACCORD PORTE SUR L'APPLICATION TELLE QU'ELLE LEUR A ÉTÉ MONTRÉE.** Sans bouton télécharger,
+exporter, partager ou enregistrer, et sans galerie. **Un seul de ces ajouts, et il ne couvre plus la
+même application** — et il cessera de couvrir en silence, rien dans le code ne reliant ces écrans à
+cette page. C'est désormais le seul point de rupture connu.
+
+⛔ **PIXABAY N'A JAMAIS ÉTÉ CONTACTÉ.** Relevé le 2026-08-20 : `courriers/pixabay-question.txt` est
+rédigé depuis le 2026-08-14 et **n'est toujours pas parti**. Les **10 photos Pixabay** ne sont
+couvertes par rien — même groupe (Canva), équipes distinctes, la réponse de Pexels n'engage pas
+l'autre. ⚠️ **Ne pas écrire « Pixabay n'a pas répondu » : on ne leur a rien demandé.**
+
+---
+
 ## 4. Pexels — droit à l'image : aucune garantie
 
 Conditions générales, obligation mise à la charge du **contributeur qui téléverse**, pas de
