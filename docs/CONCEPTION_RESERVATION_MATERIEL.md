@@ -388,7 +388,7 @@ Seule la présente clôture porte un commit propre, et il ne contient que des do
 
 ---
 
-### Lot 65c — la quantité de feux et les occupations de plaque ⏳ BRIEF OUVERT le 2026-08-19
+### Lot 65c — la quantité de feux et les occupations de plaque ✅ LIVRÉ le 2026-08-20 · commit `4a9f373`
 
 **Les deux ensemble, jamais l'une sans l'autre**, et c'est la leçon de l'écart (1) ci-dessus :
 `user_equipment.quantite` sans occupation de plaque au catalogue ne produit **aucun** affichage, et
@@ -525,6 +525,27 @@ occupation de plaque n'affiche rien, et des occupations sans quantité laissent 
 16. ⛔ **Quantité NON déclarée ⇒ le moteur se tait sur la plaque, exactement comme aujourd'hui.**
     C'est la propriété que le 65a a payée pour obtenir — 63 % de fausses alertes éteintes. Un lot qui
     la casse en croyant bien faire est un lot raté, et cette clause est là pour le dire.
+
+#### Ce qui a été livré le 2026-08-20, et ce qui ne l'a pas été
+
+✅ **LES SEIZE CLAUSES PASSENT, ET LES CHIFFRES SONT CEUX D'AVANT LE CODE** : 285 occupations de
+plaque sur **166 recettes**, mesurées le 2026-08-19 et retrouvées à l'identique le 2026-08-20.
+`recipe_step_equipment` passe de 92 à **377 occupations sur 228 recettes**.
+
+⛔ **UNE MOITIÉ DU LOT N'EST DÉMONTRÉE PAR AUCUN TEST, ET C'EST ÉCRIT ICI PARCE QUE C'EST LA RÈGLE.**
+Le **champ visible** « combien en avez-vous ? » de l'écran de matériel a été ajouté à la demande
+explicite de l'auteur, APRÈS que les seize clauses aient été scellées. Les seize s'arrêtent à la
+donnée et au moteur : **aucune ne rend l'écran.** Il marche — il écrit ce que les clauses 9 à 11
+relisent — mais rien ne le garde. ▶ C'est exactement ce qui est arrivé au lot D3.
+
+⛔ **DEUX CLAUSES SCELLÉES DU 65b ONT ÉTÉ DESSERRÉES POUR QUE CE LOT PASSE**, par décision de
+l'auteur du 2026-08-20. Elles écrivaient le numéro de schéma **en dur** (`toBe(17)`), ce qui
+n'affirmait pas seulement « la v17 existe » mais « et il n'y en aura jamais de dix-huitième ».
+▶ Motif, ce qui reste scellé et ce qui saute : `ETAT.md` §3.
+
+⚠️ **LE TROU LE PLUS DANGEREUX N'A PAS ÉTÉ TROUVÉ PAR LA SUITE DE TESTS.** Cocher une case du même
+écran aurait effacé la quantité déjà déclarée — sans erreur, sans type fâché, sans rouge. C'est un
+critique lancé sur le brief AVANT le code qui l'a vu, et la clause 11 existe pour ça.
 
 **Ce que le lot ne touche pas** : le four et le micro-ondes — leurs 92 occupations sont inchangées.
 La liste du matériel possédé et l'interrupteur du 65b — seule la quantité s'ajoute. Le solveur de

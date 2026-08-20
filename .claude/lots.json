@@ -153,7 +153,9 @@
       "id": "65c",
       "chantier": "réservation matériel",
       "titre": "la quantité de feux et les occupations de plaque",
-      "etat": "a_faire"
+      "etat": "fait",
+      "le": "2026-08-20",
+      "commit": "4a9f373"
     },
     {
       "id": "rang 0",
@@ -289,8 +291,8 @@
       "chantier": "régime personnalisé",
       "titre": "la correction demandée n'était pas un défaut",
       "etat": "fait",
-      "commit": "8dcaa8f",
-      "le": "2026-08-10"
+      "le": "2026-08-10",
+      "commit": "8dcaa8f"
     },
     {
       "id": "Lot D",

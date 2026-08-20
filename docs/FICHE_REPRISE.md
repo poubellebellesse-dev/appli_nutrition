@@ -21,13 +21,13 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-19, SUR L'ARBRE COMMITÉ** (`2398471`, clôture du 65b-bis) : `npm test` →
-**2 238 passed / 0 failed (121 fichiers)** en 66,9 s · typecheck propre · `vite build` ✓ (2,98 s) ·
-`engine:plan-stress` → **20/20**. `audit-mapping` **non relancé** : aucun lot depuis le 08-16 n'a
-touché au catalogue, donc 451 / 9 candidats **tient par absence de cause**, pas par mesure du jour.
-⚠️ **L'écart 2 156 → 2 238 couvre TROIS lots, pas un** (photo 3, 66c, 65b) : le relevé précédent
-datait du 08-16. **Attribué fichier par fichier dans [../CLAUDE.md](../CLAUDE.md), pas ici** — avec
-le piège qui a failli le fausser.
+⚠️ **RELEVÉ DU 2026-08-20, SUR L'ARBRE COMMITÉ** (`4a9f373`, livraison du 65c) : `npm test` →
+**2 254 passed / 0 failed (122 fichiers)** en 44,3 s · typecheck propre · `vite build` ✓ (2,98 s) ·
+`engine:plan-stress` → **20/20** · `audit-mapping` **relancé** : 451 mappings, 9 candidats à
+relire, **inchangé**.
+⚠️ **L'écart 2 238 → 2 254 est d'UN SEUL lot** (65c) : seize clauses scellées neuves, aucun autre
+fichier n'a gagné ni perdu de test. ⚠️ **Et le catalogue a bougé** : les occupations d'ustensile
+passent de 92 à **377 sur 228 recettes**, la plaque en apportant 285 sur 166.
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
 tail -25` rend le code de sortie du **pipe**, donc 0. Lire `Tests N failed`, jamais `$?`.
@@ -106,8 +106,11 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
    n'existait pas du tout (rien n'écrivait `user_equipment`), et l'écrire aurait réveillé une couche
    d'exclusion endormie : **264 recettes sur 330 retirées à la première case cochée.**
    ✅ **LA DETTE DU SCEAU EST FERMÉE le 2026-08-19 — lot 65b-bis.** Le réglage du filtre traverse
-   désormais la fermeture de l'appli **sous garantie**, et pas seulement en fait. ⚠️ **Aucune ligne de
-   production n'a changé** : ce lot n'a ajouté qu'un examen à un code qui était déjà juste.
+   désormais la fermeture de l'appli **sous garantie**, et pas seulement en fait.
+   ✅ **65c LIVRÉ le 2026-08-20** (`4a9f373`) : la plaque existe enfin comme ustensile occupé, et qui
+   déclare son nombre de feux est prévenu quand deux plats les demandent en même temps. ⛔ **Plus
+   aucun lot ouvert dans ce chantier.** ⚠️ Deux clauses du 65b desserrées, champ visible sans test :
+   `ETAT.md` §3 et §8.
    ▶ `ETAT.md` §3, §4 (décision 65) et §8 · [CONCEPTION_RESERVATION_MATERIEL.md](./CONCEPTION_RESERVATION_MATERIEL.md).
 
 ⚠️ **Deux trous sanitaires bloquent la publication au même titre que la relecture** : céphalopodes et

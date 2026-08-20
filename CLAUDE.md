@@ -42,15 +42,17 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-19, arbre COMPLET, commit `2398471`
-(clôture du lot 65b-bis)** :
-`npm test` → **2 238 passed / 0 failed (121 fichiers)** en 66,9 s · typecheck propre ·
+Dernier relevé, **suite réellement exécutée le 2026-08-20, arbre COMPLET, commit `4a9f373`
+(livraison du lot 65c)** :
+`npm test` → **2 254 passed / 0 failed (122 fichiers)** en 44,3 s · typecheck propre ·
 `vite build` ✓ (2,98 s) · `engine:plan-stress` **20/20**.
-⚠️ **`node catalog/build.mjs` ET `audit-mapping.mjs` N'ONT PAS ÉTÉ RELANCÉS LE 2026-08-19** —
-aucun lot depuis le 08-16 n'a touché au catalogue. Leurs chiffres, **451 aliments, 330 recettes,
-1 548 étapes, 62 gestes, 73 tips, 8 fiches, 30 équipements (1 473 couples)** et **451 mappings /
-9 candidats à relire**, sont donc ceux du 2026-08-16 : ils tiennent **par absence de cause**, pas
-par mesure du jour. ⛔ Ne pas les citer comme un relevé frais.
+✅ **LES CINQ COMMANDES ONT ÉTÉ RELANCÉES LE 2026-08-20**, catalogue compris — le lot 65c a touché
+au détecteur d'occupation. **451 aliments, 330 recettes, 1 548 étapes, 62 gestes, 73 tips, 8 fiches,
+30 équipements (1 473 couples)** et **451 mappings / 9 candidats à relire** : inchangés, et cette
+fois **mesurés**, pas déduits d'une absence de cause.
+⛔ **CE QUI A CHANGÉ AU CATALOGUE, C'EST L'OCCUPATION D'USTENSILE** : `recipe_step_equipment` passe
+de 92 à **377 occupations sur 228 recettes** — la plaque de cuisson en apporte **285 sur 166**, elle
+qui n'en avait aucune. C'est le lot 65c, et c'est attendu.
 ✅ **L'ARBRE EST VERT EN ENTIER — les 6 rouges de la lane média sont éteints.** Ils vivaient dans
 `tests/scelles/gestes-champ-media.test.ts` (7 tests), écrits AVANT leur code, donc rouges par
 construction, exactement comme la méthode l'exige ; le **lot geste 1 les a fermés le 2026-08-16**.

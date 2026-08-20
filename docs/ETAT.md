@@ -236,6 +236,27 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   fausses alertes évitées** : sur les paires de recettes à occupation de four, **2 831 sur 3 321 se
   chevauchent encore (85,2 %)**. Le gain est que l'écran dit **une plage** au lieu d'une liste de
   noms — un fait daté, pas un jugement (principe 6).
+- **65c — un geste ambigu se tranche par CE QUI PRÉCÈDE, et la quantité déclarée est un
+  TRI-ÉTAT. TRANCHÉ et CODÉ le 2026-08-20** (plan : `docs/CONCEPTION_RESERVATION_MATERIEL.md`
+  § « Lot 65c », commit `4a9f373`). Quatre choses sont figées.
+  **(a) La plaque se dérive de QUINZE gestes du lexique qui ne se font que sur un feu du dessus**,
+  jamais d'un mot du texte : « faire revenir les oignons » ne nomme aucun ustensile. `vapeur` n'en
+  est pas — ses deux étapes décrivent un risque et ne commandent rien.
+  ⭐ **(b) `dorer` PREND L'INDICE DE SON ÉTAPE, ET À DÉFAUT CELUI DES QUATRE ÉTAPES QUI PRÉCÈDENT**
+  — règle posée par l'auteur le 2026-08-19. C'est le geste le plus fréquent de la liste (64 étapes)
+  et **23 sont au four** ; une règle qui lit l'étape SEULE en attrape 22 et sort la vingt-troisième
+  d'un feu où elle n'est jamais allée. Un plat mis au four y reste jusqu'à ce qu'on l'en sorte.
+  ⛔ **Onze `dorer` que rien ne tranche restent DEHORS** : la règle ne devine pas.
+  **(c) La quantité déclarée est un TRI-ÉTAT, et l'absence fait TAIRE le moteur.** Colonne nullable,
+  `NULL` = « je n'ai rien dit ». Un défaut à 1 ferait crier au conflit sur presque chaque paire de
+  plats — **166 recettes tiennent la plaque**. C'est la propriété que 65a a payée pour obtenir.
+  ⛔ **(d) UN TEST SCELLÉ NE GÈLE PAS LE FUTUR — deux clauses du 65b desserrées le 2026-08-20**,
+  par décision de l'auteur. Elles écrivaient `toBe(17)` en dur : non pas « la v17 existe » mais
+  « et il n'y en aura jamais de dix-huitième », que la prose du 65b ne mentionne nulle part. **Ce qui
+  reste scellé est intact** — la 17 est toujours exigée dans la liste, la liste reste sans trou ni
+  doublon, une base v16 remplie la traverse sans rien perdre et son interrupteur naît éteint. ▶ Le
+  repère : **un sceau affirme un invariant, pas un instantané.** `Math.max(versions)` doit valoir
+  la constante de version, pas un nombre écrit à la main.
 - ✅ **UNE ORIGINE ANIMALE NE S'ÉCRIT PLUS SANS SA PROVENANCE — LA GARANTIE VIENT DE LA FORME**
   (décision 66, livrée le 2026-08-14). `Food.origineAnimale` est une paire
   `{ origine, provenance }` ou `null` ; `Food.provenanceAnimale` **n'existe plus**. Avant, deux
@@ -1417,6 +1438,36 @@ Fusionné le 2026-08-17 en `147a45b` : un seul conflit, dans la fiche de reprise
   marqueur… »). Le marqueur existe désormais, mais **ailleurs** — c'est l'interrupteur, et c'est
   `readConstraints` qui les recolle. Rien n'est faux ; c'est une lecture qui demande deux fichiers
   là où elle en demandait un.
+
+### Ce que le lot 65c laisse derrière lui (2026-08-20)
+
+- ⛔ **LE CHAMP VISIBLE N'EST COUVERT PAR AUCUNE CLAUSE SCELLÉE.** « Combien en avez-vous ? » a été
+  ajouté à la demande explicite de l'auteur **après** le sceau : les seize clauses s'arrêtent à la
+  donnée et au moteur, aucune ne rend l'écran. Il marche — il écrit ce que les clauses 9 à 11
+  relisent — mais **rien ne le garde**, et un lot d'écran pourrait le casser sans un seul rouge.
+  ▶ Même défaut que le lot D3, et il est **écrit plutôt que découvert**.
+- ⚠️ **DIX-HUIT `dorer` NE TIENNENT QUE PAR TROIS CAS NOMMÉS.** Les clauses 2 et 3 verrouillent les
+  267 étapes à geste sûr dans les deux sens, mais les 13 + 5 `dorer` retenus ne sont vérifiés que
+  sur `pommes_terre_four_romarin` #5, `tartine_sardine_citron_echalote` #4 et `riz_pilaf_amandes`
+  #1. **Une erreur sur un dix-neuvième passerait.** Les sceller tous les dix-huit est possible ;
+  personne ne l'a demandé, et la question a été posée à l'auteur qui ne l'a pas tranchée.
+- ⚠️ **94 RECETTES EXIGENT LA PLAQUE SANS QU'AUCUNE ÉTAPE NE L'OCCUPE** (260 − 166), et ce n'est pas
+  un défaut du détecteur : « cuire les pâtes », « porter à ébullition » ne portent aucun geste du
+  lexique. Le lot ne prétend pas fermer cet écart, et le sceau ne l'exige pas.
+- ⚠️ **UNE ÉTAPE N'APPARTIENT À AUCUN USTENSILE, ET LE SCEAU L'ÉCRIT** : la portée de four de
+  `pommes_terre_four_romarin` s'arrête à l'étape 4, l'étape 5 n'est tenue par rien. La règle de
+  report empêche qu'elle tombe sur la plaque ; elle ne répare pas la portée du four. **Étendre les
+  portées est un autre lot.**
+- ⚠️ **LES SCRIPTS DE MESURE VIVENT HORS DÉPÔT**, une fois de plus. Les 285 / 166 ont été mesurés
+  par un script de brouillon qui n'est dans aucun clone : le chiffre est **retrouvable** (le
+  détecteur le reproduit, et la clause 1 le vérifie), la mesure préalable ne l'est pas.
+  ▶ **Cinquième occurrence de la même dette** — avec `atelier/mesure-occupation-four.mjs` (65a),
+  les scripts du 66c, ceux du 65b et ceux du 65b-bis : **à trancher ensemble, pas séparément.**
+- ⛔ **LE DÉFAUT LE PLUS COÛTEUX DU LOT N'A PAS ÉTÉ TROUVÉ PAR UN TEST.** Resauver la liste du
+  matériel effaçait la quantité déclarée — aucune erreur, aucun type fâché, aucun rouge, et l'écran
+  appelle ce chemin à chaque cochage. C'est un **critique lancé sur le brief avant la première ligne
+  de code** qui l'a vu, avec deux implémentations fausses qui passaient les dix clauses d'alors.
+  ▶ **Le repère qui s'en déduit** : attaquer un sceau coûte une passe et rembourse un lot entier.
 
 ### Ce que le lot 65b-bis laisse derrière lui (2026-08-19)
 
