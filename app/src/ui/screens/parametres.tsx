@@ -50,9 +50,11 @@ import {
   readExcludedGroupIds,
   readGroupExceptionFoodIds,
   readMealTimes,
+  readEquipmentQuantites,
   readOwnedEquipmentIds,
   readFiltreEquipement,
   writeFiltreEquipement,
+  writeEquipmentQuantite,
   writeOwnedEquipmentIds,
   writeAdmittedFoodIds,
   writeAllergies,
@@ -125,6 +127,14 @@ interface Vue extends ChoixProfil {
    * premier — ferait disparaître 264 plats sur 330 à la première case cochée.
    */
   readonly filtreEquipement: boolean
+  /**
+   * Combien d'exemplaires de chaque ustensile — aujourd'hui, les feux de la plaque (lot 65c).
+   *
+   * ⚠️ ABSENT DE LA TABLE ≠ ZÉRO. Un ustensile qui n'y figure pas n'a pas été chiffré, et le moteur
+   * se tait alors sur lui. Écrire un 1 par défaut ferait crier au conflit sur presque chaque paire
+   * de plats — 166 recettes tiennent la plaque.
+   */
+  readonly quantitesEquipement: ReadonlyMap<EquipmentId, number>
   readonly affichage: StoredDisplay
   readonly heures: HeuresDeRepas
   /** Décision 35. `null` = jamais déclarée — la couche `piquant` du moteur reste alors inerte. */
@@ -187,6 +197,7 @@ async function lireVue(): Promise<Vue> {
     moteur: socle.moteur,
     equipement: readOwnedEquipmentIds(socle.db),
     filtreEquipement: readFiltreEquipement(socle.db),
+    quantitesEquipement: readEquipmentQuantites(socle.db),
     affichage: readDisplay(socle.db),
     heures: readMealTimes(socle.db),
     sauvegarde: lireEtatSauvegarde(socle.db),
@@ -611,11 +622,19 @@ export function Parametres() {
             catalogue={vue.catalogue}
             possedes={new Set(vue.equipement ?? [])}
             filtreActif={vue.filtreEquipement}
+            quantites={vue.quantitesEquipement}
             onMateriel={(ids) =>
               appliquer({ ...vue, equipement: ids.length === 0 ? null : ids }, (db) =>
                 writeOwnedEquipmentIds(db, ids)
               )
             }
+            onQuantite={(id, combien) => {
+              const suivantes = new Map(vue.quantitesEquipement)
+              suivantes.set(id, combien)
+              appliquer({ ...vue, quantitesEquipement: suivantes }, (db) =>
+                writeEquipmentQuantite(db, id, combien)
+              )
+            }}
             onFiltre={(actif) =>
               appliquer({ ...vue, filtreEquipement: actif }, (db) => writeFiltreEquipement(db, actif))
             }
@@ -1166,23 +1185,45 @@ function Sauvegarde({
  * ⚠️ RIEN N'EST ÉCRIT TANT QUE LA QUESTION EST POSÉE. `onFiltre` n'est appelé qu'à la confirmation :
  * écrire d'abord aurait déjà retiré les recettes au moment où la fenêtre s'affiche.
  */
+/**
+ * Le plafond du champ de quantité. ⚠️ CE N'EST PAS UNE RÈGLE MÉTIER, c'est un garde-fou de saisie :
+ * il empêche un doigt qui glisse d'écrire 400 feux. Aucune cuisine domestique n'en a douze.
+ */
+const MAX_QUANTITE_USTENSILE = 12
+
 function ReglageMateriel({
   catalogue,
   possedes,
   filtreActif,
+  quantites,
   onMateriel,
   onFiltre,
+  onQuantite,
 }: {
   readonly catalogue: Catalog
   readonly possedes: ReadonlySet<EquipmentId>
   readonly filtreActif: boolean
+  readonly quantites: ReadonlyMap<EquipmentId, number>
   readonly onMateriel: (ids: readonly EquipmentId[]) => void
   readonly onFiltre: (actif: boolean) => void
+  readonly onQuantite: (id: EquipmentId, combien: number) => void
 }) {
   const [confirmation, setConfirmation] = useState(false)
 
   const ustensiles = [...catalogue.equipment.values()].sort((a, b) =>
     a.terme.localeCompare(b.terme, 'fr')
+  )
+
+  /**
+   * Ceux qu'on peut chiffrer : `selon_quantite`, et cochés. Lot 65c.
+   *
+   * ⚠️ LA LISTE VIENT DU CATALOGUE, PAS D'UN NOM EN DUR. Aujourd'hui seule la plaque est dans ce
+   * cas ; le jour où un second ustensile le devient, ce champ apparaît sans qu'on touche à l'écran.
+   * ⚠️ Et il ne s'affiche que si la case est cochée : demander « combien de plaques ? » à qui n'en a
+   * pas déclaré est une question sans objet.
+   */
+  const aChiffrer = ustensiles.filter(
+    (u) => u.partageable === 'selon_quantite' && possedes.has(u.id)
   )
 
   function basculer(id: EquipmentId): void {
@@ -1248,6 +1289,50 @@ function ReglageMateriel({
           </li>
         ))}
       </ul>
+
+      {aChiffrer.length > 0 && (
+        <div className="mt-5">
+          <p className="mb-2 text-courant leading-relaxed text-texte-doux">
+            Ceux-là servent à plusieurs plats à la fois. Si vous dites combien vous en avez, l’écran
+            de cuisine vous prévient quand deux plats les demandent en même temps. Sans réponse, il
+            ne dit rien.
+          </p>
+          <ul className="flex flex-col gap-2">
+            {aChiffrer.map((ustensile) => (
+              <li
+                key={ustensile.id}
+                className="flex min-h-tactile items-center gap-3 rounded-[--radius-carte] border border-bordure bg-surface px-4 py-2"
+              >
+                <label
+                  htmlFor={`quantite-${ustensile.id}`}
+                  className="flex-1 text-lecture leading-snug text-texte"
+                >
+                  {ustensile.terme} — combien en avez-vous ?
+                </label>
+                <input
+                  id={`quantite-${ustensile.id}`}
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={MAX_QUANTITE_USTENSILE}
+                  value={quantites.get(ustensile.id) ?? ''}
+                  placeholder="—"
+                  onChange={(evenement) => {
+                    // ⚠️ ON N'ÉCRIT QUE CE QUI EST VALIDE. Un champ vidé ne remet pas la quantité à
+                    // zéro — « je ne sais pas » ne se dit pas en effaçant trois caractères, et un 0
+                    // écrit par accident ferait taire le moteur sans que personne l'ait demandé.
+                    const saisi = Number.parseInt(evenement.target.value, 10)
+                    if (!Number.isInteger(saisi)) return
+                    if (saisi < 1 || saisi > MAX_QUANTITE_USTENSILE) return
+                    onQuantite(ustensile.id, saisi)
+                  }}
+                  className="min-h-tactile w-20 rounded-[0.7rem] border border-bordure bg-fond px-3 text-center text-lecture text-texte"
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {confirmation && (
         <Panneau titre="Aucun ustensile coché" onFermer={() => setConfirmation(false)}>

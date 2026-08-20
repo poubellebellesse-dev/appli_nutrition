@@ -354,14 +354,79 @@ export function readOwnedEquipmentIds(db: UserDb): readonly EquipmentId[] | null
   return ids.length === 0 ? null : ids
 }
 
-/** Remplace la liste entière, même raison que `writeAllergies`. */
+/**
+ * Remplace la liste entière — mais SANS effacer les quantités des ustensiles qui restent.
+ *
+ * ⛔ CETTE FONCTION FAISAIT `DELETE` PUIS `INSERT`, ET L'ÉCRAN DE MATÉRIEL L'APPELLE À CHAQUE
+ * COCHAGE. Depuis que `user_equipment` porte une `quantite` (v18), cette forme effaçait le nombre de
+ * feux déclaré au clic suivant sur n'importe quelle autre case : aucune erreur, aucun type fâché,
+ * aucun test rouge. C'est le piège `INSERT OR REPLACE` du dépôt, sous un autre nom — supprimer une
+ * ligne pour la réécrire emporte tout ce qu'elle portait d'autre.
+ *
+ * ⚠️ `DO NOTHING`, PAS `DO UPDATE` : une case cochée ne dit rien de la quantité, donc elle ne doit
+ * rien en écrire. Seule `writeEquipmentQuantite` touche cette colonne.
+ */
 export function writeOwnedEquipmentIds(db: UserDb, equipmentIds: readonly EquipmentId[]): void {
   withTransaction(db, () => {
-    db.run('DELETE FROM user_equipment')
+    const gardes = new Set<string>(equipmentIds)
+    const existants = db.all<{ readonly equipment_id: string }>(
+      'SELECT equipment_id FROM user_equipment'
+    )
+    for (const { equipment_id } of existants) {
+      if (gardes.has(equipment_id)) continue
+      db.run('DELETE FROM user_equipment WHERE equipment_id = ?', [equipment_id])
+    }
     for (const equipmentId of equipmentIds) {
-      db.run('INSERT INTO user_equipment (equipment_id) VALUES (?)', [equipmentId])
+      db.run(
+        'INSERT INTO user_equipment (equipment_id) VALUES (?) ON CONFLICT (equipment_id) DO NOTHING',
+        [equipmentId]
+      )
     }
   })
+}
+
+/**
+ * Combien d'exemplaires de cet ustensile la personne DIT posséder. `null` = elle n'a rien dit.
+ *
+ * ⛔ `null` NE VAUT PAS 1, et c'est la propriété centrale du lot 65c. La plaque est
+ * `selon_quantite` : le catalogue sait qu'elle a plusieurs feux, il ne sait pas combien. Tant que
+ * personne ne l'a écrit, `capaciteDepuisPartage` rend `null` et le moteur se tait — 166 recettes
+ * tiennent la plaque, un défaut à 1 ferait crier au conflit sur presque chaque paire de plats.
+ */
+export function readEquipmentQuantite(db: UserDb, equipmentId: EquipmentId): number | null {
+  const row = db.all<{ readonly quantite: number | null }>(
+    'SELECT quantite FROM user_equipment WHERE equipment_id = ?',
+    [equipmentId]
+  )[0]
+  return row?.quantite ?? null
+}
+
+/** Les quantités déclarées, en une lecture. Les ustensiles muets n'y figurent pas. */
+export function readEquipmentQuantites(db: UserDb): ReadonlyMap<EquipmentId, number> {
+  const rows = db.all<{ readonly equipment_id: string; readonly quantite: number | null }>(
+    'SELECT equipment_id, quantite FROM user_equipment WHERE quantite IS NOT NULL'
+  )
+  return new Map(rows.map((r) => [r.equipment_id as EquipmentId, r.quantite as number]))
+}
+
+/**
+ * Déclare combien on en possède. Crée la ligne si l'ustensile n'était pas encore coché — déclarer
+ * qu'on a quatre feux, c'est déclarer qu'on a une plaque.
+ *
+ * ⚠️ `ON CONFLICT DO UPDATE`, jamais `INSERT OR REPLACE` : la seconde forme supprime la ligne avant
+ * de la réinsérer. Même règle qu'à `writeFiltreEquipement`, et c'est exactement l'erreur que
+ * `writeOwnedEquipmentIds` vient de cesser de faire juste au-dessus.
+ */
+export function writeEquipmentQuantite(
+  db: UserDb,
+  equipmentId: EquipmentId,
+  quantite: number
+): void {
+  db.run(
+    `INSERT INTO user_equipment (equipment_id, quantite) VALUES (?, ?)
+       ON CONFLICT (equipment_id) DO UPDATE SET quantite = excluded.quantite`,
+    [equipmentId, quantite]
+  )
 }
 
 /**

@@ -276,12 +276,24 @@ describe('65b — clauses 5 et 6 : la tenaille, mêmes données, l’interrupteu
 })
 
 describe('65b — la v17, et ce qu’elle ne doit pas abîmer', () => {
+  // ⛔ CES DEUX CLAUSES ONT ÉTÉ DESSERRÉES LE 2026-08-20, PAR DÉCISION DE L'AUTEUR, ET IL FAUT
+  // SAVOIR CE QU'ON A CHANGÉ. Elles écrivaient `toBe(17)` en dur, ce qui n'affirmait pas seulement
+  // « la v17 existe » mais aussi « et il n'y en aura jamais de dix-huitième » — un gel du futur que
+  // le lot 65b ne voulait pas poser et que sa prose ne mentionne nulle part. Le lot 65c ajoute la
+  // colonne `quantite` en v18 et s'y est cogné.
+  //
+  // ⛔ CE QUI RESTE SCELLÉ EST INTACT, et c'est la raison pour laquelle le desserrage est légitime :
+  // la 17 est TOUJOURS exigée dans la liste, la liste reste sans trou ni doublon, et une base v16
+  // remplie la traverse sans rien perdre avec son interrupteur éteint. Seule saute l'affirmation
+  // « 17 est le dernier numéro », qui datait du jour où elle a été écrite.
   it('porte le numéro 17, sans trou ni doublon dans la liste des migrations', () => {
-    expect(USER_SCHEMA_VERSION).toBe(17)
     const versions = MIGRATIONS.map((m) => m.version)
+    expect(versions).toContain(17)
     expect(versions).toEqual([...versions].sort((a, b) => a - b))
     expect(new Set(versions).size).toBe(versions.length)
-    expect(Math.max(...versions)).toBe(17)
+    // La dernière migration de la liste EST la version courante — l'invariant vrai, celui qui
+    // attrape une entrée ajoutée sans que la constante bouge.
+    expect(Math.max(...versions)).toBe(USER_SCHEMA_VERSION)
   })
 
   it('migre une base v16 REMPLIE sans rien perdre, et son interrupteur naît ÉTEINT', async () => {
@@ -307,7 +319,10 @@ describe('65b — la v17, et ce qu’elle ne doit pas abîmer', () => {
     brute.run(`INSERT INTO user_equipment (equipment_id) VALUES ('four')`)
 
     expect(() => migrate(brute)).not.toThrow()
-    expect(readSchemaVersion(brute)).toBe(17)
+    // ⚠️ `USER_SCHEMA_VERSION`, pas 17 en dur — voir l'encadré de la clause précédente. Ce que la
+    // clause exige n'est pas un numéro : c'est qu'une base v16 REMPLIE arrive au bout des migrations
+    // sans rien perdre, quelle que soit la distance.
+    expect(readSchemaVersion(brute)).toBe(USER_SCHEMA_VERSION)
 
     const store = await storeComplet()
     expect(store.readOwnedEquipmentIds(brute)).toEqual([FOUR])

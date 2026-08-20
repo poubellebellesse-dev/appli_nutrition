@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 17
+export const USER_SCHEMA_VERSION = 18
 
 export interface Migration {
   readonly version: number
@@ -843,6 +843,27 @@ const V17_STATEMENTS: readonly string[] = [
    )`,
 ]
 
+/**
+ * v18 — COMBIEN DE FEUX. Lot 65c, `docs/CONCEPTION_RESERVATION_MATERIEL.md`.
+ *
+ * ⛔ LA COLONNE QUE LA v17 A REFUSÉE, ET ELLE A EU RAISON DE LA REFUSER. Le 2026-08-18, aucune
+ * recette du catalogue ne déclarait occuper la plaque : une quantité de feux n'aurait rien affiché,
+ * et un réglage qui ne change rien s'oublie. Le lot 65c pose d'abord les 285 occupations, puis cette
+ * colonne. L'ordre n'est pas un détail — c'est ce qui fait que le nombre saisi se voit.
+ *
+ * ⚠️ NULLABLE, ET C'EST TOUT LE TRI-ÉTAT. `NULL` = « je n'ai rien dit », et `capaciteDepuisPartage`
+ * rend alors `null`, donc le moteur SE TAIT. Un défaut à 1 rouvrirait les 63 % de fausses alertes
+ * que le lot 65a a payé pour éteindre : 166 recettes tiennent la plaque, presque chaque paire de
+ * plats se disputerait un feu unique que personne n'a déclaré.
+ *
+ * ⚠️ `ALTER TABLE ADD COLUMN` PLUTÔT QU'UNE TABLE FILLE. La quantité est un attribut de la ligne
+ * qui existe déjà — une table de plus obligerait à joindre pour lire un entier.
+ */
+const V18_STATEMENTS: readonly string[] = [
+  `ALTER TABLE user_equipment
+     ADD COLUMN quantite INTEGER CHECK (quantite IS NULL OR quantite > 0)`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -861,6 +882,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 15, statements: V15_STATEMENTS },
   { version: 16, statements: V16_STATEMENTS },
   { version: 17, statements: V17_STATEMENTS },
+  { version: 18, statements: V18_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

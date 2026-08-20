@@ -45,11 +45,15 @@ import { segmentsDeLaRecette } from './segments.js'
 /**
  * Combien de plats un ustensile porte en même temps, d'après ce que le CATALOGUE dit de lui.
  *
- * ⚠️ `selon_quantite` REND `null`, ET C'EST TOUT L'INTÉRÊT DE LA TROISIÈME VALEUR. La plaque est
- * nommée sans être répondue : le catalogue sait qu'une plaque a plusieurs feux, il ne sait pas
- * combien la personne en possède. `null` fait taire le moteur, et c'est ce qui rend 65a strictement
- * additif — la plaque entre au catalogue sans déclencher une seule alerte. 65b posera la quantité
- * côté utilisateur et cette fonction cédera la place à une lecture de `user_equipment`.
+ * ⚠️ `selon_quantite` SANS QUANTITÉ REND `null`, ET C'EST TOUT L'INTÉRÊT DE LA TROISIÈME VALEUR. La
+ * plaque est nommée sans être répondue : le catalogue sait qu'une plaque a plusieurs feux, il ne
+ * sait pas combien la personne en possède. `null` fait taire le moteur, et c'est ce qui rend 65a
+ * strictement additif — la plaque entre au catalogue sans déclencher une seule alerte.
+ *
+ * ⭐ DEPUIS LE LOT 65c, LA PERSONNE PEUT RÉPONDRE. `quantiteDeclaree` vient de `user_equipment`
+ * (`readEquipmentQuantite`) et l'appelant la passe ; le moteur, lui, ne lit aucune base. ⛔ L'ARGUMENT
+ * RESTE OPTIONNEL, et pas par commodité : un appelant qui ne le passe pas retrouve exactement le
+ * comportement d'avant, donc ajouter la quantité ne peut allumer aucune alerte ailleurs.
  *
  * ⛔ NE PAS REPLIER `null` SUR 1 « en attendant ». 260 recettes réclament la plaque : l'avertissement
  * se déclencherait sur presque chaque paire de plats jusqu'à ce que plus personne ne le lise. C'est
@@ -58,10 +62,17 @@ import { segmentsDeLaRecette } from './segments.js'
  *
  * @param partageable ce que le référentiel dit de l'ustensile, ou `null` s'il est inconnu
  */
-export function capaciteDepuisPartage(partageable: EquipmentSharing | null): number | null {
+export function capaciteDepuisPartage(
+  partageable: EquipmentSharing | null,
+  quantiteDeclaree?: number | null,
+): number | null {
   if (partageable === 'jamais') return 1
   if (partageable === 'toujours') return Number.POSITIVE_INFINITY
-  // `selon_quantite`, et l'ustensile inconnu : dans les deux cas on ne sait pas, donc on se tait.
+  // ⭐ LOT 65c : la personne a répondu à la question que le catalogue ne pouvait pas trancher.
+  if (partageable === 'selon_quantite' && typeof quantiteDeclaree === 'number' && quantiteDeclaree > 0) {
+    return quantiteDeclaree
+  }
+  // `selon_quantite` sans réponse, et l'ustensile inconnu : on ne sait pas, donc on se tait.
   return null
 }
 

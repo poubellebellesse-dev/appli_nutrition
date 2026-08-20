@@ -152,6 +152,101 @@ function etapeOccupeLeFour(etape) {
   return null
 }
 
+// ---------------------------------------------------------------------------------------------
+// LA PLAQUE — lot 65c, `docs/CONCEPTION_RESERVATION_MATERIEL.md`
+//
+// Le four se trahit par un geste ou une tournure ; la plaque, elle, n'a presque jamais de mot à
+// elle. « Faire revenir les oignons » ne nomme aucun ustensile — c'est le GESTE qui dit le feu.
+//
+// ⛔ QUINZE GESTES SÛRS, ET UN SEUL AMBIGU. Mesuré le 2026-08-19 sur les 1 548 étapes : les quinze
+// ne rendent aucun faux positif. `dorer`, lui, est le geste le plus fréquent de la liste — 64
+// étapes — et VINGT-TROIS SONT AU FOUR.
+//
+// ⛔ `vapeur` N'EST PAS DANS LA LISTE. Ses deux étapes décrivent un risque et ne commandent rien —
+// « entassés, ils cuiraient à la vapeur ». C'est le piège de `poireaux_gratines_bechamel`, déjà
+// payé au lot B du 65a, et la même phrase le retendrait ici.
+
+/** Les quinze gestes qui ne se font QUE sur un feu du dessus. */
+const GESTES_PLAQUE = new Set([
+  'revenir',
+  'suer',
+  'saisir',
+  'sauter',
+  'poeler',
+  'mijoter',
+  'fremir',
+  'reduire',
+  'deglacer',
+  'mouiller',
+  'blanchir',
+  'pocher',
+  'carameliser',
+  'braiser',
+  'bain_marie',
+])
+
+/** Le seizième, et le seul qui se fasse des deux côtés. */
+const GESTE_AMBIGU = 'dorer'
+
+/** Nommer le récipient, c'est nommer le feu : aucun de ces objets ne va au four tout seul. */
+const CONTENANT_SUR_LE_FEU =
+  /\b(po[eê]le|casserole|sauteuse|cocotte|wok|faitout|marmite|po[eê]lon)\b/i
+
+/**
+ * Le signe qu'on est au four. ⚠️ PLUS LARGE QUE `TOURNURES`, ET C'EST VOULU : ici le signe ne sert
+ * qu'à ÉCARTER une occupation de plaque, jamais à en créer une. Se tromper coûte une occupation en
+ * moins, pas une fausse alerte — et le sens de l'erreur n'est pas symétrique.
+ */
+const SIGNE_DE_FOUR = /\bau four\b|\benfourn|\bgratin|\bgril du four\b|\bpapillote/i
+
+/**
+ * Combien d'étapes en arrière on cherche l'indice qui manque à l'étape courante.
+ *
+ * ⭐ LA RÈGLE DE REPORT, POSÉE PAR L'AUTEUR LE 2026-08-19 : un plat mis au four y reste jusqu'à ce
+ * qu'on l'en sorte, et l'étape qui dit « poursuivre jusqu'à ce qu'ils soient dorés » n'a aucune
+ * raison de le redire. `pommes_terre_four_romarin` #5 est le cas exact — son texte ne contient pas
+ * le mot « four », c'est l'étape #4 qui l'y a mis. Une règle qui lit l'étape SEULE lui pose une
+ * occupation de plaque, et le plat sort d'un feu où il n'est jamais allé.
+ */
+const PORTEE_DU_REPORT = 4
+
+/** Ce que l'étape dit d'elle-même : `four`, `plaque_cuisson`, ou rien. */
+function indiceDeLEtape(etape) {
+  const texte = etape.texte ?? ''
+  const gestes = etape.lexicon_ids ?? []
+  const gesteDeFour = gestes.some((g) => g === 'enfourner' || g === 'gratiner' || g === 'rotir')
+  if (gesteDeFour || SIGNE_DE_FOUR.test(texte)) return 'four'
+  if (CONTENANT_SUR_LE_FEU.test(texte)) return 'plaque_cuisson'
+  return null
+}
+
+/**
+ * L'étape occupe-t-elle la plaque ?
+ *
+ * ⛔ ELLE NE DEVINE PAS. Un `dorer` que ni son texte ni les quatre étapes d'avant ne tranchent reste
+ * DEHORS — onze cas, dont « faire dorer les amandes à sec » et « griller les tranches de pain
+ * complet », qui sont probablement un grille-pain que personne n'a écrit. Les déclarer un par un
+ * reste possible ; le détecteur, lui, se tait.
+ *
+ * @param etape       l'étape courante
+ * @param precedentes les étapes de geste qui la précèdent, dans l'ordre
+ */
+function etapeOccupeLaPlaque(etape, precedentes) {
+  const gestes = etape.lexicon_ids ?? []
+  if (gestes.some((g) => GESTES_PLAQUE.has(g))) return 'plaque_cuisson'
+  if (!gestes.includes(GESTE_AMBIGU)) return null
+
+  const propre = indiceDeLEtape(etape)
+  if (propre !== null) return propre === 'plaque_cuisson' ? 'plaque_cuisson' : null
+
+  const depuis = Math.max(0, precedentes.length - PORTEE_DU_REPORT)
+  for (let i = precedentes.length - 1; i >= depuis; i -= 1) {
+    const reporte = indiceDeLEtape(precedentes[i])
+    if (reporte !== null) return reporte === 'plaque_cuisson' ? 'plaque_cuisson' : null
+  }
+  return null
+}
+
 /**
  * Deux portées du même ustensile se recouvrent-elles ? ⚠️ RECOUVREMENT SEUL, JAMAIS ADJACENCE :
  * `[2,2]` et `[3,3]` restent deux occupations. Fusionner des étapes voisines effacerait le trou de
@@ -174,12 +269,11 @@ const seRecouvrent = (a, b) => a.ordreDebut <= b.ordreFin && b.ordreDebut <= a.o
  * une — elles se lisent, elles ne se font pas.
  */
 export function occupationsDeLaRecette(recette) {
-  const etapes = recette.etapes ?? []
+  const etapes = (recette.etapes ?? []).filter((e) => (e.nature ?? 'geste') === 'geste')
   const brutes = []
 
+  // Passe 1 — ce que l'humain a déclaré, puis le four dérivé. Inchangée depuis le lot 65a.
   for (const etape of etapes) {
-    if ((etape.nature ?? 'geste') !== 'geste') continue
-
     for (const declaree of etape.occupe ?? []) {
       brutes.push({
         code: declaree.code,
@@ -192,6 +286,28 @@ export function occupationsDeLaRecette(recette) {
     if ((etape.occupe ?? []).length > 0) continue
 
     const code = etapeOccupeLeFour(etape)
+    if (code !== null) {
+      brutes.push({ code, ordreDebut: etape.ordre, ordreFin: etape.ordre, origine: 'derive' })
+    }
+  }
+
+  // ⛔ LA PLAQUE SE DÉRIVE APRÈS LE FOUR, ET SUR CE QU'IL LAISSE. Une étape que le four tient déjà
+  // — portée déclarée comprise, donc les étapes 2 à 4 des œufs cocotte — n'est pas aussi sur un feu
+  // du dessus. 27 étapes à geste sûr sont dans ce cas, et les compter deux fois annoncerait un plat
+  // à deux endroits à la fois.
+  const tenuesParLeFour = new Set()
+  for (const occupation of brutes) {
+    if (occupation.code !== 'four' && occupation.code !== 'micro_ondes') continue
+    for (let i = occupation.ordreDebut; i <= occupation.ordreFin; i += 1) tenuesParLeFour.add(i)
+  }
+
+  // Passe 2 — la plaque, avec le report sur les étapes qui précèdent.
+  for (let i = 0; i < etapes.length; i += 1) {
+    const etape = etapes[i]
+    if ((etape.occupe ?? []).length > 0) continue
+    if (tenuesParLeFour.has(etape.ordre)) continue
+
+    const code = etapeOccupeLaPlaque(etape, etapes.slice(0, i))
     if (code !== null) {
       brutes.push({ code, ordreDebut: etape.ordre, ordreFin: etape.ordre, origine: 'derive' })
     }

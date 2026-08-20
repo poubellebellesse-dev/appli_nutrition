@@ -42,6 +42,7 @@ import {
   clearCuisson,
   clearToutesLesCuissons,
   readCuissons,
+  readEquipmentQuantites,
   readHeureService,
   writeCuisson,
   type StoredCuisineSession,
@@ -879,14 +880,21 @@ function MaterielPartage({
   // soit 3 600 fois par heure sur le seul écran conçu pour rester allumé. Une requête SQL et une
   // passe moteur par battement, c'est la régression que l'en-tête de ce fichier documente déjà.
   const heureServiceMs = useMemo(() => readHeureService(db), [db])
+  // ⭐ LOT 65c : les quantités déclarées, lues UNE FOIS. Sans elles la plaque reste muette — c'est
+  // le tri-état de `capaciteDepuisPartage`, et c'est ce qui fait que ce panneau ne s'allume que pour
+  // qui a répondu à la question.
+  const quantites = useMemo(() => readEquipmentQuantites(db), [db])
   const conflits = useMemo(
     () =>
       conflitsDEquipement(
         plats.map((p) => p.recette),
         (code) =>
-          capaciteDepuisPartage(catalogue.equipment.get(code as EquipmentId)?.partageable ?? null),
+          capaciteDepuisPartage(
+            catalogue.equipment.get(code as EquipmentId)?.partageable ?? null,
+            quantites.get(code as EquipmentId) ?? null,
+          ),
       ),
-    [plats, catalogue],
+    [plats, catalogue, quantites],
   )
 
   if (conflits.length === 0) return null
