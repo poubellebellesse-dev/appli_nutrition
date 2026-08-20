@@ -388,16 +388,147 @@ Seule la présente clôture porte un commit propre, et il ne contient que des do
 
 ---
 
-### Lot 65c — la quantité de feux et les occupations de plaque ⏳ NON OUVERT
+### Lot 65c — la quantité de feux et les occupations de plaque ⏳ BRIEF OUVERT le 2026-08-19
 
 **Les deux ensemble, jamais l'une sans l'autre**, et c'est la leçon de l'écart (1) ci-dessus :
 `user_equipment.quantite` sans occupation de plaque au catalogue ne produit **aucun** affichage, et
 des occupations de plaque sans quantité laissent le moteur se taire — `capaciteDepuisPartage` rend
 `null` pour `selon_quantite`, par construction.
 
-**Fini quand** : à écrire au moment d'ouvrir le lot. ⛔ **Ne pas le rédiger d'avance** — le nombre
-d'occupations de plaque n'a jamais été mesuré, et écrire un chiffre pour avoir l'air précis est
-exactement l'erreur que le palier de 98 a déjà coûtée plus haut.
+### La mesure préalable, faite le 2026-08-19 — le lot ne pouvait pas s'écrire avant
+
+⛔ **LE CHIFFRE QUI MANQUAIT EXISTE : 285 OCCUPATIONS DE PLAQUE SUR 166 RECETTES.** Dérivées des
+gestes du lexique sur `catalog.db` réel, jamais estimées. Trois fois le four, qui en porte 91 sur
+84 recettes.
+
+| ce qui est mesuré | valeur |
+|---|---|
+| recettes qui **exigent** la plaque (`recipe_equipment.niveau='requis'`) | **260 / 330** |
+| occupations de plaque enregistrées **aujourd'hui** | **0** — le détecteur ne connaît que le four |
+| occupations dérivables, règle complète | **285**, sur **166 recettes** |
+| dont par un geste sûr (15 codes) | 267 |
+| dont par `dorer` + indice dans l'étape même | 13 |
+| dont par `dorer` + indice **reporté d'une étape précédente** | 5 |
+| écartées : signe de four | 1 |
+| écartées : `dorer` sans aucun indice, ni chez lui ni avant | 11 |
+| écartées : étape déjà occupée par le four ou le micro-ondes | 27 |
+
+⛔ **`dorer` EST LE PIÈGE DE CE LOT, ET IL A FAILLI PASSER.** C'est le geste le plus fréquent de la
+liste — 64 étapes — et **23 d'entre elles sont au four**. Une règle qui lit seulement l'étape en
+attrape 22 ; la vingt-troisième ne se trahit que par l'étape d'avant :
+
+> `pommes_terre_four_romarin` #5 — « Retourner les quartiers et poursuivre jusqu'à ce qu'ils
+> soient dorés. » Rien dans cette phrase ne dit le four. L'étape #2 l'y a mises.
+
+⭐ **D'OÙ LA RÈGLE DE REPORT, POSÉE PAR L'AUTEUR LE 2026-08-19** : un geste ambigu prend l'indice de
+son étape, et à défaut celui des quatre étapes qui précèdent — un plat mis au four y reste jusqu'à
+ce qu'on l'en sorte. Le report rattrape **1 faux positif** que la lecture à l'étape seule laissait
+passer, et **confirme 5 occupations** de plaque qui n'ont aucun mot à elles.
+
+⚠️ **ET IL RESTE 11 `dorer` QUE RIEN NE TRANCHE**, pas même les étapes d'avant : « faire dorer les
+amandes à sec », « griller les tranches de pain complet ». **La règle ne devine pas** — elle les
+laisse dehors, et c'est un choix : deux d'entre eux sont probablement un grille-pain, pas un feu.
+Les déclarer un par un est possible plus tard ; le lot ne le fait pas.
+
+⚠️ **94 RECETTES EXIGENT LA PLAQUE SANS QU'AUCUNE ÉTAPE NE L'OCCUPE** (260 − 166), et ce n'est pas
+un défaut du détecteur : « cuire les pâtes », « porter à ébullition » ne portent aucun geste du
+lexique. **Écrit plutôt que découvert.** Le lot ne prétend pas fermer cet écart.
+
+⚠️ **`vapeur` N'ENTRE PAS DANS LA RÈGLE.** Ses 2 étapes décrivent un risque et ne commandent rien
+— « entassés, ils cuiraient à la vapeur ». C'est le piège de `poireaux_gratines_bechamel`, déjà
+payé au lot B du 65a.
+
+### ⚔️ Le brief a été attaqué le 2026-08-20, et il n'a pas tenu
+
+⛔ **UN CRITIQUE A ÉCRIT DEUX IMPLÉMENTATIONS FAUSSES QUI PASSAIENT LES DIX CLAUSES D'ORIGINE.**
+Elles sont écrites ici parce qu'un trou refermé sans être nommé se rouvre au lot suivant.
+
+| la triche | ce qu'elle faisait | ce qui la laissait passer |
+|---|---|---|
+| **au hasard** | poser une occupation sur n'importe quelle étape libre de 166 recettes, **sans lire un mot de texte** | on scellait un TOTAL et cinq points nommés ; les 161 autres recettes n'étaient vérifiées par rien |
+| **hors du temps** | compter les recettes DISTINCTES qui demandent l'ustensile, sans regarder QUAND | les deux plats du test se recouvraient ; aucun cas disjoint n'était testé |
+
+⛔ **LA SECONDE EST LA PLUS GRAVE : elle réintroduit en silence la régression que le 65a a payé
+63 % de fausses alertes pour éliminer**, et l'ancien sceau la déclarait verte.
+
+Trois autres trous, plus petits, tous vérifiés dans le code :
+
+- `readEquipmentQuantite = () => 3` suffisait — **3 était le seul nombre jamais écrit** de toute la
+  suite.
+- ⛔ **`writeOwnedEquipmentIds` fait `DELETE FROM user_equipment` puis réinsère** (`user-store.ts`,
+  l. 358-365), **et l'écran du 65b l'appelle à chaque cochage**. Le lot livrait donc une quantité que
+  le clic suivant effaçait sans erreur, sans type fâché, sans test rouge. C'est le piège
+  `INSERT OR REPLACE` de `CLAUDE.md` sous un autre nom, et **personne ne l'avait vu**.
+- Le test passait un `Map` à `conflitsDEquipement`, qui prend une **fonction** — il ne testait donc
+  pas le chemin réel de `cuisine.tsx`.
+
+### Les trois signatures, tranchées ici pour qu'on n'ait pas à les deviner
+
+1. **`capaciteDepuisPartage(partageable, quantiteDeclaree?)`** — un second argument OPTIONNEL. Les
+   appelants d'aujourd'hui continuent de marcher sans le passer, et continuent de recevoir `null`.
+2. **`conflitsDEquipement(plats, capaciteDe)` NE CHANGE PAS.** `capaciteDe` reste une **fonction**
+   `(code) => number | null`, comme `cuisine.tsx` l'appelle. Les « plats » restent des `Recipe`
+   entières : les fenêtres se calculent dans le moteur, elles ne se fabriquent pas dans le test.
+3. **`writeOwnedEquipmentIds` cesse d'effacer.** `INSERT … ON CONFLICT DO UPDATE`, jamais un
+   `DELETE` suivi d'un `INSERT` — la quantité est une colonne de cette table et elle a des enfants.
+
+**Fini quand** — seize clauses. Les huit premières portent le catalogue, les huit suivantes le
+réglage et le moteur. ⛔ **Les deux moitiés ensemble ou aucune** : une quantité de feux sans
+occupation de plaque n'affiche rien, et des occupations sans quantité laissent le moteur muet.
+
+**Moitié A — le catalogue**
+
+1. **Exactement 166 recettes** portent une occupation `plaque_cuisson` dans `recipe_step_equipment`,
+   comptées sur le `catalog.db` construit par `catalog/build.mjs` — **jamais sur une fixture**.
+   ⛔ **C'EST LE COMPTE DE RECETTES QUI EST SCELLÉ, PAS CELUI DES LIGNES, ET C'EST LA LEÇON DU 65a.**
+   Les 285 sont mesurées **par étape** ; le modèle à portée (`ordre_debut`/`ordre_fin`) ne compte pas
+   le même objet dès que deux occupations se rejoignent.
+2. ⛔ **AUCUNE OCCUPATION INVENTÉE.** Toute occupation de plaque couvre au moins une étape qui porte
+   un des **seize gestes** de la règle. ⭐ **C'est la clause qui tue le placement au hasard** : sans
+   elle, la clause 1 se satisfait de 166 lignes posées n'importe où.
+3. ⛔ **AUCUNE OCCUPATION OMISE.** Toute étape qui porte un des **quinze gestes sûrs**, et que le
+   four ou le micro-ondes ne prend pas déjà, porte une occupation de plaque — les 267 y passent.
+   ⭐ **C'est la clause qui tue « une occupation par recette »**, sans nommer une seule recette.
+4. ⛔ **`pommes_terre_four_romarin` #5 ne porte AUCUNE occupation de plaque.** C'est le cas que la
+   règle de report existe pour attraper ; sans elle il en porte une.
+5. ⚠️ **Et le four ne la revendique pas non plus** : sa portée s'arrête à l'étape 4. L'étape 5
+   n'appartient à aucun ustensile. **Écart nommé, hors périmètre** — étendre les portées est un
+   autre lot, et le sceau l'écrit pour que personne ne croie que le report l'a réparé.
+6. ⛔ **Les 11 `dorer` indécis ne portent aucune occupation** — vérifié nommément sur
+   `tartine_sardine_citron_echalote` #4 et `riz_pilaf_amandes` #1.
+7. Les gestes sûrs marchent : `boeuf_bourguignon` #1 (*saisir*) et `blanquette_veau` #1 (*frémir*)
+   portent chacun une occupation de plaque.
+8. ⛔ **Aucune étape ne porte à la fois une occupation de four et une de plaque.** Les 27 étapes
+   déjà occupées restent au four seul.
+
+**Moitié B — le réglage, et le moteur**
+
+9. `user_equipment` porte une **quantité déclarée**, et ⛔ **relue après fermeture et réouverture du
+   fichier**, lue une troisième fois en SQL brut — la leçon du 65b-bis s'applique d'emblée.
+10. ⛔ **La quantité relue est CELLE QU'ON A ÉCRITE** : 4, puis 1, et un autre ustensile à 2 qui ne
+    bouge pas. Un ustensile jamais déclaré rend `null`, pas 1. ⭐ **C'est la clause qui tue
+    `() => 3`.**
+11. ⛔ **Resauver la liste du matériel n'efface pas la quantité déjà déclarée.** Le chemin exact de
+    l'écran du 65b : cocher une case de plus, et retrouver ses quatre feux. ⭐ **Le trou le plus
+    dangereux des cinq** — sans cette clause, le lot livre un effacement silencieux.
+12. `capaciteDepuisPartage` rend **le nombre déclaré** pour `selon_quantite` quand la quantité est
+    connue ; `null` sans elle ; `jamais` → 1 et `toujours` → ∞ ne bougent pas d'un iota.
+13. Deux plats qui occupent la plaque **en même temps** produisent un conflit qui **nomme les deux**
+    quand un seul feu est déclaré, et **aucun conflit** quand quatre le sont. Le même montage, deux
+    réponses.
+14. ⛔ **Deux plats qui tiennent le feu à des MOMENTS DIFFÉRENTS ne se disputent rien**, à un seul
+    feu. ⭐ **C'est la clause qui tue le comptage hors du temps** — et elle se cherche dans le
+    catalogue, pas sur une paire choisie d'avance : il doit exister une paire qui se dispute la
+    plaque ET une qui ne se la dispute pas, sur la même donnée et à la même capacité.
+15. ⛔ **Trois plats, deux seulement qui se chevauchent : le conflit ne nomme que ces deux-là.** Un
+    comptage global nommerait les trois.
+16. ⛔ **Quantité NON déclarée ⇒ le moteur se tait sur la plaque, exactement comme aujourd'hui.**
+    C'est la propriété que le 65a a payée pour obtenir — 63 % de fausses alertes éteintes. Un lot qui
+    la casse en croyant bien faire est un lot raté, et cette clause est là pour le dire.
+
+**Ce que le lot ne touche pas** : le four et le micro-ondes — leurs 92 occupations sont inchangées.
+La liste du matériel possédé et l'interrupteur du 65b — seule la quantité s'ajoute. Le solveur de
+plan de semaine : `engine:plan-stress` doit rendre 20/20 avant et après.
 
 ⚠️ **Rien ne presse ce lot, et `ETAT.md` le dit** : « ce silence est un état stable, pas un
 provisoire — il ne coûte aucune fausse alerte, donc rien ne le forcera à se refermer. »
