@@ -131,7 +131,7 @@ champ de saisie, et que le lot D3 avait payé avant lui. Il est assumé, pas ign
 
 ⛔ **SEPT RÉPARATIONS SUR HUIT. La huitième n'est pas livrée, et ce n'est pas un oubli** — voir le
 bilan en fin de section : elle décrivait autre chose que ce qu'elle disait, et elle est sortie en
-lot `retour-1b`. **Le hash reste à écrire** : au moment de cette ligne, rien n'est commité.
+lot `retour-1b`. **Livré en `3ce17d7`**, 12 fichiers, 1 064 insertions.
 
 Deux moitiés de nature différente, dans le même lot parce qu'elles se testent sur le même écran et
 que les séparer ferait deux passes de vérification manuelle au lieu d'une.

@@ -42,8 +42,8 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-21, arbre COMPLET, livraison du lot
-`retour-1` — NON COMMITÉ au moment de cette ligne, donc sans hash** :
+Dernier relevé, **suite réellement exécutée le 2026-08-21, arbre COMPLET, commit `3ce17d7`
+(livraison du lot `retour-1`)** :
 `npm test` → **2 263 passed / 0 failed (123 fichiers)** en 43,9 s · typecheck propre ·
 `vite build` ✓ (3,12 s) · `engine:plan-stress` **20/20**.
 ✅ **L'ÉCART 2 254 → 2 263 S'ATTRIBUE EN ENTIER À UN SEUL FICHIER, ET IL A ÉTÉ COMPTÉ, PAS DÉDUIT** :
