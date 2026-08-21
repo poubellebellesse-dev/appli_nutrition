@@ -103,6 +103,16 @@ export function Visite({
 }): JSX.Element | null {
   const [etapeIndex, setEtapeIndex] = useState<number | null>(() => premierIndexValide(etapes, 0))
   const [rect, setRect] = useState<DOMRect | null>(null)
+  /**
+   * La première étape RÉELLEMENT affichée, figée au montage — c'est elle qui porte le bandeau
+   * « TUTORIEL ».
+   *
+   * ⚠️ UNE RÉFÉRENCE, PAS UN CALCUL À CHAQUE RENDU. `premierIndexValide` interroge le DOM : le
+   * rappeler plus tard rendrait un autre index dès que la cible de la première étape disparaît
+   * de l'écran, et le bandeau se rallumerait au milieu du parcours. Il est vrai une fois, au
+   * montage, et il le reste.
+   */
+  const premiereAffichee = useRef(premierIndexValide(etapes, 0))
   const bulle = useRef<HTMLDivElement>(null)
   // La route courante, pour les étapes « route » — même hook que `main.tsx` : pas de second
   // écouteur `hashchange` (voir l'en-tête).
@@ -122,6 +132,25 @@ export function Visite({
     const recalculer = () => {
       const cible = document.querySelector(etape.cible)
       setRect(cible === null ? null : cible.getBoundingClientRect())
+    }
+    // ⛔ AMENER LA CIBLE À L'ÉCRAN AVANT DE LA MESURER — sinon la visite désigne un bouton que
+    // personne ne voit. Le défilement du fond étant bloqué à l'utilisateur (`overflow: hidden`
+    // plus bas), il ne peut PAS y aller lui-même : signalé sur téléphone, corrigé le 2026-08-21
+    // (lot `retour-1`). `overflow: hidden` interdit le geste, jamais le défilement par script.
+    // ⚠️ INSTANTANÉ, PAS `smooth` : un défilement animé rendrait la mesure qui suit fausse d'un
+    // écran entier, et le halo se poserait à côté de la cible.
+    // ⚠️ APPEL OPTIONNEL : jsdom n'implémente pas `scrollIntoView`, et les tests d'écran de ce
+    // dépôt tournent tous dessus.
+    // ⛔ ON NE DÉFILE QUE SI LA CIBLE EST DEHORS, et ce garde-fou a été ajouté après coup : la
+    // première étape du parcours d'accueil désigne la barre d'onglets, qui est `position: fixed`
+    // en bas d'écran. `scrollIntoView` la « centrerait » en faisant défiler la page — la barre ne
+    // bougerait pas d'un pixel, mais tout le reste sauterait, à l'instant même où le tutoriel
+    // s'ouvre. Défiler vers quelque chose de déjà visible n'aide personne.
+    const aAmener = document.querySelector(etape.cible)
+    if (aAmener !== null) {
+      const boite = aAmener.getBoundingClientRect()
+      const dehors = boite.bottom < 0 || boite.top > window.innerHeight
+      if (dehors) aAmener.scrollIntoView?.({ block: 'center', inline: 'nearest' })
     }
     recalculer()
     window.addEventListener('resize', recalculer)
@@ -192,10 +221,13 @@ export function Visite({
 
   return createPortal(
     <div className={'fixed inset-0 z-50 ' + (attendGeste ? 'pointer-events-none' : '')}>
-      {/* Assombrit. Capte les clics seulement pour une étape « lecture » — voir l'en-tête : une
-          étape qui attend un geste doit laisser le clic atteindre la vraie cible en dessous. */}
-      <div aria-hidden="true" className="absolute inset-0 bg-black/60" />
-
+      {/* ⛔ PLUS AUCUN VOILE ICI. Un `bg-black/60` couvrait l'écran : le tutoriel noircissait
+          précisément ce qu'il était censé montrer, au point que le texte présenté devenait
+          illisible. Signalé sur téléphone, retiré le 2026-08-21 (lot `retour-1`). Ce qui désigne
+          la cible, c'est le HALO ci-dessous, et lui seul.
+          ⚠️ Le voile ne servait pas à capter les clics : pour une étape « lecture », c'est le
+          conteneur parent qui les capte, faute de `pointer-events-none`. Le remettre « pour la
+          sécurité du clic » redirait donc le défaut sans rien gagner. */}
       {rect !== null && (
         <div
           aria-hidden="true"
@@ -223,6 +255,20 @@ export function Visite({
         className="pointer-events-auto absolute max-w-prose rounded-[--radius-carte] border border-bordure bg-surface p-4 shadow-lg outline-none"
         style={stylePositionBulle(rect)}
       >
+        {/* ⛔ DIRE CE QUE C'EST, ET LE DIRE EN GRAND. Sur téléphone, la bulle arrivait sans se
+            nommer : on ne savait pas si c'était un tutoriel, une alerte ou un message de l'appli.
+            Ajouté le 2026-08-21 (lot `retour-1`).
+            ⚠️ SUR LA PREMIÈRE ÉTAPE AFFICHÉE, PAS SUR L'INDEX 0 : `premierIndexValide` saute les
+            étapes dont la cible est absente de l'écran, donc la première VUE n'est pas toujours la
+            première du tableau.
+            ⚠️ Majuscules par le CSS et non dans le texte : un lecteur d'écran épellerait « T-U-T-O ».
+            ⚠️ `text-titre-m` — un pas au-dessus du titre d'étape (`text-titre-s`), pris dans
+            l'échelle déclarée. Pas de taille littérale : `ui/echelle-typo.test.ts` les refuse. */}
+        {etapeIndex === premiereAffichee.current && (
+          <p className="mb-2 font-titre text-titre-m font-bold uppercase tracking-wide text-accent-texte">
+            Tutoriel
+          </p>
+        )}
         {/* Lisible en texte, pas seulement en pastilles, et ANNONCÉ (`role="status"`) à chaque
             changement d'étape — même mécanisme que le bandeau de persistance dans `main.tsx`. */}
         <p role="status" className="text-mention font-medium text-attenue">

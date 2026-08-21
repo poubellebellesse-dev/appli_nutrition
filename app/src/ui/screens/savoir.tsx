@@ -176,6 +176,35 @@ function LeSaviezVous({ tips }: { readonly tips: readonly Tip[] }) {
 
   return (
     <Bloc titre="Le saviez-vous ?">
+      {/* ⛔ LES FLÈCHES AU-DESSUS DU FAIT, ET C'EST LA RAISON D'ÊTRE DE CE BLOC. En dessous, elles
+          suivaient la hauteur du texte : les faits vont de deux lignes à huit, donc les boutons
+          sautaient de plusieurs centimètres à chaque passage et il fallait rechercher le doigt.
+          Signalé sur téléphone, déplacé le 2026-08-21 (lot `retour-1`).
+          ⚠️ CE N'EST PAS UNE HAUTEUR MINIMALE. Réserver la place du plus long fait aurait creusé un
+          vide sous les courts, et un nombre choisi au jugé aurait fini par être dépassé. Au-dessus,
+          la stabilité vient de la FORME : rien de variable ne précède les boutons. */}
+      <div className="mb-3 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setIndex(index - 1)}
+          aria-label="Fait précédent"
+          className="flex min-h-tactile w-14 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-titre-s text-texte-doux"
+        >
+          ←
+        </button>
+        <button
+          type="button"
+          onClick={() => setIndex(index + 1)}
+          aria-label="Fait suivant"
+          className="flex min-h-tactile w-14 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-titre-s text-texte-doux"
+        >
+          →
+        </button>
+        <span className="text-courant tabular-nums text-attenue">
+          {(((index % tips.length) + tips.length) % tips.length) + 1} sur {tips.length}
+        </span>
+      </div>
+
       <div className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
         {mention !== null && (
           <p className="mb-2 text-mention font-semibold uppercase tracking-wide text-attenue">
@@ -198,28 +227,6 @@ function LeSaviezVous({ tips }: { readonly tips: readonly Tip[] }) {
             {domaine(tip.sourceUrl)}
           </a>
         </p>
-      </div>
-
-      <div className="mt-3 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setIndex(index - 1)}
-          aria-label="Fait précédent"
-          className="flex min-h-tactile w-14 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-titre-s text-texte-doux"
-        >
-          ←
-        </button>
-        <button
-          type="button"
-          onClick={() => setIndex(index + 1)}
-          aria-label="Fait suivant"
-          className="flex min-h-tactile w-14 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond text-titre-s text-texte-doux"
-        >
-          →
-        </button>
-        <span className="text-courant tabular-nums text-attenue">
-          {(((index % tips.length) + tips.length) % tips.length) + 1} sur {tips.length}
-        </span>
       </div>
     </Bloc>
   )

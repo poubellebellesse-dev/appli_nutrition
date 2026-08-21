@@ -1275,6 +1275,14 @@ function ReglageMateriel({
         </span>
       </button>
 
+      {/* ⛔ LE COCHÉ DOIT SE VOIR SANS LIRE. Ces puces portaient le bon `aria-pressed` et AUCUNE
+          classe conditionnelle : coché et décoché étaient rigoureusement identiques à l'œil, et un
+          test au clavier ne pouvait pas s'en apercevoir. Signalé sur téléphone, corrigé le
+          2026-08-21 (lot `retour-1`). Les jetons sont ceux de `Pastille` (`aujourdhui.tsx`) —
+          on ne fabrique pas un second vocabulaire d'état pour la même idée.
+          ⚠️ `border-2` DES DEUX CÔTÉS, contrairement à `Pastille` : ici les puces sont trente sur
+          une grille qui passe à la ligne ; faire varier l'épaisseur ferait sauter toute la mise en
+          page à chaque clic. Seule la COULEUR change. */}
       <ul className="mt-4 flex flex-wrap gap-2">
         {ustensiles.map((ustensile) => (
           <li key={ustensile.id}>
@@ -1282,7 +1290,12 @@ function ReglageMateriel({
               type="button"
               aria-pressed={possedes.has(ustensile.id)}
               onClick={() => basculer(ustensile.id)}
-              className="min-h-tactile rounded-[0.7rem] border border-bordure bg-fond px-3 text-courant text-texte-doux"
+              className={
+                'min-h-tactile rounded-[0.7rem] border-2 px-3 text-courant ' +
+                (possedes.has(ustensile.id)
+                  ? 'border-accent bg-accent-doux font-semibold text-accent-texte'
+                  : 'border-bordure bg-fond text-texte-doux')
+              }
             >
               {ustensile.terme}
             </button>

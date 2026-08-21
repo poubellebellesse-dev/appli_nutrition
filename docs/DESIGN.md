@@ -276,7 +276,14 @@ stateDiagram-v2
 
 Conçu pour être **lu debout, mains occupées, parfois de loin** — gros caractères, beaucoup d'air.
 
-- Photo, retour, favori · nom · temps prep/cuisson, portions, difficulté · tags
+- **Retour**, photo, favori · nom · temps prep/cuisson, portions, difficulté · tags
+  ⚠️ **L'ordre a changé le 2026-08-21 (lot `retour-1`), et le sens de la correction est inverse de
+  celui du 2026-08-17.** Cette ligne écrivait « Photo, retour » ; une relecture de maquette avait
+  fait redescendre le lien sous l'image à ce titre. Sur un téléphone réel, la photo occupe **40 % de
+  la hauteur d'écran** : le seul moyen de revenir en arrière commençait donc sous le pli, sur un
+  écran qu'on ouvre justement pour repartir. **Le document décrivait une maquette ; l'appareil a
+  tranché.** Aucun test ne verrouille ce placement — les 23 tests scellés de la photo n'exigent que
+  « la photo précède le titre », vrai dans les deux dispositions.
 - **Sélecteur de portions** qui recalcule les quantités en direct
 - Ingrédients (absents du garde-manger signalés discrètement)
 - Préparation en **gros blocs numérotés** ; mots techniques soulignés → fiche lexique + animation

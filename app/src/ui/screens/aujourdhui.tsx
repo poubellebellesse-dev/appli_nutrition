@@ -84,15 +84,26 @@ const SEUIL_INDECISION = 10
  * `legerConsistant` et `chaudFroid` ; ajouter ici « rapide / mijoté » donnerait une pastille qui
  * ne pilote RIEN — le défaut récurrent du projet, un réglage sans consommateur. Le temps a son
  * propre contrôle, qui lui passe par `tempsDisponibleMin`.
+ *
+ * ⛔ `bas` VAUT −1 ET `haut` VAUT +1 — la boucle de rendu plus bas l'impose aux TROIS axes à la
+ * fois. Le libellé doit donc suivre la convention du catalogue (`domain/catalog.ts` : « -1 (froid)
+ * … +1 (chaud) »), pas la lecture naturelle de la question. C'est ce qui a été manqué : `chaudFroid`
+ * portait `bas: 'Chaud'`, donc cliquer « Chaud » demandait −1, donc du FROID. Corrigé le
+ * 2026-08-21 (lot `retour-1`), après que l'utilisateur a signalé « chaud = salade » sur téléphone.
+ * ⚠️ NE PAS « RÉPARER » ÇA EN INVERSANT LE SIGNE DANS LA BOUCLE DE RENDU : elle est partagée, et
+ * les deux autres axes sont justes. `tests/scelles/retour-1.test.tsx` refuse les deux erreurs.
+ * ▶ `editeur-recette.tsx` déclare le même axe et doit rester d'accord avec celui-ci.
  */
 const AXES_ENVIE: readonly {
   readonly cle: keyof CravingAxes
   readonly question: string
+  /** Le libellé du côté **−1** de l'axe. */
   readonly bas: string
+  /** Le libellé du côté **+1** de l'axe. */
   readonly haut: string
 }[] = [
   { cle: 'legerConsistant', question: 'Plutôt léger ou consistant ?', bas: 'Léger', haut: 'Consistant' },
-  { cle: 'chaudFroid', question: 'Chaud ou froid ?', bas: 'Chaud', haut: 'Froid' },
+  { cle: 'chaudFroid', question: 'Chaud ou froid ?', bas: 'Froid', haut: 'Chaud' },
   { cle: 'sucreSale', question: 'Salé ou sucré ?', bas: 'Salé', haut: 'Sucré' },
 ]
 

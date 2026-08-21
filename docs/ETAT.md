@@ -1000,6 +1000,9 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 > de mémoire : **ouvertes au 2026-08-21 — 2, 5, 6, 11, 52, 58, 65, 68, 70, 79, 80, soit ONZE.** Les
 > **79** et **80** naissent des arbitrages du jour (71 à 78) : trancher huit questions en a laissé
 > deux ouvertes, et les ranger dans les lignes fermées les aurait rendues invisibles au décompte.
+> ⚠️ **LA 81, ENTRÉE PLUS TARD LE MÊME JOUR, NE CHANGE PAS CE COMPTE : elle naît TRANCHÉE.** Onze
+> ouvertes reste la mesure. Une décision qui arrive déjà arbitrée s'inscrit quand même — c'est ce
+> qui distingue « personne ne l'a posée » de « personne n'y a répondu ».
 
 | # | Question | Reco |
 |---|---|---|
@@ -1085,6 +1088,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | ~~78~~ | **Peut-on réutiliser un plat déjà cuisiné ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur), en deux points opposés.** **(1) NON comme ingrédient d'une autre recette** — « trop compliqué à gérer ». Pas de réemploi partiel, pas de reste qui entre dans une préparation. **(2) OUI comme repas entier décalé** — « pouvoir décaler la semaine si l'utilisateur veut manger les restes le lendemain ». ✅ **MESURÉ : le mécanisme est déjà là pour l'essentiel** — `planLeftovers` remplace des **créneaux entiers** (ce qui est le point 1 pris à l'envers : la couche restes ne sait DÉJÀ pas faire du partiel), et `lockedEntries`/`entry.locked` sont préservés par `plan-week`. Il manque **une action « les restes de… »** créant une entrée de reste verrouillée au jour visé. ⚠️ **Le « décalage de la semaine » n'est alors PAS à coder** : il est émergent — un créneau verrouillé de plus, et la replanification contourne. Chercher à écrire un décalage explicite reviendrait à réimplémenter à côté ce que le verrouillage fait déjà. |
 | 79 | **Que montre l'écran Aujourd'hui quand les filtres durs, empilés aux contraintes existantes, ne laissent AUCUNE recette ?** | ⏳ **OUVERTE le 2026-08-21, née de la ~~71~~ et posée AVANT le lot qui en dépend.** Les trois axes seuls ne vident jamais le catalogue (mesuré : 8 combinaisons, minimum 8 recettes). Mais ils s'ajoutent à six exclusions déjà dures, et **l'écran ne peut pas répondre « rien » à quelqu'un qui a faim**. ▶ Trois issues, non départagées : **(1)** relâcher l'axe le moins engageant et le dire (« aucun plat chaud et léger — voici des plats chauds ») ; **(2)** refuser la combinaison **au moment du clic**, en grisant ce qui ne mène nulle part ; **(3)** laisser le vide et proposer de retirer un filtre. ⚠️ **La (2) est la plus honnête et la plus chère** : elle suppose de connaître le nombre de résultats **avant** que l'utilisateur clique, donc de recalculer à chaque pastille. ⛔ **Ce qu'aucune des trois ne doit faire : rendre un plat qui ne respecte pas le filtre sans le dire.** C'est la ~~71~~ prise à l'envers, et l'utilisateur l'a signalée comme un défaut (« les filtres ne marchent pas ??? chaud = salade »). |
 | 80 | **À quel geste la déclaration de frigo est-elle dépensée ?** | ⏳ **OUVERTE le 2026-08-21, née de la ~~74~~.** La déclaration vaut pour **un** repas ; reste à dire lequel, c'est-à-dire quand elle s'efface. ▶ Deux issues : **« J'ai choisi ce plat »** (simple, couvre le cas normal, mais efface avant qu'on ait cuisiné — quelqu'un qui choisit puis revient a perdu sa saisie) ou **la sortie du mode cuisine** (colle au repas réellement préparé, mais ne couvre pas les plats qu'on ne cuisine pas au pas-à-pas). ⚠️ **La première a été proposée par l'assistant et n'a PAS été tranchée par l'utilisateur** — elle est écrite ici comme piste, pas comme choix. |
+| ~~81~~ | **Le tutoriel est-il neuf visites séparées, ou une seule qui traverse les menus ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : UNE SEULE, qui entre dans chaque menu.** Dans ses mots : « montrer les différents menus · premier menu → Aujourd'hui · quand on clique sur le menu Aujourd'hui, on continue le menu mais spécialement pour le menu Aujourd'hui · puis on enchaîne sur le menu Semaine etc. » ⛔ **CETTE DÉCISION EST NÉE D'UNE PUCE DE BRIEF QUI DÉCRIVAIT AUTRE CHOSE QU'ELLE-MÊME.** Le lot `retour-1` portait « le tutoriel commence par Semaine, pas par Aujourd'hui » ; **mesuré, il commençait DÉJÀ par Semaine** — le parcours d'accueil enchaîne barre du bas → Semaine → Courses → Recettes → Savoir et n'a aucune étape « Aujourd'hui ». Une première interprétation (réordonner la liste « Revoir un tutoriel » de Réglages) a été proposée par l'assistant puis **écartée par l'auteur** : ce n'était pas ce qu'il visait. ✅ **Ce qui existe déjà** : les neuf parcours sont écrits (`ui/parcours.ts`) et le type d'étape `route` fait déjà avancer sur navigation — il manque l'ENCHAÎNEMENT, pas le contenu. ⚠️ **Le risque est dans `premierIndexValide` (`ui/visite.tsx`), qui écarte en silence toute étape dont la cible est absente du DOM à l'instant où elle arrive** : si l'écran suivant n'est pas encore rendu, toutes ses étapes sautent et le tutoriel se termine sans rien dire. ▶ Détail, forme visée et « ce qu'il reste à mesurer » : `CONCEPTION_RETOURS_TEST.md`, lot `retour-1b`. Les neuf parcours individuels restent lançables un par un — ce lot ajoute un chemin, il n'en supprime aucun. |
 
 ---
 
@@ -1218,6 +1222,44 @@ appli_nutrition/
 ## 8. Dette connue
 
 Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
+
+### Ce que le lot `retour-1` laisse derrière lui (2026-08-21)
+
+⛔ **LES HUIT VÉRIFICATIONS À L'ŒIL N'ONT PAS ÉTÉ FAITES, ET AUCUN ARBRE VERT NE LES FERA.** Sept
+réparations d'affichage sont livrées ; jsdom ne calcule ni hauteur, ni position, ni couleur, donc
+**rien dans les 2 263 tests ne dit qu'elles ont l'effet voulu**. Le protocole en huit lignes est
+dans `CONCEPTION_RETOURS_TEST.md` §3, à exécuter sur le téléphone, en navigation privée. C'est
+exactement la dette que 65c et D3 ont laissée avant lui, et elle se paie de la même façon : à la
+main, ou pas du tout.
+
+⚠️ **`cuisine.tsx` A ÉTÉ TOUCHÉ SANS QUE SA DETTE TYPOGRAPHIQUE SOIT SOLDÉE.**
+`app/src/ui/echelle-typo.test.ts` le nomme dans ses exceptions avec cette phrase : « Il doit passer
+à l'échelle au prochain lot qui le touche — cette ligne est une DETTE, pas une dispense ». Le lot
+`retour-1` l'a touché (le lien de sortie, rendu collant) **sans requalifier ses 28 tailles
+littérales**, et sans en ajouter aucune. ▶ Le choix est assumé : requalifier 28 tailles est un lot
+en soi, et le faire ici aurait noyé sept réparations d'affichage dans un diff de mise en page.
+**Mais la phrase du test reste vraie, et le prochain qui ouvre ce fichier la lira encore.**
+
+⚠️ **UN BOUTON A CHANGÉ DE CÔTÉ SANS QU'AUCUN TEST NE LE SACHE.** Sur Aujourd'hui, « Froid »
+s'affiche désormais à gauche de « Chaud » — conséquence de l'alignement de `AXES_ENVIE` sur la
+convention du catalogue. Les clauses scellées vérifient le SIGNE envoyé au moteur, jamais l'ordre
+des deux boutons. Le remettre dans l'autre sens demanderait de changer la boucle de rendu **pour
+les trois axes à la fois** ; c'est faisable, ce n'est pas ce lot.
+
+⚠️ **LE PLACEMENT DU RETOUR SUR LA FICHE RECETTE A FAIT UN ALLER-RETOUR COMPLET EN QUATRE JOURS.**
+Au-dessus de la photo (lot photo 3), redescendu le 2026-08-17 par relecture au nom de §4.6 DESIGN,
+**remonté le 2026-08-21 par le test sur téléphone**. §4.6 a été corrigé dans le même geste. Aucun
+test ne verrouille ce placement, ni dans un sens ni dans l'autre — les 23 tests scellés de la photo
+n'exigent que « la photo précède le titre », vrai dans les deux dispositions. **Le troisième qui y
+touchera ne cassera rien non plus.**
+
+⚠️ **CE LOT A ÉTÉ ATTAQUÉ DEUX FOIS ET N'A TENU NI LA PREMIÈRE NI LA DEUXIÈME.** Trois
+implémentations fausses passaient les clauses scellées : deux listes en dur (fermée par la clause
+de graine), la correction portée sur le moteur au lieu de l'écran (fermée par un appel à
+`scoreCraving` hors écran), et un tri d'après-coup laissant le mauvais signe partir au moteur
+(fermée par une interception de la requête). **La troisième n'est apparue qu'après correction des
+deux premières** — un brief corrigé n'est pas un brief sûr, chaque clause ajoutée déplace la triche
+ailleurs.
 
 > ⛔ **LES CHIFFRES DU CATALOGUE VIVENT ICI ET NULLE PART AILLEURS DANS §8.** Audit du 2026-08-07 :
 > **six entrées** annonçaient « 241 recettes » ou « 212 recettes », une septième « 9 fichiers de

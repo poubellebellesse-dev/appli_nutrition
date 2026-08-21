@@ -325,6 +325,22 @@ export function DetailRecette({
 
   return (
     <article>
+      {/* ⛔ LE RETOUR PASSE AVANT LA PHOTO — ET C'EST UN ALLER-RETOUR ASSUMÉ, PAS UNE ÉTOURDERIE.
+          Le lot photo 3 l'avait rendu au-dessus ; la critique du 2026-08-17 l'a fait redescendre au
+          nom de §4.6 DESIGN (« Photo, retour, favori · nom »). Le test sur téléphone du 2026-08-21
+          a tranché dans l'autre sens : la photo fait 40 % de la hauteur d'écran, donc le seul moyen
+          de revenir en arrière commençait SOUS le pli. §4.6 a été corrigé le même jour — le
+          document suivait une maquette, l'appareil a rendu un verdict.
+          ⚠️ Les 23 tests scellés de la photo n'exigent que « la photo précède le TITRE », vrai dans
+          les deux dispositions : ce placement n'est verrouillé par aucun test, ni avant ni après.
+          Le jour où le favori de §4.6 arrivera, c'est ici qu'il se posera, à côté du retour. */}
+      <a
+        href={retour.hash}
+        className="mt-2 inline-flex min-h-tactile items-center text-courant font-semibold text-accent-texte no-underline"
+      >
+        {retour.libelle}
+      </a>
+
       {/* La « photo dominante » de §4.1 DESIGN, sur le dernier écran qui n'en montrait aucune.
           ⚠️ MÊME MOTIF QUE LA CARTE DU JOUR (`aujourdhui.tsx`), PAS UN SECOND. Deux traitements de
           la même image sur deux écrans divergent à la première retouche — c'est la raison d'être de
@@ -360,19 +376,6 @@ export function DetailRecette({
           </span>
         </div>
       )}
-
-      {/* ⛔ LE RETOUR VIENT APRÈS LA PHOTO, et l'ordre n'est pas cosmétique : §4.6 DESIGN écrit
-          « Photo, retour, favori · nom », la photo EN PREMIER. Le lot photo 3 l'avait d'abord rendu
-          au-dessus — la critique du 2026-08-17 l'a relevé, aucun des 23 tests scellés ne le voyait
-          (ils n'exigent que « la photo précède le titre », vrai dans les deux dispositions).
-          ⚠️ Ce placement n'est donc verrouillé par AUCUN test : le prochain qui remonte ce lien ne
-          cassera rien. Le jour où le favori de §4.6 arrivera, c'est ici qu'il se posera, à côté. */}
-      <a
-        href={retour.hash}
-        className="mt-2 inline-flex min-h-tactile items-center text-courant font-semibold text-accent-texte no-underline"
-      >
-        {retour.libelle}
-      </a>
 
       {/* ⚠️ §4.3 ARCHITECTURE l'impose : une recette utilisateur est « contenu AUTONOME, hors
           garanties du catalogue source : toujours affiché non vérifié ». Les valeurs nutritionnelles

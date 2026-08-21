@@ -42,10 +42,15 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-20, arbre COMPLET, commit `4a9f373`
-(livraison du lot 65c)** :
-`npm test` → **2 254 passed / 0 failed (122 fichiers)** en 44,3 s · typecheck propre ·
-`vite build` ✓ (2,98 s) · `engine:plan-stress` **20/20**.
+Dernier relevé, **suite réellement exécutée le 2026-08-21, arbre COMPLET, livraison du lot
+`retour-1` — NON COMMITÉ au moment de cette ligne, donc sans hash** :
+`npm test` → **2 263 passed / 0 failed (123 fichiers)** en 43,9 s · typecheck propre ·
+`vite build` ✓ (3,12 s) · `engine:plan-stress` **20/20**.
+✅ **L'ÉCART 2 254 → 2 263 S'ATTRIBUE EN ENTIER À UN SEUL FICHIER, ET IL A ÉTÉ COMPTÉ, PAS DÉDUIT** :
+`tests/scelles/retour-1.test.tsx` porte exactement **9 clauses**, et c'est le 123ᵉ fichier. Aucun
+test existant n'a bougé. ⚠️ **Le catalogue n'a PAS été touché** — ni `catalog/build.mjs` ni
+`catalog/audit-mapping.mjs` n'étaient des témoins de ce lot, et les chiffres de contenu ci-dessous
+datent donc toujours du 2026-08-20.
 ✅ **LES CINQ COMMANDES ONT ÉTÉ RELANCÉES LE 2026-08-20**, catalogue compris — le lot 65c a touché
 au détecteur d'occupation. **451 aliments, 330 recettes, 1 548 étapes, 62 gestes, 73 tips, 8 fiches,
 30 équipements (1 473 couples)** et **451 mappings / 9 candidats à relire** : inchangés, et cette

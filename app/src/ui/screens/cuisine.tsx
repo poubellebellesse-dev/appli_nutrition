@@ -520,9 +520,19 @@ export function Cuisine({
       // luminance, pas un pictogramme. Voir `theme.css`, bloc « signal visuel d'alarme ».
       data-alarme={alarmeSur !== null ? 'oui' : undefined}
     >
-      <a className="text-accent-texte underline" href={hashDeRecette(recette.id)}>
-        ← Quitter le mode cuisine
-      </a>
+      {/* ⛔ COLLÉ EN HAUT, PAS POSÉ EN HAUT. Le lien défilait avec le contenu : au bas d'une
+          recette longue, sortir du mode cuisine demandait de remonter tout l'écran — les mains
+          occupées, c'est précisément le moment où l'on ne peut pas. Signalé sur téléphone, corrigé
+          le 2026-08-21 (lot `retour-1`).
+          ⚠️ `-mx-4 px-4` COMPENSE LE `p-4` DE L'ARTICLE : sans ça le fond s'arrête avant les bords
+          et le texte de l'étape se voit passer dessous par les deux côtés.
+          ⚠️ `bg-fond` OPAQUE, jamais une transparence : ce qui défile en dessous doit disparaître,
+          pas transparaître. */}
+      <div className="sticky top-0 z-10 -mx-4 mb-1 bg-fond px-4 py-2">
+        <a className="text-accent-texte underline" href={hashDeRecette(recette.id)}>
+          ← Quitter le mode cuisine
+        </a>
+      </div>
 
       {/* ⚠️ LA BARRE N'APPARAÎT QU'À PARTIR DE DEUX PLATS. Un seul onglet n'offre aucun choix : il
           prendrait de la hauteur sur le seul écran qu'on lit à un mètre, pour ne rien dire. */}

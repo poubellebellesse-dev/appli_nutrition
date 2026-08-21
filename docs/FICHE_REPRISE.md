@@ -54,6 +54,23 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 
 ⛔ **LE HORS-LIGNE EST FERMÉ. CE QUI BLOQUE MAINTENANT, C'EST LE CONTENU.**
 
+⭐ **PASSE AVANT TOUT LE RESTE DEPUIS LE 2026-08-21 : LE TEST SUR TÉLÉPHONE.** Une session d'usage
+réel a produit une quarantaine d'observations, huit arbitrages (décisions 71 à 78, plus la 81) et
+deux questions ouvertes (79, 80). ▶ Tout est dans
+**[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RETOURS_TEST.md)** ; l'état des décisions est dans
+`ETAT.md` §4, la dette dans §8.
+
+**Ce qui vient tout de suite, dans cet ordre :**
+
+- ⛔ **LA PASSE À L'ŒIL SUR LE TÉLÉPHONE — huit cases, et rien ne la remplacera.** Le lot
+  `retour-1` a livré sept réparations d'affichage que **jsdom ne sait pas vérifier**. Le protocole
+  est dans `CONCEPTION_RETOURS_TEST.md` §3. **Tant qu'elle n'est pas faite, on ne sait pas si le lot
+  a marché** — on sait seulement qu'il n'a rien cassé.
+- ▶ **`/brief retour-1b`** — le tutoriel qui traverse les menus (décision 81). Rien ne le bloque.
+- ▶ Puis `retour-2` à `retour-8`, dans l'ordre des dépendances du document. ⚠️ **`retour-6` (les
+  filtres d'envie deviennent durs) attend la décision 79**, pas seulement du code.
+
+
 1. **▶ LOTS GESTE 1, GESTE 3 ET GESTE 4 LIVRÉS le 2026-08-16** (`e259bcb` le champ média, `de2ba39`
    l'affichage, `00f8e38` le hors-ligne). ⛔ **Il ne reste AUCUN lot débloqué dans ce chantier** : le
    lot geste 2 est le seul ouvert, et il est arrêté par décision. **La suite du chantier est un choix,
