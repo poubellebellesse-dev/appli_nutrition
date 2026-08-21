@@ -370,7 +370,11 @@ navigation aboutit. Il manque **l'enchaînement**, pas le contenu.
 
 **Les trois choses à faire, et la troisième est la seule vraie inconnue :**
 
-1. un parcours composé qui entrelace `ETAPES_MENUS` et les parcours d'écran ;
+1. un parcours composé qui **entrelace** `ETAPES_MENUS` et les parcours d'écran — ⛔ **entrelacer,
+   pas concaténer** : une étape de transition, puis le bloc de l'écran où elle mène, puis la
+   transition suivante, et ainsi de suite. Mettre les cinq transitions d'abord et les cinq blocs
+   ensuite produit 29 étapes, satisfait les clauses 2, 4, 5, 6 et 7 — et **échoue les quatre autres**,
+   c'est mesuré plus bas ;
 2. une étape « touchez Aujourd'hui », qui **n'existe pas** — son absence est écrite dans
    `parcours.ts` comme une décision (« c'est l'écran de départ le plus courant, le désigner
    n'apprendrait rien »), et cette décision tombe avec ce lot ;
@@ -384,6 +388,122 @@ navigation aboutit. Il manque **l'enchaînement**, pas le contenu.
    confusion deux fois dans la même journée. **La première clause du « Fini quand » doit être
    celle-là.**
 
+**Fini quand** — cinq clauses, jouées contre la coquille RÉELLE (`ui/main.tsx` monté comme le font
+déjà `main.test.tsx:52` et `main-accessibilite.test.tsx:78`), jamais contre un écran isolé ni contre
+la table `PARCOURS` seule. Le compte de référence : **29 étapes**, soit les 5 de `menus`, les 23 des
+cinq parcours d'écran (5 + 4 + 4 + 5 + 5) et **une** étape neuve qui demande de toucher Aujourd'hui.
+
+1. ⛔ **L'ENCHAÎNEMENT NE SAUTE RIEN — c'est la clause qui décide du lot.** On traverse l'intro, on
+   répond « Oui » à l'invitation, puis on **joue le tutoriel comme un utilisateur** : « Suivant » sur
+   les étapes de lecture, et pour les autres le geste que l'étape déclare — y compris le clic sur le
+   **vrai lien de la barre d'onglets**, celui de `navigation.tsx`, jamais une destination choisie
+   par le test. Les cinq étapes d'ouverture d'écran sont alors **réellement affichées, dans cet
+   ordre** :
+
+   | ordre | titre affiché | écran |
+   |---|---|---|
+   | 1 | « Une idée à la fois » | Aujourd'hui |
+   | 2 | « Toute la semaine d'un coup » | Semaine |
+   | 3 | « La liste se fait toute seule » | Courses |
+   | 4 | « Chercher, pas se faire proposer » | Recettes |
+   | 5 | « Pour comprendre, pas pour décider à votre place » | Savoir |
+
+   Et le tutoriel se ferme **après** la cinquième, jamais avant. ⚠️ **Ce sont les étapes
+   INCONDITIONNELLES de la règle 1** (`parcours.ts`, verrouillée par `parcours.test.ts`) : elles
+   ciblent le titre de l'écran, toujours monté. Une étape conditionnelle légitimement sautée
+   (`composer-semaine` quand un plan existe, `sans-rien-acheter` sur un frigo vide) ne fait pas
+   échouer la clause — un écran entier sauté, si. ▶ **Ce qui la rendrait fausse** : voir
+   « Vos courses » là où « Toute la semaine d'un coup » est attendu, c'est-à-dire l'écran Semaine
+   traversé sans qu'une seule de ses étapes s'affiche.
+
+   ⚠️ **MESURÉ LE 2026-08-21, ET ÇA CONTRAINT LE TEST** : en jsdom, cliquer un `<a href="#/semaine">`
+   **met bien à jour `location.hash`**, mais **n'émet AUCUN `hashchange`** — vérifié par un fichier
+   jetable, `hash = "#/semaine"` et `hashchange = 0`. Or `useRoute()` n'écoute que `hashchange`.
+   Le test clique donc le vrai lien **puis réveille jsdom** par un `hashchange` à la main, comme le
+   font déjà `visite.test.tsx:54-55` et `main-accessibilite.test.tsx:66-67`. **Ce n'est pas la
+   triche que la clause interdit** : la destination vient du `href` du lien touché, pas du test. Si
+   la bulle désignait un autre onglet, le test irait ailleurs et échouerait.
+
+2. **Le premier lancement joue le composé, pas « menus ».** Juste après « Oui », la bulle annonce
+   **« Étape 1 sur 29 »**. ▶ Faux si elle annonce « sur 5 » : le tutoriel de première ouverture est
+   resté celui de la barre d'onglets.
+
+3. **Une étape demande de toucher Aujourd'hui, et elle précède les étapes d'Aujourd'hui.** Sa bulle
+   **n'a pas de bouton « Suivant »** (c'est une étape à geste, `attendGeste` dans `visite.tsx`), et
+   cliquer le vrai lien `#/aujourdhui` la fait avancer. ▶ Faux si la bulle porte « Suivant » : le
+   geste serait décoratif, on avancerait sans toucher l'onglet.
+
+4. **Le composé RÉUTILISE les étapes existantes, il ne les recopie pas.** Chacune des 23 étapes des
+   cinq parcours d'écran, et chacune de celles de `menus`, se retrouve dans le composé **par identité
+   d'objet** (`toBe`, pas `toEqual`), dans son ordre d'origine. ▶ Faux si un `toEqual` passe là où un
+   `toBe` échoue : les textes ont été dupliqués, et ils divergeront au premier lot de contenu.
+
+5. **Les neuf parcours restent lançables un par un.** `PARCOURS` porte toujours les neuf
+   identifiants d'origine, chacun avec au moins une étape. ▶ Faux si le composé en a remplacé un.
+   ⚠️ **LE COMPOSÉ VIT DANS `PARCOURS`, ET CE N'EST PLUS UN CHOIX** : `main.tsx:448` joue
+   `etapesDuParcours(parcoursActif)`, donc un parcours hors table serait injouable par le mécanisme
+   actuel. La clause l'exige (`PARCOURS.length > 9`). Reste ouvert, en revanche : que la liste
+   « Revoir un tutoriel » de Réglages, dérivée de la même table, l'affiche ou le filtre.
+
+6. ⛔ **AUCUNE BULLE NE POINTE DANS LE VIDE.** Toute bulle affichée pendant le parcours désigne un
+   élément **réellement présent dans le DOM** à l'instant où elle s'affiche. ▶ **Née de l'attaque du
+   2026-08-21** : le lot a le droit de toucher `visite.tsx`, et le chemin le plus court est de faire
+   rendre à `premierIndexValide` son point de départ sans rien vérifier. Les 29 étapes défilent
+   alors dans l'ordre du tableau, les cinq ouvertures s'affichent, le compteur dit 29 — et chaque
+   bulle d'un écran absent désigne un élément qui n'existe pas. **Six clauses vertes, garde-fou
+   supprimé au lieu d'être remplacé.**
+
+7. **Les titres du parcours joué sont deux à deux distincts.** ▶ **Mesuré, pas supposé** :
+   « Partir de ce que vous avez » existe DÉJÀ deux fois dans `parcours.ts` (lignes 170 et 289), sur
+   deux cibles différentes, et la première appartient à `ETAPES_AUJOURDHUI`, donc au composé. Deux
+   bulles au même titre, c'est un défaut pour qui suit le tutoriel autant qu'un piège pour qui le
+   pilote.
+
+⚠️ **LES CLAUSES 6 ET 7 SONT VERTES AUJOURD'HUI, ET C'EST VOULU** — même rôle que les axes
+`legerConsistant` et `sucreSale` du lot `retour-1`. Ce sont des gardes **anti-débordement** : elles
+n'existent pas pour révéler le défaut du jour, elles existent pour rougir si la correction l'obtient
+en cassant autre chose.
+
+⛔ **CE QUE LA CLAUSE 3 NE PROUVE PAS, ET IL FAUT LE SAVOIR.** `router.tsx:371` pose
+`ROUTE_PAR_DEFAUT = { onglet: 'aujourdhui' }` : **l'écran Aujourd'hui est déjà monté quand le
+tutoriel démarre.** La transition « touchez Aujourd'hui » ne traverse donc JAMAIS le risque de course
+décrit plus haut — elle ne teste que la FORME du geste. **C'est la clause 1 qui traverse la course,
+quatre fois** : Semaine, Courses, Recettes et Savoir, eux, ne sont pas montés.
+
+⛔ **ET CE QU'AUCUNE CLAUSE NE PROUVERA : jsdom committe de façon synchrone.** Un vert ici ne dit
+rien de la peinture réelle d'un navigateur, où le montage d'un écran peut arriver plus tard. **La
+course se vérifie à l'œil, sur le téléphone**, au même titre que les réparations visuelles de
+`retour-1` — protocole §3. Un arbre vert n'est pas une preuve sur ce point précis, et le prétendre
+serait exactement l'erreur que ce document reproche ailleurs.
+
+⚠️ **CE QUE LE « FINI QUAND » NE DIT PAS, ET QU'IL FAUDRA TRANCHER EN CODANT** : le libellé exact de
+l'étape « touchez Aujourd'hui » ; l'identifiant du parcours composé ; où elle vit dans le code (une
+constante à part ou en ligne dans le tableau composé) ; **son type de geste — `clic` ou `route`, les
+deux passent les clauses** ; la valeur de `ecran` pour le composé (`null` comme `menus` est
+déductible par analogie, ce n'est pas une spécification) ; et **si `visite.tsx` doit attendre qu'une
+cible apparaisse au lieu de la sauter**.
+
+⛔ **CE QUE LES CLAUSES N'EXERCENT PAS : UN COMPTE QUI A DÉJÀ SERVI.** `test-socle.js` monte un
+compte NEUF — pas de plan de semaine, pas de liste de courses, frigo vide. Or les étapes
+conditionnelles de `ETAPES_SEMAINE` et `ETAPES_COURSES` changent de forme dès qu'un plan existe
+(`composer-semaine` disparaît, `autre-semaine` apparaît). **Rejouer le composé depuis « Revoir un
+tutoriel » sur un compte rempli n'est couvert par rien**, ni ici ni ailleurs. Ce n'est pas une raison
+de bloquer le lot — c'est une raison de ne pas prétendre que le vert le couvre.
+
+⚠️ **`ecran: null` POUR LE COMPOSÉ EST UN CHOIX, PAS UNE ÉVIDENCE.** Le prendre par analogie avec
+`menus` donnerait **deux** entrées de `PARCOURS` à `ecran === null`, et `parcoursDeLEcran`
+(`parcours.ts:498`) est un `find` : il rendrait la première, en silence. ▶ **Sans conséquence
+aujourd'hui — cette fonction n'a AUCUN appelant**, vérifié sur tout `app/src` ; `lien-tutoriel.tsx:6`
+explique même pourquoi on ne s'en sert pas. L'autre option, `ecran: hashDe('aujourdhui')`, a du sens
+en soi : `lancerParcours` amènerait sur l'écran de départ avant de démarrer. **Le lot tranche, le
+brief ne tranche pas.**
+
+⚠️ **UN POINT DE CODE QUE LE BRIEF NE NOMMAIT PAS ET QU'IL FAUDRA TOUCHER** : `main.tsx:178` fixe
+`parcoursActif` à `'menus'` **en dur**, et `repondreInvitation` ne le change jamais avant de lancer
+la visite. La clause 2 impose 29 dès la première bulle : cette ligne doit bouger. Ce
+dernier point est le seul qui touche au mécanisme — clause 1 dit ce qu'on doit observer, pas comment
+l'obtenir, et **desserrer `premierIndexValide` sans le remplacer rouvrirait le tutoriel fantôme**.
+
 ⛔ **CE LOT TOUCHE AU COMPOSANT QUI JOUE LES TUTORIELS, pas seulement à leur contenu.** Ce n'est pas
 de l'affichage : c'est du comportement, et `premierIndexValide` est un garde-fou volontaire contre
 le « tutoriel fantôme » (règle 1 de l'en-tête de `parcours.ts`). Le desserrer sans le remplacer
@@ -393,6 +513,80 @@ rouvrirait exactement ce qu'il ferme.
 séparément, et **cette liste n'est pas ce que l'auteur visait** — vérifié auprès de lui le même jour,
 après une première interprétation fausse de ma part. Les neuf parcours individuels restent lançables
 un par un ; ce lot ajoute un dixième chemin, il n'en supprime aucun.
+
+#### Ce que le lot NE TOUCHE PAS
+
+`app/src/engine/` en entier · `catalog/` et `catalog.db` — **aucun contenu ne bouge, donc ni
+`catalog/build.mjs` ni `catalog/audit-mapping.mjs` ne sont des témoins de ce lot** · les neuf
+parcours existants, dont **aucune étape n'est réécrite** (clause 4 : identité d'objet) · les écrans
+(`ui/screens/`), sauf si une cible `data-visite` manquait — auquel cas c'est à signaler, pas à
+faire en silence · le mécanisme d'invitation de fin d'intro, qui reste un `Panneau` proposé une
+seule fois.
+
+⛔ **LA SEULE EXTENSION AUTORISÉE HORS `parcours.ts` EST `visite.tsx`**, et seulement si la clause 1
+l'exige. `premierIndexValide` est un garde-fou volontaire : le desserrer sans le remplacer rouvre
+le tutoriel fantôme que la règle 1 de `parcours.ts` existe pour fermer.
+
+#### Les témoins d'avant — mesurés le 2026-08-21, arbre du brief
+
+| Commande | Avant le lot |
+|---|---|
+| `npm test` | **2 265 passed / 8 failed (124 fichiers)** en 43,6 s — **les 8 rouges sont ceux de ce brief, et les 2 verts de plus sont ses clauses 6 et 7** ; le reste, 2 263, est exactement le relevé de `retour-1`, compté et non déduit |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ 3,11 s |
+| `npm run engine:plan-stress` | **20/20** |
+
+⚠️ **CE QUE LE ROUGE PROUVE, LIGNE À LIGNE** — un test scellé qui échoue pour une raison de
+harnais ne prouverait rien :
+
+| Clause | Sortie |
+|---|---|
+| 1 — l'enchaînement | 🔴 `expected [] to deeply equal [ 'Une idée à la fois', …(4) ]` |
+| 1 — sur le bon écran | 🔴 `expected [] to deeply equal [ Array(5) ]` |
+| 1 — la fin | 🔴 `expected -1 to be greater than or equal to 0` |
+| 2 — le composé au premier lancement | 🔴 `expected [ 1, 5 ] to deeply equal [ 1, 29 ]` |
+| 3 — toucher Aujourd'hui | 🔴 `expected 'Cette semaine' to be 'Une idée à la fois'` |
+| 3 — elle dit ce qu'elle demande | 🔴 `expected undefined to be defined` |
+| 4 — réutiliser sans recopier | 🔴 `expected undefined to be defined` |
+| 5 — les neuf survivent | 🔴 `expected 9 to be greater than 9` |
+| 6 — aucune bulle dans le vide | 🟢 **verte, garde anti-débordement** |
+| 7 — titres distincts | 🟢 **verte, garde anti-débordement** |
+
+⛔ **HUIT ROUGES QUI DISENT CHACUN LEUR PROPRE DÉFAUT — ET IL A FALLU S'Y REPRENDRE À DEUX FOIS.** Le
+premier durcissement faisait dépendre les clauses de terrain de l'EXISTENCE du composé : six d'entre
+elles échouaient alors sur le même `expected undefined to be defined`, **un rouge exact et
+parfaitement muet**, qui ne prouvait plus qu'elles savaient détecter leur défaut. Le pilote joue
+désormais **le parcours que l'application lance réellement**, déduit du total et du titre affichés —
+aucun nom de parcours en dur. **Un test rouge n'est utile que si son message désigne la cause.**
+
+⚔️ **LE BRIEF A ÉTÉ ATTAQUÉ DEUX FOIS. LE SECOND ROUND A ÉCRIT SA TRICHE ET L'A LANCÉE.** Le
+premier n'avait que raisonné — « raisonné, pas mesuré, faute de temps » —, ce qui ne prouve rien
+dans un sens ni dans l'autre. Le second a écrit dans l'arbre un parcours composé obtenu par
+**concaténation** des blocs (29 étapes, réutilisant les vrais objets, branché comme tutoriel par
+défaut), puis a lancé la suite :
+
+```
+Tests  4 failed | 6 passed (10)
+× affiche l'étape d'ouverture des CINQ écrans   → expected [] to deeply equal [ 'Une idée à la fois', …(4) ]
+× est RÉELLEMENT sur l'écran                    → expected [] to deeply equal [ Array(5) ]
+× ne se termine qu'APRÈS la dernière ouverture  → expected -1 to be greater than or equal to 0
+× touchez Aujourd'hui                           → expected 'Cette semaine' to be 'Une idée à la fois'
+```
+
+⛔ **CE QUE CE 4/10 DÉMONTRE, ET QU'AUCUNE RELECTURE N'AURAIT DÉMONTRÉ** : les clauses 2, 4, 5, 6 et 7
+sont satisfaites par la seule PRÉSENCE des bons objets en bon nombre — **elles ne discriminent pas
+seules**. C'est la clause 1, qui joue le parcours sur le vrai DOM et relève `location.hash` à chaque
+bulle, qui attrape la triche : une concaténation laisse le tutoriel sur Aujourd'hui pendant que la
+table déroule les titres de Semaine, dont les cibles ne sont pas dans le DOM ; `premierIndexValide`
+les saute toutes et `ouverturesVues` rend `[]`. ▶ **Verdict du round 2 : NON TROUVÉ de triche qui
+fasse passer les dix.** L'arbre a été rendu intact — vérifié à la main, `git diff -- app/src` vide,
+aucun `.orig` orphelin.
+
+✅ **LE PILOTE A ÉTÉ VÉRIFIÉ VIVANT AVANT D'ÊTRE CRU MORT.** Une sonde temporaire a relevé ce qu'il
+traverse réellement aujourd'hui : `["La navigation", "Cette semaine", "Vos courses", "Toutes les
+recettes", "Le coin Savoir"]`, hash final `#/savoir`. Il clique donc bien les vrais liens, la
+navigation aboutit, et le tutoriel se déroule jusqu'au bout — **il nomme les cinq onglets sans
+entrer dans un seul.** C'est exactement le défaut que le lot ferme, et non un harnais cassé.
 
 ---
 

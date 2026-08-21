@@ -18,9 +18,9 @@
 // précédent.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { hashDe } from './router.js'
-import { Visite, type EtapeVisite } from './visite.js'
+import { ATTENTE_CIBLE_MS, Visite, type EtapeVisite } from './visite.js'
 import { PARCOURS, etapesDuParcours } from './parcours.js'
 
 const ETAPES_MENUS = etapesDuParcours('menus')
@@ -185,14 +185,25 @@ describe('visite — cible introuvable', () => {
     // L'étape 3 (« Courses ») n'existe plus : elle doit être sautée, pas provoquer d'erreur.
     document.querySelector(`a[href="${hashDe('courses')}"]`)?.remove()
     const onTerminer = vi.fn()
+    vi.useFakeTimers()
     expect(() => render(<Visite etapes={ETAPES_MENUS} onTerminer={onTerminer} />)).not.toThrow()
 
     fireEvent.click(bouton(/^Suivant/)) // étape 1 → étape 2 (Semaine, présente)
     expect(screen.getByText(`Étape 2 sur ${ETAPES_MENUS.length}`)).toBeDefined()
 
-    naviguerVers(hashDe('semaine')) // étape 2 → étape 3 absente → saute à l'étape 4 (Recettes)
+    // ⚠️ EN DEUX TEMPS DEPUIS LE LOT `retour-1b`, ET LA PREMIÈRE MOITIÉ EST NEUVE. Le saut était
+    //    IMMÉDIAT ; il ne l'est plus après un CHANGEMENT D'ÉCRAN, parce qu'une cible absente y veut
+    //    dire deux choses (voir l'en-tête de `visite.tsx`) : « elle n'existera jamais », ou « l'écran
+    //    d'arrivée charge encore ». La visite attend donc d'abord, en silence, sans jamais poser de
+    //    bulle sur du vide — puis elle renonce et saute, ce que la fin de ce test vérifie inchangé.
+    naviguerVers(hashDe('semaine'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(onTerminer).not.toHaveBeenCalled()
+
+    act(() => vi.advanceTimersByTime(ATTENTE_CIBLE_MS))
     expect(screen.getByText(`Étape 4 sur ${ETAPES_MENUS.length}`)).toBeDefined()
     expect(onTerminer).not.toHaveBeenCalled()
+    vi.useRealTimers()
   })
 
   it('⛔ toutes les cibles absentes : onTerminer() est appelé et rien n’est rendu', () => {

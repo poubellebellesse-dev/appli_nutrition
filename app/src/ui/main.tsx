@@ -174,8 +174,16 @@ function Coquille() {
    * visite tourne.
    */
   const [etapeVisite, setEtapeVisite] = useState<'aucune' | 'invitation' | 'active'>('aucune')
-  /** Quel parcours la visite active joue — l'invitation de fin d'accueil lance toujours « menus ». */
-  const [parcoursActif, setParcoursActif] = useState('menus')
+  /**
+   * Quel parcours la visite active joue — l'invitation de fin d'accueil lance toujours « découverte »,
+   * le seul qui TRAVERSE les menus en entrant dans chacun (`ui/parcours.ts`).
+   *
+   * ⚠️ C'ÉTAIT « menus » JUSQU'AU LOT `retour-1b`, et « menus » nommait les cinq onglets sans jamais
+   * entrer dedans : on apprenait où toucher, jamais ce qu'on y trouvait. Le parcours « menus » existe
+   * toujours et reste lançable depuis « Revoir un tutoriel » — ce lot ajoute un chemin, il n'en
+   * supprime aucun.
+   */
+  const [parcoursActif, setParcoursActif] = useState('decouverte')
   /**
    * Un parcours demandé depuis un AUTRE écran que le sien (typiquement Réglages), en attente que la
    * navigation vers `parcours.ecran` ait réellement abouti avant de monter `<Visite>`.

@@ -26,11 +26,26 @@
 // `pointer-events` est une propriété HÉRITÉE, la bulle elle-même reprend explicitement
 // `pointer-events-auto` pour que « Passer » reste cliquable.
 //
-// ⚠️ CIBLE INTROUVABLE = ÉTAPE SAUTÉE, JAMAIS DE PLANTAGE — décision reprise telle quelle de la
-// version précédente. `premierIndexValide` reste l'unique point qui décide « cette étape existe-t-
-// elle », sur `document.querySelector(...) !== null` uniquement (jamais une dimension mesurée, nulle
-// sous jsdom et avant la première peinture). Si plus aucune étape n'est valide, la visite se termine
-// d'elle-même.
+// ⚠️ CIBLE INTROUVABLE : DEUX CAS, ET LE LOT `retour-1b` A DÛ LES SÉPARER. Une cible absente est
+// jugée sur `document.querySelector(...) !== null` uniquement (jamais une dimension mesurée, nulle
+// sous jsdom et avant la première peinture) — mais l'absence ne veut pas dire la même chose partout :
+//
+//   • HORS TRANSITION D'ÉCRAN, l'étape est SAUTÉE, comme depuis toujours. Sa cible n'existe pas sur
+//     ce compte-là (Courses sans liste, semaine non composée) et n'existera pas : `ui/parcours.ts`
+//     écrit que ces sauts sont voulus. Si plus aucune étape n'est valide, la visite se termine.
+//   • APRÈS UNE TRANSITION D'ÉCRAN, l'étape est ATTENDUE, jamais sautée. ⛔ CHAQUE ÉCRAN DE CE
+//     DÉPÔT DÉMARRE EN `phase: 'chargement'` et n'affiche qu'un « Chargement… » : son ancre
+//     `data-visite` n'arrive qu'après une promesse. Sauter à l'instant de l'arrivée écartait donc
+//     TOUTES les étapes de l'écran d'un coup — mesuré le 2026-08-21 : le tutoriel de première
+//     ouverture traversait cinq écrans en n'en montrant qu'un, et s'éteignait en silence sur le
+//     dernier. Ce n'est pas un artefact de jsdom : sur téléphone le chargement est plus lent.
+//     L'étape qui suit une transition est TOUJOURS l'étape d'ouverture de l'écran, inconditionnelle
+//     par la règle 1 de `ui/parcours.ts` et verrouillée par `parcours.test.tsx` : l'attendre est donc
+//     sûr par construction, pas par pari.
+//
+// ⛔ PENDANT L'ATTENTE, RIEN NE S'AFFICHE. Une bulle posée sur une cible absente est exactement le
+// « tutoriel fantôme » que `premierIndexValide` existe pour empêcher : le calque revient dès que la
+// cible paraît, pas avant.
 //
 // ⚠️ LE TUTORIEL VIT AU-DESSUS DU ROUTEUR — c'est le point structurant d'une étape « route » : une
 // étape « touchez l'onglet Recettes » fait CHANGER D'ÉCRAN, et un tutoriel monté DANS un écran serait
@@ -77,6 +92,16 @@ export function premierIndexValide(etapes: readonly EtapeVisite[], depart: numbe
   return null
 }
 
+/**
+ * Combien de temps la visite attend une cible qui doit paraître, avant de renoncer et de sauter.
+ *
+ * ⚠️ C'EST UN GARDE-FOU, PAS UN DÉLAI D'USAGE. En marche normale l'ancre de l'écran arrive en
+ * quelques dizaines de millisecondes et l'attente se termine sur le `MutationObserver`, jamais sur
+ * ce compte à rebours. Il ne sert qu'au cas où l'écran d'arrivée tombe en erreur et n'affiche donc
+ * jamais son ancre : sans lui, le tutoriel resterait invisible pour toujours au lieu de reprendre.
+ */
+export const ATTENTE_CIBLE_MS = 4000
+
 /** Marge, en pixels, entre la bulle (ou le contour) et le bord de l'écran ou de la cible. */
 const MARGE_PX = 16
 
@@ -104,6 +129,15 @@ export function Visite({
   const [etapeIndex, setEtapeIndex] = useState<number | null>(() => premierIndexValide(etapes, 0))
   const [rect, setRect] = useState<DOMRect | null>(null)
   /**
+   * La cible de l'étape courante est-elle dans le DOM ? Tant qu'elle n'y est pas, la visite se tait
+   * et guette — voir l'en-tête, deuxième cas.
+   *
+   * ⚠️ VRAI PAR DÉFAUT, ET C'EST VOULU : hors transition d'écran, `premierIndexValide` a déjà
+   * garanti la présence avant de poser l'index. Le chemin rapide ci-dessous ne coûte alors qu'un
+   * `querySelector`, et aucun observateur n'est créé.
+   */
+  const [ciblePresente, setCiblePresente] = useState(true)
+  /**
    * La première étape RÉELLEMENT affichée, figée au montage — c'est elle qui porte le bandeau
    * « TUTORIEL ».
    *
@@ -117,6 +151,26 @@ export function Visite({
   // La route courante, pour les étapes « route » — même hook que `main.tsx` : pas de second
   // écouteur `hashchange` (voir l'en-tête).
   const route = useRoute()
+
+  /**
+   * La route au moment où l'étape courante s'est affichée.
+   *
+   * ⛔ UNE ÉTAPE « route » NE DOIT PAS SE VALIDER TOUTE SEULE. Son contrat est « il faut ARRIVER sur
+   * cet écran » — y être déjà n'est pas y arriver. Le tutoriel de première ouverture démarre SUR
+   * Aujourd'hui (`ROUTE_PAR_DEFAUT`, `router.tsx:371`) et sa deuxième étape demande de toucher
+   * Aujourd'hui : sans ce repère, elle s'évanouirait dans le même souffle, avant que personne ne
+   * l'ait lue. Ce qui la valide alors, c'est le TOUCHER de sa cible (voir l'effet de clic).
+   *
+   * ⚠️ MIS À JOUR PENDANT LE RENDU, PAS DANS UN EFFET : un effet passerait APRÈS celui qui teste la
+   * route, et le repère vaudrait encore celui de l'étape précédente. `<StrictMode>` double le rendu
+   * sans dommage — au second passage l'index n'a pas bougé, donc rien n'est réécrit.
+   */
+  const routeALArrivee = useRef(route)
+  const indexMesure = useRef(etapeIndex)
+  if (indexMesure.current !== etapeIndex) {
+    indexMesure.current = etapeIndex
+    routeALArrivee.current = route
+  }
 
   // Plus aucune étape valide — au montage comme après un « Suivant » qui vide la liste : on prévient
   // l'appelant plutôt que de rester affiché sur rien.
@@ -155,7 +209,9 @@ export function Visite({
     recalculer()
     window.addEventListener('resize', recalculer)
     return () => window.removeEventListener('resize', recalculer)
-  }, [etapeIndex, etapes])
+    // ⚠️ `ciblePresente` EST UNE DÉPENDANCE, PAS UN OUBLI : sans elle, une cible attendue serait
+    //    mesurée une seule fois, quand elle n'existait pas encore, et le halo ne se poserait jamais.
+  }, [etapeIndex, etapes, ciblePresente])
 
   // Le focus entre dans la bulle à chaque étape — c'est aussi ce qui annonce le changement d'étape
   // aux lecteurs d'écran (dialogue nommé par `aria-label`, focus déplacé dedans).
@@ -188,32 +244,103 @@ export function Visite({
     return () => document.removeEventListener('keydown', surTouche)
   }, [onTerminer])
 
-  const surSuivant = useCallback(() => {
-    setEtapeIndex((i) => (i === null ? null : premierIndexValide(etapes, i + 1)))
-  }, [etapes])
+  /**
+   * Avance à l'étape suivante. `depuis` rend l'appel IDEMPOTENT pour une étape donnée.
+   *
+   * ⚠️ SANS CE GARDE, UNE ÉTAPE « route » EN SAUTERAIT UNE. Depuis ce lot elle avance sur DEUX
+   * signaux — le toucher de sa cible et l'arrivée sur l'écran — et un lien d'onglet produit les deux
+   * dans le même lot React. Deux `surSuivant()` en forme fonctionnelle avancent deux fois ; passer
+   * l'index d'où l'on part fait ignorer le second.
+   *
+   * ⛔ UN `useRef` COMME DRAPEAU NE CONVIENDRAIT PAS : `<StrictMode>` invoque l'updater DEUX FOIS,
+   * et le second passage trouverait le drapeau déjà levé — il ANNULERAIT l'avancée au lieu de la
+   * protéger. Comparer l'index est idempotent, donc insensible au nombre d'invocations.
+   */
+  const surSuivant = useCallback(
+    (depuis?: number, sansSauter = false) => {
+      setEtapeIndex((i) => {
+        if (i === null || (depuis !== undefined && i !== depuis)) return i
+        // ⛔ `sansSauter` : on vient de CHANGER D'ÉCRAN. L'étape suivante est l'ouverture de l'écran
+        //    d'arrivée, qui n'a pas encore fini de charger — la mesurer maintenant l'écarterait, elle
+        //    et tout son bloc. On y va quand même, et l'effet d'attente ci-dessous la fait paraître.
+        if (sansSauter) return i + 1 < etapes.length ? i + 1 : null
+        return premierIndexValide(etapes, i + 1)
+      })
+    },
+    [etapes]
+  )
 
   const etape = etapeIndex === null ? undefined : etapes[etapeIndex]
+
+  useEffect(() => {
+    if (etape === undefined) return
+    const laVoit = () => document.querySelector(etape.cible) !== null
+    if (laVoit()) {
+      setCiblePresente(true)
+      return
+    }
+    setCiblePresente(false)
+
+    // ⚠️ UN OBSERVATEUR, PAS UN SONDAGE : l'ancre paraît quand la promesse de l'écran se résout,
+    //    et `MutationObserver` le voit à la micro-tâche près — y compris sous jsdom, où aucun
+    //    `requestAnimationFrame` n'est garanti.
+    const observateur = new MutationObserver(() => {
+      if (!laVoit()) return
+      observateur.disconnect()
+      setCiblePresente(true)
+    })
+    observateur.observe(document.body, { childList: true, subtree: true })
+
+    const renoncer = window.setTimeout(() => {
+      observateur.disconnect()
+      // L'écran ne montrera jamais son ancre (erreur de chargement) : on reprend la règle ordinaire
+      // à partir d'ICI, ce qui saute cette étape-là et, s'il n'en reste aucune, termine la visite.
+      setEtapeIndex((i) => (i === null ? null : premierIndexValide(etapes, i)))
+    }, ATTENTE_CIBLE_MS)
+
+    return () => {
+      observateur.disconnect()
+      window.clearTimeout(renoncer)
+    }
+  }, [etape, etapes])
 
   // Étape « clic » : avance quand la VRAIE cible est cliquée à travers le calque (voir l'en-tête —
   // le calque ne capte plus les clics pour ce type d'étape). Capture, pas bulle : on veut réagir
   // même si la cible arrête elle-même la propagation dans son propre gestionnaire.
   useEffect(() => {
-    if (etape === undefined || etape.attendu.type !== 'clic') return
-    const { cible } = etape.attendu
+    if (etape === undefined || etape.attendu.type === 'lecture') return
+    // ⛔ « route » PASSE PAR ICI AUSSI DEPUIS LE LOT `retour-1b`. Une étape qui demande de toucher
+    //    l'onglet où l'on se trouve DÉJÀ ne verrait jamais la route changer ; son seul signal est le
+    //    toucher. Sa cible est celle qu'elle DÉSIGNE (`etape.cible`, le lien de la barre), là où une
+    //    étape « clic » nomme la sienne séparément.
+    const cible = etape.attendu.type === 'clic' ? etape.attendu.cible : etape.cible
     const surClic = (evenement: MouseEvent) => {
-      if (evenement.target instanceof Element && evenement.target.closest(cible) !== null) surSuivant()
+      if (!(evenement.target instanceof Element) || evenement.target.closest(cible) === null) return
+      // ⛔ SI LE TOUCHER VA CHANGER D'ÉCRAN, ON NE BOUGE PAS ENCORE — c'est l'ARRIVÉE qui valide.
+      //    Avancer dès le clic écarterait toutes les étapes de l'écran visé : il n'est pas monté à
+      //    cet instant, donc `premierIndexValide` ne trouve aucune de ses cibles et la visite
+      //    s'arrête en silence. C'est le mode de défaillance décrit en tête de `ui/parcours.ts`, et
+      //    le lot `retour-1b` l'a rencontré pour de vrai : 7 clauses sur 10 passaient, le tutoriel
+      //    s'arrêtait après le bloc « Aujourd'hui » et n'atteignait jamais « Semaine ».
+      if (etape.attendu.type === 'route' && hashDe(route.onglet) !== etape.attendu.hash) return
+      surSuivant(etapeIndex ?? undefined)
     }
     document.addEventListener('click', surClic, true)
     return () => document.removeEventListener('click', surClic, true)
-  }, [etape, surSuivant])
+  }, [etape, etapeIndex, route, surSuivant])
 
   // Étape « route » : avance dès que la route RÉELLE correspond à celle attendue — jamais avant.
   useEffect(() => {
     if (etape === undefined || etape.attendu.type !== 'route') return
-    if (hashDe(route.onglet) === etape.attendu.hash) surSuivant()
-  }, [etape, route, surSuivant])
+    // Y ÊTRE DÉJÀ N'EST PAS Y ARRIVER : sans ce test, l'étape se validerait à son propre affichage.
+    if (route === routeALArrivee.current) return
+    // `true` : on ARRIVE sur l'écran, il charge encore. Voir `surSuivant` et l'en-tête.
+    if (hashDe(route.onglet) === etape.attendu.hash) surSuivant(etapeIndex ?? undefined, true)
+  }, [etape, etapeIndex, route, surSuivant])
 
-  if (etapeIndex === null || etape === undefined) return null
+  // ⛔ PAS DE BULLE SUR UNE CIBLE ABSENTE — la visite n'est pas finie pour autant : `onTerminer`
+  //    ne part que sur `etapeIndex === null`. Elle se tait, elle attend, elle revient.
+  if (etapeIndex === null || etape === undefined || !ciblePresente) return null
 
   // Une étape qui attend un geste (clic ou route) n'a pas de « Suivant » : le geste EST le seul
   // moyen d'avancer, hors « Passer ». C'est aussi elle qui décide si le calque bloque les clics.
@@ -304,7 +431,7 @@ export function Visite({
           {!attendGeste && (
             <button
               type="button"
-              onClick={surSuivant}
+              onClick={() => surSuivant()}
               className="flex min-h-tactile flex-1 items-center justify-center gap-2 rounded-[0.7rem] bg-accent-plein px-4 text-courant font-semibold text-white"
             >
               Suivant

@@ -53,6 +53,7 @@ import type { EtapeVisite } from './visite.js'
  * compilation, pas un plantage chez l'utilisateur.
  */
 export type ParcoursId =
+  | 'decouverte'
   | 'menus'
   | 'aujourdhui'
   | 'semaine'
@@ -132,6 +133,26 @@ const ETAPES_MENUS: readonly EtapeVisite[] = [
     attendu: { type: 'route', hash: hashDe('savoir') },
   },
 ]
+
+/**
+ * L'étape que `ETAPES_MENUS` n'a jamais eue : « touchez Aujourd'hui ».
+ *
+ * ⚠️ ELLE RENVERSE UNE DÉCISION ÉCRITE JUSTE AU-DESSUS, et c'est voulu (lot `retour-1b`, décision 81).
+ * « Aujourd'hui n'a pas son étape » se tenait tant que le tutoriel se contentait de NOMMER les
+ * onglets : le désigner n'apprenait rien. Le parcours composé, lui, ENTRE dans chaque écran — il lui
+ * faut donc une porte d'entrée comme aux quatre autres, sans quoi le premier bloc arriverait sans
+ * qu'on ait rien touché.
+ *
+ * ⛔ ELLE VIT ICI ET NON DANS `ETAPES_MENUS`. Le parcours « menus » garde ses cinq étapes et son
+ * sens d'origine — ce lot AJOUTE un chemin, il n'en modifie aucun.
+ */
+const ETAPE_VERS_AUJOURDHUI: EtapeVisite = {
+  cible: `a[href="${hashDe('aujourdhui')}"]`,
+  titre: 'On commence par aujourd’hui',
+  texte:
+    "Touchez « Aujourd'hui » : c'est l'écran qui vous propose une idée pour le prochain repas, une à la fois.",
+  attendu: { type: 'route', hash: hashDe('aujourdhui') },
+}
 
 // --- 2. Aujourd'hui -----------------------------------------------------------------------------
 
@@ -472,7 +493,44 @@ const ETAPES_REGLAGES: readonly EtapeVisite[] = [
  * un contenu, pas depuis la barre — ni l'une ni l'autre n'a de parcours, pour le même motif. Le mode
  * cuisine se découvre là où l'on y entre : le bouton « Cuisiner pas à pas » de la fiche.
  */
+/**
+ * Le tutoriel de PREMIÈRE OUVERTURE : celui qui traverse les menus en entrant dans chacun.
+ *
+ * ⛔ ENTRELACÉ, PAS CONCATÉNÉ, ET LA DIFFÉRENCE N'EST PAS ESTHÉTIQUE. Une étape de transition, puis
+ * le bloc de l'écran où elle mène, puis la transition suivante. Mettre les cinq transitions d'abord
+ * et les cinq blocs ensuite donne le même compte (29) et les mêmes objets — et un tutoriel MORT :
+ * les cibles de Semaine ne sont pas dans le DOM tant qu'on est sur Aujourd'hui, `premierIndexValide`
+ * les écarte toutes, et la visite s'arrête après le premier bloc. **Mesuré le 2026-08-21** : cette
+ * erreur-là fait 4 rouges sur 10 dans `tests/scelles/retour-1b.test.tsx`.
+ *
+ * ⚠️ LES ÉTAPES SONT LES MÊMES OBJETS que ceux des parcours d'écran, jamais des copies : un texte
+ * recopié divergerait au premier lot de contenu. C'est vérifié par identité (`toBe`), pas par
+ * égalité.
+ *
+ * ⚠️ LE FRIGO, L'ÉDITEUR ET LES RÉGLAGES N'Y SONT PAS, et ce n'est pas un oubli : ce parcours suit
+ * la BARRE D'ONGLETS, qui en compte cinq. Les trois autres écrans gardent leur tutoriel propre,
+ * atteignable depuis « Revoir un tutoriel ».
+ */
+const ETAPES_DECOUVERTE: readonly EtapeVisite[] = [
+  ETAPES_MENUS[0] as EtapeVisite,
+  ETAPE_VERS_AUJOURDHUI,
+  ...ETAPES_AUJOURDHUI,
+  ETAPES_MENUS[1] as EtapeVisite,
+  ...ETAPES_SEMAINE,
+  ETAPES_MENUS[2] as EtapeVisite,
+  ...ETAPES_COURSES,
+  ETAPES_MENUS[3] as EtapeVisite,
+  ...ETAPES_RECETTES,
+  ETAPES_MENUS[4] as EtapeVisite,
+  ...ETAPES_SAVOIR,
+]
+
 export const PARCOURS: readonly Parcours[] = [
+  /* ⚠️ EN TÊTE DE TABLE, ET C'EST L'ORDRE D'USAGE : c'est le tutoriel qu'on voit en premier, le jour
+     de la première ouverture. `ecran: null` comme « menus » — il n'appartient à aucun écran puisqu'il
+     les traverse tous. ⛔ NE PAS LUI DONNER `hashDe('aujourdhui')` « pour qu'il y navigue » :
+     `parcours.test.tsx` exige que chaque `ecran` NON NUL soit unique, et Aujourd'hui a déjà le sien. */
+  { id: 'decouverte', titre: 'Découvrir l’application', ecran: null, etapes: ETAPES_DECOUVERTE },
   { id: 'menus', titre: 'Découvrir les menus', ecran: null, etapes: ETAPES_MENUS },
   { id: 'aujourdhui', titre: 'Aujourd’hui', ecran: hashDe('aujourdhui'), etapes: ETAPES_AUJOURDHUI },
   { id: 'semaine', titre: 'Cette semaine', ecran: hashDe('semaine'), etapes: ETAPES_SEMAINE },
