@@ -347,7 +347,23 @@ existant n'a bougé. Le catalogue n'ayant pas été touché, ni `catalog/build.m
 
 ---
 
-### Lot `retour-1b` — le tutoriel qui traverse les menus 🔒 **NON OUVERT**
+### Lot `retour-1b` — le tutoriel qui traverse les menus ✅ **LIVRÉ le 2026-08-21**
+
+**Livré en `42491ea`**, 6 fichiers. `npm test` **2 363 passed / 0 failed (124 fichiers)** en 44,4 s ·
+typecheck propre · `vite build` ✓ (3,06 s) · `engine:plan-stress` **20/20**. Catalogue non touché.
+Les 10 clauses scellées sont vertes.
+
+⛔ **CE QUE CE VERT NE DÉMONTRE PAS, ET IL FAUT LE SAVOIR AVANT DE LE CROIRE.** jsdom commet ses
+rendus de façon synchrone : le vert prouve que l'enchaînement est correct, **pas** que l'attente
+tient au temps de chargement réel d'un écran sur téléphone. C'est exactement la moitié du « Fini
+quand » qu'aucun test ne peut porter, et elle se paie à la main — voir §3, la passe à l'œil.
+
+⚠️ **UN CINQUIÈME FICHIER EST ENTRÉ DANS LE PÉRIMÈTRE, QUE LE BRIEF N'AVAIT PAS PRÉVU** :
+`app/src/ui/visite.test.tsx`, test ordinaire et non scellé, affirmait que le saut d'une étape sans
+cible est **immédiat** — au point exact que le lot change. Sa fin est inchangée (l'étape est bien
+sautée, la visite ne se termine pas) ; la moitié neuve vérifie qu'**aucune bulle n'est posée pendant
+l'attente**. Le titre du test reste vrai. ▶ Le brief déclarait ce fichier hors périmètre : c'est un
+écart de plan, pas de spec.
 
 **Ce que l'auteur a demandé, dans ses mots (2026-08-21) :** « montrer les différents menus · premier
 menu → Aujourd'hui · quand on clique sur le menu Aujourd'hui, on continue le menu mais spécialement
@@ -596,7 +612,6 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 
 | Lot | Ce qu'il fait | Bloqué par |
 |---|---|---|
-| `retour-1b` | **le tutoriel traverse les menus au lieu d'être neuf tutoriels séparés** (décision 81) | rien |
 | `retour-2` | le sélecteur d'exclusion s'ouvre aux 451 aliments (décision 73) | rien |
 | `retour-3` | « je mange dehors » étiquette le créneau (décision 76) | rien |
 | `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | rien |

@@ -66,7 +66,9 @@ deux questions ouvertes (79, 80). ▶ Tout est dans
   `retour-1` a livré sept réparations d'affichage que **jsdom ne sait pas vérifier**. Le protocole
   est dans `CONCEPTION_RETOURS_TEST.md` §3. **Tant qu'elle n'est pas faite, on ne sait pas si le lot
   a marché** — on sait seulement qu'il n'a rien cassé.
-- ▶ **`/brief retour-1b`** — le tutoriel qui traverse les menus (décision 81). Rien ne le bloque.
+- ▶ **`/brief retour-2`** — le sélecteur d'exclusion s'ouvre aux 451 aliments (décision 73). Rien
+  ne le bloque. ✅ `retour-1b` est livré (`42491ea`) : le tutoriel traverse les menus. Ce qu'il
+  laisse derrière lui — dont **une case de plus dans la passe à l'œil** — est dans `ETAT.md` §8.
 - ▶ Puis `retour-2` à `retour-8`, dans l'ordre des dépendances du document. ⚠️ **`retour-6` (les
   filtres d'envie deviennent durs) attend la décision 79**, pas seulement du code.
 

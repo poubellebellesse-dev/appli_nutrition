@@ -352,6 +352,28 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   que la règle 1 de `parcours.ts` interdit. **Ligne qui en découle : un parcours par écran atteignable
   depuis la barre d'onglets** — la fiche recette n'en a pas non plus, pour le même motif. Raisonnement
   complet au-dessus de la table `PARCOURS`, verrouillé par un test.
+- ✅ **UN SEUL TUTORIEL DE PREMIÈRE OUVERTURE, QUI ENTRE DANS CHAQUE MENU — lot `retour-1b`,
+  2026-08-21, `42491ea`.** Il nommait les cinq onglets sans entrer dans un seul ; il les traverse
+  maintenant, 29 étapes, un seul parcours. Les neuf parcours d'écran restent lançables un par un :
+  **ce lot ajoute un chemin, il n'en supprime aucun.** ⛔ **LE COMPOSÉ ENTRELACE, IL NE CONCATÈNE
+  PAS**, et la différence n'est pas esthétique : mesuré, une concaténation rend les mêmes 29 objets
+  dans le même compte — et un tutoriel MORT, qui reste sur le premier écran pendant que la table
+  déroule les titres des autres. ⚠️ **Une étape « touchez Aujourd'hui » a été ajoutée, ce qui
+  RENVERSE une décision écrite dans `parcours.ts`** (« c'est l'écran de départ le plus courant, le
+  désigner n'apprendrait rien ») : elle se tenait tant que le tutoriel se contentait de NOMMER les
+  onglets, elle tombe dès qu'il ENTRE dedans.
+- ✅ **UNE CIBLE ABSENTE NE VEUT PLUS DIRE UNE SEULE CHOSE — même lot, et c'est le vrai fond.**
+  `premierIndexValide` (`ui/visite.tsx`) sautait toute étape dont la cible manquait au DOM. ⛔ **OR
+  CHAQUE ÉCRAN DE CE DÉPÔT DÉMARRE EN `phase: 'chargement'`** et n'affiche son ancre `data-visite`
+  qu'après résolution d'une promesse : sauter à l'instant de l'arrivée écartait **tout le bloc** de
+  l'écran d'un coup. Mesuré : le tutoriel traversait cinq écrans en n'en montrant qu'un, puis
+  s'éteignait en silence sur le dernier. **Ce n'est pas un artefact de jsdom** — sur téléphone le
+  chargement est plus lent, pas plus rapide. ▶ La règle est désormais double : **hors transition
+  d'écran on saute** (la cible n'existera jamais sur ce compte, c'est voulu) ; **après une transition
+  on ATTEND** (l'étape suivante est l'ouverture de l'écran, inconditionnelle par la règle 1 de
+  `parcours.ts`, donc sûre par construction et non par pari). ⚠️ **PENDANT L'ATTENTE, RIEN NE
+  S'AFFICHE** : une bulle posée sur une cible absente est exactement le tutoriel fantôme que ce
+  garde-fou existe pour empêcher.
 - ✅ **Les ingrédients sont dans le mode cuisine — 2026-08-06, schéma v11.** L'écran tenait la
   recette complète en mémoire et n'en affichait **aucun** ingrédient : « c'était combien d'ail ? »
   obligeait à quitter la cuisson pour rouvrir la fiche. Une fenêtre `Panneau` donne désormais la
@@ -1088,7 +1110,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | ~~78~~ | **Peut-on réutiliser un plat déjà cuisiné ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur), en deux points opposés.** **(1) NON comme ingrédient d'une autre recette** — « trop compliqué à gérer ». Pas de réemploi partiel, pas de reste qui entre dans une préparation. **(2) OUI comme repas entier décalé** — « pouvoir décaler la semaine si l'utilisateur veut manger les restes le lendemain ». ✅ **MESURÉ : le mécanisme est déjà là pour l'essentiel** — `planLeftovers` remplace des **créneaux entiers** (ce qui est le point 1 pris à l'envers : la couche restes ne sait DÉJÀ pas faire du partiel), et `lockedEntries`/`entry.locked` sont préservés par `plan-week`. Il manque **une action « les restes de… »** créant une entrée de reste verrouillée au jour visé. ⚠️ **Le « décalage de la semaine » n'est alors PAS à coder** : il est émergent — un créneau verrouillé de plus, et la replanification contourne. Chercher à écrire un décalage explicite reviendrait à réimplémenter à côté ce que le verrouillage fait déjà. |
 | 79 | **Que montre l'écran Aujourd'hui quand les filtres durs, empilés aux contraintes existantes, ne laissent AUCUNE recette ?** | ⏳ **OUVERTE le 2026-08-21, née de la ~~71~~ et posée AVANT le lot qui en dépend.** Les trois axes seuls ne vident jamais le catalogue (mesuré : 8 combinaisons, minimum 8 recettes). Mais ils s'ajoutent à six exclusions déjà dures, et **l'écran ne peut pas répondre « rien » à quelqu'un qui a faim**. ▶ Trois issues, non départagées : **(1)** relâcher l'axe le moins engageant et le dire (« aucun plat chaud et léger — voici des plats chauds ») ; **(2)** refuser la combinaison **au moment du clic**, en grisant ce qui ne mène nulle part ; **(3)** laisser le vide et proposer de retirer un filtre. ⚠️ **La (2) est la plus honnête et la plus chère** : elle suppose de connaître le nombre de résultats **avant** que l'utilisateur clique, donc de recalculer à chaque pastille. ⛔ **Ce qu'aucune des trois ne doit faire : rendre un plat qui ne respecte pas le filtre sans le dire.** C'est la ~~71~~ prise à l'envers, et l'utilisateur l'a signalée comme un défaut (« les filtres ne marchent pas ??? chaud = salade »). |
 | 80 | **À quel geste la déclaration de frigo est-elle dépensée ?** | ⏳ **OUVERTE le 2026-08-21, née de la ~~74~~.** La déclaration vaut pour **un** repas ; reste à dire lequel, c'est-à-dire quand elle s'efface. ▶ Deux issues : **« J'ai choisi ce plat »** (simple, couvre le cas normal, mais efface avant qu'on ait cuisiné — quelqu'un qui choisit puis revient a perdu sa saisie) ou **la sortie du mode cuisine** (colle au repas réellement préparé, mais ne couvre pas les plats qu'on ne cuisine pas au pas-à-pas). ⚠️ **La première a été proposée par l'assistant et n'a PAS été tranchée par l'utilisateur** — elle est écrite ici comme piste, pas comme choix. |
-| ~~81~~ | **Le tutoriel est-il neuf visites séparées, ou une seule qui traverse les menus ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : UNE SEULE, qui entre dans chaque menu.** Dans ses mots : « montrer les différents menus · premier menu → Aujourd'hui · quand on clique sur le menu Aujourd'hui, on continue le menu mais spécialement pour le menu Aujourd'hui · puis on enchaîne sur le menu Semaine etc. » ⛔ **CETTE DÉCISION EST NÉE D'UNE PUCE DE BRIEF QUI DÉCRIVAIT AUTRE CHOSE QU'ELLE-MÊME.** Le lot `retour-1` portait « le tutoriel commence par Semaine, pas par Aujourd'hui » ; **mesuré, il commençait DÉJÀ par Semaine** — le parcours d'accueil enchaîne barre du bas → Semaine → Courses → Recettes → Savoir et n'a aucune étape « Aujourd'hui ». Une première interprétation (réordonner la liste « Revoir un tutoriel » de Réglages) a été proposée par l'assistant puis **écartée par l'auteur** : ce n'était pas ce qu'il visait. ✅ **Ce qui existe déjà** : les neuf parcours sont écrits (`ui/parcours.ts`) et le type d'étape `route` fait déjà avancer sur navigation — il manque l'ENCHAÎNEMENT, pas le contenu. ⚠️ **Le risque est dans `premierIndexValide` (`ui/visite.tsx`), qui écarte en silence toute étape dont la cible est absente du DOM à l'instant où elle arrive** : si l'écran suivant n'est pas encore rendu, toutes ses étapes sautent et le tutoriel se termine sans rien dire. ▶ Détail, forme visée et « ce qu'il reste à mesurer » : `CONCEPTION_RETOURS_TEST.md`, lot `retour-1b`. Les neuf parcours individuels restent lançables un par un — ce lot ajoute un chemin, il n'en supprime aucun. |
+| ~~81~~ | **Le tutoriel est-il neuf visites séparées, ou une seule qui traverse les menus ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : UNE SEULE, qui entre dans chaque menu.** Dans ses mots : « montrer les différents menus · premier menu → Aujourd'hui · quand on clique sur le menu Aujourd'hui, on continue le menu mais spécialement pour le menu Aujourd'hui · puis on enchaîne sur le menu Semaine etc. » ⛔ **CETTE DÉCISION EST NÉE D'UNE PUCE DE BRIEF QUI DÉCRIVAIT AUTRE CHOSE QU'ELLE-MÊME.** Le lot `retour-1` portait « le tutoriel commence par Semaine, pas par Aujourd'hui » ; **mesuré, il commençait DÉJÀ par Semaine** — le parcours d'accueil enchaîne barre du bas → Semaine → Courses → Recettes → Savoir et n'a aucune étape « Aujourd'hui ». Une première interprétation (réordonner la liste « Revoir un tutoriel » de Réglages) a été proposée par l'assistant puis **écartée par l'auteur** : ce n'était pas ce qu'il visait. ✅ **Ce qui existe déjà** : les neuf parcours sont écrits (`ui/parcours.ts`) et le type d'étape `route` fait déjà avancer sur navigation — il manque l'ENCHAÎNEMENT, pas le contenu. ⚠️ **Le risque est dans `premierIndexValide` (`ui/visite.tsx`), qui écarte en silence toute étape dont la cible est absente du DOM à l'instant où elle arrive** : si l'écran suivant n'est pas encore rendu, toutes ses étapes sautent et le tutoriel se termine sans rien dire. ▶ Détail, forme visée et « ce qu'il reste à mesurer » : `CONCEPTION_RETOURS_TEST.md`, lot `retour-1b`. Les neuf parcours individuels restent lançables un par un — ce lot ajoute un chemin, il n'en supprime aucun. ✅ **LIVRÉE le 2026-08-21 (`42491ea`), et LE RISQUE ANNONCÉ CI-DESSUS S'EST PRODUIT POUR DE VRAI** : le tutoriel s'arrêtait après le premier écran, 7 clauses scellées sur 10 passaient quand même. La réponse n'a pas été de desserrer le garde-fou mais de séparer les deux sens d'une cible absente — détail en §3. |
 
 ---
 
@@ -1222,6 +1244,30 @@ appli_nutrition/
 ## 8. Dette connue
 
 Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
+
+### Ce que le lot `retour-1b` laisse derrière lui (2026-08-21)
+
+⛔ **LE TUTORIEL N'A PAS ÉTÉ VU TOURNER SUR UN TÉLÉPHONE, ET C'EST LÀ QUE SE JUGE CE QU'IL A CHANGÉ.**
+jsdom commet ses rendus de façon synchrone : les 10 clauses vertes prouvent l'enchaînement, **pas**
+que l'attente d'un écran qui charge tient au temps réel. La course que le lot ferme est précisément
+celle que jsdom ne sait pas jouer. ▶ À ajouter à la passe à l'œil déjà due par `retour-1`.
+
+⚠️ **UN GARDE-FOU DE 4 SECONDES A ÉTÉ POSÉ AU JUGÉ**, et c'est le seul nombre du lot qui n'a pas été
+mesuré. Il ne sert qu'au cas où l'écran d'arrivée tombe en erreur et n'affiche donc jamais son ancre :
+sans lui le tutoriel resterait invisible pour toujours au lieu de reprendre. En marche normale
+l'attente se termine sur l'observateur du DOM, jamais sur ce compte à rebours — donc **le nombre
+n'est pas observable tant qu'aucun écran n'échoue**. Ne pas le déplacer « pour voir » : il n'y aurait
+rien à voir.
+
+⚠️ **`parcoursDeLEcran` (`ui/parcours.ts`) N'A AUCUN APPELANT** — vérifié à la main pendant ce lot,
+et ce n'est pas ce lot qui l'a orphelinée. Une fonction exportée que personne n'appelle se lit comme
+une API, et la prochaine session la croira branchée.
+
+⛔ **LA GARDE NE FILTRE QUE LES OUTILS D'ÉDITION.** `.claude/hooks/garde.mjs` n'intercepte que
+`Edit|Write|MultiEdit|NotebookEdit` : un sous-agent qui n'a que `Bash` écrit dans `app/src/` et dans
+`tests/scelles/` **sans être vu**. Constaté pendant ce lot, en conditions réelles — le critique du
+round 2 a modifié l'arbre par ce chemin (il l'a ensuite rendu intact). La garde protège donc un lot
+scellé de l'étourderie, pas de l'outil.
 
 ### Ce que le lot `retour-1` laisse derrière lui (2026-08-21)
 
