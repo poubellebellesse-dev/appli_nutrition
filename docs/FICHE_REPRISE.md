@@ -18,13 +18,13 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-21, SUR L'ARBRE COMMITÉ** (`42491ea`, `retour-1b`) : `npm test` → **2 363
-passed / 0 failed (124 fichiers)** en 44,4 s · typecheck propre · `vite build` ✓ (3,06 s) ·
+⚠️ **RELEVÉ DU 2026-08-22, SUR L'ARBRE COMMITÉ** (`6aad49c`, `retour-2`) : `npm test` → **2 376
+passed / 0 failed (125 fichiers)** en 51,4 s · typecheck propre · `vite build` ✓ (2,97 s) ·
 `plan-stress` **20/20**. ⚠️ **`audit-mapping` non relancé** : catalogue inchangé depuis le 08-20
-(451 mappings, 9 à relire). ⚠️ **L'écart 2 254 → 2 363 couvre DEUX lots**, attribués fichier par
-fichier : **+9** (`retour-1`, 122 → 123 fichiers) et **+100** (`retour-1b`, 123 → 124).
-⛔ **CE FICHIER SCELLÉ PORTE 10 CLAUSES ET VITEST EN COMPTE 100** — quatre sont paramétrées et se
-déplient. **Au `grep`, l'écart se serait déclaré inexpliqué.**
+(451 mappings, 9 à relire). ⚠️ **L'écart 2 363 → 2 376 est `retour-2` SEUL**, mesuré fichier par
+fichier : **+12** scellés (124 → 125 fichiers) et **+1** de non-régression.
+⛔ **UN COMPTE PEUT BOUGER SANS QU'AUCUN FICHIER DE TEST NE CHANGE** — `it.each` nourri par une
+table de production. C'est ce qui a ouvert un écart de 90 ici. ▶ `ETAT.md` §8, lot `retour-2`.
 
 ⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
 tail` rend le code du **pipe**, donc 0 ; lire `Tests N failed`, jamais `$?`. ⚠️ **Le compte d'écrans
@@ -52,18 +52,19 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 réel a produit une quarantaine d'observations, neuf arbitrages (71 à 78, plus la 81) et deux
 questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RETOURS_TEST.md)**.
 
-- ⛔ **LA PASSE À L'ŒIL SUR LE TÉLÉPHONE — NEUF cases, et rien ne la remplacera.** `retour-1` a livré
-  sept réparations d'affichage et `retour-1b` une attente de chargement, **qu'aucun test jsdom ne
-  sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3. **Tant qu'elle n'est pas faite, on
-  sait seulement que rien n'est cassé** — pas que ça marche.
-- ▶ **`/brief retour-2`** — le sélecteur d'exclusion s'ouvre aux 451 aliments (décision 73), rien ne
-  le bloque. Puis `retour-3` à `retour-8`, dans l'ordre du document. ⚠️ **`retour-6` attend la
-  décision 79**, pas seulement du code.
+- ⛔ **LA PASSE À L'ŒIL SUR LE TÉLÉPHONE — NEUF cases, et rien ne la remplacera.** Trois lots y ont
+  ajouté de quoi voir (affichages, attente de chargement, champ de recherche et famille de 74
+  lignes), **qu'aucun test jsdom ne sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3.
+  **Tant qu'elle n'est pas faite, on sait seulement que rien n'est cassé** — pas que ça marche.
+- ▶ **`/brief retour-3`** — « je mange dehors » étiquette le créneau (décision 76), rien ne le
+  bloque. Puis `retour-4` à `retour-8`. ⚠️ **`retour-6` attend la décision 79**, pas que du code.
+  ⚠️ **En ouvrant le brief : nommer les réglages persistants que l'écran lit, et dire lesquels les
+  clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.
 
 **Les chantiers TERMINÉS ne sont plus détaillés ici** — leur fait vit dans `ETAT.md` et dans leur
 document de chantier. En un coup d'œil : gestes illustrés (3 lots sur 4, le 2ᵉ arrêté par décision),
 clips (fait, 7 gestes sans candidat), photos (129 sur 330, bloqué sur la SOURCE), origine animale
-(66c, clos), réservation matériel (65c, plus aucun lot ouvert), retours test (`retour-1`, `retour-1b`).
+(66c, clos), réservation matériel (65c), retours test (`retour-1`, `retour-1b`, `retour-2`).
 
 **Ce qui reste à faire, et qui n'attend que d'être commencé :**
 

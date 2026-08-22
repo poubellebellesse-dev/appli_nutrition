@@ -42,15 +42,35 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-21, arbre COMPLET, commit `3ce17d7`
-(livraison du lot `retour-1`)** :
-`npm test` → **2 263 passed / 0 failed (123 fichiers)** en 43,9 s · typecheck propre ·
-`vite build` ✓ (3,12 s) · `engine:plan-stress` **20/20**.
-✅ **L'ÉCART 2 254 → 2 263 S'ATTRIBUE EN ENTIER À UN SEUL FICHIER, ET IL A ÉTÉ COMPTÉ, PAS DÉDUIT** :
-`tests/scelles/retour-1.test.tsx` porte exactement **9 clauses**, et c'est le 123ᵉ fichier. Aucun
-test existant n'a bougé. ⚠️ **Le catalogue n'a PAS été touché** — ni `catalog/build.mjs` ni
-`catalog/audit-mapping.mjs` n'étaient des témoins de ce lot, et les chiffres de contenu ci-dessous
-datent donc toujours du 2026-08-20.
+Dernier relevé, **suite réellement exécutée le 2026-08-22, arbre COMPLET, livraison du lot
+`retour-2` (`6aad49c`). Le relevé précédent (`3ce17d7`, 2 263 / 123 fichiers) est CONFIRMÉ,
+pas corrigé** :
+`npm test` → **2 376 passed / 0 failed (125 fichiers)** en 51,4 s · typecheck propre ·
+`vite build` ✓ (2,97 s) · `engine:plan-stress` **20/20**.
+✅ **RELANCÉES UNE SECONDE FOIS SUR L'ARBRE FINAL**, après le retrait d'une fonction orpheline et
+l'extension de la garde au shell : **mêmes 2 376 / 125**. Une fonction sans appelant ne coûte aucun
+test à retirer — c'est ce qui prouve qu'elle n'en avait aucun.
+✅ **CE QUE `retour-2` AJOUTE A ÉTÉ COMPTÉ SEUL, PAS DÉDUIT** : `tests/scelles/retour-2.test.tsx`,
+lancé à part, rend **12 tests** — c'est le 125ᵉ fichier — et `parametres.test.tsx` passe de 49 à
+**50** (le test de non-régression posé après relecture). 12 + 1 = 13, aucun autre test n'a bougé.
+⛔ **UN ÉCART DE 90 TESTS A ÉTÉ OUVERT PUIS FERMÉ PAR LA MESURE — ET LE CHIFFRE `2 263` ÉTAIT JUSTE.**
+`2 263 + 10 (retour-1b) + 13 (retour-2) = 2 286`, alors que la suite en rend **2 376** : 90 tests
+n'étaient attribuables à AUCUN fichier de test modifié, puisque `git diff 3ce17d7 HEAD` n'en montre
+que deux (`tests/scelles/retour-1b.test.tsx`, neuf, 10 tests ; `app/src/ui/visite.test.tsx`, modifié
+sans un seul `it` ajouté). ✅ **CAUSE ÉTABLIE, PAS SUPPOSÉE** : en remettant le seul
+`app/src/ui/parcours.ts` de `3ce17d7` et en relançant `app/src/ui/parcours.test.tsx`, il rend **144
+tests** au lieu de **234**. **Exactement 90.**
+⛔ **LE PIÈGE, ET IL RESSERVIRA : UN FICHIER DE TEST PARAMÉTRÉ PAR LA DONNÉE DE PRODUCTION CHANGE DE
+COMPTE SANS APPARAÎTRE DANS AUCUN DIFF DE TEST.** `parcours.test.tsx` est bâti sur `it.each` nourri
+par la table `PARCOURS` — son en-tête le revendique (« chaque nouvel élément de la table doit être
+couvert sans toucher ce fichier »). Le lot `retour-1b` y a ajouté UN parcours, `decouverte`, qui
+concatène les étapes de tous les autres : +90 tests, dans un fichier que `git diff --name-only` ne
+cite pas. ⚠️ **Ce n'est donc PAS le symptôme documenté plus bas** (là, un compte BAISSE sans rouge).
+▶ Attribuer un écart par `git diff --name-only` reste juste, mais **ne suffit plus** : il faut aussi
+regarder les fichiers de test que la DONNÉE pilote.
+⚠️ **Le catalogue n'a PAS été touché** — ni `catalog/build.mjs` ni `catalog/audit-mapping.mjs`
+n'étaient des témoins de ce lot, et les chiffres de contenu ci-dessous datent donc toujours du
+2026-08-20.
 ✅ **LES CINQ COMMANDES ONT ÉTÉ RELANCÉES LE 2026-08-20**, catalogue compris — le lot 65c a touché
 au détecteur d'occupation. **451 aliments, 330 recettes, 1 548 étapes, 62 gestes, 73 tips, 8 fiches,
 30 équipements (1 473 couples)** et **451 mappings / 9 candidats à relire** : inchangés, et cette

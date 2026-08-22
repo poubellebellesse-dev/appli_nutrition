@@ -510,7 +510,8 @@ de bloquer le lot — c'est une raison de ne pas prétendre que le vert le couvr
 `menus` donnerait **deux** entrées de `PARCOURS` à `ecran === null`, et `parcoursDeLEcran`
 (`parcours.ts:498`) est un `find` : il rendrait la première, en silence. ▶ **Sans conséquence
 aujourd'hui — cette fonction n'a AUCUN appelant**, vérifié sur tout `app/src` ; `lien-tutoriel.tsx:6`
-explique même pourquoi on ne s'en sert pas. L'autre option, `ecran: hashDe('aujourdhui')`, a du sens
+explique même pourquoi on ne s'en sert pas. ▶ **Elle a depuis été RETIRÉE (2026-08-22, lot
+`retour-2`, dette §8)** : le défaut décrit ici ne peut plus se produire, faute de fonction. L'autre option, `ecran: hashDe('aujourdhui')`, a du sens
 en soi : `lancerParcours` amènerait sur l'écran de départ avant de démarrer. **Le lot tranche, le
 brief ne tranche pas.**
 
@@ -606,13 +607,195 @@ entrer dans un seul.** C'est exactement le défaut que le lot ferme, et non un h
 
 ---
 
+### Lot `retour-2` — le sélecteur s'ouvre aux 451 aliments ✅ **LIVRÉ le 2026-08-22**
+
+**Commit `6aad49c`** — code, tests scellés et garde. Les documents suivent dans le commit d'après,
+celui qui porte ce hash. ▶ Bilan et angle mort en fin de section.
+
+**Ce que l'auteur a demandé, dans ses mots (2026-08-21, décision 73) :** « C'est un menu préférence
+en tout : si une personne déteste manger des haricots, il faut lui donner la possibilité d'exclure
+l'aliment. »
+
+#### Ce qui a été mesuré avant d'écrire quoi que ce soit
+
+⛔ **LE CHIFFRE DE LA DÉCISION 73 EST FAUX, ET IL A ÉTÉ REMESURÉ AVANT D'OUVRIR LE LOT.** Elle
+annonce « 129 aliments atteignables sur 451 ». **129 est le nombre d'aliments qui DÉCLARENT
+`origine_animale` en propre** — il oublie les **38 dérivés** que `resolveAnimalOrigin` rattache en
+remontant `deriveDe` (le beurre par `lait_entier`). Relevé en faisant tourner `groupesAnimaux` sur
+`app/public/catalog/catalog.db` : **167 atteignables, 284 hors d'atteinte.**
+`CONCEPTION_REGIME_PERSONNALISE.md` lot A écrivait déjà « total 167/451 » ; c'est `ETAT.md` §4 qui
+était seul à dire 129, et il a été corrigé dans le même geste.
+
+**Les 7 groupes rendus aujourd'hui**, effectifs mesurés : `laitiers` 50 · `poisson` 43 ·
+`viande_mammifere` 39 · `fruits_de_mer` 14 · `volaille` 13 · `oeufs` 7 · `miel` 1. **Total 167.**
+
+**Les 284 hors d'atteinte**, par famille du catalogue : légumes **74** · condiments **52** ·
+fruits **50** · céréales et dérivés **45** · fruits à coque et oléagineux **18** · légumineuses
+**14** · produits sucrés **12** · matières grasses **9** · boissons alcoolisées **6** · lait et
+produits laitiers **4** (ces quatre derniers sont les trois boissons végétales et le lait de coco —
+sans origine animale, et c'est juste).
+
+✅ **LA CLAUSE EXHAUSTIVE PAR LA RECHERCHE EST TENABLE, ET ÇA NE SE DÉDUISAIT PAS.**
+`chercherParNom` ne rend que 6 résultats classés : rien ne garantissait a priori qu'un aliment tapé
+en toutes lettres y figure toujours — un homonyme au nom plus court pouvait le sortir du haut de
+liste. **Relevé sur les 451 aliments du `catalog.db` réel : 0 introuvable à la limite 6** (0 aussi à
+8 et à 10). La clause peut donc porter sur les 451, pas sur un échantillon.
+
+#### Ce qui existe déjà, et qu'il ne faut surtout pas réécrire
+
+**Tout, sauf le moyen de désigner.** La table `user_excluded_food`, `writeExcludedFoodIds` /
+`readExcludedFoodIds`, le dépliage `readExcludedFoodIdsDeplies`, la couche `exclusions` du moteur et
+le compteur de plats restants tournent depuis le lot B du régime personnalisé. Le panneau sait déjà
+cocher un aliment SEUL — c'est ce que fait son dépliant de groupe. **Il manque une porte vers les 284
+autres, pas un moteur.**
+
+⭐ **ET LE MÊME PROBLÈME A DÉJÀ ÉTÉ RÉSOLU AILLEURS DANS CETTE APPLI — décision 58, le 2026-08-05.**
+Sur l'écran Frigo, **352 aliments sur 450 étaient injoignables** parce que le seul pont était une
+recherche par nom. La réponse retenue alors, et en place depuis sur **trois écrans** (Frigo, Courses,
+Éditeur de recette), est une **paire** : un champ `chercherParNom` **et** un parcours des familles du
+catalogue pour qui ne sait pas comment l'aliment s'appelle. ⛔ **Ne pas livrer la moitié de cette
+paire ici serait rejouer un défaut déjà payé** : « je n'aime pas les abats » ne se tape pas, ça se
+reconnaît dans une liste.
+
+#### La forme retenue, et les trois qu'on écarte
+
+**Retenue : la paire de la décision 58, posée à l'INTÉRIEUR du panneau existant** — un champ de
+recherche sur les **451**, et les familles du catalogue en **intitulés dépliables non cochables**,
+comme le fait déjà le panneau voisin « Mes exceptions » (« un intitulé, pas une case : le groupe
+n'est pas cochable, il ouvre »). Les cases restent individuelles et écrivent par le chemin déjà en
+place.
+
+⚠️ **LES FAMILLES SE DÉRIVENT, ELLES NE SE RECOPIENT PAS.** `famillesDuCatalogue`
+(`ui/parcours-aliments.tsx`) fait déjà exactement ce regroupement, tri `localeCompare('fr')` compris,
+et son en-tête dit pourquoi une liste écrite à la main diverge. **La sortir en export et l'appeler**,
+jamais en écrire une seconde.
+
+⛔ **ÉCARTÉ : RÉUTILISER `ParcoursAliments` TEL QUEL.** Deux raisons, chacune suffisante.
+**(1) Il choisit UN aliment et se ferme** — c'est un sélecteur, pas un jeu de cases ; retirer les
+haricots, les navets et les endives demanderait trois allers-retours. **(2) Il s'ouvre dans un
+`Panneau`, et le sélecteur d'exclusion EN EST DÉJÀ UN.** Deux `Panneau` montés en même temps, c'est
+deux `role="dialog"` avec `aria-modal="true"` dans le document, **deux pièges à `Tab` posés sur
+`document` qui se disputent le focus**, et un `getByRole('dialog')` qui en trouve deux — soit les
+~20 tests de `parametres.test.tsx` qui passent par `ouvrir()` cassés d'un coup. La clause 7 interdit
+ce montage.
+
+⛔ **ÉCARTÉ : DES CASES DE GROUPE SUR LES 14 FAMILLES DU CATALOGUE.**
+`user_excluded_group.groupe_id` porte un `CHECK` SQL qui fige **sept** valeurs (`user-schema.ts`,
+v15) : en ajouter quatorze force une reconstruction de table, donc **une migration de `user.db`** — et
+`groupes-animaux.ts` écrit noir sur blanc qu'un `groupe_id` stocké qui ne se déplie plus **n'exclut
+plus rien, en silence**. Pire : les deux découpages **se chevauchent sans coïncider** — « viandes »
+(46) n'est ni `viande_mammifere` (39) ni son union avec `volaille` (13) — et deux jeux de cases qui
+se recouvrent à moitié dans un même panneau, c'est une confusion durable. **En intitulés non
+cochables, le chevauchement devient inoffensif** : deux portes, un seul état par aliment.
+
+⛔ **ÉCARTÉ : UN TROISIÈME PANNEAU.** Il y en a déjà deux, et leur séparation est structurelle
+(l'un retire, l'autre réadmet). Un troisième qui retire aussi rendrait la frontière illisible.
+
+⚠️ **UNE RECHERCHE QUI NE COUVRIRAIT QUE LES 284 SERAIT UN PIÈGE.** Taper « saumon » et ne rien
+trouver se lit « cet aliment n'existe pas » — le défaut exact que `chercherParNom` a été écrit pour
+fermer (décision 58, 33 saisies mesurées). Le champ voit donc **les 451**, et un aliment qui
+appartient à un groupe animal s'y coche **avec la sémantique du dépliant**, exception comprise.
+
+⚠️ **UNE EXCLUSION QUI NE SE RETROUVE PAS EST UNE EXCLUSION QU'ON NE PEUT PAS DÉFAIRE.** Un aliment
+retiré par la recherche disparaît du champ dès qu'on l'efface : sans une liste des retraits en cours,
+la case est **en écriture seule** et il faut se souvenir du mot exact pour revenir dessus. C'est la
+moitié du lot, pas un confort.
+
+**Ce que le lot NE touche pas** : `engine/` (aucune couche, aucun score, le registre reste à 16),
+`user-schema.ts` (aucune version, aucune migration), `catalog/` (aucun contenu), `ui/panneau.tsx`,
+les sept groupes animaux et leur ordre, le panneau « Mes exceptions », et les allergènes — qui ne
+passent pas par cet écran (garde-fou 1).
+
+**Fini quand** — sept clauses, jouées dans le panneau RÉEL de l'écran Paramètres, contre
+`app/public/catalog/catalog.db` (celui que `catalogueDeTest()` charge), jamais contre une fixture.
+⛔ **Les listes d'aliments se DEMANDENT au catalogue, jamais écrites en dur dans le test** : un
+effectif codé en dur a déjà cassé quatre tests à un lot de contenu.
+
+1. ⛔ **AUCUN DES 451 N'EST INTROUVABLE EN TAPANT SON NOM — la clause qui décide du lot.** Pour
+   **chacun** des 451 aliments, taper son `nom` exact dans le champ du panneau « Aliments que je ne
+   veux pas » le fait apparaître dans les résultats. **Aujourd'hui 0 passe : le champ n'existe pas.**
+2. ⛔ **AUCUN DES 451 N'EST INJOIGNABLE SANS RIEN TAPER.** Pour chacun, une suite de clics — déplier
+   sa famille — l'affiche. C'est la moitié de la décision 58, celle qui a coûté 352 aliments sur 450.
+   **Aujourd'hui 167 passent, 284 échouent.**
+   ⛔ **ET C'EST UN PARCOURS PAR FAMILLES, PAS UN DÉCOUPAGE.** Trois formes fausses satisfont la
+   lettre de la clause, et les trois sont refusées : un dépliant unique « Tous les aliments (451) »,
+   **un bouton par aliment**, et — celle qui a réellement traversé une première version du test —
+   **quatorze paquets de trente-trois aliments découpés dans l'ordre d'itération de la Map**, dont
+   le compte tombait juste sans qu'aucun ne réunisse quoi que ce soit de reconnaissable. Le test
+   exige donc **quatre** choses : au moins autant de portes que le catalogue a de familles (**14**),
+   **au plus 14 + 7 + 3 = 24** (les familles, les groupes animaux, et une marge), aucun dépliant plus
+   gros que la plus grosse famille (**74**), et surtout **un critère commun dans CHAQUE dépliant
+   peuplé** — tous ses aliments partagent la même `Food.groupe`, ou le même groupe animal. Rien
+   d'autre n'est accepté.
+   ⛔ **ET LE PARCOURS COUVRE LES 451, PAS SEULEMENT LES 284.** Un aliment déjà atteignable par son
+   groupe animal apparaît **aussi** dans sa famille : « je cherche du bœuf dans les viandes » ne doit
+   pas dépendre de ce que le bœuf porte une origine animale. La clause 6 est ce qui rend cette
+   troisième porte sans danger — un aliment, un état, quelle que soit la porte.
+   ⚠️ **Un nom déjà affiché avant le premier clic ne compte pas comme atteint** — jsdom ne calcule
+   aucun rendu, donc 451 lignes montées en permanence et masquées par une classe CSS se liraient
+   « affichées » alors que personne ne les atteint.
+3. **Cocher un aliment d'aucun groupe animal écrit son `food_id` dans `user_excluded_food`**,
+   immédiatement au geste et non à la fermeture, et **rien** dans `user_excluded_group`.
+   `readExcludedFoodIdsDeplies` le rend.
+4. ⛔ **LE MOTEUR EN TIENT COMPTE — la chaîne complète, pas la case.** Retirer par cette porte un
+   aliment porté par au moins une recette fait **baisser** le nombre de plats que `suggestMeals`
+   propose. Une case qui bascule sans que le moteur bouge ne prouve rien : c'est déjà la clause qui
+   compte pour les groupes.
+5. **Un retrait se défait sans retaper.** Le panneau liste les aliments retirés un par un ; décocher
+   depuis cette liste efface la ligne de `user_excluded_food` **et** fait remonter le compte de
+   plats. ⚠️ Le champ vidé, la liste reste.
+   ⚠️ **LA FORME DE CETTE LISTE EST LIBRE, ET C'EST ASSUMÉ** — plate ou dépliable, triée par nom ou
+   par ordre de retrait. La seule contrainte est qu'elle soit **visible sans rien taper** : c'est ce
+   qui empêche la case d'être en écriture seule. Le test ne discrimine que ça.
+6. ⛔ **UN SEUL SENS PAR ALIMENT, ET SUR LES DEUX NOUVELLES PORTES.** Un aliment d'un groupe animal
+   atteint par la recherche **ou par sa famille** se coche **exactement** comme dans le dépliant du
+   groupe : si le groupe est retiré, le geste écrit une **exception** (`user_group_exception`) et non
+   un retrait, et l'état de sa case est le même des deux côtés. Deux vérités pour le même aliment
+   feraient dire au panneau une chose et à la base une autre.
+   ⛔ **LES DEUX PORTES SONT TESTÉES SÉPARÉMENT, ET CE N'EST PAS DU ZÈLE.** Une première version ne
+   jouait cette clause que par le champ de recherche : une implémentation qui figeait `groupeRetire`
+   à `false` dans le seul parcours par familles — donc qui écrivait un **retrait** là où il fallait
+   une **exception** — passait 9 assertions sur 11 sans être vue. La sémantique du groupe doit tenir
+   sur la porte qu'on n'a pas pensé à tester.
+7. ⛔ **UN SEUL `role="dialog"` À LA FOIS, ET RIEN À MIGRER.** Quel que soit le geste fait dans ce
+   panneau, le document n'en contient jamais deux. Et après le lot, `user_excluded_group.groupe_id`
+   accepte toujours ses **sept** valeurs et **elles seules**, version de `user-schema.ts` inchangée.
+
+⚠️ **CE QUE CES SEPT CLAUSES NE DÉMONTRERONT PAS.** Qu'un champ de saisie et une liste de 74 légumes
+soient utilisables au pouce sur un téléphone — hauteur de cible, clavier qui recouvre les résultats,
+défilement d'une famille longue. jsdom ne mesure ni position ni hauteur. ▶ Cette vérification rejoint
+la passe à l'œil de §3, elle ne s'y substitue pas.
+
+#### Ce qui a été livré, et ce que les sept clauses n'ont pas attrapé
+
+**Les sept clauses passent**, jouées contre `app/public/catalog/catalog.db` réel :
+`tests/scelles/retour-2.test.tsx`, **12 tests**, mesurés seuls. Les 451 aliments sont atteignables
+par le nom **et** par les familles ; les 284 qui ne portent aucune origine animale ne dépendent plus
+d'un groupe pour exister. Le compte de portes tombe à **21** (14 familles + 7 groupes animaux), sous
+le plafond de 24.
+
+⛔ **UNE CLAUSE PASSAIT PENDANT QU'ELLE ÉTAIT FAUSSE, ET AUCUN TEST SCELLÉ NE POUVAIT LE VOIR.** La
+clause 5 dit « un retrait se défait sans retaper ». Elle était vraie dans la configuration que le
+test montait — aucun régime déclaré — et fausse dès qu'un régime plus strict rattrapait l'aliment
+déjà retiré : la ligne devenait un texte mort « Déjà écarté par votre régime », donc un retrait
+**indéfaisable**, écrit en base et impossible à reprendre. ⚠️ **Le défaut n'est pas dans le test,
+il est dans le « Fini quand » : aucune des sept clauses ne fait varier le régime.** Les deux
+relecteurs l'ont trouvé indépendamment, à la relecture, pas à l'exécution. Corrigé, et **verrouillé
+par un test ordinaire** (`app/src/ui/screens/parametres.test.tsx`) vérifié rouge sans le correctif.
+▶ La leçon générale — un « Fini quand » qui ne fait varier qu'une dimension — est en `ETAT.md` §8.
+
+⚠️ **La passe à l'œil sur téléphone reste due** (§3 ci-dessus) : elle n'a pas été faite, et rien de
+ce lot ne la remplace.
+
+---
+
 ### Les lots suivants — non ouverts
 
 Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETAT.md` §4) :
 
 | Lot | Ce qu'il fait | Bloqué par |
 |---|---|---|
-| `retour-2` | le sélecteur d'exclusion s'ouvre aux 451 aliments (décision 73) | rien |
+| `retour-2` | le sélecteur d'exclusion s'ouvre aux 451 aliments (décision 73) | ✅ **LIVRÉ le 2026-08-22** |
 | `retour-3` | « je mange dehors » étiquette le créneau (décision 76) | rien |
 | `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | rien |
 | `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | rien — lot de contenu |
