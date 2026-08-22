@@ -23,7 +23,7 @@
 // ⚠️ CE N'EST PAS UN SIXIÈME ONGLET (§2 DESIGN, cinq onglets stables) — on y arrive par l'engrenage
 // de l'en-tête, présent sur tous les écrans. Voir `router.tsx`.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState } from 'react'
 import type {
   AllergenId,
   Catalog,
@@ -39,7 +39,13 @@ import type {
   PiquantTolerance,
   PlatsDuCreneau,
 } from '../../engine/domain/index.js'
-import { deplierGroupesRetires, groupesAnimaux, platsParCreneau } from '../../engine/domain/index.js'
+import {
+  deplierGroupesRetires,
+  groupeAnimalDe,
+  groupesAnimaux,
+  platsParCreneau,
+} from '../../engine/domain/index.js'
+import { chercherParNom, normaliser } from '../../engine/search/index.js'
 import type { Engine } from '../../engine/api/index.js'
 import { DEFAULT_PLAN_DAYS } from '../../engine/planning/plan-week.js'
 import { DIET_CHAIN, regimeExigePar } from '../../engine/selection/index.js'
@@ -93,6 +99,7 @@ import { creneauxDuRythme } from '../creneau.js'
 import { demanderAutorisation, etatNotifications, type EtatNotifications } from '../notifications.js'
 import type { StoredRythme } from '../../data/user-store.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
+import { famillesDuCatalogue } from '../parcours-aliments.js'
 import { ChoixPiquant } from '../champs-profil.js'
 import { PARCOURS } from '../parcours.js'
 import { useLancerParcours } from '../lancer-parcours.js'
@@ -1478,14 +1485,98 @@ function AlimentsEcartes({
   readonly onGroupe: (groupeId: GroupeAnimalId, retire: boolean) => void
   readonly onAliment: (foodId: FoodId, retire: boolean, groupeRetire: boolean) => void
 }) {
-  const [deplie, setDeplie] = useState<GroupeAnimalId | null>(null)
+  // ⚠️ UNE SEULE CLÉ POUR DEUX SORTES DE DÉPLIANTS, PRÉFIXÉE. Les groupes animaux et les familles
+  // du catalogue se chevauchent sans coïncider (« viandes » n'est ni `viande_mammifere` ni son
+  // union avec `volaille`) : sans préfixe, deux dépliants distincts partageraient une clé le jour
+  // où un identifiant de groupe vaudrait un nom de famille, et s'ouvriraient ensemble.
+  const [deplie, setDeplie] = useState<string | null>(null)
+  const [saisie, setSaisie] = useState('')
+  // `useId` et pas une constante : un `id` en dur devient un doublon silencieux le jour où deux
+  // panneaux sont montés côte à côte, et un `htmlFor` qui désigne deux champs n'en étiquette aucun.
+  const idChamp = useId()
   const preselections = regime === null ? [] : (PRESELECTIONS[regime] ?? [])
+
+  // ⛔ LES 451, PAS LES 284 (lot `retour-2`). Un aliment déjà atteignable par son groupe animal
+  // apparaît AUSSI dans sa famille : chercher du bœuf dans « viandes » ne doit pas dépendre de ce
+  // que le bœuf porte une origine animale. La troisième porte est sans danger parce que l'état
+  // d'une case ne dépend jamais de la porte — voir `caseAliment` juste en dessous.
+  const familles = useMemo(() => famillesDuCatalogue(foods, []), [foods])
+
+  // Deux caractères avant de proposer, comme sur Courses et l'éditeur de recette : à un seul, les
+  // six résultats sont du bruit qui recouvre la liste des familles.
+  const resultats = useMemo(
+    () =>
+      normaliser(saisie.trim()).length < 2 ? [] : chercherParNom([...foods.values()], saisie, 6),
+    [foods, saisie]
+  )
+
+  // ⛔ SANS CETTE LISTE, LA CASE EST EN ÉCRITURE SEULE. Un aliment retiré par la recherche disparaît
+  // du champ dès qu'on l'efface : il faudrait se souvenir du mot exact pour revenir dessus. Elle est
+  // affichée en permanence, jamais dépliable — c'est la moitié du geste « je me suis trompé ».
+  const retires = useMemo(
+    () =>
+      [...alimentsRetires]
+        .flatMap((id) => {
+          const aliment = foods.get(id)
+          return aliment === undefined ? [] : [aliment]
+        })
+        .sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+    [alimentsRetires, foods]
+  )
+
+  /**
+   * Une case d'aliment, quelle que soit la porte par laquelle on l'atteint — recherche, famille,
+   * groupe animal ou liste des retraits.
+   *
+   * ⛔ UN SEUL ENDROIT CALCULE CET ÉTAT, ET C'EST STRUCTUREL. Le même aliment a désormais jusqu'à
+   * trois portes ; en recopier la règle sur chacune ferait dire au panneau une chose et à la base
+   * une autre au premier ajustement. `groupeRetire` se DÉDUIT de l'aliment, il n'est jamais passé
+   * en dur : dans un groupe retiré, décocher est une RÉ-ADMISSION (`user_group_exception`) et non
+   * un retrait (`user_excluded_food`).
+   */
+  const caseAliment = (aliment: Food) => {
+    // ⛔ « DÉJÀ ÉCARTÉ PAR VOTRE RÉGIME » NE COUVRE JAMAIS UN RETRAIT DÉJÀ POSÉ, et ce garde a été
+    // ajouté après relecture. Sans lui : retirer « foie de veau » à la main, puis déclarer
+    // végétarien, et la ligne devient un texte inerte — sur les QUATRE portes, « Vos retraits »
+    // comprise. Le compteur promettait alors une ligne qu'aucune case ne défaisait, et il fallait
+    // assouplir son régime pour revenir dessus. Une case sans effet est à éviter (c'est ce que dit
+    // le panneau voisin), mais celle-ci EN A un : elle efface une ligne de `user_excluded_food` qui
+    // reviendra mordre le jour où le régime s'assouplit. Ce qu'on refuse, c'est de proposer un
+    // retrait NEUF sur un aliment que le régime écarte déjà.
+    if (!alimentsRetires.has(aliment.id) && alimentEcarteParLeRegime(aliment, foods, regime)) {
+      return (
+        <p
+          key={aliment.id}
+          className="rounded-[--radius-carte] border border-bordure bg-fond px-4 py-2 text-lecture text-attenue"
+        >
+          {aliment.nom}
+          <span className="block text-mention leading-snug text-attenue">
+            Déjà écarté par votre régime.
+          </span>
+        </p>
+      )
+    }
+
+    const groupeId = groupeAnimalDe(aliment, foods)
+    const groupeRetire = groupeId !== null && groupesRetires.has(groupeId)
+    const cochee = groupeRetire ? !exceptions.has(aliment.id) : alimentsRetires.has(aliment.id)
+
+    return (
+      <Case
+        key={aliment.id}
+        libelle={aliment.nom}
+        cochee={cochee}
+        onBasculer={() => onAliment(aliment.id, !cochee, groupeRetire)}
+      />
+    )
+  }
 
   return (
     <>
       <p className="mb-3 text-courant leading-relaxed text-texte-doux">
-        Ces aliments ne vous seront plus proposés. Cochez un groupe entier, ou dépliez-le pour n'en
-        retirer qu'une partie. Une allergie se déclare ailleurs, dans « Mes allergies ».
+        Ces aliments ne vous seront plus proposés. Cherchez-en un par son nom, ou parcourez les
+        familles. Cochez un groupe entier, ou dépliez-le pour n'en retirer qu'une partie. Une
+        allergie se déclare ailleurs, dans « Mes allergies ».
       </p>
 
       {preselections.length > 0 && (
@@ -1508,11 +1599,44 @@ function AlimentsEcartes({
 
       <ComptesParCreneau comptes={comptes} />
 
+      {/* ⛔ LA PREMIÈRE MOITIÉ DE LA PAIRE (décision 58, rejouée ici par le lot `retour-2`). Un champ
+          qui ne verrait que les 284 sans origine animale serait un piège : taper « saumon » et ne
+          rien trouver se lit « cet aliment n'existe pas ». Il voit les 451. */}
+      <div className="mb-3">
+        <label
+          className="block text-courant font-semibold text-texte-doux"
+          htmlFor={idChamp}
+        >
+          Chercher un aliment
+        </label>
+        <input
+          id={idChamp}
+          type="search"
+          value={saisie}
+          onChange={(evenement) => setSaisie(evenement.target.value)}
+          placeholder="haricot, saumon, cannelle…"
+          className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-lecture text-texte"
+        />
+
+        {resultats.length > 0 && (
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {resultats.map((aliment) => caseAliment(aliment))}
+          </div>
+        )}
+        {/* On ne dit « rien trouvé » qu'après deux caractères : à un seul, la phrase s'afficherait
+            au premier appui sur une touche, avant même que la recherche ait un sens. */}
+        {resultats.length === 0 && normaliser(saisie.trim()).length >= 2 && (
+          <p className="mt-2 text-mention leading-snug text-attenue">
+            Aucun aliment de ce nom. Essayez sa famille, juste en dessous.
+          </p>
+        )}
+      </div>
+
       <div className="space-y-2">
         {groupes.map((groupe) => {
           const parLeRegime = ecarteParLeRegime(groupe, foods, regime)
           const retire = groupesRetires.has(groupe.id)
-          const ouvert = deplie === groupe.id
+          const ouvert = deplie === `groupe:${groupe.id}`
           const libelle = `${groupe.libelle} (${groupe.aliments.length})`
 
           return (
@@ -1537,7 +1661,7 @@ function AlimentsEcartes({
                   que « Voir les allergènes réglementaires » juste à côté. */}
               <button
                 type="button"
-                onClick={() => setDeplie(ouvert ? null : groupe.id)}
+                onClick={() => setDeplie(ouvert ? null : `groupe:${groupe.id}`)}
                 aria-expanded={ouvert}
                 className="mt-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
               >
@@ -1546,35 +1670,69 @@ function AlimentsEcartes({
 
               {ouvert && (
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  {groupe.aliments.map((aliment) =>
-                    parLeRegime ? (
-                      <p
-                        key={aliment.id}
-                        className="rounded-[--radius-carte] border border-bordure bg-fond px-4 py-2 text-lecture text-attenue"
-                      >
-                        {aliment.nom}
-                      </p>
-                    ) : (
-                      <Case
-                        key={aliment.id}
-                        libelle={aliment.nom}
-                        cochee={retire ? !exceptions.has(aliment.id) : alimentsRetires.has(aliment.id)}
-                        onBasculer={() =>
-                          onAliment(
-                            aliment.id,
-                            retire ? exceptions.has(aliment.id) : !alimentsRetires.has(aliment.id),
-                            retire
-                          )
-                        }
-                      />
-                    )
-                  )}
+                  {/* ⚠️ LE MÊME `caseAliment` QUE LA RECHERCHE ET LES FAMILLES (lot `retour-2`). Il
+                      y avait ici une copie de la règle « groupe retiré → décocher est une
+                      exception » ; deux copies pour trois portes, c'est le désaccord garanti au
+                      premier ajustement. `retire` valait exactement ce que `caseAliment` déduit. */}
+                  {groupe.aliments.map((aliment) => caseAliment(aliment))}
                 </div>
               )}
             </div>
           )
         })}
       </div>
+
+      {/* ⛔ LA SECONDE MOITIÉ DE LA PAIRE — celle qui a coûté 352 aliments sur 450 quand elle
+          manquait (décision 58). « Je n'aime pas les abats » ne se tape pas, ça se reconnaît.
+          ⚠️ DES INTITULÉS, PAS DES CASES : `user_excluded_group.groupe_id` fige sept valeurs par un
+          CHECK SQL, et les deux découpages se chevauchent sans coïncider — « viandes » n'est ni
+          `viande_mammifere` ni son union avec `volaille`. Non cochables, le chevauchement est
+          inoffensif : deux portes, un seul état par aliment. */}
+      <div className="mt-4 space-y-2">
+        <p className="text-courant font-semibold text-texte-doux">
+          Ou parcourez les familles ({familles.length})
+        </p>
+
+        {familles.map((famille) => {
+          const ouvert = deplie === `famille:${famille.groupe}`
+
+          return (
+            <div key={famille.groupe}>
+              <button
+                type="button"
+                onClick={() => setDeplie(ouvert ? null : `famille:${famille.groupe}`)}
+                aria-expanded={ouvert}
+                className="flex min-h-tactile w-full items-center justify-between rounded-[--radius-carte] border border-bordure-forte bg-fond px-4 text-left text-lecture font-semibold text-texte"
+              >
+                <span>{famille.groupe}</span>
+                <span className="text-mention font-normal text-attenue">
+                  {ouvert ? 'Masquer' : `Voir les ${famille.aliments.length}`}
+                </span>
+              </button>
+
+              {ouvert && (
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {famille.aliments.map((aliment) => caseAliment(aliment))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ⛔ SANS ELLE, LE RETRAIT EST EN ÉCRITURE SEULE. Visible sans rien taper et sans rien
+          déplier : c'est la moitié du geste « je me suis trompé ». Elle ne montre QUE les retraits
+          d'aliment (`user_excluded_food`) — un groupe entier se décoche sur sa propre case. */}
+      {retires.length > 0 && (
+        <div className="mt-4">
+          <p className="text-courant font-semibold text-texte-doux">
+            Vos retraits ({retires.length})
+          </p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {retires.map((aliment) => caseAliment(aliment))}
+          </div>
+        </div>
+      )}
     </>
   )
 }

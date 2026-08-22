@@ -552,7 +552,10 @@ export function etapesDuParcours(id: string): readonly EtapeVisite[] {
   return PARCOURS.find((p) => p.id === id)?.etapes ?? []
 }
 
-/** Le parcours d'un écran, par son hash — `undefined` si cet écran n'en a pas (encore, cf. Savoir). */
-export function parcoursDeLEcran(hash: string): Parcours | undefined {
-  return PARCOURS.find((p) => p.ecran === hash)
-}
+// ⛔ IL Y AVAIT ICI `parcoursDeLEcran(hash)`, RETIRÉE LE 2026-08-22 — elle n'avait aucun appelant
+// depuis sa naissance. Ce n'est pas du ménage de confort : une fonction exportée que personne
+// n'appelle se lit comme une API, et elle était un `find` sur `ecran`, donc fausse par construction
+// dès que deux parcours partagent un écran (ce qui est le cas depuis `retour-1b` : `menus` et
+// `decouverte` valent tous deux `ecran: null`). Elle aurait rendu le premier, en silence.
+// ▶ La déduction du parcours depuis la route est un choix DÉJÀ ÉCARTÉ — `lien-tutoriel.tsx` dit
+// pourquoi : chaque écran sait quel est le sien et le passe explicitement.

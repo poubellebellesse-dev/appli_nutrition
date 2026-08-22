@@ -28,7 +28,7 @@ import { Panneau } from './panneau.js'
  *  dispose de toute façon que de cette Map. */
 type Aliments = ReadonlyMap<FoodId, Food>
 
-interface Famille {
+export interface Famille {
   readonly groupe: string
   readonly aliments: readonly Food[]
 }
@@ -36,13 +36,18 @@ interface Famille {
 /**
  * Les familles du catalogue, la plus fournie d'abord, chacune triée par NOM.
  *
+ * ⛔ EXPORTÉE, ET C'EST TOUT CE QUI DEVAIT ARRIVER (lot `retour-2`). Le panneau « Aliments que je
+ * ne veux pas » avait besoin du même regroupement ; en réécrire un second aurait mis deux
+ * découpages du catalogue dans la même application, qui divergent au premier aliment ajouté.
+ * Ce composant reste le seul appelant du `Panneau` — c'est la FONCTION qui se partage, pas l'écran.
+ *
  * ⚠️ ALPHABÉTIQUE À L'INTÉRIEUR, PAS PAR FRÉQUENCE. On parcourt en balayant des yeux : un ordre de
  * popularité oblige à lire toute la liste pour savoir qu'un nom n'y est pas. L'ordre de fréquence
  * sert le raccourci (« Ajout rapide »), pas la recherche exhaustive — les deux gestes coexistent.
  *
  * `localeCompare('fr')` et pas `<` : sans lui « Œuf » et « Épinard » partent en fin de liste.
  */
-function famillesDuCatalogue(foods: Aliments, deja: readonly string[]): readonly Famille[] {
+export function famillesDuCatalogue(foods: Aliments, deja: readonly string[]): readonly Famille[] {
   const parGroupe = new Map<string, Food[]>()
   for (const aliment of foods.values()) {
     if (deja.includes(aliment.id)) continue

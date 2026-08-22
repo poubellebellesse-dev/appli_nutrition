@@ -148,9 +148,64 @@ try {
     return a.startsWith(racineN + '/') ? a.slice(racineN.length + 1) : a;
   };
 
+  // ── Le shell écrit aussi, et la garde ne le voyait pas ────────────────────
+  //
+  // ⛔ TROU CONSTATÉ EN CONDITIONS RÉELLES (2026-08-21, dette §8) : la garde n'interceptait que
+  // `Edit|Write|MultiEdit|NotebookEdit`. Un sous-agent qui n'a que `Bash` — et le critique du
+  // round 2 en était un — écrivait dans `tests/scelles/` sans être vu. Elle protégeait donc un lot
+  // scellé de l'étourderie, pas de l'outil.
+  //
+  // ⚠️ ON NE PARSE PAS LE SHELL, ON RECONNAÎT DEUX FORMES ET RIEN D'AUTRE : une redirection dont la
+  // CIBLE tombe dans une zone protégée, et un verbe qui écrit dans le même segment qu'un chemin
+  // protégé. Tout le reste passe. Un faux refus coûte plus cher qu'un trou résiduel — la parade
+  // d'un refus est d'utiliser `Edit`, que la garde sait lire, donc elle ne bloque aucun travail.
+  const prefixeDe = (motif) => norm(motif).split('*')[0].replace(/\/+$/, '');
+  const VERBES_QUI_ECRIVENT =
+    /(?:^|[\s(])(?:tee|cp|mv|rm|truncate|dd|patch|install|touch)\b|\bsed\b[^]*?\s-[a-z]*i|\bperl\b[^]*?\s-[a-z]*i|\bgit\s+(?:checkout|restore|apply|mv|rm)\b/;
+
+  function ecritureShellInterdite(cmd) {
+    const zones = [
+      { motifs: CFG.proteges ?? [], actif: true, quoi: 'un INSTRUMENT (instantané daté)' },
+      { motifs: CFG.scelles ?? [], actif: Boolean(etat.lot?.scelle), quoi: 'un test SCELLÉ' },
+      { motifs: CFG.source ?? [], actif: !etat.lot, quoi: 'du code de PRODUCTION, hors lot' },
+    ].filter((z) => z.actif);
+    if (zones.length === 0) return null;
+
+    for (const segment of String(cmd).split(/[;&|\n]+/)) {
+      const jetons = segment.match(/[^\s'"<>;&|()]+/g) ?? [];
+      const cibles = [...segment.matchAll(/(?:^|[^0-9<>])>>?\s*(['"]?)([^\s'";&|]+)\1/g)].map(
+        (m) => m[2]
+      );
+      const verbe = VERBES_QUI_ECRIVENT.test(segment);
+
+      for (const zone of zones) {
+        for (const motif of zone.motifs) {
+          const prefixe = prefixeDe(motif);
+          if (!prefixe) continue;
+          const touche = (p) => norm(p).includes(prefixe + '/');
+          const coupable = cibles.find(touche) ?? (verbe ? jetons.find(touche) : undefined);
+          if (coupable !== undefined) return { chemin: coupable, quoi: zone.quoi };
+        }
+      }
+    }
+    return null;
+  }
+
   // ── PRE : le seul endroit qui dit non ─────────────────────────────────────
   if (MODE === 'pre') {
     const outil = entree.tool_name ?? '';
+
+    if (outil === 'Bash') {
+      const faute = ecritureShellInterdite(entree.tool_input?.command ?? '');
+      if (faute)
+        refus(`Cette commande écrit dans « ${faute.chemin} », qui est ${faute.quoi}.\n` +
+              `Le shell contourne la garde ; ce n'est pas une porte de service.\n` +
+              `Si l'écriture est légitime, passe par Edit/Write : la garde sait les lire, ` +
+              `et te dira précisément ce qu'elle refuse.\n` +
+              `Si c'est vraiment le sujet de la tâche : demande à l'auteur, il lancera /libre.`);
+      sortir(null);
+    }
+
     if (!/^(Edit|Write|MultiEdit|NotebookEdit)$/.test(outil)) sortir(null);
     const rel = relatif(entree.tool_input?.file_path ?? '');
     if (!rel) sortir(null);

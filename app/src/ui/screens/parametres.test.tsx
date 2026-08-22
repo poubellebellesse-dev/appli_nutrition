@@ -296,6 +296,39 @@ describe('parametres — « Aliments que je ne veux pas »', () => {
     expect(panneau.getByText(ligneDuGroupe('Œufs')).closest('button')).not.toBeNull()
   })
 
+  it('⛔ UN RETRAIT DÉJÀ POSÉ RESTE DÉFAISABLE QUAND LE RÉGIME RATTRAPE L’ALIMENT', async () => {
+    // ⚠️ CE TEST EXISTE PARCE QUE LE DÉFAUT A ÉTÉ LIVRÉ, PUIS TROUVÉ EN RELECTURE (lot `retour-2`).
+    // « Déjà écarté par votre régime » passait AVANT tout calcul de case, sur les quatre portes du
+    // panneau : retirer un aliment à la main puis déclarer un régime plus strict le changeait en
+    // texte inerte. Le compteur « Vos retraits (N) » annonçait alors une ligne que rien ne
+    // défaisait, et il fallait assouplir son régime pour revenir dessus — la clause 5 du lot
+    // (« un retrait se défait sans retaper ») était fausse dans cette configuration.
+    const { writeDiet, writeExcludedFoodIds, readExcludedFoodIds } = await import(
+      '../../data/user-store.js'
+    )
+    const { groupesAnimaux } = await import('../../engine/domain/index.js')
+
+    // L'aliment se DEMANDE au catalogue : n'importe quel membre de la viande de mammifère est
+    // écarté par le végétarisme, et on ne parie pas sur son nom.
+    const catalogue = catalogueDeTest()
+    const viande = groupesAnimaux(catalogue.foods).find((g) => g.id === 'viande_mammifere')!
+      .aliments[0]!
+    writeExcludedFoodIds(baseCourante(), [viande.id])
+    writeDiet(baseCourante(), 'vegetarien')
+
+    await monter()
+    const panneau = ouvrir('Aliments que je ne veux pas')
+
+    // La liste des retraits l'annonce, et la ligne porte bien une case — pas un texte mort.
+    expect(panneau.getByText(/^Vos retraits \(\d+\)$/)).toBeDefined()
+    const ligne = panneau.getByText(viande.nom)
+    expect(ligne.closest('button')).not.toBeNull()
+
+    // Et le geste va jusqu'à la base : décocher efface la ligne, régime déclaré ou non.
+    fireEvent.click(ligne)
+    await waitFor(() => expect(readExcludedFoodIds(baseCourante())).toEqual([]))
+  })
+
   it('⛔ AUCUNE ALLERGIE NE PASSE PAR CET ÉCRAN — un régime est une préférence', async () => {
     // Un régime est une préférence, une allergie un fait médical : le filtre allergène est le seul
     // garde-fou CRITIQUE du moteur (§5.2 ARCHITECTURE), il ne se règle pas au même endroit ni avec

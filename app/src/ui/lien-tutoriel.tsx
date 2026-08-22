@@ -3,9 +3,11 @@
 //
 // ⚠️ UN SEUL COMPOSANT, jamais huit conditions écrites en dur dans chaque écran : c'est exactement le
 // genre de duplication qui diverge au premier écran oublié. L'identifiant du parcours est passé
-// EXPLICITEMENT par l'écran plutôt que déduit de la route courante (`parcoursDeLEcran`) : chaque
-// écran sait déjà quel est SON parcours, le lui faire redéduire de sa propre route ajouterait un
-// aller-retour pour rien.
+// EXPLICITEMENT par l'écran plutôt que déduit de la route courante : chaque écran sait déjà quel est
+// SON parcours, le lui faire redéduire de sa propre route ajouterait un aller-retour pour rien.
+// ⛔ ET CETTE DÉDUCTION EST DEVENUE FAUSSE, PAS SEULEMENT INUTILE : depuis `retour-1b`, deux
+// parcours partagent le même `ecran` (`null`). La fonction qui la faisait a été retirée le
+// 2026-08-22 — voir la note à sa place dans `parcours.ts`.
 
 // ⚠️ `ParcoursId` ET NON `string` : une faute de frappe dans l'écran appelant rendrait un bouton
 // parfaitement normal qui ne ferait RIEN au toucher, et aucun test d'écran ne le verrait. L'union

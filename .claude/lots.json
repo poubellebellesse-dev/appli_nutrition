@@ -35,7 +35,9 @@
       "id": "retour-2",
       "chantier": "retours test",
       "titre": "le sélecteur d'exclusion s'ouvre aux 451 aliments",
-      "etat": "a_faire"
+      "etat": "fait",
+      "le": "2026-08-22",
+      "commit": "da719ba"
     },
     {
       "id": "retour-3",
