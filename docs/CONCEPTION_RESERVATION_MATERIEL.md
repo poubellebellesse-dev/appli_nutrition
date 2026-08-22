@@ -436,7 +436,7 @@ lexique. **Écrit plutôt que découvert.** Le lot ne prétend pas fermer cet é
 
 ⚠️ **`vapeur` N'ENTRE PAS DANS LA RÈGLE.** Ses 2 étapes décrivent un risque et ne commandent rien
 — « entassés, ils cuiraient à la vapeur ». C'est le piège de `poireaux_gratines_bechamel`, déjà
-payé au lot B du 65a.
+payé au lot 65a-B.
 
 ### ⚔️ Le brief a été attaqué le 2026-08-20, et il n'a pas tenu
 
@@ -584,7 +584,7 @@ de four, **2 831 des 3 321 paires se chevauchent encore (85,2 %)** — la fenêt
 une paire sur sept, pas la majorité. **Le gain n'est pas le volume, c'est la phrase** : ce qui
 s'affiche est une plage, pas une liste de noms.
 
-### Lot A — la table d'occupations, dérivée du texte ✅ LIVRÉ le 2026-08-13
+### Lot 65a-A — la table d'occupations, dérivée du texte ✅ LIVRÉ le 2026-08-13
 
 Une table neuve, **calquée trait pour trait sur `recipe_step_ingredient`**, qui résout déjà ce
 problème pour les ingrédients :
@@ -715,7 +715,7 @@ exemplaire, versionné.
 
 ---
 
-### Lot B — corriger les 6 faux, par déclaration ✅ LIVRÉ le 2026-08-13
+### Lot 65a-B — corriger les 6 faux, par déclaration ✅ LIVRÉ le 2026-08-13
 
 Le détecteur se trompe **6 fois sur 98 (~6 %)**, mesuré en relisant **à la main les 24 cas qui ne
 reposent pas sur le geste `enfourner`** : **18 justes, 6 faux**. Les six, en trois familles :
@@ -762,12 +762,18 @@ apprendre.
 
 ---
 
-### Lot C — la capacité ⭐ *c'est une décision, pas du travail* — C′ ✅ LIVRÉ le 2026-08-13, C″ (65b) NON OUVERT
+### Lot 65a-C — la capacité ⭐ *c'est une décision, pas du travail* — C′ ✅ LIVRÉ le 2026-08-13 · C″ ✅ LIVRÉ EN 65b le 2026-08-18 (`d0c4bb3`)
 
 > ⭐ **CE LOT EST COUPÉ EN DEUX DEPUIS LE 2026-08-13 — voir « La coupe 65a / 65b » plus haut.**
 > **C′** (`equipment.partageable`, suppression de `CODES_INDIVISIBLES`) appartient à **65a**.
 > **C″** (`user_equipment.quantite`, l'écran de réglage, la plaque) appartient à **65b**.
 > Le texte ci-dessous décrit les deux moitiés ensemble : le lire en gardant la coupe en tête.
+>
+> ✅ **LES DEUX MOITIÉS SONT LIVRÉES — titre corrigé le 2026-08-22.** Il annonçait encore « C″ (65b)
+> NON OUVERT » alors que le 65b est livré le 2026-08-18 (`d0c4bb3`, ligne 225 de ce document) et
+> que le 65c a suivi le 2026-08-20 (`4a9f373`). ⚠️ **Le corps du lot n'a PAS été réécrit** : il
+> décrit le plan tel qu'il a été pensé, et un plan ne se réécrit pas après coup. Ce qui a été livré
+> se lit aux sections 65b, 65b-bis et 65c.
 
 **C'est le seul point d'arrêt du plan**, et c'est la question que la décision 65 rangeait au mauvais
 endroit.
@@ -807,7 +813,7 @@ qui n'a pas répondu n'en reçoit aucun.
 
 ---
 
-### Lot D — le moteur, en intervalles ✅ LIVRÉ le 2026-08-13
+### Lot 65a-D — le moteur, en intervalles ✅ LIVRÉ le 2026-08-13
 
 `engine/cuisine/` calcule les intervalles d'occupation depuis les durées d'étapes et signale un
 chevauchement **au-delà de la capacité effective**.
@@ -852,7 +858,7 @@ couverture du module au niveau du reste de `engine/cuisine/`.
 
 ---
 
-### Lot E — l'écran ✅ LIVRÉ le 2026-08-13
+### Lot 65a-E — l'écran ✅ LIVRÉ le 2026-08-13
 
 > « Le four est pris de 18h10 à 18h35. »
 

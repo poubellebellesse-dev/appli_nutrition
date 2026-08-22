@@ -1,9 +1,10 @@
 {
   "avertissement": "CACHE DÉRIVÉ, jamais une source. La vérité est dans les fichiers listés sous « sources ». Toute édition à la main sera écrasée à la prochaine réconciliation (/plan). « genere_le » date la dernière lecture des documents ; les états ont pu bouger depuis, par /sceller ou /fin.",
-  "genere_le": "2026-08-19T12:00:38",
+  "genere_le": "2026-08-22T15:53:57",
   "sources": [
     "docs/FICHE_REPRISE.md",
     "docs/ETAT.md",
+    "docs/CONCEPTION_RETOURS_TEST.md",
     "docs/CONCEPTION_GESTES_ILLUSTRES.md",
     "docs/CONCEPTION_PHOTOS_RECETTES.md",
     "docs/CONCEPTION_INVARIANT_ORIGINE_ANIMALE.md",
@@ -14,6 +15,65 @@
     ".claude/etat-garde.json"
   ],
   "lots": [
+    {
+      "id": "retour-1",
+      "chantier": "retours test",
+      "titre": "l'axe retourné, et les écrans qui mentent",
+      "etat": "fait",
+      "le": "2026-08-21",
+      "commit": "3ce17d7"
+    },
+    {
+      "id": "retour-1b",
+      "chantier": "retours test",
+      "titre": "le tutoriel qui traverse les menus",
+      "etat": "fait",
+      "le": "2026-08-21",
+      "commit": "42491ea"
+    },
+    {
+      "id": "retour-2",
+      "chantier": "retours test",
+      "titre": "le sélecteur d'exclusion s'ouvre aux 451 aliments",
+      "etat": "a_faire"
+    },
+    {
+      "id": "retour-3",
+      "chantier": "retours test",
+      "titre": "« je mange dehors » étiquette le créneau",
+      "etat": "a_faire"
+    },
+    {
+      "id": "retour-4",
+      "chantier": "retours test",
+      "titre": "l'action « les restes de… » et le décalage émergent",
+      "etat": "a_faire"
+    },
+    {
+      "id": "retour-5",
+      "chantier": "retours test",
+      "titre": "la catégorie « plat simple » au catalogue",
+      "etat": "a_faire"
+    },
+    {
+      "id": "retour-6",
+      "chantier": "retours test",
+      "titre": "les filtres d'envie deviennent durs sur Aujourd'hui",
+      "etat": "a_faire",
+      "bloque_par": "retour-1"
+    },
+    {
+      "id": "retour-7",
+      "chantier": "retours test",
+      "titre": "le frigo ne vaut plus que pour un repas",
+      "etat": "a_faire"
+    },
+    {
+      "id": "retour-8",
+      "chantier": "retours test",
+      "titre": "effacer un repas passé",
+      "etat": "a_faire"
+    },
     {
       "id": "Lot geste 1",
       "chantier": "gestes illustrés",
