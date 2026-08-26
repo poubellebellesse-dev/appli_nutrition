@@ -51,7 +51,9 @@
       "id": "retour-4",
       "chantier": "retours test",
       "titre": "l'action « les restes de… » et le décalage émergent",
-      "etat": "a_faire"
+      "etat": "fait",
+      "le": "2026-08-26",
+      "commit": "7642492"
     },
     {
       "id": "retour-5",
