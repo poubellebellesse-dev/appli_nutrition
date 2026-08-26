@@ -1105,7 +1105,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | ~~73~~ | **L'exclusion personnelle couvre-t-elle TOUS les aliments, ou seulement allergènes et régimes ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : TOUS.** « C'est un menu préférence en tout : si une personne déteste manger des haricots, il faut lui donner la possibilité d'exclure l'aliment. » ✅ **MESURÉ, et ce n'est PAS un chantier** : la table, la couche d'exclusion `exclusions`, le chemin d'écriture et une suite d'une dizaine de tests **existent déjà et tournent**. Seul le **sélecteur** de l'écran Paramètres est restreint aux groupes d'origine animale — **129 aliments atteignables sur 451** ⛔ **CE CHIFFRE EST FAUX, REMESURÉ LE 2026-08-22 À L'OUVERTURE DE `retour-2` : 167 atteignables, 284 hors d'atteinte.** 129 compte les aliments qui DÉCLARENT `origine_animale` en propre et oublie les **38 dérivés** que `resolveAnimalOrigin` rattache en remontant `deriveDe` (le beurre par `lait_entier`). `CONCEPTION_REGIME_PERSONNALISE.md` lot A écrivait déjà « total 167/451 » — ce sont les deux documents qui divergeaient, pas le code. Ce qui manque est un moyen de désigner les **284** autres (et non « 322 », qui découlait du 129 faux), pas un moteur. ✅ **FAIT — lot `retour-2`, livré le 2026-08-22 (`6aad49c`)** : les 451 sont atteignables, par le nom tapé et par les familles, et un retrait posé se défait sans retaper. ▶ Le bilan et ce que les clauses n'ont pas attrapé : `CONCEPTION_RETOURS_TEST.md`, lot `retour-2`. ⚠️ **Correction d'une affirmation antérieure de la même journée** : cette demande avait été annoncée comme « la plus lourde de la liste » et « un chantier, pas un réglage ». **C'était faux**, et dit avant mesure. |
 | ~~74~~ | **Le garde-manger a-t-il une mémoire, et pour combien de temps ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur)** : « vider le frigo est sur le moment », précisé le même jour — **la déclaration vaut pour UN repas, celui qu'on va manger.** ⛔ **CE QUI PERD SON OBJET, et c'est du code livré, testé et récent qui part** : la question « avez-vous encore ces aliments ? » (`confirmer-frigo.tsx` et ses deux points d'appel), la colonne `declare_le` (**migration v8**) et le seuil de 7 jours. Tout cela avait été construit par la décision ~~57~~ (2026-08-04, elle aussi décision utilisateur) pour **surveiller une durée** — durée qui n'existe plus dès lors que la déclaration ne survit pas au repas. ✅ **CE QUI SURVIT SANS ÊTRE TOUCHÉ** : la table `user_pantry`, la couche de score `pantry`, `ShoppingOptions.pantryFoodIds` et la section **« Déjà chez vous »** de la liste de courses. Le frigo étant normalement vide quand on ouvre les courses, la liste sort **entière par construction** — le comportement voulu s'obtient sans toucher à cet écran. ⚠️ **CE N'EST PAS UN RENVERSEMENT DE LA ~~57~~, C'EST SON RESSERREMENT** : la 57 posait déjà « facultatif et ponctuel, **jamais un inventaire à tenir** » et interdisait déjà rappel, badge et notification. Elle tenait cette promesse par une péremption ; la 74 la tient par une portée. ▶ Le geste exact qui dépense la déclaration n'est pas tranché : **décision 80**. |
 | ~~75~~ | **Que devient un repas planifié, déjà passé, qu'on n'a pas mangé ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : « simple, le repas est effacé. »** Pas de report, pas de trace, pas de question posée. ⛔ **CONSÉQUENCE À TRAITER DANS LE LOT, ET ELLE CROISE LA ~~1~~** : effacer un repas passé **orpheline les restes qu'il alimentait** — `planLeftovers` remplace des créneaux entiers en s'appuyant sur un repas source, et rien ne dit aujourd'hui ce que devient un reste dont la source vient de disparaître. Le cas ne se voit pas en écrivant l'effacement ; il se voit deux jours plus tard, dans la semaine. |
-| ~~76~~ | **« Je mange dehors » : que fait ce geste au plan de la semaine ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : on ÉTIQUETTE le créneau.** Ni suppression, ni recalcul, ni trou. Le repas reste à sa place et porte une marque. ⚠️ Distinct de la ~~75~~, et volontairement : un repas non mangé **disparaît**, un repas pris dehors **reste visible**. Ce qui les sépare n'est pas le fait de ne pas avoir cuisiné, c'est que l'un est un renoncement et l'autre une information. |
+| ~~76~~ | **« Je mange dehors » : que fait ce geste au plan de la semaine ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : on ÉTIQUETTE le créneau.** Ni suppression, ni recalcul, ni trou. Le repas reste à sa place et porte une marque. ⚠️ Distinct de la ~~75~~, et volontairement : un repas non mangé **disparaît**, un repas pris dehors **reste visible**. Ce qui les sépare n'est pas le fait de ne pas avoir cuisiné, c'est que l'un est un renoncement et l'autre une information. ✅ **APPLIQUÉE au lot `retour-3` le 2026-08-22**, sur les DEUX écrans — Semaine et Aujourd'hui : un clic, aucune frappe, et le geste se défait tant que la page n'a pas été rechargée. ▶ `CONCEPTION_RETOURS_TEST.md` §3, lot `retour-3`. |
 | ~~77~~ | **Jusqu'où va le tutoriel ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : il explique L'APPLICATION.** Pas la nutrition, pas les équivalences, pas les principes. Ce que fait chaque écran et comment y arriver — rien au-delà. ✅ Cohérent avec le principe 1 (« l'appli filtre et informe ; elle ne diagnostique pas ») : un tutoriel qui enseignerait la nutrition enseignerait un jugement. |
 | ~~78~~ | **Peut-on réutiliser un plat déjà cuisiné ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur), en deux points opposés.** **(1) NON comme ingrédient d'une autre recette** — « trop compliqué à gérer ». Pas de réemploi partiel, pas de reste qui entre dans une préparation. **(2) OUI comme repas entier décalé** — « pouvoir décaler la semaine si l'utilisateur veut manger les restes le lendemain ». ✅ **MESURÉ : le mécanisme est déjà là pour l'essentiel** — `planLeftovers` remplace des **créneaux entiers** (ce qui est le point 1 pris à l'envers : la couche restes ne sait DÉJÀ pas faire du partiel), et `lockedEntries`/`entry.locked` sont préservés par `plan-week`. Il manque **une action « les restes de… »** créant une entrée de reste verrouillée au jour visé. ⚠️ **Le « décalage de la semaine » n'est alors PAS à coder** : il est émergent — un créneau verrouillé de plus, et la replanification contourne. Chercher à écrire un décalage explicite reviendrait à réimplémenter à côté ce que le verrouillage fait déjà. |
 | 79 | **Que montre l'écran Aujourd'hui quand les filtres durs, empilés aux contraintes existantes, ne laissent AUCUNE recette ?** | ⏳ **OUVERTE le 2026-08-21, née de la ~~71~~ et posée AVANT le lot qui en dépend.** Les trois axes seuls ne vident jamais le catalogue (mesuré : 8 combinaisons, minimum 8 recettes). Mais ils s'ajoutent à six exclusions déjà dures, et **l'écran ne peut pas répondre « rien » à quelqu'un qui a faim**. ▶ Trois issues, non départagées : **(1)** relâcher l'axe le moins engageant et le dire (« aucun plat chaud et léger — voici des plats chauds ») ; **(2)** refuser la combinaison **au moment du clic**, en grisant ce qui ne mène nulle part ; **(3)** laisser le vide et proposer de retirer un filtre. ⚠️ **La (2) est la plus honnête et la plus chère** : elle suppose de connaître le nombre de résultats **avant** que l'utilisateur clique, donc de recalculer à chaque pastille. ⛔ **Ce qu'aucune des trois ne doit faire : rendre un plat qui ne respecte pas le filtre sans le dire.** C'est la ~~71~~ prise à l'envers, et l'utilisateur l'a signalée comme un défaut (« les filtres ne marchent pas ??? chaud = salade »). |
@@ -1244,6 +1244,43 @@ appli_nutrition/
 ## 8. Dette connue
 
 Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
+
+### Ce que le lot `retour-3` laisse derrière lui (2026-08-22)
+
+⚠️ **LE RETOUR EN ARRIÈRE EST UNE COMMODITÉ DE SESSION, PAS UNE GARANTIE — assumé, pas subi.**
+Défaire « je mange dehors » demande de savoir quel plat occupait le créneau avant ; **rien ne
+conserve cette information**. La décision 51 verrouille `hors_catalogue` à trois états et interdit
+un second champ, et la clause 8 du lot interdisait la colonne neuve comme la migration. La mémoire
+vit donc à la portée du module (`app/src/ui/dehors.ts`) et **meurt au rechargement de
+l'application** : l'étiquette reste, le bouton d'annulation disparaît, et « Changer » comme
+« Choisir » redeviennent les portes de sortie. ▶ Le jour où une migration s'ouvre pour une autre
+raison, une colonne `plat_avant` fermerait ça en trois lignes — **ne pas ouvrir une migration
+rien que pour ça.**
+
+⚠️ **UN CRÉNEAU QUI PORTAIT UN RESTE NE SE DÉFAIT PAS — REFUS DÉLIBÉRÉ, TROUVÉ EN RELECTURE.**
+Le moteur repose un créneau avec les portions du catalogue et sans marque de reste
+(`reposerLeCreneau`) : rendre un reste par ce chemin le ferait revenir en **plat neuf, à portions
+pleines**, et la liste de courses réclamerait les ingrédients d'un plat déjà cuisiné la veille.
+Plutôt que de rendre autre chose que ce qui est annoncé, **le bouton n'est pas proposé** dans ce
+cas-là. ▶ Le vrai correctif est moteur : savoir reposer une entrée À L'IDENTIQUE (reste, portions,
+absence d'accompagnement), ce que la reconstruction actuelle ne sait pas exprimer. ⚠️ **Le test
+scellé du lot ne couvre PAS ce cas** : ses cibles excluent les restes (`!e.isLeftover`). Un futur lot
+qui ouvrirait le retour aux restes doit donc écrire sa propre clause — la clause 4 ne l'attrapera
+pas.
+
+⚠️ **L'ÉCRITURE PART MÊME SI L'ÉCRAN A CHANGÉ DE CRÉNEAU ENTRE-TEMPS.** Sur Aujourd'hui, les deux
+gestes capturent leur vue au clic. L'AFFICHAGE est désormais gardé — le plan n'est reposé dans
+l'écran que si la vue n'a pas bougé, comme le drapeau `annule` de `rafraichir` — mais **l'écriture
+en base, elle, part quand même**. En pratique le socle est en cache et la fenêtre se compte en
+microsecondes, les deux écrans ne sont jamais montés ensemble, et l'écriture porte de toute façon
+ce que l'utilisateur a demandé. **Mesuré nulle part, jamais reproduit** : écrit ici pour ne pas
+avoir à le redécouvrir.
+
+⚠️ **DETTE ANTÉRIEURE AU LOT, VUE EN PASSANT, NON CORRIGÉE — hors périmètre.** Sur l'écran
+Semaine, « Changer » écrit le plan **sans reprogrammer les rappels de préparation** : l'appareil
+continue de sonner pour le plat remplaçé. « Je mange dehors » et « Choisir », eux, passent par le
+chemin d'écriture complet. ⚠️ **Ne pas étendre ça à « Garder/Relâcher »**, qui ne change aucun
+plat et n'a donc rien à reprogrammer.
 
 ### Ce que le lot `retour-2` laisse derrière lui (2026-08-22)
 

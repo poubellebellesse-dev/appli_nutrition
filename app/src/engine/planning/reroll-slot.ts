@@ -271,6 +271,18 @@ function reposerLeCreneau(
   const platPose: MealPlanEntry = {
     ...cible,
     recipeId: choisi,
+    // ⛔ L'ÉTIQUETTE DE L'ANCIEN CRÉNEAU NE SURVIT PAS AU NOUVEAU PLAT, et `...cible` la recopiait.
+    // Poser un plat sur un créneau qui portait « Pizza livrée » rendait une entrée avec un plat ET
+    // une étiquette — l'état que la migration v9 interdit (`recipe_id IS NULL OR hors_catalogue IS
+    // NULL`). Le plan était donc bien formé aux yeux du moteur et REFUSÉ par la base : « Changer »
+    // et « Choisir » levaient une erreur d'écriture sur tout créneau déjà marqué « Un plat
+    // préparé ». Mesuré le 2026-08-22 au lot `retour-3`, corrigé ici plutôt qu'à l'écran : c'est le
+    // moteur qui décrit le créneau, et un créneau ne peut pas être les deux à la fois.
+    // ⚠️ SAUF QUAND AUCUN PLAT N'A PU ÊTRE POSÉ. Sur un vivier épuisé, `choisi` vaut `null` et le
+    // créneau redevient vide : effacer l'étiquette LÀ ferait disparaître sans un mot ce que
+    // l'utilisateur avait DÉCLARÉ, pour ne rien mettre à la place — et « Changer » n'est filtré sur
+    // aucun créneau marqué. La règle de la base tient dans les deux cas : plus aucun plat en face.
+    horsCatalogue: choisi === null ? cible.horsCatalogue : null,
     portions: choisi === null ? 0 : (catalog.recipes.get(choisi)?.portionsBase ?? 0),
     // Ni un reroll ni un choix ne produisent un RESTE : le plat de la veille n'a pas été cuisiné en
     // double parce qu'on a changé celui-ci.

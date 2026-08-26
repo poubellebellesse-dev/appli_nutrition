@@ -43,10 +43,22 @@ npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
 Dernier relevé, **suite réellement exécutée le 2026-08-22, arbre COMPLET, livraison du lot
-`retour-2` (`6aad49c`). Le relevé précédent (`3ce17d7`, 2 263 / 123 fichiers) est CONFIRMÉ,
-pas corrigé** :
-`npm test` → **2 376 passed / 0 failed (125 fichiers)** en 51,4 s · typecheck propre ·
-`vite build` ✓ (2,97 s) · `engine:plan-stress` **20/20**.
+`retour-3` (pas encore commité). Les relevés précédents (`6aad49c`, 2 376 / 125 ; `3ce17d7`,
+2 263 / 123) sont CONFIRMÉS, pas corrigés** :
+`npm test` → **2 392 passed / 0 failed (126 fichiers)** en 50,1 s · typecheck propre ·
+`vite build` ✓ (3,01 s) · `engine:plan-stress` **20/20**.
+✅ **CE QUE `retour-3` AJOUTE A ÉTÉ COMPTÉ SEUL, PAS DÉDUIT** : `tests/scelles/retour-3.test.tsx`,
+lancé à part, rend **13 tests** — c'est le 126ᵉ fichier — et `plan-week.test.ts` passe de **59** à
+**62** (trois gardes moteur posées sur un défaut LIVRÉ, voir plus bas). 13 + 3 = 16, aucun autre
+test n'a bougé. ⚠️ **Le piège `it.each` a été revérifié** : `PARCOURS` n'a pas bougé.
+⚠️ **UN DÉFAUT DÉJÀ EN PRODUCTION A ÉTÉ TROUVÉ PAR UN TEST SCELLÉ QUI NE LE VISAIT PAS.** Poser ou
+tirer un plat sur un créneau portant une étiquette `hors_catalogue` recopiait l'étiquette à côté du
+plat : le moteur rendait un plan bien formé que le `CHECK` de la migration v9 REFUSAIT à
+l'écriture. Ni le type ni aucun test ne disaient non — seule la base. Corrigé dans le moteur au lot
+`retour-3`, avec trois tests. **Un champ mutuellement exclusif de son voisin ne se garde pas par le
+type : il se garde par un test, ou par la base au pire moment.**
+📦 **CE QUI SUIT DATE DU LOT `retour-2` (`6aad49c`) — gardé pour la MÉTHODE, pas pour le
+chiffre : le compte de référence est désormais 2 392 / 126.**
 ✅ **RELANCÉES UNE SECONDE FOIS SUR L'ARBRE FINAL**, après le retrait d'une fonction orpheline et
 l'extension de la garde au shell : **mêmes 2 376 / 125**. Une fonction sans appelant ne coûte aucun
 test à retirer — c'est ce qui prouve qu'elle n'en avait aucun.

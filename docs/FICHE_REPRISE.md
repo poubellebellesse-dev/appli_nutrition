@@ -18,11 +18,11 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-22, SUR L'ARBRE COMMITÉ** (`6aad49c`, `retour-2`) : `npm test` → **2 376
-passed / 0 failed (125 fichiers)** en 51,4 s · typecheck propre · `vite build` ✓ (2,97 s) ·
+⚠️ **RELEVÉ DU 2026-08-22, SUR L'ARBRE DU LOT `retour-3`** : `npm test` → **2 392
+passed / 0 failed (126 fichiers)** en 50,1 s · typecheck propre · `vite build` ✓ (3,01 s) ·
 `plan-stress` **20/20**. ⚠️ **`audit-mapping` non relancé** : catalogue inchangé depuis le 08-20
-(451 mappings, 9 à relire). ⚠️ **L'écart 2 363 → 2 376 est `retour-2` SEUL**, mesuré fichier par
-fichier : **+12** scellés (124 → 125 fichiers) et **+1** de non-régression.
+(451 mappings, 9 à relire). ⚠️ **L'écart 2 376 → 2 392 est `retour-3` SEUL**, mesuré fichier par
+fichier : **+13** scellés (125 → 126) et **+3** au moteur (59 → 62). ⚠️ **Pas encore commité.**
 ⛔ **UN COMPTE PEUT BOUGER SANS QU'AUCUN FICHIER DE TEST NE CHANGE** — `it.each` nourri par une
 table de production. C'est ce qui a ouvert un écart de 90 ici. ▶ `ETAT.md` §8, lot `retour-2`.
 
@@ -56,15 +56,15 @@ questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RET
   ajouté de quoi voir (affichages, attente de chargement, champ de recherche et famille de 74
   lignes), **qu'aucun test jsdom ne sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3.
   **Tant qu'elle n'est pas faite, on sait seulement que rien n'est cassé** — pas que ça marche.
-- ▶ **`/brief retour-3`** — « je mange dehors » étiquette le créneau (décision 76), rien ne le
-  bloque. Puis `retour-4` à `retour-8`. ⚠️ **`retour-6` attend la décision 79**, pas que du code.
+- ▶ **`/brief retour-4`** — `retour-3` est livré (« je mange dehors », les deux écrans). Puis
+  `retour-5` à `retour-8`. ⚠️ **`retour-6` attend la décision 79**, pas que du code.
   ⚠️ **En ouvrant le brief : nommer les réglages persistants que l'écran lit, et dire lesquels les
   clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.
 
 **Les chantiers TERMINÉS ne sont plus détaillés ici** — leur fait vit dans `ETAT.md` et dans leur
 document de chantier. En un coup d'œil : gestes illustrés (3 lots sur 4, le 2ᵉ arrêté par décision),
 clips (fait, 7 gestes sans candidat), photos (129 sur 330, bloqué sur la SOURCE), origine animale
-(66c, clos), réservation matériel (65c), retours test (`retour-1`, `retour-1b`, `retour-2`).
+(66c, clos), réservation matériel (65c), retours test (`retour-1`, `retour-1b`, `retour-2`, `retour-3`).
 
 **Ce qui reste à faire, et qui n'attend que d'être commencé :**
 

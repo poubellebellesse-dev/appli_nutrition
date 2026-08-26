@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest'
 import { MAX_PLAN_DAYS, MIN_PLAN_DAYS, addDays, planWeek } from './plan-week.js'
-import { rerollSlot, setSlotRecipe } from './reroll-slot.js'
+import { rerollSlot, setSlotHorsCatalogue, setSlotRecipe } from './reroll-slot.js'
 import { makeCatalog, makeFood, makeRecipe } from '../selection/test-fixtures.js'
 import { NoViableRecipeError } from '../domain/index.js'
 import type { Catalog, FoodId, MealPlanEntry, MealSlot, RecipeId, RecipeIngredient, SuggestionRequest, SuggestionResult, WeekPlan, WeekPlanRequest } from '../domain/index.js'
@@ -456,6 +456,69 @@ describe('planning/setSlotRecipe — POSER un plat choisi, ce qui n’est pas le
     expect(
       setSlotRecipe(MENU, plan, { date: '2026-09-01', creneau: 'diner' }, 'plat1' as RecipeId, CONTEXTE, fakeSuggest([]))
     ).toBe(plan)
+  })
+
+  // ⛔ CE QUE CES DEUX TESTS GARDENT, ET C'ÉTAIT UN DÉFAUT LIVRÉ. `reposerLeCreneau` reconstruit
+  // l'entrée par `{ ...cible }` et RECOPIAIT `horsCatalogue`. Poser ou tirer un plat sur un créneau
+  // portant « Un plat préparé » rendait donc une entrée avec un plat ET une étiquette — l'état que
+  // la migration v9 interdit (`recipe_id IS NULL OR hors_catalogue IS NULL`). Le plan sortait bien
+  // formé du moteur et `savePlan` le REFUSAIT : à l'écran, « Changer » et « Choisir » levaient une
+  // erreur d'écriture sur ces créneaux-là. Rien ne l'attrapait — le type autorise les deux champs,
+  // et seul le `CHECK` de la base disait non. Mesuré et corrigé le 2026-08-22 (lot `retour-3`).
+  const marqueDehors = (plan: WeekPlan): WeekPlan =>
+    setSlotHorsCatalogue(plan, { date: '2026-08-04', creneau: 'diner' }, 'Restaurant')
+
+  it('⛔ POSER un plat EFFACE l’étiquette « plat préparé » du créneau, sur toutes ses entrées', () => {
+    const marque = marqueDehors(planDeDeuxJours())
+    expect(
+      marque.entries.find((e) => e.slot.date === '2026-08-04' && e.slot.creneau === 'diner')!.horsCatalogue
+    ).toBe('Restaurant')
+
+    const apres = setSlotRecipe(
+      MENU,
+      marque,
+      { date: '2026-08-04', creneau: 'diner' },
+      'plat1' as RecipeId,
+      CONTEXTE,
+      fakeSuggest(['plat2', 'acc'])
+    )
+    const duCreneau = apres.entries.filter((e) => e.slot.date === '2026-08-04' && e.slot.creneau === 'diner')
+
+    expect(duCreneau.map((e) => e.recipeId)).toEqual(['plat1', 'acc'])
+    expect(duCreneau.map((e) => e.horsCatalogue)).toEqual([null, null])
+  })
+
+  it('⛔ TIRER un plat l’efface aussi — les deux passent par la même reconstruction', () => {
+    const apres = rerollSlot(
+      MENU,
+      marqueDehors(planDeDeuxJours()),
+      { date: '2026-08-04', creneau: 'diner' },
+      CONTEXTE,
+      fakeSuggest(['plat1', 'plat2', 'acc'])
+    )
+    const duCreneau = apres.entries.filter((e) => e.slot.date === '2026-08-04' && e.slot.creneau === 'diner')
+
+    expect(duCreneau.length).toBeGreaterThan(0)
+    expect(duCreneau.every((e) => e.horsCatalogue === null)).toBe(true)
+  })
+
+  it('⛔ MAIS UN VIVIER ÉPUISÉ NE L’EFFACE PAS : rien n’est posé, donc rien n’est perdu', () => {
+    // La correction ci-dessus efface l'étiquette parce qu'un plat prend la place. Quand AUCUN plat
+    // n'a pu être tiré, il n'y a pas de remplaçant : effacer reviendrait à supprimer en silence une
+    // déclaration de l'utilisateur pour ne rien mettre à la place. Le créneau garde donc son
+    // étiquette, et la règle de la base est respectée des deux côtés — plus aucun plat en face.
+    const apres = rerollSlot(
+      MENU,
+      marqueDehors(planDeDeuxJours()),
+      { date: '2026-08-04', creneau: 'diner' },
+      CONTEXTE,
+      fakeSuggest([])
+    )
+    const duCreneau = apres.entries.filter((e) => e.slot.date === '2026-08-04' && e.slot.creneau === 'diner')
+
+    expect(duCreneau).toHaveLength(1)
+    expect(duCreneau[0]?.recipeId).toBeNull()
+    expect(duCreneau[0]?.horsCatalogue).toBe('Restaurant')
   })
 })
 

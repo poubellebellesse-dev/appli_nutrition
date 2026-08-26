@@ -25,14 +25,24 @@
 import { useCallback, useEffect, useState } from 'react'
 import type {
   CravingAxes,
+  MealPlanEntry,
   MealSlot,
   Minutes,
   RecipeId,
   ScoredSuggestion,
+  SlotRef,
   SuggestionRequest,
+  WeekPlan,
 } from '../../engine/domain/index.js'
 import { min } from '../../engine/domain/index.js'
-import { readDisplay, readRythme, readUserState, recordMeal, type StoredUserState } from '../../data/user-store.js'
+import {
+  readDisplay,
+  readLatestPlan,
+  readRythme,
+  readUserState,
+  recordMeal,
+  type StoredUserState,
+} from '../../data/user-store.js'
 import type { UserProfile } from '../../engine/domain/index.js'
 import {
   FENETRE_HISTORIQUE_JOURS,
@@ -40,7 +50,7 @@ import {
   chargerSocle,
   profilCourant,
 } from '../socle.js'
-import { hashDeRecette, hashDuFrigo } from '../router.js'
+import { hashDe, hashDeRecette, hashDuFrigo } from '../router.js'
 import { REPAS_PAR_DEFAUT, TITRE_CRENEAU, creneauDuMoment, creneauxDuRythme } from '../creneau.js'
 // ⚠️ `PALIERS_TEMPS` est IMPORTÉ, pas recopié. Il l'était — même valeurs, mot pour mot — alors que
 // `champs-profil.tsx` l'exportait déjà sans que personne le lise. Le réglage de temps de cet écran
@@ -50,6 +60,8 @@ import { PALIERS_TEMPS, Segment } from '../champs-profil.js'
 import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
 import { RepriseCuisine } from '../reprise-cuisine.js'
+import { enregistrerLePlan } from '../ecrire-plan.js'
+import { LIBELLE_DEHORS, oublierLePlat, platDAvant, retenirLePlat } from '../dehors.js'
 
 /**
  * Combien de plats on prépare d'avance. Assez pour défiler sans recalculer à chaque flèche, pas
@@ -154,6 +166,18 @@ function construireRequete(
   }
 }
 
+/**
+ * L'entrée PRINCIPALE d'un créneau — jamais l'accompagnement, qui partage le même couple
+ * date/créneau. C'est le plat qu'on étiquette, et lui seul.
+ */
+function surLeCreneau(entree: MealPlanEntry, slot: SlotRef): boolean {
+  return (
+    entree.slot.date === slot.date &&
+    entree.slot.creneau === slot.creneau &&
+    entree.service !== 'accompagnement'
+  )
+}
+
 interface Vue {
   readonly suggestions: readonly ScoredSuggestion[]
   readonly nomDe: (id: string) => string
@@ -161,6 +185,19 @@ interface Vue {
    *  sont les deux seules choses que l'écran demande au catalogue à partir d'un identifiant. */
   readonly photoDe: (id: string) => string | null
   readonly nbRetenus: number
+  /** La journée affichée, figée au calcul de la vue — jamais relue à l'horloge au moment d'écrire. */
+  readonly date: string
+  /**
+   * Le dernier plan enregistré, ou `null` s'il n'y en a aucun.
+   *
+   * ⚠️ CET ÉCRAN NE COMPOSE AUCUNE SEMAINE — il ne fait que lire celle qui existe, pour pouvoir
+   * étiqueter le créneau du jour. Sans plan, il n'y a rien à étiqueter et le geste n'apparaît pas :
+   * fabriquer sept jours de repas pour poser une étiquette serait exactement l'effet de bord que
+   * `reprendre` a dû retirer de l'écran Semaine.
+   */
+  readonly plan: WeekPlan | null
+  /** Le profil du jour, que le moteur redemande à chaque réécriture du plan. */
+  readonly profil: UserProfile
   readonly creneau: MealSlot
   /** Les créneaux du rythme DÉCLARÉ (`creneauxDuRythme`) — jamais les quatre en dur : c'est ce qui
    *  distingue le sélecteur de repas de `TITRE_CRENEAU`, qui couvre le vocabulaire complet. */
@@ -219,6 +256,9 @@ async function calculerVue(
     // ce `null` qui déclenche l'aplat, sur 201 des 330 recettes.
     photoDe: (id) => socle.catalogue.recipes.get(id as never)?.imagePath ?? null,
     nbRetenus: etat.history.entries.length,
+    date,
+    plan: readLatestPlan(socle.db),
+    profil,
     creneau,
     creneaux,
     balayageActif: readDisplay(socle.db).gestesBalayage,
@@ -370,6 +410,94 @@ export function Aujourdhui() {
     setAideOuverte(false)
   }, [])
 
+  /**
+   * Ranger dans l'écran le plan qu'on vient d'écrire — mais SEULEMENT s'il regarde encore le même
+   * repas qu'au moment du clic.
+   *
+   * ⛔ L'ÉCRAN PEUT AVOIR CHANGÉ DE CRÉNEAU PENDANT L'ÉCRITURE. Les deux gestes ci-dessous partent
+   * d'une vue capturée au clic ; entre ce clic et la fin de l'écriture, une pastille de créneau peut
+   * avoir relancé le calcul. Reposer `{ ...vue }` sans regarder ramènerait alors de force le repas
+   * d'avant sous les yeux de l'utilisateur, sans qu'il ait rien demandé — le même défaut que le
+   * drapeau `annule` empêche dans `rafraichir`. Ici on compare l'identité de la vue : si elle a
+   * bougé, on ne touche à rien. Le plan est déjà en base, et le calcul en cours le relira.
+   */
+  const appliquer = useCallback((vue: Vue, plan: WeekPlan) => {
+    setEtat((precedent) =>
+      precedent.phase === 'pret' && precedent.vue === vue
+        ? { phase: 'pret', vue: { ...vue, plan } }
+        : precedent
+    )
+  }, [])
+
+  /**
+   * « Je mange dehors » — UN clic, aucune frappe (décision 76, lot `retour-3`).
+   *
+   * ⚠️ MÊME CHEMIN D'ÉCRITURE QUE L'ÉCRAN SEMAINE : `setSlotHorsCatalogue` puis `enregistrerLePlan`.
+   * Le créneau est ÉTIQUETÉ, ni supprimé ni recalculé — c'est la lecture (b) de la décision 76, et
+   * c'est aussi ce qui rend le geste réversible : la journée garde sa place dans le plan.
+   *
+   * ⚠️ SANS PLAN ENREGISTRÉ, RIEN. Le bouton n'est pas rendu, et ce garde-fou reste quand même :
+   * l'écran ne doit inventer aucune semaine, à aucun clic.
+   */
+  const marquerDehors = useCallback(() => {
+    if (etat.phase !== 'pret') return
+    const { vue } = etat
+    const plan = vue.plan
+    if (plan === null) return
+    const slot: SlotRef = { date: vue.date, creneau: vue.creneau }
+    const entree = plan.entries.find((e) => surLeCreneau(e, slot))
+    if (entree === undefined) return
+
+    // Retenu AVANT l'écriture : après, le plat n'est plus nulle part, et l'annuler n'aurait plus rien
+    // à rendre. La mémoire meurt au rechargement — voir l'en-tête de `ui/dehors.ts`.
+    retenirLePlat(slot, entree)
+    chargerSocle()
+      .then((socle) => {
+        const suivant = socle.moteur.setSlotHorsCatalogue(plan, slot, LIBELLE_DEHORS, vue.profil)
+        enregistrerLePlan(socle, suivant)
+        appliquer(vue, suivant)
+      })
+      .catch((erreur: unknown) => {
+        setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
+      })
+  }, [etat, appliquer])
+
+  /** « Finalement je mange ici » — repose le plat que le geste avait remplacé, s'il est encore connu. */
+  const revenirIci = useCallback(() => {
+    if (etat.phase !== 'pret') return
+    const { vue } = etat
+    const plan = vue.plan
+    if (plan === null) return
+    const slot: SlotRef = { date: vue.date, creneau: vue.creneau }
+    const precedent = platDAvant(slot)
+    if (precedent === null) return
+
+    chargerSocle()
+      .then((socle) => {
+        // Le contexte de reroll se rebâtit ici comme sur l'écran Semaine : le moteur en a besoin
+        // pour choisir l'accompagnement qui repart avec le plat.
+        const etatUtilisateur = readUserState(
+          socle.db,
+          { windowDays: FENETRE_HISTORIQUE_JOURS, today: vue.date },
+          socle.catalogue.foods
+        )
+        const suivant = socle.moteur.setSlotRecipe(plan, slot, precedent, {
+          profile: vue.profil,
+          constraints: etatUtilisateur.constraints,
+          tolerancePiquant: etatUtilisateur.tolerancePiquant,
+          history: etatUtilisateur.history,
+          activeTopics: etatUtilisateur.activeTopics,
+          seed: plan.seed,
+        })
+        enregistrerLePlan(socle, suivant)
+        oublierLePlat(slot)
+        appliquer(vue, suivant)
+      })
+      .catch((erreur: unknown) => {
+        setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
+      })
+  }, [etat, appliquer])
+
   if (etat.phase === 'chargement') return <p className="text-attenue">Chargement…</p>
   if (etat.phase === 'erreur') {
     return (
@@ -408,6 +536,14 @@ export function Aujourdhui() {
   }
 
   const doitAider = aideOuverte
+  // La journée vient de la VUE, pas d'une relecture de l'horloge : un geste posé à 23 h 59
+  // s'enregistre sur la journée qu'on regardait, même si l'écriture aboutit à 00 h 01.
+  const slotDuJour: SlotRef = { date: vue.date, creneau: vue.creneau }
+  const entreeDuJour = vue.plan?.entries.find((e) => surLeCreneau(e, slotDuJour))
+  const etiquetteDehors =
+    entreeDuJour !== undefined && (entreeDuJour.horsCatalogue ?? '').trim() !== ''
+      ? entreeDuJour.horsCatalogue
+      : null
 
   return (
     <section>
@@ -476,22 +612,43 @@ export function Aujourdhui() {
         </button>
       )}
 
-      <CarteRepas
-        suggestion={courante}
-        nom={vue.nomDe(courante.recipeId)}
-        photo={vue.photoDe(courante.recipeId)}
-        balayageActif={vue.balayageActif}
-        surPrecedent={position > 0 ? () => deplacer(-1, total) : null}
-        surSuivant={position < total - 1 ? () => deplacer(1, total) : null}
-        surRetenir={() => retenir(courante.recipeId, vue.creneau)}
-        surProposerAutreChose={proposerAutreChose}
-      />
+      {etiquetteDehors !== null ? (
+        <CreneauDehors
+          libelle={etiquetteDehors}
+          surRevenirIci={platDAvant(slotDuJour) === null ? null : revenirIci}
+        />
+      ) : (
+        <>
+          <CarteRepas
+            suggestion={courante}
+            nom={vue.nomDe(courante.recipeId)}
+            photo={vue.photoDe(courante.recipeId)}
+            balayageActif={vue.balayageActif}
+            surPrecedent={position > 0 ? () => deplacer(-1, total) : null}
+            surSuivant={position < total - 1 ? () => deplacer(1, total) : null}
+            surRetenir={() => retenir(courante.recipeId, vue.creneau)}
+            surProposerAutreChose={proposerAutreChose}
+          />
 
-      <PlatsProches
-        ids={vue.prochesDe(courante.recipeId as RecipeId)}
-        nomDe={vue.nomDe}
-        photoDe={vue.photoDe}
-      />
+          <PlatsProches
+            ids={vue.prochesDe(courante.recipeId as RecipeId)}
+            nomDe={vue.nomDe}
+            photoDe={vue.photoDe}
+          />
+
+          {/* Rendu SEULEMENT quand une semaine composée porte ce créneau : sans plan, il n'y a rien
+              à étiqueter, et l'écran n'en fabrique pas un. */}
+          {entreeDuJour !== undefined && (
+            <button
+              type="button"
+              onClick={marquerDehors}
+              className="mt-3 flex min-h-tactile w-full items-center justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-texte-doux"
+            >
+              Je mange dehors
+            </button>
+          )}
+        </>
+      )}
 
       {vue.nbRetenus > 0 && (
         <p className="mt-4 text-courant leading-relaxed text-attenue">
@@ -500,6 +657,53 @@ export function Aujourdhui() {
         </p>
       )}
     </section>
+  )
+}
+
+/**
+ * Ce qu'on voit à la place des suggestions quand le créneau est étiqueté.
+ *
+ * ⚠️ LE LIBELLÉ EST AFFICHÉ TEL QUEL. `hors_catalogue` est un texte que l'utilisateur écrit et
+ * relit — pas un canal de stockage. Le reformuler ou le tronquer ferait mentir la carte de la
+ * Semaine, qui montre la même chaîne.
+ */
+function CreneauDehors({
+  libelle,
+  surRevenirIci,
+}: {
+  readonly libelle: string
+  /** `null` quand plus rien ne se souvient du plat d'avant — après un rechargement, par exemple. */
+  readonly surRevenirIci: (() => void) | null
+}) {
+  return (
+    <div className="mt-4 rounded-[--radius-carte] border border-bordure-forte bg-surface p-5">
+      <p className="text-lecture font-semibold text-texte">{libelle}</p>
+      <p className="mt-2 text-courant leading-relaxed text-texte-doux">
+        Ce repas est noté comme pris dehors. Rien à cuisiner, et aucun rappel ne sonnera pour lui.
+      </p>
+      {surRevenirIci !== null ? (
+        <button
+          type="button"
+          onClick={surRevenirIci}
+          className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-fond px-4 text-lecture font-semibold text-texte"
+        >
+          Finalement je mange ici
+        </button>
+      ) : (
+        /* ⛔ JAMAIS DE CUL-DE-SAC. Sans mémoire du plat d'avant — après un rechargement, sur un
+           créneau qui était déjà vide, ou sur un reste qu'on ne sait pas rendre à l'identique — cet
+           écran n'a rien à reposer : il ne montre qu'un repas et ne choisit pas à la place de
+           l'utilisateur. La sortie existe, elle est sur la Semaine, et on la montre au lieu de la
+           laisser deviner. Un lien, pas un bouton : il n'écrit rien. */
+        <p className="mt-4 text-courant leading-relaxed text-texte-doux">
+          Pour reposer un plat sur ce repas,{' '}
+          <a href={hashDe('semaine')} className="font-semibold text-texte underline">
+            passez par la Semaine
+          </a>
+          .
+        </p>
+      )}
+    </div>
   )
 }
 

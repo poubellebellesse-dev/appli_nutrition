@@ -789,6 +789,376 @@ ce lot ne la remplace.
 
 ---
 
+### Lot `retour-3` — « je mange dehors », et l'écran qui ne connaît pas la semaine ✅ **LIVRÉ le 2026-08-22**
+
+**Commit : à écrire.** Le code, les tests scellés et les documents partent ensemble ; le hash se pose
+dans le commit d'après, comme pour `retour-1b` et `retour-2`. ▶ Bilan et dette en fin de section.
+
+**Ce que l'auteur a demandé (2026-08-21, décision 76) :** ⛔ **ses mots n'ont été retranscrits nulle
+part.** Ni ici — ce document n'en portait qu'une ligne de tableau — ni dans `ETAT.md`, qui n'a que le
+verdict : « **on ÉTIQUETTE le créneau.** Ni suppression, ni recalcul, ni trou. Le repas reste à sa
+place et porte une marque. ⚠️ Distinct de la 75, et volontairement : un repas non mangé
+**disparaît**, un repas pris dehors **reste visible**. » Les deux lots précédents ouvraient sur une
+citation ; celui-ci n'en a aucune. **Ce qui suit interprète, et le signale chaque fois qu'il le
+fait.**
+
+⭐ **UNE PRÉCISION OBTENUE À L'OUVERTURE DU BRIEF, ET ELLE DOUBLE LE LOT (2026-08-22).** Question
+posée : quand appuie-t-on sur « je mange dehors » — sur un repas à venir, ou sur le repas du jour ?
+Réponse de l'auteur : **les deux.** Le geste vit donc sur **Semaine** *et* sur **Aujourd'hui**.
+
+#### Ce qui a été mesuré avant d'écrire quoi que ce soit
+
+⛔ **LE MÉCANISME QUE LA DÉCISION 76 DÉCRIT EXISTE DÉJÀ, ET IL TOURNE DEPUIS LE 2026-08-05.** C'est
+la décision 51, « plat préparé, traiteur, repas au restaurant ». Rien n'a été deviné ici : le chemin
+a été suivi ligne à ligne.
+
+| Ce qui existe | Où | Depuis |
+|---|---|---|
+| l'état en base — `meal_plan_entry.hors_catalogue TEXT` | `user-schema.ts`, migration **v9** | 2026-08-05 |
+| `CHECK (recipe_id IS NULL OR hors_catalogue IS NULL)` — **trois** états possibles, jamais quatre | même migration | 2026-08-05 |
+| la transformation — `setSlotHorsCatalogue(plan, slot, libelle)` | `engine/planning/reroll-slot.ts:211` | 2026-08-05 |
+| le chemin d'écriture depuis l'écran Semaine | `screens/semaine.tsx:390`, `poserHorsCatalogue` | 2026-08-05 |
+| la porte visible — onglet « **Un plat préparé** », libellé libre | `ui/choisir-plat.tsx:144-160` | 2026-08-05 |
+| l'affichage du créneau marqué + « Repas noté à la main — l'application ne connaît pas ce qu'il apporte. » | `screens/semaine.tsx:824-862` | 2026-08-05 |
+| la sortie de la liste de courses | `engine/planning/shopping-list.ts:198` | — |
+| l'absence de rappel pour ce créneau | `ui/rappel.ts:97` | — |
+| l'extinction de l'alerte de plancher calorique sur cette journée | `createEngine` → `checkCalorieFloor` | — |
+
+⚠️ **LES EXEMPLES AFFICHÉS DANS CETTE PORTE SONT DÉJÀ CEUX DE LA DÉCISION 76**, mot pour mot :
+« Lasagnes surgelées », « **Restaurant italien** », « **Chez mes parents** ». Le besoin était vu ; il
+manque le mot que l'auteur emploie, et le nombre de gestes qu'il coûte.
+
+⛔ **CE QUI MANQUE VRAIMENT, MESURÉ, ET CE N'EST PAS CE QUE LA LIGNE DE TABLEAU LAISSAIT CROIRE.**
+
+1. **Le mot « dehors » n'existe nulle part dans l'interface.** Quatre occurrences dans tout
+   `app/src/ui/` : un attribut de test de portail, un commentaire sur un aliment resté dehors la
+   nuit, un booléen de fenêtre dans `visite.tsx`, et un commentaire dans `semaine.tsx:592`. **Zéro
+   texte affiché.** Qui cherche « je mange dehors » cherche « Un plat préparé ».
+2. **Le geste coûte trois clics et une frappe** : « Choisir » → onglet « Un plat préparé » → taper →
+   valider. Un repas au restaurant demande donc de composer une phrase au clavier.
+3. **Le geste est indéfaisable.** `setSlotHorsCatalogue` remplace `recipeId` par `null` : le plat
+   prévu est perdu. Rien à l'écran ne le rend. Se tromper de créneau coûte le plat.
+4. ⛔ **ET SURTOUT — L'ÉCRAN AUJOURD'HUI NE CONNAÎT PAS LE PLAN DE LA SEMAINE.** Vérifié :
+   `readPlan`, `readLatestPlan` et `savePlan` ont **zéro occurrence** dans
+   `app/src/ui/screens/aujourdhui.tsx`. Cet écran lit l'historique sur 21 jours, le profil, les
+   contraintes, le rythme et les réglages d'affichage ; il n'écrit **qu'une seule chose**, une ligne
+   d'historique. Il n'y a pas « un bouton à ajouter » : **il n'y a pas de créneau en main.**
+
+#### La contradiction entre la décision 51 et la décision 76, et comment on la lit
+
+⛔ **ELLES NE DISENT PAS LA MÊME CHOSE, ET IL FAUT LE DIRE AVANT DE CODER.** La 76 écrit « le repas
+reste à sa place ». La 51, telle qu'elle est implémentée, **efface le plat prévu** : `recipeId: null`,
+`portions: 0`, et l'accompagnement du créneau est supprimé.
+
+**Lecture A — le plat prévu SURVIT à côté de la marque.** ⛔ **ÉCARTÉE, et pas par confort.** Elle
+exige que `recipe_id` et `hors_catalogue` soient non-nuls **ensemble**, donc de desserrer le `CHECK`
+de la v9, donc une reconstruction de table et une migration de `user.db`. Et elle produit exactement
+ce que la décision 51 a écrit noir sur blanc qu'il ne fallait pas produire : **deux champs capables
+de se contredire**, sans qu'aucun ne soit le marqueur. Un créneau qui porterait « Gratin » *et*
+« Restaurant italien » n'aurait plus de vérité.
+
+**Lecture B — c'est le CRÉNEAU qui reste à sa place.** Pas de trou dans la semaine, aucun jour qui
+se décale, aucun autre repas reproposé — et le créneau, bien visible, porte une marque au lieu d'un
+plat. Sous cette lecture, la 51 et la 76 disent la même chose, et l'état existe déjà.
+✅ **RETENUE.** ⚠️ **C'est une interprétation d'une décision d'une ligne, pas une parole de
+l'auteur** — c'est le point de ce brief le plus susceptible d'être corrigé, et il est isolé ici pour
+qu'il puisse l'être sans toucher au reste.
+
+#### La forme retenue : un seul effet, deux portes
+
+**Les deux écrans appellent la MÊME transformation sur le MÊME plan.** `setSlotHorsCatalogue` puis
+`savePlan` puis `reprogrammerLesRappels` — le chemin que `semaine.tsx:390` emploie déjà. Aucune
+fonction nouvelle dans `engine/`, aucune version de schéma, aucune migration.
+
+Ce que le lot ajoute, et rien de plus :
+
+1. **Le mot de l'auteur, sur le chemin.** « Je mange dehors » devient un texte visible, et le geste
+   ne demande **aucune frappe** : le libellé par défaut est posé, et reste modifiable par la porte
+   existante.
+2. **Le geste se défait**, et rend le plat **exact** qui était prévu — `setSlotRecipe`
+   (`reroll-slot.ts:143`) le repose sans tirage.
+3. ⛔ **Aujourd'hui apprend à lire le plan de la semaine.** C'est le vrai travail du lot, et le seul
+   endroit où il touche à la structure d'un écran. ⚠️ **Et si aucune semaine ne couvre le jour, il
+   n'y a rien à marquer** — le geste ne doit alors ni mentir, ni fabriquer une semaine dans le dos
+   de l'utilisateur (l'écran Semaine a mis un lot entier à cesser de le faire : « composer une
+   semaine est un geste, jamais un effet de bord du montage »).
+
+⛔ **ÉCARTÉ : UNE TROISIÈME VALEUR DANS `meal_history.origine`.** La table porte
+`recipe_id TEXT NOT NULL` **dans sa clé primaire** : un repas sans recette n'y est pas représentable,
+et la rendre nullable force une reconstruction de table et une v19. Et son propre en-tête dit
+pourquoi ce serait faux quand même : « enregistre *ce plat a été retenu*, jamais *voici ce que tu as
+mangé* ». L'historique nourrit `habit` et `variety`, deux couches indexées sur des recettes. **Un
+repas pris dehors n'apprend rien au moteur sur les goûts** — et prétendre le contraire, c'est
+inventer une donnée.
+
+⛔ **ÉCARTÉ : UN QUATRIÈME BOUTON SUR LA CARTE DU CRÉNEAU.** Elle en porte déjà trois
+(« Proposer »/« Changer », « Choisir », « Garder »/« Relâcher »), sur une carte qui doit tenir dans
+la largeur d'un téléphone, et ils forment un jeu cohérent — deux gestes de choix, un verrou. **Le
+« Fini quand » ne prescrit donc pas l'endroit** : il borne le **coût** (au plus deux clics, aucune
+frappe) et laisse la forme au lot. Un bouton en tête de la fenêtre de choix satisfait la borne
+aussi bien qu'un quatrième bouton.
+
+⚠️ **CE QUE LE LOT NE TRANCHE PAS, ET QU'IL FAUDRA TRANCHER EN CODANT** : le libellé par défaut
+exact (« Repas pris dehors » ? « Dehors » ?) ; l'endroit précis du geste sur chacun des deux écrans ;
+si l'onglet « Un plat préparé » est renommé ou conservé tel quel à côté ; si le tutoriel
+(`ui/parcours.ts`) gagne une étape. **Aucun de ces quatre points n'est observable par une clause**,
+et les inventer en ferait des contraintes que personne n'a demandées.
+
+⛔ **DEUX POINTS QUI SEMBLAIENT OUVERTS NE LE SONT PAS — ils se déduisent, et les laisser flous
+coûterait un aller-retour. Écrits le 2026-08-22 après relecture adverse.**
+
+1. **Le chemin court ÉCRIT DIRECTEMENT ; il ne traverse pas la fenêtre existante.** La déduction est
+   arithmétique : passer par l'onglet « Un plat préparé » demande un clic pour ouvrir, un pour
+   valider, et le champ y attend une frappe — le budget de deux clics est consommé avant même
+   d'avoir un libellé, et la clause 1 interdit la frappe. ▶ **L'onglet existant reste la porte
+   d'ÉDITION du libellé**, pour qui veut écrire « Chez ma sœur » ; le geste court, lui, pose un
+   libellé par défaut sans rien demander. Les deux coexistent, ils ne se remplacent pas.
+2. ⛔ **L'ANNULER DOIT SURVIVRE À UN REMONTAGE DE L'ÉCRAN — un état de composant NE SUFFIT PAS.**
+   ⚠️ **CE PARAGRAPHE DISAIT L'INVERSE, ET IL AVAIT TORT ; corrigé le 2026-08-22, avant la première
+   ligne de code, en RELISANT la clause plutôt qu'en s'en souvenant.** La clause 4 pose le geste,
+   puis fait `cleanup()` et remonte l'écran **avant** de chercher l'annuler : tout `useState` de
+   l'écran Semaine est effacé entre les deux. La mémoire du plat d'avant doit donc vivre **hors du
+   composant** — et hors de la base, puisque la clause 8 interdit la colonne neuve et la migration.
+   Il reste la portée du MODULE : elle survit à un remontage, elle meurt au rechargement.
+   ▶ **Conséquence assumée, et c'est la réponse du lot : l'annuler est une commodité de SESSION.**
+   Après un rechargement de l'application, le bouton d'annulation n'est plus proposé ; l'étiquette
+   reste, et « Changer » comme « Choisir » restent les portes de sortie. ⚠️ **Aucune clause ne
+   mesure ce cas-là** — il se relit à l'œil, pas en jsdom.
+3. **`hors_catalogue` ne sert pas à mémoriser le plat d'avant.** C'est un texte destiné aux yeux de
+   l'utilisateur. Où vit alors l'information dont l'annuler a besoin, **c'est au lot de le décider**
+   — mais pas là, et pas dans une colonne neuve non plus (clause 8). ⚠️ **Question réelle et
+   non tranchée ici** : elle appartient au codage, pas au brief.
+
+⛔ **CETTE DÉCLARATION A ÉTÉ CORRIGÉE EN COURS DE LOT : `engine/` A ÉTÉ TOUCHÉ, D'UNE LIGNE, SUR
+DÉCISION DE L'UTILISATEUR LE 2026-08-22.** Elle disait « `setSlotRecipe` est appelé **tel quel** ».
+C'était vrai de l'intention et faux du code : `reposerLeCreneau` (`engine/planning/reroll-slot.ts`)
+reconstruit l'entrée par `{ ...cible }` et **recopiait `horsCatalogue`**. Reposer un plat sur un
+créneau étiqueté rendait donc une entrée portant un plat ET une étiquette — l'état que la migration
+v9 interdit. Mesuré, pas supposé :
+`APRES setSlotRecipe : recipeId=chou_blanc_pommes_terre_aneth horsCatalogue="Repas pris dehors"`
+puis `savePlan : Error: CHECK constraint failed: recipe_id IS NULL OR hors_catalogue IS NULL`.
+▶ **Ce défaut PRÉEXISTAIT au lot** : dans l'application livrée, « Changer » et « Choisir » lèvent
+cette erreur sur tout créneau déjà marqué « Un plat préparé » (décision 51), sans « je mange
+dehors ». La clause 4 n'a pas créé le trou, elle est tombée dedans. Corrigé au moteur plutôt qu'à
+l'écran : c'est le moteur qui décrit le créneau, et un créneau ne peut pas être les deux à la fois.
+⚠️ Un contournement à l'écran aurait rendu la clause 4 verte en laissant le plantage atteignable par
+l'autre chemin — celui que ce lot ne traverse pas. C'est exactement ce qui a été écarté.
+
+**Ce que le lot NE touche pas** : `engine/` — aucune fonction nouvelle, aucune couche, aucun score ;
+**une seule ligne modifiée**, `horsCatalogue: null` dans `reposerLeCreneau`, voir le ⛔ ci-dessus ·
+`setSlotHorsCatalogue` est appelé **tel quel** · `user-schema.ts` — version
+**18** inchangée, aucune migration, aucun `CHECK` modifié · `meal_history` et ses deux origines
+`choisi`/`reste` · `catalog/` — aucun contenu, donc **ni `catalog/build.mjs` ni
+`catalog/audit-mapping.mjs` ne sont des témoins de ce lot** · le code de la liste de courses, des
+rappels et de l'alerte de plancher : **c'est le plan qui change sous eux**, pas eux · le libellé
+libre de l'onglet « Un plat préparé », qui reste la porte de qui veut nommer son repas · les deux
+autres onglets de la fenêtre de choix.
+
+**Fini quand** — neuf clauses, jouées sur les **écrans réels**, contre `app/public/catalog/catalog.db`
+(celui que `catalogueDeTest()` charge) et une `user.db` réelle, jamais contre une fixture.
+
+⛔ **DEUX RÈGLES DE JEU S'APPLIQUENT À TOUTES LES CLAUSES, ET ELLES VIENNENT D'UNE DETTE.** Le
+« Fini quand » de `retour-2` ne faisait varier **qu'une seule dimension** et une clause est restée
+verte en étant fausse (`ETAT.md` §8). Donc, ici :
+
+- **Les réglages persistants que ces deux écrans lisent sont nommés** : `user_rythme`
+  (`repasParJour`, qui décide **quels créneaux existent**), `user_profile`, les contraintes
+  (allergies, régime, exclusions), `user_display`, et la fenêtre d'historique de 21 jours.
+  ⛔ **Les clauses font varier `repasParJour` — 2 et 3 — et rien d'autre n'est laissé au hasard.**
+  Sur un rythme à 2 repas, la journée n'a **pas** de petit-déjeuner : marquer « dehors » ne doit
+  jamais créer un créneau qui n'existe pas au plan.
+  ⚠️ **Cette ligne disait « 2 et 4 » ; c'était FAUX, et c'est le test qui l'a dit.** `user_rythme`
+  porte `CHECK (repas_par_jour BETWEEN 1 AND 3)` (`user-schema.ts:356`) : écrire 4 lève une
+  contrainte, et `creneauxDuRythme` retombe silencieusement sur 2 hors de cette plage. **2 et 3 sont
+  les deux seules valeurs qui changent vraiment la liste des créneaux** — 3 ajoute le goûter.
+- **L'heure est figée par le test.** Aujourd'hui choisit le créneau affiché par `creneauDuMoment`,
+  qui lit l'horloge : une suite verte à 14 h et rouge à 23 h serait une suite qui ne mesure rien.
+
+1. ⛔ **LE GESTE EXISTE SUR LES DEUX ÉCRANS, SANS UNE SEULE FRAPPE — la clause qui décide du lot.**
+   Depuis Semaine (sur un créneau) **et** depuis Aujourd'hui, une suite d'**au plus deux clics**, et
+   **aucun événement de saisie**, pose le repas hors catalogue. Mesuré **en base**, par relecture du
+   plan (`readLatestPlan`) et non dans l'état React : le créneau visé porte `horsCatalogue` non vide
+   et `recipeId === null`. Et le mot **« dehors »** est affiché sur le chemin, sur chacun des deux
+   écrans. **Aujourd'hui : 0 des deux passe** — trois clics et une frappe sur Semaine, rien du tout
+   sur Aujourd'hui.
+   ⚠️ **Le test ne clique que du texte visible et n'appelle jamais `fireEvent.change`** : c'est ce
+   qui rend « sans frappe » falsifiable plutôt que déclaratif.
+   ⛔ **ET LE LIBELLÉ ÉCRIT EN BASE EST CELUI QU'ON LIT SUR LA CARTE, AU CARACTÈRE PRÈS. Ajouté le
+   2026-08-22 après relecture adverse.** Aucune migration n'étant permise (clause 8), il n'existe
+   aucune colonne où ranger « quel plat il y avait avant » pour le rendre à l'annuler — d'où la
+   tentation d'encoder l'identifiant DANS le libellé (« `Dehors§poulet_curry` » en base, « Dehors »
+   à l'écran) et de le redécouper. ▶ **`hors_catalogue` est un texte libre écrit et relu par
+   l'utilisateur, pas un canal de stockage technique** : la clause relit donc l'écran Semaine et
+   exige d'y retrouver la valeur exacte de la base. **Mesuré** : la carte affiche aujourd'hui le
+   champ brut, la vérification ne produit donc aucun faux échec. ⚠️ Elle se lit « la carte
+   contient le libellé » et non « la carte égale le libellé » : le décor autour reste libre.
+
+2. ⛔ **NI TROU, NI RECALCUL — le cœur de la décision 76, et la clause anti-débordement du lot.**
+   Après le geste, le plan porte **exactement autant d'entrées principales** qu'avant, aux **mêmes**
+   `(date, creneau)`, et **tout autre créneau que celui visé porte le même `recipeId` qu'avant**,
+   au même `locked` et au même `isLeftover`. Comparaison de la liste **entière**, pas d'un
+   échantillon. ▶ **Ce qui la rendrait fausse** : une implémentation qui recompose la semaine, ou
+   qui retire l'entrée au lieu de la marquer.
+
+3. ⛔ **L'ACCOMPAGNEMENT A DISPARU AVEC LE PLAT, ET L'ENTRÉE RESTANTE A LA BONNE FORME.** Sur un
+   créneau qui portait un **accompagnement**, celui-ci n'est plus là après le geste, et le créneau
+   ne porte plus qu'**une** entrée — qui annonce **zéro portion**, aucun plat, aucun reste, aucun
+   verrou, et un libellé non vide.
+   ⛔ **LA MOITIÉ « ZÉRO PORTION » A ÉTÉ AJOUTÉE LE 2026-08-22, APRÈS UNE SECONDE RELECTURE
+   ADVERSE, ET LE TROU ÉTAIT RÉEL — mesuré, pas supposé.** Aucune des neuf clauses ne relisait
+   `portions` sur le chemin ALLER : une écriture fabriquée à la main pouvait retirer
+   l'accompagnement, vider le plat, poser le libellé, et **laisser `portions` à 4**. Personne ne
+   l'aurait vu — la liste de courses filtre sur « pas de plat », le plancher calorique lit
+   l'étiquette, et l'annuler de la clause 4 rétablit la valeur du catalogue, **la même**. Le trou se
+   refermait tout seul au retour. ⚠️ `setSlotHorsCatalogue` documente pourtant l'invariant en
+   toutes lettres — « ZÉRO PORTION, et ce n'est pas "zéro assiette" ». C'est le comportement que `setSlotHorsCatalogue` documente déjà — « lui adjoindre du riz
+   choisi par le moteur reviendrait à compléter nutritionnellement une assiette dont on ne connaît
+   pas le contenu ». ▶ **Ce qui la rendrait fausse** : un `savePlan` bricolé qui poserait
+   `hors_catalogue` sans rien retirer — l'accompagnement resterait, et le créneau porterait deux
+   entrées dont une seule est mesurable.
+   ⚠️ **CETTE CLAUSE S'INTITULAIT « L'ÉCRITURE PASSE PAR LE MOTEUR » ET SE DISAIT « L'ANTI-TRICHE
+   PRINCIPALE ». Corrigé le 2026-08-22 après relecture adverse : elle promettait plus qu'elle ne
+   mesure.** Elle observe un **état final**, pas un appel de fonction — une implémentation qui
+   redupliquerait correctement la logique de `reroll-slot.ts` sans appeler `setSlotHorsCatalogue`
+   passerait. ⛔ **Et c'est volontaire : vérifier QUELLE fonction a été appelée, c'est tester
+   l'implémentation, pas le comportement** — le test se mettrait alors à refuser un refactor
+   légitime. Ce que cette clause tue, c'est le raccourci ; la duplication fidèle relève de la
+   relecture, pas d'un oracle.
+
+4. ⛔ **LE GESTE SE DÉFAIT, ET IL REND LE PLAT EXACT — PAS UN AUTRE.** Au plus deux clics ramènent le
+   créneau à son `recipeId` d'avant, à l'identique, et `horsCatalogue` redevient `null`. Vérifié sur
+   **trois créneaux pris sur trois jours différents** : un tirage qui retomberait trois fois de
+   suite sur le plat exact n'est pas crédible, et c'est précisément la triche que cette répétition
+   ferme. ⚠️ **L'accompagnement, lui, a le droit de différer** — `setSlotRecipe` le recalcule, c'est
+   son comportement écrit (« l'accompagnement se recalcule avec le plat, il ne survit pas au
+   changement »). La clause exige donc la **cohérence** — `service` vaut `'plat'` si et seulement si
+   une seconde entrée suit — et non l'identité de l'accompagnement.
+   ⛔ **ELLE NE VÉRIFIAIT QUE DEUX CHAMPS, ET DEUX CHAMPS NE SUFFISENT PAS. Ajouté le 2026-08-22
+   après relecture adverse.** Rendre `recipeId` et remettre `horsCatalogue` à `null` à la main, sans
+   repasser par le moteur, laisse **`portions` à zéro** — `setSlotHorsCatalogue` l'y avait mis, et
+   personne ne l'en sort. **Mesuré** sur le plan de test : le rapiéçage rend **0 portion** là où le
+   moteur en rend **4** (le `portionsBase` de la recette). Un plat « restauré » à zéro portion ne
+   remplit ni la liste de courses ni les restes : invisible à qui ne regarde que deux champs,
+   immédiat au premier usage réel. La clause exige donc aussi les **portions que le catalogue
+   annonce pour cette recette**, `isLeftover` à faux, et le verrou inchangé.
+
+5. ⛔ **LA LISTE DE COURSES BAISSE, ET AUCUNE LIGNE NE MONTE.** Liste reconstruite avant et après le
+   geste sur un créneau qui portait une recette : **au moins un ingrédient** disparaît ou voit son
+   grammage baisser, et **aucun** ingrédient ne voit le sien augmenter ni n'apparaît. ▶ Formulée en
+   un seul sens exprès : « rien ne monte » attrape aussi bien un masquage à l'écran (rien ne
+   bougerait) qu'un recalcul de la semaine (quelque chose monterait).
+
+6. **Aucun rappel pour ce créneau, et les autres survivent intacts.** Après le geste, les rappels du
+   plan ne contiennent rien pour le créneau visé, et l'ensemble des rappels des autres créneaux est
+   **identique** à celui d'avant. ▶ Faux si l'écran oublie de reprogrammer : l'appareil sonnerait
+   encore pour le plat qu'on vient de remplacer.
+
+7. **Aucune journée ne GAGNE d'avertissement de plancher calorique.** L'ensemble des journées
+   averties après le geste est **inclus** dans celui d'avant. ▶ Un seul sens, là encore : une journée
+   dont un repas devient immesurable ne peut que perdre son alerte, jamais en acquérir une.
+
+8. ⛔ **RIEN DANS L'HISTORIQUE, RIEN À MIGRER.** Le geste, depuis l'un ou l'autre écran, n'ajoute
+   **aucune ligne** à `meal_history`. Et après le lot : `USER_SCHEMA_VERSION` vaut toujours **18**, et
+   le `CHECK` de `meal_plan_entry` accepte toujours ses **trois** états et eux seuls — recette seule
+   ✅, libellé seul ✅, vide ✅, **les deux ensemble refusés** (vérifié par un `INSERT` direct qui doit
+   lever). ▶ Cette clause est le garde-fou contre la lecture A : elle rougit le jour où quelqu'un
+   desserre le `CHECK` « pour pouvoir garder le plat à côté ».
+
+9. ⛔ **SANS SEMAINE COMPOSÉE, LE GESTE N'INVENTE RIEN.** Sur un compte neuf, aucun plan en base :
+   après toute suite de clics sur le chemin « dehors » d'Aujourd'hui, `readLatestPlan` rend
+   **toujours `null`** et l'écran ne lève pas. ▶ Faux si le geste compose une semaine de sept jours
+   pour avoir un créneau à marquer — c'est le défaut exact que l'écran Semaine a mis un lot à fermer.
+   ⛔ **CETTE CLAUSE EST LA SEULE DES NEUF QUI SOIT VERTE AUJOURD'HUI, ET ELLE L'EST PAR VACUITÉ.**
+   Mesuré : elle passe aux deux rythmes, parce qu'aucun chemin « dehors » n'existe sur Aujourd'hui
+   — on ne peut pas fabriquer un plan par un geste qui n'est pas là. **Elle ne discrimine qu'à
+   partir du moment où la clause 1 est verte** ; d'ici là, elle ne prouve rien, et l'inscrire au
+   compte des clauses tenues serait se mentir. ▶ Elle est écrite maintenant parce qu'écrite après,
+   elle serait écrite pour passer.
+
+⚠️ **UNE MOITIÉ DE LA CLAUSE 7 EST DÉJÀ TENUE PAR LE MOTEUR, ET ÇA NE LA REND PAS INUTILE.**
+`guards/index.ts:212` marque déjà la journée `immesurable` dès qu'une entrée porte un
+`horsCatalogue`, donc l'avertissement de plancher ne peut pas naître là. Ce que la clause continue
+de tuer, c'est l'implémentation qui **supprimerait** l'entrée au lieu de l'étiqueter, ou qui
+poserait un **autre** marqueur : dans les deux cas la journée redevient mesurable et gagne l'alerte.
+
+⚠️ **ÉCART DE SPÉC TROUVÉ EN MESURANT, À TRANCHER AVANT DE CODER — PAS PENDANT.** Marquer un plat
+« dehors » laisse en place **les restes qui en dépendent** : sur le plan de test, le plat du
+2026-03-12 est resservi les 13 et 14, et ces deux créneaux continueraient de renvoyer à un repas
+jamais cuisiné. C'est **conforme** à la décision 76 (« ni recalcul ») et la clause 2 l'exige
+même, puisqu'elle interdit de toucher aux autres créneaux. ▶ Aucune des neuf clauses ne le traite,
+et c'est délibéré : ce serait étendre le lot. ⇒ **Question ouverte, pas dette silencieuse.**
+
+⚠️ **CE QUE CES NEUF CLAUSES NE DÉMONTRERONT PAS.** Que le geste se **trouve** sur un téléphone. Une
+borne à deux clics dit le coût du chemin une fois qu'on le connaît, pas qu'un pouce le rencontre.
+jsdom ne mesure ni position, ni hauteur, ni l'ordre de lecture d'une carte. ▶ Cette vérification
+rejoint la passe à l'œil de §3, elle ne s'y substitue pas — et pour ce lot elle est plus lourde que
+d'habitude, puisque la moitié du travail est de rendre visible quelque chose qui existait déjà.
+
+#### Les témoins d'avant — mesurés le 2026-08-22, arbre du brief (`6aad49c`)
+
+| Commande | Avant le lot |
+|---|---|
+| `npm test` | **2 376 passed / 0 failed (125 fichiers)** en 43,1 s |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ 2,86 s |
+| `npm run engine:plan-stress` | **20/20** |
+| `USER_SCHEMA_VERSION` | **18** (dernière migration : v18, `user_equipment.quantite`) |
+
+⚠️ **`catalog/build.mjs` et `catalog/audit-mapping.mjs` ne sont PAS des témoins de ce lot** — aucun
+contenu ne bouge. Le relevé du catalogue reste celui du 2026-08-20.
+
+#### Les témoins d'après — mesurés le 2026-08-22, sur l'arbre qu'on commite
+
+| Commande | Après le lot |
+|---|---|
+| `npm test` | **2 392 passed / 0 failed (126 fichiers)** en 50,1 s |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ 3,01 s |
+| `npm run engine:plan-stress` | **20/20** |
+| `USER_SCHEMA_VERSION` | **18** — inchangé, aucune migration (clause 8) |
+
+✅ **L'ÉCART 2 376 → 2 392 EST ATTRIBUÉ FICHIER PAR FICHIER, PAS DÉDUIT.** **+13** pour
+`tests/scelles/retour-3.test.tsx`, fichier neuf — c'est le 126ᵉ — et **+3** pour
+`app/src/engine/planning/plan-week.test.ts`, qui passe de **59** à **62**. 13 + 3 = 16, et les deux
+comptes ont été relevés en lançant ces fichiers **séparément**. Aucun autre test n'a bougé.
+⚠️ **Le piège de `retour-2` a été revérifié ici** : aucun fichier de test paramétré par une table de
+production n'est touché par ce lot — `PARCOURS` n'a pas bougé.
+
+#### Ce que la relecture a changé — quatre points, trois corrigés
+
+Le lot a été relu par un tiers **avant** d'être déclaré fini, sur l'arbre complet. Verdict initial :
+**pas prêt à merger**. Ce qui suit dit ce qui a été fait de chacun des quatre points, y compris de
+celui qui ne l'a pas été.
+
+⛔ **1. L'écran pouvait revenir en arrière tout seul — CORRIGÉ.** Sur Aujourd'hui, les deux gestes
+partaient d'une vue capturée au clic et reposaient l'état sans regarder. Changer de créneau pendant
+l'écriture ramenait donc le repas d'avant sous les yeux de l'utilisateur, sans qu'il ait rien
+demandé. L'état n'est plus reposé que si la vue n'a pas bougé — même garde que le drapeau `annule`
+de `rafraichir`, qui existait déjà dix lignes plus haut. ⚠️ **L'ÉCRITURE EN BASE, ELLE, PART QUAND
+MÊME** : `ETAT.md` §8.
+
+⛔ **2. Défaire le geste sur un RESTE rendait un plat neuf — CORRIGÉ, en refusant le geste plutôt
+qu'en le truquant.** `reposerLeCreneau` repose toujours avec les portions du catalogue et sans
+marque de reste : le retour aurait rendu un plat à portions pleines et fait remonter des
+ingrédients d'un plat déjà cuisiné. La mémoire ne retient donc plus que ce qu'elle sait rendre À
+L'IDENTIQUE, et le bouton disparaît dans les autres cas. ⚠️ **LE TEST SCELLÉ NE COUVRE PAS CE
+CAS** — ses cibles excluent les restes. Dit en toutes lettres dans `ETAT.md` §8, avec ce qu'il
+faudrait au moteur pour lever la restriction.
+
+⛔ **3. Un vivier épuisé effaçait l'étiquette sans rien mettre à la place — CORRIGÉ.** La
+correction moteur décrite plus haut effaçait `horsCatalogue` à chaque reconstruction, y compris
+quand AUCUN plat n'avait pu être tiré. Le créneau sortait alors vide **et** dépouillé de ce que
+l'utilisateur avait déclaré — et « Changer » n'est filtré sur aucun créneau marqué. L'étiquette
+n'est désormais effacée que **si un plat prend la place**. Un troisième test moteur le garde
+(59 → 62 tests, dont ce cas).
+
+⛔ **4. Aucune sortie depuis Aujourd'hui quand rien n'était en mémoire — CORRIGÉ.** Après un
+rechargement, sur un créneau déjà vide ou sur un reste, l'écran n'affichait que l'étiquette et le
+repas devenait un cul-de-sac. Il renvoie maintenant vers la Semaine — un lien, pas un bouton : il
+n'écrit rien, et ne compte donc pas dans les deux clics de la clause 1.
+
+---
+
 ### Les lots suivants — non ouverts
 
 Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETAT.md` §4) :
@@ -796,7 +1166,7 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 | Lot | Ce qu'il fait | Bloqué par |
 |---|---|---|
 | `retour-2` | le sélecteur d'exclusion s'ouvre aux 451 aliments (décision 73) | ✅ **LIVRÉ le 2026-08-22** |
-| `retour-3` | « je mange dehors » étiquette le créneau (décision 76) | rien |
+| `retour-3` | « je mange dehors » étiquette le créneau (décision 76) | ✅ **LIVRÉ le 2026-08-22** — section ci-dessus |
 | `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | rien |
 | `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | rien — lot de contenu |
 | `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | **`retour-1`** et **décision 79** |

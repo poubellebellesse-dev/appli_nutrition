@@ -24,7 +24,7 @@ import type {
   WeekPlan,
 } from '../../engine/domain/index.js'
 import { DEFAULT_PLAN_DAYS, MAX_PLAN_DAYS, MIN_PLAN_DAYS } from '../../engine/planning/plan-week.js'
-import { readLatestPlan, readRythme, readUserState, savePlan } from '../../data/user-store.js'
+import { readDisplay, readLatestPlan, readRythme, readUserState, savePlan } from '../../data/user-store.js'
 import {
   FENETRE_HISTORIQUE_JOURS,
   LIBELLE_CRENEAU,
@@ -39,10 +39,9 @@ import {
 import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { Panneau } from '../panneau.js'
 import { REPAS_PAR_DEFAUT, creneauxDuRythme } from '../creneau.js'
-import { readDisplay, readMealTimes } from '../../data/user-store.js'
-import { rappelsDuPlan } from '../rappel.js'
-import { reprogrammer, toutAnnuler } from '../notifications.js'
+import { reprogrammerLesRappels } from '../ecrire-plan.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { LIBELLE_DEHORS, oublierLePlat, platDAvant, retenirLePlat } from '../dehors.js'
 import { ChoisirPlat } from '../choisir-plat.js'
 
 // Le mapping « nombre de repas → créneaux » a été remonté dans `ui/creneau.ts` quand l'écran
@@ -152,31 +151,6 @@ function planifier(socle: Socle, reglages: Reglages, verrous: readonly MealPlanE
   savePlan(socle.db, plan, maintenantIso())
   reprogrammerLesRappels(socle, plan)
   return { plan, profil, nomDe: (id) => socle.catalogue.recipes.get(id)?.nom ?? id }
-}
-
-/**
- * Repose les rappels de préparation sur l'appareil après un changement de plan.
- *
- * ⚠️ APPELÉ À CHAQUE ÉCRITURE DE PLAN, et sans être attendu. Les rappels sont un CONFORT : si la
- * plateforme refuse, si la permission a été révoquée, ou s'il n'y a pas de conteneur natif, la
- * semaine s'affiche exactement pareil. Attendre la programmation ferait dépendre l'affichage d'un
- * service optionnel.
- *
- * ⚠️ IL FAUT REPROGRAMMER À CHAQUE FOIS. « Proposer une autre semaine » réécrit tout le plan ;
- * laisser les anciens rappels ferait sonner l'appareil pour des plats qui n'y sont plus.
- */
-function reprogrammerLesRappels(socle: Socle, plan: WeekPlan): void {
-  if (!readDisplay(socle.db).rappelsActifs) {
-    void toutAnnuler()
-    return
-  }
-  const rappels = rappelsDuPlan(
-    plan,
-    socle.catalogue.recipes,
-    readMealTimes(socle.db),
-    Date.now()
-  )
-  void reprogrammer(rappels)
 }
 
 /**
@@ -322,6 +296,8 @@ export function Semaine() {
             { excludeRecipeIds: dejaRefuses }
           )
           savePlan(socle.db, suivant, maintenantIso())
+          // Le créneau porte un autre plat : la mémoire du « dehors » n'a plus d'objet.
+          oublierLePlat(slot)
           setRefus(new Map(refus).set(cle, dejaRefuses))
           setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
         })
@@ -366,6 +342,8 @@ export function Semaine() {
           const refusSuivants = new Map(refus)
           refusSuivants.delete(cleCreneau(slot.date, slot.creneau))
           setRefus(refusSuivants)
+          // L'utilisateur a désigné un plat : plus rien à défaire.
+          oublierLePlat(slot)
           setAChoisir(null)
           setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
         })
@@ -406,6 +384,46 @@ export function Semaine() {
         .catch(echouer)
     },
     [etat, refus, echouer]
+  )
+
+  /**
+   * « Je mange dehors » — UN clic, aucune frappe (décision 76, lot `retour-3`).
+   *
+   * ⚠️ MÊME CHEMIN D'ÉCRITURE QUE L'ONGLET « UN PLAT PRÉPARÉ », à un détail près : le libellé est
+   * fourni au lieu d'être demandé. Le créneau n'est ni supprimé ni recalculé — il est ÉTIQUETÉ, ce
+   * qui est la décision 76 en toutes lettres. La journée reste au plan, les autres créneaux ne
+   * bougent pas, et le moteur retire de lui-même l'alerte de plancher de cette journée-là.
+   *
+   * On retient le plat remplacé AVANT d'écrire, sinon il n'y a plus rien à retenir après.
+   */
+  const poserDehors = useCallback(
+    (slot: SlotRef) => {
+      if (etat.phase !== 'pret') return
+      const entree = etat.vue.plan.entries.find((e) => memeCreneau(e, slot))
+      retenirLePlat(slot, entree)
+      poserHorsCatalogue(slot, LIBELLE_DEHORS)
+    },
+    [etat, poserHorsCatalogue]
+  )
+
+  /**
+   * Se raviser : le créneau retrouve le plat exact qu'il portait, accompagnement compris.
+   *
+   * ⚠️ LE BOUTON N'EXISTE QUE SI LE RETOUR EST EXACT. Un créneau qui portait un RESTE n'est pas
+   * retenu (voir `ui/dehors.ts`) : il n'y a donc rien à rendre, et rien n'est proposé. Mieux vaut
+   * pas de bouton qu'un bouton qui rend autre chose que ce qu'il annonce.
+   *
+   * ⚠️ PAR LE MOTEUR, PAS À LA MAIN. `poser` appelle `setSlotRecipe`, qui repose le créneau avec
+   * les portions du catalogue et lui rend son accompagnement. Rétablir `recipeId` et effacer
+   * l'étiquette soi-même laisserait un plat à ZÉRO portion — visible nulle part, et pourtant plus
+   * un seul ingrédient sur la liste de courses.
+   */
+  const defaireDehors = useCallback(
+    (slot: SlotRef) => {
+      const precedent = platDAvant(slot)
+      if (precedent !== null) poser(slot, precedent)
+    },
+    [poser]
   )
 
   if (etat.phase === 'chargement') return <p className="text-attenue">Construction de la semaine…</p>
@@ -489,6 +507,12 @@ export function Semaine() {
                     onGarder={() => basculerVerrou({ date, creneau })}
                     onChanger={() => changer({ date, creneau })}
                     onChoisir={() => setAChoisir({ date, creneau })}
+                    onDehors={() => poserDehors({ date, creneau })}
+                    onDefaire={
+                      platDAvant({ date, creneau }) === null
+                        ? null
+                        : () => defaireDehors({ date, creneau })
+                    }
                   />
                 )
               })}
@@ -806,6 +830,8 @@ function Creneau({
   onGarder,
   onChanger,
   onChoisir,
+  onDehors,
+  onDefaire,
 }: {
   readonly entry: MealPlanEntry
   readonly nom: string | null
@@ -816,6 +842,10 @@ function Creneau({
   readonly onChanger: () => void
   /** Choix : l'utilisateur désigne le plat lui-même (décision 49). */
   readonly onChoisir: () => void
+  /** « Je mange dehors » : étiquette le créneau, sans frappe (décision 76). */
+  readonly onDehors: () => void
+  /** Se raviser. `null` quand plus rien n'est en mémoire — après un rechargement, notamment. */
+  readonly onDefaire: (() => void) | null
 }) {
   // ⚠️ « VIDE » N'EST PLUS « SANS RECETTE » depuis la décision 51. Un plat préparé porte
   // `recipeId: null` ET un libellé : le créneau est REMPLI. S'en tenir à `recipeId === null` lui
@@ -890,7 +920,20 @@ function Creneau({
           hasard. Même classe de défaut que `note_allergene` ou `Recipe.service` déclaré et jamais
           lu : l'écart entre ce qui est annoncé et ce qui est branché.
           « Proposer » tire, « Choisir » ouvre la fenêtre de sélection. Les mots disent l'acte. */}
+      {/* ⛔ L'ANNULATION PASSE EN PREMIER SUR UN CRÉNEAU QU'ON VIENT DE MARQUER, et ce n'est pas
+          cosmétique : c'est le geste qu'on cherche quand on regarde cette carte-là. Les trois
+          autres boutons continuent de faire ce qu'ils faisaient — « Changer » retire l'étiquette
+          en tirant un plat, « Choisir » en désignant le sien. */}
       <div className="mt-3 flex flex-wrap gap-2">
+        {onDefaire !== null && horsCatalogue !== null && (
+          <button
+            type="button"
+            onClick={onDefaire}
+            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux"
+          >
+            Finalement je mange ici
+          </button>
+        )}
         <button
           type="button"
           onClick={onChanger}
@@ -922,6 +965,20 @@ function Creneau({
         >
           {entry.locked ? 'Relâcher' : 'Garder'}
         </button>
+        {/* ⚠️ UN SEUL CLIC, ET LE MOT « DEHORS » EN TOUTES LETTRES. Le geste écrit directement : le
+            faire passer par la fenêtre de choix coûterait un clic pour ouvrir et un pour valider,
+            et le champ y attend une frappe. Absent d'un créneau déjà marqué — il n'y aurait rien à
+            marquer — et d'un créneau gardé, comme les trois autres boutons. */}
+        {horsCatalogue === null && (
+          <button
+            type="button"
+            onClick={onDehors}
+            disabled={entry.locked}
+            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
+          >
+            Je mange dehors
+          </button>
+        )}
       </div>
     </div>
   )
