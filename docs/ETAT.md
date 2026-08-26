@@ -301,6 +301,28 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
   ils passent au premier essai, et seule la mutation manuelle les distingue d'assertions
   décoratives — voir §8.
 
+- ✅ **POSER UN RESTE À LA MAIN GARDE LES DEUX CRÉNEAUX, ET L'ANNULATION NE REND QUE CE QU'ELLE A
+  PRIS** (décision ~~78~~, lot `retour-4`, livré le 2026-08-26, `7642492`). Le créneau qui reçoit le
+  reste **et** celui de la CUISSON sont verrouillés par le même geste. ⚠️ **Sans le second verrou, la
+  recomposition suivante déplace le plat source et la semaine porte le reste d'un plat cuisiné nulle
+  part** — mesuré sur le code livré : `plan-week.ts` verse le `recipeId` de toute entrée verrouillée
+  non-accompagnement dans `placedRecipeIds`, donc le reste y entre comme s'il était la cuisson, et la
+  cuisson n'est plus programmée. La liste de courses écartant les restes, **rien n'est acheté pour ce
+  repas**. ⚠️ **L'annulation ne relâche la cuisson que si plus AUCUN reste POSÉ À LA MAIN ne s'en
+  nourrit** — et « posé à la main » se lit sur le verrou, pas sur `isLeftover`. ⛔ **La version large
+  de ce prédicat a été écrite d'abord, et elle ne relâchait jamais rien** : la source d'un reste
+  plaçable est presque toujours un plat que la pose automatique sert déjà ailleurs (trois restes sur
+  l'unique source de la première cible, aux deux rythmes). **Un reste automatique se recalcule à
+  chaque recomposition ; il n'a pas besoin d'un verrou, donc il ne doit pas en retenir un.**
+- ⛔ **L'OFFRE « LES RESTES DE… » SE CALCULE SUR LES PLATS CUISINÉS DU PLAN, SANS DÉDUIRE CE QUE LA
+  MACHINE A DÉJÀ POSÉ** (même lot). Mesuré avant d'écrire une ligne : la pose automatique consomme
+  **toutes** les portions plaçables — **0 créneau** restait offrable à 1, 2 comme 3 convives. Une
+  offre qui respecterait la même comptabilité serait **vide** sur chaque créneau d'une semaine
+  fraîchement composée. ▶ **Le lot n'ajoute donc pas une capacité, il ajoute un CHOIX** : la machine
+  plaçait déjà les restes, l'utilisateur ne décidait pas *où*. ⚠️ Contrepartie assumée, non mesurée
+  à l'écran : le créneau qu'on transforme en reste était peut-être lui-même la cuisson d'autres
+  restes, qui se retrouvent sans plat cuisiné jusqu'à la recomposition — voir §8.
+
 ### Design
 - **5 onglets** stables v1→v2 : Aujourd'hui · Semaine · Courses · Recettes · Savoir.
 - **Geste = accélérateur**, toujours doublé d'un contrôle visible.
@@ -1110,7 +1132,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | ~~75~~ | **Que devient un repas planifié, déjà passé, qu'on n'a pas mangé ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : « simple, le repas est effacé. »** Pas de report, pas de trace, pas de question posée. ⛔ **CONSÉQUENCE À TRAITER DANS LE LOT, ET ELLE CROISE LA ~~1~~** : effacer un repas passé **orpheline les restes qu'il alimentait** — `planLeftovers` remplace des créneaux entiers en s'appuyant sur un repas source, et rien ne dit aujourd'hui ce que devient un reste dont la source vient de disparaître. Le cas ne se voit pas en écrivant l'effacement ; il se voit deux jours plus tard, dans la semaine. |
 | ~~76~~ | **« Je mange dehors » : que fait ce geste au plan de la semaine ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : on ÉTIQUETTE le créneau.** Ni suppression, ni recalcul, ni trou. Le repas reste à sa place et porte une marque. ⚠️ Distinct de la ~~75~~, et volontairement : un repas non mangé **disparaît**, un repas pris dehors **reste visible**. Ce qui les sépare n'est pas le fait de ne pas avoir cuisiné, c'est que l'un est un renoncement et l'autre une information. ✅ **APPLIQUÉE au lot `retour-3` le 2026-08-22**, sur les DEUX écrans — Semaine et Aujourd'hui : un clic, aucune frappe, et le geste se défait tant que la page n'a pas été rechargée. ▶ `CONCEPTION_RETOURS_TEST.md` §3, lot `retour-3`. |
 | ~~77~~ | **Jusqu'où va le tutoriel ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : il explique L'APPLICATION.** Pas la nutrition, pas les équivalences, pas les principes. Ce que fait chaque écran et comment y arriver — rien au-delà. ✅ Cohérent avec le principe 1 (« l'appli filtre et informe ; elle ne diagnostique pas ») : un tutoriel qui enseignerait la nutrition enseignerait un jugement. |
-| ~~78~~ | **Peut-on réutiliser un plat déjà cuisiné ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur), en deux points opposés.** **(1) NON comme ingrédient d'une autre recette** — « trop compliqué à gérer ». Pas de réemploi partiel, pas de reste qui entre dans une préparation. **(2) OUI comme repas entier décalé** — « pouvoir décaler la semaine si l'utilisateur veut manger les restes le lendemain ». ✅ **MESURÉ : le mécanisme est déjà là pour l'essentiel** — `planLeftovers` remplace des **créneaux entiers** (ce qui est le point 1 pris à l'envers : la couche restes ne sait DÉJÀ pas faire du partiel), et `lockedEntries`/`entry.locked` sont préservés par `plan-week`. Il manque **une action « les restes de… »** créant une entrée de reste verrouillée au jour visé. ⚠️ **Le « décalage de la semaine » n'est alors PAS à coder** : il est émergent — un créneau verrouillé de plus, et la replanification contourne. Chercher à écrire un décalage explicite reviendrait à réimplémenter à côté ce que le verrouillage fait déjà. |
+| ~~78~~ | **Peut-on réutiliser un plat déjà cuisiné ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur), en deux points opposés.** **(1) NON comme ingrédient d'une autre recette** — « trop compliqué à gérer ». Pas de réemploi partiel, pas de reste qui entre dans une préparation. **(2) OUI comme repas entier décalé** — « pouvoir décaler la semaine si l'utilisateur veut manger les restes le lendemain ». ✅ **MESURÉ : le mécanisme est déjà là pour l'essentiel** — `planLeftovers` remplace des **créneaux entiers** (ce qui est le point 1 pris à l'envers : la couche restes ne sait DÉJÀ pas faire du partiel), et `lockedEntries`/`entry.locked` sont préservés par `plan-week`. Il manque **une action « les restes de… »** créant une entrée de reste verrouillée au jour visé. ⚠️ **Le « décalage de la semaine » n'est alors PAS à coder** : il est émergent — un créneau verrouillé de plus, et la replanification contourne. Chercher à écrire un décalage explicite reviendrait à réimplémenter à côté ce que le verrouillage fait déjà. ✅ **APPLIQUÉE au lot `retour-4` le 2026-08-26 (`7642492`)** : sur l'écran Semaine, un créneau prend le reste d'un plat cuisiné ailleurs dans la semaine en un clic, la carte dit de quel jour il vient, et le geste se défait tant que la page n'a pas été rechargée. ⛔ **L'ANNOTATION « MESURÉ » CI-DESSUS ÉTAIT FAUSSE SUR SES DEUX POINTS, ET ELLE AVAIT ÉTÉ ÉCRITE PAR L'ASSISTANT, PAS PAR L'AUTEUR.** **(a)** « il ne manque qu'une action » : la pose automatique ne laisse **aucun** créneau offrable à 1, 2 ni 3 convives — une action qui déduirait les restes déjà placés ne serait jamais proposée. **(b)** « une entrée de reste verrouillée » suffirait : elle produit au contraire une semaine où le plat source n'est plus cuisiné nulle part dès la recomposition suivante. La réponse est **deux verrous, pas un** — détail en §3. ▶ Ce que la livraison a démontré, et **la moitié de clause retirée du test scellé** faute d'implémentation qui la satisfasse : `CONCEPTION_RETOURS_TEST.md`, lot `retour-4`. |
 | 79 | **Que montre l'écran Aujourd'hui quand les filtres durs, empilés aux contraintes existantes, ne laissent AUCUNE recette ?** | ⏳ **OUVERTE le 2026-08-21, née de la ~~71~~ et posée AVANT le lot qui en dépend.** Les trois axes seuls ne vident jamais le catalogue (mesuré : 8 combinaisons, minimum 8 recettes). Mais ils s'ajoutent à six exclusions déjà dures, et **l'écran ne peut pas répondre « rien » à quelqu'un qui a faim**. ▶ Trois issues, non départagées : **(1)** relâcher l'axe le moins engageant et le dire (« aucun plat chaud et léger — voici des plats chauds ») ; **(2)** refuser la combinaison **au moment du clic**, en grisant ce qui ne mène nulle part ; **(3)** laisser le vide et proposer de retirer un filtre. ⚠️ **La (2) est la plus honnête et la plus chère** : elle suppose de connaître le nombre de résultats **avant** que l'utilisateur clique, donc de recalculer à chaque pastille. ⛔ **Ce qu'aucune des trois ne doit faire : rendre un plat qui ne respecte pas le filtre sans le dire.** C'est la ~~71~~ prise à l'envers, et l'utilisateur l'a signalée comme un défaut (« les filtres ne marchent pas ??? chaud = salade »). |
 | 80 | **À quel geste la déclaration de frigo est-elle dépensée ?** | ⏳ **OUVERTE le 2026-08-21, née de la ~~74~~.** La déclaration vaut pour **un** repas ; reste à dire lequel, c'est-à-dire quand elle s'efface. ▶ Deux issues : **« J'ai choisi ce plat »** (simple, couvre le cas normal, mais efface avant qu'on ait cuisiné — quelqu'un qui choisit puis revient a perdu sa saisie) ou **la sortie du mode cuisine** (colle au repas réellement préparé, mais ne couvre pas les plats qu'on ne cuisine pas au pas-à-pas). ⚠️ **La première a été proposée par l'assistant et n'a PAS été tranchée par l'utilisateur** — elle est écrite ici comme piste, pas comme choix. |
 | ~~81~~ | **Le tutoriel est-il neuf visites séparées, ou une seule qui traverse les menus ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : UNE SEULE, qui entre dans chaque menu.** Dans ses mots : « montrer les différents menus · premier menu → Aujourd'hui · quand on clique sur le menu Aujourd'hui, on continue le menu mais spécialement pour le menu Aujourd'hui · puis on enchaîne sur le menu Semaine etc. » ⛔ **CETTE DÉCISION EST NÉE D'UNE PUCE DE BRIEF QUI DÉCRIVAIT AUTRE CHOSE QU'ELLE-MÊME.** Le lot `retour-1` portait « le tutoriel commence par Semaine, pas par Aujourd'hui » ; **mesuré, il commençait DÉJÀ par Semaine** — le parcours d'accueil enchaîne barre du bas → Semaine → Courses → Recettes → Savoir et n'a aucune étape « Aujourd'hui ». Une première interprétation (réordonner la liste « Revoir un tutoriel » de Réglages) a été proposée par l'assistant puis **écartée par l'auteur** : ce n'était pas ce qu'il visait. ✅ **Ce qui existe déjà** : les neuf parcours sont écrits (`ui/parcours.ts`) et le type d'étape `route` fait déjà avancer sur navigation — il manque l'ENCHAÎNEMENT, pas le contenu. ⚠️ **Le risque est dans `premierIndexValide` (`ui/visite.tsx`), qui écarte en silence toute étape dont la cible est absente du DOM à l'instant où elle arrive** : si l'écran suivant n'est pas encore rendu, toutes ses étapes sautent et le tutoriel se termine sans rien dire. ▶ Détail, forme visée et « ce qu'il reste à mesurer » : `CONCEPTION_RETOURS_TEST.md`, lot `retour-1b`. Les neuf parcours individuels restent lançables un par un — ce lot ajoute un chemin, il n'en supprime aucun. ✅ **LIVRÉE le 2026-08-21 (`42491ea`), et LE RISQUE ANNONCÉ CI-DESSUS S'EST PRODUIT POUR DE VRAI** : le tutoriel s'arrêtait après le premier écran, 7 clauses scellées sur 10 passaient quand même. La réponse n'a pas été de desserrer le garde-fou mais de séparer les deux sens d'une cible absente — détail en §3. |
@@ -1247,6 +1269,37 @@ appli_nutrition/
 ## 8. Dette connue
 
 Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
+
+### Ce que le lot `retour-4` laisse derrière lui (2026-08-26)
+
+⛔ **ENTRE LE GESTE ET LA RECOMPOSITION, LA SEMAINE PEUT PORTER DES RESTES DONT LE PLAT N'EST PLUS
+CUISINÉ — MESURÉ, ET RIEN NE LE DIT À L'UTILISATEUR.** Le créneau qu'on transforme en reste était
+peut-être lui-même la cuisson d'autres restes posés par la machine ; ceux-là se retrouvent orphelins.
+**Compté sur la semaine du test scellé : 3 restes orphelins juste après le geste, plus aucun après
+recomposition** — le plan se referme tout seul, mais seulement quand l'utilisateur recompose.
+⚠️ **La fenêtre n'a été mesurée QU'EN MÉMOIRE, jamais à l'écran ni sur la liste de courses.**
+▶ Deux issues, non tranchées : recomposer d'office après le geste (ce que la clause 3 du lot
+interdisait — elle n'autorise à toucher que le créneau visé et sa cuisson), ou signaler les
+orphelins sur la carte. **Ne pas refermer ça en élargissant le geste sans rouvrir cette clause.**
+
+⛔ **UNE MOITIÉ DE CLAUSE A ÉTÉ RETIRÉE DU TEST SCELLÉ, PAR DÉCISION DE L'AUTEUR, SCEAU LEVÉ PUIS
+REMIS.** La clause 4 exigeait à la fois « aucun reste orphelin **juste après le geste** » et « aucun
+reste orphelin **après recomposition** » ; **aucune implémentation ne satisfait les deux** tant que
+la clause 3 interdit de toucher à un autre créneau. La première moitié est partie, la seconde est
+restée verte, et le retrait est expliqué **dans le fichier de test lui-même**. ▶ Le raisonnement et
+le tableau des quatre cibles mesurées : `CONCEPTION_RETOURS_TEST.md`, lot `retour-4`.
+
+⚠️ **LE RETOUR EN ARRIÈRE MEURT AU RECHARGEMENT, comme celui de « je mange dehors »** — même cause,
+même arbitrage : défaire le geste demande de savoir quel plat occupait le créneau **et** si la
+cuisson était déjà gardée, et rien en base ne conserve ça. La mémoire vit à la portée du module
+(`app/src/ui/restes.ts`). Après un rechargement le reste reste, le bouton disparaît, et « Relâcher »
+puis « Changer » restent les portes de sortie. ▶ Même conclusion que pour `retour-3` ci-dessous :
+**ne pas ouvrir une migration rien que pour ça.**
+
+⚠️ **RIEN NE VÉRIFIE QUE LA PROMESSE DE PORTIONS TIENT APRÈS COUP.** L'éligibilité exige qu'il reste
+au moins une part une fois le repas d'origine servi, aux convives réglés ; ce calcul n'est **pas**
+rejoué quand le réglage des convives change ensuite. Un reste posé à 2 convives puis relu à 4 reste
+affiché tel quel. **Non mesuré.**
 
 ### Ce que le lot `retour-3` laisse derrière lui (2026-08-22)
 

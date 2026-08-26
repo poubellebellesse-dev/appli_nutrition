@@ -1159,6 +1159,359 @@ n'écrit rien, et ne compte donc pas dans les deux clics de la clause 1.
 
 ---
 
+### Lot `retour-4` — « les restes de… », et le reste dont le plat n'est jamais cuisiné ✅ **LIVRÉ le 2026-08-26** (`7642492`)
+
+**Ce que l'auteur a demandé (2026-08-21, décision 78), ses mots :** « **trop compliqué à gérer** »
+pour le réemploi partiel — un reste n'entre pas comme ingrédient dans une autre recette — et
+« **pouvoir décaler la semaine si l'utilisateur veut manger les restes le lendemain** » pour le
+repas entier. Deux points opposés dans la même décision, et c'est le second qui ouvre ce lot.
+
+⚠️ **CE DOCUMENT N'AVAIT QU'UNE LIGNE DE TABLEAU SUR CE LOT.** Tout ce qui suit est écrit
+aujourd'hui, avant la première ligne de code.
+
+#### Ce qui a été mesuré avant d'écrire quoi que ce soit
+
+Toutes les mesures ci-dessous ont été prises le **2026-08-26**, sur `dd09205`, contre
+`app/public/catalog/catalog.db` réel, en composant une semaine par le même chemin que l'écran
+(`planWeek` puis `planLeftovers`, départ `2026-03-10`, 7 jours, graine 1, profil par défaut).
+Aucune n'est déduite.
+
+**Ce qui existe déjà, et qui tourne :**
+
+| Ce qui existe | Où | Ce qu'il fait |
+|---|---|---|
+| la pose AUTOMATIQUE des restes | `engine/planning/plan-leftovers.ts` | remplace un plat prévu par le reste d'un plat cuisiné avant |
+| ses quatre règles d'éligibilité | même fichier, l. 85-91 | le lendemain au plus tôt · `conservationJours` · créneau porté par la recette · portions restantes, `dejaPlaces` déduits |
+| l'appel, à chaque composition | `screens/semaine.tsx:150` | `planLeftovers(brut, profil, reglages.convives)` |
+| la persistance | `meal_plan_entry.est_reste`, `verrouille` | deux colonnes `INTEGER NOT NULL CHECK (… IN (0,1))` |
+| l'affichage d'un reste | `screens/semaine.tsx:861, 911` | fond `accent-doux`, et la mention « Reste du plat de la veille » |
+| la préservation d'un créneau gardé | `plan-week.ts`, `lockedEntries` | un verrou survit à une recomposition |
+
+⛔ **ET VOICI CE QUE `ETAT.md` §4 ANNONÇAIT, QUI EST FAUX — mesuré, pas discuté.** La décision 78
+porte une annotation ✅ « **MESURÉ : le mécanisme est déjà là pour l'essentiel** […] Il manque une
+action « les restes de… » créant une entrée de reste verrouillée au jour visé. » **Cette annotation
+a été écrite par l'assistant, pas par l'auteur, et elle ne tient pas :**
+
+1. ⛔ **LA POSE AUTOMATIQUE NE LAISSE RIEN À POSER À LA MAIN. ZÉRO CRÉNEAU, À TROIS VALEURS DE
+   CONVIVES.** Sur la semaine composée ci-dessus, en appliquant à la main les quatre règles
+   d'éligibilité de `plan-leftovers.ts` créneau par créneau :
+
+   | convives | entrées | restes posés d'office | créneaux offrant **encore** un reste plaçable |
+   |---|---|---|---|
+   | 1 (le défaut) | 35 | **13** sur 21 principaux | **0** |
+   | 2 | 35 | 8 | **0** |
+   | 3 | 35 | 1 | **0** |
+
+   Le glouton consomme **toutes** les portions plaçables. Une action « les restes de… » qui
+   respecterait la même comptabilité afficherait une liste **vide** sur chaque créneau d'une semaine
+   fraîchement composée. ▶ **Le lot n'ajoute donc pas une CAPACITÉ, il ajoute un CHOIX** : la
+   machine place déjà les restes, l'utilisateur ne décide pas *où*. C'est pourquoi la clause 5
+   calcule l'offre depuis **les plats cuisinés du plan**, sans déduire `dejaPlaces` — sinon le lot
+   n'a littéralement rien sur quoi s'exercer.
+
+2. ⛔ **« UNE ENTRÉE DE RESTE VERROUILLÉE » PRODUIT UNE SEMAINE INCOHÉRENTE — MESURÉ SUR LE CODE
+   LIVRÉ, ET C'EST LE CŒUR DU LOT.** `plan-week.ts:244` verse le `recipeId` de **toute** entrée
+   verrouillée non-accompagnement dans `placedRecipeIds`, qui interdit le doublon dans la semaine.
+   Un reste verrouillé y entre donc comme s'il était une cuisson. Sortie relevée, en posant le reste
+   de `tarte_oignons_anchois` (cuisinée le 10 au dîner, `portionsBase` 6, conservation 2 jours) sur
+   le 11 au déjeuner, puis en recomposant :
+
+   ```
+   --- reste seul
+      cuissons : AUCUNE
+      restes   : 2026-03-11 dejeuner locked=true
+      un reste sans cuisson ? true
+   --- source + reste
+      cuissons : 2026-03-10 diner   locked=true
+      restes   : 2026-03-11 dejeuner locked=true
+      total restes du plan : 13
+   ```
+
+   ▶ **La semaine contient un « reste de tarte aux oignons » et la tarte n'est cuisinée nulle part.**
+   Et comme la liste de courses écarte les restes, rien n'est acheté pour ce repas : l'utilisateur
+   ouvre son frigo devant un plat qui n'a jamais existé. ⚠️ **Le défaut ne se voit pas au moment du
+   geste** — il apparaît à la recomposition suivante. **La réponse, mesurée juste au-dessus :
+   verrouiller AUSSI la cuisson.** Deux verrous, pas un — et personne ne l'avait écrit.
+
+3. ⚠️ **LA CARTE NE SAIT PAS DIRE « GARDÉ » ET « RESTE » EN MÊME TEMPS.** `semaine.tsx:911-914` :
+   `{entry.locked ? 'Gardé' : 'Reste du plat de la veille'}`. Les deux mentions sont **mutuellement
+   exclusives**. Or ce lot demande précisément un reste verrouillé : tel quel, il s'afficherait
+   « Gardé », et le mot « reste » disparaîtrait de l'écran au moment même où il compte le plus.
+
+4. ⚠️ **« LA VEILLE » EST DÉJÀ UN MENSONGE AUJOURD'HUI, SUR 4 DES 13 RESTES DE LA SEMAINE
+   MESURÉE.** Écart entre la cuisson et le reste, à 3 repas/jour : **9 restes à 1 jour, 3 à 2 jours,
+   1 à 3 jours** — et les treize portent la même mention. À 2 repas/jour : **6 à 1 jour, 4 à 2
+   jours**, soit 4 sur 10. `conservationJours` dépasse 1 pour **223 des 330 recettes** du catalogue.
+   Le lot pose des restes à la main dans exactement la même plage : il ne peut pas laisser la
+   mention en l'état.
+
+5. **Le geste n'existe nulle part.** `isLeftover` a **deux** occurrences dans `semaine.tsx`, toutes
+   deux d'affichage (l. 861, l. 911) ; **aucune** dans `aujourdhui.tsx`. `reroll-slot.ts` n'exporte
+   que `rerollSlot`, `setSlotRecipe` et `setSlotHorsCatalogue` : **aucune transformation en reste**.
+   Les seuls gestes par créneau sont « Proposer »/« Changer », « Choisir », « Garder »/« Relâcher »
+   et « Je mange dehors » (`retour-3`). Aucun ne parle de restes.
+
+6. ⚠️ **`convives` N'EST PAS PERSISTÉ.** `meal_plan` ne porte que `id` et `date_debut`
+   (`user-schema.ts:191`), et l'écran le tient dans un `useState` initialisé à **1**
+   (`semaine.tsx:194`), choix parmi 1 à 6. Un plan composé à 4 convives se relit sur un écran qui
+   affiche 1. ▶ **Conséquence directe sur les clauses : elles se jouent à `convives = 1`**, seule
+   valeur qui survive à un remontage. C'est une limite mesurée, pas un confort de test.
+
+#### Sur combien de créneaux le geste peut-il seulement s'exercer — mesuré, et c'est peu
+
+⚠️ **CE TABLEAU EST PRIS AVEC LE PROFIL DU HARNAIS** (`PROFIL_PAR_DEFAUT`, `sexe: 'NP'`, taille et
+poids `null`) et **pas** avec un profil chiffré : c'est celui que les tests scellés utiliseront, et
+un autre profil compose une autre semaine. Une source est dite **éligible** au sens du §« forme
+retenue » — cuisinée ailleurs dans le plan, les quatre règles de `plan-leftovers.ts` satisfaites,
+`dejaPlaces` NON déduit.
+
+| | 2 repas/jour | 3 repas/jour |
+|---|---|---|
+| entrées du plan | 28 | 35 |
+| plats réellement cuisinés | **4** | **8** |
+| restes posés d'office | 10 | 13 |
+| créneaux à plat posé, non verrouillés, non-restes | 4 | 8 |
+| … **dont au moins une source éligible** | **2** | **3** |
+| … dont AUSSI accompagnés (ce que la clause 2 exige) | **2** | **2** |
+| journées distinctes parmi ceux-là | 2 | 2 |
+
+⛔ **DEUX CIBLES PAR RYTHME, PAS DAVANTAGE — et c'est une contrainte du CATALOGUE, pas du test.**
+Les clauses sont écrites pour ce chiffre : la clause 7 rejoue le chemin sur **un** autre créneau, et
+non deux, parce qu'il n'y en a qu'un. ▶ Écrire « deux autres créneaux » aurait produit un « semis
+insuffisant » systématique, c'est-à-dire un examen impossible à passer pour une raison qui n'a rien
+à voir avec le code livré.
+
+#### Ce que l'accompagnement devient — mesuré, parce que les trois gestes du créneau ne font pas pareil
+
+`planLeftovers` n'écrase **que** l'entrée principale : il écarte les accompagnements comme cible
+**et** comme source, et les laisse en place. **Mesuré : l'accompagnement survit sur 10 des 13
+créneaux devenus restes** (les 3 autres n'en avaient pas). ⛔ **C'est l'inverse de
+`setSlotHorsCatalogue`**, qui vide le créneau — et c'est le piège d'implémentation numéro un de ce
+lot : recopier le geste « je mange dehors » de `retour-3` retirerait l'accompagnement et produirait
+un créneau que le moteur n'aurait jamais écrit.
+
+▶ **D'où la règle qui tient tout le « Fini quand » : l'entrée écrite par le geste doit être
+INDISCERNABLE de celle que `planLeftovers` aurait écrite sur ce créneau — au verrou près.** C'est
+une phrase falsifiable champ par champ, et aucun raccourci ne la produit par accident.
+
+#### La forme retenue, et le décalage qu'on ne code pas
+
+**Le geste, sur un créneau cible, avec un plat source choisi dans une liste :**
+
+1. la cible reçoit `{ recipeId: <source>, isLeftover: true, locked: true, portions: convives,
+   horsCatalogue: null }`, `service` inchangé, **accompagnement laissé en place** ;
+2. **le créneau de la CUISSON passe `locked: true`** — sans quoi la recomposition suivante l'efface,
+   mesuré au point 2 ci-dessus ;
+3. **rien d'autre ne bouge.** Aucune recomposition n'est déclenchée par le geste.
+
+⚠️ **LE « DÉCALAGE DE LA SEMAINE » N'EST PAS CODÉ, ET C'EST UNE INTERPRÉTATION QU'IL FAUT POUVOIR
+CORRIGER ICI.** L'auteur a dit « pouvoir décaler la semaine » ; `ETAT.md` en a tiré que le décalage
+est **émergent** — deux créneaux verrouillés de plus, et la replanification contourne. Sous cette
+lecture, le plat qui occupait la cible n'est **pas** reprogrammé par le geste : il disparaît, et la
+semaine ne se réorganise qu'au prochain « Composer ma semaine ». ▶ **Si l'auteur voulait un vrai
+décalage — le plat de mardi glisse à mercredi, celui de mercredi à jeudi — ce paragraphe est celui à
+corriger, et c'est le seul.** Il est isolé exprès. ⛔ Écrire un décalage explicite reviendrait à
+réimplémenter à côté ce que le verrouillage fait déjà, et c'est ce que `ETAT.md` écarte.
+
+**Ce que le lot ajoute au moteur, et c'est assumé :** deux fonctions pures dans
+`engine/planning/`, une qui rend les sources éligibles pour un créneau, une qui écrit les deux
+entrées. ⛔ **Recalculer les quatre règles d'éligibilité dans l'écran serait le vrai défaut** : elles
+vivraient alors à deux endroits, et divergeraient au premier changement de `plan-leftovers.ts`.
+Le « Fini quand » ne prescrit **aucun nom de fonction ni aucun emplacement à l'écran** — il borne le
+coût du geste et mesure ce qui atterrit en base.
+
+⛔ **ÉCARTÉ : DÉCLENCHER UNE RECOMPOSITION DEPUIS LE GESTE.** Elle rebattrait toute la semaine pour
+un geste posé sur un créneau — exactement ce que la clause « ni trou, ni recalcul » de `retour-3`
+interdit aux gestes par créneau. **La recomposition reste un geste que l'utilisateur demande.**
+
+⛔ **ÉCARTÉ : UNE COLONNE POUR MÉMORISER LE PLAT DÉPLACÉ.** Aucune migration (clause 10). Comme dans
+`retour-3`, l'annuler est une **commodité de session** : sa mémoire vit à la portée du module, elle
+survit à un remontage de l'écran et meurt au rechargement de l'application.
+
+⚠️ **CE QUE LE LOT NE TRANCHE PAS, ET QU'IL FAUDRA TRANCHER EN CODANT** : le libellé exact du geste
+et de la mention (« Restes de X » ? « Reste de X, cuisiné mardi » ?) ; l'endroit précis sur la carte
+ou dans une fenêtre ; si le geste vit aussi sur Aujourd'hui (`retour-3` y a ouvert la porte, mais
+choisir une source demande une liste, et cet écran n'en a pas). **Aucun de ces points n'est
+observable par une clause, et aucune clause ne les prescrit.**
+
+#### Ce que le lot NE touche pas
+
+`plan-leftovers.ts` — **la pose automatique n'est pas modifiée**, ni ses quatre règles, ni son
+comptage `dejaPlaces` · `plan-week.ts` et `placedRecipeIds` — le défaut du point 2 se referme par le
+**second verrou**, pas en desserrant le moteur · `user-schema.ts` — version **18** inchangée, aucune
+migration, aucun `CHECK` touché · `meal_history` et ses deux origines `choisi`/`reste` · le geste
+« je mange dehors » et `hors_catalogue` · la liste de courses, les rappels et l'alerte de plancher :
+**c'est le plan qui change sous eux**, pas eux · `catalog/` — aucun contenu, donc **ni
+`catalog/build.mjs` ni `catalog/audit-mapping.mjs` ne sont des témoins de ce lot** · l'écran
+Aujourd'hui, sauf si le codage montre que la liste y tient.
+
+#### Les témoins d'avant — mesurés le 2026-08-26, arbre du brief (`dd09205`)
+
+| Témoin | Valeur d'avant |
+|---|---|
+| `npm test` | **2 392 passed / 0 failed**, 126 fichiers |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ |
+| `npm run engine:plan-stress` | **20/20 configurations saines** |
+| `node catalog/build.mjs` | **pas un témoin** — le catalogue n'est pas touché |
+| restes posés d'office (7 j · 3 repas · 1 convive · graine 1) | **13** sur 21 créneaux principaux |
+| créneaux offrant un reste plaçable **sous la comptabilité de `plan-leftovers`** | **0** |
+| créneaux cibles du geste (accompagnés, avec offre) | **2** par rythme, sur 2 journées |
+
+---
+
+**Fini quand** — dix clauses, jouées sur l'écran Semaine **réel**, contre
+`app/public/catalog/catalog.db` (celui que charge le chargeur de test) et une `user.db` réelle,
+jamais contre une fixture.
+
+⛔ **LES RÈGLES DE JEU, HÉRITÉES DE LA DETTE DE `retour-2` (`ETAT.md` §8) :**
+
+- **Les réglages persistants que l'écran lit sont nommés** : `user_rythme.repasParJour` (il décide
+  **quels créneaux existent** ; `CHECK (repas_par_jour BETWEEN 1 AND 3)`), `user_profile`, les
+  contraintes, `user_display`, et la fenêtre d'historique de 21 jours. ⛔ **Les clauses font varier
+  `repasParJour` entre 2 et 3** — 2 = déjeuner + dîner, 3 AJOUTE LE PETIT-DÉJEUNER (`creneau.ts:31` ;
+  ⚠️ le goûter n'entre qu'à 4, que la base refuse) — et **rien d'autre n'est laissé au hasard**.
+  ⚠️ **`convives` n'est PAS persistant** (mesuré ci-dessus) : les clauses se jouent à **1**, et cette
+  limite est écrite plutôt que contournée.
+- **L'horloge est figée** (`vi.setSystemTime`), comme dans `retour-3` : la date du jour décide de la
+  date de départ du plan, et une suite verte à 14 h et rouge à 23 h ne mesure rien.
+- ⛔ **AUCUN IDENTIFIANT DE RECETTE, AUCUNE DATE DE CUISSON, AUCUN EFFECTIF EN DUR.** Créneaux
+  cibles, plats sources et contre-exemples sont **déduits** du plan que le moteur compose sur le
+  catalogue réel. Si le catalogue change au point de ne plus fournir de cas, le message le dit — et
+  dit que c'est le semis qui manque, pas la clause qui échoue.
+- ⛔ **TOUTE MESURE SE FAIT EN BASE**, par relecture du dernier plan écrit. Un écran qui afficherait
+  « restes de… » sans rien écrire passerait n'importe quel `getByText` ; il ne passe pas une
+  relecture de `user.db`.
+
+1. ⛔ **LE GESTE EXISTE, COÛTE AU PLUS DEUX CLICS ET AUCUNE FRAPPE — la clause qui décide du lot.**
+   Sur un créneau qui a au moins une source éligible (déduit du plan), une suite d'**au plus deux
+   clics** sur des contrôles **visibles**, sans **aucun** événement de saisie, pose le reste ; et le
+   mot **« restes »** est affiché sur le chemin. Relu en base : la cible porte le `recipeId` du plat
+   choisi. **Aujourd'hui : rien ne passe** — le mot n'existe sur aucun contrôle, et `isLeftover` n'a
+   que deux occurrences d'affichage dans tout l'écran.
+   ⚠️ Le test ne clique que du texte visible et n'appelle jamais `fireEvent.change` : c'est ce qui
+   rend « sans frappe » falsifiable plutôt que déclaratif.
+
+2. ⛔ **L'ENTRÉE ÉCRITE EST INDISCERNABLE D'UN RESTE POSÉ PAR LE MOTEUR, AU VERROU PRÈS.** Relue en
+   base, l'entrée principale de la cible porte `isLeftover === true`, `portions === convives`,
+   `horsCatalogue === null`, le `service` qu'elle avait avant, et **l'accompagnement du créneau est
+   toujours là, avec le même `recipeId`** (mesuré : la pose automatique le conserve sur 10 des 13
+   créneaux devenus restes). Seul `locked` diffère : `true`. ▶ **Ce qui la rendrait fausse** : une
+   écriture recopiée de `setSlotHorsCatalogue`, qui vide le créneau et emporte l'accompagnement.
+
+3. ⛔ **NI TROU, NI RECALCUL.** Après le geste, le plan porte **exactement autant d'entrées
+   principales** qu'avant, aux **mêmes** couples (date, créneau) ; et **tout créneau autre que la
+   cible et que la cuisson source** porte le même `recipeId`, le même `locked`, le même `isLeftover`
+   et les mêmes `portions` qu'avant. Comparaison de la liste **entière**, pas d'un échantillon.
+   ▶ **Ce qui la rendrait fausse** : un geste qui recompose la semaine.
+
+4. ⛔ **LA CUISSON QUI NOURRIT LE RESTE EST PROTÉGÉE, ET LA SEMAINE SURVIT À UNE RECOMPOSITION.**
+   C'est la clause centrale, et elle échoue aujourd'hui sur du code livré. Deux temps :
+   **(a)** après le geste, le créneau où le plat source est cuisiné porte `locked === true` ;
+   **(b)** l'invariant de plan — **tout reste du plan a son plat cuisiné à un créneau ANTÉRIEUR du
+   même plan** — tient après le geste, **et tient encore après un « Composer ma semaine »**, où la
+   cible porte toujours le même plat, au même créneau, en reste. **Mesuré aujourd'hui, sans le
+   second verrou : 0 cuisson, 1 reste.** ▶ **Ce qui la rendrait fausse** : ne verrouiller que la
+   cible — le cas le plus naturel, et celui que `ETAT.md` décrivait.
+
+5. ⛔ **L'OFFRE NE CONTIENT QUE CE QUI EST MANGEABLE, ET LES CAUSES DE REFUS QUI EXISTENT SONT EXERCÉES.**
+   Sur un créneau cible, la liste proposée contient **exactement** les plats cuisinés du plan qui
+   satisfont les quatre règles de `plan-leftovers.ts` : cuisiné **strictement avant** (le lendemain
+   au plus tôt), dans la limite de `conservationJours`, portant ce `MealSlot`, et laissant au moins
+   un repas de portions. Les contre-exemples sont **déduits** du plan, un par cause, et doivent être
+   **absents** de la liste. ⛔ **UN CHIFFRE A ÉTÉ CORRIGÉ ICI PAR LA MESURE, ET IL DISAIT LE
+   CONTRAIRE.** Les totaux par rythme (couples cible × source refusés par une cause **unique**) — à
+   **3 repas/jour**, même jour 13 · créneau 6 · conservation 5 · portions 1 ; à **2 repas/jour**,
+   même jour 6 · conservation 2 — sont des **SOMMES SUR TOUTES LES CIBLES**, pas ce dont dispose une
+   cible donnée. **Par cible, mesuré**, il n'y a qu'une ou deux causes : `2026-03-13|dejeuner` donne
+   {créneau, même jour}, `2026-03-15|diner` donne {conservation}, `2026-03-12|diner` donne
+   {conservation, même jour}, `2026-03-14|diner` donne {conservation} seule. Écrite d'abord sur la
+   première cible et sur les quatre causes, la clause échouait sur une **ABSENCE DE CAS**. Elle
+   balaie donc **toutes les cibles du rythme** et n'exige, par cible, que les causes qui existent —
+   avec un plancher : **au moins deux causes distinctes couvertes sur l'ensemble du rythme**
+   ({conservation, même jour} à 2 repas/jour ; {même jour, créneau, conservation} à 3).
+   ⚠️ **« portions » n'a aucun contre-exemple à cause unique sur une cible offrante** : la clause ne
+   l'exige nulle part, et le dit plutôt que de le taire. ▶ **Ce qui la rendrait fausse** : offrir
+   tout ce qui a été cuisiné avant.
+
+6. ⛔ **UN CRÉNEAU SANS OFFRE NE PROPOSE RIEN, ET N'ÉCRIT RIEN.** Sur un créneau dont l'ensemble des
+   sources éligibles est vide — **mesuré : 5 des 8 créneaux à plat posé à 3 repas/jour, 2 des 4 à 2
+   repas/jour**, dont toujours ceux du premier jour, qui n'ont aucune veille — le geste n'est pas
+   proposé, ou dit qu'il n'y a rien ; et le plan relu en base est **identique champ pour champ** à celui d'avant. ▶ **Ce qui la
+   rendrait fausse** : une liste vide qu'on peut valider quand même.
+
+7. ⛔ **LE GESTE SE DÉFAIT, ET REND LES DEUX CÔTÉS.** Le chemin trouvé sur la première cible est
+   **rejoué à l'identique** sur **l'autre créneau candidat**, d'une autre journée et portant un autre
+   plat — un chemin qui nomme un plat ne survit pas au rejeu. ⚠️ **Un seul rejeu par rythme, parce
+   que le catalogue n'offre que deux cibles** (mesuré ci-dessus) ; la clause tournant aux deux
+   rythmes, le chemin est rejoué **quatre fois** au total. Après l'annulation, relu en base : la cible
+   retrouve son `recipeId`, ses `portions`, son `isLeftover` et son `locked` d'avant, **et le
+   créneau de la cuisson retrouve le `locked` qu'il avait**. ▶ **Ce qui la rendrait fausse** : un
+   annuler qui rend le plat et laisse derrière lui un verrou que personne n'a demandé.
+
+8. ⛔ **LA CARTE DIT LES DEUX : C'EST UN RESTE, ET IL EST GARDÉ.** Sur la cible, les deux faits sont
+   lisibles en toutes lettres. **Mesuré : impossible aujourd'hui** — `semaine.tsx:911-914` choisit
+   entre « Gardé » et « Reste du plat de la veille », jamais les deux.
+
+9. ⚠️ **« LA VEILLE » CESSE DE MENTIR.** Sur un reste posé **2 jours ou plus** après sa cuisson —
+   déduit du plan, **mesuré : 4 des 13 restes à 3 repas/jour, 4 des 10 à 2 repas/jour, et 223 des
+   330 recettes se conservent plus d'un jour** — la carte ne prétend pas que le plat a été cuisiné la veille.
+   ⚠️ **C'est la seule clause qui répare un défaut que le geste n'a pas créé** : elle est signalée
+   comme telle, et elle se raye sans toucher aux neuf autres si l'auteur veut garder le lot serré.
+
+10. ⛔ **RIEN N'EST ÉCRIT HORS DU PLAN.** Le geste n'ajoute **aucune** ligne à `meal_history` — cette
+    table enregistre « ce plat a été retenu », jamais « voici ce que tu as mangé » — et ne demande
+    **aucune migration** : `USER_SCHEMA_VERSION` reste **18** avant et après.
+
+⚠️ **CE QU'AUCUNE DE CES DIX CLAUSES NE DÉMONTRERA** : que le geste se **trouve** sur un téléphone,
+ni qu'une liste de trois plats y soit lisible. Un contrôle atteignable en deux clics par requête
+DOM peut être hors écran. Cela rejoint la passe à l'œil de §3, et rien ne la remplace.
+
+#### Ce que la livraison a démontré, et LA MOITIÉ DE CLAUSE QUI A ÉTÉ RETIRÉE
+
+**Livré le 2026-08-26 (`7642492`).** Les dix clauses tournent aux deux rythmes, 19 tests,
+`npm test` 2 411 / 2 411 sur 127 fichiers.
+
+⛔ **LA CLAUSE 4 A PERDU LA MOITIÉ (b1) DE SON ÉNONCÉ, ET C'EST L'AUTEUR QUI L'A TRANCHÉ, SCEAU
+LEVÉ.** Elle exigeait l'invariant de plan — *tout reste a son plat cuisiné à un créneau antérieur* —
+**à deux moments** : juste après le geste, puis après une recomposition. **Le premier est intenable,
+et ce n'est pas le code qui le rend intenable, c'est la clause 3.** Celle-ci fige tout créneau hors
+de {cible, cuisson} ; or, mesuré le 2026-08-26 sur le catalogue réel, **les quatre cibles que le
+catalogue offre sont elles-mêmes la cuisson de restes déjà posés par la machine** :
+
+| rythme | cible | son plat | restes qui en dépendent |
+|---|---|---|---|
+| 2 repas | 2026-03-12 dîner | poulet curry riz complet | 3 |
+| 2 repas | 2026-03-14 dîner | quiche épinards feta | 4 |
+| 3 repas | 2026-03-13 déjeuner | tajine légumes racines pruneaux | 3 |
+| 3 repas | 2026-03-15 dîner | lapin moutarde thym | 2 |
+
+Remplacer le plat de la cible prive donc 2 à 4 restes de leur cuisson, et la clause 3 défend d'y
+toucher. **Aucune implémentation ne satisfait les deux** : ce n'était pas un défaut du code, c'était
+une contradiction entre deux clauses du même examen — et elle n'a été vue qu'à l'exécution, pas à la
+relecture. ▶ **Mesuré, aux deux rythmes** : « orphelins juste après le geste : 3 · APRÈS
+recomposition : aucun », la cible gardant son reste (`isLeftover=true locked=true`). Le décalage est
+**transitoire par construction**, et c'est le prochain tirage qui l'efface.
+
+✅ **CE QUI RESTE EXIGÉ, ET QUI PASSE** : (a) le verrou sur la CUISSON, vérifié **à l'instant du
+geste** — c'est lui qui porte le piège de `plan-week.ts:244`, le cœur du lot ; et (b) l'invariant de
+plan **après** « Proposer une autre semaine », là où il a un sens.
+
+⚠️ **CE QUE PERSONNE NE MESURE ENCORE, ET C'EST À L'ŒIL QUE ÇA SE VERRA** : entre le geste et la
+recomposition suivante, la semaine affiche des restes dont le plat n'est plus cuisiné nulle part, et
+la liste de courses n'achète rien pour eux. Aucune clause ne l'interdit désormais, aucune ne le
+signale à l'utilisateur. ▶ `ETAT.md` §8.
+
+⚠️ **UN DÉFAUT DE CONCEPTION TROUVÉ PAR LE TEST, PAS PAR LA RELECTURE** : la mémoire d'annulation
+comptait **tous** les restes du plat source pour décider de relâcher le verrou de la cuisson. Or la
+source d'un geste est presque toujours un plat que la machine sert **déjà** ailleurs (3 restes de
+dahl sur l'unique source du premier créneau cible, aux deux rythmes) : le verrou n'était donc
+**jamais** relâché, et chaque annulation laissait derrière elle un créneau figé. Seuls les restes
+**gardés** comptent — un reste automatique est recalculé à chaque tirage, il n'a pas besoin du
+verrou.
+
+---
+
 ### Les lots suivants — non ouverts
 
 Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETAT.md` §4) :
@@ -1167,7 +1520,7 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 |---|---|---|
 | `retour-2` | le sélecteur d'exclusion s'ouvre aux 451 aliments (décision 73) | ✅ **LIVRÉ le 2026-08-22** |
 | `retour-3` | « je mange dehors » étiquette le créneau (décision 76) | ✅ **LIVRÉ le 2026-08-22** — section ci-dessus |
-| `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | rien |
+| `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | ✅ **LIVRÉ le 2026-08-26** (`7642492`) — section ci-dessus |
 | `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | rien — lot de contenu |
 | `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | **`retour-1`** et **décision 79** |
 | `retour-7` | le frigo ne vaut plus que pour un repas (décision 74) | **décision 80** |

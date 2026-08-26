@@ -43,17 +43,23 @@ npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
 Dernier relevé, **suite réellement exécutée le 2026-08-26, arbre COMPLET, APRÈS le commit de
-`retour-3` (`166aa32`), le réglage d'`asyncUtilTimeout` (`tests/setup-jsdom.ts`) et la remise de
-l'assertion de `semaine.test.tsx`. Les relevés précédents (`6aad49c`, 2 376 / 125 ; `3ce17d7`,
-2 263 / 123) sont CONFIRMÉS, pas corrigés** :
-`npm test` → **2 392 passed / 0 failed (126 fichiers)** en 49,9 s · typecheck propre ·
-`vite build` ✓ (3,21 s) · `engine:plan-stress` **20/20**. ⚠️ **LE COMPTE N'A BOUGÉ D'AUCUN TEST SUR
-LES DEUX LOTS** : un `setupFiles` n'est pas ramassé comme un fichier de test, et un `it` remplacé
-par un `it` n'en ajoute aucun. C'est ce qu'il fallait vérifier, pas ce qu'on pouvait déduire.
-✅ **CE QUE `retour-3` AJOUTE A ÉTÉ COMPTÉ SEUL, PAS DÉDUIT** : `tests/scelles/retour-3.test.tsx`,
-lancé à part, rend **13 tests** — c'est le 126ᵉ fichier — et `plan-week.test.ts` passe de **59** à
-**62** (trois gardes moteur posées sur un défaut LIVRÉ, voir plus bas). 13 + 3 = 16, aucun autre
-test n'a bougé. ⚠️ **Le piège `it.each` a été revérifié** : `PARCOURS` n'a pas bougé.
+`retour-4` (`7642492`). Les relevés précédents (`166aa32`, 2 392 / 126 ; `6aad49c`, 2 376 / 125 ;
+`3ce17d7`, 2 263 / 123) sont CONFIRMÉS, pas corrigés** :
+`npm test` → **2 411 passed / 0 failed (127 fichiers)** en 50,4 s · typecheck propre ·
+`vite build` ✓ (3,11 s) · `engine:plan-stress` **20/20**.
+✅ **CE QUE `retour-4` AJOUTE A ÉTÉ COMPTÉ SEUL, PAS DÉDUIT** : `tests/scelles/retour-4.test.tsx`,
+lancé à part, rend **19 tests** — c'est le 127ᵉ fichier — et **aucun autre fichier n'a bougé** :
+19 + 0 = 19, et 2 392 + 19 = 2 411. ⚠️ **Le piège `it.each` a été revérifié** : `PARCOURS` n'a pas
+bougé.
+⛔ **UNE MOITIÉ DE CLAUSE SCELLÉE A ÉTÉ RETIRÉE, SUR DÉCISION DE L'AUTEUR, SCEAU LEVÉ PUIS REMIS.**
+Le test exigeait « aucun reste orphelin **juste après le geste** » ET « aucun après recomposition »
+pendant qu'une autre clause interdisait de toucher à un troisième créneau : **aucune implémentation
+ne satisfait les deux.** Mesuré, pas discuté — les quatre cibles que le catalogue offre nourrissent
+chacune 2 à 4 restes posés par la machine. La première moitié est partie, le retrait est expliqué
+dans le fichier de test, et la dette est en `ETAT.md` §8. **Un « Fini quand » peut être
+contradictoire avec lui-même ; c'est l'implémentation qui le révèle, et ce n'est pas au code de
+trancher.**
+📦 **CE QUI SUIT DATE DU LOT `retour-3` (`166aa32`) — gardé pour la MÉTHODE, pas pour le chiffre.**
 ⚠️ **UN DÉFAUT DÉJÀ EN PRODUCTION A ÉTÉ TROUVÉ PAR UN TEST SCELLÉ QUI NE LE VISAIT PAS.** Poser ou
 tirer un plat sur un créneau portant une étiquette `hors_catalogue` recopiait l'étiquette à côté du
 plat : le moteur rendait un plan bien formé que le `CHECK` de la migration v9 REFUSAIT à
@@ -61,7 +67,7 @@ l'écriture. Ni le type ni aucun test ne disaient non — seule la base. Corrig�
 `retour-3`, avec trois tests. **Un champ mutuellement exclusif de son voisin ne se garde pas par le
 type : il se garde par un test, ou par la base au pire moment.**
 📦 **CE QUI SUIT DATE DU LOT `retour-2` (`6aad49c`) — gardé pour la MÉTHODE, pas pour le
-chiffre : le compte de référence est désormais 2 392 / 126.**
+chiffre : le compte de référence est désormais 2 411 / 127.**
 ✅ **RELANCÉES UNE SECONDE FOIS SUR L'ARBRE FINAL**, après le retrait d'une fonction orpheline et
 l'extension de la garde au shell : **mêmes 2 376 / 125**. Une fonction sans appelant ne coûte aucun
 test à retirer — c'est ce qui prouve qu'elle n'en avait aucun.

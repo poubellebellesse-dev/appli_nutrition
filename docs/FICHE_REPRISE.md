@@ -18,11 +18,11 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-26, APRÈS LE COMMIT DE `retour-3` (`166aa32`)** : `npm test` → **2 392
-passed / 0 failed (126 fichiers)** en 49,9 s · typecheck propre · `vite build` ✓ (3,21 s) ·
+⚠️ **RELEVÉ DU 2026-08-26, APRÈS LE COMMIT DE `retour-4` (`7642492`)** : `npm test` → **2 411
+passed / 0 failed (127 fichiers)** en 50,4 s · typecheck propre · `vite build` ✓ (3,11 s) ·
 `plan-stress` **20/20**. ⚠️ **`audit-mapping` non relancé** : catalogue inchangé depuis le 08-20
-(451 mappings, 9 à relire). ⚠️ **L'écart 2 376 → 2 392 est `retour-3` SEUL**, mesuré fichier par
-fichier : **+13** scellés (125 → 126) et **+3** au moteur (59 → 62).
+(451 mappings, 9 à relire). ⚠️ **L'écart 2 392 → 2 411 est `retour-4` SEUL**, et il tient dans **un
+seul fichier scellé neuf** (126 → 127, 19 tests) : aucun autre fichier n'a bougé.
 ⛔ **UN COMPTE PEUT BOUGER SANS QU'AUCUN FICHIER DE TEST NE CHANGE** — `it.each` nourri par une
 table de production. C'est ce qui a ouvert un écart de 90 ici. ▶ `ETAT.md` §8, lot `retour-2`.
 
@@ -56,15 +56,15 @@ questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RET
   ajouté de quoi voir (affichages, attente de chargement, champ de recherche et famille de 74
   lignes), **qu'aucun test jsdom ne sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3.
   **Tant qu'elle n'est pas faite, on sait seulement que rien n'est cassé** — pas que ça marche.
-- ▶ **`/brief retour-4`** — `retour-3` est livré (« je mange dehors », les deux écrans). Puis
-  `retour-5` à `retour-8`. ⚠️ **`retour-6` attend la décision 79**, pas que du code.
+- ▶ **`/brief retour-5`** — `retour-4` est livré (poser un reste à la main, écran Semaine). Puis
+  `retour-6` à `retour-8`. ⚠️ **`retour-6` attend la décision 79**, pas que du code.
   ⚠️ **En ouvrant le brief : nommer les réglages persistants que l'écran lit, et dire lesquels les
   clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.
 
 **Les chantiers TERMINÉS ne sont plus détaillés ici** — leur fait vit dans `ETAT.md` et dans leur
 document de chantier. ⚠️ **Gestes illustrés : 3 sur 62 en base** — lot geste 2 arrêté à trois par
 la décision D5, TOUJOURS OUVERT, sa clause en demande 51. Clips récoltés (7 gestes sans candidat),
-photos (129/330, source), origine animale (66c), matériel (65c), retours test (1, 1b, 2, 3 livrés).
+photos (129/330, source), origine animale (66c), matériel (65c), retours test (1, 1b, 2, 3, 4 livrés).
 
 **Ce qui reste à faire, et qui n'attend que d'être commencé :**
 
