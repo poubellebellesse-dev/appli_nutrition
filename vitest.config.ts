@@ -20,6 +20,10 @@ export default defineConfig({
     // scellé qui ne s'exécute jamais est pire que pas de test : il a l'air de garder quelque chose.
     include: ['app/**/*.test.{ts,tsx}', 'tests/**/*.test.{ts,tsx,mjs}', 'catalog/**/*.test.{ts,mjs}'],
 
+    // ⚠️ NE MATCHE PAS `include` (il n'est pas un `*.test.ts`), donc il n'est pas ramassé comme un
+    // test — il est chargé AVANT chacun d'eux. Un seul réglage y vit, et son en-tête dit pourquoi.
+    setupFiles: ['./tests/setup-jsdom.ts'],
+
     // ⚠️ CE DÉLAI CORRIGE DE LA CONTENTION, PAS UNE LENTEUR — ne pas le lire comme l'aveu d'un test
     // lent. Le budget de Vitest est du temps d'HORLOGE, pas du temps CPU : avec 85 fichiers lancés
     // en parallèle sur autant de workers que de cœurs, un test qui demande 1,4 s de calcul peut

@@ -42,11 +42,12 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-22, arbre COMPLET, livraison du lot
-`retour-3` (pas encore commité). Les relevés précédents (`6aad49c`, 2 376 / 125 ; `3ce17d7`,
-2 263 / 123) sont CONFIRMÉS, pas corrigés** :
-`npm test` → **2 392 passed / 0 failed (126 fichiers)** en 50,1 s · typecheck propre ·
-`vite build` ✓ (3,01 s) · `engine:plan-stress` **20/20**.
+Dernier relevé, **suite réellement exécutée le 2026-08-26, arbre COMPLET, APRÈS le commit de
+`retour-3` (`166aa32`) et le réglage d'`asyncUtilTimeout` (`tests/setup-jsdom.ts`). Les relevés
+précédents (`6aad49c`, 2 376 / 125 ; `3ce17d7`, 2 263 / 123) sont CONFIRMÉS, pas corrigés** :
+`npm test` → **2 392 passed / 0 failed (126 fichiers)** en 43,9 s · typecheck propre ·
+`vite build` ✓ (3,03 s) · `engine:plan-stress` **20/20**. ⚠️ **Le compte n'a pas bougé d'un test** —
+un `setupFiles` n'est pas ramassé comme un fichier de test, et c'est ce qu'il fallait vérifier.
 ✅ **CE QUE `retour-3` AJOUTE A ÉTÉ COMPTÉ SEUL, PAS DÉDUIT** : `tests/scelles/retour-3.test.tsx`,
 lancé à part, rend **13 tests** — c'est le 126ᵉ fichier — et `plan-week.test.ts` passe de **59** à
 **62** (trois gardes moteur posées sur un défaut LIVRÉ, voir plus bas). 13 + 3 = 16, aucun autre
