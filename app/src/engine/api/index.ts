@@ -62,6 +62,12 @@ import {
   setSlotHorsCatalogue as runSetSlotHorsCatalogue,
 } from '../planning/reroll-slot.js'
 import type { RerollContext } from '../planning/reroll-slot.js'
+import {
+  setSlotLeftover as runSetSlotLeftover,
+  sourcesDeReste as runSourcesDeReste,
+  unsetSlotLeftover as runUnsetSlotLeftover,
+} from '../planning/set-slot-leftover.js'
+import type { ResteDefait, SourceDeReste } from '../planning/set-slot-leftover.js'
 import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError, proposerUneSauce, saucesProposees, toutesLesSauces } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
@@ -182,6 +188,56 @@ export interface Engine {
    * calculer les restes eux-mêmes : `WeekPlan` ne dit pas combien de personnes mangent.
    */
   planLeftovers(plan: WeekPlan, profile: UserProfile, convives?: number): WeekPlan
+  /**
+   * Les plats du plan dont un reste POURRAIT être servi sur `slot` — de quoi peupler un choix.
+   *
+   * ⚠️ À NE PAS CONFONDRE AVEC `planLeftovers`, qui PLACE les restes tout seul (§7.3). Celui-ci ne
+   * place rien : il rend la liste des cuissons encore mangeables sur ce créneau, pour que
+   * quelqu'un choisisse. C'est la réponse au retour d'essai « trop compliqué à gérer » (décision
+   * 78) : la machine décidait, l'utilisateur n'avait pas de mot à dire.
+   *
+   * ⚠️ LA COMPTABILITÉ N'EST PAS LA MÊME, et c'est délibéré : `sourcesDeReste` ne déduit PAS les
+   * portions déjà servies ailleurs. Sous la comptabilité de `planLeftovers`, une semaine fraîche
+   * n'offre AUCUNE portion encore plaçable (mesuré à 1, 2 et 3 convives) et la liste serait
+   * toujours vide. Poser un reste à la main, c'est DÉPLACER une décision déjà prise.
+   *
+   * Créneau introuvable, verrouillé, ou déjà un reste → liste VIDE.
+   */
+  sourcesDeReste(plan: WeekPlan, slot: SlotRef, convives?: number): readonly SourceDeReste[]
+  /**
+   * Sert sur `slot` le reste de `recipeId`, cuisiné ailleurs dans la semaine (décision 78).
+   *
+   * ⚠️ LE VERROU VA PAR DEUX : le créneau cible ET le créneau de la cuisson. `planWeek` verse le
+   * `recipeId` de toute entrée verrouillée dans les plats déjà placés ; verrouiller le reste seul
+   * ferait donc compter le RESTE comme la CUISSON, et la recomposition suivante n'ordonnerait plus
+   * jamais le plat. La semaine porterait un repas que personne n'a acheté ni cuisiné.
+   *
+   * ⚠️ L'ACCOMPAGNEMENT DE LA CIBLE RESTE EN PLACE, à l'inverse de `setSlotHorsCatalogue` qui vide
+   * le créneau. Un reste est un plat comme un autre : le riz qui l'accompagnait accompagne encore.
+   *
+   * Créneau introuvable, verrouillé, déjà un reste, ou plat qui n'est pas une source éligible : le
+   * plan rendu est l'objet d'entrée, inchangé — même posture que `rerollSlot` sur un créneau figé.
+   */
+  setSlotLeftover(
+    plan: WeekPlan,
+    slot: SlotRef,
+    recipeId: RecipeId,
+    profile: UserProfile,
+    convives?: number
+  ): WeekPlan
+  /**
+   * Défait un `setSlotLeftover` : le créneau retrouve son plat, la cuisson son verrou d'avant.
+   *
+   * ⚠️ LA MÉMOIRE EST PASSÉE EN ARGUMENT parce qu'un plan ne dit pas ce qu'il portait avant, ni QUI
+   * a posé le verrou de la cuisson. Reconstituer reviendrait à retirer un verrou que l'utilisateur
+   * avait peut-être mis lui-même. C'est une mémoire de SESSION, comme celle de `ui/dehors.ts`.
+   */
+  unsetSlotLeftover(
+    plan: WeekPlan,
+    slot: SlotRef,
+    memoire: ResteDefait,
+    profile: UserProfile
+  ): WeekPlan
   buildShoppingList(plan: WeekPlan, opts?: ShoppingOptions): ShoppingList
   /**
    * Recalcule les avertissements d'un plan — §6.5, cinquième garde-fou.
@@ -875,6 +931,22 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
     planLeftovers: (plan, profile, convives) => {
       const avecRestes = runPlanLeftovers(plan, enrichedCatalog, convives)
       return { ...avecRestes, warnings: checkCalorieFloor(avecRestes, profile, enrichedCatalog) }
+    },
+    // Lecture seule : rien ne change, donc aucun avertissement à recalculer.
+    sourcesDeReste: (plan, slot, convives) =>
+      runSourcesDeReste(enrichedCatalog, plan, slot, convives),
+    // ⚠️ LE PLANCHER REPASSE ICI AUSSI. Un reste remplace un plat : les totaux caloriques du jour
+    // changent, exactement comme quand `planLeftovers` en pose un tout seul. Garder les anciens
+    // avertissements laisserait un chiffre périmé à côté d'un plat qui n'y est plus.
+    setSlotLeftover: (plan, slot, recipeId, profile, convives) => {
+      const apres = runSetSlotLeftover(enrichedCatalog, plan, slot, recipeId, convives)
+      if (apres === plan) return plan
+      return { ...apres, warnings: checkCalorieFloor(apres, profile, enrichedCatalog) }
+    },
+    unsetSlotLeftover: (plan, slot, memoire, profile) => {
+      const apres = runUnsetSlotLeftover(plan, slot, memoire)
+      if (apres === plan) return plan
+      return { ...apres, warnings: checkCalorieFloor(apres, profile, enrichedCatalog) }
     },
     // `generatedAt` vient de l'horloge INJECTÉE si elle existe, jamais de `Date.now()` (§3) ;
     // sinon la date de départ du plan, qui est déterministe.

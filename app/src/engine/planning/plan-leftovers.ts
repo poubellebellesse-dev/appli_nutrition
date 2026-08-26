@@ -28,8 +28,14 @@ import type { Catalog, MealPlanEntry, RecipeId, WeekPlan } from '../domain/index
 
 const MS_PER_DAY = 86_400_000
 
-/** Écart en jours calendaires entre deux dates ISO. Jamais `Date.now()` (§3 ENGINE). */
-function ecartJours(depuis: string, jusqua: string): number {
+/**
+ * Écart en jours calendaires entre deux dates ISO. Jamais `Date.now()` (§3 ENGINE).
+ *
+ * ⚠️ EXPORTÉ POUR `set-slot-leftover.ts`, ET C'EST DÉLIBÉRÉ. Le geste manuel rejoue les mêmes
+ * quatre règles d'éligibilité que le placement automatique ci-dessous ; recopier le calcul
+ * d'âge aurait fait vivre deux définitions du mot « la veille », qui auraient fini par diverger.
+ */
+export function ecartJours(depuis: string, jusqua: string): number {
   return Math.round((Date.parse(`${jusqua}T00:00:00Z`) - Date.parse(`${depuis}T00:00:00Z`)) / MS_PER_DAY)
 }
 

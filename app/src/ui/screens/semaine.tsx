@@ -42,6 +42,13 @@ import { REPAS_PAR_DEFAUT, creneauxDuRythme } from '../creneau.js'
 import { reprogrammerLesRappels } from '../ecrire-plan.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
 import { LIBELLE_DEHORS, oublierLePlat, platDAvant, retenirLePlat } from '../dehors.js'
+import {
+  gestePrecedent,
+  oublierLeGeste,
+  oublierTousLesGestes,
+  retenirLeGeste,
+} from '../restes.js'
+import type { SourceDeReste } from '../../engine/planning/set-slot-leftover.js'
 import { ChoisirPlat } from '../choisir-plat.js'
 
 // Le mapping « nombre de repas → créneaux » a été remonté dans `ui/creneau.ts` quand l'écran
@@ -200,6 +207,8 @@ export function Semaine() {
   const [refus, setRefus] = useState<ReadonlyMap<string, readonly RecipeId[]>>(new Map())
   /** Le créneau dont la fenêtre « Choisir un plat » est ouverte, ou `null`. */
   const [aChoisir, setAChoisir] = useState<SlotRef | null>(null)
+  /** Le créneau dont la fenêtre « Manger un reste » est ouverte, ou `null` (décision 78). */
+  const [pourReste, setPourReste] = useState<SlotRef | null>(null)
   /** Le socle, gardé pour la fenêtre de choix — elle interroge le moteur à chaque frappe. */
   const [socleCharge, setSocleCharge] = useState<Socle | null>(null)
   const [premierRendu, setPremierRendu] = useState(true)
@@ -240,6 +249,11 @@ export function Semaine() {
         .then((socle) => {
           setReglages(suivants)
           setRefus(new Map())
+          // ⚠️ LA MÉMOIRE DES RESTES POSÉS À LA MAIN MEURT ICI, et c'est délibéré. Elle retient le
+          // plat qu'un créneau portait AVANT le geste ; après une recomposition ce plat est
+          // ailleurs dans la semaine, et le rendre le poserait deux fois. Le reste survit — ses
+          // deux créneaux sont gardés —, seul le raccourci pour le défaire disparaît.
+          oublierTousLesGestes()
           setEtat({ phase: 'pret', vue: planifier(socle, suivants, verrous) })
         })
         .catch(echouer)
@@ -298,6 +312,7 @@ export function Semaine() {
           savePlan(socle.db, suivant, maintenantIso())
           // Le créneau porte un autre plat : la mémoire du « dehors » n'a plus d'objet.
           oublierLePlat(slot)
+          oublierLeGeste(slot)
           setRefus(new Map(refus).set(cle, dejaRefuses))
           setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
         })
@@ -344,6 +359,7 @@ export function Semaine() {
           setRefus(refusSuivants)
           // L'utilisateur a désigné un plat : plus rien à défaire.
           oublierLePlat(slot)
+          oublierLeGeste(slot)
           setAChoisir(null)
           setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
         })
@@ -418,6 +434,81 @@ export function Semaine() {
    * l'étiquette soi-même laisserait un plat à ZÉRO portion — visible nulle part, et pourtant plus
    * un seul ingrédient sur la liste de courses.
    */
+  /**
+   * « Manger un reste » — l'utilisateur décide QUEL plat déjà cuisiné se resert ici (décision 78).
+   *
+   * ⚠️ CE N'EST PAS `planLeftovers` AVEC UN ARGUMENT. Le placement automatique distribue les
+   * portions restantes tout seul, et §7.3 dit pourquoi ; ce geste-ci DÉPLACE une décision déjà
+   * prise — mesuré, une semaine fraîchement composée n'offre plus aucune portion non distribuée.
+   * C'est la réponse au retour d'essai « trop compliqué à gérer » : la machine décidait seule.
+   *
+   * ⚠️ LA MÉMOIRE SE PREND AVANT L'ÉCRITURE. Après, le créneau porte le reste et le créneau de
+   * cuisson porte un verrou dont plus rien ne dit qui l'a posé — voir `ui/restes.ts`.
+   */
+  const poserReste = useCallback(
+    (slot: SlotRef, recipeId: RecipeId) => {
+      if (etat.phase !== 'pret') return
+      const { plan, profil } = etat.vue
+      const cible = plan.entries.find((e) => memeCreneau(e, slot) && e.service !== 'accompagnement')
+      const cuisson = plan.entries.find(
+        (e) => e.recipeId === recipeId && !e.isLeftover && e.service !== 'accompagnement'
+      )
+      if (cible === undefined || cuisson === undefined) return
+
+      chargerSocle()
+        .then((socle) => {
+          const suivant = socle.moteur.setSlotLeftover(plan, slot, recipeId, profil, reglages.convives)
+          // Le moteur refuse en rendant le plan tel quel : rien à enregistrer, rien à mémoriser.
+          if (suivant === plan) {
+            setPourReste(null)
+            return
+          }
+          retenirLeGeste(slot, { cible, cuisson })
+          savePlan(socle.db, suivant, maintenantIso())
+          // ⚠️ LES RAPPELS SUIVENT LE PLAT, comme pour « Choisir » : l'appareil sonnerait encore
+          // pour le plat que ce reste vient de remplacer.
+          reprogrammerLesRappels(socle, suivant)
+          const refusSuivants = new Map(refus)
+          refusSuivants.delete(cleCreneau(slot.date, slot.creneau))
+          setRefus(refusSuivants)
+          // Le créneau porte un autre plat : la mémoire du « dehors » n'a plus d'objet.
+          oublierLePlat(slot)
+          setPourReste(null)
+          setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
+        })
+        .catch(echouer)
+    },
+    [etat, refus, reglages.convives, echouer]
+  )
+
+  /**
+   * Se raviser : le créneau retrouve son plat, et le créneau de la CUISSON son verrou d'avant.
+   *
+   * ⚠️ LES DEUX CÔTÉS, PAS SEULEMENT LA CIBLE. Poser un reste verrouille aussi la cuisson pour
+   * qu'une recomposition continue de l'ordonner ; rendre le plat sans relâcher ce verrou
+   * laisserait figé un créneau que personne n'a demandé à garder.
+   */
+  const defaireReste = useCallback(
+    (slot: SlotRef) => {
+      if (etat.phase !== 'pret') return
+      const memoire = gestePrecedent(slot)
+      if (memoire === null) return
+      const { plan, profil } = etat.vue
+
+      chargerSocle()
+        .then((socle) => {
+          const suivant = socle.moteur.unsetSlotLeftover(plan, slot, memoire, profil)
+          if (suivant === plan) return
+          oublierLeGeste(slot)
+          savePlan(socle.db, suivant, maintenantIso())
+          reprogrammerLesRappels(socle, suivant)
+          setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
+        })
+        .catch(echouer)
+    },
+    [etat, echouer]
+  )
+
   const defaireDehors = useCallback(
     (slot: SlotRef) => {
       const precedent = platDAvant(slot)
@@ -494,6 +585,23 @@ export function Semaine() {
                 const duCreneau = plan.entries.filter((e) => memeCreneau(e, { date, creneau }))
                 const entry = duCreneau.find((e) => e.service !== 'accompagnement')
                 const accompagnement = duCreneau.find((e) => e.service === 'accompagnement')
+                // Ce que le moteur accepterait de servir ici en reste. Vide = pas de bouton : un
+                // geste proposé là où il ne peut rien faire se paie en confiance, pas en clics.
+                const sourcesReste =
+                  socleCharge === null
+                    ? []
+                    : socleCharge.moteur.sourcesDeReste(plan, { date, creneau }, reglages.convives)
+                // ⚠️ LE JOUR DE LA CUISSON, PAS « la veille ». Mesuré : 4 des 13 restes que le moteur
+                // pose à 3 repas/jour ont DEUX jours ou plus — la carte annonçait la veille pour tous.
+                const cuissonDuReste =
+                  entry === undefined || !entry.isLeftover || entry.recipeId === null
+                    ? undefined
+                    : plan.entries.find(
+                        (e) =>
+                          e.recipeId === entry.recipeId &&
+                          !e.isLeftover &&
+                          e.service !== 'accompagnement'
+                      )
                 return entry === undefined ? null : (
                   <Creneau
                     key={creneau}
@@ -508,6 +616,15 @@ export function Semaine() {
                     onChanger={() => changer({ date, creneau })}
                     onChoisir={() => setAChoisir({ date, creneau })}
                     onDehors={() => poserDehors({ date, creneau })}
+                    resteDepuis={
+                      cuissonDuReste === undefined ? null : formaterJour(cuissonDuReste.slot.date)
+                    }
+                    onRestes={sourcesReste.length === 0 ? null : () => setPourReste({ date, creneau })}
+                    onDefaireReste={
+                      gestePrecedent({ date, creneau }) === null
+                        ? null
+                        : () => defaireReste({ date, creneau })
+                    }
                     onDefaire={
                       platDAvant({ date, creneau }) === null
                         ? null
@@ -531,6 +648,17 @@ export function Semaine() {
           onPoser={(recipeId) => poser(aChoisir, recipeId)}
           onPoserHorsCatalogue={(libelle) => poserHorsCatalogue(aChoisir, libelle)}
           onFermer={() => setAChoisir(null)}
+        />
+      )}
+
+      {/* Même raison que ci-dessus : une seule fenêtre montée, jamais une par carte. */}
+      {pourReste !== null && socleCharge !== null && (
+        <ChoisirUnReste
+          libelleCreneau={`${formaterJour(pourReste.date)} · ${LIBELLE_CRENEAU[pourReste.creneau]}`}
+          sources={socleCharge.moteur.sourcesDeReste(plan, pourReste, reglages.convives)}
+          nomDe={nomDe}
+          onPoser={(recipeId) => poserReste(pourReste, recipeId)}
+          onFermer={() => setPourReste(null)}
         />
       )}
     </section>
@@ -832,6 +960,9 @@ function Creneau({
   onChoisir,
   onDehors,
   onDefaire,
+  resteDepuis,
+  onRestes,
+  onDefaireReste,
 }: {
   readonly entry: MealPlanEntry
   readonly nom: string | null
@@ -846,6 +977,12 @@ function Creneau({
   readonly onDehors: () => void
   /** Se raviser. `null` quand plus rien n'est en mémoire — après un rechargement, notamment. */
   readonly onDefaire: (() => void) | null
+  /** Le jour où le plat de ce reste a été cuisiné, déjà formaté, ou `null` si on ne le sait pas. */
+  readonly resteDepuis: string | null
+  /** Ouvrir le choix des restes servables ici. `null` quand aucun plat de la semaine ne l'est. */
+  readonly onRestes: (() => void) | null
+  /** Défaire le reste posé à la main. `null` quand plus rien n'est en mémoire. */
+  readonly onDefaireReste: (() => void) | null
 }) {
   // ⚠️ « VIDE » N'EST PLUS « SANS RECETTE » depuis la décision 51. Un plat préparé porte
   // `recipeId: null` ET un libellé : le créneau est REMPLI. S'en tenir à `recipeId === null` lui
@@ -908,9 +1045,23 @@ function Creneau({
 
       {/* Les états se disent AUSSI en toutes lettres — l'emoji seul serait invisible à un lecteur
           d'écran, et le cadenas de la maquette ne suffit pas à expliquer ce qu'il signifie. */}
+      {/* ⛔ LES DEUX FAITS, PAS UN CHOIX ENTRE EUX. Cette ligne disait `locked ? 'Gardé' : 'Reste…'` :
+          un reste qu'on garde perdait le mot « reste » exactement quand il compte, et la carte ne
+          disait plus pourquoi ce repas ne se cuisine pas. ⛔ ET ELLE NE DIT PLUS « la veille » AU
+          JUGÉ : le reste d'un plat de dimanche servi mercredi ne vient pas de la veille, et le dire
+          fait douter de tout le reste de la carte. */}
       {(entry.locked || entry.isLeftover) && (
         <p className="mt-1 text-mention font-medium text-accent-texte">
-          {entry.locked ? 'Gardé' : 'Reste du plat de la veille'}
+          {[
+            entry.isLeftover
+              ? resteDepuis === null
+                ? 'Reste d’un plat déjà cuisiné'
+                : `Reste du plat de ${resteDepuis}`
+              : null,
+            entry.locked ? 'Gardé' : null,
+          ]
+            .filter((mention) => mention !== null)
+            .join(' · ')}
         </p>
       )}
 
@@ -925,6 +1076,17 @@ function Creneau({
           autres boutons continuent de faire ce qu'ils faisaient — « Changer » retire l'étiquette
           en tirant un plat, « Choisir » en désignant le sien. */}
       <div className="mt-3 flex flex-wrap gap-2">
+        {/* ⛔ L'ANNULATION D'ABORD, comme pour « je mange dehors » : c'est le geste qu'on cherche
+            quand on regarde cette carte-là. Elle rend le plat ET relâche la cuisson. */}
+        {onDefaireReste !== null && entry.isLeftover && (
+          <button
+            type="button"
+            onClick={onDefaireReste}
+            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux"
+          >
+            Remettre le plat prévu
+          </button>
+        )}
         {onDefaire !== null && horsCatalogue !== null && (
           <button
             type="button"
@@ -969,6 +1131,19 @@ function Creneau({
             faire passer par la fenêtre de choix coûterait un clic pour ouvrir et un pour valider,
             et le champ y attend une frappe. Absent d'un créneau déjà marqué — il n'y aurait rien à
             marquer — et d'un créneau gardé, comme les trois autres boutons. */}
+        {/* ⚠️ ABSENT QUAND RIEN N'EST SERVABLE, et c'est la moitié du geste. Un bouton toujours là
+            qui ouvre une fenêtre vide apprend à ne plus cliquer dessus. Le moteur décide : un plat
+            cuisiné plus tôt, encore bon, servi à ce créneau-là, et en quantité suffisante. */}
+        {onRestes !== null && (
+          <button
+            type="button"
+            onClick={onRestes}
+            aria-haspopup="dialog"
+            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux"
+          >
+            Manger un reste
+          </button>
+        )}
         {horsCatalogue === null && (
           <button
             type="button"
@@ -981,6 +1156,55 @@ function Creneau({
         )}
       </div>
     </div>
+  )
+}
+
+/**
+ * Les restes servables sur un créneau, un par ligne — décision 78.
+ *
+ * ⚠️ CHAQUE LIGNE DIT LE JOUR DE LA CUISSON. Sans lui, deux plats se ressemblent et le choix se
+ * fait au hasard : « le curry » ne veut rien dire, « le curry de lundi » se décide.
+ *
+ * ⚠️ AUCUN CHIFFRE DE PORTIONS RESTANTES. Le moteur compte en repas entiers pour le nombre de
+ * convives du plan ; afficher « 2 portions » inviterait à une arithmétique que l'application ne
+ * refait pas dans l'assiette de l'utilisateur.
+ */
+function ChoisirUnReste({
+  libelleCreneau,
+  sources,
+  nomDe,
+  onPoser,
+  onFermer,
+}: {
+  readonly libelleCreneau: string
+  readonly sources: readonly SourceDeReste[]
+  readonly nomDe: (id: RecipeId) => string
+  readonly onPoser: (recipeId: RecipeId) => void
+  readonly onFermer: () => void
+}) {
+  return (
+    <Panneau titre={`Manger un reste — ${libelleCreneau}`} onFermer={onFermer}>
+      <p className="text-courant leading-relaxed text-texte-doux">
+        Ces plats sont cuisinés plus tôt dans la semaine, en quantité suffisante, et se gardent
+        jusque-là. Le repas prévu ici sera remplacé, et le jour de la cuisson sera gardé.
+      </p>
+      <ul className="mt-4 space-y-2">
+        {sources.map((source) => (
+          <li key={`${source.slot.date}|${source.slot.creneau}`}>
+            <button
+              type="button"
+              onClick={() => onPoser(source.recipeId)}
+              className="flex min-h-cta w-full flex-col items-start justify-center rounded-[--radius-carte] border border-bordure-forte bg-surface px-4 py-2 text-left"
+            >
+              <span className="text-lecture font-semibold text-texte">{nomDe(source.recipeId)}</span>
+              <span className="text-mention text-attenue">
+                cuisiné {formaterJour(source.slot.date)}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Panneau>
   )
 }
 
