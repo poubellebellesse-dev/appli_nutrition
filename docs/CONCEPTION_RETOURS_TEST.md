@@ -791,8 +791,8 @@ ce lot ne la remplace.
 
 ### Lot `retour-3` — « je mange dehors », et l'écran qui ne connaît pas la semaine ✅ **LIVRÉ le 2026-08-22**
 
-**Commit : à écrire.** Le code, les tests scellés et les documents partent ensemble ; le hash se pose
-dans le commit d'après, comme pour `retour-1b` et `retour-2`. ▶ Bilan et dette en fin de section.
+**Commit `166aa32`** — code, tests scellés et documents partis ENSEMBLE (`retour-2` les séparait) ;
+seul ce hash suit dans le commit d'après. ▶ Bilan et dette en fin de section.
 
 **Ce que l'auteur a demandé (2026-08-21, décision 76) :** ⛔ **ses mots n'ont été retranscrits nulle
 part.** Ni ici — ce document n'en portait qu'une ligne de tableau — ni dans `ETAT.md`, qui n'a que le

@@ -1,6 +1,6 @@
 {
   "avertissement": "CACHE DÉRIVÉ, jamais une source. La vérité est dans les fichiers listés sous « sources ». Toute édition à la main sera écrasée à la prochaine réconciliation (/plan). « genere_le » date la dernière lecture des documents ; les états ont pu bouger depuis, par /sceller ou /fin.",
-  "genere_le": "2026-08-22T15:53:57",
+  "genere_le": "2026-08-26T13:25:45",
   "sources": [
     "docs/FICHE_REPRISE.md",
     "docs/ETAT.md",
@@ -34,16 +34,18 @@
     {
       "id": "retour-2",
       "chantier": "retours test",
-      "titre": "le sélecteur d'exclusion s'ouvre aux 451 aliments",
+      "titre": "le sélecteur s'ouvre aux 451 aliments",
       "etat": "fait",
       "le": "2026-08-22",
-      "commit": "bdc028f"
+      "commit": "6aad49c"
     },
     {
       "id": "retour-3",
       "chantier": "retours test",
-      "titre": "« je mange dehors » étiquette le créneau",
-      "etat": "a_faire"
+      "titre": "« je mange dehors », et l'écran qui ne connaît pas la semaine",
+      "etat": "fait",
+      "le": "2026-08-22",
+      "commit": "166aa32"
     },
     {
       "id": "retour-4",
@@ -112,7 +114,7 @@
     {
       "id": "clips-7-gestes",
       "chantier": "clips",
-      "titre": "7 gestes sans aucun candidat (piquer, blanchir, essorer, effeuiller, gratiner, chinois, ecosser)",
+      "titre": "7 gestes sans candidat",
       "etat": "a_faire"
     },
     {
@@ -141,7 +143,7 @@
     {
       "id": "photos-source",
       "chantier": "photos recettes",
-      "titre": "bac épuisé, 19 recettes sans AUCUNE candidate — goulot = la source",
+      "titre": "il manque 201 photos, le bac est épuisé — 19 recettes n'ont AUCUNE candidate",
       "etat": "a_faire"
     },
     {
@@ -241,8 +243,7 @@
       "id": "rang 3",
       "chantier": "vin et repas",
       "titre": "recipe_pairing + règle miroir + lexique d'incitation au test bloquant",
-      "etat": "a_faire",
-      "bloque_par": "rang 2"
+      "etat": "a_faire"
     },
     {
       "id": "rang 4",
@@ -361,7 +362,8 @@
       "chantier": "régime personnalisé",
       "titre": "la direction « admettre »",
       "etat": "fait",
-      "le": "2026-08-11"
+      "le": "2026-08-11",
+      "commit": "98b452c"
     },
     {
       "id": "Lot E",
