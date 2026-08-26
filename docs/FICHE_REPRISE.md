@@ -19,7 +19,7 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
 ```
 
 ⚠️ **RELEVÉ DU 2026-08-26, APRÈS LE COMMIT DE `retour-3` (`166aa32`)** : `npm test` → **2 392
-passed / 0 failed (126 fichiers)** en 43,9 s · typecheck propre · `vite build` ✓ (3,03 s) ·
+passed / 0 failed (126 fichiers)** en 49,9 s · typecheck propre · `vite build` ✓ (3,21 s) ·
 `plan-stress` **20/20**. ⚠️ **`audit-mapping` non relancé** : catalogue inchangé depuis le 08-20
 (451 mappings, 9 à relire). ⚠️ **L'écart 2 376 → 2 392 est `retour-3` SEUL**, mesuré fichier par
 fichier : **+13** scellés (125 → 126) et **+3** au moteur (59 → 62).

@@ -119,15 +119,24 @@ describe('semaine — les réglages', () => {
     expect(Boolean(relation & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
   })
 
-  it('changer le nombre de jours réplanifie l’écran', async () => {
-    // ⚠️ NE VÉRIFIE PAS `readLatestPlan` ICI — voir le défaut rapporté en tête de fichier
-    // (id de plan collisionnant sur `startDate`) : la lecture la plus récente peut rendre
-    // l'ANCIEN plan quand seul le nombre de jours change. L'écran, lui, se met bien à jour ; ce
-    // test s'arrête volontairement là où la lecture cesse d'être fiable.
+  it('changer le nombre de jours réplanifie l’écran ET le plan enregistré', async () => {
+    // ⛔ CE TEST S'EST PRIVÉ DE `readLatestPlan` JUSQU'AU 2026-08-26, en se réclamant d'un défaut
+    // que l'en-tête de ce fichier donne pour CORRIGÉ (migration v7 : `savePlan` écrit
+    // `meal_plan.mis_a_jour_le`, et `readLatestPlan` trie dessus en premier). Le contournement a
+    // survécu à sa cause — et c'est LUI qui tombait : le 2026-08-26, sur quatre exécutions du même
+    // arbre, la plus lente (71,6 s d'horloge contre 46,3 s) a rendu « Expected 3, Received 7 ».
+    // Compter les `<article>` mesure le DOM des SEPT jours d'avant tant que le remplacement n'a
+    // pas eu lieu, et `waitFor` abandonnait à 1 s (`asyncUtilTimeout` — voir tests/setup-jsdom.ts).
+    // ▶ Le test suivant lit `readLatestPlan` sans difficulté : celui-ci n'avait aucune raison de
+    // s'en priver. On attend le PLAN ENREGISTRÉ, puis on vérifie que l'écran le suit.
     await composerSemaine()
     const champJours = screen.getByLabelText(/Nombre de jours/) as HTMLInputElement
     fireEvent.change(champJours, { target: { value: '3' } })
     fireEvent.blur(champJours)
+    await waitFor(() => {
+      const jours = new Set(readLatestPlan(baseCourante())!.entries.map((e) => e.slot.date))
+      expect(jours.size).toBe(3)
+    })
     await waitFor(() => expect(document.querySelectorAll('article').length).toBe(3))
   })
 
