@@ -42,6 +42,9 @@ dist-mesure/
 docs/_avant_decoupe_*/
 atelier/
 capture/
+#   `photo maquette/` : captures d'écran du téléphone, prises pour la passe à l'œil. 728 Ko qui
+#   n'ont rien à faire dans l'historique, et qu'un `git add -A` d'une autre lane embarquerait.
+photo maquette/
 .codeboarding/
 
 # état local de la garde (hooks) — ne se partage pas

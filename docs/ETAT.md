@@ -27,12 +27,15 @@ P1c lots 1-4), puis le chantier CONTENU, puis la planification : `suggestMeals` 
 **les 5 garde-fous**. Registre à **18 couches** (7 exclusion + 11 score, dont **8 implémentées** —
 `occasion`, `topic` et `cost` restent déclarées et non codées).
 
-**Suite exécutée le 2026-08-07, arbre COMPLET — lot mode cuisine et facettes `cuisine` inclus** :
-`npm test` → **1 669 passed / 0 failed (91 fichiers)** en 50,2 s · `npm run typecheck` propre ·
-`npx vite build` ✓ · `npm run engine:plan-stress` → **20/20, PLUS AUCUN SIGNAL** (le dernier,
-« végétalien + sans gluten », est éteint par le lot de 8 plats — voir §8). Les comptes du
-catalogue sont **en tête de §8 et nulle part ailleurs**. **La sortie réelle fait foi, pas cette
-ligne.**
+⛔ **LE RELEVÉ DES QUATRE COMMANDES NE VIT PLUS ICI** — il vivait ici ET dans `CLAUDE.md`
+§« Vérifier », et le doublon a dérivé sans que personne le voie : cette ligne annonçait encore
+**1 669 / 91** le 2026-08-26, quand l'arbre en portait **2 392 / 126**. Sept cent vingt-trois tests
+d'écart sur dix-neuf jours, dans le document désigné comme faisant foi sur l'état — la règle
+d'unicité de `CLAUDE.md` interdisait ce doublon, et voilà ce qu'il coûte. ▶ Le relevé fait foi dans
+**`CLAUDE.md` §« Vérifier »**, repris dans `FICHE_REPRISE.md`. Ce qui reste ici est un fait d'état,
+pas une mesure du jour : `engine:plan-stress` ne porte **PLUS AUCUN SIGNAL** — le dernier,
+« végétalien + sans gluten », est éteint par le lot de 8 plats (§8). Les comptes du **catalogue**
+sont **en tête de §8 et nulle part ailleurs**. **La sortie réelle fait foi, jamais un document.**
 *(Relevés antérieurs, conservés pour mémoire : 1 253 / 77 le 2026-08-03 avec 200 aliments ;
 572 / 44 le 2026-07-29. Le catalogue a plus que doublé entre les deux — attention aux mesures
 prises sur l'ancien, voir décisions 33 et 48.)*

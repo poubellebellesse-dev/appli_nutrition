@@ -62,9 +62,9 @@ questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RET
   clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.
 
 **Les chantiers TERMINÉS ne sont plus détaillés ici** — leur fait vit dans `ETAT.md` et dans leur
-document de chantier. En un coup d'œil : gestes illustrés (3 lots sur 4, le 2ᵉ arrêté par décision),
-clips (fait, 7 gestes sans candidat), photos (129 sur 330, bloqué sur la SOURCE), origine animale
-(66c, clos), réservation matériel (65c), retours test (`retour-1`, `retour-1b`, `retour-2`, `retour-3`).
+document de chantier. ⚠️ **Gestes illustrés : 3 sur 62 en base** — lot geste 2 arrêté à trois par
+la décision D5, TOUJOURS OUVERT, sa clause en demande 51. Clips récoltés (7 gestes sans candidat),
+photos (129/330, source), origine animale (66c), matériel (65c), retours test (1, 1b, 2, 3 livrés).
 
 **Ce qui reste à faire, et qui n'attend que d'être commencé :**
 
