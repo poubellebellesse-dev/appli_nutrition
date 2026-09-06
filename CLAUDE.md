@@ -42,11 +42,41 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-Dernier relevé, **suite réellement exécutée le 2026-08-26, arbre COMPLET, APRÈS le commit de
-`retour-4` (`7642492`). Les relevés précédents (`166aa32`, 2 392 / 126 ; `6aad49c`, 2 376 / 125 ;
-`3ce17d7`, 2 263 / 123) sont CONFIRMÉS, pas corrigés** :
-`npm test` → **2 411 passed / 0 failed (127 fichiers)** en 50,4 s · typecheck propre ·
-`vite build` ✓ (3,11 s) · `engine:plan-stress` **20/20**.
+⛔ **DERNIER RELEVÉ : L'ARBRE EST ROUGE, ET C'EST UNE DÉCISION DE L'AUTEUR, PAS UN DÉFAUT.** Suite
+réellement exécutée le **2026-08-27**, arbre COMPLET, après le code de `retour-5` (non commité) :
+`npm test` → **2 425 passed / 11 failed (2 436 tests, 128 fichiers)** en 59,7 s · typecheck propre ·
+`vite build` ✓ (3,02 s) · `engine:plan-stress` **20/20** · `audit-mapping` **451 / 9**, inchangé.
+Le catalogue passe à **339 recettes** (330 + 9 bases nues) et **1 575 étapes**.
+✅ **CE QUE `retour-5` AJOUTE A ÉTÉ COMPTÉ SEUL, PAS DÉDUIT** : `tests/scelles/retour-5.test.ts`, lancé
+à part, rend **24 tests** — c'est le 128ᵉ fichier — soit 2 411 + 24 = 2 435, plus **1** test ordinaire
+posé à côté de l'écran Aujourd'hui = **2 436**. Aucun autre fichier n'a changé de compte : **les 11
+rouges sont des tests QUI EXISTAIENT DÉJÀ et qui passaient.**
+⛔ **LES 11 ROUGES VIVENT DANS LES SIX FICHIERS SCELLÉS QUE LE BRIEF AVAIT ANNONCÉS** — 5 dans
+`65b`, 1 dans `65b-ecran`, 1 dans `65c`, 1 dans `gestes-champ-media`, 1 dans `photo-fiche-detail`,
+2 dans `retour-1`. **Dix scellent le nombre ABSOLU de recettes** — 330, mesuré avant les neuf bases ;
+le sceau interdit de les corriger dans le lot qui les fait rougir, c'est **`retour-5c`**.
+⚠️ **LE ONZIÈME N'EST PAS UN COMPTEUR, ET IL N'EST PAS PARTI AVEC LA CORRECTION QU'IL A
+DÉCLENCHÉE** : `retour-1` exige 6 propositions froides sur 10 sous « Froid », l'écran en rend **7 sur
+12**, et il les rend encore après.
+⛔ **LA PREMIÈRE EXPLICATION ÉCRITE ICI ÉTAIT FAUSSE, ET C'EST LA MESURE QUI L'A DIT.** En collectant
+la liste affichée carte par carte, sur les deux catalogues et des deux côtés du filtre : **aucune des
+neuf bases nues n'apparaît dans les douze propositions**. À 330 recettes la liste rend **8/12
+froides**, à 339 **7/12**, et **les douze plats diffèrent** — leur seule présence au catalogue
+réordonne la sélection. Mécanisme **non identifié** ; hypothèse non vérifiée : l'accesseur de
+similarité que reçoit `diversify` est construit sur le catalogue entier.
+✅ **LE TROISIÈME ENDROIT OÙ LA MACHINE DÉCIDE SEULE EXISTE BEL ET BIEN, ET IL EST FERMÉ** : l'écran
+Aujourd'hui écarte désormais les bases nues, comme le planificateur et « Changer ». Ce qui était faux,
+c'était de lui attribuer le rouge. ▶ `ETAT.md` §4 décision **82**, lot `retour-5d`.
+⚠️ **UN TEST SCELLÉ QUI NE VISAIT PAS LE LOT A ENCORE TROUVÉ LE DÉFAUT** — deuxième occurrence après
+`retour-3`. **Ne pas lire un rouge comme « un compteur à rebaser » avant d'avoir regardé ce qu'il
+mesure** : ici dix l'étaient, un ne l'était pas, et c'est le seul qui portait une information.
+⚠️ **13 ASSERTIONS PRÉVUES AU BRIEF, 11 TESTS ROUGES MESURÉS — CE N'EST PAS UN ÉCART** : le brief
+comptait des `expect` repérés à la lecture, vitest compte des `it`, et plusieurs `expect` vivent
+dans le même `it`. Deux unités différentes ne se soustraient pas.
+📦 **RELEVÉ PRÉCÉDENT, CONFIRMÉ ET NON CORRIGÉ** : 2026-08-26, après le commit de `retour-4`
+(`7642492`), **2 411 passed / 0 failed (127 fichiers)** en 50,4 s · typecheck propre · `vite build`
+✓ (3,11 s) · `engine:plan-stress` 20/20. Ainsi que `166aa32` (2 392 / 126), `6aad49c`
+(2 376 / 125) et `3ce17d7` (2 263 / 123).
 ✅ **CE QUE `retour-4` AJOUTE A ÉTÉ COMPTÉ SEUL, PAS DÉDUIT** : `tests/scelles/retour-4.test.tsx`,
 lancé à part, rend **19 tests** — c'est le 127ᵉ fichier — et **aucun autre fichier n'a bougé** :
 19 + 0 = 19, et 2 392 + 19 = 2 411. ⚠️ **Le piège `it.each` a été revérifié** : `PARCOURS` n'a pas

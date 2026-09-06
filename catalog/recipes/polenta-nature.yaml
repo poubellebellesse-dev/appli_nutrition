@@ -1,0 +1,72 @@
+# PLAT SIMPLE — une BASE NUE, pas une recette assaisonnée.
+#
+# `est_plat_simple: true` est un AXE SÉPARÉ de `service` : cette recette EST un accompagnement,
+# elle en porte le rang, mais elle ne fait pas un repas à elle seule. Le moteur l'écarte de la
+# passe de pis-aller de `pickForSlot` et de « Changer » — voir catalog/build.mjs (bloc
+# « Plats simples ») et docs/CONCEPTION_RETOURS_TEST.md, lot retour-5.
+#
+# AU PLUS 3 INGRÉDIENTS, refusé au build au-delà : « nature » est une forme, pas une intention.
+# L'eau n'est pas un aliment du catalogue (convention du poids sec), elle ne se déclare pas.
+id: polenta_nature
+nom: "Polenta nature"
+origine: maison
+description: >
+  De la polenta versée en pluie dans l'eau salée et remuée jusqu'à ce qu'elle prenne.
+temps_prep_min: 1
+temps_cuisson_min: 8
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+est_plat_simple: true
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.3
+  chaud_froid: 0.9
+  texture: creme
+
+ingredients:
+  - food_id: polenta
+    quantite_g: 250
+    unite_affichage: "250 g de polenta"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 5
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Porter à ébullition quatre fois le volume de la polenta en eau salée."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Verser la polenta en pluie sans cesser de remuer, pour éviter les grumeaux."
+    lexicon_ids: [fouetter]
+    timer_s: 480
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Servir aussitôt : elle fige en refroidissant."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: casserole
+    niveau: informatif
+  - code: fouet
+    niveau: informatif
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

@@ -139,7 +139,8 @@ function construireRequete(
   creneau: MealSlot,
   tempsDisponibleMin: Minutes | null,
   envie: CravingAxes | null,
-  graine: number
+  graine: number,
+  margePlatsSimples: number
 ): SuggestionRequest {
   return {
     profile,
@@ -162,7 +163,17 @@ function construireRequete(
     // faire varier `rankScoredCandidates`/`diversify` (§6.5 précision 7, §6.6 ENGINE). Une graine
     // codée en dur donnait TOUJOURS les mêmes 12 suggestions, quel que soit le nombre de rechargements.
     seed: graine,
-    limit: PROFONDEUR,
+    // ⛔ LA MARGE QUE COÛTE L'INTERDICTION DES BASES NUES (lot `retour-5`, découverte du
+    // 2026-08-27). L'écran écarte les plats simples À L'ARRIVÉE, après classement : le moteur ne
+    // sait pas les refuser, et c'est voulu — `estPlatSimple` n'est pas exprimable dans
+    // `SuggestionRequest` (décision 53, acquis n° 2). Sans cette marge, chaque base nue tirée dans
+    // les douze premières COÛTE une carte à l'écran.
+    // ⚠️ COMPTÉE SUR LE CATALOGUE, PAS ÉCRITE EN DUR. À la dixième base ajoutée, un `+ 9` codé en
+    // dur reperdrait la carte sans qu'aucun test ne le dise.
+    // ⚠️ CE N'EST PAS UN ÉLARGISSEMENT DU CLASSEMENT : `diversify` est un glouton qui retient tant
+    // que `retained.length < limit` — les douze premiers d'une passe à 21 sont exactement ceux
+    // d'une passe à 12. Même argument qu'au plan de semaine.
+    limit: PROFONDEUR + margePlatsSimples,
   }
 }
 
@@ -234,6 +245,21 @@ async function calculerVue(
   // `creneauChoisi` ne peut venir que d'un bouton généré depuis `creneaux` lui-même.
   const creneau = creneauChoisi ?? creneauDuMoment(new Date().getHours(), creneaux)
 
+  // ⛔ UNE BASE NUE N'EST PAS UN REPAS, ET CET ÉCRAN EST LE TROISIÈME ENDROIT OÙ LA MACHINE DÉCIDE
+  // SEULE (lot `retour-5`, découverte du 2026-08-27, trouvée par un test scellé qui ne la visait
+  // pas). Il présente une liste à retenir telle quelle, SANS accompagnement : y proposer du riz
+  // blanc nature, c'est proposer un dîner de riz blanc. `planning/plan-week.ts` et
+  // `planning/reroll-slot.ts` écartent déjà les plats simples ; ici la même interdiction s'écrit
+  // dans l'écran, faute de pouvoir s'écrire dans la requête.
+  // ⚠️ LE FILTRE LIT LE CHAMP, JAMAIS UN IDENTIFIANT. Une dixième base ajoutée au catalogue est
+  // écartée sans que cette ligne bouge.
+  const estPlatSimple = (id: RecipeId): boolean =>
+    socle.catalogue.recipes.get(id)?.estPlatSimple === true
+  let margePlatsSimples = 0
+  for (const recette of socle.catalogue.recipes.values()) {
+    if (recette.estPlatSimple) margePlatsSimples++
+  }
+
   const requete = construireRequete(
     etat,
     profil,
@@ -241,16 +267,20 @@ async function calculerVue(
     creneau,
     minutes === null ? null : min(minutes),
     reglages.envie,
-    graine
+    graine,
+    margePlatsSimples
   )
-  const resultat = socle.moteur.suggestMeals(requete)
+  const suggestions = socle.moteur
+    .suggestMeals(requete)
+    .suggestions.filter((suggestion) => !estPlatSimple(suggestion.recipeId))
+    .slice(0, PROFONDEUR)
 
   // Mémorisation : `similarRecipes` repasse toute la passe d'exclusion, et l'écran le redemanderait
   // à chaque rendu de React sinon.
   const cache = new Map<RecipeId, readonly RecipeId[]>()
 
   return {
-    suggestions: resultat.suggestions,
+    suggestions,
     nomDe: (id) => socle.catalogue.recipes.get(id as never)?.nom ?? id,
     // `?? null` et non `?? ''` : l'absence de photo est un CAS, pas une chaîne vide à tester. C'est
     // ce `null` qui déclenche l'aplat, sur 201 des 330 recettes.
@@ -265,7 +295,13 @@ async function calculerVue(
     prochesDe: (id) => {
       const connu = cache.get(id)
       if (connu !== undefined) return connu
-      const proches = socle.moteur.similarRecipes(requete, id, NB_PROCHES)
+      // Même interdiction sur les plats proches : ils se retiennent d'un geste, exactement comme
+      // la carte principale. La marge y sert la même raison, et `runSimilarRecipes` tronque lui
+      // aussi APRÈS classement.
+      const proches = socle.moteur
+        .similarRecipes(requete, id, NB_PROCHES + margePlatsSimples)
+        .filter((proche) => !estPlatSimple(proche))
+        .slice(0, NB_PROCHES)
       cache.set(id, proches)
       return proches
     },

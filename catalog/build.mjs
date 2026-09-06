@@ -873,6 +873,39 @@ function validateCatalog({ foods, lexicon, recipes, tips, evidence, equipment = 
       }
     }
 
+    // --- Plats simples ------------------------------------------------------------------------
+    //
+    // ⛔ TROIS FORMES REFUSEES, ET AUCUNE N'EST UNE PRUDENCE.
+    //   1. Un service autre qu'accompagnement : un plat simple EST un accompagnement. L'admettre
+    //      en 'plat' le rendrait eligible a la premiere passe de pickForSlot, ou peutRemplirSeul
+    //      le laisserait porter un diner -- exactement ce que le lot interdit.
+    //   2. types_repas vide : contrairement a une sauce, un plat simple doit etre dans
+    //      recipesBySlot, sinon pickAccompagnement ne le voit pas non plus. Invisible partout.
+    //   3. Plus de 3 ingredients : « nature » est une FORME, pas une intention. Sans ce refus
+    //      l'etiquette derive vers n'importe quel accompagnement assaisonne, et l'interdiction du
+    //      moteur se met a retirer des creneaux qu'elle n'aurait jamais du toucher.
+    if (recipe.est_plat_simple) {
+      if (recipe.service !== 'accompagnement') {
+        errors.push(
+          `Recette '${recipe.id}' : un plat simple porte 'service: accompagnement' (il en EST un, ` +
+            `il ne peut pas porter un repas seul) — trouvé '${recipe.service ?? 'null'}'`
+        )
+      }
+      if ((recipe.types_repas ?? []).length === 0) {
+        errors.push(
+          `Recette '${recipe.id}' : un plat simple ne peut pas porter 'types_repas: []' — il ` +
+            `n'entrerait dans aucun créneau de recipesBySlot, donc pas même comme accompagnement`
+        )
+      }
+      const nbIngredients = (recipe.ingredients ?? []).length
+      if (nbIngredients > 3) {
+        errors.push(
+          `Recette '${recipe.id}' : un plat simple porte au plus 3 ingrédients (« nature » est une ` +
+            `forme, pas une intention) — trouvé ${nbIngredients}`
+        )
+      }
+    }
+
     const saucesVues = new Set()
     for (const sauceId of recipe.sauces ?? []) {
       if (saucesVues.has(sauceId)) {
@@ -1157,6 +1190,22 @@ CREATE TABLE recipe (
   --    ne peut pas la proposer au diner meme s'il le voulait. Meme parti que requiredFoodIds dans
   --    MealContext (acquis 2 du CLAUDE.md). Verifie au build, plus bas.
   est_sauce INTEGER NOT NULL DEFAULT 0 CHECK (est_sauce IN (0, 1)),
+  -- est_plat_simple : cette recette est une BASE NUE (riz blanc nature, pommes de terre vapeur).
+  --   Elle porte service='accompagnement' -- c'en est un -- mais elle ne fait pas un repas seule.
+  --
+  -- ⛔ AXE SEPARE DE service, MEME ARGUMENT QUE est_sauce : un plat simple n'ouvre aucun rang
+  --    nouveau dans l'ordre de service francais, il se sert AU rang de l'accompagnement. Ajouter
+  --    'plat_simple' a l'union CourseKind l'aurait rendu soit present dans COURSE_ORDER (faux),
+  --    soit saute en silence par tout code qui itere cet ordre.
+  --
+  -- ⚠️ MAIS LA GARANTIE N'EST PAS DE LA MEME NATURE QUE CELLE DE LA SAUCE. Une sauce est hors
+  --    d'atteinte du moteur par sa FORME (types_repas vide, donc absente de recipesBySlot). Un
+  --    plat simple, lui, DOIT etre dans recipesBySlot : pickAccompagnement passe par suggest, qui
+  --    part de recipesBySlot.get(creneau). Un plat simple invisible la serait invisible partout,
+  --    accompagnement compris -- donc inutile. « Il ne porte jamais un repas seul » est donc une
+  --    REGLE DU MOTEUR (passe de pis-aller de pickForSlot, et rerollSlot), pas une forme.
+  --    Le build refuse ici les trois formes fausses -- voir plus haut, bloc « Plats simples ».
+  est_plat_simple INTEGER NOT NULL DEFAULT 0 CHECK (est_plat_simple IN (0, 1)),
   -- porte_deja_une_sauce : TRI-ETAT. 1 = le plat vient deja avec sa sauce (blanquette, bourguignon,
   --   curry) ; 0 = non, meme si la derivation croit le contraire ; NULL = laisser deriver.
   --
@@ -1569,8 +1618,8 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment = []
         id, nom, origine, description, temps_prep_min, temps_cuisson_min, difficulte,
         portions_base, image_path, teste_le, types_repas, saison_mois, envergure,
         conservation_jours, axe_sucre_sale, axe_leger_consistant, axe_chaud_froid, axe_texture,
-        service, piquant, est_sauce, porte_deja_une_sauce
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        service, piquant, est_sauce, est_plat_simple, porte_deja_une_sauce
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     const insertRecipeSauce = db.prepare(
       'INSERT INTO recipe_sauce (recipe_id, sauce_recipe_id) VALUES (?, ?)'
@@ -1621,6 +1670,7 @@ function buildDatabase({ foods, lexicon, recipes, tips, evidence, equipment = []
         recipe.service ?? null,
         recipe.piquant ?? null,
         recipe.est_sauce ? 1 : 0,
+        recipe.est_plat_simple ? 1 : 0,
         // `?? null` et pas `? 1 : 0` : le tri-etat perdrait son NULL (« personne n'a tranche »).
         recipe.porte_deja_une_sauce === undefined || recipe.porte_deja_une_sauce === null
           ? null

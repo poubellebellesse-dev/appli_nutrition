@@ -146,6 +146,7 @@ export function makeRecipe(
     sources: [],
     testeLe: null,
     estSauce: false,
+    estPlatSimple: false,
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: overrides.equipements ?? [],

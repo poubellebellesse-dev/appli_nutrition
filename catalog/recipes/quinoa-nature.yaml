@@ -1,0 +1,72 @@
+# PLAT SIMPLE — une BASE NUE, pas une recette assaisonnée.
+#
+# `est_plat_simple: true` est un AXE SÉPARÉ de `service` : cette recette EST un accompagnement,
+# elle en porte le rang, mais elle ne fait pas un repas à elle seule. Le moteur l'écarte de la
+# passe de pis-aller de `pickForSlot` et de « Changer » — voir catalog/build.mjs (bloc
+# « Plats simples ») et docs/CONCEPTION_RETOURS_TEST.md, lot retour-5.
+#
+# AU PLUS 3 INGRÉDIENTS, refusé au build au-delà : « nature » est une forme, pas une intention.
+# L'eau n'est pas un aliment du catalogue (convention du poids sec), elle ne se déclare pas.
+id: quinoa_nature
+nom: "Quinoa nature"
+origine: maison
+description: >
+  Du quinoa rincé puis cuit à l'eau salée, jusqu'à ce que le germe se détache en spirale.
+temps_prep_min: 2
+temps_cuisson_min: 15
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+est_plat_simple: true
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.2
+  chaud_froid: 0.8
+  texture: croquant
+
+ingredients:
+  - food_id: quinoa
+    quantite_g: 250
+    unite_affichage: "250 g de quinoa"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 4
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Rincer le quinoa à l'eau froide : c'est ce qui retire son amertume."
+    lexicon_ids: [rincer]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Le cuire dans deux fois son volume d'eau salée, à couvert, jusqu'à absorption."
+    lexicon_ids: [fremir]
+    timer_s: 900
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Laisser reposer à couvert, puis égrener."
+    lexicon_ids: [reserver]
+    timer_s: 300
+    timer_type: repos
+
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: casserole
+    niveau: informatif
+  - code: passoire
+    niveau: informatif
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

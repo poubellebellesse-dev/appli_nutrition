@@ -80,6 +80,23 @@ export function rerollSlot(
   const exclus = new Set<RecipeId>(opts.excludeRecipeIds ?? [])
   for (const entree of plan.entries) if (entree.recipeId !== null) exclus.add(entree.recipeId)
 
+  // ⛔ LES BASES NUES NE PORTENT PAS UN REPAS, ICI NON PLUS (lot `retour-5`). « Changer »
+  // reconstruit sa PROPRE requête et ne filtre aucun service : corriger le seul planificateur
+  // aurait laissé la promesse du lot fausse dans le produit livré. Sur un vivier épuisé — refus
+  // répété jusqu'au bout — le tirage suivant avait neuf bases nues sous la main et posait le riz
+  // blanc SEUL sur le créneau. MESURÉ le 2026-08-27 : 9 tirages fautifs sur une fenêtre de 2 jours.
+  // ⚠️ UN CRÉNEAU VIDE EST LE BON RÉSULTAT quand il ne reste que des bases nues : c'est déjà ce
+  // que fait cette fonction quand plus rien ne passe, et §7.2 prévoit l'état Vide.
+  // ⛔ LE FILTRE LIT LE CHAMP, JAMAIS L'IDENTIFIANT — les neuf finissent toutes par `_nature` ou
+  // `_vapeur`, et une expression régulière mentirait à la dixième base ajoutée au catalogue.
+  // ⚠️ L'ACCOMPAGNEMENT, LUI, RESTE OUVERT AUX BASES NUES : `pickAccompagnement` est appelé plus
+  // bas et ne passe pas par ce filtre. C'est tout le sujet de la catégorie — le riz à côté du
+  // poulet, jamais à la place.
+  const estPlatSimple = (recipeId: RecipeId): boolean =>
+    catalog.recipes.get(recipeId)?.estPlatSimple === true
+  let margePlatsSimples = 0
+  for (const recette of catalog.recipes.values()) if (recette.estPlatSimple) margePlatsSimples++
+
   const requete: SuggestionRequest = {
     // Même transmission que `planWeek` : « Changer » ne doit pas reproposer ce que la tolérance
     // déclarée écarte, sinon le réglage ne tiendrait qu'au premier tirage.
@@ -100,7 +117,10 @@ export function rerollSlot(
     activeTopics: contexte.activeTopics,
     // Même raison que dans `planWeek` : sans une fenêtre assez large, tous les candidats rendus
     // peuvent être déjà exclus et le créneau se viderait sans nécessité.
-    limit: exclus.size + 1,
+    // ⚠️ PLUS LA MARGE DES BASES NUES : elles sont écartées À L'ARRIVÉE, après le classement, donc
+    // elles consomment des rangs sous cette borne. Sans la marge, un créneau se viderait alors
+    // qu'un vrai plat attendait juste derrière — même piège que dans `planWeek`.
+    limit: exclus.size + 1 + margePlatsSimples,
     skipDiversification: true,
     seed: opts.seed ?? contexte.seed,
   }
@@ -108,10 +128,10 @@ export function rerollSlot(
   let choisi: RecipeId | null = null
   try {
     for (const suggestion of suggest(requete).suggestions) {
-      if (!exclus.has(suggestion.recipeId)) {
-        choisi = suggestion.recipeId
-        break
-      }
+      if (exclus.has(suggestion.recipeId)) continue
+      if (estPlatSimple(suggestion.recipeId)) continue
+      choisi = suggestion.recipeId
+      break
     }
   } catch (error) {
     if (!(error instanceof NoViableRecipeError)) throw error

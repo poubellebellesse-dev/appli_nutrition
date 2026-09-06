@@ -161,6 +161,8 @@ interface RecipeRow {
   readonly piquant: number | null
   readonly teste_le: string | null
   readonly est_sauce: number
+  /** Base nue servie en accompagnement. Voir `Recipe.estPlatSimple`. */
+  readonly est_plat_simple: number
   /** Tri-état : `null` = à dériver, jamais « non ». Voir `Recipe.porteDejaUneSauce`. */
   readonly porte_deja_une_sauce: number | null
 }
@@ -670,6 +672,7 @@ function loadRecipes(db: SqlSource): Map<RecipeId, Recipe> {
       })),
       testeLe: row.teste_le,
       estSauce: row.est_sauce !== 0,
+      estPlatSimple: row.est_plat_simple !== 0,
       // ⚠️ `!== 0` SEUL SERAIT FAUX ICI : `null !== 0` vaut `true`, donc un plat dont personne n'a
       // tranché serait lu « il a déjà sa sauce » et ne s'en verrait jamais proposer. Le tri-état se
       // teste sur `null` d'abord — c'est tout l'intérêt d'avoir trois valeurs plutôt que deux.

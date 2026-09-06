@@ -1,0 +1,72 @@
+# PLAT SIMPLE — une BASE NUE, pas une recette assaisonnée.
+#
+# `est_plat_simple: true` est un AXE SÉPARÉ de `service` : cette recette EST un accompagnement,
+# elle en porte le rang, mais elle ne fait pas un repas à elle seule. Le moteur l'écarte de la
+# passe de pis-aller de `pickForSlot` et de « Changer » — voir catalog/build.mjs (bloc
+# « Plats simples ») et docs/CONCEPTION_RETOURS_TEST.md, lot retour-5.
+#
+# AU PLUS 3 INGRÉDIENTS, refusé au build au-delà : « nature » est une forme, pas une intention.
+# L'eau n'est pas un aliment du catalogue (convention du poids sec), elle ne se déclare pas.
+id: pates_nature
+nom: "Pâtes nature"
+origine: maison
+description: >
+  Des spaghettis cuits à l'eau salée et égouttés. Rien d'autre.
+temps_prep_min: 1
+temps_cuisson_min: 10
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+est_plat_simple: true
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.3
+  chaud_froid: 0.9
+  texture: ferme
+
+ingredients:
+  - food_id: pates_spaghetti
+    quantite_g: 400
+    unite_affichage: "400 g de spaghettis"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 10
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Porter une grande quantité d'eau à ébullition et la saler franchement."
+    lexicon_ids: []
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Y plonger les spaghettis et les cuire le temps indiqué sur le paquet, en remuant au début."
+    lexicon_ids: [fremir]
+    timer_s: 600
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Égoutter sans rincer, pour garder l'amidon qui fera tenir une sauce plus tard."
+    lexicon_ids: [egoutter]
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: marmite
+    niveau: informatif
+  - code: passoire
+    niveau: informatif
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

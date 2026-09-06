@@ -96,6 +96,7 @@ function recipeWithOneIngredient(id: string, foodId: string): Recipe {
     sources: [],
     testeLe: null,
     estSauce: false,
+    estPlatSimple: false,
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: [],

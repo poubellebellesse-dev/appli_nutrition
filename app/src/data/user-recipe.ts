@@ -224,6 +224,14 @@ export function versRecette(stockee: StoredUserRecipe, foods: ReadonlyMap<FoodId
     // L'exposer aussi ici créerait un second endroit où dire la même chose, avec deux réponses
     // possibles et aucune règle pour les départager.
     estSauce: stockee.estSauce === true,
+    // ⚠️ TOUJOURS `false`, ET C'EST UN CHOIX, PAS UN OUBLI (lot `retour-5`). « Plat simple » est
+    // une catégorie ÉDITORIALE du catalogue, vérifiée au build (au plus 3 ingrédients, servi en
+    // accompagnement, visible aux deux créneaux) ; aucune question n'est posée ici, donc aucune
+    // recette perso ne la porte. La conséquence est voulue : une variante de riz nature reste un
+    // accompagnement ORDINAIRE, à qui le pis-aller du moteur reste ouvert — c'est la décision du
+    // 2026-07-28 (« un accompagnement PEUT être servi seul »), que `retour-5` n'a rétrécie que
+    // pour les neuf bases du catalogue.
+    estPlatSimple: false,
     porteDejaUneSauce: null,
     sauceIds: [],
     equipements: [],

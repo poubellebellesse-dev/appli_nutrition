@@ -1136,6 +1136,7 @@ Concept ─▶ Architecture ─▶ Moteur ─▶ Analyse marché ─▶ Design U
 | 79 | **Que montre l'écran Aujourd'hui quand les filtres durs, empilés aux contraintes existantes, ne laissent AUCUNE recette ?** | ⏳ **OUVERTE le 2026-08-21, née de la ~~71~~ et posée AVANT le lot qui en dépend.** Les trois axes seuls ne vident jamais le catalogue (mesuré : 8 combinaisons, minimum 8 recettes). Mais ils s'ajoutent à six exclusions déjà dures, et **l'écran ne peut pas répondre « rien » à quelqu'un qui a faim**. ▶ Trois issues, non départagées : **(1)** relâcher l'axe le moins engageant et le dire (« aucun plat chaud et léger — voici des plats chauds ») ; **(2)** refuser la combinaison **au moment du clic**, en grisant ce qui ne mène nulle part ; **(3)** laisser le vide et proposer de retirer un filtre. ⚠️ **La (2) est la plus honnête et la plus chère** : elle suppose de connaître le nombre de résultats **avant** que l'utilisateur clique, donc de recalculer à chaque pastille. ⛔ **Ce qu'aucune des trois ne doit faire : rendre un plat qui ne respecte pas le filtre sans le dire.** C'est la ~~71~~ prise à l'envers, et l'utilisateur l'a signalée comme un défaut (« les filtres ne marchent pas ??? chaud = salade »). |
 | 80 | **À quel geste la déclaration de frigo est-elle dépensée ?** | ⏳ **OUVERTE le 2026-08-21, née de la ~~74~~.** La déclaration vaut pour **un** repas ; reste à dire lequel, c'est-à-dire quand elle s'efface. ▶ Deux issues : **« J'ai choisi ce plat »** (simple, couvre le cas normal, mais efface avant qu'on ait cuisiné — quelqu'un qui choisit puis revient a perdu sa saisie) ou **la sortie du mode cuisine** (colle au repas réellement préparé, mais ne couvre pas les plats qu'on ne cuisine pas au pas-à-pas). ⚠️ **La première a été proposée par l'assistant et n'a PAS été tranchée par l'utilisateur** — elle est écrite ici comme piste, pas comme choix. |
 | ~~81~~ | **Le tutoriel est-il neuf visites séparées, ou une seule qui traverse les menus ?** | **TRANCHÉE le 2026-08-21 (décision utilisateur) : UNE SEULE, qui entre dans chaque menu.** Dans ses mots : « montrer les différents menus · premier menu → Aujourd'hui · quand on clique sur le menu Aujourd'hui, on continue le menu mais spécialement pour le menu Aujourd'hui · puis on enchaîne sur le menu Semaine etc. » ⛔ **CETTE DÉCISION EST NÉE D'UNE PUCE DE BRIEF QUI DÉCRIVAIT AUTRE CHOSE QU'ELLE-MÊME.** Le lot `retour-1` portait « le tutoriel commence par Semaine, pas par Aujourd'hui » ; **mesuré, il commençait DÉJÀ par Semaine** — le parcours d'accueil enchaîne barre du bas → Semaine → Courses → Recettes → Savoir et n'a aucune étape « Aujourd'hui ». Une première interprétation (réordonner la liste « Revoir un tutoriel » de Réglages) a été proposée par l'assistant puis **écartée par l'auteur** : ce n'était pas ce qu'il visait. ✅ **Ce qui existe déjà** : les neuf parcours sont écrits (`ui/parcours.ts`) et le type d'étape `route` fait déjà avancer sur navigation — il manque l'ENCHAÎNEMENT, pas le contenu. ⚠️ **Le risque est dans `premierIndexValide` (`ui/visite.tsx`), qui écarte en silence toute étape dont la cible est absente du DOM à l'instant où elle arrive** : si l'écran suivant n'est pas encore rendu, toutes ses étapes sautent et le tutoriel se termine sans rien dire. ▶ Détail, forme visée et « ce qu'il reste à mesurer » : `CONCEPTION_RETOURS_TEST.md`, lot `retour-1b`. Les neuf parcours individuels restent lançables un par un — ce lot ajoute un chemin, il n'en supprime aucun. ✅ **LIVRÉE le 2026-08-21 (`42491ea`), et LE RISQUE ANNONCÉ CI-DESSUS S'EST PRODUIT POUR DE VRAI** : le tutoriel s'arrêtait après le premier écran, 7 clauses scellées sur 10 passaient quand même. La réponse n'a pas été de desserrer le garde-fou mais de séparer les deux sens d'une cible absente — détail en §3. |
+| 82 | **Que fait-on de la clause « 6 froides sur 10 » de `retour-1`, que la croissance du catalogue fait tomber à 7/12 ?** | ⏳ **OUVERTE le 2026-08-27, et REFORMULÉE le même jour : la première version de cette ligne portait une cause FAUSSE, corrigée par la mesure.** ✅ **CE QUI EST TRANCHÉ ET CODÉ (piste (a), décision de l'auteur, 2026-08-27)** : « Aujourd'hui » est bien le **troisième** endroit où la machine décide seule — il appelle `suggestMeals` et présente sa liste comme des repas à retenir, sans accompagnement. Il écarte désormais les plats simples **à l'arrivée**, avec la même marge de borne qu'au planificateur, et **les plats proches** avec eux ; un test ordinaire posé à côté de l'écran le garde — pas un test scellé, `tests/scelles/` étant fermé. Les pistes **(b)** — une option de requête réservée au placement automatique — et **(c)** — ne rien faire — sont écartées : (b) rouvrait ce que la ~~53~~ a fermé, et `estPlatSimple` reste inexprimable dans `SuggestionRequest`, par dessein (acquis n° 2). ⛔ **ET CELA NE REND PAS `retour-1` VERT — LA CAUSE QUE CETTE LIGNE ANNONÇAIT ÉTAIT FAUSSE.** Mesuré le 2026-08-27 en collectant la liste affichée carte par carte, sur les deux catalogues et des deux côtés du filtre : **aucune des neuf bases nues ne figure dans les douze propositions sous « Froid »**, ni avant le filtre ni après. À **330** recettes la liste rend **8/12 froides** ; à **339**, **7/12** — et les douze plats ne sont ni les mêmes ni dans le même ordre, **alors qu'aucune des neuf n'y entre**. Leur seule présence au catalogue réordonne la sélection. ⚠️ **MÉCANISME NON IDENTIFIÉ, ET IL NE FAUT PAS L'ÉCRIRE COMME UN FAIT.** Hypothèse non vérifiée : `diversify` reçoit un accesseur de similarité construit sur le catalogue ENTIER, et neuf recettes de plus déplacent les pénalités de proximité à chaque tour du glouton. ▶ **Ce qui reste à trancher** : **(a)** lever le sceau de `retour-1` et rebaser le plancher, **(b)** un lot moteur sur le classement d'envie, **(c)** accepter le rouge. C'est le lot `retour-5d`. |
 
 ---
 
@@ -1269,6 +1270,47 @@ appli_nutrition/
 ## 8. Dette connue
 
 Tenue ici et **nulle part ailleurs** : `FICHE_REPRISE.md` ne fait qu'y renvoyer.
+
+### Ce que le lot `retour-5` laisse derrière lui (2026-08-27)
+
+⛔ **L'ARBRE EST ROUGE, ET C'EST UNE DÉCISION DE L'AUTEUR, PAS UN OUBLI.** Les neuf recettes portent
+le catalogue de 330 à **339**, et **six fichiers de tests scellés d'autres lots scellent le nombre
+ABSOLU de recettes**. Le sceau interdit de les corriger dans ce lot : c'est `retour-5c`, tranché hors
+périmètre le 2026-08-27. ✅ **LES SIX FICHIERS ANNONCÉS SONT EXACTEMENT LES SIX QUI ROUGISSENT** — 5 tests dans `65b`, 1 dans
+`65b-ecran`, 1 dans `65c`, 1 dans `gestes-champ-media`, 1 dans `photo-fiche-detail`, 2 dans
+`retour-1`. ⚠️ **NE PAS LIRE « 13 prévues, 11 mesurées » COMME UN ÉCART : les deux nombres ne
+comptent pas la même chose.** Le brief comptait des ASSERTIONS (`expect`) repérées à la lecture ;
+vitest compte des TESTS (`it`), et plusieurs assertions voisines vivent dans le même `it`.
+▶ **Sur ces 11, dix sont des compteurs — et un seul ne l'est pas.**
+
+⛔ **UN ONZIÈME ROUGE N'EST PAS UN COMPTEUR, ET IL N'EST PAS PARTI NON PLUS AVEC LA CORRECTION
+QU'IL A DÉCLENCHÉE.** L'écran « Aujourd'hui » écarte désormais les bases nues, comme le planificateur
+et « Changer » : la suite reste à **11 rouges**, et le onzième est le même.
+✅ **LA CAUSE A ÉTÉ MESURÉE, PAS SUPPOSÉE, ET LA PREMIÈRE EXPLICATION ÉTAIT FAUSSE** : aucune des neuf
+bases n'apparaît dans les douze propositions sous « Froid », ni avant le filtre ni après — leur seule
+présence au catalogue réordonne la sélection (**8/12** froides à 330 recettes, **7/12** à 339, et les
+douze plats diffèrent dans les deux cas).
+⚠️ **CE QUE ÇA APPREND** : une explication plausible posée AVANT la mesure a survécu à deux documents
+et à un relevé. Le rouge disait « une base nue passe devant un plat froid » ; il disait en fait
+« neuf recettes de plus changent le classement sans jamais y entrer ». ▶ Décision **82** de §4, lot
+`retour-5d`.
+
+⚠️ **LA MARGE DE BORNE EST UN COÛT PERMANENT, PAS UN RÉGLAGE.** `planWeek` et `rerollSlot` demandent
+désormais `+ margePlatsSimples` candidats de plus, parce que les bases nues sont écartées **à
+l'arrivée**, après le classement. Sans elle, un créneau se perd : **mesuré, 9/14 au lieu de 10/14**.
+La marge est **comptée sur le catalogue** à chaque appel, jamais écrite en dur — un `+ 9` codé en dur
+reperdrait le créneau à la dixième base sans qu'aucun test ne le dise. ⚠️ **Ce qui n'est PAS mesuré :
+ce que coûte ce classement élargi en temps de calcul.** `engine:plan-stress` rend 20/20 et n'a pas de
+budget de durée — il ne dirait rien d'un ralentissement.
+
+⚠️ **LES NEUF BASES SONT TOUTES VÉGÉTALIENNES ET TOUTES CHAUDES**, et aucune n'a de photo. Elles
+gonflent donc de 9 le compte des recettes sans photo (201 → 210) et déplacent l'équilibre
+chaud/froid du catalogue — c'est ce que `retour-1` a détecté.
+
+⚠️ **`recetteDepuisStockee` pose `estPlatSimple: false` en dur, et c'est un choix.** « Plat
+simple » est une catégorie ÉDITORIALE, vérifiée au build ; une recette écrite par l'utilisateur ne
+passe par aucun build. Une variante de riz nature saisie à la main reste donc un accompagnement
+ORDINAIRE, à qui le pis-aller du moteur reste ouvert.
 
 ### Ce que le lot `retour-4` laisse derrière lui (2026-08-26)
 

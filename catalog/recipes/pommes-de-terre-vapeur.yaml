@@ -1,0 +1,72 @@
+# PLAT SIMPLE — une BASE NUE, pas une recette assaisonnée.
+#
+# `est_plat_simple: true` est un AXE SÉPARÉ de `service` : cette recette EST un accompagnement,
+# elle en porte le rang, mais elle ne fait pas un repas à elle seule. Le moteur l'écarte de la
+# passe de pis-aller de `pickForSlot` et de « Changer » — voir catalog/build.mjs (bloc
+# « Plats simples ») et docs/CONCEPTION_RETOURS_TEST.md, lot retour-5.
+#
+# AU PLUS 3 INGRÉDIENTS, refusé au build au-delà : « nature » est une forme, pas une intention.
+# L'eau n'est pas un aliment du catalogue (convention du poids sec), elle ne se déclare pas.
+id: pommes_de_terre_vapeur
+nom: "Pommes de terre vapeur"
+origine: maison
+description: >
+  Des pommes de terre cuites à la vapeur, salées à la sortie du panier.
+temps_prep_min: 5
+temps_cuisson_min: 25
+difficulte: 1
+portions_base: 4
+image_path: null
+types_repas: [dejeuner, diner]
+service: accompagnement
+est_plat_simple: true
+piquant: 0
+saison_mois: []
+envergure: quotidien
+conservation_jours: 2
+axes:
+  sucre_sale: -0.5
+  leger_consistant: 0.3
+  chaud_froid: 0.9
+  texture: fondant
+
+ingredients:
+  - food_id: pomme_de_terre
+    quantite_g: 800
+    unite_affichage: "800 g de pommes de terre"
+    optionnel: false
+  - food_id: sel_fin
+    quantite_g: 3
+    unite_affichage: "1 cuillère à café"
+    optionnel: false
+
+etapes:
+  - ordre: 1
+    texte: "Éplucher les pommes de terre et les couper en morceaux réguliers."
+    lexicon_ids: [eplucher, detailler]
+    timer_s: null
+    timer_type: null
+  - ordre: 2
+    texte: "Les disposer dans le panier vapeur au-dessus de l'eau bouillante, puis couvrir."
+    lexicon_ids: [vapeur]
+    timer_s: 1500
+    timer_type: cuisson
+  - ordre: 3
+    texte: "Vérifier la cuisson à la pointe du couteau, puis saler à la sortie."
+    lexicon_ids: [piquer]
+    timer_s: null
+    timer_type: null
+
+equipements:
+  - code: plaque_cuisson
+    niveau: requis
+  - code: cuit_vapeur
+    niveau: requis
+  - code: econome
+    niveau: informatif
+
+facettes:
+  - facette: regime
+    valeur: vegetalien
+  - facette: style
+    valeur: quotidien

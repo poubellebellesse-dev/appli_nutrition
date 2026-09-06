@@ -112,7 +112,8 @@ function slotRequest(
   creneau: MealSlot,
   history: MealHistory,
   nutrientTarget: NutrientVector | undefined,
-  nombreDeCreneaux: number
+  nombreDeCreneaux: number,
+  margePlatsSimples: number
 ): SuggestionRequest {
   return {
     // ⚠️ OMISE, PAS POSÉE À `undefined` — `exactOptionalPropertyTypes` est actif, et surtout c'est
@@ -144,7 +145,10 @@ function slotRequest(
     //
     // `limit` couvre le pire cas — tout ce qui peut déjà avoir été placé, plus un. Garantit qu'un
     // candidat libre apparaît s'il en existe un.
-    limit: nombreDeCreneaux + 1,
+    //
+    // ⚠️ PLUS LA MARGE DES PLATS SIMPLES (lot `retour-5`) : `pickForSlot` les écarte À L'ARRIVÉE,
+    // après le classement, donc ils consomment des rangs sous cette borne. Voir `planWeek`.
+    limit: nombreDeCreneaux + 1 + margePlatsSimples,
     // La diversification MMR est INUTILE ici et nuisible : elle réordonne un ensemble dont on ne
     // prend qu'un élément, et la variété du plan est déjà assurée autrement — l'historique de
     // travail fait baisser le score des plats récents, `placedRecipeIds` interdit le doublon.
@@ -225,6 +229,19 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
   }
 
   const dailyReference = resolveReferenceIntakes(req.profile, catalog)
+  // ⛔ LA MARGE QUE COÛTE L'INTERDICTION DES PLATS SIMPLES, ET ELLE N'EST PAS UN CONFORT (lot
+  // `retour-5`). Une base nue reste dans `recipesBySlot`, donc dans ce que `suggest` CLASSE ; c'est
+  // `pickForSlot` qui l'écarte, à l'arrivée. Sans cette marge, les neuf bases occupent des rangs
+  // sous la borne `limit` et mangent le budget : MESURÉ le 2026-08-27, la configuration
+  // d'exclusion de la clause 6a de `retour-5` retombait à **9/14** créneaux remplis là où elle en
+  // rendait 10 avant les neuf recettes — un créneau perdu, sur une implémentation qui a pourtant
+  // l'air juste. Le pire cas est borné et se compte : toutes les bases nues au-dessus du premier
+  // candidat viable.
+  //
+  // ⚠️ COMPTÉ SUR LE CATALOGUE, PAS ÉCRIT EN DUR. À la dixième base ajoutée, un `+ 9` codé en dur
+  // reperdrait le créneau sans qu'aucun test ne le dise.
+  let margePlatsSimples = 0
+  for (const recette of catalog.recipes.values()) if (recette.estPlatSimple) margePlatsSimples++
   const entries: MealPlanEntry[] = []
   const placedRecipeIds = new Set<RecipeId>()
   // Copie de travail : on n'ajoute JAMAIS à `req.history`, qui appartient à l'appelant.
@@ -293,9 +310,10 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
         : remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex)
       const scored = pickForSlot(
         suggest,
-        slotRequest(req, date, creneau, history, cible, req.days * req.slots.length),
+        slotRequest(req, date, creneau, history, cible, req.days * req.slots.length, margePlatsSimples),
         placedRecipeIds,
-        (recipeId) => peutRemplirSeul(catalog, creneau, recipeId)
+        (recipeId) => peutRemplirSeul(catalog, creneau, recipeId),
+        (recipeId) => catalog.recipes.get(recipeId)?.estPlatSimple === true
       )
 
       if (scored === null) {
@@ -331,7 +349,11 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
           journeeImmesurable
             ? undefined
             : remainingTarget(dailyReference, placedToday, req.slots.length - slotIndex),
-          req.days * req.slots.length
+          req.days * req.slots.length,
+          // ⚠️ AUCUNE MARGE ICI, ET C'EST VOULU : `pickAccompagnement` remplace cette borne par la
+          // taille du catalogue, et surtout la place d'accompagnement est justement CELLE que les
+          // bases nues ont le droit d'occuper — il n'y a rien à compenser.
+          0
         ),
         scored
       )
@@ -403,7 +425,8 @@ function pickForSlot(
   suggest: SuggestForSlot,
   req: SuggestionRequest,
   placedRecipeIds: ReadonlySet<RecipeId>,
-  peutRemplirSeul: (recipeId: RecipeId) => boolean
+  peutRemplirSeul: (recipeId: RecipeId) => boolean,
+  estPlatSimple: (recipeId: RecipeId) => boolean
 ): RecipeId | null {
   let result: SuggestionResult
   try {
@@ -427,13 +450,37 @@ function pickForSlot(
   // créneaux vides de plus : il ne compte comme échec qu'un plantage, un doublon ou un
   // non-déterminisme. Un compte de créneaux remplis qui baisse sans rouge est un signal, comme le
   // compte de tests qui baisse sans rouge de `vitest.config.ts`.
+  //
+  // ⛔ ET LE PIS-ALLER S'ARRÊTE AVANT LE PLAT SIMPLE (lot `retour-5`). Une base nue — riz
+  // blanc nature, pommes de terre vapeur — porte `service: 'accompagnement'`, donc la PREMIÈRE
+  // passe l'écarte déjà sur déjeuner et dîner. La seconde, elle, ne demande plus rien : sans cette
+  // ligne elle poserait le riz nature SEUL sur le créneau. MESURÉ le 2026-08-27, configuration
+  // d'exclusion de la clause 6a : 14/14 créneaux remplis dont **6 par une base nue sans plat à
+  // côté**, là où le même plan en rendait 10/14 avant que les neuf bases n'entrent au catalogue.
+  //
+  // ⚠️ UN CRÉNEAU VIDE EST PRÉFÉRÉ ICI, ET C'EST L'INVERSE DE L'ARBITRAGE DU 2026-08-03 ci-dessus.
+  // La contradiction n'est qu'apparente : une entrée posée en pis-aller reste un repas maigre mais
+  // MANGEABLE, tandis qu'une assiette de riz blanc nature n'est pas un dîner — c'est ce que la
+  // catégorie `estPlatSimple` déclare, et elle ne déclare que ça.
+  //
+  // ⛔ LE FILTRE LIT LE CHAMP, JAMAIS L'IDENTIFIANT. Les neuf bases finissent toutes par `_nature`
+  // ou `_vapeur` : une expression régulière passerait toutes les clauses de plan de `retour-5`, et
+  // mentirait à la dixième base ajoutée au catalogue.
+  //
+  // ⚠️ L'ÉCART SE FAIT ICI, PAS DANS LA REQUÊTE. Poser un filtre `estPlatSimple` dans
+  // `SuggestionRequest` le rendrait exprimable dans TOUTE suggestion, y compris celles que
+  // l'utilisateur pilote — même raisonnement que `requiredFoodIds` tenu hors de `HardConstraints`
+  // (acquis n°2) et que le filtre `service` de `pickAccompagnement`.
   for (const suggestion of result.suggestions) {
     if (placedRecipeIds.has(suggestion.recipeId)) continue
+    if (estPlatSimple(suggestion.recipeId)) continue
     if (!peutRemplirSeul(suggestion.recipeId)) continue
     return suggestion.recipeId
   }
   for (const suggestion of result.suggestions) {
-    if (!placedRecipeIds.has(suggestion.recipeId)) return suggestion.recipeId
+    if (placedRecipeIds.has(suggestion.recipeId)) continue
+    if (estPlatSimple(suggestion.recipeId)) continue
+    return suggestion.recipeId
   }
   return null
 }

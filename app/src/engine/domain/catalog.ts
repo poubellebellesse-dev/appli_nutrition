@@ -624,6 +624,30 @@ export interface Recipe {
    */
   readonly estSauce: boolean
   /**
+   * Cette recette est une **base nue** : riz blanc nature, pommes de terre vapeur. Elle porte
+   * `service: 'accompagnement'` — c'en est un — mais elle ne fait pas un repas à elle seule.
+   *
+   * ⛔ AXE SÉPARÉ DE `service`, POUR LA MÊME RAISON QUE `estSauce` : un plat simple n'ouvre aucun
+   * rang nouveau dans l'ordre de service français. Il se sert AU rang de l'accompagnement,
+   * puisqu'il en est un. `'plat_simple'` n'est donc PAS une valeur de `CourseKind`.
+   *
+   * ⚠️ MAIS LA GARANTIE N'EST PAS DE LA MÊME NATURE QUE CELLE DE LA SAUCE, ET C'EST LE POINT DUR
+   * DU LOT `retour-5`. Une sauce est hors d'atteinte du moteur par sa FORME (`typesRepas: []`,
+   * donc absente de `recipesBySlot`). Un plat simple, lui, DOIT être dans `recipesBySlot` :
+   * `pickAccompagnement` passe par `suggest`, qui part de `recipesBySlot.get(creneau)`. Un plat
+   * simple invisible là serait invisible partout, accompagnement compris — donc inutile.
+   *
+   * ▶ « Il ne porte jamais un repas seul » est donc une **règle du moteur**, pas une forme : la
+   * passe de pis-aller de `pickForSlot` l'écarte, et `rerollSlot` fait de même. Le build, lui,
+   * refuse trois formes fausses (`service` autre qu'accompagnement, `typesRepas: []`, plus de
+   * 3 ingrédients).
+   *
+   * ⛔ L'interdiction lit CE CHAMP, jamais l'identifiant. Les neuf bases du catalogue finissent
+   * toutes par `_nature` ou `_vapeur` : une expression régulière donnerait le même résultat sur
+   * le catalogue d'aujourd'hui et serait fausse dès la dixième.
+   */
+  readonly estPlatSimple: boolean
+  /**
    * TRI-ÉTAT. `true` = le plat vient déjà avec sa sauce (blanquette, bourguignon, curry) ;
    * `false` = non, même si la dérivation croit le contraire ; **`null` = personne n'a tranché**,
    * il faut dériver.

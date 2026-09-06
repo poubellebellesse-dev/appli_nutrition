@@ -1512,6 +1512,482 @@ verrou.
 
 ---
 
+### Lot `retour-5` — le riz nature entre au catalogue, et il ne fait pas un dîner ☑️ **CODÉ le 2026-08-27, PAS ENCORE CLÔTURÉ** (hash à poser)
+
+**Ce que l'auteur a tranché (2026-08-21, décision 72), ses mots :** « **oui**, au moyen d'une
+**catégorie de bases — « plat simple »**. Un accompagnement nu entre donc au catalogue comme recette
+à part entière, distingué par sa catégorie et non par son absence. » Et l'avertissement qu'il a posé
+lui-même dans la même ligne : « ces plats deviennent éligibles à la suggestion comme les autres, et
+**rien aujourd'hui ne les empêche d'être proposés comme repas complet** ».
+
+⚠️ **CE DOCUMENT N'AVAIT QU'UNE LIGNE DE TABLEAU SUR CE LOT, et elle disait « rien — lot de
+contenu ». Elle est fausse sur la seconde moitié :** l'avertissement de la 72 ne se referme pas en
+écrivant des recettes, il se referme dans le moteur. Tout ce qui suit est écrit aujourd'hui, avant
+la première ligne de code.
+
+#### Ce qui a été mesuré avant d'écrire quoi que ce soit
+
+Mesures prises le **2026-08-26**, contre `app/public/catalog/catalog.db` réel — jamais contre une
+fixture — en composant des semaines par le vrai `planWeek`.
+
+| Mesure | Valeur |
+|---|---|
+| recettes par `service` | plat **191** · dessert **49** · entrée **41** · accompagnement **40** · fromage **6** · `null` **3** |
+| le plus nu des 40 accompagnements | **4 ingrédients**, **3 étapes** — ⛔ **aucune base nature n'existe**, les 40 sont tous assaisonnés |
+| aliments de base présents, sans recette nature | `riz_blanc` `riz_complet` `pates_spaghetti` `semoule_ble` `quinoa` `boulgour` `polenta` `pomme_de_terre` `lentilles_vertes` — **9** |
+| aliment `eau` | ⛔ **il n'existe pas**, et **aucune** des 330 recettes n'en cite (convention du poids sec) ⇒ une base nature tient en **2 ingrédients** : la base et le sel |
+| créneaux principaux portés par une recette qui n'est pas un `plat` — 20 graines × 7 j, 4 configurations | **0** ⛔ **le pis-aller de `pickForSlot` ne se déclenche JAMAIS** sur le catalogue d'aujourd'hui |
+| créneaux remplis, mêmes 4 configurations | **420/420** dans les quatre |
+| accompagnements posés / distincts, mêmes runs | nominal 280 / **25** · végétalien 280 / **18** · végétalien + sans gluten 280 / **17** · sans gluten 280 / **21** |
+| **la configuration qui fait TOMBER le pis-aller** — 22 aliments exclus (liste au test), 7 j, `['dejeuner','diner']`, graine 1 | **10/14** créneaux remplis · **0 accompagnement** survit à l'exclusion · **7** des 10 créneaux sont portés par un fromage, une entrée ou un dessert |
+
+⛔ **LA DERNIÈRE LIGNE EST CE QUI REND CE BRIEF ATTAQUABLE OU NON.** Une clause « aucun créneau
+n'est porté par un plat simple seul » posée sur le cas NOMINAL passerait **aujourd'hui, sans une
+ligne de code** : le pis-aller n'y tombe jamais. Elle ne prouverait rien. La configuration
+d'exclusion est le seul terrain mesuré où il tombe pour de bon — et elle a été construite exprès
+pour **laisser vivre** `sel_fin`, `riz_blanc`, `pomme_de_terre` et les autres bases, sans quoi les
+plats simples mourraient avec les plats et la clause redeviendrait vide.
+
+#### Pourquoi ce n'est PAS un sixième `CourseKind`
+
+`COURSE_ORDER` **est** l'ordre de service français — entrée, plat, accompagnement, fromage, dessert.
+Un plat simple n'y ouvre aucun rang nouveau : il se sert **au rang de l'accompagnement**, puisqu'il
+en est un. L'ajouter à l'union le rendrait soit présent dans `COURSE_ORDER` (faux), soit sauté en
+silence par tout code qui itère cet ordre. **C'est mot pour mot l'argument déjà écrit pour
+`est_sauce`** dans `catalog/build.mjs`, et il n'a pas à être redécouvert : axe séparé, pas sixième
+valeur.
+
+⛔ **MAIS LA GARANTIE NE PEUT PAS ÊTRE DE LA MÊME NATURE QUE CELLE DE LA SAUCE, ET IL FAUT LE DIRE.**
+Une sauce ne peut pas être suggérée comme repas parce qu'elle porte `types_repas: []` : elle
+n'entre dans **aucun** créneau de `recipesBySlot`, donc le moteur ne peut pas la proposer même s'il
+le voulait. **Cette porte est fermée ici** : `pickAccompagnement` passe par `suggest`, qui part de
+`recipesBySlot.get(creneau)`. Un plat simple à `types_repas: []` serait invisible **y compris comme
+accompagnement** — c'est-à-dire inutile. Il doit donc être dans `recipesBySlot`, et la garantie
+devient une **règle du moteur**, pas une forme. **C'est la première fois qu'on l'écrit dans ce sens ;
+ne pas laisser croire que la forme suffit.**
+
+#### La forme retenue : un axe séparé, et une INTERDICTION
+
+**Au catalogue** — une colonne `est_plat_simple` sur `recipe`, `NOT NULL DEFAULT 0`,
+`CHECK (est_plat_simple IN (0,1))`, et `estPlatSimple: boolean` au domaine. Un plat simple porte
+`service: 'accompagnement'`.
+
+**Le build refuse trois formes**, sur le modèle du bloc des sauces :
+
+1. `est_plat_simple: true` avec un `service` autre que `accompagnement` ;
+2. `est_plat_simple: true` avec `types_repas: []` — il serait invisible partout, accompagnement compris ;
+3. `est_plat_simple: true` avec **plus de 3 ingrédients** — « nature » est une forme, pas une
+   intention, et sans ce refus l'étiquette dérive vers n'importe quel accompagnement.
+
+**Au moteur** — `pickForSlot` garde ses **deux** passes, et un plat simple est refusé des deux :
+
+1. un `plat` (ou `service: null`) — **inchangé** : `peutRemplirSeul` écarte déjà `accompagnement` ;
+2. le pis-aller — **tout, sauf un plat simple.** C'est la passe qui change.
+
+Un plat simple n'entre donc dans un créneau principal **que comme accompagnement, à côté d'un
+plat**. Il ne porte jamais un repas seul.
+
+⛔ **DÉCISION DE L'AUTEUR, 2026-08-26 — LA VERSION MOLLE A ÉTÉ PROPOSÉE ET REFUSÉE.** Le brief
+portait d'abord un **troisième rang** : un plat simple plutôt qu'un créneau vide. C'est la règle
+dure qui est retenue. Elle a un prix connu — essayée le 2026-08-03 sous une autre forme, « jamais
+seul » avait fait retomber le végétalien 14 j de 42/42 créneaux remplis à 32/42, et le
+« végétalien + sans gluten » de 16 trous à 33.
+
+✅ **MAIS CE PRIX-LÀ N'EST PAS CELUI D'ICI, ET C'EST MESURÉ, PAS DÉDUIT.** Le chiffre du 2026-08-03
+mesurait l'interdiction appliquée à **tous** les accompagnements. Ici elle ne vise que les neuf
+bases nues, **qui n'existent pas encore** : elle ne peut retirer aucun créneau rempli aujourd'hui.
+Sur la configuration d'exclusion qui fait tomber le pis-aller, les créneaux principaux remplis
+restent **10 sur 14** avec l'interdiction, contre **14 sur 14** sans elle. **Le lot est donc neutre
+sur les trous existants** — il refuse seulement de les combler par une assiette de riz nature.
+
+⚠️ **ET CELA NE REDISCUTE PAS LA DÉCISION DU 2026-07-28** (« un accompagnement PEUT être servi
+seul », inscrite dans le commentaire de `CourseKind`). Un accompagnement assaisonné garde le
+pis-aller — une purée ou des légumes sautés font toujours un dîner léger recevable. Seule la base
+nue en est exclue, et elle n'existait pas quand la décision a été prise. **La décision est appliquée
+à une catégorie neuve, pas rétrécie.**
+
+⛔ **ET L'INTERDICTION NE DOIT COÛTER AUCUN CRÉNEAU — C'EST LE PIÈGE DE CE LOT.** Un plat simple
+reste dans `recipesBySlot`, donc dans ce que `suggest` classe, et la demande du planificateur est
+**bornée** (`limit`). Neuf recettes de plus qui remontent au classement et se font écarter **après**
+mangent le budget : le compte de créneaux remplis **baisserait**, sur une implémentation qui a
+pourtant l'air juste. L'écart doit se faire **avant** le classement. C'est pour cela que la clause 6
+scelle **exactement 10**, et pas « au moins 10 ».
+
+✅ **DEUX CHEMINS SATISFONT LA CLAUSE, ET ILS SONT NOMMÉS ICI POUR QUE `10` SOIT UNE EXIGENCE, PAS UN
+PIÈGE** : écarter les plats simples **dans la passe de pis-aller elle-même, avant que le budget ne
+soit consommé** ; ou **relever la borne** de la demande du planificateur
+(`app/src/engine/planning/plan-week.ts:147`, `limit: nombreDeCreneaux + 1`) de la marge nécessaire.
+L'un ou l'autre, au choix de l'implémenteur. Ce que la clause refuse, c'est le troisième chemin :
+laisser les neuf remonter le classement et les jeter à l'arrivée.
+
+⛔ **ET L'INTERDICTION DOIT SUIVRE LE CHAMP, PAS LES IDENTIFIANTS.** Les neuf bases finissent toutes
+par `_nature` ou `_vapeur` : une expression régulière sur l'identifiant passerait toutes les clauses
+de contenu et de plan. C'est ce que la **clause 11** refuse, en retirant l'étiquette aux neuf en
+mémoire et en exigeant qu'elles redeviennent alors éligibles.
+
+⛔ **ET « CHANGER » COMPTE AUTANT QUE LE PLANIFICATEUR.** `rerollSlot` reconstruit sa propre requête
+de suggestion et ne filtre **aucun** service ; le bouton « Changer » des deux écrans passe par là.
+Corriger le seul planificateur laisserait la promesse du lot fausse **dans le produit livré**. C'est
+la **clause 10**.
+
+#### La case vide n'apprend pas à parler ici — c'est le lot suivant
+
+⛔ **LA CAUSE DES TROUS A ÉTÉ MESURÉE, ET CE N'EST PAS CELLE QU'ON CROYAIT.** L'hypothèse de départ
+— « le filtrage est trop dur, le moteur lève `NoViableRecipeError` » — est **fausse sur cette
+configuration**. Mesuré le 2026-08-26 : sous les 22 exclusions, `suggestMeals` rend **10 suggestions
+pour le déjeuner et 3 seulement pour le dîner**, et les quatre trous sont les **quatre derniers
+dîners** de la semaine. Le catalogue est **épuisé**, pas verrouillé. Les deux causes ne se disent pas
+avec la même phrase.
+
+▶ **Le texte qui expliquera la case vide SORT de ce lot**, pour trois raisons : les cases vides
+existent **déjà aujourd'hui**, sans un mot d'explication et indépendamment des plats simples ;
+l'interdiction ci-dessus n'en ajoute aucune (mesuré) ; et le replier ici ferait toucher au même lot
+le catalogue, les règles de build, le moteur, le diagnostic **et deux écrans**. Il devient le lot
+`retour-5b`, inscrit au tableau des lots suivants.
+
+✅ **LA MATIÈRE EXISTE DÉJÀ, ET ELLE EST JETÉE** : `pickForSlot` attrape `NoViableRecipeError` — qui
+porte son `RejectionSummary` — et **le jette en une ligne**, alors que `describeNoViableRecipe` sait
+déjà en tirer la phrase du motif dominant. La seconde cause (catalogue épuisé pour la semaine) est
+connue au point d'appel. Et `MealPlanEntry` a déjà, pour un créneau vide, la place où accrocher un
+motif.
+
+#### Les neuf bases
+
+| id | nom | aliment de base | régime |
+|---|---|---|---|
+| `riz_blanc_nature` | Riz blanc nature | `riz_blanc` | végétalien · sans gluten |
+| `riz_complet_nature` | Riz complet nature | `riz_complet` | végétalien · sans gluten |
+| `pates_nature` | Pâtes nature | `pates_spaghetti` | végétalien |
+| `semoule_nature` | Semoule nature | `semoule_ble` | végétalien |
+| `boulgour_nature` | Boulgour nature | `boulgour` | végétalien |
+| `quinoa_nature` | Quinoa nature | `quinoa` | végétalien · sans gluten |
+| `polenta_nature` | Polenta nature | `polenta` | végétalien · sans gluten |
+| `pommes_de_terre_vapeur` | Pommes de terre vapeur | `pomme_de_terre` | végétalien · sans gluten |
+| `lentilles_vertes_nature` | Lentilles vertes nature | `lentilles_vertes` | végétalien · sans gluten |
+
+⚠️ **Aucun aliment n'est créé** : les neuf existent déjà et sont déjà cartographiés. `451 mappings /
+9 candidats à relire` ne bougera pas, et `node catalog/audit-mapping.mjs` **n'est pas un témoin de ce
+lot**. `node catalog/build.mjs`, lui, en est un : il passera de **330 à 339 recettes**.
+
+#### Ce que le lot NE touche pas
+
+`CourseKind` et `COURSE_ORDER` — **cinq rangs, inchangés** · `peutRemplirSeul` et la première passe ·
+`pickAccompagnement` — un plat simple y est un candidat **ordinaire**, et le seuil de recouvrement de
+signature de famille (0,30) écarte déjà le riz nature d'un plat de riz · `plan-leftovers.ts` et la
+pose des restes · `user-schema.ts` — **aucune migration** : `est_plat_simple` est une colonne du
+CATALOGUE, pas de la base utilisateur · `user-recipe.ts` — le champ y vaut **toujours `false`**,
+aucune question ajoutée au formulaire · la liste de courses · **aucun écran n'apprend le mot « plat
+simple » dans ce lot** : les neuf bases s'affichent comme les 40 autres accompagnements ·
+**le texte de la case vide** — c'est `retour-5b`, et la raison du découpage est ci-dessus ·
+**les six fichiers de tests scellés dont les compteurs vont rougir** — tranché hors périmètre le
+2026-08-27, c'est `retour-5c`, voir le relevé ci-dessus.
+
+#### Les témoins d'avant — mesurés le 2026-08-26, arbre du brief (`834f102`)
+
+| Témoin | Valeur d'avant |
+|---|---|
+| `npm test` | **2 411 passed / 0 failed**, 127 fichiers |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ |
+| `npm run engine:plan-stress` | **20/20 configurations saines** |
+| `node catalog/build.mjs` | **451 aliments, 330 recettes, 1 548 étapes, 62 gestes, 73 tips, 8 fiches** · 1 473 couples équipement · 377 occupations |
+| `node catalog/audit-mapping.mjs` | **pas un témoin** — aucun aliment créé |
+| recettes portant `est_plat_simple = 1` | **0** — la colonne n'existe pas |
+
+⛔ **NEUF RECETTES DE PLUS FONT ROUGIR SIX FICHIERS DE TESTS SCELLÉS D'AUTRES LOTS — ET LE SCEAU
+INTERDIT DE LES CORRIGER.** Ce n'est pas une hypothèse : ces fichiers scellent le nombre ABSOLU de
+recettes du catalogue, mesuré à 330. Relevé le 2026-08-26, treize assertions :
+
+| Fichier scellé | Ce qui est scellé | Ce qui bouge |
+|---|---|---|
+| `gestes-champ-media.test.ts:340,347` | 330 recettes · 1 548 étapes | 339 · 1 548 + 9 à 27 (clause 2 : 1 à 3 étapes chacune) |
+| `65b.test.ts:73,76,78` | 330 recettes · 271 écartées à vide · 264 écartées four coché | 339 · les deux montent si les neuf déclarent un ustensile requis |
+| `65b-ecran.test.tsx:62` | 271 écartées à vide | idem |
+| `65c.test.ts:78` | 166 recettes touchant la plaque de cuisson | monte si les neuf déclarent la plaque |
+| `photo-fiche-detail.test.tsx:48-50` | 330 au total · 201 sans photo (129 pourvues : inchangé) | 339 · 210 |
+| `retour-1.test.tsx:130` | 84 froides · 1 neutre · 245 chaudes · 330 au total | 339 au total, et la répartition chaud/froid bouge |
+
+▶ **`photo-affichage.test.ts` ne bouge pas** : il compte les 129 photos, pas les recettes.
+▶ **`retour-4.test.tsx` ne bouge probablement pas** : son 330 est dans un message, l'assertion est
+un `> 0`. À revérifier après coup, pas à corriger d'avance.
+
+⛔ **TRANCHÉ PAR L'AUTEUR LE 2026-08-27 : HORS PÉRIMÈTRE.** `retour-5` ne touche à **aucun** de ces
+six fichiers. Les deux autres sorties — porter les mises à jour dans ce lot, ou rendre ces compteurs
+relatifs comme le fait déjà `app/src/engine/domain/plats-par-creneau.ts` — ont été écartées.
+
+⛔ **CE QUE CETTE DÉCISION COÛTE, ET IL FAUT LE SAVOIR AVANT DE CODER : `retour-5` NE POURRA PAS SE
+CONCLURE SEUL.** Ce n'est pas de la prose, c'est mécanique. `.claude/hooks/garde.mjs` marque toute
+commande qui sort en code ≠ 0 comme `(ROUGE)` et rend `decision: 'block'` : un `npm test` rouge
+**interdit** de conclure le lot. Les treize assertions ci-dessus rougiront le jour où la neuvième
+recette entrera au catalogue.
+
+▶ **Corollaire : les compteurs deviennent un lot à eux seuls, `retour-5c`**, inscrit au tableau des
+lots suivants. C'est exactement la règle qu'on vient d'écrire dans `.claude/commands/attaquer.md` :
+une correction qui demande une décision de conception neuve — ici, lever six sceaux — devient un lot
+séparé, elle ne gonfle pas celui-ci. **`retour-5` et `retour-5c` se livrent donc à la suite, et
+l'arbre est rouge entre les deux.**
+
+---
+
+**Fini quand** — onze clauses, jouées contre `app/public/catalog/catalog.db` réel et contre un
+`catalog.db` reconstruit vers un fichier isolé, **jamais contre une fixture qui redirait la même
+chose**.
+
+1. **La colonne existe et elle est fermée.** Un `catalog.db` reconstruit vers un fichier isolé porte
+   sur `recipe` une colonne `est_plat_simple`, `NOT NULL`, défaut `0`, `CHECK (est_plat_simple IN
+   (0,1))`.
+
+2. **Neuf bases nues, nommées, et chacune tient à son aliment.** Les neuf identifiants du tableau
+   ci-dessus existent et portent, chacun : `est_plat_simple = 1`, `service = 'accompagnement'`, un
+   `types_repas` contenant **`dejeuner` ET `diner`**, **au plus 3 ingrédients**, **au plus 3 étapes**,
+   et **l'aliment de base attendu parmi ses ingrédients** — `riz_blanc` pour `riz_blanc_nature`, et
+   ainsi de suite. ⛔ Cette dernière moitié est là pour tuer les neuf coquilles vides qu'une
+   implémentation pressée écrirait.
+
+3. **Personne d'autre ne porte l'étiquette.** Le catalogue compte **339 recettes** (330 + 9) et
+   **exactement 9** portent `est_plat_simple = 1`.
+
+4. **Le build refuse les trois formes fausses.** Sur une source minimale isolée, `catalog/build.mjs`
+   sort en code **≠ 0** et **nomme la recette fautive**, une fois par forme : `service` autre
+   qu'`accompagnement` ; `types_repas: []` ; **4 ingrédients**.
+
+5. **Un plat simple est réellement atteignable comme accompagnement.** Sur 20 graines × 7 jours,
+   profil nominal, `['petit_dejeuner','dejeuner','diner']` : **au moins un** des neuf est posé **au
+   moins une fois** en accompagnement, à côté d'un plat.
+
+6. **Il ne porte jamais un repas seul, et l'interdiction ne coûte aucun créneau.** Deux moitiés,
+   deux `it`.
+
+   **6a — le compte ne bouge pas d'un créneau.** Sur la configuration d'exclusion nommée dans le
+   test (22 aliments), 7 jours, `slots: ['dejeuner','diner']`, graine 1 — **la seule mesurée où le
+   pis-aller tombe** : **exactement 10** créneaux principaux sur 14 sont remplis, et **aucun** n'est
+   porté par un plat simple sans plat à côté.
+
+   **6b — et chaque pose est bien un accompagnement.** Sur les 20 graines nominales de la clause 5
+   **plus** ce plan-là : le test compte les poses des neuf bases, **exige d'abord qu'il y en ait au
+   moins une**, puis vérifie que **toutes** portent `service: 'accompagnement'` et se tiennent à côté
+   d'une recette de rang `plat`.
+
+   ⛔ **`10` N'EST PAS UNE PRUDENCE, C'EST LA CLAUSE.** Une implémentation **sans** interdiction
+   remplit **14/14** et tombe. Une implémentation qui écarte les plats simples **après** le
+   classement en remplit **moins de 10** et tombe aussi — c'est le piège décrit plus haut. Seule
+   celle qui les écarte **avant** rend 10.
+
+   ⛔ **ON NE SCELLE NI L'IDENTITÉ DES DIX NI CELLE DES QUATRE TROUS.** Ajouter neuf recettes change
+   la fenêtre du MMR : sceller un plan à la recette rendrait la clause fausse **pour une
+   implémentation juste**. C'est la leçon de la moitié de clause retirée au `retour-4`, appliquée
+   d'emblée. ⚠️ **6a est VERTE aujourd'hui** — 10 remplis, zéro plat simple, puisqu'il n'en existe
+   aucun. C'est une garde, et elle est annoncée comme telle : ce qu'elle tue, c'est l'implémentation
+   sans interdiction, pas l'absence de code.
+
+7. **La monotonie ne s'installe pas.** Sur les mêmes 20 graines nominales : **280 accompagnements
+   posés** (inchangé), dont **au moins 20 distincts qui ne sont pas des plats simples** — aujourd'hui
+   25 distincts, tous assaisonnés.
+
+8. **L'ordre de service n'a pas bougé.** `COURSE_ORDER` compte toujours **5** rangs, et
+   `'plat_simple'` n'est **pas** une valeur de `CourseKind`. ⚠️ Clause de FORME : elle refuse la
+   mauvaise implémentation, pas seulement le mauvais résultat.
+
+9. **Le moteur n'a rien perdu.** `npm run engine:plan-stress` rend **20/20**, et les quatre
+   configurations mesurées ci-dessus remplissent toujours **420/420** créneaux sur 20 graines.
+
+10. **« Changer » obéit à la même interdiction que le planificateur.** Sur la fenêtre la plus courte
+    que §7.1 autorise — 2 jours, `slots: ['dejeuner']`, mêmes 22 exclusions, graine 1 — le test
+    **refuse le plat proposé encore et encore** jusqu'à épuisement du vivier. **Mesuré le
+    2026-08-26 : les 9 premiers tirages rendent un plat, le 10ᵉ rend un créneau VIDE.** Aucun de ces
+    tirages ne pose un plat simple autrement qu'en accompagnement à côté d'un plat.
+
+    ⛔ **C'EST LA CLAUSE QUI TUE « JE N'AI CORRIGÉ QUE LE PLANIFICATEUR ».** Après le lot, ce 10ᵉ
+    tirage aura neuf bases nues sous la main : un `rerollSlot` resté sans filtre posera le riz nature
+    SEUL sur le créneau. ⚠️ **Seul le PLAT refusé s'accumule dans les refus, jamais l'accompagnement**
+    — sinon les neuf bases se videraient d'elles-mêmes et le piège s'auto-désamorcerait.
+    ⚠️ **VERTE aujourd'hui**, et annoncée comme telle : elle ne juge pas le code d'aujourd'hui.
+
+11. **L'interdiction lit le CHAMP, pas les identifiants.** Le catalogue est recopié en mémoire avec
+    `estPlatSimple` remis à `false` sur les neuf — **identifiants intacts** — un moteur est rebâti
+    dessus, et la configuration d'exclusion de la clause 6a remplit alors **plus de 10** créneaux
+    principaux sur 14.
+
+    ⛔ Les neuf finissent toutes par `_nature` ou `_vapeur` : une expression régulière passerait
+    toutes les autres clauses. Elle rendrait **10** ici, et tomberait.
+
+⚠️ **AU BRIEF, LE 2026-08-26 — GARDÉ POUR LA MÉTHODE, PAS POUR LE CHIFFRE.**
+`tests/scelles/retour-5.test.ts`, **24 tests, 17 rouges / 7 verts** : rouges les clauses 1 (1), 2 (9,
+une par base), 3 (1), 4 (les trois formes fausses), 5 (1), **6b** — aucune pose à juger, et la clause
+refuse de passer à vide — et **11**, qui ne trouvait aucune étiquette à retirer. Verts le **témoin
+valide** de la clause 4 — il DEVAIT passer, sinon les trois rejets ne prouvaient rien — et **6a**, 7,
+8, 9a, 9b, **10**, annoncées comme gardes de non-régression plutôt que déguisées en preuves.
+
+---
+
+#### Ce que le lot a livré, mesuré le 2026-08-27
+
+✅ **`tests/scelles/retour-5.test.ts` : 24 / 24.** Les onze clauses passent, sur `catalog.db` réel.
+Le catalogue compte **339 recettes** et exactement **9** portent `est_plat_simple = 1`.
+
+✅ **DEUX LEVIERS ONT ÉTÉ NÉCESSAIRES, PAS UN — ET LE BRIEF N'EN ANNONÇAIT QU'UN À LA FOIS.** Le
+brief autorisait « écarter dans la passe de pis-aller » **ou** « relever la borne ». **Mesuré : il
+fallait les deux.** L'écart seul faisait tomber la clause 6a à **9/14** créneaux remplis là où elle en
+exige 10 — les neuf bases occupaient bien des rangs sous `limit`. La borne est donc relevée de la
+marge **comptée sur le catalogue**, jamais écrite en dur : à la dixième base ajoutée, un `+ 9` codé en
+dur reperdrait le créneau sans qu'aucun test ne le dise. La progression, en trois mesures :
+**14/14 dont 6 portés par une base nue** (avant) → **9/14, 0 porté** (écart seul) → **10/14, 0 porté**
+(écart + marge).
+
+✅ **« Changer » obtient le même traitement**, même paire de leviers : 9 tirages rendus, puis le
+créneau se vide, et **0 base nue posée seule** là où il y en avait 9.
+
+⚠️ **`setSlotRecipe` N'EST PAS FILTRÉ, ET C'EST UN CHOIX.** « Choisir » pose la recette que
+l'utilisateur a désignée : lui refuser le riz nature serait un jugement, et le principe 6 l'interdit.
+La catégorie ne gouverne que ce que la MACHINE décide seule.
+
+⛔ **UNE DÉCOUVERTE : UN TROISIÈME ENDROIT DÉCIDE SEUL, ET LE « FINI QUAND » N'EN NOMMAIT QUE DEUX.**
+L'écran « Aujourd'hui » appelle `suggestMeals` directement et présente sa liste comme des repas à
+retenir, sans accompagnement — une base nue y figure donc comme un dîner. Ce n'est ni `pickForSlot`
+ni `rerollSlot` : le lot était complet au sens de ses onze clauses, et la promesse restait fausse à
+l'écran.
+
+✅ **FERMÉ LE 2026-08-27, SUR DÉCISION DE L'AUTEUR.** L'écran écarte désormais les plats simples **à
+l'arrivée**, après classement, avec la même marge de borne qu'au planificateur — et les plats proches
+avec eux. Le filtre ne pouvait pas vivre ailleurs : `estPlatSimple` n'est **pas** exprimable dans
+`SuggestionRequest`, par dessein (décision 53, acquis n°2), et l'y poser le rendrait disponible à
+toute suggestion, y compris celles que l'utilisateur pilote. Un test ordinaire posé à côté de l'écran
+le garde — pas un test scellé, `tests/scelles/` étant fermé.
+
+⛔ **ET LA CAUSE QUE CE DOCUMENT AVAIT ÉCRITE ÉTAIT FAUSSE — C'EST LA MESURE QUI L'A DIT.** Il était
+écrit ici que l'une des neuf bases nues « prend la place d'une froide ». En collectant la liste
+affichée carte par carte, sur les deux catalogues et **des deux côtés du filtre** : **aucune des neuf
+n'apparaît dans les douze propositions**, ni avant ni après. À **330** recettes la liste rend **8/12
+froides** ; à **339**, **7/12** — et les douze plats ne sont ni les mêmes ni dans le même ordre,
+**alors qu'aucune des neuf n'y entre**. Leur seule présence au catalogue réordonne la sélection. Le
+filtre est juste pour ce qu'il corrige, et il **ne rend pas `retour-1` vert**.
+
+⚠️ **MÉCANISME NON IDENTIFIÉ — NE PAS L'ÉCRIRE COMME UN FAIT.** Hypothèse non vérifiée : `diversify`
+reçoit un accesseur de similarité construit sur le catalogue ENTIER, et neuf recettes de plus
+déplacent les pénalités de proximité à chaque tour du glouton. Ce qui reste à trancher est en
+`ETAT.md` §4 décision **82**, lot `retour-5d`.
+
+⚠️ **CE QUE ÇA APPREND, ET C'EST LE COÛT RÉEL DU LOT** : une explication plausible posée AVANT la
+mesure a survécu à trois documents et à un relevé. Le rouge disait « une base nue passe devant un
+plat froid » ; il disait en fait « neuf recettes de plus changent le classement sans jamais y
+entrer ». **Une cause n'est acquise qu'une fois la liste regardée, pas une fois l'histoire
+cohérente.**
+
+---
+
+### Lot `retour-5c` — rebaser les compteurs que les neuf bases nues font rougir ⏳ **BRIEF ÉCRIT le 2026-08-28, NON SCELLÉ**
+
+⛔ **CE LOT MODIFIE SIX FICHIERS SCELLÉS. C'EST SON OBJET, PAS UN DÉBORDEMENT.** Il ne peut donc pas
+s'exécuter sceau posé : `.claude/hooks/garde.mjs` refuse toute écriture dans `tests/scelles/` tant
+qu'un lot est scellé. Le sceau se lève par `/libre sceau`, et **c'est le geste de l'auteur, pas le
+mien**.
+
+⚠️ **CE LOT NE REND PAS L'ARBRE VERT, ET C'EST PRÉVU.** Il éteint **dix** rouges sur onze. Le
+onzième — la clause de qualité de `retour-1` — relève de la décision **82** (`ETAT.md` §4) et du lot
+`retour-5d`. Un lot qui rendrait `npm test` entièrement vert aurait donc **fait taire un capteur**,
+et c'est exactement la fausse implémentation que la clause 6 ci-dessous interdit.
+
+#### Ce que le catalogue mesure aujourd'hui — relevé du 2026-08-28 sur `app/public/catalog/catalog.db`
+
+Les onze valeurs, avec ce qui explique chaque écart. **Aucune n'est déduite : toutes sont comptées.**
+
+| # | Fichier scellé | Constante / assertion | Scellé | Mesuré | Pourquoi cet écart |
+|---|---|---|---|---|---|
+| 1 | `65b.test.ts:73` | `RECETTES_TOTAL` | 330 | **339** | les neuf bases nues |
+| 2 | `65b.test.ts:76` | `ECARTEES_SANS_RIEN` | 271 | **280** | **les neuf** portent un ustensile `requis` |
+| 3 | `65b.test.ts:78` | `ECARTEES_AVEC_LE_FOUR` | 264 | **273** | **les neuf** portent un `requis` autre que le four |
+| 4 | `65b-ecran.test.tsx:62` | `ECARTEES_SANS_RIEN` | 271 | **280** | même compte, autre fichier |
+| 5 | `65c.test.ts:78` | `RECETTES_AVEC_PLAQUE` | 166 | **172** | **six des neuf** occupent la plaque |
+| 6 | `gestes-champ-media.test.ts:340` | `recipes.size` | 330 | **339** | les neuf |
+| 7 | `gestes-champ-media.test.ts:347` | total des étapes | 1 548 | **1 575** | 9 × 3 étapes |
+| 8 | `photo-fiche-detail.test.tsx:49` | `SANS_PHOTO` | 201 | **210** | aucune des neuf n'a de photo |
+| 9 | `photo-fiche-detail.test.tsx:50` | `TOTAL` | 330 | **339** | les neuf |
+| 10 | `retour-1.test.tsx:130` | `chaudes` | 245 | **254** | **les neuf sont strictement chaudes** (axe 0,8 à 0,9) |
+| 11 | `retour-1.test.tsx:130` | `total` | 330 | **339** | les neuf |
+
+⛔ **DEUX DES ONZE VALEURS SONT INVISIBLES AUJOURD'HUI, ET C'EST LE PIÈGE DE CE LOT.** Vitest
+abandonne un `it` à la **première** assertion fausse : tout ce qui suit dans le même `it` n'est jamais
+exécuté, et ne rougit donc pas.
+
+| Valeur masquée | Par quoi | Dans le même `it` |
+|---|---|---|
+| **n° 7** — `etapes` 1 548 → 1 575 | n° 6, `recipes.size` 330 → 339 | `gestes-champ-media.test.ts:340` puis `:347` |
+| **n° 8** — `SANS_PHOTO` 201 → 210 | n° 9, `TOTAL` 330 → 339 | `photo-fiche-detail.test.tsx:128` puis `:130` |
+
+▶ **Conséquence pratique : corriger les onze valeurs d'un coup, jamais les dix visibles seules.** Un
+lot qui ne traiterait que ce que `npm test` affiche ferait **apparaître deux rouges neufs** au relevé
+de fin, et donnerait l'impression d'avoir cassé quelque chose. ⚠️ **UN COMPTE DE ROUGES N'EST PAS UN
+COMPTE DE VALEURS À CORRIGER** — et ici l'écart est de deux. Cette relecture a été faite **après**
+avoir écrit la première version de ce brief, qui n'en annonçait qu'une : c'est la lecture des `it`
+un par un qui a rendu la seconde, pas la sortie de vitest.
+
+✅ **CE QUI NE BOUGE PAS, ET QUI LE PROUVE** : `451` aliments, `62` gestes, `73` tips, `8` fiches,
+`30` équipements, `129` recettes pourvues d'une photo, `84` recettes strictement froides, `1` neutre.
+Et les deux restes de la tenaille du 65b : **59** recettes survivantes à vide (339 − 280) et **66**
+avec le seul four (339 − 273) — **identiques à ceux de 330 recettes**, parce que les neuf tombent
+entières du même côté. Un lot qui ferait bouger l'un de ces huit nombres aurait débordé.
+
+#### Fini quand
+
+Sept clauses, jouées contre `app/public/catalog/catalog.db` réel et contre le **texte source** des
+six fichiers scellés — **jamais contre une fixture qui redirait la même chose**.
+
+1. **Les onze valeurs valent ce que le catalogue compte.** Pour chacune des onze lignes du tableau
+   ci-dessus, la valeur écrite dans le fichier scellé est égale à celle qu'une mesure indépendante
+   tire de `catalog.db`. La mesure est refaite par le test, elle n'est pas recopiée du tableau.
+
+2. **Aucun capteur n'a disparu.** Chacun des six fichiers porte **exactement autant** de `it(` et de
+   `expect(` qu'avant le lot, et **aucun** `.skip`, `.only` ni `.todo` n'y apparaît.
+
+3. **Les compteurs restent ABSOLUS.** Chacune des onze valeurs est un **littéral numérique** dans le
+   source. ⛔ Il est interdit de la dériver du catalogue — `toBe(catalogue.recipes.size)` est une
+   tautologie qui passerait toujours et détruirait le capteur. Cette sortie a déjà été **écartée par
+   l'auteur le 2026-08-27** ; la clause la rend inexprimable.
+
+4. **Les anciennes valeurs ne survivent nulle part comme valeur courante.** Aucun des six fichiers ne
+   contient plus `330`, `271`, `264`, `166`, `1548`, `201` ni `245` là où ce nombre désignait le
+   catalogue d'aujourd'hui — **titres de `it` compris**, et ils sont onze à les citer.
+
+5. **Les deux assertions masquées s'exécutent, et elles passent.** Après le lot,
+   `expect(etapes).toBe(1575)` de `gestes-champ-media` et `expect(…).toBe(SANS_PHOTO)` de
+   `photo-fiche-detail` ne sont plus masquées par l'assertion qui les précède — elles sont
+   atteintes, et elles sont vraies.
+
+6. ⛔ **Il reste EXACTEMENT UN rouge, et c'est le bon.** `npm test` rend **1 failed**, et c'est
+   `retour-1` › « propose du froid quand on demande « Froid » », qui mesure 0,583 là où il exige
+   0,6. **Zéro rouge = échec du lot** : cela voudrait dire qu'un capteur de qualité a été rebasé
+   comme s'il était un compteur, ce que la décision 82 réserve à `retour-5d`.
+
+7. **Rien hors des six fichiers scellés n'a changé.** Pas une ligne de `app/src/`, pas une ligne de
+   `catalog/`, aucun autre fichier de `tests/scelles/`.
+
+⚠️ **CE QUE LES TESTS D'ACCEPTATION NE DÉMONTRERONT PAS, ET IL FAUT L'ÉCRIRE** : les clauses **4**
+(pour les commentaires en prose, par opposition aux titres de `it`) et **6** ne sont pas
+automatisables depuis `tests/scelles/retour-5c.test.ts` — un test ne peut pas relancer la suite qui
+le contient, ni juger si un commentaire historique cite `166` comme un souvenir ou comme la valeur du
+jour. Les deux se vérifient **à la relecture et au relevé de `/fin`**. C'est la leçon du lot D3 :
+une moitié de « Fini quand » que rien ne mesure doit être déclarée, pas sous-entendue.
+
+#### Témoins d'avant — relevés le 2026-08-28, arbre complet
+
+| Témoin | Valeur |
+|---|---|
+| `npm test` | **2 425 passed / 11 failed** (2 436 tests, 128 fichiers) |
+| les six fichiers scellés seuls | **64 passed / 11 failed** (75 tests, 6 fichiers) |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ |
+| `npm run engine:plan-stress` | **20/20 configurations saines** |
+| `node catalog/build.mjs` | **451 aliments, 339 recettes, 1 575 étapes, 62 gestes, 73 tips, 8 fiches** |
+| `node catalog/audit-mapping.mjs` | **451 mappings, 9 candidats** — pas un témoin, aucun aliment créé |
+
+#### Ce que le lot NE touche PAS
+
+`app/src/**` · `catalog/**` · `docs/archive/**` · `.claude/hooks/**` · les fichiers de
+`tests/scelles/` autres que les six nommés · **et la décision 82**, qui reste ouverte et part
+dans `retour-5d`.
+
+---
+
 ### Les lots suivants — non ouverts
 
 Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETAT.md` §4) :
@@ -1521,7 +1997,10 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 | `retour-2` | le sélecteur d'exclusion s'ouvre aux 451 aliments (décision 73) | ✅ **LIVRÉ le 2026-08-22** |
 | `retour-3` | « je mange dehors » étiquette le créneau (décision 76) | ✅ **LIVRÉ le 2026-08-22** — section ci-dessus |
 | `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | ✅ **LIVRÉ le 2026-08-26** (`7642492`) — section ci-dessus |
-| `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | rien — lot de contenu |
+| `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | ☑️ **codé le 2026-08-27, 24/24 clauses** — non clôturé, l'arbre est rouge pour `retour-5c` |
+| `retour-5b` | la case vide dit **pourquoi** elle est vide (décision de l'auteur, 2026-08-26) | **`retour-5`** |
+| `retour-5c` | rebaser les **onze** valeurs scellées que les neuf bases nues font mentir (décision de l'auteur, 2026-08-27) | **`retour-5`** — ⏳ **brief écrit le 2026-08-28**, section ci-dessus · ⚠️ **11 valeurs pour 10 rouges de compteur** : deux sont masquées par l'assertion qui les précède · ⛔ **il restera 1 rouge après**, celui de la décision 82 |
+| `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1`, que la croissance du catalogue fait tomber à 7/12 | **`retour-5`** — ✅ **le filtre d'écran est LIVRÉ le 2026-08-27**, mais ⛔ **il ne rend pas ce rouge vert** : aucune des neuf bases n'apparaît dans les douze propositions, leur seule présence réordonne la sélection. Mécanisme non identifié · décision **82** |
 | `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | **`retour-1`** et **décision 79** |
 | `retour-7` | le frigo ne vaut plus que pour un repas (décision 74) | **décision 80** |
 | `retour-8` | effacer un repas passé (décision 75) | le sort des restes orphelins |

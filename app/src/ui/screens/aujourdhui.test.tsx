@@ -384,3 +384,36 @@ describe('aujourdhui — changer de créneau', () => {
     expect(listeDuCreneau()).not.toEqual(listeAvant)
   })
 })
+
+describe('aujourdhui — les bases nues', () => {
+  /**
+   * ⛔ CET ÉCRAN EST LE TROISIÈME ENDROIT OÙ LA MACHINE DÉCIDE SEULE, et personne ne l'avait écrit.
+   * Le lot `retour-5` a interdit les bases nues au plan de semaine et au bouton « Changer », depuis
+   * un « Fini quand » qui ne nommait que ces deux-là. Ici, la liste se retient telle quelle et SANS
+   * accompagnement : proposer « Riz blanc nature » revient à proposer un dîner de riz blanc.
+   *
+   * ⚠️ LE DÉFAUT A ÉTÉ TROUVÉ PAR `tests/scelles/retour-1.test.tsx`, QUI NE LE VISAIT PAS — il exige
+   * 6 propositions froides sur 10 sous « Froid », et les neuf bases nues, toutes chaudes, en ont
+   * chassé une : 8/12 avant, 7/12 après, mesuré par retrait puis remise des neuf YAML. Deuxième
+   * occurrence après `retour-3`. La clause de proportion reste gardée là-bas ; ici on garde
+   * l'interdiction elle-même, qui est plus simple et ne dépend d'aucune pastille.
+   */
+  it('ne propose jamais une base nue comme repas, et garde ses douze cartes', async () => {
+    const nomsDesBasesNues = new Set(
+      Array.from(catalogueDeTest().recipes.values())
+        .filter((recette) => recette.estPlatSimple)
+        .map((recette) => recette.nom)
+    )
+    // ⚠️ Sur un catalogue SANS base nue, l'assertion suivante passerait sans rien prouver — le
+    // défaut que ce projet traque partout. On mesure donc d'abord qu'il y a quelque chose à écarter.
+    expect(nomsDesBasesNues.size).toBeGreaterThan(0)
+
+    await monter()
+    const liste = listeDuCreneau()
+
+    expect(liste.filter((nom) => nomsDesBasesNues.has(nom))).toEqual([])
+    // La marge de `PROFONDEUR` : écarter à l'arrivée sans elle COÛTERAIT une carte à chaque base
+    // nue tirée dans les douze premières. Douze restent douze.
+    expect(liste).toHaveLength(12)
+  })
+})
