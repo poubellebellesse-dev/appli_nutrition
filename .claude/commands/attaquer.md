@@ -26,3 +26,33 @@ l'adoucis pas :
 Puis rends-moi son verdict tel quel, sans l'adoucir, et dis-moi ce que tu comptes corriger.
 
 **Ne scelle rien.** C'est moi qui taperai `/sceller $1` — ou pas.
+
+---
+
+## Quand ça s'arrête — DEUX TOURS D'ATTAQUE, JAMAIS TROIS
+
+**Décision de l'auteur, 2026-08-27.** Sans plafond, chaque correction appelle une réattaque
+qui appelle une correction. Le brief ne converge plus, il tourne.
+
+**Une seule chose rouvre un brief : une implémentation fausse qui fait passer tous les
+tests** — la question 2 ci-dessus, et rien d'autre. Si le critique en exhibe une, on corrige,
+et on a le droit de réattaquer. **Une fois.**
+
+**Ce qui ne rouvre RIEN**, et c'est exactement là que la boucle se fabrique :
+
+- « tu pourrais aussi tester X » → c'est du périmètre en plus. Ça va en dette, `ETAT.md` §8.
+- « cette clause est verte aujourd'hui » → c'est une garde, elle est déclarée comme telle
+  dans l'en-tête du test. Une garde n'est pas un défaut.
+- « et si le catalogue changeait » → un test scellé mesure l'arbre du jour, pas tous ses
+  futurs. Un compte qui bougera est signalé, il n'est pas retiré.
+- une correction qui demande une **décision de conception neuve** → elle devient un **lot
+  séparé**, elle ne gonfle pas celui-ci. C'est ce qui a donné `retour-5b`.
+
+**Au deuxième tour, on scelle.** Ce qui reste sera trouvé en codant — c'est ce qui est arrivé
+au `retour-4`, dont la moitié de clause contradictoire n'a été vue ni par le brief ni par le
+critique, mais par l'implémentation. Ce n'est pas un échec du brief : c'est la limite de ce
+qu'un brief peut voir, et elle se paie moins cher qu'un troisième tour.
+
+⚠️ **Le compteur compte les tours d'ATTAQUE, pas les clauses ajoutées.** Une correction qui
+n'ajoute aucun mécanisme n'ajoute aucune surface d'attaque : fermer un chemin d'appel oublié
+ou un branchement sur la mauvaise donnée ne fait pas grossir la spec d'un pouce.

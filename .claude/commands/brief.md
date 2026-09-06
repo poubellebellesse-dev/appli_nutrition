@@ -31,3 +31,7 @@ c'est une consigne pour ce tour. Traite-la, ne l'ignore pas.
 **Écris en sachant que ce brief sera ATTAQUÉ.** Avant de sceller, je lance un critique dont
 la seule mission est de trouver une implémentation fausse qui ferait passer tes tests. Si
 elle existe, tes tests ne valent rien et on recommence. Écris-les pour survivre à ça.
+
+⚠️ **Deux tours d'attaque, jamais trois** — le critère d'arrêt est dans `/attaquer`. Une seule
+chose rouvre un brief : une implémentation fausse qui passe. Le reste va en dette ou devient
+un lot séparé. Au deuxième tour, on scelle et le code révélera ce qui reste.
