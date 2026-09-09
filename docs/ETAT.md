@@ -52,10 +52,18 @@ Questions numérotées 1 → 82, barrées quand fermées : [decisions/registre.m
 **Ouvertes au 2026-09-08 : 2, 5, 6, 11, 52, 58, 65, 68, 70, 79, 80, 82 — douze**, comptées sur les
 numéros non barrés. Trois bloquent quelque chose : 65 (feux possédés), 68 (budget P6), 82 (clause
 « 6 froides sur 10 » de `retour-1`, lot `retour-5d`). `retour-6` attend la 79.
-⚠️ **La 82 change d'objet au 2026-09-09, elle ne se ferme pas** : la clause qu'elle mesurait est
-**verte** au relevé de clôture de `retour-5`, sans qu'aucune ligne de `app/src/` ni de `catalog/`
-ait bougé depuis le relevé rouge du 2026-08-27. La question devient « pourquoi », pas « comment
-corriger » — détail dans `CONCEPTION_RETOURS_TEST.md`, section `retour-5`.
+✅ **La 82 a sa cause au 2026-09-09, elle ne se ferme pas pour autant.** La clause « 6 froides sur
+10 » de `retour-1` dépend de **l'heure de la machine** : l'écran « Aujourd'hui » déduit son créneau
+de `new Date().getHours()` et la bascule est à **14 h**. Même arbre, même catalogue : **12/12
+froides à 12 h**, **7/12 à 14 h**. Les relevés « rouge le 2026-08-27, vert le 2026-09-09 » ne
+mesuraient pas deux catalogues, ils mesuraient deux heures. ⛔ **Reste à trancher : quoi en faire**
+— quatre pistes, dont la nouvelle « le test épingle le créneau ». Lot `retour-5d`.
+⭐ **`retour-5e` (livré 2026-09-09) a rendu la clause VERTE, 9/9 à 17 h — et la 82 reste ouverte.**
+Le rouge mesurait **un rayon vide** : le dîner ne portait que 8 froides sur 214 (3,7 %), le moteur
+en remontait 7. Les 36 froides que `types_repas` en barrait y sont entrées → **250 recettes, 44
+froides (17,6 %)**. ⛔ **Le test lit toujours l'horloge** : il est vert par abondance, pas par
+correction. `retour-5d` garde son objet ; seul son plancher chiffré est à re-mesurer sur ce
+catalogue-ci.
 
 ## 5. Les écrans
 
@@ -145,7 +153,9 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - Photos : goulot = la récolte, pas le tri ; les neuf bases de `retour-5` (végétaliennes, chaudes) n'en ont pas.
 
 **Tests et preuve**
-- Arbre rouge par décision : **10** tests dans 6 fichiers scellés comptent le nombre absolu de recettes (330 → 339) — `retour-5c`, qui les couvre **tous** (relevé du 2026-09-09 ; les trois documents qui annonçaient 11 dont un non-compteur ont été corrigés).
+- Arbre rouge, **un** test : la clause « 6 froides sur 10 » de `retour-1` mesure l'heure de la machine sans le dire (bascule à 14 h). Les 10 compteurs de recettes sont éteints depuis `retour-5c` (2026-09-09). ▶ §4, décision 82, lot `retour-5d`.
+- **Trois valeurs périmées survivent hors du périmètre de `retour-5c`**, qui ne pouvait toucher que ses six fichiers : un **titre de `it`** dans `photo-affichage.test.ts` (« les 201 recettes sans photo »), une chaîne dans `retour-4.test.tsx` (« 223 des 330 recettes ») et de la prose dans `65a.test.ts`. Aucune n'est assertée, donc aucune ne rougit — elles mentent en silence.
+- Le test scellé de `retour-5c` a un angle mort mesuré : sa borne de mot rejette un nombre suivi d'un point ou d'une virgule, donc « … sur 330. » en fin de phrase lui échappe. Sans effet au 2026-09-09 (attrapé au balayage manuel), faux négatif réel ensuite.
 - `node catalog/audit-mapping.mjs` **ne tourne plus dans le dépôt principal non plus** : `documents Ciqual/2025_11_03` y est absent (gitignoré). La cinquième commande de `CLAUDE.md` n'est mesurable nulle part en l'état.
 - Une moitié de clause a été retirée du test scellé de `retour-4` (sceau levé puis remis, décision de l'auteur).
 - Preuves par mutation et scripts de mesure **hors dépôt** (`atelier/`) : 65a, 65b, 65b-bis, 65c, 66b, 66c — cinq occurrences, à trancher une fois.

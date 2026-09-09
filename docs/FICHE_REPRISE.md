@@ -49,17 +49,18 @@ questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RET
   ajouté de quoi voir (affichages, attente de chargement, champ de recherche et famille de 74
   lignes), **qu'aucun test jsdom ne sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3.
   **Tant qu'elle n'est pas faite, on sait seulement que rien n'est cassé** — pas que ça marche.
-- ⛔ **`/brief retour-5c` — ET L'ARBRE EST ROUGE JUSQUE-LÀ.** `retour-5` est **clôturé le
-  2026-09-09** ; ses neuf recettes portent le catalogue à 339 et font rougir **10 tests dans 6
-  fichiers scellés, tous des compteurs**. Ce lot seul rend l'arbre vert ; son brief est écrit, non
-  scellé. Puis `retour-5b`, et `retour-6` à `retour-8`. ⚠️ **`retour-6` attend la décision 79**, pas que du
-  code. ⚠️ **En ouvrant un brief : nommer les réglages persistants que l'écran lit, et dire lesquels
+- ⛔ **`retour-5d` EST OUVERT ET SES 6 CLAUSES SONT ROUGES — c'est son état normal, le code n'est
+  pas écrit.** `retour-5c` puis `retour-5e` sont **livrés le 2026-09-09** ; ce dernier a rendu la
+  clause « 6 froides sur 10 » de `retour-1` **verte**, le dîner passant de 8 recettes froides à 44.
+  ⚠️ La décision **82** reste ouverte : le test lit encore l'horloge. ▶ `ETAT.md` §4. Puis `retour-5b`, et
+  `retour-6` à `retour-8`. ⚠️ **`retour-6` attend la décision 79**, pas que du code.
+  ⚠️ **En ouvrant un brief : nommer les réglages persistants que l'écran lit, et dire lesquels
   les clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.
 
 **Les chantiers TERMINÉS ne sont plus détaillés ici** — leur fait vit dans `ETAT.md` et dans leur
 document de chantier. ⚠️ **Gestes illustrés : 3 sur 62 en base** — lot geste 2 arrêté à trois par
 la décision D5, TOUJOURS OUVERT, sa clause en demande 51. Clips récoltés (7 gestes sans candidat),
-photos (129/330, source), origine animale (66c), matériel (65c), retours test (1, 1b, 2, 3, 4, 5 livrés).
+photos (129/339, source), origine animale (66c), matériel (65c), retours test (1, 1b, 2, 3, 4, 5, 5c, 5e livrés).
 
 **Ce qui reste à faire, et qui n'attend que d'être commencé :**
 

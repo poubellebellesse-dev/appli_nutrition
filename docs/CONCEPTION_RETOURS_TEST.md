@@ -1901,17 +1901,23 @@ paragraphe précédent s'applique une seconde fois, au même endroit.
 
 ---
 
-### Lot `retour-5c` — rebaser les compteurs que les neuf bases nues font rougir ⏳ **BRIEF ÉCRIT le 2026-08-28, NON SCELLÉ**
+### Lot `retour-5c` — rebaser les compteurs que les neuf bases nues font rougir ✅ **LIVRÉ le 2026-09-09** — brief écrit le 2026-08-28, attaqué et corrigé puis scellé le 2026-09-09, **non commité à cette heure**
 
 ⛔ **CE LOT MODIFIE SIX FICHIERS SCELLÉS. C'EST SON OBJET, PAS UN DÉBORDEMENT.** Il ne peut donc pas
 s'exécuter sceau posé : `.claude/hooks/garde.mjs` refuse toute écriture dans `tests/scelles/` tant
 qu'un lot est scellé. Le sceau se lève par `/libre sceau`, et **c'est le geste de l'auteur, pas le
 mien**.
 
-⚠️ **CE LOT NE REND PAS L'ARBRE VERT, ET C'EST PRÉVU.** Il éteint **dix** rouges sur onze. Le
-onzième — la clause de qualité de `retour-1` — relève de la décision **82** (`ETAT.md` §4) et du lot
-`retour-5d`. Un lot qui rendrait `npm test` entièrement vert aurait donc **fait taire un capteur**,
-et c'est exactement la fausse implémentation que la clause 6 ci-dessous interdit.
+⚠️ **CE LOT REND L'ARBRE VERT — CORRIGÉ LE 2026-09-09 ; LE BRIEF DISAIT LE CONTRAIRE.** Au relevé
+de clôture de `retour-5`, les **dix** rouges sont tous des compteurs et ce lot les couvre tous. La
+clause de qualité de `retour-1`, onzième rouge du 2026-08-28, est **verte** depuis, sans qu'aucune
+ligne de `app/src/` ni de `catalog/` ait bougé entre les deux relevés — bascule **non expliquée**,
+décision **82** toujours ouverte, `retour-5d` inchangé dans son objet. ⛔ **Ce lot ne répare donc
+pas ce capteur et n'y touche pas** : il tombe vert tout seul, pour une raison que personne ne sait
+encore nommer.
+
+> Version du 2026-08-28, périmée, gardée parce qu'elle explique la clause 6 d'origine : « CE LOT NE
+> REND PAS L'ARBRE VERT, ET C'EST PRÉVU. Il éteint dix rouges sur onze. »
 
 #### Ce que le catalogue mesure aujourd'hui — relevé du 2026-08-28 sur `app/public/catalog/catalog.db`
 
@@ -1962,27 +1968,74 @@ six fichiers scellés — **jamais contre une fixture qui redirait la même chos
    ci-dessus, la valeur écrite dans le fichier scellé est égale à celle qu'une mesure indépendante
    tire de `catalog.db`. La mesure est refaite par le test, elle n'est pas recopiée du tableau.
 
-2. **Aucun capteur n'a disparu.** Chacun des six fichiers porte **exactement autant** de `it(` et de
-   `expect(` qu'avant le lot, et **aucun** `.skip`, `.only` ni `.todo` n'y apparaît.
+2. **Aucun capteur n'a disparu, ET AUCUN N'A ÉTÉ VIDÉ.** Chacun des six fichiers porte **exactement
+   autant** de `it(` et d'`expect(` qu'avant le lot, **aucun** `.skip`, `.only` ni `.todo` n'y
+   apparaît, et — moitié ajoutée le 2026-09-09 — son **squelette est inchangé** : commentaires
+   retirés, indentation normalisée, toute suite de chiffres remplacée par `#`, l'empreinte du
+   fichier vaut celle relevée avant le lot.
+   ⛔ **Pourquoi cette moitié existe** : `/attaquer` a exhibé le 2026-09-09 la seule triche qui
+   passait. Les six fichiers portent **154** `expect(`, dont **onze** seulement sont tenus par une
+   ancre de la clause 1. Remplacer `expect(ecartees).toEqual([])` par
+   `expect(ecartees).toBeDefined()` laisse le compte à 34, laisse `retour-5c.test.ts` vert **et**
+   l'arbre entier des 2 436 tests vert, et tue le capteur en silence. **Un compte n'est pas une
+   couverture.** Le squelette, lui, dit que ce lot n'a le droit de changer que des **chiffres** et
+   de la **prose**.
+   ⚠️ **Ce que ça coûte** : plus aucune reformulation, aucun déplacement, aucune ligne ajoutée dans
+   les six fichiers pendant ce lot. C'est tenable ici parce qu'**aucune des sept valeurs ne change
+   de largeur** (330→339, 271→280, 264→273, 166→172, 1548→1575, 201→210, 245→254) : le rebasage ne
+   peut pas provoquer de repli de ligne.
 
 3. **Les compteurs restent ABSOLUS.** Chacune des onze valeurs est un **littéral numérique** dans le
    source. ⛔ Il est interdit de la dériver du catalogue — `toBe(catalogue.recipes.size)` est une
    tautologie qui passerait toujours et détruirait le capteur. Cette sortie a déjà été **écartée par
    l'auteur le 2026-08-27** ; la clause la rend inexprimable.
+   ⚠️ **Piège d'écriture, relevé le 2026-09-09** : le motif d'ancrage capture la fin de ligne
+   entière. `const RECETTES_TOTAL = 339 // ancien 330` fait donc échouer la clause 3 avec le
+   message « vaut « 339 // ancien 330 » ». Ce n'est pas un faux positif à contourner : la note de
+   rebasage va **au-dessus** de la ligne, pas à sa suite.
 
 4. **Les anciennes valeurs ne survivent nulle part comme valeur courante.** Aucun des six fichiers ne
    contient plus `330`, `271`, `264`, `166`, `1548`, `201` ni `245` là où ce nombre désignait le
    catalogue d'aujourd'hui — **titres de `it` compris**, et ils sont onze à les citer.
+   ⚠️ **Un titre porte la NOUVELLE valeur, il ne perd pas simplement l'ancienne** — précisé le
+   2026-09-09, le brief laissait le choix. « porte bien 330 recettes » devient « porte bien 339
+   recettes », pas « porte le bon nombre de recettes » : un titre qui renonce au chiffre efface un
+   capteur de lecture. La clause 2 le rend d'ailleurs inexprimable.
+   ⚠️ **La prose exemptée est celle qui raconte le PASSÉ, pas celle qui décrit le présent** —
+   tranché le 2026-09-09 en codant, le brief avait choisi le mauvais exemple. Ce qui reste :
+   `65c.test.ts:49-50, 82, 274`, qui datent la **règle de report** et non un compte, et
+   `retour-5.test.ts:145` (`RECETTES_AVANT = 330`), qui est un témoin d'avant par définition.
+   Ce qui se rebase malgré la forme de commentaire : le commentaire non daté de
+   `photo-fiche-detail.test.tsx:195` (« une image cassée sur 201 recettes sur 330 »), qui décrit le
+   présent, **et le JSDoc de `65c.test.ts:77`** — « le compte mesuré le 2026-08-19 sur les 330
+   recettes réelles » posé au-dessus de `= 172` serait un mensonge par juxtaposition : la date et
+   le total y sont refaits en même temps que la valeur qu'ils documentent.
 
 5. **Les deux assertions masquées s'exécutent, et elles passent.** Après le lot,
    `expect(etapes).toBe(1575)` de `gestes-champ-media` et `expect(…).toBe(SANS_PHOTO)` de
    `photo-fiche-detail` ne sont plus masquées par l'assertion qui les précède — elles sont
    atteintes, et elles sont vraies.
 
-6. ⛔ **Il reste EXACTEMENT UN rouge, et c'est le bon.** `npm test` rend **1 failed**, et c'est
-   `retour-1` › « propose du froid quand on demande « Froid » », qui mesure 0,583 là où il exige
-   0,6. **Zéro rouge = échec du lot** : cela voudrait dire qu'un capteur de qualité a été rebasé
-   comme s'il était un compteur, ce que la décision 82 réserve à `retour-5d`.
+6. ⛔ **`npm test` rend UN rouge, et on sait lequel — clause réécrite une SECONDE fois le
+   2026-09-09, à la clôture, sur décision de l'auteur.** Les dix compteurs sont éteints ; le
+   onzième rouge est le capteur de qualité de `retour-1` (« au moins 6 plats sur 10 »), et le lot
+   s'est arrêté dessus comme la version précédente de cette clause l'ordonnait. **Il n'appartient
+   pas à ce lot** : le diff de `retour-1.test.tsx` fait quatre lignes, dont trois de prose, et la
+   quatrième (`CONVENTION_DU_CATALOGUE`) n'est lue que dans un autre `describe`. **Un second rouge,
+   lui, aurait été un échec** : il aurait désigné une valeur oubliée ou un capteur cassé.
+   ✅ **CE QUE L'ARRÊT A RAPPORTÉ, ET C'EST PLUS CHER QUE LE LOT** : le mécanisme de la décision
+   **82** est trouvé. La clause dépend de **l'heure de la machine** — l'écran déduit son créneau de
+   `new Date().getHours()`, la bascule est à **14 h**, et le même arbre rend **12/12 froides à
+   12 h** contre **7/12 à 14 h**. La décision 82 reste ouverte sur ce qu'il faut EN FAIRE ; elle
+   n'est plus ouverte sur la cause. ▶ `docs/decisions/registre.md`, ligne 82.
+
+   > Version du 2026-09-09 (matin), périmée : « `npm test` rend ZÉRO rouge … un seul rouge restant
+   > = échec du lot ». Elle a été écrite le matin même, sur un relevé pris avant 14 h, où le
+   > capteur de qualité était vert. Elle n'était pas fausse : elle mesurait une autre heure.
+   >
+   > Version du 2026-08-28, périmée : « Il reste EXACTEMENT UN rouge, et c'est le bon. `npm test`
+   > rend **1 failed** … **Zéro rouge = échec du lot** ». Elle disait le bon compte pour la
+   > mauvaise raison — elle attribuait le rouge à la croissance du catalogue.
 
 7. **Rien hors des six fichiers scellés n'a changé.** Pas une ligne de `app/src/`, pas une ligne de
    `catalog/`, aucun autre fichier de `tests/scelles/`.
@@ -2014,6 +2067,448 @@ dans `retour-5d`.
 
 ---
 
+### Lot `retour-5d` — la clause qui mesurait l'heure ⏳ **BRIEF ÉCRIT le 2026-09-09**, non scellé
+
+⛔ **CE LOT MODIFIE UN FICHIER SCELLÉ, ET C'EST TOUT CE QU'IL FAIT.** `tests/scelles/retour-1.test.tsx`,
+et rien d'autre. Comme `retour-5c`, il ne peut pas s'exécuter sceau posé : le sceau se lève par
+`/libre sceau`, **geste de l'auteur, pas le mien**.
+
+⚠️ **CE LOT NE TOUCHE AUCUNE LIGNE DE PRODUCTION.** Ni `app/src/`, ni `catalog/`. Ce qui est faux
+n'est pas l'écran : c'est ce que le test croit mesurer.
+
+#### La cause, mesurée le 2026-09-09 — et ce qu'elle invalide
+
+`aujourdhui.tsx:246` : `creneauChoisi ?? creneauDuMoment(new Date().getHours(), creneaux)`. Le
+sélecteur de créneau existe à l'écran (deux pastilles, `aujourdhui.tsx:602`), mais `retour-1` ne le
+touche jamais : **l'écran déduit donc son repas de l'horloge de la machine qui lance la suite.** À
+deux repas par jour, `FIN_DE_CRENEAU.dejeuner` vaut **14** — vérifié en appelant la fonction : 11 h
+et 13 h rendent `dejeuner`, 14 h, 15 h et 20 h rendent `diner`. **La clause bascule à 14 h 00, tous
+les jours.**
+
+⛔ **CE QUE ÇA INVALIDE** : le relevé du 2026-08-27 comparait 330 et 339 recettes **sans contrôler
+l'heure**, et son 8/12 contre 7/12 peut être deux heures et non deux catalogues. L'hypothèse
+`diversify` de la décision 82 n'est pas réfutée — elle n'est plus étayée. ⚠️ Elle n'est pas morte
+non plus : **aucune des deux valeurs mesurées aujourd'hui n'est 8/12**, donc quelque chose d'autre
+a bougé entre les deux catalogues. Ne pas refermer ce point sur ce lot.
+
+#### Ce que chaque pastille rend, créneau par créneau
+
+Relevé du **2026-09-09** contre `app/public/catalog/catalog.db` réel (339 recettes), rythme à
+**2 repas/jour**, base neuve, graine 1, horloge figée au 09 h 30 puis au 20 h 30 — **les deux
+heures rendent des listes identiques à créneau épinglé égal**, ce qui est le point du lot.
+
+| Pastille | Axe lu | « Ce midi » | « Ce soir » |
+|---|---|---|---|
+| Chaud | `axe_chaud_froid` | +0,842 · 12/12 | +0,900 · 12/12 |
+| **Froid** | `axe_chaud_froid` | −0,825 · **12/12** | **−0,125 · 7/12** |
+| Léger | `axe_leger_consistant` | −0,583 · 12/12 | −0,350 · 11/12 |
+| Consistant | `axe_leger_consistant` | +0,675 · 12/12 | +0,683 · 12/12 |
+| Salé | `axe_sucre_sale` | −0,608 · 12/12 | −0,583 · 12/12 |
+| Sucré | `axe_sucre_sale` | +0,150 · 9/12 | +0,083 · 7/12 |
+| Chaud, 2ᵉ graine | `axe_chaud_froid` | +0,875 · 12/12 | +0,858 · 12/12 |
+
+⛔ **UNE SEULE CASE EST SOUS LE SEUIL SCELLÉ, ET C'EST LA CASE ROUGE DEPUIS DEUX SEMAINES.**
+7/12 = **0,583**, contre le plancher de **0,6** écrit le 2026-08-21. Toutes les autres clauses de
+`retour-1` tiennent aux **deux** créneaux : `Chaud` ≥ 0,9 partout, les moyennes de `Léger`,
+`Consistant`, `Salé` et `Sucré` du bon signe partout, et le renouvellement de graine rend deux
+listes différentes et chaudes aux deux créneaux.
+
+⚠️ **CE QUE LE CHIFFRE DIT, EN CLAIR : à « Ce soir », 5 des 12 plats offerts sous « Froid » sont
+chauds.** ⛔ **LA PREMIÈRE EXPLICATION ÉCRITE ICI ÉTAIT FAUSSE** — elle accusait le **filtre mou** et
+renvoyait la réparation à `retour-6`. Mesuré depuis : le dîner ne contient que **8 recettes froides
+sur 214** (3,7 %, contre 22,7 % au déjeuner) et le moteur en remonte **7**. Il ne classe pas mal,
+**il vide le rayon** ; un filtre dur rendrait une liste de 8, sous le minimum de 10 propositions.
+C'est un défaut de **contenu** : `retour-5e`, section plus bas, qui passe devant ce lot.
+
+▶ **Précédent, dans le corpus scellé lui-même** : `retour-3.test.tsx:271` monte déjà l'écran avec
+`monterAujourdhui(creneau: MealSlot | null)` et clique la pastille, distinguée du titre — qui porte
+le même texte — par son `aria-pressed`. `retour-1` est le seul fichier scellé qui monte cet écran
+sans nommer son repas. `app/src/ui/screens/aujourdhui.test.tsx` est déjà écrit sans dépendre de
+l'heure (l. 131 accepte les quatre titres, l. 377 déduit « l'autre » du courant).
+
+#### Fini quand
+
+Sept clauses, jouées contre `app/public/catalog/catalog.db` réel et contre le **texte source** de
+`tests/scelles/retour-1.test.tsx` — jamais contre une fixture.
+
+1. **Le créneau est nommé, jamais déduit.** Dans `retour-1.test.tsx`, tout montage de l'écran
+   « Aujourd'hui » qui aboutit à la collecte d'une liste clique d'abord la pastille de créneau,
+   désignée par son `aria-pressed`. ▶ Rendu faux par : un seul chemin de collecte qui n'épingle pas.
+
+2. **Les DEUX créneaux sont examinés, pas le plus favorable.** La pastille « Froid » est mesurée
+   sous « Ce midi » **et** sous « Ce soir ». ⛔ **C'est la clause qui interdit la triche la moins
+   chère de ce lot** : épingler « Ce midi » partout rend l'arbre vert en une ligne et retire de la
+   suite exactement le cas dont l'utilisateur s'est plaint sur son téléphone. ▶ Rendu faux par :
+   une version qui ne garde qu'un créneau.
+
+3. **Les planchers sont ceux qu'on mesure, écrits par créneau, et le test les recalcule.**
+   « Ce midi » : moyenne < 0 et **≥ 0,9** de froides (mesuré 12/12). « Ce soir » : moyenne < 0 et
+   un plancher **À RE-MESURER APRÈS `retour-5e`**. ▶ Rendu faux par : un plancher que la mesure du
+   jour ne tient pas, ou supprimé.
+
+   ⛔ **CETTE CLAUSE A ÉTÉ CORRIGÉE LE 2026-09-09, AVANT TOUT SCEAU.** Elle proposait **0,5** au
+   dîner, « mesuré 7/12, marge d'un plat ». C'était sceller une lacune de catalogue comme une norme :
+   le créneau du dîner ne compte que **8 recettes froides sur 214**, le moteur en remonte 7, et le
+   plafond d'une liste de 12 est **0,67**. Le bon plancher ne se connaîtra qu'une fois `retour-5e`
+   passé — il n'a donc pas à être deviné ici.
+
+4. **Rien d'autre ne bouge dans le fichier scellé.** `CONVENTION_DU_CATALOGUE`, les seuils de
+   `Chaud`, des deux axes justes et du renouvellement de graine gardent leurs valeurs — le tableau
+   ci-dessus montre qu'ils tiennent aux deux créneaux, donc rien ne les oblige à bouger. ▶ Rendu
+   faux par : un seuil déplacé ailleurs que dans la clause « Froid ».
+
+5. **L'heure ne décide plus de rien.** À créneau épinglé égal, la liste collectée à **9 h** et à
+   **20 h** d'horloge figée est la **même**, et le titre de l'écran nomme le créneau épinglé. ▶
+   Rendu faux par : deux listes différentes, ou un titre qui ne suit pas la pastille.
+
+6. **La cause reste sous témoin.** Sans épinglage, l'écran change de créneau entre 12 h et 20 h —
+   titres différents, listes différentes. C'est le fait sur lequel la décision 82 se ferme ; il doit
+   vivre dans le corpus exécuté, pas seulement dans ce document. ▶ Rendu faux par : deux listes
+   identiques, qui voudraient dire que la cause a changé.
+
+7. **Les quatre commandes sont vertes et `npm test` rend ZÉRO rouge**, `typecheck` propre,
+   `vite build` ✓, `engine:plan-stress` 20/20 — et `git status -sb` ne montre **aucune** ligne sous
+   `app/src/` ni `catalog/`.
+
+#### La sortie rouge du jour — `tests/scelles/retour-5d.test.tsx`, écrit avant tout code
+
+**6 rouges sur 14**, le 2026-09-09. Les six sont les clauses qui lisent le source de `retour-1` ;
+les huit vertes sont les gardes déclarées en en-tête (le témoin de la cause, la surdité à l'heure,
+les quatre planchers).
+
+```
+× ne monte plus jamais l’écran sans dire quel repas il regarde
+    → expected 4 to be +0                       (quatre `monter()` nus)
+× vise la pastille par son `aria-pressed`, jamais par son seul texte
+    → expected false to be true
+× examine « Froid » aux DEUX repas, pas au plus favorable
+    → expected +0 to be 1
+× écrit les deux planchers, et ce sont ceux que ce fichier mesure
+    → aucune clause « Froid » pour « Ce midi »
+× n’a rien déplacé d’autre : la convention du catalogue et le seuil de « Chaud » tiennent
+    → « Chaud » doit être examiné aux deux repas lui aussi: expected 1 to be >= 2
+× n’a éteint aucun capteur : ni `.skip`, ni `.only`, ni `.todo`, et pas moins de clauses
+    → le fichier ne perd aucune clause en chemin: expected 9 to be >= 11
+
+[MESURE] Froid / Ce midi → moyenne -0.825, 12/12 froides
+[MESURE] Froid / Ce soir → moyenne -0.125,  7/12 froides
+[MESURE] Chaud / Ce midi → moyenne  0.842, 12/12 chaudes
+[MESURE] Chaud / Ce soir → moyenne  0.900, 12/12 chaudes
+```
+
+⛔ **UN PIÈGE PAYÉ EN ÉCRIVANT CE FICHIER, ET C'EST LE TÉMOIN DE LA CAUSE QUI L'A ATTRAPÉ.**
+Passer `now:` à un **second** `vi.useFakeTimers()` dans le même `it` ne déplace pas l'horloge :
+elle est déjà simulée, l'option est ignorée. Les deux montages tournaient donc à la même heure, et
+la clause « la même liste à 9 h et à 20 h » **passait sans rien comparer**. Seule la clause 6 —
+celle qui exige que l'écran CHANGE entre 12 h et 20 h — a rougi et a désigné la panne.
+`vi.setSystemTime` déplace, lui, une horloge déjà simulée.
+
+#### Témoins d'avant — relevés le 2026-09-09 à 14 h 33, avant ce lot
+
+| Commande | Sortie |
+|---|---|
+| `npm test` | **2 492 passed / 1 failed** (2 493 tests, 129 fichiers) en 58,66 s |
+| le seul rouge | `retour-1.test.tsx › propose du froid quand on demande « Froid »` — `expected 0.5833333333333334 to be greater than or equal to 0.6` |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ 2,53 s |
+| `npm run engine:plan-stress` | **20/20 configurations saines** |
+
+⚠️ Le catalogue n'est pas concerné : `node catalog/build.mjs` n'est pas un témoin de ce lot.
+
+Et **avec** le test d'acceptation posé, avant la première correction : **2 500 passed / 7 failed**
+(2 507 tests, 130 fichiers) en 60,11 s · typecheck propre · `vite build` ✓ 2,54 s · plan-stress
+20/20. L'écart est de **+14 tests et +1 fichier**, soit exactement `retour-5d.test.tsx` — rien
+d'autre n'a bougé de compte.
+
+#### Ce que le lot NE touche PAS
+
+`app/src/**` · `catalog/**` · `docs/archive/**` · `.claude/**` · tout `tests/scelles/` **sauf**
+`retour-1.test.tsx` et le fichier d'acceptation `retour-5d.test.tsx`.
+
+#### La forme plus lourde, envisagée et écartée
+
+Sortir le montage de l'écran dans un module partagé (`tests/outils/`) dont le créneau serait un
+**paramètre obligatoire** rendrait l'oubli structurellement impossible — « la garantie vient de la
+forme », comme l'acquis n° 2. Écartée pour ce lot : elle réécrit le harnais d'un fichier scellé
+pour fermer un trou que la clause 2 ferme déjà, et elle laisserait `retour-3` avec sa propre copie.
+▶ À porter en dette à la clôture, `ETAT.md` §8, avec la copie de `retour-3`.
+
+#### Ce que ce lot NE tranche PAS
+
+La décision 82 se ferme sur la **cause** et sur la piste **(d)**. Elle ne se ferme pas sur la
+qualité du classement sous « Froid » au dîner : **5 plats chauds sur 12**.
+
+⛔ **CORRIGÉ LE 2026-09-09, APRÈS LA PREMIÈRE ÉCRITURE DE CE BRIEF.** Ce paragraphe attribuait les
+5 plats chauds au **filtre mou**, et renvoyait leur correction à `retour-6`. **C'est faux, et la
+mesure le dit** : le créneau du dîner ne contient que **8 recettes froides sur 214**. Le moteur en
+remonte **7** — il ne rate pas la consigne, il vide le rayon. Le plafond théorique d'une liste de 12
+est **8/12 = 0,67** ; le plancher scellé en exige 0,60. `retour-6` (filtre dur) n'y changerait rien :
+il rendrait une liste de 8, sous le minimum de 10 propositions. **La cause est dans le contenu**, et
+c'est `retour-5e` ci-dessous. ▶ **Conséquence sur ce lot** : les planchers de la clause 3 sont
+**provisoires** et doivent être **re-mesurés après `retour-5e`**, qui passe donc devant.
+
+---
+
+### Lot `retour-5e` — les plats froids n'ont pas le droit de dîner ✅ **LIVRÉ le 2026-09-09**
+
+**Lot de CONTENU.** Il ne touche ni le moteur, ni l'écran, ni un test scellé existant : il corrige
+l'annotation `types_repas` de 36 fichiers de `catalog/recipes/`. Il naît de la mesure faite en
+écrivant `retour-5d`, et il passe **devant** lui.
+
+#### Le fait mesuré, le 2026-09-09, sur `app/public/catalog/catalog.db` (339 recettes)
+
+| Créneau | recettes servables | dont froides (`axe_chaud_froid < 0`) | part |
+|---|---|---|---|
+| petit-déjeuner | 55 | 18 | 32,7 % |
+| déjeuner | 194 | 44 | 22,7 % |
+| goûter | 49 | 30 | 61,2 % |
+| **dîner** | **214** | **8** | **3,7 %** |
+
+Les huit froides du dîner, en entier : gaspacho de tomates, huîtres nature, salade de lentilles-
+betterave, blancs en neige, et **quatre plateaux de fromage**. C'est tout le rayon.
+
+⚠️ **PREMIER COMPTAGE FAUX, GARDÉ ICI PARCE QU'IL EST INSTRUCTIF** : un `LIKE '%dejeuner%'` sur
+`types_repas` attrape aussi `petit_dejeuner`, et donnait « 241 recettes au déjeuner dont 61 froides ».
+Les vrais chiffres sont 194 et 44. Le créneau `diner` n'était pas touché — `diner` n'est sous-chaîne
+de rien —, donc le constat tenait, mais pas les parts.
+
+#### La règle que le catalogue suit déjà — sauf pour les froides
+
+En écartant les plats du matin, qui n'ont leur place au dîner dans aucun des deux camps :
+
+| Recettes du déjeuner, hors petit-déjeuner | barrées du dîner | sur | part |
+|---|---|---|---|
+| **froides** | **36** | 43 | **83,7 %** |
+| chaudes | 2 | 143 | **1,4 %** |
+
+**Une recette froide a soixante fois plus de chances d'être interdite de dîner qu'une chaude.** Les
+35 chaudes absentes du dîner sont, à deux exceptions près (figues rôties au chèvre, focaccia),
+**des plats du petit-déjeuner** : porridges, tartines, pancakes, muesli. La règle implicite est donc
+déjà écrite dans le contenu — *ce qui se sert au déjeuner se sert au dîner, sauf un plat du matin* —
+elle tient à **141 sur 143** chez les chaudes, et elle n'a **jamais été appliquée aux salades**.
+
+▶ Ce n'est donc pas un arbitrage éditorial qu'on rouvre, c'est une **omission qu'on mesure**. Mais
+c'est bien un arbitrage sur ce que le produit promet : `PIEGES.md` l'a déjà dit d'un cas voisin —
+« ne pas corriger en retirant du contenu, ni en changeant l'assertion sans décider ».
+
+#### Fini quand
+
+**Dix clauses**, jouées contre les fichiers source `catalog/recipes/*.yaml` **et contre une base
+RECONSTRUITE DEPUIS EUX** — jamais contre une fixture, et jamais contre la base livrée telle quelle.
+
+⛔ **PRÉREQUIS, ÉCRIT ICI PARCE QU'IL MANQUAIT AU PREMIER JET** : `npm run build` (c'est-à-dire
+`node --experimental-sqlite catalog/build.mjs`) **fait partie du lot**. Ce n'est pas une des quatre
+commandes qui font foi, et un codeur qui s'en tient à elles ne la relancerait jamais. La clause 10
+la rend obligatoire au lieu de l'espérer.
+
+1. **La règle tient.** Aucune recette de `axe_chaud_froid < 0` ne porte `dejeuner` sans porter
+   `diner`, sauf si elle porte aussi `petit_dejeuner`. ▶ Rendu faux par : une seule froide qui reste
+   barrée sans être un plat du matin.
+2. **Les 36 nommées dînent.** La liste est **nominative dans le test**, pas dérivée de la base — une
+   liste recalculée à l'exécution deviendrait vide dès le lot fait et ne vérifierait plus rien.
+   ▶ Rendu faux par : une recette de la liste qui ne porte pas `diner`.
+3. **Aucun camp n'est barré du dîner.** La part des recettes du déjeuner barrées du dîner (hors
+   plats du matin) est **≤ 5 %** chez les froides **et** chez les chaudes. Mesuré : 83,7 % et 1,4 %.
+   ▶ Rendu faux par : des froides qui restent barrées, **ou** des chaudes qu'on aurait fermées.
+
+   ⛔ **RÉÉCRITE APRÈS LE PREMIER TOUR D'ATTAQUE.** Formulée en écart relatif (« froid ≤ chaud + 5
+   points »), elle était **logiquement impliquée par la clause 1** : celle-ci passée, le numérateur
+   du froid vaut 0 et l'inégalité était vraie d'office. Le brief annonçait cinq rouges indépendants,
+   il n'en avait que quatre. Bornée maintenant **des deux côtés en absolu**, elle ferme en plus la
+   triche « égaliser l'asymétrie en barrant des chaudes du dîner ».
+4. **Le rayon froid du dîner s'ouvre** : **≥ 40** recettes froides servables au dîner **et ≥ 15 %**
+   du créneau (attendu 44 sur 250 = 17,6 %, à comparer aux 22,7 % du déjeuner). ▶ Rendu faux par :
+   un compte qui reste sous 40.
+5. **La correction vit dans la SOURCE, et le YAML est ANALYSÉ, pas cherché.** Chacun des 36 `.yaml`
+   **déclare** `diner` dans `types_repas`, document analysé par le parseur du build (`yaml`) et
+   fichier retrouvé par son `id:`, jamais par un nom deviné. ⛔ **Interdit de corriger dans
+   `build.mjs`** : la base serait juste et la source fausse.
+
+   ⛔ **RÉÉCRITE APRÈS LE PREMIER TOUR D'ATTAQUE.** Elle cherchait `'diner'` dans le **texte** de la
+   ligne `types_repas:`. Un commentaire suffisait à la satisfaire — `types_repas: [dejeuner]  # diner`
+   — sans que la valeur analysée bouge d'un caractère.
+6. **Garde — rien n'est retiré.** Les comptes de `petit_dejeuner` (55), `dejeuner` (194) et `gouter`
+   (49) sont inchangés ; `diner` vaut **214 ou 250, jamais entre les deux**. ⛔ Tue la triche
+   « satisfaire *pas de déjeuner sans dîner* en fermant le déjeuner », et — depuis le premier tour
+   d'attaque, où un intervalle laissait la porte ouverte — celle qui ajoute les 36 en retirant des
+   chaudes pour faire monter la part de froid.
+7. **Garde — les 36 gardent leur déjeuner.** On ajoute un créneau, on n'en déplace pas un.
+8. **Garde — les axes ne bougent pas.** Les 36 `axe_chaud_froid` sont gelés à la valeur mesurée.
+   ⛔ Tue la triche la moins chère : réchauffer une salade la sort du périmètre de la clause 1 sans
+   qu'une seule ne dîne.
+9. **Garde — le service et les plats du matin.** Le `service` des 36 est inchangé, et les seules
+   recettes portant `petit_dejeuner` **et** `diner` restent les **quatre œufs** d'aujourd'hui
+   (brouillés, à la coque, au plat, omelette).
+
+10. **La base LIVRÉE dit la même chose que les sources.** Pour chacune des 36, les `types_repas` de
+    `app/public/catalog/catalog.db` sont identiques à ceux de la base reconstruite. ▶ Rendu faux
+    par : une source corrigée sans que `npm run build` soit rejoué et l'artefact commité.
+
+    ⛔ **CLAUSE NOUVELLE, NÉE DU PREMIER TOUR D'ATTAQUE, ET C'EST UN PIÈGE QUI S'ARME TOUT SEUL.**
+    Elle est **VERTE aujourd'hui** — source et base disent toutes deux `[dejeuner]` — elle passera
+    **ROUGE dès la première correction YAML**, et ne redeviendra verte qu'une fois le build rejoué.
+    C'est la seule clause du fichier dont l'état normal, en cours de lot, est le rouge.
+
+⚠️ **Les clauses 6 à 9 sont VERTES le jour où le test est écrit, et c'est déclaré en en-tête.**
+Elles n'attestent rien du lot : elles ferment les contournements. Une garde n'est pas un défaut.
+
+#### Premier tour d'attaque — 2026-09-09 : une implémentation fausse passait **9 clauses sur 9**
+
+⛔ **LE BRIEF A ÉTÉ ROUVERT, ET C'EST LA SEULE CHOSE QUI LE ROUVRE.** Le critique a exhibé la
+triche, en deux gestes, et elle marchait :
+
+1. patcher `app/public/catalog/catalog.db` **en SQL, à la main**, sans jamais rejouer le build ;
+2. écrire `types_repas: [dejeuner]  # diner` dans les 36 `.yaml` — la valeur analysée ne bouge pas
+   d'un caractère, mais le `.includes('diner')` du test cherchait dans le **texte** de la ligne.
+
+Neuf clauses vertes, **aucune salade servable au dîner**, et le correctif se serait évaporé au
+premier `npm run build` légitime **sans qu'un seul test rougisse** : les clauses lisaient une base
+dont rien ne garantissait qu'elle venait des sources. « La source est juste » et « la base le
+reflète » étaient mesurées par deux chemins **totalement découplés**.
+
+**Les trois parades, toutes empruntées au corpus déjà scellé :**
+
+| Le trou | La parade | D'où elle vient |
+|---|---|---|
+| la base pouvait être patchée à la main | la base de référence est **reconstruite depuis les sources** dans un fichier temporaire, à chaque exécution | `65a.test.ts` et `65c.test.ts` le font déjà (`spawnSync` sur `build.mjs --out`) |
+| le YAML était **cherché**, pas lu | la clause 5 **analyse** le document avec le parseur du build (`yaml`) | `catalog/build.mjs` l. 25 |
+| rien n'obligeait à rejouer le build | **clause 10**, neuve : la base livrée doit dire la même chose que la reconstruite | — |
+
+▶ Deux autres remarques du critique, portées sans rouvrir de périmètre : la **clause 3** était
+impliquée par la clause 1 (quatre rouges indépendants annoncés comme cinq) — elle est maintenant
+bornée des deux côtés en absolu ; et le **prérequis `npm run build`** n'était écrit nulle part.
+
+⚠️ **Un seul tour reste disponible.** Le plafond est de deux, et seule une nouvelle implémentation
+fausse passant toutes les clauses rouvrirait encore ce brief.
+
+#### La sortie rouge du jour — `tests/scelles/retour-5e.test.ts`, écrit avant toute correction
+
+**5 rouges sur 10**, le 2026-09-09, après réécriture. Le build du catalogue tient dans les 3 s de
+l'exécution complète :
+
+```
+[MESURE] barrées du dîner — froides 36/43 = 83.7 % · chaudes 2/143 = 1.4 %
+[MESURE] dîner : 8 froides sur 214 = 3.7 %
+
+ × aucune recette froide ne sert au déjeuner sans servir au dîner, sauf si c'est un plat du matin
+   → 36 recettes froides restent interdites de dîner
+ × les 36 recettes nommées servent toutes au dîner
+   → 36 recettes sur 36 ne dînent toujours pas
+ × aucun camp n'est barré du dîner : ni le froid, ni le chaud qu'on aurait fermé pour égaliser
+   → expected 0.8372093023255814 to be less than or equal to 0.05
+ × le rayon froid du dîner tient au moins 40 recettes, et au moins 15 % du créneau
+   → expected 8 to be greater than or equal to 40
+ × la correction vit dans les fichiers SOURCE — YAML analysé, pas texte cherché
+   → 36 sources sur 36 ne déclarent pas « diner »
+ ✓ la base LIVRÉE dit la même chose que les sources   ← verte AUJOURD'HUI, rouge dès la première
+                                                         correction YAML, verte après le build
+ ✓ garde : rien n'est retiré — le dîner vaut 214 ou 250, jamais entre
+ ✓ garde : les 36 gardent leur déjeuner
+ ✓ garde : les axes chaud/froid des 36 sont inchangés
+ ✓ garde : le service des 36 est inchangé, et aucun plat du matin nouveau ne dîne
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 5 passed (10)      Duration 3.28s
+```
+
+#### Les 36 recettes — ✅ **VALIDÉES PAR L'AUTEUR le 2026-09-09, sans exception**
+
+⛔ **C'ÉTAIT LE SEUL ARBITRAGE DE CE LOT, ET IL EST ÉDITORIAL.** Les 36 passent au dîner, aucune
+n'est retirée. La liste ci-dessous est donc **close** : c'est exactement celle que
+`tests/scelles/retour-5e.test.ts` nomme, et le lot n'a plus rien à décider.
+
+**Entrées (21)** — artichauts à la vinaigrette · asperges œuf mimosa · caviar d'aubergine · œufs
+mimosa · poireaux vinaigrette · poivrons grillés marinés · radis au beurre · salade de chou rouge et
+carotte · salade d'endives aux clémentines · salade d'endives, noix et roquefort · salade de fenouil
+et orange · salade de flageolets au thon · salade grecque · salade de haricots verts et tomates ·
+salade de mâche, betterave et noix · melon au jambon · salade d'oranges aux olives · salade de
+pastèque, feta et menthe · salade de pois chiches · salade thaïe de poulet · salade de tomates et
+mozzarella.
+
+**Plats (13)** — hareng et pommes de terre tièdes · houmous · salade d'avocat et crevettes · salade
+de crabe et avocat · salade de lentilles tièdes au chèvre · salade de pâtes au pesto · salade de
+poulet grillé au parmesan · salade tiède de poulpe · salade de quinoa, feta et menthe · salade de
+raisin, roquefort et noix · salade de riz aux crevettes · salade de riz au thon et maïs · sardines
+marinées au citron.
+
+**Accompagnements (2)** — taboulé de boulgour · taboulé de quinoa à la menthe.
+
+#### Ce que le lot NE touche PAS
+
+`app/src/**` · `docs/archive/**` · `.claude/**` · tout `tests/scelles/` **sauf** le fichier
+d'acceptation `retour-5e.test.ts` · dans `catalog/`, **rien d'autre que la ligne `types_repas` des
+36 `.yaml` nommés** — ni un axe, ni un `service`, ni un ingrédient, ni `build.mjs`.
+
+⚠️ **CE QU'IL TOUCHE ET QUE LE PREMIER JET AVAIT OUBLIÉ DE NOMMER : `app/public/catalog/catalog.db`.**
+L'artefact vit hors de `catalog/` et échappait donc à la liste ci-dessus. Il est **régénéré par
+`npm run build`** — c'est la clause 10 qui l'exige, et sans lui l'application continuerait de charger
+l'ancien catalogue pendant que les sources disent le contraire.
+⛔ **CORRECTION DU 2026-09-09, MESURÉE À LA LIVRAISON : il n'est PAS commité, et ce n'est pas un
+oubli.** `.gitignore:18` exclut `app/public/catalog/*.db` — le dépôt ne suit **aucune** base
+compilée, elle se refabrique. Le brief avait écrit « régénéré et commité » sans vérifier ; seule la
+première moitié était juste. La clause 10 n'en souffre pas : elle compare deux **fichiers**, elle ne
+consulte pas git. ⚠️ Conséquence à retenir : **cloner le dépôt ne suffit pas à faire dîner les
+salades — il faut `npm run build`.**
+
+#### Le risque, nommé d'avance
+
+⚠️ **UN LOT DE CONTENU PEUT FAIRE ROUGIR UN TEST D'ÉCRAN, ET CE N'EST PAS UNE RÉGRESSION** —
+`PIEGES.md` en compte déjà trois occurrences. Ouvrir 36 recettes au dîner change les listes de
+suggestion du soir : des comptes et des seuils scellés ailleurs **peuvent** bouger. Ils seront
+attribués par `git diff --name-only` et par la sortie de vitest, jamais par déduction, et rebasés
+comme `retour-5c` a rebasé ses onze valeurs — **pas contournés en retirant du contenu**.
+
+⛔ **PROPRIÉTAIRE DU SUIVI, NOMMÉ ICI PARCE QUE LE PREMIER JET NE LE NOMMAIT PAS : le lot `retour-5e`
+lui-même, dans sa propre passe de vérification.** Un seuil qui bouge se rebase **dans ce lot**, pas
+plus tard : la dette qui « sera traitée ailleurs » n'a jamais de date. Deux exceptions, et deux
+seulement : le plancher du dîner de `retour-1` (clause « 6 froides sur 10 »), qui appartient à
+`retour-5d` et se re-mesurera après ce lot ; et un rouge qui exigerait une **décision de conception
+neuve**, qui devient un lot séparé et est annoncé comme tel dans le rapport de `/fin`.
+
+#### Le résultat, mesuré après la correction — 2026-09-09 à 17 h 20
+
+Les 36 `types_repas` sont passés de `[dejeuner]` à `[dejeuner, diner]`, **une ligne par fichier,
+36 fichiers, 36 insertions et 36 suppressions** — la forme dominante du catalogue (148 recettes
+l'écrivent déjà ainsi). `npm run build` rejoué, `app/public/catalog/catalog.db` régénéré.
+
+| Créneau | Recettes | dont froides | part |
+|---|---|---|---|
+| petit-déjeuner | 55 | 18 | 32,7 % |
+| déjeuner | 194 | 44 | 22,7 % |
+| goûter | 49 | 30 | 61,2 % |
+| **dîner** | **250** (214 + 36) | **44** (8 avant) | **17,6 %** (3,7 % avant) |
+
+`tests/scelles/retour-5e.test.ts` : **10 clauses sur 10 vertes**. Total du dépôt inchangé à
+**2 517 tests / 131 fichiers** — aucun capteur ajouté ni éteint.
+
+⭐ **ET LA CLAUSE « 6 FROIDES SUR 10 » DE `retour-1` EST REDEVENUE VERTE, À 17 H, DANS LE CRÉNEAU DU
+DÎNER.** `retour-1.test.tsx` passe 9/9. C'est la confirmation par l'expérience du diagnostic qui a
+ouvert ce lot : ce que le rouge mesurait, c'était **le rayon vide**, pas un mauvais classement. Le
+moteur remontait 7 des 8 froides existantes ; il en a maintenant 44.
+⚠️ **Cela ne clôt pas `retour-5d` et ne referme pas la décision 82.** Le test lit toujours
+`new Date().getHours()` : il est vert **par abondance**, pas parce qu'il a cessé de dépendre de
+l'horloge. Ce qui change, c'est l'urgence, pas la cause.
+
+#### Le seul rebasage qu'a coûté ce lot — et il était annoncé
+
+`tests/exclusion-real-catalog.test.ts` est passé au rouge sur une seule assertion :
+`expect(candidates.has('salade_pois_chiches')).toBe(false) // dejeuner uniquement`. **Ce n'est pas
+une régression** : la recette dîne désormais légitimement, et pas une ligne de moteur n'a changé.
+L'en-tête de ce fichier interdisait déjà les *nombres* figés « parce que le catalogue grandit » ;
+l'identifiant en dur était le même piège sous un autre nom. Le témoin est maintenant **dérivé** —
+*aucune* recette hors du créneau du dîner ne doit être candidate — ce qui, avec l'égalité de taille
+déjà présente, fixe l'ensemble exactement au créneau. Fichier vert, 9/9.
+⛔ Rebasé **dans ce lot**, comme le prévoyait « Le risque, nommé d'avance ». Aucune autre clause de
+l'arbre n'a bougé.
+
+#### Ce que ce lot NE tranche PAS
+
+Ni la décision **79**, ni le filtre dur de `retour-6`. Il ne dit pas non plus que le classement sous
+« Froid » est bon : il rend seulement au moteur de quoi choisir. Le plancher du dîner de `retour-1`
+se fixera **après**, sur une mesure d'après-lot, dans `retour-5d`.
+
+---
+
 ### Les lots suivants — non ouverts
 
 Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETAT.md` §4) :
@@ -2025,8 +2520,9 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 | `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | ✅ **LIVRÉ le 2026-08-26** (`7642492`) — section ci-dessus |
 | `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | ✅ **LIVRÉ** — codé le 2026-08-27 (24/24 clauses), commité le 2026-09-06 (`d0dd712`), clôturé le 2026-09-09 · ⛔ **l'arbre reste rouge**, 10 compteurs pour `retour-5c` |
 | `retour-5b` | la case vide dit **pourquoi** elle est vide (décision de l'auteur, 2026-08-26) | **`retour-5`** |
-| `retour-5c` | rebaser les **onze** valeurs scellées que les neuf bases nues font mentir (décision de l'auteur, 2026-08-27) | **`retour-5`** — ⏳ **brief écrit le 2026-08-28**, section ci-dessus · ⚠️ **11 valeurs pour 10 rouges de compteur** : deux sont masquées par l'assertion qui les précède · ✅ **relevé du 2026-09-09 : les 10 rouges sont TOUS des compteurs**, ce lot rend donc l'arbre vert à lui seul |
-| `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1`, que la croissance du catalogue fait tomber à 7/12 | **`retour-5`** — ✅ **le filtre d'écran est LIVRÉ le 2026-08-27**, mais ⛔ **il ne rendait pas ce rouge vert** le 2026-08-27 · ⛔ **et au 2026-09-09 le rouge n'existe plus** : clause rejouée deux fois seule, verte, **sans qu'aucune ligne de `app/src/` ni `catalog/` ait bougé entre les deux relevés**. L'objet du lot devient « pourquoi » et non « comment le corriger ». Mécanisme non identifié · décision **82**, toujours ouverte |
+| `retour-5c` | rebaser les **onze** valeurs scellées que les neuf bases nues font mentir (décision de l'auteur, 2026-08-27) | **`retour-5`** — ✅ **LIVRÉ le 2026-09-09**, section ci-dessus · les 11 valeurs et 27 lignes de prose et de titres rebasées dans les 6 fichiers · ⚠️ **10 rouges éteints sur 11** : le onzième n'était pas un compteur, il est renvoyé à `retour-5d` · ⛔ le brief annonçait l'arbre vert, il ne l'est pas — clause 6 réécrite une seconde fois à la clôture |
+| `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1` | **`retour-5`** — ✅ **LA CAUSE EST TROUVÉE le 2026-09-09** : la clause dépend de **l'heure de la machine**. L'écran déduit son créneau de `new Date().getHours()`, la bascule est à **14 h** ; même arbre, **12/12 froides à 12 h** contre **7/12 à 14 h**. Les relevés d'août l'attribuaient à la croissance du catalogue **sans contrôler l'heure** · **PISTE (d) RETENUE par l'auteur le 2026-09-09** · ⏳ **BRIEF ÉCRIT le 2026-09-09**, non scellé — section ci-dessus : 7 clauses, test d'acceptation **6 rouges sur 14**, **aucune ligne de production touchée** · ⛔ **PASSE APRÈS `retour-5e`, ordre CONFIRMÉ PAR L'AUTEUR le 2026-09-09** : le plancher du dîner proposé à 0,5 scellait une lacune de catalogue (8 froides au dîner sur 214), il est **à re-mesurer après** · décision **82** |
+| `retour-5e` | rendre le dîner aux 36 recettes froides que `types_repas` en exclut | **`retour-5`** — ✅ **DÉFAUT MESURÉ le 2026-09-09** en écrivant `retour-5d` : le dîner ne compte que **8 froides sur 214 (3,7 %)** contre 44 sur 194 au déjeuner ; hors plats du matin, **83,7 % des froides du déjeuner** sont barrées du dîner contre **1,4 % des chaudes**. Le moteur remonte 7 des 8 qui existent — il vide le rayon, il ne classe pas mal · ✅ **LIVRÉ le 2026-09-09 à 17 h 20** — section ci-dessus : **10 clauses sur 10 vertes**, 36 fichiers YAML, **une ligne chacun**, `catalog.db` régénéré, **aucune ligne de code de production** · le dîner passe de **214 à 250 recettes** et de **8 froides (3,7 %) à 44 (17,6 %)** · ⛔ **UN TOUR D'ATTAQUE A ÉTÉ PAYÉ** : le critique a exhibé une implémentation fausse passant 9 clauses sur 9 (patch SQL direct de `catalog.db` + `# diner` en commentaire dans le YAML) — base reconstruite depuis les sources, YAML analysé au lieu d'être cherché, clause 10 neuve qui apparie base livrée et sources · ⭐ **EFFET DE BORD MESURÉ : la clause « 6 froides sur 10 » de `retour-1` redevient VERTE à 17 h** — le rouge mesurait le rayon vide · un seul rebasage, `tests/exclusion-real-catalog.test.ts`, témoin dérivé au lieu d'un identifiant en dur |
 | `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | **`retour-1`** et **décision 79** |
 | `retour-7` | le frigo ne vaut plus que pour un repas (décision 74) | **décision 80** |
 | `retour-8` | effacer un repas passé (décision 75) | le sort des restes orphelins |

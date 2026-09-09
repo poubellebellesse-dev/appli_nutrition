@@ -42,15 +42,25 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-09, arbre complet, clôture de `retour-5`, `HEAD` = `560eb8e`) : 2 426
-passed / 10 failed (2 436 tests, 128 fichiers, 6 rouges)** en 49,9 s · typecheck propre · `vite
-build` ✓ 2,55 s · `engine:plan-stress` 20/20 · catalogue 339 recettes dont 9 plats simples.
-**L'arbre est rouge par décision de l'auteur** : les **10** rouges scellent tous le nombre absolu de
-recettes (330), à rebaser dans le lot `retour-5c`, qui les couvre **tous**. La sortie réelle fait foi.
-⚠️ **Le relevé du 2026-08-27 en annonçait 11, dont un non-compteur** (`retour-1`, « 6 froides sur
-10 ») : cette clause est **verte** au 2026-09-09, rejouée deux fois seule, **sans qu'aucune ligne de
-`app/src/` ni de `catalog/` ait bougé entre les deux**. Bascule **non expliquée** — décision 82
-toujours ouverte, lot `retour-5d`. ▶ `docs/CONCEPTION_RETOURS_TEST.md`, section `retour-5`.
+⛔ **Dernier relevé (2026-09-09 à 17 h 24, arbre complet, livraison de `retour-5e`, NON COMMITÉ) :
+2 511 passed / 6 failed (2 517 tests, 131 fichiers)** en 59,1 s · typecheck propre · `vite build`
+✓ 2,50 s · `engine:plan-stress` 20/20 · catalogue 339 recettes, **dîner 250** dont 44 froides.
+⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** Le seul rouge est `retour-5d.test.tsx`
+(6 sur 14) — **son propre test d'acceptation, scellé avant son code** : l'état attendu d'un lot
+ouvert, pas une régression.
+⭐ **`retour-1` « au moins 6 plats sur 10 » EST VERTE DEPUIS `retour-5e` (2026-09-09, 17 h 24),
+9/9.** Ce qu'elle mesurait n'était pas un mauvais classement : **le rayon était vide.** Le dîner ne
+portait que **8 recettes froides sur 214 (3,7 %)** contre 44 sur 194 au déjeuner, et le moteur en
+remontait 7 sur 8. Les 36 froides que `types_repas` barrait du dîner y sont entrées → **250
+recettes, 44 froides (17,6 %)**.
+⚠️ **LA CAUSE MÉCANIQUE N'EST PAS RÉPARÉE POUR AUTANT, ET C'EST LE PIÈGE À NE PAS OUBLIER** :
+`retour-1.test.tsx` déduit toujours son créneau de `new Date().getHours()` (bascule à **14 h**,
+`FIN_DE_CRENEAU.dejeuner`). Il est vert **par abondance**, pas parce qu'il a cessé de lire
+l'horloge. Décision **82**, lot `retour-5d`. ▶ `docs/ETAT.md` §4.
+⚠️ **Les relevés d'août et du matin du 2026-09-09 attribuaient la bascule à la croissance du
+catalogue** (330 → 339) : ils comparaient deux heures sans le savoir. Ne pas les citer comme cause.
+✅ Les **10** rouges de compteur qui scellaient le nombre absolu de recettes sont éteints par
+`retour-5c` (11 valeurs dans 6 fichiers scellés, 2026-09-09). La sortie réelle fait foi.
 - **Un compte qui bouge sans rouge est un signal.** Attribuer par `git diff --name-only` **et** par
   les fichiers de test pilotés par la donnée (`parcours.test.tsx` est en `it.each` sur `PARCOURS`).
   Seule la sortie de vitest compte, jamais un `grep "it("`.
