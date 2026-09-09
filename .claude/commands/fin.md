@@ -36,34 +36,34 @@ te refusera l'écriture de toute façon).
 Ce rapport, et **rien d'autre**. Pas d'introduction, pas de conclusion, pas de « n'hésite pas ».
 
 ```
-ÉTAT     : AVANCE | BLOQUÉ | ATTEND_TOI | FINI
-EN CLAIR : ce qui a changé, vu du dehors.             (200 caractères max)
-ET ALORS : ce que ça permet ou empêche, pour de vrai. (150 max)
-BLOCAGE  : ce qui coince — ou « rien ».               (150 max)
-TA DÉCISION : UNE question fermée, ou « rien ».       (120 max)
-COÛT     : essais consommés, écart au budget.
-DÉCOUVERTE : « écart de spec » ou « écart de plan », si le lot a révélé quelque chose qui
-             n'était ni dans la conception ni dans le plan. Sinon, rien.
+RÉSUMÉ — ≤5 lignes : ce qui a changé et pourquoi, vu du dehors (conséquences, pas faits)
+FAIT — résultat concret : sortie des commandes qui font foi, comptes exacts
+RESTE — ce qui n'est pas fini, dette créée ou révélée (→ aussi dans l'état)
+BLOQUÉ — ce qui coince et pourquoi, ou « non »
+TOI — UNE question fermée, ou « rien »
+SUITE — prochaine étape proposée
 ```
 
 Puis un bloc replié :
 
 ```
 <details><summary>détail technique</summary>
-fichiers, sorties des quatre commandes, témoins (plan-stress, compte de tests, build catalogue)
+fichiers, sorties de commandes, témoins, écarts de compte, écart de spec ou de plan
 </details>
 ```
 
 **Règles dures. Une violation = tu recommences.**
 
-1. Aucun nom de fichier, de fonction, de classe, de table hors du bloc replié.
-2. Chaque ligne dit une **conséquence**, pas un fait.
+1. Aucun nom de fichier, de fonction, de classe, de table hors de FAIT et du bloc replié.
+2. RÉSUMÉ dit des **conséquences**, pas des faits.
    ✗ « la couche de persistance a été refactorée »
    ✓ « les données survivent maintenant à un redémarrage »
 3. Zéro adjectif de succès : robuste, propre, optimisé, solide, performant.
-4. **UNE** question maximum. Deux questions = tu ne m'as pas trié le travail, tu me l'as rendu.
+4. **UNE** question dans TOI. Deux questions = tu ne m'as pas trié le travail, tu me l'as rendu.
 5. Aucun chiffre que tu n'as pas recalculé. Sinon : « non mesuré ».
-6. La dette et les « on pourrait aussi refactorer » ne remontent pas ici — elles vont dans
+6. Si le lot a révélé un écart entre ce que le brief annonçait et ce que le diff fait, ça va
+   dans RESTE ou BLOQUÉ — c'est la seule chose que le codeur ne pouvait pas voir.
+7. La dette et les « on pourrait aussi refactorer » ne remontent pas ici — elles vont dans
    `ETAT.md` §8. C'est du périmètre en plus déguisé en zèle.
 
 Si tu veux un regard neuf sur le bilan, délègue-le à `@rapporteur` : il n'a pas fait le
@@ -81,3 +81,13 @@ node .claude/hooks/garde.mjs fin
 se trompe pas. La première ligne ne touche qu'un **cache** — si elle échoue, le lot est fini
 quand même, et `/plan` réconciliera. Si elle répond que le lot est inconnu, **n'invente pas
 la ligne** : dis-le-moi.
+
+## 4. Le tableau
+
+Réécris le bloc `## Nutrition` de `F:\Claude\tableau\README.md` — cinq lignes (Où, Suite,
+Bloqué, Leçon, Dernier), jamais six, les autres blocs intacts, la date du titre mise à jour.
+Puis, **dans ce dépôt-là uniquement** :
+
+    cd /d F:\Claude\tableau && git add README.md && git commit -m "Nutrition <date>" && git push
+
+C'est le seul dépôt où tu commites : quinze lignes de texte, rien d'autre.

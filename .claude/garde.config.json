@@ -2,6 +2,7 @@
   "proteges": ["docs/archive/**"],
   "scelles": ["tests/scelles/**"],
   "source": ["app/src/**", "catalog/**"],
+  "plafonds": { "docs/ETAT.md": 200, "docs/FICHE_REPRISE.md": 100 },
   "verifications": [
     { "nom": "npm test", "motifs": ["npm test", "vitest"] },
     { "nom": "npm run typecheck", "motifs": ["typecheck", "tsc --noEmit"] },

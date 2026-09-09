@@ -59,7 +59,9 @@
       "id": "retour-5",
       "chantier": "retours test",
       "titre": "la catégorie « plat simple » au catalogue",
-      "etat": "en_cours"
+      "etat": "fait",
+      "le": "2026-09-09",
+      "commit": "560eb8e"
     },
     {
       "id": "retour-6",
