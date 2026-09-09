@@ -42,7 +42,7 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-09 à 17 h 24, arbre complet, livraison de `retour-5e`, NON COMMITÉ) :
+⛔ **Dernier relevé (2026-09-09 à 17 h 24, arbre complet, livraison de `retour-5e`, `HEAD` = `3e56937`) :
 2 511 passed / 6 failed (2 517 tests, 131 fichiers)** en 59,1 s · typecheck propre · `vite build`
 ✓ 2,50 s · `engine:plan-stress` 20/20 · catalogue 339 recettes, **dîner 250** dont 44 froides.
 ⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** Le seul rouge est `retour-5d.test.tsx`
