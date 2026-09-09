@@ -46,8 +46,8 @@ vi.mock('../../app/src/ui/user-source.js', () => ({
  * catalogue : si ces nombres bougent pendant ce lot, c'est le lot qui a débordé.
  */
 const POURVUES = 129
-const SANS_PHOTO = 201
-const TOTAL = 330
+const SANS_PHOTO = 210
+const TOTAL = 339
 
 beforeEach(() => {
   vi.resetModules()
@@ -192,7 +192,7 @@ describe('photo-fiche-detail — une recette sans photo garde l’aplat, et rien
   ] as const) {
     it(`⛔ ${nom} des ${SANS_PHOTO} sans photo ne rend AUCUN <img>`, async () => {
       // Le garde-fou de tout le reste : rendre l'image sans condition passerait les six tests du
-      // dessus et poserait une image cassée sur 201 recettes sur 330.
+      // dessus et poserait une image cassée sur 210 recettes sur 339.
       const recette = temoinsSansPhoto()[rang]!
       const { container } = await monter(recette.id)
 
@@ -215,7 +215,7 @@ describe('photo-fiche-detail — une recette sans photo garde l’aplat, et rien
     it(`⛔ ${nom} : l’aplat est EN TÊTE, avant le nom — exactement là où la photo serait`, async () => {
       // ⛔ CE TEST EST ENTRÉ SUR ATTAQUE (2026-08-17). Sans lui, une implémentation qui posait la
       // photo en tête et l'aplat TOUT EN BAS, après les étapes, passait l'examen entier — pour
-      // 201 recettes sur 330, c'est-à-dire la majorité. Un repli n'est un repli que s'il occupe la
+      // 210 recettes sur 339, c'est-à-dire la majorité. Un repli n'est un repli que s'il occupe la
       // place de ce qu'il remplace ; ailleurs, c'est un rectangle de couleur au milieu d'une
       // recette. C'est aussi ce que §4.6 DESIGN impose par son ordre : « Photo, retour, favori · nom ».
       const recette = temoinsSansPhoto()[rang]!

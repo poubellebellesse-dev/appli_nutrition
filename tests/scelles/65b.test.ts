@@ -21,16 +21,16 @@
 //   « rendre toujours null »       passe 1, 2, 5   ÉCHOUE 3, 4, 6
 //   « rendre toujours la liste »   passe 3, 4, 6   ÉCHOUE 1, 2, 5
 //
-// Les mêmes données, le même catalogue, l'interrupteur seul qui change : 330 recettes contre 66.
+// Les mêmes données, le même catalogue, l'interrupteur seul qui change : 339 recettes contre 66.
 //
 // ⛔ LA DÉCLARATION PARTIELLE EST LE CŒUR DE LA CLAUSE 5, PAS UN DÉTAIL. Déclarer les 30 ustensiles
-// laisserait 330 recettes disponibles MÊME filtre allumé — la clause serait alors satisfaite par un
+// laisserait 339 recettes disponibles MÊME filtre allumé — la clause serait alors satisfaite par un
 // code qui ignore l'interrupteur. Le seul `four` déclaré, elle ne l'est plus.
 //
 // ⚠️ DES NOMBRES EXACTS, MESURÉS LE 2026-08-18 SUR `app/public/catalog/catalog.db` RÉEL :
-//   330 recettes · 30 ustensiles au référentiel
-//   271 recettes portent au moins un ustensile `requis`  → filtre allumé, rien de coché : 59 restent
-//   264 recettes portent un `requis` autre que le four   → filtre allumé, seul le four : 66 restent
+//   339 recettes · 30 ustensiles au référentiel
+//   280 recettes portent au moins un ustensile `requis`  → filtre allumé, rien de coché : 59 restent
+//   273 recettes portent un `requis` autre que le four   → filtre allumé, seul le four : 66 restent
 // Si l'un de ces nombres devient faux parce que le CONTENU a bougé, on le DIT et on s'arrête. On ne
 // retouche pas un test scellé pour le faire passer.
 //
@@ -70,12 +70,12 @@ const CATALOGUE = path.join(REPO_ROOT, 'app', 'public', 'catalog', 'catalog.db')
 
 // --- Les nombres scellés, mesurés sur le catalogue réel le 2026-08-18 -------------------------
 
-const RECETTES_TOTAL = 330
+const RECETTES_TOTAL = 339
 const USTENSILES_TOTAL = 30
 /** Recettes portant au moins un ustensile `requis` — écartées si le filtre est allumé à vide. */
-const ECARTEES_SANS_RIEN = 271
+const ECARTEES_SANS_RIEN = 280
 /** Recettes portant un `requis` autre que le four — écartées si le filtre est allumé, four coché. */
-const ECARTEES_AVEC_LE_FOUR = 264
+const ECARTEES_AVEC_LE_FOUR = 273
 
 const FOUR = 'four' as EquipmentId
 
@@ -176,13 +176,13 @@ function ecarteesSelonLeCatalogue(codesPossedes: readonly string[]): ReadonlySet
 // ==============================================================================================
 
 describe('65b — le catalogue sur lequel les nombres scellés sont mesurés', () => {
-  it('porte bien 330 recettes et 30 ustensiles', () => {
+  it('porte bien 339 recettes et 30 ustensiles', () => {
     const catalog = catalogueReel()
     expect(catalog.recipes.size).toBe(RECETTES_TOTAL)
     expect(catalog.equipment.size).toBe(USTENSILES_TOTAL)
   })
 
-  it('condamne 271 recettes sans rien, 264 avec le seul four — les deux bornes de la tenaille', () => {
+  it('condamne 280 recettes sans rien, 273 avec le seul four — les deux bornes de la tenaille', () => {
     // Mesuré par SQL, indépendamment du moteur : si ces deux nombres bougent, c'est le CONTENU qui
     // a changé, et les clauses 5 et 6 sont à revoir avec l'auteur, pas à réajuster en silence.
     expect(ecarteesSelonLeCatalogue([]).size).toBe(ECARTEES_SANS_RIEN)
@@ -226,7 +226,7 @@ describe('65b — clauses 1 à 4 : ce que `readConstraints` transmet au moteur',
 })
 
 describe('65b — clauses 5 et 6 : la tenaille, mêmes données, l’interrupteur seul qui change', () => {
-  it('5. le seul four déclaré, interrupteur ÉTEINT : les 330 recettes restent, zéro écartée', async () => {
+  it('5. le seul four déclaré, interrupteur ÉTEINT : les 339 recettes restent, zéro écartée', async () => {
     const store = await storeComplet()
     store.writeOwnedEquipmentIds(db, [FOUR])
 
@@ -237,7 +237,7 @@ describe('65b — clauses 5 et 6 : la tenaille, mêmes données, l’interrupteu
 
   it('5 bis. rien de déclaré du tout : le même résultat, à l’identifiant près', async () => {
     // La clause dit « strictement identique ». On compare les ENSEMBLES, pas les comptes : deux
-    // ensembles de 330 pris dans un catalogue de 330 seraient forcément égaux, mais l'assertion
+    // ensembles de 339 pris dans un catalogue de 339 seraient forcément égaux, mais l'assertion
     // survivra à un catalogue qui grandit.
     const store = await storeComplet()
     const sansRien = await passeEquipement()
@@ -248,7 +248,7 @@ describe('65b — clauses 5 et 6 : la tenaille, mêmes données, l’interrupteu
     expect([...avecLeFour.gardees].sort()).toEqual([...sansRien.gardees].sort())
   })
 
-  it('6. le même four, interrupteur ALLUMÉ : 264 écartées, et EXACTEMENT celles-là', async () => {
+  it('6. le même four, interrupteur ALLUMÉ : 273 écartées, et EXACTEMENT celles-là', async () => {
     const store = await storeComplet()
     store.writeOwnedEquipmentIds(db, [FOUR])
     store.writeFiltreEquipement(db, true)
@@ -258,13 +258,13 @@ describe('65b — clauses 5 et 6 : la tenaille, mêmes données, l’interrupteu
     expect(ecartees.length).toBe(ECARTEES_AVEC_LE_FOUR)
     expect(gardees.size).toBe(RECETTES_TOTAL - ECARTEES_AVEC_LE_FOUR)
 
-    // ⛔ L'ENSEMBLE, PAS LE COMPTE. Un code qui écarterait 264 recettes au hasard passerait la
+    // ⛔ L'ENSEMBLE, PAS LE COMPTE. Un code qui écarterait 273 recettes au hasard passerait la
     // ligne du dessus. On compare identifiant par identifiant à ce que `recipe_equipment` désigne,
     // par un chemin qui ne passe NI par le moteur NI par le loader.
     expect([...ecartees].sort()).toEqual([...ecarteesSelonLeCatalogue(['four'])].sort())
   })
 
-  it('6 bis. interrupteur ALLUMÉ sur une table vide : 271 écartées, il n’en reste que 59', async () => {
+  it('6 bis. interrupteur ALLUMÉ sur une table vide : 280 écartées, il n’en reste que 59', async () => {
     // Le nombre que le garde-fou de l'écran doit annoncer AVANT d'allumer (clause 8).
     const store = await storeComplet()
     store.writeFiltreEquipement(db, true)

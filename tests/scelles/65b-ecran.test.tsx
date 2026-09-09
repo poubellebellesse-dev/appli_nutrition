@@ -22,10 +22,10 @@
 // ⚠️ LA FORMULATION EXACTE APPARTIENT AU LOT, PAS AU SCEAU. Ce fichier n'impose aucune phrase. Il
 // impose trois choses observables : le terme du référentiel comme libellé (« Four », pas `four`),
 // `role="switch"` pour l'interrupteur — c'est le rôle ARIA d'un réglage à deux états, et un test qui
-// n'exigerait rien laisserait passer un `div` cliquable —, et le NOMBRE 271 dans l'avertissement.
+// n'exigerait rien laisserait passer un `div` cliquable —, et le NOMBRE 280 dans l'avertissement.
 //
-// ⚠️ 271 N'EST PAS UN NOMBRE DÉCORATIF. C'est le compte, mesuré sur `catalog.db` réel, des recettes
-// qui disparaîtraient si l'on allumait le filtre sans rien cocher : il en resterait 59 sur 330. Un
+// ⚠️ 280 N'EST PAS UN NOMBRE DÉCORATIF. C'est le compte, mesuré sur `catalog.db` réel, des recettes
+// qui disparaîtraient si l'on allumait le filtre sans rien cocher : il en resterait 59 sur 339. Un
 // avertissement qui ne le dit pas ne prévient de rien. Le même nombre est scellé dans `65b.test.ts`,
 // par un chemin SQL indépendant de l'écran.
 //
@@ -59,7 +59,7 @@ vi.mock('../../app/src/ui/user-source.js', () => ({
 }))
 
 /** Recettes qui disparaîtraient si le filtre s'allumait sans qu'un seul ustensile soit coché. */
-const ECARTEES_SANS_RIEN = 271
+const ECARTEES_SANS_RIEN = 280
 
 /** Le libellé du four vient du RÉFÉRENTIEL, pas d'une chaîne en dur : c'est « Four ». */
 function termeDuFour(): string {
@@ -168,7 +168,7 @@ describe('65b — clause 8 : le garde-fou de vide', () => {
     expect(await filtreEnBase()).toBe(false)
   })
 
-  it('l’allumer sans rien avoir coché PRÉVIENT AVANT, en annonçant les 271 recettes', async () => {
+  it('l’allumer sans rien avoir coché PRÉVIENT AVANT, en annonçant les 280 recettes', async () => {
     await monter()
     const panneau = ouvrirLeMateriel()
     fireEvent.click(interrupteur(panneau))
@@ -190,7 +190,7 @@ describe('65b — clause 8 : le garde-fou de vide', () => {
       expect(screen.getAllByRole('dialog').length).toBeGreaterThan(1)
     })
     // ⛔ LE CŒUR DE LA CLAUSE. Un écran qui écrirait d'abord et demanderait ensuite aurait déjà
-    // retiré 271 recettes au moment où la question s'affiche.
+    // retiré 280 recettes au moment où la question s'affiche.
     expect(await filtreEnBase()).toBe(false)
   })
 

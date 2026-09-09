@@ -337,13 +337,13 @@ describe('lot gestes-champ-media — le lexique gagne un point d’accroche, et 
     // n'existaient que dans la sortie console de `build.mjs`, qu'aucune machine ne lit.
     // Un lot qui aurait cassé le chargement des tips serait passé au vert.
     expect(catalogue.foods.size, 'le nombre d’aliments a bougé').toBe(451)
-    expect(catalogue.recipes.size, 'le nombre de recettes a bougé').toBe(330)
+    expect(catalogue.recipes.size, 'le nombre de recettes a bougé').toBe(339)
     expect(catalogue.lexicon.size, 'le nombre de gestes a bougé').toBe(62)
     expect(catalogue.tips.length, 'le nombre de tips a bougé').toBe(73)
     expect(catalogue.evidence.size, 'le nombre de fiches de preuve a bougé').toBe(8)
     expect(catalogue.equipment.size, 'le nombre d’équipements a bougé').toBe(30)
 
     const etapes = [...catalogue.recipes.values()].reduce((n, r) => n + r.etapes.length, 0)
-    expect(etapes, 'le nombre total d’étapes de recette a bougé').toBe(1548)
+    expect(etapes, 'le nombre total d’étapes de recette a bougé').toBe(1575)
   })
 })

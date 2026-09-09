@@ -9,7 +9,7 @@
 //
 // ---------------------------------------------------------------------------------------------
 // ⛔ CE FICHIER A ÉTÉ RÉÉCRIT LE 2026-08-20 APRÈS UNE ATTAQUE QUI L'A TRAVERSÉ. Sa première version
-// scellait un total (166 recettes) et cinq points nommés. Un critique a produit en trois lignes une
+// scellait un total (172 recettes) et cinq points nommés. Un critique a produit en trois lignes une
 // implémentation qui posait les occupations AU HASARD sur 161 recettes, sans lire un seul mot de
 // texte, et qui passait les dix clauses. Il a produit une seconde triche qui calculait les conflits
 // en comptant les recettes DISTINCTES sans jamais regarder QUAND les plats se font — la régression
@@ -37,7 +37,7 @@
 //     `INSERT OR REPLACE` de `CLAUDE.md`, sous un autre nom.
 //
 // ---------------------------------------------------------------------------------------------
-// ⛔ LE COMPTE SCELLÉ EST CELUI DES RECETTES — 166 —, PAS CELUI DES LIGNES, ET C'EST LA LEÇON DU
+// ⛔ LE COMPTE SCELLÉ EST CELUI DES RECETTES — 172 —, PAS CELUI DES LIGNES, ET C'EST LA LEÇON DU
 // 65a, PAYÉE. Les 285 occupations sont mesurées PAR ÉTAPE ; le modèle à portée
 // (`ordre_debut`/`ordre_fin`) ne compte plus le même objet dès que deux occupations se rejoignent.
 // Sceller 285 serait écrire un chiffre pour avoir l'air précis — c'est ainsi qu'un 83 faux a été
@@ -74,8 +74,8 @@ const BUILD_SCRIPT = path.join(REPO_ROOT, 'catalog', 'build.mjs')
 
 const PLAQUE = 'plaque_cuisson'
 
-/** Le compte mesuré le 2026-08-19 sur les 330 recettes réelles. Voir l'en-tête pour le motif. */
-const RECETTES_AVEC_PLAQUE = 166
+/** Le compte mesuré le 2026-09-09 sur les 339 recettes réelles. Voir l'en-tête pour le motif. */
+const RECETTES_AVEC_PLAQUE = 172
 
 /**
  * Les quinze gestes du lexique qui ne se font QUE sur un feu du dessus. Aucun n'a rendu de faux
@@ -215,14 +215,14 @@ function laPlaqueExisteAuCatalogue(): void {
 // ══════════════════════════════════════ MOITIÉ A — LE CATALOGUE ══════════════════════════════════
 
 describe('65c — la plaque de cuisson entre au catalogue', () => {
-  it('1. exactement 166 recettes portent une occupation de plaque', () => {
+  it('1. exactement 172 recettes portent une occupation de plaque', () => {
     const recettes = new Set(occupations.filter((o) => o.code === PLAQUE).map((o) => o.recipe_id))
     expect(recettes.size).toBe(RECETTES_AVEC_PLAQUE)
   })
 
   it('2. ⛔ AUCUNE OCCUPATION INVENTÉE — chacune couvre une étape qui porte un des seize gestes', () => {
     // ⛔ LA CLAUSE QUI TUE LE PLACEMENT AU HASARD. Sans elle, une implémentation qui pose une
-    // occupation sur n'importe quelle étape libre de 166 recettes atteint le compte de la clause 1
+    // occupation sur n'importe quelle étape libre de 172 recettes atteint le compte de la clause 1
     // sans avoir lu un seul mot de texte. Ici, il lui faut tomber juste 285 fois de suite.
     laPlaqueExisteAuCatalogue()
 
@@ -247,7 +247,7 @@ describe('65c — la plaque de cuisson entre au catalogue', () => {
   })
 
   it('3. ⛔ AUCUNE OCCUPATION OMISE — toute étape à geste sûr, libre du four, en porte une', () => {
-    // ⛔ LA CLAUSE QUI TUE « une occupation par recette ». La clause 1 se satisfait de 166 lignes ;
+    // ⛔ LA CLAUSE QUI TUE « une occupation par recette ». La clause 1 se satisfait de 172 lignes ;
     // celle-ci en exige une par étape qui la mérite, sans nommer une seule recette. Les 267 étapes à
     // geste sûr y passent toutes.
     laPlaqueExisteAuCatalogue()

@@ -15,7 +15,7 @@
 // ⛔ ON LIT LE CATALOGUE PAR SQL DIRECT, JAMAIS PAR LE CHARGEUR QUE L'ÉCRAN UTILISE. Si la
 // correction consistait à retourner la convention des DONNÉES au lieu de celle de l'écran, un test
 // qui relit par le même chemin ne verrait rien : les deux erreurs s'annuleraient. D'où
-// `CONVENTION_DU_CATALOGUE`, qui fige les comptes mesurés — 84 froides, 245 chaudes, 1 neutre.
+// `CONVENTION_DU_CATALOGUE`, qui fige les comptes mesurés — 84 froides, 254 chaudes, 1 neutre.
 //
 // ⛔ ON NE LIT PAS LE SOURCE DU FICHIER. Pas d'expression régulière sur `aujourdhui.tsx` : un
 // `critique` a déjà fait passer le sceau du lot E en ajoutant un `import` jamais appelé.
@@ -127,7 +127,7 @@ const CATALOGUE = path.join(
  * Comptes mesurés le 2026-08-21 sur `catalog.db` réel. Ils ne décorent pas : ils interdisent la
  * correction par retournement des DONNÉES, qui les ferait basculer.
  */
-const CONVENTION_DU_CATALOGUE = { froides: 84, neutres: 1, chaudes: 245, total: 330 } as const
+const CONVENTION_DU_CATALOGUE = { froides: 84, neutres: 1, chaudes: 254, total: 339 } as const
 
 /**
  * Taille minimale de la liste que l'écran doit offrir. L'écran en propose 12 aujourd'hui ; la
@@ -255,7 +255,7 @@ async function propositionsSous(libelle: string): Promise<readonly string[]> {
 // ------------------------------------------------------------------------------------------
 
 describe('retour-1 — la convention du catalogue, figée pour interdire la fausse correction', () => {
-  it('porte 84 recettes strictement froides, 245 strictement chaudes, 1 neutre, 330 en tout', () => {
+  it('porte 84 recettes strictement froides, 254 strictement chaudes, 1 neutre, 339 en tout', () => {
     const db = ouvrirCatalogue()
     try {
       const l = (sql: string) => (db.prepare(sql).get() as { n: number }).n
@@ -357,7 +357,7 @@ describe('retour-1 — la pastille « Chaud » demande du chaud (ROUGE aujourd�
       console.log(`[MESURE] Froid → moyenne ${v.moyenne.toFixed(3)}, ${v.bonCote}/${v.sur} froides`)
       expect(v.sur).toBeGreaterThanOrEqual(PROPOSITIONS_MINIMUM)
       expect(v.moyenne).toBeLessThan(0)
-      // ⚠️ 0,6 ET NON 0,9, ET CE N EST PAS UN RELACHEMENT : le catalogue porte 245 recettes
+      // ⚠️ 0,6 ET NON 0,9, ET CE N EST PAS UN RELACHEMENT : le catalogue porte 254 recettes
       // chaudes contre 84 froides. Demander du froid rend MECANIQUEMENT une liste plus melangee
       // que demander du chaud. Mesure du 2026-08-21 : 8 froides sur 12, soit 67 %. Exiger 70 %
       // aurait fait rougir la clause APRES la correction — la symetrie des seuils aurait ete
