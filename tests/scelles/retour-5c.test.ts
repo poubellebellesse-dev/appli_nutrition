@@ -281,7 +281,14 @@ const CAPTEURS_AVANT: Readonly<Record<string, { readonly it: number; readonly ex
   '65c.test.ts': { it: 16, expect: 39 },
   'gestes-champ-media.test.ts': { it: 7, expect: 28 },
   'photo-fiche-detail.test.tsx': { it: 8, expect: 16 },
-  'retour-1.test.tsx': { it: 9, expect: 23 },
+  // ⚠️ REPHOTOGRAPHIÉ LE 2026-09-09 APRÈS `retour-5d` (était `{ it: 9, expect: 23 }`). Ce lot-ci
+  // n'a rien changé : c'est `retour-5d` qui a rendu à `retour-1` les capteurs qui lui manquaient —
+  // ses clauses « Froid » et « Chaud » se sont dédoublées par créneau, parce qu'une clause qui ne
+  // nomme pas son repas mesure `new Date().getHours()`. Le rouge de ce fichier était JUSTE et
+  // attendu (voir l'avertissement ci-dessus) ; l'auteur a tranché de rebaser plutôt que de retirer
+  // `retour-1` de la liste, pour ne pas perdre l'empreinte, seul capteur d'une assertion affaiblie
+  // à compte constant.
+  'retour-1.test.tsx': { it: 11, expect: 30 },
 }
 
 /** `it(` et `expect(` en position d'appel — jamais `.it(`, jamais `unIt(`. */
@@ -308,7 +315,11 @@ const EMPREINTES: Readonly<Record<string, { readonly sha: string; readonly ligne
   '65c.test.ts': { sha: 'a042d94e87d4243c', lignes: 403 },
   'gestes-champ-media.test.ts': { sha: '510462e15469e98d', lignes: 216 },
   'photo-fiche-detail.test.tsx': { sha: '8df69f711b1f66fe', lignes: 144 },
-  'retour-1.test.tsx': { sha: '90ed6b6054243dd8', lignes: 270 },
+  // ⚠️ REPHOTOGRAPHIÉ LE 2026-09-09 APRÈS `retour-5d` (était `90ed6b6054243dd8` / 270 lignes).
+  // Même raison qu'au-dessus. ⛔ CETTE LIGNE NE SE REBASE PAS « PARCE QUE LE TEST EST ROUGE » :
+  // elle se rebase quand un lot a le droit d'avoir changé le fichier, et seulement là. Sans ce
+  // droit, un sha qu'on recopie depuis la sortie d'échec ne garde plus rien du tout.
+  'retour-1.test.tsx': { sha: '8806528362af02e5', lignes: 324 },
 }
 
 describe('retour-5c — clause 2 : aucun capteur n’a disparu', () => {

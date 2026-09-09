@@ -137,6 +137,29 @@ const CONVENTION_DU_CATALOGUE = { froides: 84, neutres: 1, chaudes: 254, total: 
  */
 const PROPOSITIONS_MINIMUM = 10
 
+/**
+ * Les deux repas de la journée, tels que l'écran les nomme sous `repasParJour: 2`.
+ *
+ * ⛔ AJOUTÉS PAR `retour-5d` (2026-09-09), ET C'EST TOUT L'OBJET DE CE LOT. Avant lui, aucune
+ * clause de ce fichier ne disait quel repas elle mesurait : `Aujourdhui` déduisait son créneau de
+ * `new Date().getHours()` (`aujourdhui.tsx:246`, bascule à 14 h — `FIN_DE_CRENEAU.dejeuner`), donc
+ * la même clause rendait 12/12 froides à midi et 7/12 à 14 h. Elle mesurait l'heure de la machine.
+ * ▶ Décision 82.
+ */
+const CE_MIDI = 'Ce midi'
+const CE_SOIR = 'Ce soir'
+
+/**
+ * L'heure à laquelle ce fichier relève ses mesures.
+ *
+ * ⚠️ ELLE NE DEVRAIT PLUS RIEN CHANGER, et c'est justement pour ça qu'on la fige. Le créneau est
+ * épinglé à la pastille dans chaque clause ; `retour-5d` prouve séparément qu'un créneau épinglé
+ * rend l'écran sourd à l'horloge. Figer ici n'est donc pas la correction — c'est la ceinture :
+ * si l'épingle cessait un jour de mordre, on ne veut pas que ce fichier redevienne silencieusement
+ * une mesure de l'heure qu'il est. 9 h, comme `retour-5d`, pour que les deux relèvent la même chose.
+ */
+const HEURE_DU_RELEVE = 9
+
 type Axe = 'axe_chaud_froid' | 'axe_leger_consistant' | 'axe_sucre_sale'
 
 function ouvrirCatalogue(): DatabaseSync {
@@ -174,9 +197,33 @@ beforeEach(() => {
   reinitialiserBase()
   writeRythme(baseCourante(), { repasParJour: 2, tempsSemaineMin: null, tempsWeekendMin: null })
 })
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  vi.useRealTimers()
+})
 
-async function monter(): Promise<void> {
+/**
+ * Fige l'horloge à une heure donnée du 2026-09-09.
+ *
+ * ⚠️ SEUL `Date` EST SIMULÉ. Feindre les minuteries casserait `await` et le rendu de React ; ici
+ * on ne veut qu'une chose, que `new Date().getHours()` réponde ce qu'on lui dit.
+ */
+function figerAHeure(heure: number): void {
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(new Date(2026, 8, 9, heure, 30, 0))
+}
+
+/**
+ * Monte « Aujourd'hui » ET ÉPINGLE SON REPAS. Il n'existe pas de version sans créneau.
+ *
+ * ⛔ LE PARAMÈTRE EST OBLIGATOIRE, ET C'EST LA CORRECTION DU LOT `retour-5d`. Une signature à
+ * argument facultatif rouvrirait exactement le trou : un appelant qui l'omet ne produit aucune
+ * erreur — ni au type, ni au test, ni à l'écran — et sa clause se remet à mesurer l'heure sans que
+ * personne ne le voie. C'est le piège « un champ déclaré n'est pas un champ branché », payé trois
+ * fois sur ce dépôt.
+ */
+async function monter(creneau: string): Promise<void> {
+  figerAHeure(HEURE_DU_RELEVE)
   const { Aujourdhui } = await import('../../app/src/ui/screens/aujourdhui.js')
   const { ProvenanceLancerParcours } = await import('../../app/src/ui/lancer-parcours.js')
   render(
@@ -185,9 +232,32 @@ async function monter(): Promise<void> {
     </ProvenanceLancerParcours>
   )
   await screen.findByText(/sur \d+$/)
+  await epingler(creneau)
+}
+
+/**
+ * Clique la pastille du créneau demandé.
+ *
+ * ⛔ ON VISE `aria-pressed`, PAS LE TEXTE. Le titre de l'écran porte le MÊME libellé que la
+ * pastille ; `getByText` en trouve deux et le premier est le titre, qui n'est pas un bouton —
+ * cliquer dessus ne change rien et laisse l'horloge décider en silence. C'est la fausse
+ * implémentation n°3 de l'en-tête, prise par un autre bout.
+ */
+async function epingler(creneau: string): Promise<void> {
+  const pastille = screen
+    .queryAllByText(creneau)
+    .map((n) => n.closest('button'))
+    .find((b) => b !== null && b.hasAttribute('aria-pressed'))
+  if (pastille === undefined || pastille === null) {
+    expect.fail(`la pastille de créneau « ${creneau} » est absente de l'écran`)
+  }
+  fireEvent.click(pastille)
+  await screen.findByText(/sur \d+$/)
+  await laisserRecalculer()
 }
 
 const platAffiche = (): string => document.querySelector('article h2')!.textContent!
+const titreAffiche = (): string => document.querySelector('h1')!.textContent!
 const compteur = (): string => screen.getByText(/^\d+ sur \d+$/).textContent!
 const tailleListe = (): number => Number(compteur().split(' sur ')[1])
 const bouton = (texte: string | RegExp) => screen.getByText(texte).closest('button') as HTMLButtonElement
@@ -240,9 +310,18 @@ function collecterListe(): readonly string[] {
   return plats
 }
 
-/** Monte l'écran, active la pastille demandée, referme l'encart, et rend la liste proposée. */
-async function propositionsSous(libelle: string): Promise<readonly string[]> {
-  await monter()
+/**
+ * Monte l'écran SUR UN REPAS NOMMÉ, active la pastille d'envie, referme l'encart, rend la liste.
+ *
+ * ⛔ LA VÉRIFICATION DU TITRE N'EST PAS DÉCORATIVE. `epingler` échoue si la pastille est absente,
+ * mais pas si elle est présente et inerte : sans ce contrôle, une pastille débranchée laisserait
+ * la mesure se faire sur le créneau de l'horloge tout en portant le nom de l'autre.
+ */
+async function propositionsSous(libelle: string, creneau: string): Promise<readonly string[]> {
+  await monter(creneau)
+  expect(titreAffiche(), `l’écran doit afficher « ${creneau} », pas le repas de l’horloge`).toBe(
+    creneau
+  )
   await ouvrirEncart()
   fireEvent.click(bouton(libelle))
   fireEvent.click(bouton('Masquer'))
@@ -311,8 +390,13 @@ describe('retour-1 — ce que l’écran DEMANDE au moteur (ROUGE aujourd’hui)
    * aucune liste : elle regarde le nombre qui part vers le moteur. Reclasser après l'appel ne
    * peut pas la satisfaire, parce qu'à ce moment-là l'appel a déjà eu lieu avec le mauvais signe.
    */
-  it('envoie +1 quand on demande « Chaud », et −1 quand on demande « Froid »', async () => {
-    await monter()
+  // ⚠️ LE TITRE DIT « le chaud » ET NON « Chaud », ET CE N'EST PAS UN CAPRICE DE STYLE.
+  // `retour-5d` exige que TOUTE clause dont le titre porte « Chaud » écrive le seuil de 0,9 —
+  // garde contre un plancher qu'on retirerait en laissant le titre le promettre. Cette clause-ci
+  // ne mesure aucune proportion : elle écoute le SIGNE envoyé au moteur. Lui coller un 0,9
+  // n'aurait rien vérifié ; la minuscule dit qu'on parle de la température, pas de la pastille.
+  it('envoie +1 quand on demande le chaud, et −1 quand on demande le froid', async () => {
+    await monter(CE_MIDI)
     await ouvrirEncart()
 
     observe.requetes.length = 0
@@ -334,13 +418,59 @@ describe('retour-1 — ce que l’écran DEMANDE au moteur (ROUGE aujourd’hui)
   })
 })
 
-describe('retour-1 — la pastille « Chaud » demande du chaud (ROUGE aujourd’hui)', () => {
-  it('propose une liste dont la moyenne est chaude, et au moins 9 plats sur 10 le sont', async () => {
-    const plats = await propositionsSous('Chaud')
+/**
+ * ⛔ QUATRE CLAUSES LÀ OÙ IL Y EN AVAIT DEUX, UNE PAR PASTILLE ET PAR REPAS — c'est la livraison
+ * de `retour-5d`. Les deux clauses d'avant ne disaient pas quel repas elles regardaient : elles
+ * héritaient de `new Date().getHours()`, donc du moment où la suite tournait. La même clause a
+ * rendu 12/12 froides à 12 h et 7/12 à 14 h le 2026-09-09, et deux relevés d'août ont attribué
+ * l'écart à la croissance du catalogue : ils comparaient deux heures sans le savoir.
+ *
+ * ⛔ LE PLANCHER DU FROID PASSE DE 0,6 À 0,9 AUX DEUX REPAS, ET CE N'EST PAS UN DURCISSEMENT
+ * DÉCORATIF — c'est le re-mesurage que le brief du lot exigeait « APRÈS `retour-5e` ». Le 0,6
+ * datait du 2026-08-21 et se justifiait par le rayon : 254 recettes chaudes contre 84 froides, et
+ * un dîner qui n'en portait que **8 sur 214**. `retour-5e` (2026-09-09) a rendu au dîner les 36
+ * froides que `types_repas` en barrait → **250 recettes, 44 froides**, la même densité qu'au
+ * déjeuner (44 sur 194). Mesure du jour : **12/12 froides aux DEUX créneaux**.
+ * ⚠️ 0,9 ET NON 1,0 : un plancher au ras de sa mesure rougit au premier plat chaud qui entre dans
+ * la liste. La marge est d'un plat sur dix — la même que celle du seuil de « Chaud », et la même
+ * que celle que le 0,6 prenait sous son 8/12 d'août. La symétrie des deux seuils était une
+ * « élégance fausse » tant que le rayon ne la portait pas ; elle est maintenant un RÉSULTAT.
+ */
+describe('retour-1 — chaque pastille tient sa promesse, à chaque repas (ROUGE aujourd’hui)', () => {
+  it('« Froid » à « Ce midi » : la liste penche froid, et 9 plats sur 10 le sont', async () => {
+    const plats = await propositionsSous('Froid', CE_MIDI)
+    const db = ouvrirCatalogue()
+    try {
+      const v = verdict(db, plats, 'axe_chaud_froid', -1)
+      console.log(`[MESURE] Froid / ${CE_MIDI} → ${v.moyenne.toFixed(3)}, ${v.bonCote}/${v.sur} froides`)
+      expect(v.sur).toBeGreaterThanOrEqual(PROPOSITIONS_MINIMUM)
+      expect(v.moyenne).toBeLessThan(0)
+      expect(v.bonCote / v.sur).toBeGreaterThanOrEqual(0.9)
+    } finally {
+      db.close()
+    }
+  })
+
+  it('« Froid » à « Ce soir » : la liste penche froid, et 9 plats sur 10 le sont', async () => {
+    const plats = await propositionsSous('Froid', CE_SOIR)
+    const db = ouvrirCatalogue()
+    try {
+      const v = verdict(db, plats, 'axe_chaud_froid', -1)
+      console.log(`[MESURE] Froid / ${CE_SOIR} → ${v.moyenne.toFixed(3)}, ${v.bonCote}/${v.sur} froides`)
+      expect(v.sur).toBeGreaterThanOrEqual(PROPOSITIONS_MINIMUM)
+      expect(v.moyenne).toBeLessThan(0)
+      expect(v.bonCote / v.sur).toBeGreaterThanOrEqual(0.9)
+    } finally {
+      db.close()
+    }
+  })
+
+  it('« Chaud » à « Ce midi » : la liste penche chaud, et 9 plats sur 10 le sont', async () => {
+    const plats = await propositionsSous('Chaud', CE_MIDI)
     const db = ouvrirCatalogue()
     try {
       const v = verdict(db, plats, 'axe_chaud_froid', 1)
-      console.log(`[MESURE] Chaud → moyenne ${v.moyenne.toFixed(3)}, ${v.bonCote}/${v.sur} chaudes`)
+      console.log(`[MESURE] Chaud / ${CE_MIDI} → ${v.moyenne.toFixed(3)}, ${v.bonCote}/${v.sur} chaudes`)
       expect(v.sur).toBeGreaterThanOrEqual(PROPOSITIONS_MINIMUM)
       expect(v.moyenne).toBeGreaterThan(0)
       expect(v.bonCote / v.sur).toBeGreaterThanOrEqual(0.9)
@@ -349,20 +479,15 @@ describe('retour-1 — la pastille « Chaud » demande du chaud (ROUGE aujourd�
     }
   })
 
-  it('propose du froid quand on demande « Froid », et au moins 6 plats sur 10 le sont', async () => {
-    const plats = await propositionsSous('Froid')
+  it('« Chaud » à « Ce soir » : la liste penche chaud, et 9 plats sur 10 le sont', async () => {
+    const plats = await propositionsSous('Chaud', CE_SOIR)
     const db = ouvrirCatalogue()
     try {
-      const v = verdict(db, plats, 'axe_chaud_froid', -1)
-      console.log(`[MESURE] Froid → moyenne ${v.moyenne.toFixed(3)}, ${v.bonCote}/${v.sur} froides`)
+      const v = verdict(db, plats, 'axe_chaud_froid', 1)
+      console.log(`[MESURE] Chaud / ${CE_SOIR} → ${v.moyenne.toFixed(3)}, ${v.bonCote}/${v.sur} chaudes`)
       expect(v.sur).toBeGreaterThanOrEqual(PROPOSITIONS_MINIMUM)
-      expect(v.moyenne).toBeLessThan(0)
-      // ⚠️ 0,6 ET NON 0,9, ET CE N EST PAS UN RELACHEMENT : le catalogue porte 254 recettes
-      // chaudes contre 84 froides. Demander du froid rend MECANIQUEMENT une liste plus melangee
-      // que demander du chaud. Mesure du 2026-08-21 : 8 froides sur 12, soit 67 %. Exiger 70 %
-      // aurait fait rougir la clause APRES la correction — la symetrie des seuils aurait ete
-      // une elegance fausse.
-      expect(v.bonCote / v.sur).toBeGreaterThanOrEqual(0.6)
+      expect(v.moyenne).toBeGreaterThan(0)
+      expect(v.bonCote / v.sur).toBeGreaterThanOrEqual(0.9)
     } finally {
       db.close()
     }
@@ -374,7 +499,7 @@ describe('retour-1 — la pastille « Chaud » demande du chaud (ROUGE aujourd�
    * chose » renouvelle le tirage, la liste doit CHANGER et rester chaude.
    */
   it('renouvelle la liste sans cesser d’être chaude — une table figée ne le peut pas', async () => {
-    await monter()
+    await monter(CE_MIDI)
     await ouvrirEncart()
     fireEvent.click(bouton('Chaud'))
     fireEvent.click(bouton('Masquer'))
@@ -406,9 +531,9 @@ describe('retour-1 — la pastille « Chaud » demande du chaud (ROUGE aujourd�
 
 describe('retour-1 — les deux axes justes le restent (VERTS aujourd’hui, témoins de débordement)', () => {
   it('« Léger » reste léger et « Consistant » reste consistant', async () => {
-    const legers = await propositionsSous('Léger')
+    const legers = await propositionsSous('Léger', CE_MIDI)
     cleanup()
-    const consistants = await propositionsSous('Consistant')
+    const consistants = await propositionsSous('Consistant', CE_MIDI)
     const db = ouvrirCatalogue()
     try {
       const a = verdict(db, legers, 'axe_leger_consistant', -1)
@@ -423,9 +548,9 @@ describe('retour-1 — les deux axes justes le restent (VERTS aujourd’hui, té
   })
 
   it('« Salé » reste salé et « Sucré » reste sucré', async () => {
-    const sales = await propositionsSous('Salé')
+    const sales = await propositionsSous('Salé', CE_MIDI)
     cleanup()
-    const sucres = await propositionsSous('Sucré')
+    const sucres = await propositionsSous('Sucré', CE_MIDI)
     const db = ouvrirCatalogue()
     try {
       const a = verdict(db, sales, 'axe_sucre_sale', -1)
