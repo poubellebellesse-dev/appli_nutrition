@@ -204,7 +204,7 @@ confirme, le leader français du meal-planning gratuit vient de faire payer.
 - Yummly (fermeture) — [Wikipedia](https://en.wikipedia.org/wiki/Yummly)
 - Mealie (IA) — [docs.mealie.io](https://docs.mealie.io/documentation/getting-started/features/) ·
   Tandoor (IA) — [docs.tandoor.dev](https://docs.tandoor.dev/features/ai/)
-- Contexte complet et limites de la passe : `G:\Claude\strategie_applis\sessions\RECAP_2026-08-16.md` §9.1
+- Contexte complet et limites de la passe : `F:\Claude\strategie_applis\sessions\RECAP_2026-08-16.md` §9.1
 
 ---
 

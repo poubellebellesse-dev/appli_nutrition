@@ -94,7 +94,7 @@ avec `git status -sb`, ce que le bloc disait lui-même deux lignes plus haut.
 > Le défaut de ciblage (`lire_csv` de `chercher_photos.py` retombe **en silence** sur le slug de
 > recette quand la colonne de requête est vide, d'où une libellule dans `photos/crepes/`) **n'est
 > toujours pas corrigé** ; il rendait 2,2 % de `oui` contre 5,6 % sur un dossier ciblé. Le fichier
-> `recettes-appli.csv` (224 recettes, vérifié) attend dans `G:\Claude\Dessinateur\recettes\`, et
+> `recettes-appli.csv` (224 recettes, vérifié) attend dans `F:\Claude\Dessinateur\recettes\`, et
 > **c'est à l'utilisateur de le lancer** — réseau et clés API.
 >
 > ⚠️ **`image_path` n'est encore posé nulle part : trier n'est pas rattacher.** L'étape d'import

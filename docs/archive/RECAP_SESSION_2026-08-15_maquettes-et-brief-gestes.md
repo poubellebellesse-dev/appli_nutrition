@@ -84,7 +84,7 @@ auront un carré vide dans la liste, en permanence. **Ce n'est pas une dette.**
    tiret (`bain-marie`/`bain_marie`, `monter-blancs`, `tailler-des`), **onze sont de vrais manques**.
    C'est le lot 2 qui paiera.
 
-**Chiffres relevés à la main sur le bac** (`G:\Claude\Dessinateur\gestes\videos`) : 98 segments pour
+**Chiffres relevés à la main sur le bac** (`F:\Claude\Dessinateur\gestes\videos`) : 98 segments pour
 51 gestes — **22 gestes à 1 segment, 11 à 2, 18 à 3**. Noms de moments : **29 `debut`, 23 `milieu`,
 25 `fin`, 21 `unique`**. Les 98 posters existent déjà, un par segment.
 

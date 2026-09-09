@@ -51,7 +51,7 @@ décisions humaines : 86
 sorties du bac     : 97 photos écartées (rejets de trier.py + anciennes images générées)
 ```
 
-**Un fichier de récolte ciblée** : `G:\Claude\Dessinateur\recettes\recettes-appli.csv`, 224 lignes
+**Un fichier de récolte ciblée** : `F:\Claude\Dessinateur\recettes\recettes-appli.csv`, 224 lignes
 `id;;requete_fr;requete_en`, vérifié en rejouant le filtre de `lire_csv` — 224 lues, 0 requête vide,
 0 doublon, 0 sujet IA, toutes les recettes existent au catalogue. **Non lancé** : la récolte tape le
 réseau et consomme les clés API de l'utilisateur.

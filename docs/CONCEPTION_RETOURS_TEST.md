@@ -1512,7 +1512,7 @@ verrou.
 
 ---
 
-### Lot `retour-5` — le riz nature entre au catalogue, et il ne fait pas un dîner ☑️ **CODÉ le 2026-08-27, PAS ENCORE CLÔTURÉ** (hash à poser)
+### Lot `retour-5` — le riz nature entre au catalogue, et il ne fait pas un dîner ✅ **LIVRÉ** — codé le 2026-08-27, commité le 2026-09-06 (`d0dd712`), **clôturé le 2026-09-09**
 
 **Ce que l'auteur a tranché (2026-08-21, décision 72), ses mots :** « **oui**, au moyen d'une
 **catégorie de bases — « plat simple »**. Un accompagnement nu entre donc au catalogue comme recette
@@ -1873,6 +1873,32 @@ plat froid » ; il disait en fait « neuf recettes de plus changent le classem
 entrer ». **Une cause n'est acquise qu'une fois la liste regardée, pas une fois l'histoire
 cohérente.**
 
+#### La clôture, mesurée le 2026-09-09 — et le compte de rouges n'est plus celui qu'on annonçait
+
+Relevé sur l'arbre principal, `HEAD` = `560eb8e`, code de `retour-5` compris (`d0dd712`), rien de
+non commité hors documents : `npm test` → **2 426 passed / 10 failed** (2 436 tests, **6 fichiers
+rouges sur 128**) en 49,9 s · `typecheck` propre · `vite build` ✓ (2,55 s) · `plan-stress` **20/20**.
+Catalogue construit : **339 recettes, dont 9 `est_plat_simple = 1`** — lu dans `catalog.db`.
+⚠️ `node catalog/audit-mapping.mjs` **n'a pas pu tourner** : `documents Ciqual/2025_11_03` est absent
+de l'arbre (gitignoré). `retour-5` n'ajoute **aucun aliment**, donc aucun mappage n'a bougé, mais
+c'est un raisonnement, pas une mesure — l'écrire comme tel.
+
+⛔ **ONZE ROUGES ANNONCÉS, DIX MESURÉS — ET C'EST LE ONZIÈME QUI MANQUE, PAS UN COMPTEUR.** Ce
+document, `CLAUDE.md` et le message de `d0dd712` annoncent tous les trois « 11 rouges, dont 1 qui
+n'est pas un compteur ». Mesuré ce jour, la clause **« propose du froid quand on demande « Froid »,
+et au moins 6 plats sur 10 le sont »** de `tests/scelles/retour-1.test.tsx` **PASSE** — dans la suite
+complète, puis **rejouée deux fois seule**. Le seul rouge que ce fichier porte encore est son
+compteur `330`. **Les dix rouges restants sont donc TOUS des compteurs, et `retour-5c` les couvre
+tous.**
+
+⚠️ **NE PAS EN CONCLURE QUE LA DÉCISION 82 EST TRANCHÉE.** Aucune ligne de `app/src/` ni de
+`catalog/` n'a bougé entre le relevé du 2026-08-27 et celui-ci : **on ne sait pas ce qui a fait
+passer cette clause au vert**, et une clause qui bascule sans diff est exactement le signal que
+`CLAUDE.md` demande de ne pas ranger. La décision **82** reste **ouverte** et `retour-5d` reste au
+tableau — son objet change : il ne s'agit plus de rendre un rouge vert, mais de **savoir pourquoi il
+l'est devenu**, faute de quoi la clause peut rebasculer au prochain ajout de recettes. La leçon du
+paragraphe précédent s'applique une seconde fois, au même endroit.
+
 ---
 
 ### Lot `retour-5c` — rebaser les compteurs que les neuf bases nues font rougir ⏳ **BRIEF ÉCRIT le 2026-08-28, NON SCELLÉ**
@@ -1997,10 +2023,10 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 | `retour-2` | le sélecteur d'exclusion s'ouvre aux 451 aliments (décision 73) | ✅ **LIVRÉ le 2026-08-22** |
 | `retour-3` | « je mange dehors » étiquette le créneau (décision 76) | ✅ **LIVRÉ le 2026-08-22** — section ci-dessus |
 | `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | ✅ **LIVRÉ le 2026-08-26** (`7642492`) — section ci-dessus |
-| `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | ☑️ **codé le 2026-08-27, 24/24 clauses** — non clôturé, l'arbre est rouge pour `retour-5c` |
+| `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | ✅ **LIVRÉ** — codé le 2026-08-27 (24/24 clauses), commité le 2026-09-06 (`d0dd712`), clôturé le 2026-09-09 · ⛔ **l'arbre reste rouge**, 10 compteurs pour `retour-5c` |
 | `retour-5b` | la case vide dit **pourquoi** elle est vide (décision de l'auteur, 2026-08-26) | **`retour-5`** |
-| `retour-5c` | rebaser les **onze** valeurs scellées que les neuf bases nues font mentir (décision de l'auteur, 2026-08-27) | **`retour-5`** — ⏳ **brief écrit le 2026-08-28**, section ci-dessus · ⚠️ **11 valeurs pour 10 rouges de compteur** : deux sont masquées par l'assertion qui les précède · ⛔ **il restera 1 rouge après**, celui de la décision 82 |
-| `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1`, que la croissance du catalogue fait tomber à 7/12 | **`retour-5`** — ✅ **le filtre d'écran est LIVRÉ le 2026-08-27**, mais ⛔ **il ne rend pas ce rouge vert** : aucune des neuf bases n'apparaît dans les douze propositions, leur seule présence réordonne la sélection. Mécanisme non identifié · décision **82** |
+| `retour-5c` | rebaser les **onze** valeurs scellées que les neuf bases nues font mentir (décision de l'auteur, 2026-08-27) | **`retour-5`** — ⏳ **brief écrit le 2026-08-28**, section ci-dessus · ⚠️ **11 valeurs pour 10 rouges de compteur** : deux sont masquées par l'assertion qui les précède · ✅ **relevé du 2026-09-09 : les 10 rouges sont TOUS des compteurs**, ce lot rend donc l'arbre vert à lui seul |
+| `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1`, que la croissance du catalogue fait tomber à 7/12 | **`retour-5`** — ✅ **le filtre d'écran est LIVRÉ le 2026-08-27**, mais ⛔ **il ne rendait pas ce rouge vert** le 2026-08-27 · ⛔ **et au 2026-09-09 le rouge n'existe plus** : clause rejouée deux fois seule, verte, **sans qu'aucune ligne de `app/src/` ni `catalog/` ait bougé entre les deux relevés**. L'objet du lot devient « pourquoi » et non « comment le corriger ». Mécanisme non identifié · décision **82**, toujours ouverte |
 | `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | **`retour-1`** et **décision 79** |
 | `retour-7` | le frigo ne vaut plus que pour un repas (décision 74) | **décision 80** |
 | `retour-8` | effacer un repas passé (décision 75) | le sort des restes orphelins |

@@ -13,8 +13,8 @@ lire**, **lequel fait foi**, et **lequel ne doit jamais être réécrit**.
    les invariants, les commandes de vérification, la carte de cette doc. Rien à faire, il est déjà là.
 1. **[FICHE_REPRISE.md](./FICHE_REPRISE.md)** — ⭐ à lire en premier à chaque reprise. Une page :
    où on en est, quoi faire ensuite, ce qu'il ne faut pas défaire.
-2. **[ETAT.md](./ETAT.md)** — l'état complet quand la fiche ne suffit pas : avancement détaillé,
-   décisions figées, décisions ouvertes.
+2. **[ETAT.md](./ETAT.md)** — l'état quand la fiche ne suffit pas (≤200 lignes) : ce qui est
+   construit, écrans, structure, dette laissée par les lots. Décisions : **[decisions/](./decisions/README.md)**.
 3. Puis le document de référence correspondant au sujet (ci-dessous).
 
 ## Les quatre rôles
@@ -39,7 +39,9 @@ corrige dans le document, elle ne se contourne pas dans le code.
 | Document | Rôle |
 |---|---|
 | [FICHE_REPRISE.md](./FICHE_REPRISE.md) | Point de reprise condensé. **Une page, jamais plus — plafond dur : 100 lignes.** Ramenée de 341 à 100 lignes le 2026-08-03. |
-| [ETAT.md](./ETAT.md) | État complet, avancement, décisions figées et ouvertes. |
+| [ETAT.md](./ETAT.md) | État courant, plafonné à 200 lignes par la garde. |
+| [decisions/](./decisions/README.md) | Décisions figées par thème (ex-`ETAT.md` §3) et [registre.md](./decisions/registre.md) des questions numérotées (ex-§4). |
+| [PROBLEMES.md](./PROBLEMES.md) | Registre des défauts P-nn, une ligne chacun, jamais effacée. |
 
 > **Règle d'unicité** : chaque fait vit à UN SEUL endroit. La fiche donne l'état vérifié et la
 > prochaine étape ; tout le reste — avancement détaillé, décisions, **dette connue** (`ETAT.md` §8)
@@ -96,7 +98,7 @@ une piste a été écartée vaut souvent l'énoncé de celle qui a été retenue
 | [SOURCES_RECETTES.md](./SOURCES_RECETTES.md) | D'où viennent les 241 recettes, quelles sources libres existent, ce que coûte un import | Sources vérifiées le 2026-08-02, aucune encore utilisée ; 4 décisions ouvertes |
 
 > ⚠️ `RETOUR_ESSAI_TELEPHONE.md` est **un backlog, pas un état** — seule exception à la règle
-> d'unicité ci-dessus, et elle est temporaire. Ce qui s'y tranche part dans `ETAT.md` §3 ou §4 ; ce
+> d'unicité ci-dessus, et elle est temporaire. Ce qui s'y tranche part dans `decisions/` ; ce
 > qui s'y fait en sort. Quand il sera vide, il rejoindra `archive/`.
 
 ## Deux conventions à respecter
@@ -105,8 +107,8 @@ une piste a été écartée vaut souvent l'énoncé de celle qui a été retenue
 on le dit dans le message de commit. Plusieurs notes de `ENGINE.md` conservent la trace de ces
 corrections (le compte de couches est passé de 12 à 18 en cinq étapes, chacune consignée).
 
-**Une décision se range à un seul endroit.** Tranchée → `ETAT.md` §3. Encore ouverte → `ETAT.md`
-§4. Propre à un chantier → le document de chantier. La fiche de reprise ne fait que *pointer* vers
+**Une décision se range à un seul endroit.** Tranchée → `decisions/<thème>.md`. Encore ouverte →
+`decisions/registre.md`. Propre à un chantier → le document de chantier. La fiche de reprise ne fait que *pointer* vers
 elles.
 
 **Un journal de travail achevé n'est pas de l'état.** `ETAT.md` a porté jusqu'au 2026-07-31 un

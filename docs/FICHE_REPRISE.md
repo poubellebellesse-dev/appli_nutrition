@@ -18,17 +18,10 @@ MOTEUR ✅ ─ CONTENU ✅ ─ user.db ✅ ─ DESIGN ✅ ─ 12 ÉCRANS ✅ ─
                                                                                           ⬅ ICI
 ```
 
-⚠️ **RELEVÉ DU 2026-08-26, APRÈS LE COMMIT DE `retour-4` (`7642492`)** : `npm test` → **2 411
-passed / 0 failed (127 fichiers)** en 50,4 s · typecheck propre · `vite build` ✓ (3,11 s) ·
-`plan-stress` **20/20**. ⚠️ **`audit-mapping` non relancé** : catalogue inchangé depuis le 08-20
-(451 mappings, 9 à relire). ⚠️ **L'écart 2 392 → 2 411 est `retour-4` SEUL**, et il tient dans **un
-seul fichier scellé neuf** (126 → 127, 19 tests) : aucun autre fichier n'a bougé.
-⛔ **UN COMPTE PEUT BOUGER SANS QU'AUCUN FICHIER DE TEST NE CHANGE** — `it.each` nourri par une
-table de production. C'est ce qui a ouvert un écart de 90 ici. ▶ `ETAT.md` §8, lot `retour-2`.
-
-⚠️ **`git status -sb` donne l'état, jamais cette page.** ⚠️ **Piège de relevé** : `npm test 2>&1 |
-tail` rend le code du **pipe**, donc 0 ; lire `Tests N failed`, jamais `$?`. ⚠️ **Le compte d'écrans
-se lit en `ETAT.md` §5, qui en porte TROIS** : **8 spécifiés**, **12 codés**, **12 testés**.
+⛔ **LE RELEVÉ QUI FAIT FOI VIT DANS [../CLAUDE.md](../CLAUDE.md) § « Vérifier », JAMAIS ICI** — avec
+ses pièges de comptage (`| tail` rend le code du pipe ; un `it.each` nourri par une table de
+production déplace le compte sans qu'aucun fichier de test change).
+⚠️ **`git status -sb` donne l'état, jamais cette page.**
 
 ## ⛔ Travailler à plusieurs sessions dans cet arbre
 
@@ -56,18 +49,17 @@ questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RET
   ajouté de quoi voir (affichages, attente de chargement, champ de recherche et famille de 74
   lignes), **qu'aucun test jsdom ne sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3.
   **Tant qu'elle n'est pas faite, on sait seulement que rien n'est cassé** — pas que ça marche.
-- ⛔ **`/brief retour-5c` — ET L'ARBRE EST ROUGE JUSQUE-LÀ.** `retour-5` est codé (24/24 clauses,
-  2026-08-27) mais **pas clôturé** : ses neuf recettes portent le catalogue à 339 et font rougir
-  **11 tests dans 6 fichiers scellés**. Dix sont des compteurs à rebaser — c'est `retour-5c`.
-  ⚠️ **Le onzième n'en est pas un** : décision **82** de `ETAT.md` §4, lot `retour-5d`.
-  Puis `retour-5b`, et `retour-6` à `retour-8`. ⚠️ **`retour-6` attend la décision 79**, pas que du
+- ⛔ **`/brief retour-5c` — ET L'ARBRE EST ROUGE JUSQUE-LÀ.** `retour-5` est **clôturé le
+  2026-09-09** ; ses neuf recettes portent le catalogue à 339 et font rougir **10 tests dans 6
+  fichiers scellés, tous des compteurs**. Ce lot seul rend l'arbre vert ; son brief est écrit, non
+  scellé. Puis `retour-5b`, et `retour-6` à `retour-8`. ⚠️ **`retour-6` attend la décision 79**, pas que du
   code. ⚠️ **En ouvrant un brief : nommer les réglages persistants que l'écran lit, et dire lesquels
   les clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.
 
 **Les chantiers TERMINÉS ne sont plus détaillés ici** — leur fait vit dans `ETAT.md` et dans leur
 document de chantier. ⚠️ **Gestes illustrés : 3 sur 62 en base** — lot geste 2 arrêté à trois par
 la décision D5, TOUJOURS OUVERT, sa clause en demande 51. Clips récoltés (7 gestes sans candidat),
-photos (129/330, source), origine animale (66c), matériel (65c), retours test (1, 1b, 2, 3, 4 livrés ; 5 codé, non clôturé).
+photos (129/330, source), origine animale (66c), matériel (65c), retours test (1, 1b, 2, 3, 4, 5 livrés).
 
 **Ce qui reste à faire, et qui n'attend que d'être commencé :**
 
@@ -81,10 +73,8 @@ photos (129/330, source), origine animale (66c), matériel (65c), retours test (
 
 ⚠️ **Deux trous sanitaires bloquent la publication au même titre que la relecture** : céphalopodes et
 cuisson de l'œuf, qu'aucune autorité lue ne donne — le principe 3 interdit d'écrire sans source.
-⚠️ **DOUZE questions ouvertes en `ETAT.md` §4 — RECOMPTÉES le 2026-08-27, cette ligne en
-annonçait NEUF et c'était faux** : 2, 5, 6, 11, 52, 58, 65, 68, 70, 79, 80, 82. Seule source — ne
-pas les recopier ici. Trois
-bloquent quelque chose : **65** (feux possédés), **68** (budget P6), les **366 doublons d'affichage**.
+⚠️ **Les questions ouvertes se comptent dans [decisions/registre.md](./decisions/registre.md) et se
+résument en `ETAT.md` §4 — jamais ici.** Cette ligne en a annoncé NEUF pour DOUZE pendant six jours.
 
 ## Où chercher le reste
 

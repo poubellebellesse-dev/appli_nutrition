@@ -151,7 +151,7 @@ l'existant.
 une suppression ultérieure**. ⚠️ **Les deux options écartées le sont pour de bonnes raisons, à ne
 pas rouvrir sans fait nouveau** : git LFS impose un outil sur chaque poste et casse les worktrees
 existants ; ne pas versionner ferait produire, sur toute autre machine, **un catalogue sans clips
-sans lever la moindre erreur** — le bac source `G:\Claude\Dessinateur\gestes` n'existe que sur une
+sans lever la moindre erreur** — le bac source `F:\Claude\Dessinateur\gestes` n'existe que sur une
 machine. C'est la famille d'échec silencieux que ce dépôt a déjà payée trois fois.
 
 ### ~~D3~~ — Un poster par geste, ou un par segment ? ✅ FERMÉE le 2026-08-14 : **UN PAR SEGMENT**
