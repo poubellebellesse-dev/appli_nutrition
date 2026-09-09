@@ -49,18 +49,17 @@ thème). Toute référence « `ETAT.md` §3 » antérieure pointe là.
 ## 4. Décisions encore ouvertes → `decisions/registre.md`
 
 Questions numérotées 1 → 82, barrées quand fermées : [decisions/registre.md](./decisions/registre.md).
-**Ouvertes au 2026-09-09 : 2, 5, 6, 11, 52, 58, 65, 68, 70, 80, 82 — onze**, comptées sur les
-numéros non barrés. **Deux** bloquent encore quelque chose : 65 (feux possédés), 68 (budget P6).
+**Ouvertes au 2026-09-09 : 2, 5, 6, 11, 52, 58, 65, 68, 70, 80 — dix**, comptées sur les numéros
+non barrés (72 barrées sur 82). **Deux** bloquent quelque chose : 65 (feux possédés), 68 (budget P6).
 ✅ **La 79 est FERMÉE le 2026-09-09** : `retour-6` n'attend plus qu'une place dans la file.
-⏳ **La 82 ne bloque plus rien et n'est PAS fermée — sa fermeture est une décision, pas une
-conséquence.** Sa cause est établie et sa piste (d) est livrée par `retour-5d` (2026-09-09) : la
-clause « 6 froides sur 10 » de `retour-1` dépendait de **l'heure de la machine** — l'écran déduit
-son créneau de `new Date().getHours()`, bascule à **14 h**, d'où **12/12 froides à 12 h** et
-**7/12 à 14 h**. Les relevés d'août attribuaient l'écart à la croissance du catalogue **sans
-contrôler l'heure** ; ne pas les citer comme cause. Le test épingle désormais sa pastille et mesure
-les **deux** repas — 12/12 aux deux depuis `retour-5e`, plancher scellé à 0,9. Les pistes (a), (b)
-et (c) sont sans objet. ⛔ **L'écran de production, lui, déduit toujours son créneau de l'horloge**
-— c'est voulu, et c'est gardé sous témoin exécuté.
+✅ **La 82 est FERMÉE le 2026-09-09**, sur la cause et sur la piste (d), livrée par `retour-5d` : la
+clause « 6 froides sur 10 » de `retour-1` dépendait de **l'heure de la machine** — l'écran déduit son
+créneau de `new Date().getHours()`, bascule à **14 h**, d'où **12/12 froides à 12 h** et **7/12 à
+14 h**. Le test épingle désormais sa pastille et mesure les **deux** repas — 12/12 aux deux depuis
+`retour-5e`, plancher scellé à 0,9. ⛔ **Deux choses qu'elle ne referme pas** : l'écran de production
+déduit toujours son créneau de l'horloge — voulu, gardé sous témoin exécuté ; et le 8/12 d'août
+contre 7/12 de septembre reste **inexpliqué**, les deux relevés comparant deux heures sans le savoir.
+Ne pas citer la croissance du catalogue comme cause ; si le mécanisme ressort, ce sera par un rouge.
 
 ## 5. Les écrans
 
@@ -150,7 +149,7 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - Photos : goulot = la récolte, pas le tri ; les neuf bases de `retour-5` (végétaliennes, chaudes) n'en ont pas.
 
 **Tests et preuve**
-- **Arbre VERT au 2026-09-09 à 19 h 32, zéro rouge** : la clause « 6 froides sur 10 » de `retour-1` ne lit plus l'heure (`retour-5d`), les 10 compteurs de recettes sont éteints depuis `retour-5c`. ▶ §4, décision 82.
+- **Arbre VERT au 2026-09-09 à 19 h 47, zéro rouge** : la clause « 6 froides sur 10 » de `retour-1` ne lit plus l'heure (`retour-5d`), les 10 compteurs de recettes sont éteints depuis `retour-5c`.
 - **Trois harnais séparés montent l'écran « Aujourd'hui »** : `retour-1` (créneau obligatoire depuis `retour-5d`), `retour-3` (le sien, antérieur), `aujourdhui.test.tsx`. Un montage partagé à créneau obligatoire rendrait l'oubli inexprimable — écarté du lot pour ne pas réécrire le harnais d'un fichier scellé.
 - **`retour-5c` photographie `retour-1`** : toute clause ajoutée à l'un de ses six fichiers scellés rougit son empreinte. Rebasée une fois le 2026-09-09 (9 → 11 clauses, 23 → 30 `expect(`), sur décision de l'auteur.
 - **Trois valeurs périmées survivent hors du périmètre de `retour-5c`**, qui ne pouvait toucher que ses six fichiers : un **titre de `it`** dans `photo-affichage.test.ts` (« les 201 recettes sans photo »), une chaîne dans `retour-4.test.tsx` (« 223 des 330 recettes ») et de la prose dans `65a.test.ts`. Aucune n'est assertée, donc aucune ne rougit — elles mentent en silence.

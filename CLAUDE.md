@@ -42,21 +42,22 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-09 à 17 h 24, arbre complet, livraison de `retour-5e`, `HEAD` = `3e56937`) :
-2 511 passed / 6 failed (2 517 tests, 131 fichiers)** en 59,1 s · typecheck propre · `vite build`
-✓ 2,50 s · `engine:plan-stress` 20/20 · catalogue 339 recettes, **dîner 250** dont 44 froides.
-⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** Le seul rouge est `retour-5d.test.tsx`
-(6 sur 14) — **son propre test d'acceptation, scellé avant son code** : l'état attendu d'un lot
-ouvert, pas une régression.
-⭐ **`retour-1` « au moins 6 plats sur 10 » EST VERTE DEPUIS `retour-5e` (2026-09-09, 17 h 24),
-9/9.** Ce qu'elle mesurait n'était pas un mauvais classement : **le rayon était vide.** Le dîner ne
-portait que **8 recettes froides sur 214 (3,7 %)** contre 44 sur 194 au déjeuner, et le moteur en
-remontait 7 sur 8. Les 36 froides que `types_repas` barrait du dîner y sont entrées → **250
-recettes, 44 froides (17,6 %)**.
-⚠️ **LA CAUSE MÉCANIQUE N'EST PAS RÉPARÉE POUR AUTANT, ET C'EST LE PIÈGE À NE PAS OUBLIER** :
-`retour-1.test.tsx` déduit toujours son créneau de `new Date().getHours()` (bascule à **14 h**,
-`FIN_DE_CRENEAU.dejeuner`). Il est vert **par abondance**, pas parce qu'il a cessé de lire
-l'horloge. Décision **82**, lot `retour-5d`. ▶ `docs/ETAT.md` §4.
+⛔ **Dernier relevé (2026-09-09 à 19 h 47, arbre complet, livraison de `retour-5d`, `HEAD` = `bb79e04`) :
+2 519 passed / 0 failed (2 519 tests, 131 fichiers)** en 52,2 s · typecheck propre · `vite build`
+✓ 2,57 s · `engine:plan-stress` 20/20 · catalogue 339 recettes, **dîner 250** dont 44 froides.
+⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** **Arbre entièrement vert** — le rouge du relevé
+de 17 h 24 était `retour-5d.test.tsx`, son propre test d'acceptation scellé avant son code.
+⭐ **`retour-1` « au moins 6 plats sur 10 » EST VERTE, ET DEUX CAUSES DISTINCTES ONT ÉTÉ PAYÉES
+POUR ÇA.** (1) **Le rayon était vide** : le dîner ne portait que **8 recettes froides sur 214
+(3,7 %)** contre 44 sur 194 au déjeuner, et le moteur en remontait 7 sur 8 ; `retour-5e` y a fait
+entrer les 36 froides que `types_repas` en barrait → **250 recettes, 44 froides (17,6 %)**.
+(2) **Le test lisait l'horloge de la machine** — `retour-5d` le lui a retiré : il épingle sa pastille
+de créneau par `aria-pressed`, fige l'horloge et vérifie le titre affiché. Il mesure désormais les
+**deux** repas : **12/12 froides à midi comme le soir**, plancher scellé à **0,9**.
+⚠️ **CE QUI RESTE VRAI, ET QU'IL NE FAUT PAS LIRE COMME UN DÉFAUT** : l'**écran de production** déduit
+toujours son créneau de `new Date().getHours()` (bascule à **14 h**, `FIN_DE_CRENEAU.dejeuner`). C'est
+le comportement voulu d'un écran ouvert sans qu'on ait rien choisi, et une clause de `retour-5d` le
+garde **sous témoin exécuté**. Décision **82 FERMÉE le 2026-09-09**.
 ⚠️ **Les relevés d'août et du matin du 2026-09-09 attribuaient la bascule à la croissance du
 catalogue** (330 → 339) : ils comparaient deux heures sans le savoir. Ne pas les citer comme cause.
 ✅ Les **10** rouges de compteur qui scellaient le nombre absolu de recettes sont éteints par

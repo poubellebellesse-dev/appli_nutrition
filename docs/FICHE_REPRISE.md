@@ -50,9 +50,8 @@ questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RET
   lignes), **qu'aucun test jsdom ne sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3.
   **Tant qu'elle n'est pas faite, on sait seulement que rien n'est cassé** — pas que ça marche.
 - ▶ **PROCHAIN LOT : `retour-5b`**, puis `retour-6` à `retour-8`. `retour-5c`, `retour-5e` et
-  `retour-5d` sont **livrés le 2026-09-09**, l'arbre est vert ; la décision **79** est tranchée,
-  donc `retour-6` n'attend plus que du code. ⚠️ **La décision 82 n'attend plus qu'une chose : que
-  tu la fermes ou que tu dises ce qui manque.** ▶ `ETAT.md` §4.
+  `retour-5d` sont **livrés le 2026-09-09**, l'arbre est vert ; les décisions **79** et **82** sont
+  tranchées le même jour, donc `retour-6` n'attend plus que du code. ▶ `ETAT.md` §4.
   ⚠️ **En ouvrant un brief : nommer les réglages persistants que l'écran lit, et dire lesquels
   les clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.
 
