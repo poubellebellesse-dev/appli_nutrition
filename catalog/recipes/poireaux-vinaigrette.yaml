@@ -8,7 +8,7 @@ temps_cuisson_min: 20
 difficulte: 1
 portions_base: 4
 image_path: /catalog/images/poireaux-vinaigrette.avif
-types_repas: [dejeuner]
+types_repas: [dejeuner, diner]
 service: entree
 piquant: 0
 porte_deja_une_sauce: true

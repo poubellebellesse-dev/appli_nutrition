@@ -65,7 +65,17 @@ describe('selection/exclusion-pass + guards — catalogue réel', () => {
 
     expect(candidates.size).toBe(dinerCount())
     expect(rejections).toEqual([])
-    expect(candidates.has('salade_pois_chiches' as RecipeId)).toBe(false) // dejeuner uniquement
+
+    // Le témoin « une recette hors créneau ne passe pas » est DÉRIVÉ, jamais nommé.
+    // `salade_pois_chiches` tenait ce rôle jusqu'au 2026-09-09 ; le lot `retour-5e` lui a ouvert le
+    // dîner et l'assertion est devenue fausse **sans qu'une ligne de moteur change**. Un identifiant
+    // en dur épinglait du contenu, pas la couche — ce que l'en-tête de ce fichier interdit déjà
+    // pour les nombres. Balayer tout le hors-créneau est aussi plus fort : avec l'égalité de taille
+    // ci-dessus, il fixe `candidates` exactement au créneau.
+    const auDiner = catalog.indexes.recipesBySlot.get('diner')
+    const horsDiner = [...catalog.recipes.keys()].filter((id) => auDiner?.has(id) !== true)
+    expect(horsDiner.length, 'le catalogue doit porter au moins une recette hors du dîner').toBeGreaterThan(0)
+    for (const id of horsDiner) expect(candidates.has(id)).toBe(false)
   })
 
   /** Régimes déclarés par une recette du catalogue réel. */

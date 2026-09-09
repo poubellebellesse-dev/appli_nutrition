@@ -8,7 +8,7 @@ temps_cuisson_min: 50
 difficulte: 1
 portions_base: 4
 image_path: null
-types_repas: [dejeuner]
+types_repas: [dejeuner, diner]
 service: entree
 piquant: 0
 saison_mois: []
