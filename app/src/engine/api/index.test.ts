@@ -943,6 +943,7 @@ function planWith(dejeuner: string, diner: string, warnings: readonly PlanWarnin
     slot: { date: "2026-08-03", creneau },
     recipeId: recette as RecipeId,
     horsCatalogue: null,
+    motifVide: null,
     portions: 2,
     locked: false,
     isLeftover: false,
@@ -1035,6 +1036,7 @@ function planTroisCreneaux(dejeuner: string, diner: string, gouter: { readonly r
     slot: { date: "2026-08-03", creneau },
     recipeId: id as RecipeId,
     horsCatalogue: null,
+    motifVide: null,
     portions: 2,
     locked: false,
     isLeftover: false,
@@ -1054,6 +1056,7 @@ function planTroisCreneaux(dejeuner: string, diner: string, gouter: { readonly r
             slot: { date: "2026-08-03", creneau: "gouter" as const },
             recipeId: null,
             horsCatalogue: gouter.prepare,
+            motifVide: null,
             portions: 0,
             locked: false,
             isLeftover: false,
@@ -1096,8 +1099,8 @@ describe("engine/api — un plat préparé rend la journée immesurable (décisi
       ...base,
       entries: [
         ...base.entries,
-        { slot: { date: "2026-08-04", creneau: "dejeuner" as const }, recipeId: "bouillon" as RecipeId, horsCatalogue: null, portions: 2, locked: false, isLeftover: false, service: null },
-        { slot: { date: "2026-08-04", creneau: "diner" as const }, recipeId: "consomme" as RecipeId, horsCatalogue: null, portions: 2, locked: false, isLeftover: false, service: null },
+        { slot: { date: "2026-08-04", creneau: "dejeuner" as const }, recipeId: "bouillon" as RecipeId, horsCatalogue: null, motifVide: null, portions: 2, locked: false, isLeftover: false, service: null },
+        { slot: { date: "2026-08-04", creneau: "diner" as const }, recipeId: "consomme" as RecipeId, horsCatalogue: null, motifVide: null, portions: 2, locked: false, isLeftover: false, service: null },
       ],
     };
     expect(engine.checkPlan(plan, PROFIL_TEST).map((w) => w.date)).toEqual(["2026-08-04"]);

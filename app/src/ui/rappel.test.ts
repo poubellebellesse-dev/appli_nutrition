@@ -46,6 +46,7 @@ function entree(date: string, creneau: MealSlot, recipeId: string | null, isLeft
     slot: { date, creneau },
     recipeId: recipeId === null ? null : (recipeId as RecipeId),
     horsCatalogue: null,
+    motifVide: null,
     portions: recipeId === null ? 0 : 2,
     locked: false,
     isLeftover,

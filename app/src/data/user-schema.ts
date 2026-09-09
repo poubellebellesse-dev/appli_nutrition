@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 18
+export const USER_SCHEMA_VERSION = 19
 
 export interface Migration {
   readonly version: number
@@ -864,6 +864,73 @@ const V18_STATEMENTS: readonly string[] = [
      ADD COLUMN quantite INTEGER CHECK (quantite IS NULL OR quantite > 0)`,
 ]
 
+/**
+ * v19 — LA CASE VIDE DIT POURQUOI ELLE EST VIDE (lot `retour-5b`, `CONCEPTION_RETOURS_TEST.md`).
+ *
+ * L'écran Semaine enregistre et relit son plan à CHAQUE geste (`savePlan` / `readLatestPlan`). Un
+ * motif qui ne descendrait pas en base disparaîtrait au premier rechargement, et la case
+ * redeviendrait muette sans qu'aucun test d'écran ne rougisse — le défaut « champ déclaré, pas
+ * branché » que ce dépôt a déjà payé trois fois (`reference/PIEGES.md`).
+ *
+ * ⛔ LE `CHECK` EST UNE ÉQUIVALENCE, PAS UNE IMPLICATION, et c'est le tour d'attaque du 2026-09-09
+ * qui l'a imposé. Écrit `motif_vide IS NULL OR (recipe_id IS NULL AND hors_catalogue IS NULL)`, il
+ * n'interdisait qu'un seul des deux sens : une case VIDE SANS MOTIF restait parfaitement
+ * insérable — exactement l'état que le lot existe pour rendre impossible. Les deux contradictions
+ * sont maintenant inexprimables, elles ne sont pas seulement découragées :
+ *   · une recette AVEC un motif        → refusée ;
+ *   · une case vide SANS motif         → refusée.
+ * ⚠️ Conséquence assumée : une entrée d'accompagnement sans recette EST une case vide comme une
+ * autre et porte donc un motif. C'est ce que la clause 1 exigeait déjà.
+ *
+ * ⛔ ET C'EST POUR ÇA QUE LA v19 RECONSTRUIT LA TABLE AU LIEU D'AJOUTER UNE COLONNE. La v9 posait
+ * son `CHECK` dans un `ALTER TABLE … ADD COLUMN`, et ça marchait — mais seulement parce que sa
+ * contrainte était SATISFAITE PAR `NULL` : toutes les lignes existantes la passaient sans rien
+ * écrire. Une ÉQUIVALENCE, non : sur une base portant déjà une case vide, `(1) = (0)` est faux dès
+ * la seconde où la colonne apparaît, et SQLite refuse l'`ALTER` lui-même.
+ * ⚠️ **MESURÉ AVANT D'ÊTRE ÉCRIT**, pas déduit : `ALTER TABLE t ADD COLUMN c TEXT CHECK ((a IS NULL
+ * AND b IS NULL) = (c IS NOT NULL))` sur une table portant une ligne `(NULL, NULL)` lève
+ * « CHECK constraint failed ». SQLite VALIDE LES LIGNES EXISTANTES à l'ajout de colonne — ce que la
+ * v9 ne pouvait pas révéler. Le premier jet de cette migration s'est cassé là-dessus, et la clause
+ * 9 bis l'a attrapé au premier essai.
+ *
+ * ⛔ LE RATTRAPAGE VIT DANS LA COPIE, PAS DANS UN `UPDATE` D'APRÈS-COUP. Un `UPDATE` séparé serait
+ * la moitié de migration qu'on oublie : ici la valeur `indetermine` est posée par le `SELECT` qui
+ * remplit la table neuve, donc aucune ligne ne peut y entrer sans elle — le `CHECK` de la table
+ * neuve la refuserait de toute façon. `indetermine` est une VALEUR DE PLEIN DROIT — « ce plan a été
+ * composé avant qu'on sache le dire » — et non un défaut : le moteur ne doit JAMAIS la produire,
+ * ce que la clause 9 refuse par témoin exécuté.
+ *
+ * ⚠️ LE `DROP` EST SANS EFFET DE BORD, vérifié comme la v2 l'avait vérifié : aucune table ne
+ * RÉFÉRENCE `meal_plan_entry`. Il emporte l'index unique, recréé plus bas sous le même nom.
+ */
+const V19_STATEMENTS: readonly string[] = [
+  `CREATE TABLE meal_plan_entry_v19 (
+     plan_id TEXT NOT NULL REFERENCES meal_plan(id) ON DELETE CASCADE,
+     date TEXT NOT NULL,
+     creneau TEXT NOT NULL CHECK (creneau IN ('petit_dejeuner','dejeuner','gouter','diner')),
+     service TEXT CHECK (service IN ('entree','plat','accompagnement','fromage','dessert')),
+     recipe_id TEXT,
+     portions REAL NOT NULL,
+     verrouille INTEGER NOT NULL DEFAULT 0 CHECK (verrouille IN (0,1)),
+     est_reste INTEGER NOT NULL DEFAULT 0 CHECK (est_reste IN (0,1)),
+     hors_catalogue TEXT CHECK (recipe_id IS NULL OR hors_catalogue IS NULL),
+     motif_vide TEXT,
+     -- L'invariant de la v2, repris tel quel : une recette a des portions, un creneau vide n'en a aucune.
+     CHECK ((recipe_id IS NULL AND portions = 0) OR (recipe_id IS NOT NULL AND portions > 0)),
+     -- L'invariant du lot retour-5b : un motif est present SI ET SEULEMENT SI la case est vide.
+     CHECK ((recipe_id IS NULL AND hors_catalogue IS NULL) = (motif_vide IS NOT NULL))
+   )`,
+  `INSERT INTO meal_plan_entry_v19
+     (plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste, hors_catalogue, motif_vide)
+   SELECT plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste, hors_catalogue,
+          CASE WHEN recipe_id IS NULL AND hors_catalogue IS NULL THEN 'indetermine' END
+   FROM meal_plan_entry`,
+  `DROP TABLE meal_plan_entry`,
+  `ALTER TABLE meal_plan_entry_v19 RENAME TO meal_plan_entry`,
+  `CREATE UNIQUE INDEX meal_plan_entry_slot
+     ON meal_plan_entry (plan_id, date, creneau, COALESCE(service, ''))`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -883,6 +950,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 16, statements: V16_STATEMENTS },
   { version: 17, statements: V17_STATEMENTS },
   { version: 18, statements: V18_STATEMENTS },
+  { version: 19, statements: V19_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

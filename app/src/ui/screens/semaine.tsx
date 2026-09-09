@@ -41,6 +41,7 @@ import { Panneau } from '../panneau.js'
 import { REPAS_PAR_DEFAUT, creneauxDuRythme } from '../creneau.js'
 import { reprogrammerLesRappels } from '../ecrire-plan.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { phraseDuMotif } from '../motif-vide.js'
 import { LIBELLE_DEHORS, oublierLePlat, platDAvant, retenirLePlat } from '../dehors.js'
 import {
   gestePrecedent,
@@ -1028,6 +1029,17 @@ function Creneau({
         <p className="mt-1 text-mention leading-snug text-attenue">
           Repas noté à la main — l’application ne connaît pas ce qu’il apporte.
         </p>
+      )}
+
+      {/* ⚠️ LA CASE VIDE DIT POURQUOI ELLE EST VIDE (lot `retour-5b`). Sans cette phrase, le cadre
+          pointillé et « Aucun plat » se lisent comme une panne : l'utilisateur ne peut pas savoir
+          si l'application a renoncé, si elle n'a rien trouvé, ou si elle a déjà tout servi ailleurs
+          — trois situations qui ne se corrigent pas au même endroit. Le motif est CONSTATÉ par le
+          moteur au moment du tirage et relu tel quel : voir `engine/planning/motif-vide.ts`.
+          ⛔ HORS DE TOUT BOUTON, et ce n'est pas une question de mise en page : un motif se lit, il
+          ne se clique pas. Une clause scellée retire les actions avant de comparer les textes. */}
+      {vide && phraseDuMotif(entry.motifVide) !== null && (
+        <p className="mt-1 text-mention leading-snug text-attenue">{phraseDuMotif(entry.motifVide)}</p>
       )}
 
       {/* ⚠️ « avec » EN TOUTES LETTRES, pas une simple seconde ligne. Deux noms empilés se lisent

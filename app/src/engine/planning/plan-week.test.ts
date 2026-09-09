@@ -247,8 +247,8 @@ describe('planning/plan-week — un créneau GARDÉ garde son assiette ENTIÈRE'
 
   it('repose le plat ET son accompagnement, pas seulement le premier', () => {
     const verrous: MealPlanEntry[] = [
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, horsCatalogue: null, motifVide: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, horsCatalogue: null, motifVide: null, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
     ]
     const plan = planWeek(
       MENU,
@@ -266,8 +266,8 @@ describe('planning/plan-week — un créneau GARDÉ garde son assiette ENTIÈRE'
     // toute la semaine au seul motif qu'un créneau a été gardé, alors qu'il est exempté partout
     // ailleurs. C'est la même exemption, appliquée à l'amorçage.
     const verrous: MealPlanEntry[] = [
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, horsCatalogue: null, motifVide: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'acc' as RecipeId, horsCatalogue: null, motifVide: null, portions: 2, locked: true, isLeftover: false, service: 'accompagnement' },
     ]
     const plan = planWeek(
       MENU,
@@ -280,8 +280,8 @@ describe('planning/plan-week — un créneau GARDÉ garde son assiette ENTIÈRE'
 
   it('deux verrous de MÊME service sur un créneau : le premier gagne toujours', () => {
     const verrous: MealPlanEntry[] = [
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
-      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat2' as RecipeId, horsCatalogue: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat1' as RecipeId, horsCatalogue: null, motifVide: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
+      { slot: { date: '2026-08-03', creneau: 'diner' }, recipeId: 'plat2' as RecipeId, horsCatalogue: null, motifVide: null, portions: 2, locked: true, isLeftover: false, service: 'plat' },
     ]
     const plan = planWeek(MENU, makePlanRequest({ days: 2, lockedEntries: verrous }), fakeSuggest(['plat2']))
 
@@ -831,6 +831,7 @@ describe('planning/plan-week — créneaux VERROUILLÉS (§7.2, « vos repas gar
     slot: { date, creneau },
     recipeId: recette as RecipeId | null,
     horsCatalogue: null,
+    motifVide: null,
     portions: 4,
     locked: true,
     isLeftover: false,
@@ -991,6 +992,7 @@ describe('planning/plan-week — une journée immesurable cesse de réinjecter s
       slot: { date: '2026-08-03', creneau: 'dejeuner' },
       recipeId: null,
       horsCatalogue: 'Cantine',
+      motifVide: null,
       portions: 0,
       locked: true,
       isLeftover: false,
@@ -1016,6 +1018,7 @@ describe('planning/plan-week — une journée immesurable cesse de réinjecter s
       slot: { date: '2026-08-03', creneau: 'diner' },
       recipeId: null,
       horsCatalogue: 'Restaurant',
+      motifVide: null,
       portions: 0,
       locked: true,
       isLeftover: false,
@@ -1040,6 +1043,7 @@ describe('planning/plan-week — une journée immesurable cesse de réinjecter s
       slot: { date: '2026-08-03', creneau: 'diner' },
       recipeId: null,
       horsCatalogue: 'Restaurant',
+      motifVide: null,
       portions: 0,
       locked: true,
       isLeftover: false,

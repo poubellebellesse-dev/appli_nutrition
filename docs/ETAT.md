@@ -127,6 +127,7 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - `NUTRI_MIN_COVERAGE = 0,7` est un seuil de jugement, jamais calibré.
 - Marge de borne `+ margePlatsSimples` dans `planWeek`/`rerollSlot` : coût de calcul non mesuré (`plan-stress` n'a pas de budget de durée).
 - `recetteDepuisStockee` pose `estPlatSimple: false` en dur (choix : catégorie éditoriale).
+- Motif de case vide (`retour-5b`) : **trois couches d'exclusion sur sept** sont sous témoin exécuté (`allergenes`, `regime`, `exclusions`) ; les phrases `requis`, `temps`, `equipement`, `favoris` sont écrites et atteignables, **aucun test ne les exerce** — un libellé faux y passerait inaperçu.
 - Restes orphelins possibles entre le geste « en reste » et la recomposition ; mesuré en mémoire, jamais à l'écran ; deux issues non tranchées (clause 3 de `retour-4`).
 - La promesse de portions d'un reste n'est pas rejouée quand le réglage des convives change.
 - Défaire « je mange dehors » / « en reste » meurt au rechargement (rien en base ne garde l'occupant précédent) ; un créneau qui portait un reste ne se défait pas (refus délibéré).
@@ -149,7 +150,9 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - Photos : goulot = la récolte, pas le tri ; les neuf bases de `retour-5` (végétaliennes, chaudes) n'en ont pas.
 
 **Tests et preuve**
-- **Arbre VERT au 2026-09-09 à 19 h 47, zéro rouge** : la clause « 6 froides sur 10 » de `retour-1` ne lit plus l'heure (`retour-5d`), les 10 compteurs de recettes sont éteints depuis `retour-5c`.
+- **Arbre VERT au 2026-09-09 à 21 h 53, zéro rouge** : la clause « 6 froides sur 10 » de `retour-1` ne lit plus l'heure (`retour-5d`), les 10 compteurs de recettes sont éteints depuis `retour-5c`.
+- **Trois clauses scellées figeaient `USER_SCHEMA_VERSION` en valeur absolue** (`retour-2` 7, `retour-3` 8, `retour-4` 10) : rouges dès qu'un AUTRE lot migre la base, sans que ce qu'elles gardent ait bougé. Corrigées le 2026-09-09 sur décision de l'auteur (cran `libre sceau`, remis ensuite) — **même défaut que les 10 compteurs de `retour-5c`, et le balayage des autres valeurs absolues survivantes n'a pas été fait.**
+- Le piège « SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES » (payé par la v19) n'est écrit que dans `CONCEPTION_RETOURS_TEST.md` — pas encore dans `reference/PIEGES.md`.
 - **Trois harnais séparés montent l'écran « Aujourd'hui »** : `retour-1` (créneau obligatoire depuis `retour-5d`), `retour-3` (le sien, antérieur), `aujourdhui.test.tsx`. Un montage partagé à créneau obligatoire rendrait l'oubli inexprimable — écarté du lot pour ne pas réécrire le harnais d'un fichier scellé.
 - **`retour-5c` photographie `retour-1`** : toute clause ajoutée à l'un de ses six fichiers scellés rougit son empreinte. Rebasée une fois le 2026-09-09 (9 → 11 clauses, 23 → 30 `expect(`), sur décision de l'auteur.
 - **Trois valeurs périmées survivent hors du périmètre de `retour-5c`**, qui ne pouvait toucher que ses six fichiers : un **titre de `it`** dans `photo-affichage.test.ts` (« les 201 recettes sans photo »), une chaîne dans `retour-4.test.tsx` (« 223 des 330 recettes ») et de la prose dans `65a.test.ts`. Aucune n'est assertée, donc aucune ne rougit — elles mentent en silence.

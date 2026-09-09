@@ -30,6 +30,7 @@ import type {
   MealOrigin,
   MealPlanEntry,
   MealSlot,
+  MotifVide,
   PiquantTolerance,
   RecipeId,
   TopicId,
@@ -803,8 +804,8 @@ export function savePlan(db: UserDb, plan: WeekPlan, misAJourLe: string): void {
       db.run(
         `INSERT INTO meal_plan_entry
            (plan_id, date, creneau, service, recipe_id, portions, verrouille, est_reste,
-            hors_catalogue)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            hors_catalogue, motif_vide)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           plan.id,
           entry.slot.date,
@@ -815,6 +816,11 @@ export function savePlan(db: UserDb, plan: WeekPlan, misAJourLe: string): void {
           entry.locked ? 1 : 0,
           entry.isLeftover ? 1 : 0,
           entry.horsCatalogue,
+          // ⚠️ ÉCRIT TEL QUEL, SANS DÉFAUT DE SECOURS. Poser `?? 'indetermine'` ici satisferait le
+          // `CHECK` de la v19 et RENDRAIT LA GARANTIE FAUSSE : une case vide arrivée sans motif
+          // repartirait de la base avec un motif inventé, et personne ne verrait jamais le défaut.
+          // La contrainte doit refuser l'écriture — c'est tout ce qu'on lui demande.
+          entry.motifVide,
         ]
       )
     }
@@ -851,8 +857,10 @@ export function readPlan(db: UserDb, planId: string): WeekPlan | null {
       readonly verrouille: number
       readonly est_reste: number
       readonly hors_catalogue: string | null
+      readonly motif_vide: string | null
     }>(
-      `SELECT date, creneau, service, recipe_id, portions, verrouille, est_reste, hors_catalogue
+      `SELECT date, creneau, service, recipe_id, portions, verrouille, est_reste, hors_catalogue,
+              motif_vide
        FROM meal_plan_entry WHERE plan_id = ?
        ORDER BY date, ${ORDRE_CRENEAU}, ${ORDRE_SERVICE}`,
       [planId]
@@ -862,6 +870,11 @@ export function readPlan(db: UserDb, planId: string): WeekPlan | null {
         slot: { date: e.date, creneau: e.creneau as MealSlot },
         recipeId: (e.recipe_id as RecipeId | null) ?? null,
         horsCatalogue: e.hors_catalogue ?? null,
+        // ⚠️ RELU TEL QUEL, transtypé sans être validé — comme `creneau`, `service` et `recipe_id`
+        // juste au-dessus. La valeur ne vient pas de l'extérieur : c'est la base v19 qui l'a
+        // écrite, et son `CHECK` garantit déjà la seule propriété dont dépend l'affichage — un
+        // motif est présent si et seulement si la case est vide.
+        motifVide: (e.motif_vide as MotifVide | null) ?? null,
         portions: e.portions,
         locked: e.verrouille === 1,
         isLeftover: e.est_reste === 1,

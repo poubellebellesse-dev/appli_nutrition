@@ -799,6 +799,12 @@ describe('retour-3 · ce que le lot ne touche pas', () => {
       db.all<{ readonly n: number }>('SELECT count(*) AS n FROM meal_history')[0]?.n ?? -1
     expect(compteHistorique()).toBe(0)
 
+    const versionDuSchema = (): number =>
+      db.all<{ readonly schema_version: number }>(
+        'SELECT schema_version FROM app_meta WHERE id = 1'
+      )[0]?.schema_version ?? -1
+    const versionAvant = versionDuSchema()
+
     const [cible] = exigerCibles(pristine, 1, false)
     await poserDehorsDepuisSemaine('clause 8 — rien dans l’historique', cible!, pristine)
 
@@ -807,14 +813,16 @@ describe('retour-3 · ce que le lot ne touche pas', () => {
       'clause 8 : « je mange dehors » n’est pas « ce plat a été retenu » — l’historique ne bouge pas'
     ).toBe(0)
 
-    expect(USER_SCHEMA_VERSION, 'clause 8 : étiqueter un créneau ne demande AUCUNE migration').toBe(
-      18
-    )
+    // « AUCUNE MIGRATION » ne veut pas dire « la version vaut 18 ». En valeur absolue, la clause
+    // est devenue rouge le jour où un AUTRE lot a migré la base (la v19 de `retour-5b`,
+    // 2026-09-09) alors que rien de ce qu'elle garde n'avait bougé — même défaut que les dix
+    // compteurs absolus éteints par `retour-5c`. Ce qu'elle voulait dire se mesure ici :
+    // la version relevée AVANT le geste, et celle relevée APRÈS.
     expect(
-      db.all<{ readonly schema_version: number }>(
-        'SELECT schema_version FROM app_meta WHERE id = 1'
-      )[0]?.schema_version
-    ).toBe(USER_SCHEMA_VERSION)
+      versionDuSchema(),
+      'clause 8 : étiqueter un créneau ne demande AUCUNE migration'
+    ).toBe(versionAvant)
+    expect(versionDuSchema()).toBe(USER_SCHEMA_VERSION)
 
     // La contrainte de la v9 : un créneau porte un plat, OU une étiquette. Jamais les deux.
     expect(

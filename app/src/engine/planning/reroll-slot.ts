@@ -21,6 +21,7 @@ import type {
   Catalog,
   MealHistory,
   MealPlanEntry,
+  MotifVide,
   RecipeId,
   RerollOptions,
   SlotRef,
@@ -30,6 +31,7 @@ import type {
 } from '../domain/index.js'
 import { NoViableRecipeError } from '../domain/index.js'
 import { pickAccompagnement, type SuggestForSlot } from './plan-week.js'
+import { motifDeLaLevee, motifDuVivier } from './motif-vide.js'
 
 export interface RerollContext {
   readonly profile: UserProfile
@@ -125,19 +127,31 @@ export function rerollSlot(
     seed: opts.seed ?? contexte.seed,
   }
 
+  // ⛔ LE MOTIF SE CONSTATE SUR CE TIRAGE-CI, PAS SUR CELUI DE LA SEMAINE. « Changer » a son propre
+  // vivier — il exclut tout ce qui est déjà au plan PLUS les refus accumulés — donc sa cause n'est
+  // pas forcément celle qu'avait le créneau à la planification. Recopier l'ancien motif ferait dire
+  // à l'écran « il ne reste que des bases nues » alors que c'est le refus répété qui vient de vider
+  // le vivier. Le classifieur, lui, est le MÊME que celui de `planWeek` (`motif-vide.ts`) : une
+  // clause scellée exige que les deux chemins disent la même chose de la même cause.
   let choisi: RecipeId | null = null
+  let motifVide: MotifVide | null = null
   try {
-    for (const suggestion of suggest(requete).suggestions) {
+    const suggestions = suggest(requete).suggestions
+    for (const suggestion of suggestions) {
       if (exclus.has(suggestion.recipeId)) continue
       if (estPlatSimple(suggestion.recipeId)) continue
       choisi = suggestion.recipeId
       break
     }
+    if (choisi === null) {
+      motifVide = motifDuVivier(suggestions, (recipeId) => exclus.has(recipeId), estPlatSimple)
+    }
   } catch (error) {
     if (!(error instanceof NoViableRecipeError)) throw error
+    motifVide = motifDeLaLevee(error)
   }
 
-  return reposerLeCreneau(catalog, plan, slot, cible, choisi, suggest, requete)
+  return reposerLeCreneau(catalog, plan, slot, cible, choisi, motifVide, suggest, requete)
 }
 
 /**
@@ -205,7 +219,7 @@ export function setSlotRecipe(
     seed: contexte.seed,
   }
 
-  return reposerLeCreneau(catalog, plan, slot, cible, recipeId, suggest, requete)
+  return reposerLeCreneau(catalog, plan, slot, cible, recipeId, null, suggest, requete)
 }
 
 /**
@@ -254,6 +268,8 @@ export function setSlotHorsCatalogue(plan: WeekPlan, slot: SlotRef, libelle: str
       ...cible,
       recipeId: null,
       horsCatalogue: propre,
+      // Rempli, donc muet : le motif ne décrit que les cases VIDES.
+      motifVide: null,
       // ⚠️ ZÉRO PORTION, ET CE N'EST PAS « ZÉRO ASSIETTE ». `portions` compte ce que la RECETTE
       // produit, pour la liste de courses et les restes — un plat qu'on n'a pas cuisiné n'en produit
       // aucune. La quantité mangée, elle, n'est demandée nulle part et ne doit pas l'être (§6.5).
@@ -283,6 +299,7 @@ function reposerLeCreneau(
   slot: SlotRef,
   cible: MealPlanEntry,
   choisi: RecipeId | null,
+  motifVide: MotifVide | null,
   suggest: SuggestForSlot,
   requete: SuggestionRequest
 ): WeekPlan {
@@ -303,6 +320,11 @@ function reposerLeCreneau(
     // l'utilisateur avait DÉCLARÉ, pour ne rien mettre à la place — et « Changer » n'est filtré sur
     // aucun créneau marqué. La règle de la base tient dans les deux cas : plus aucun plat en face.
     horsCatalogue: choisi === null ? cible.horsCatalogue : null,
+    // ⚠️ L'ÉQUIVALENCE SE LIT SUR LA LIGNE AU-DESSUS, PAS SUR `choisi` SEUL. Un créneau vidé qui
+    // GARDE son étiquette « Un plat préparé » n'est pas vide : il est rempli et immesurable, et un
+    // motif à côté serait l'état que la base refuse (migration v19). C'est le seul endroit du
+    // moteur où « aucun plat posé » et « case vide » ne sont pas la même chose.
+    motifVide: choisi === null && cible.horsCatalogue === null ? motifVide : null,
     portions: choisi === null ? 0 : (catalog.recipes.get(choisi)?.portionsBase ?? 0),
     // Ni un reroll ni un choix ne produisent un RESTE : le plat de la veille n'a pas été cuisiné en
     // double parce qu'on a changé celui-ci.
@@ -327,6 +349,7 @@ function reposerLeCreneau(
         slot: { date: slot.date, creneau: slot.creneau },
         recipeId: complement,
         horsCatalogue: null,
+        motifVide: null,
         portions: catalog.recipes.get(complement)?.portionsBase ?? 0,
         locked: false,
         isLeftover: false,

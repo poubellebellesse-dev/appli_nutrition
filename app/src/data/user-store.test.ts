@@ -816,6 +816,7 @@ describe('user-store — planning', () => {
         slot: { date: '2026-08-03', creneau: 'diner' },
         recipeId: 'r1' as RecipeId,
         horsCatalogue: null,
+        motifVide: null,
         portions: 4,
         locked: true,
         isLeftover: false,
@@ -825,6 +826,7 @@ describe('user-store — planning', () => {
         slot: { date: '2026-08-04', creneau: 'diner' },
         recipeId: 'r2' as RecipeId,
         horsCatalogue: null,
+        motifVide: null,
         portions: 2,
         locked: false,
         isLeftover: true,
@@ -834,6 +836,7 @@ describe('user-store — planning', () => {
         slot: { date: '2026-08-05', creneau: 'diner' },
         recipeId: null,
         horsCatalogue: null,
+        motifVide: 'bases_nues',
         portions: 0,
         locked: false,
         isLeftover: false,
@@ -874,6 +877,7 @@ describe('user-store — planning', () => {
           slot: { date: '2026-08-03', creneau },
           recipeId: `r-${creneau}` as RecipeId,
           horsCatalogue: null,
+          motifVide: null,
           portions: 1,
           locked: false,
           isLeftover: false,
@@ -942,6 +946,7 @@ describe('user-store — planning', () => {
           slot: { date: '2026-08-05', creneau: 'gouter' },
           recipeId: null,
           horsCatalogue: 'Lasagnes surgelées',
+          motifVide: null,
           portions: 0,
           locked: false,
           isLeftover: false,
@@ -981,11 +986,15 @@ describe('user-schema — ce que la migration v2 corrige', () => {
   it('accepte un créneau VIDE à 0 portion — le CHECK de la v1 le refusait', () => {
     // `planWeek` rend `portions: 0` quand il ne peut pas remplir un créneau. C'est le cas normal,
     // pas une anomalie : `CHECK (portions > 0)` refusait d'enregistrer un plan valide.
+    // ⚠️ `motif_vide` EST DEVENU OBLIGATOIRE SUR UNE CASE VIDE (migration v19, lot `retour-5b`) :
+    // la case vide reste acceptée, elle n'a plus le droit d'être muette. Ce qu'affirme ce test — la
+    // v2 accepte 0 portion sans recette — est inchangé ; c'est la ligne d'exemple qui devait dire
+    // pourquoi elle est vide, comme toute case vide écrite depuis la v19.
     db.run(`INSERT INTO meal_plan (id, date_debut, jours, seed) VALUES ('p', '2026-08-03', 3, 1)`)
     expect(() =>
       db.run(
-        `INSERT INTO meal_plan_entry (plan_id, date, creneau, recipe_id, portions)
-         VALUES ('p', '2026-08-03', 'diner', NULL, 0)`
+        `INSERT INTO meal_plan_entry (plan_id, date, creneau, recipe_id, portions, motif_vide)
+         VALUES ('p', '2026-08-03', 'diner', NULL, 0, 'catalogue_epuise')`
       )
     ).not.toThrow()
   })

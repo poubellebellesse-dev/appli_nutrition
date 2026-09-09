@@ -674,8 +674,18 @@ describe('retour-2 — clause 7 : un seul dialogue, et rien à migrer', () => {
   })
 
   it('⛔ `user_excluded_group` ACCEPTE TOUJOURS SEPT VALEURS, ET LE SCHÉMA N’A PAS CHANGÉ DE VERSION', async () => {
-    const { USER_SCHEMA_VERSION } = await import('../../app/src/data/user-schema.js')
-    expect(USER_SCHEMA_VERSION).toBe(18)
+    // « RIEN À MIGRER » NE VEUT PAS DIRE « LA VERSION VAUT 18 ». En valeur absolue, la clause est
+    // devenue rouge le jour où un AUTRE lot a migré la base (la v19 de `retour-5b`, 2026-09-09)
+    // alors que la table qu'elle garde n'avait pas bougé d'un octet — même défaut que les dix
+    // compteurs absolus éteints par `retour-5c`. Ce qu'elle voulait dire se mesure sur les
+    // migrations elles-mêmes : seule la v15, celle qui l'a créée, touche à cette table.
+    const { MIGRATIONS } = await import('../../app/src/data/user-schema.js')
+    expect(
+      MIGRATIONS.filter((m) => m.statements.some((sql) => sql.includes('user_excluded_group'))).map(
+        (m) => m.version
+      ),
+      'clause 7 : une migration touche `user_excluded_group` hors de la v15 qui l’a créée'
+    ).toEqual([15])
 
     const ligne = baseCourante().all<{ readonly sql: string }>(
       "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'user_excluded_group'"

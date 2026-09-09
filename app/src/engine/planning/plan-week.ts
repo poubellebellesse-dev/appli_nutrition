@@ -64,6 +64,7 @@ import type {
   MealHistoryEntry,
   MealPlanEntry,
   MealSlot,
+  MotifVide,
   RecipeId,
   SuggestionRequest,
   WeekPlan,
@@ -74,6 +75,7 @@ import type { NutrientVector, SuggestionResult } from '../domain/index.js'
 import { resolveReferenceIntakes } from '../nutrition/index.js'
 import { signatureOverlap } from '../nutrition/signature.js'
 import { derive } from '../selection/prng.js'
+import { motifDeLaLevee, motifDuVivier } from './motif-vide.js'
 
 /** Ce que `planWeek` demande au moteur de sélection — voir l'en-tête sur l'injection. */
 export type SuggestForSlot = (req: SuggestionRequest) => SuggestionResult
@@ -316,11 +318,12 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
         (recipeId) => catalog.recipes.get(recipeId)?.estPlatSimple === true
       )
 
-      if (scored === null) {
+      if (scored.recipeId === null) {
         entries.push({
           slot: { date, creneau },
           recipeId: null,
           horsCatalogue: null,
+          motifVide: scored.motifVide,
           portions: 0,
           locked: false,
           isLeftover: false,
@@ -331,9 +334,10 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
 
       // Le plat entre dans les deux protections AVANT qu'on cherche son accompagnement : l'historique
       // de travail sert à ne pas lui adjoindre ce qu'on vient déjà de servir ailleurs.
-      placedRecipeIds.add(scored)
-      workingEntries.push({ recipeId: scored, date, creneau, origine: 'choisi' })
-      addNutrients(placedToday, catalog.indexes.recipeNutrients.get(scored))
+      const pose = scored.recipeId
+      placedRecipeIds.add(pose)
+      workingEntries.push({ recipeId: pose, date, creneau, origine: 'choisi' })
+      addNutrients(placedToday, catalog.indexes.recipeNutrients.get(pose))
 
       // ⚠️ UNE SECONDE REQUÊTE DE CRÉNEAU, PAS `history`/`cible` RÉUTILISÉS. L'historique doit
       // maintenant contenir le plat qu'on vient de poser, et la cible doit être CE QUI RESTE une
@@ -355,7 +359,7 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
           // bases nues ont le droit d'occuper — il n'y a rien à compenser.
           0
         ),
-        scored
+        pose
       )
 
       // ⚠️ `service` DIT LE MODE, il ne décrit pas la recette. `null` = mode recette, une entrée pour
@@ -364,9 +368,10 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
       // qu'il en manque une (§2.1 CONCEPTION_B_VIN_REPAS, et le commentaire de `MealPlanEntry`).
       entries.push({
         slot: { date, creneau },
-        recipeId: scored,
+        recipeId: pose,
         horsCatalogue: null,
-        portions: catalog.recipes.get(scored)?.portionsBase ?? 0,
+        motifVide: null,
+        portions: catalog.recipes.get(pose)?.portionsBase ?? 0,
         locked: false,
         isLeftover: false,
         service: complement === null ? null : 'plat',
@@ -378,6 +383,7 @@ export function planWeek(catalog: Catalog, req: WeekPlanRequest, suggest: Sugges
         slot: { date, creneau },
         recipeId: complement,
         horsCatalogue: null,
+        motifVide: null,
         portions: catalog.recipes.get(complement)?.portionsBase ?? 0,
         locked: false,
         isLeftover: false,
@@ -427,12 +433,16 @@ function pickForSlot(
   placedRecipeIds: ReadonlySet<RecipeId>,
   peutRemplirSeul: (recipeId: RecipeId) => boolean,
   estPlatSimple: (recipeId: RecipeId) => boolean
-): RecipeId | null {
+): TirageDeCreneau {
   let result: SuggestionResult
   try {
     result = suggest(req)
   } catch (error) {
-    if (error instanceof NoViableRecipeError) return null
+    // ⚠️ LE MOTIF SE PRÉLÈVE ICI, SUR L'ERREUR ELLE-MÊME. C'est le seul instant où le détail des
+    // rejets existe : `RejectionSummary` ne survit pas à ce `catch`, et le recalculer plus tard
+    // demanderait de rejouer la passe d'exclusion — donc de la rejouer AUTREMENT, puisqu'on ne
+    // serait plus dans la même requête de créneau.
+    if (error instanceof NoViableRecipeError) return { recipeId: null, motifVide: motifDeLaLevee(error) }
     throw error
   }
 
@@ -475,14 +485,26 @@ function pickForSlot(
     if (placedRecipeIds.has(suggestion.recipeId)) continue
     if (estPlatSimple(suggestion.recipeId)) continue
     if (!peutRemplirSeul(suggestion.recipeId)) continue
-    return suggestion.recipeId
+    return { recipeId: suggestion.recipeId, motifVide: null }
   }
   for (const suggestion of result.suggestions) {
     if (placedRecipeIds.has(suggestion.recipeId)) continue
     if (estPlatSimple(suggestion.recipeId)) continue
-    return suggestion.recipeId
+    return { recipeId: suggestion.recipeId, motifVide: null }
   }
-  return null
+  return {
+    recipeId: null,
+    motifVide: motifDuVivier(result.suggestions, (id) => placedRecipeIds.has(id), estPlatSimple),
+  }
+}
+
+/**
+ * Ce qu'un créneau a donné : un plat, OU la raison de son absence. Jamais les deux, jamais aucun
+ * des deux — c'est l'équivalence que la base fait respecter (migration v19).
+ */
+interface TirageDeCreneau {
+  readonly recipeId: RecipeId | null
+  readonly motifVide: MotifVide | null
 }
 
 /** Créneaux où le placement automatique doit poser un vrai plat — voir `peutRemplirSeul`. */

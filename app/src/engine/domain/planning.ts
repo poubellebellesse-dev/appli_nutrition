@@ -5,6 +5,7 @@
 
 import type { FoodId, RecipeId, TopicId } from './ids.js'
 import type { CourseKind, MealSlot, RecipeIngredient } from './catalog.js'
+import type { ExclusionLayerId } from './layer-ids.js'
 import type { UserProfile } from './profile.js'
 import type { HardConstraints, MealHistory, PiquantTolerance } from './request.js'
 import type { ScoreWeights } from './result.js'
@@ -14,6 +15,40 @@ export interface SlotRef {
   readonly date: string
   readonly creneau: MealSlot
 }
+
+/**
+ * POURQUOI un créneau est resté vide (lot `retour-5b`).
+ *
+ * ⚠️ TROIS CAUSES, PAS DEUX — le lot a été découpé sur deux et il y en a trois, mesurées le
+ * 2026-09-09 sur le catalogue réel. Elles ne se déduisent PAS de la demande : la même forme de
+ * demande produit des causes différentes selon les créneaux, et deux demandes très différentes
+ * produisent la même. C'est pourquoi cette valeur est une CONSTATATION faite créneau par créneau,
+ * jamais un calcul refait après coup à partir de `HardConstraints`.
+ *
+ *   1. `aucune_recette:<couche>` — les couches d'exclusion ont tout écarté (`NoViableRecipeError`).
+ *      Le suffixe nomme la couche qui en a écarté le PLUS : c'est le seul mot qui permette à
+ *      l'écran de dire quoi assouplir, et à compte égal la première couche du registre l'emporte.
+ *   2. `catalogue_epuise` — des recettes passaient, elles sont toutes déjà posées ailleurs dans la
+ *      semaine. Assouplir un critère n'y changerait rien ; raccourcir la fenêtre, si.
+ *   3. `bases_nues` — il ne restait que des plats simples (riz nature, pommes de terre vapeur),
+ *      que `retour-5` interdit de poser seuls sur un déjeuner ou un dîner. Cause CRÉÉE le
+ *      2026-08-27, postérieure au découpage du lot : elle n'existait pas quand il a été écrit.
+ *
+ * ⚠️ `indetermine` N'EST PAS UNE QUATRIÈME CAUSE, c'est l'aveu de la migration v19 : ce plan a été
+ * composé avant que le moteur ne sache dire pourquoi. Le moteur ne doit JAMAIS la produire — une
+ * clause scellée l'exige par témoin exécuté.
+ *
+ * ⚠️ CHAÎNE, ET NON OBJET, PARCE QUE LA BASE LA STOCKE TELLE QUELLE. `meal_plan_entry.motif_vide`
+ * est un `TEXT` : une forme composée demanderait un encodage, donc un décodage, donc un endroit de
+ * plus où la valeur relue peut différer de la valeur écrite.
+ */
+export type MotifVide =
+  | `aucune_recette:${ExclusionLayerId}`
+  /** Cas dégénéré : plus rien à écarter, donc aucune couche à nommer. Le catalogue lui-même est vide. */
+  | 'aucune_recette'
+  | 'catalogue_epuise'
+  | 'bases_nues'
+  | 'indetermine'
 
 /** Fenêtre glissante de 2 à 14 jours, à partir de n'importe quel jour (§7.1, §9 décision 9 ENGINE). */
 export interface WeekPlanRequest {
@@ -91,6 +126,19 @@ export interface MealPlanEntry {
    * par l'utilisateur se mélangerait aux valeurs CIQUAL sans marque de provenance (principe 3).
    */
   readonly horsCatalogue: string | null
+  /**
+   * Pourquoi ce créneau est vide — non-`null` SI ET SEULEMENT SI il l'est (lot `retour-5b`).
+   *
+   * ⚠️ ÉQUIVALENCE, PAS IMPLICATION, et la base la fait respecter dans LES DEUX SENS (migration
+   * v19). Une contrainte qui n'interdirait que « un plat ET un motif » laisserait passer l'autre
+   * moitié — une case vide muette, exactement l'état que le lot déclare impossible.
+   *
+   * ⚠️ REQUIS, PAS OPTIONNEL, pour la même raison que `horsCatalogue` juste au-dessus : un champ
+   * optionnel qu'un site de construction oublie ne produit aucune erreur, ni au type, ni au test,
+   * ni à l'écran. Le rendre requis force chaque `entries.push` à écrire `motifVide: null`, donc à
+   * voir que le cas existe.
+   */
+  readonly motifVide: MotifVide | null
   readonly portions: number
   /** Un créneau verrouillé est invisible pour toute replanification ultérieure (§7.2 ENGINE). */
   readonly locked: boolean

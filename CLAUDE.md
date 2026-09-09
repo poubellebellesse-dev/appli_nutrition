@@ -42,11 +42,15 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-09 à 19 h 47, arbre complet, livraison de `retour-5d`, `HEAD` = `bb79e04`) :
-2 519 passed / 0 failed (2 519 tests, 131 fichiers)** en 52,2 s · typecheck propre · `vite build`
-✓ 2,57 s · `engine:plan-stress` 20/20 · catalogue 339 recettes, **dîner 250** dont 44 froides.
-⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** **Arbre entièrement vert** — le rouge du relevé
-de 17 h 24 était `retour-5d.test.tsx`, son propre test d'acceptation scellé avant son code.
+⛔ **Dernier relevé (2026-09-09 à 21 h 53, arbre complet, livraison de `retour-5b`, `HEAD` = `0a616e6`,
+travail NON COMMITÉ) : 2 535 passed / 0 failed (2 535 tests, 132 fichiers)** en 61,5 s · typecheck
+propre · `vite build` ✓ 2,54 s · `engine:plan-stress` 20/20 · catalogue 339 recettes, **dîner 250**
+dont 44 froides. `USER_SCHEMA_VERSION` = **19** (le motif de case vide, migration par reconstruction
+de table). ⚠️ **SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES** — la forme
+de la v9 ne se recopie pas pour une équivalence.
+⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** **Arbre entièrement vert** — les trois derniers
+rouges étaient des clauses scellées qui figeaient `USER_SCHEMA_VERSION` **en valeur absolue**,
+corrigées sur décision de l'auteur (`ETAT.md` §8).
 ⭐ **`retour-1` « au moins 6 plats sur 10 » EST VERTE, ET DEUX CAUSES DISTINCTES ONT ÉTÉ PAYÉES
 POUR ÇA.** (1) **Le rayon était vide** : le dîner ne portait que **8 recettes froides sur 214
 (3,7 %)** contre 44 sur 194 au déjeuner, et le moteur en remontait 7 sur 8 ; `retour-5e` y a fait

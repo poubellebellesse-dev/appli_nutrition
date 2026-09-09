@@ -2543,6 +2543,357 @@ se fixera **après**, sur une mesure d'après-lot, dans `retour-5d`.
 
 ---
 
+### Lot `retour-5b` — la case vide dit **pourquoi** elle est vide ✅ **LIVRÉ le 2026-09-09 à 21 h 53** — brief écrit à 20 h 22, attaqué et corrigé, scellé à 21 h 05, **non commité à cette heure : aucun hash**
+
+Découpé de `retour-5` le 2026-08-26 (« Le texte qui expliquera la case vide SORT de ce lot »).
+Périmètre arrêté par l'auteur le 2026-09-09 : **l'écran Semaine ET le bouton « Changer »**, les deux
+chemins qui savent aujourd'hui produire une case vide sous les yeux de quelqu'un.
+
+#### ⛔ LE DIAGNOSTIC D'AOÛT EST FAUX AUJOURD'HUI, ET C'EST `retour-5` QUI L'A PÉRIMÉ
+
+Le découpage de 2026-08-26 annonçait **deux** causes : `NoViableRecipeError` (aucun candidat après
+exclusion) et le catalogue épuisé pour la semaine. Il y en a **trois**, et celle qui tombe
+réellement aujourd'hui n'est **aucune des deux**.
+
+Mesuré le 2026-09-09 à 20 h 10 sur `app/public/catalog/catalog.db` réel (339 recettes), en
+instrumentant l'injection `suggest` de `planWeek` sans toucher une ligne de production :
+
+| # | Cause | Où elle sort | Configuration qui la fait tomber, mesurée le 2026-09-09 | Cases vides |
+|---|---|---|---|---|
+| 1 | **aucun candidat après exclusion** — `NoViableRecipeError`, qui porte son `RejectionSummary` | `suggest(req)` lève | végétalien + 5 allergènes + les 22 exclus + les 10 aliments de base | **14 / 14** |
+| 2 | **le catalogue est épuisé pour la semaine** — tout ce qui reste est déjà au plan | 1ʳᵉ et 2ᵈᵉ passes | les 22 exclus **+ les 10 aliments de base** des neuf plats simples | **7 / 14** |
+| 3 | **il ne reste que des bases nues** — tout ce qui reste est `estPlatSimple` | 2ᵈᵉ passe | les 22 exclus seuls (la configuration de la clause 6a de `retour-5`) | **4 / 14** |
+
+⛔ **LA CAUSE 3 N'EXISTAIT PAS LE 2026-08-26 : C'EST `retour-5` QUI L'A CRÉÉE**, le 2026-08-27, en
+interdisant à une base nue de porter un créneau seule. Et elle **masque** la cause 2 : les neuf
+bases survivent à presque toute exclusion et ne sont jamais placées, donc il en reste toujours —
+sur la configuration des 22 exclus, les 4 trous rendent 9 candidats restants, **tous des bases
+nues**. Pour voir la cause 2, il faut exclure aussi les aliments de base. C'est la mesure, pas une
+hypothèse : la même semaine passe de « 3-que des plats simples ×4 » à « 2-catalogue épuisé ×7 » sur
+ce seul ajout.
+
+⚠️ **Et la première hypothèse d'août reste fausse** : sous les 22 exclusions seules, `suggestMeals`
+ne lève **jamais**. Il rend 19 suggestions au premier déjeuner et 17 au premier dîner (mesuré
+2026-09-09 ; c'était 10 et 3 le 2026-08-26, avant que `retour-5e` ne rende 36 froides au dîner).
+Le rayon n'est pas vide : il ne contient plus que des choses qui ne font pas un repas.
+
+✅ **CE QUI RESTE VRAI DU DÉCOUPAGE D'AOÛT** : la matière existe et elle est jetée.
+`plan-week.ts:435` attrape `NoViableRecipeError` et la jette en une ligne, `reroll-slot.ts:137`
+fait exactement la même chose, `describeNoViableRecipe` sait déjà en tirer la phrase du motif
+dominant, et les causes 2 et 3 sont connues **au point d'appel**, là où on sait déjà quoi dire.
+
+#### La forme du motif — et pourquoi elle n'est pas optionnelle
+
+Le champ suit le précédent de `horsCatalogue` (`domain/planning.ts:69-91`), qui a été écrit contre
+ce piège exact : *« Un champ optionnel qu'un appelant oublie ne produit AUCUNE erreur — ni au type,
+ni au test, ni à l'écran ; c'est le défaut que ce projet a déjà payé trois fois. »*
+
+- `MealPlanEntry.motifVide` est **REQUIS, PAS OPTIONNEL**, et vaut `null` **si et seulement si** la
+  case est remplie (recette ou libellé hors catalogue). Le marqueur EST le champ : pas de booléen
+  en plus, qui pourrait contredire le motif.
+- Le motif est **produit par le moteur**, aux deux endroits qui savent : `pickForSlot` et
+  `rerollSlot`. Il n'est **pas fabriqué au point d'affichage** — un écran qui devine la cause
+  redirait au premier changement de filtre quelque chose que le moteur n'a pas dit.
+- Pour la cause 1, le motif porte **la couche dominante** que `RejectionSummary` calcule déjà. Ce
+  n'est pas un ornement : c'est ce qui permet à l'écran de nommer le critère à assouplir. Mesuré le
+  2026-09-09, trois configurations qui rendent trois couches dominantes différentes :
+  `allergenes` (végétalien + 5 allergènes + 22 + bases), `regime` (végétalien + 22 + bases, sans
+  allergène), `exclusions` (pescétarien + lait/œufs + 22 + bases).
+- ✅ **LA MIGRATION DE LA BASE UTILISATEUR EST DANS LE PÉRIMÈTRE — VALIDÉE PAR L'AUTEUR le
+  2026-09-09.** Un plan est **enregistré et relu** (`savePlan` / `readLatestPlan`, appelés par
+  l'écran Semaine à chaque geste). Un motif non persisté disparaîtrait au rechargement : la case
+  redeviendrait muette sans qu'aucun test ne rougisse — le défaut « champ déclaré, pas branché »,
+  payé trois fois.
+  → **v19**, en deux instructions, dans cet ordre :
+  1. `ALTER TABLE meal_plan_entry ADD COLUMN motif_vide TEXT CHECK ((recipe_id IS NULL AND
+     hors_catalogue IS NULL) = (motif_vide IS NOT NULL))` — même forme que la v9 de
+     `hors_catalogue` ;
+  2. `UPDATE meal_plan_entry SET motif_vide = 'indetermine' WHERE recipe_id IS NULL AND
+     hors_catalogue IS NULL` — le rattrapage, sans lequel toute base existante sort de la migration
+     avec des cases vides muettes.
+
+  ⛔ **LE `CHECK` EST SYMÉTRIQUE, ET IL NE L'ÉTAIT PAS AU PREMIER JET** (corrigé le 2026-09-09,
+  au tour d'attaque). Écrit `motif_vide IS NULL OR (recipe_id IS NULL AND …)`, il n'interdisait
+  qu'un seul des deux sens : une case **vide sans motif** restait parfaitement insérable — c'est-à-
+  dire exactement l'état que ce paragraphe déclare inexprimable trois lignes plus haut. Une
+  équivalence, pas une implication : `motif_vide` est non nul **si et seulement si** la case est
+  vide. ⚠️ Conséquence assumée : une entrée d'accompagnement sans recette est une case vide comme
+  une autre et porte donc un motif — ce que la clause 1 exigeait déjà.
+  ⚠️ `USER_SCHEMA_VERSION` passe donc de **18 à 19** quand le lot sera codé, et les clauses 8 et
+  9 bis en sont **les témoins exécutés** : la 8 exige `CHECK constraint failed` **dans les deux
+  sens**, la 9 bis monte une vraie base v18 et vérifie le rattrapage.
+- Les lignes vides déjà en base, écrites avant ce lot, prennent le motif `indetermine`, qui est une
+  **valeur de plein droit** dont le texte dit exactement cela. C'est le seul moyen de n'avoir aucun
+  état « vide sans motif », ni au type ni en base, sans faire dire à la migration ce qu'elle ne sait
+  pas. ⚠️ Le risque de cette valeur est qu'elle serve un jour de valeur par défaut : la clause 9
+  existe pour le refuser.
+
+#### **Fini quand** — seize clauses, toutes contre `catalog.db` réel, jamais contre une fixture
+
+> ⛔ **CE « FINI QUAND » A ÉTÉ ATTAQUÉ LE 2026-09-09 ET N'A PAS TENU.** Le critique a exhibé une
+> implémentation fausse qui passait les douze clauses d'alors sans jamais lire
+> `RejectionSummary.byLayer` : elle devinait la cause sur la **forme de la demande** — `diet` pour
+> la cause 1, `excludedFoodIds.length >= 32` pour départager les causes 2 et 3. Elle passait parce
+> que **toutes les clauses comparaient des motifs entre eux** : trois valeurs distinctes sur trois
+> configurations distinctes suffisaient, rien n'exigeait qu'elles soient les **bonnes**.
+> Les clauses **5 ter**, **5 quater** et **9 bis** ferment ce trou, et les clauses **4**, **8** et
+> **11** sont corrigées. Aucun mécanisme neuf n'est demandé au codeur : ce qui change, c'est ce que
+> le test sait vérifier.
+
+Dix configurations, toutes sur 7 jours, `['dejeuner', 'diner']`, graine 1, profil `FEMME` du banc
+`stress-planning` — A, B et C sont celles de `retour-5.test.ts`, pour que les nombres soient
+comparables ; D à F sont les contre-exemples **mesurés** ajoutés au tour d'attaque.
+
+- **A** = les 22 aliments exclus de la clause 6a de `retour-5`. → cause 3, **4 vides / 14**.
+- **B** = A + les 10 aliments de base des neuf plats simples (`riz_blanc`, `riz_complet`,
+  `pates_seches`, `quinoa`, `boulgour`, `semoule_ble`, `polenta`, `pomme_de_terre`,
+  `lentilles_vertes`, `sel_fin`). → cause 2, **7 / 14**.
+- **C** = B + régime `vegetalien` + allergènes `gluten`, `fruits_a_coque`, `soja`, `sesame`,
+  `moutarde`. → cause 1, couche `allergenes`, **14 / 14**. Deux variantes : **C régime**
+  (végétalien seul) → couche `regime` ; **C exclusions** (pescétarien + lait/œufs) → `exclusions`.
+- **D** = B + les 8 allergènes, **`diet` à `null`** → cause 1, couche `allergenes`, **la même que
+  C** avec une tout autre forme de demande. **D bis** = D + régime `vegetarien`, même couche.
+  ⛔ *Ces deux-là tuent le branchement sur `diet`.*
+- **E** = les 10 bases + régime `vegetalien` → **13 vides, dont 7 par levée (`regime`) et 6 par
+  catalogue épuisé**. ⛔ *Deux causes dans une seule demande : aucun motif calculé une fois par
+  semaine ne peut être juste ici.*
+- **F** = les 10 bases + les 8 allergènes, soit **10 exclus** → cause 2, **13 vides**, la même
+  cause que B qui en exclut 32, quand A qui en exclut 22 est cause 3. **F bis** = les 10 bases +
+  pescétarien + lait/œufs → cause 2, **12 vides**. ⛔ *Aucun seuil monotone sur
+  `excludedFoodIds.length` ne range ces trois-là correctement.*
+
+⛔ **L'ORACLE INDÉPENDANT, sans lequel rien de tout cela ne se vérifie.** Le fichier de test rejoue
+chaque semaine en espionnant le point d'injection `suggest` de `planWeek`, et **recalcule la cause
+de chaque case vide par une autre route que l'implémentation** : la couche dominante de
+`NoViableRecipeError.rejected.byLayer` quand le moteur a levé, les suggestions rendues rejouées
+contre les recettes déjà posées sinon. **Jamais depuis `request.constraints`.** Mesuré le
+2026-09-09 : les dix configurations se rangent en **cinq causes distinctes** (`1|allergenes`,
+`1|regime`, `1|exclusions`, `2`, `3`) et l'oracle classe toutes les cases vides sans en laisser une
+seule inclassable. ⚠️ Il duplique six lignes de `pickForSlot`, et c'est voulu : un oracle qui
+appellerait la fonction qu'il juge ne juge rien.
+
+| # | Clause | Ce qui la rendrait FAUSSE |
+|---|---|---|
+| 1 | Sur A, B et C, **toute** entrée dont `recipeId` et `horsCatalogue` sont nuls porte un `motifVide` non nul. | une seule entrée vide à `motifVide: null`. |
+| 2 | Réciproquement, toute entrée portant une recette **ou** un libellé hors catalogue a `motifVide === null`. | un motif posé à côté d'un plat. |
+| 3 | **Les trois causes rendent trois valeurs deux à deux différentes** : A → « il ne reste que des bases nues », B → « catalogue épuisé pour la semaine », C → « aucun candidat après exclusion ». | un motif unique pour tout, ou deux causes qui rendent le même mot. **C'est la clause qui tue l'implémentation en dur.** |
+| 4 | Chacune de A, B et C rend **au moins une** case vide, et les motifs y sont **homogènes**. ⚠️ **« Sur une configuration à cause unique »** — la formulation « d'une même configuration » était FAUSSE, E porte deux causes à la fois. | une cause qui fuit à l'intérieur d'une configuration qui n'en porte qu'une. |
+| 5 | Sur la cause 1, le motif porte **la couche dominante**, et elle SUIT la configuration : `allergenes` sur C, `regime` sur C sans allergènes, `exclusions` sur pescétarien + lait/œufs + B. | une couche écrite en dur, ou un motif de cause 1 qui n'en porte aucune. |
+| **5 ter** | ⛔ **LA CLAUSE QUI REMPLACE LA 5 COMME PIÈGE PRINCIPAL.** Sur les **dix** configurations, chaque case vide est classée par l'**oracle indépendant**, puis : ① **même cause mesurée ⇒ un seul motif** ; ② **causes différentes ⇒ motifs différents**. | ① meurt si le motif est branché sur `diet` (C, D et D bis ont la même couche `allergenes`) ou sur un seuil de `excludedFoodIds.length` (B à 32 exclus et F à 10 ont la même cause). ② meurt si tout rend la même constante. |
+| **5 quater** | Sur **E** (végétalien + les 10 bases), les 13 cases vides portent **deux causes mesurées** et **exactement deux motifs distincts**. | un motif calculé **une fois par demande** : il ne peut pas rendre deux valeurs pour une seule requête. |
+| 6 | **« Changer » dit la même chose que la Semaine.** En refusant chaque plat rendu sur une fenêtre de 2 jours : sur A, le créneau bascule à vide après **6 tirages** et porte « il ne reste que des bases nues » ; sur B, après **3 tirages**, il porte « catalogue épuisé ». | un reroll qui rend une case vide sans motif — c'est le comportement d'aujourd'hui. |
+| 7 | Un plan portant les trois motifs, enregistré puis relu, rend **les trois mêmes motifs**. | un champ non persisté : la case redevient muette au rechargement. |
+| 8 | La base **refuse dans les deux sens** : une ligne portant à la fois une recette et un motif, **et** une ligne vide dont le motif est `NULL`. Les deux doivent dire `CHECK constraint failed`. | ⚠️ **le premier jet n'exigeait que le premier sens**, laissant insérable la case vide muette que le brief déclare inexprimable. |
+| 9 | `indetermine` n'est produit par **personne** : sur A, B, C et la configuration nominale à 14 jours, aucune entrée ne le porte. | une valeur par défaut qui s'installe. |
+| **9 bis** | Une **vraie base v18**, montée par les migrations livrées et portant une case pleine et une case vide, traverse `migrate` : elle arrive à `USER_SCHEMA_VERSION`, la case vide porte `indetermine`, la pleine porte `NULL`, et aucune ligne n'est perdue. | ⚠️ **personne n'exécutait la migration au premier jet.** Une v19 recopiée sans sa ligne de rattrapage passait la clause 9 sans rien migrer. |
+| 10 | L'écran Semaine **écrit le motif en toutes lettres** sous la case vide, et **trois motifs donnent trois textes différents**. | un texte unique, ou un motif porté par la seule bordure — l'acquis « aucun état n'est porté par la seule couleur ». |
+| 11 | Sur la cause 1, **le texte affiché change quand la couche dominante change** : C, C régime et C exclusions donnent trois textes différents. | une phrase générique « aucune recette trouvée ». ⚠️ **La prose disait « nomme le critère à assouplir », ce que le test ne vérifie pas et ne peut pas vérifier** sans figer un libellé. L'intention reste, la clause dit ce qu'elle mesure. |
+| 12 | **Rien d'autre ne bouge** : la configuration nominale rend **0 vide sur 14** à 7 jours et **0 sur 28** à 14 jours, et A rend toujours **10 créneaux remplis sur 14** — la valeur que scelle déjà la clause 6a de `retour-5`. | un motif calculé qui change le choix du plat. |
+
+⚠️ **Les nombres 4/14, 7/14 et 14/14 sont l'empreinte du 2026-09-09**, pas une loi : ils bougeront
+quand le catalogue grandira, comme les onze valeurs qu'a dû rebaser `retour-5c`. Ils sont écrits
+ici comme mesure ; **les clauses scellent les CAUSES, pas les comptes** — sauf la clause 12, qui
+reprend un compte déjà scellé ailleurs.
+
+#### Ce que le lot NE touche pas
+
+Le **choix** du plat : `pickForSlot` garde ses deux passes, son `peutRemplirSeul` et son
+interdiction des bases nues, à l'identique — un motif se lit, il ne décide pas · `suggestMeals`,
+`describeNoViableRecipe` et `RejectionSummary`, **lus** et jamais modifiés · `pickAccompagnement`
+et le second `catch` de `plan-week.ts:619` : un accompagnement absent n'est pas une case vide ·
+`setSlotRecipe` et `planLeftovers` · le **catalogue** — aucune recette, aucun aliment, aucun
+`types_repas` : `node catalog/build.mjs` n'est **pas** un témoin de ce lot · l'écran **Aujourd'hui**,
+qui ne montre pas de créneau vide · la liste de courses · les **filtres durs** de `retour-6` et la
+décision 79 · le plancher calorique et `checkCalorieFloor`.
+
+⚠️ **Un seul écran apprend le mot** : la Semaine. `rerollSlot` est dans le périmètre parce qu'il
+**produit** des cases vides que la Semaine affiche, pas parce qu'il a un écran à lui.
+
+#### Les témoins d'avant — arbre du brief (`0a616e6`), mesurés le 2026-09-09 à 20 h 22
+
+| Témoin | Valeur d'avant |
+|---|---|
+| `npm test` | **2 519 passed / 0 failed**, 131 fichiers, 52,93 s |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ 2,54 s |
+| `npm run engine:plan-stress` | **20/20** configurations saines |
+| `node catalog/build.mjs` | **pas un témoin de ce lot** — le catalogue n'est pas touché |
+| `USER_SCHEMA_VERSION` | **18** — la migration du motif sera la **v19**, ✅ validée par l'auteur le 2026-09-09 |
+
+⚠️ **L'arbre est ENTIÈREMENT VERT à l'ouverture de ce brief.** Tout rouge qui apparaît ensuite vient
+de `tests/scelles/retour-5b.test.tsx`, et de lui seul.
+
+#### Les tests scellés, écrits avant toute ligne de code — `tests/scelles/retour-5b.test.tsx`
+
+Sortie réelle, **2026-09-09 à 20 h 35**, `npx vitest run tests/scelles/retour-5b.test.tsx` :
+
+```
+Test Files  1 failed (1)
+     Tests  11 failed | 2 passed (13)
+  Duration  4,63 s
+```
+
+| Clause | Verdict du jour | Ce que la sortie dit |
+|---|---|---|
+| 1 | ROUGE | `A · 2026-08-08 dejeuner : case vide sans motif` — `expected undefined not to be undefined` |
+| 2 | ROUGE | `A · 2026-08-03 dejeuner : un motif à côté d'un plat` — `expected undefined to be null` |
+| 3 | ROUGE | `motifs rendus : null \| null \| null` — `expected 1 to be 3` |
+| 4 | ROUGE | `homogènes parce qu'ils sont tous absents` |
+| 5 | ROUGE | trois couches dominantes, `null \| null \| null` — `expected 1 to be 3` |
+| 5 bis | ROUGE | `motifs absents : [ 'null', 'null', 'null', 'null' ]` |
+| 6 | ROUGE | `« Changer » rend une case vide SANS motif` |
+| 7 | ROUGE | `rien à persister : [ '2026-08-08\|dejeuner\|null', …(3) ]` |
+| 5 ter | ROUGE | l'inventaire de l'oracle, cinq causes, toutes sans motif : `3 → null (A) · 2 → null (F bis) · 1\|allergenes → null (D bis) · 1\|regime → null (E) · 1\|exclusions → null (C exclusions)` |
+| 5 quater | ROUGE | `les motifs de E sont tous absents` — `expected [ 'null' ] to not deeply equal [ 'null' ]` |
+| 8 | ROUGE | `got 'table meal_plan_entry has no column named motif_vide'` au lieu de `CHECK constraint failed` |
+| 9 bis | ROUGE | `aucune version au-dessus de la v18 : la migration du lot n'existe pas encore` — `expected 18 to be greater than 18` |
+| 10 | ROUGE | trois déjeuners vides, trois fois `DéjeunerAucun plat` — `expected 1 to be 3` |
+| 11 | ROUGE | trois couches dominantes, trois fois `DéjeunerAucun plat` |
+| 9 | **verte** | garde déclarée : « ceci ne doit JAMAIS arriver ». Rien à démontrer avant le code. |
+| 12 | **verte** | garde déclarée, idem : nominal 0/14 et 0/28, A à 10 remplis sur 14. |
+
+⚠️ **Deux clauses vertes sur seize, et ce sont les deux gardes de non-régression.** Une clause qui
+dit « ceci ne doit jamais arriver » ne peut pas être rouge avant le code : elle n'a rien à
+démontrer, elle a quelque chose à empêcher. L'en-tête du fichier les déclare comme telles.
+
+⛔ **L'ORACLE DE LA CLAUSE 5 TER TOURNE DÈS AUJOURD'HUI, ET C'EST CE QUI REND LA CLAUSE CRÉDIBLE.**
+Le premier jet de cette clause s'arrêtait à la première case vide de A et ne prouvait donc rien de
+ses gardes de semis. Réécrite pour construire l'inventaire **avant** toute assertion sur les
+motifs, elle démontre par sa propre sortie rouge que l'oracle classe les dix configurations en cinq
+causes, sans en laisser une seule inclassable. Le jour où le catalogue changera assez pour que
+l'une des configurations perde sa cause, la clause le dira **en ces termes** — *« ce n'est pas la
+clause qui échoue, c'est le semis »* — au lieu de rougir pour rien.
+
+⛔ **TROIS CLAUSES ONT ÉTÉ VERTES PAR ACCIDENT AVANT D'ÊTRE CORRIGÉES — et c'est la mesure qui l'a
+dit, pas la relecture.** Écrites une première fois, elles passaient sans qu'une ligne de code
+existe. C'est exactement le trou que `/attaquer` cherche, trouvé ici par la sortie :
+
+- **4, 5 bis et 7** comparaient des motifs **absents** et les trouvaient « égaux ». La 7 —
+  l'aller-retour en base — « réussissait » avec `null` des deux côtés : c'est le défaut « champ
+  déclaré, pas branché » **traversant la clause écrite pour le tuer**. Chacune exige désormais que
+  la valeur comparée ne soit pas vide.
+- **10** comparait les cartes de créneaux **différents** — le libellé « Déjeuner » contre « Dîner »
+  suffisait à les distinguer, sans un mot de motif. Corrigée en visant trois déjeuners, elle est
+  restée verte : deux configurations se séparaient encore par la **présence d'un bouton d'action**
+  que le nombre de restes disponibles fait apparaître. La comparaison retire maintenant boutons et
+  liens — règle **structurelle**, pas lexicale : *un motif se lit, il ne se clique pas.*
+- La même mesure a révélé un défaut de **harnais** : sans `vi.resetModules()` entre deux montages,
+  l'écran affichait un plan qui n'était pas celui qu'on venait de semer. Le harnais vérifie
+  désormais que le plat semé est bien celui qui s'affiche, et le dit en ces termes quand il ne
+  l'est pas : *« ce n'est pas la clause qui échoue »*.
+
+#### ⛔ LE TOUR D'ATTAQUE DU 2026-09-09 — verdict « NE TIENT PAS », un tour payé
+
+Le critique a répondu aux trois questions de `/attaquer`. Sur la question 2 — *écris une
+implémentation FAUSSE qui fait passer ces tests* — **il a réussi**, et c'est la seule chose qui
+rouvre un brief. Sa triche, vérifiée clause par clause sur les douze d'alors :
+
+```
+motifVide(req, causeKind):
+  si causeKind == 'exception':                       // NoViableRecipeError attrapée
+    si req.diet == 'vegetalien':
+      retourne (req.allergies.length > 0) ? 'allergenes' : 'regime'
+    sinon: retourne 'exclusions'
+  sinon:
+    retourne (req.excludedFoodIds.length >= 32) ? 'catalogue_epuise' : 'bases_nues'
+```
+
+plus un dictionnaire de libellés statique à l'écran et le SQL de la v19 recopié **sans rattrapage**.
+⛔ **Elle passait la clause 5 — le « piège principal » que le fichier se déclarait à lui-même —
+sans jamais lire `RejectionSummary.byLayer`.** Le défaut n'était pas dans une clause : il était
+dans la **forme** de toutes. Comparer des motifs entre eux ne dit jamais lesquels sont les bons.
+
+**Ce qui a été corrigé, et ce qui ne l'a pas été :**
+
+| Trou trouvé | Traitement |
+|---|---|
+| aucune clause ne compare le motif à une valeur **recalculée indépendamment** | ✅ **clauses 5 ter et 5 quater** + l'oracle `mesurerLesCauses`, qui lit `byLayer` et les suggestions rendues, jamais `constraints` |
+| le branchement sur `diet` passe | ✅ **D et D bis**, même couche dominante que C, forme de demande différente — mesurées, pas imaginées |
+| le seuil sur `excludedFoodIds.length` passe | ✅ **F et F bis** (10 exclus, cause 2) contre **A** (22 exclus, cause 3) et **B** (32 exclus, cause 2) |
+| un motif calculé une fois par demande passe | ✅ **E**, mixte : 7 cases `regime` et 6 cases « catalogue épuisé » dans **une seule** requête |
+| le `CHECK` est **asymétrique** et autorise une case vide sans motif | ✅ **clause 8** rendue symétrique, et la v19 réécrite en équivalence |
+| la prose de la clause 9 (base v18 → `indetermine`) n'est **testée nulle part** | ✅ **clause 9 bis** : vraie base v18 montée par les migrations livrées, `migrate` exécuté, rattrapage vérifié |
+| la prose de la clause 11 (« nomme le critère à assouplir ») n'est pas ce que le test vérifie | ✅ **prose corrigée** : la clause dit désormais ce qu'elle mesure |
+| seules **3 des 7** couches de `EXCLUSION_LAYERS` sont exercées | ⏳ **dette, `ETAT.md` §8.** Aucune configuration mesurée ne rend `requis`, `temps`, `equipement` ou `favoris` dominantes. C'est du périmètre en plus, il ne gonfle pas ce lot. |
+| le **format de stockage** de la sous-cause n'est pas tranché | ✅ **volontaire, et déclaré** : le fichier lit une empreinte, pas une forme. Chaîne, objet ou union restent au choix du codeur. |
+| rien ne force `pickForSlot` et `rerollSlot` à partager un classifieur | ✅ **déjà couvert par la clause 6**, qui exige de « Changer » le motif de SA cause — la même relation que la Semaine. |
+
+⚠️ **Le compteur d'attaque est à UN.** Les quatre configurations et les trois clauses ajoutées
+n'ajoutent **aucun mécanisme** au lot : elles ferment un branchement sur la mauvaise donnée et
+exécutent une migration que la prose promettait déjà. Le prochain tour, s'il a lieu, est le dernier.
+
+`npm run typecheck` reste **propre** : le motif est lu par `(entry as unknown as Record<string,
+unknown>).motifVide`, jamais par un type qui n'existe pas encore. Le fichier est rouge à
+l'assertion, pas à la compilation.
+
+**L'arbre complet APRÈS LE TOUR DE CORRECTION, 2026-09-09 à 21 h 07** — la promesse « tout rouge
+vient de `retour-5b`, et de lui seul » est **mesurée**, pas supposée :
+
+| Commande | Résultat |
+|---|---|
+| `npm test` | **14 failed / 2 521 passed** (2 535 tests, **132 fichiers**), 62,93 s · **un seul fichier en échec : `tests/scelles/retour-5b.test.tsx`** |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ 2,49 s |
+| `npm run engine:plan-stress` | **20/20 configurations saines** |
+
+Le fichier ajoute **16 tests** (2 519 → 2 535) et **un fichier** (131 → 132). Les deux verts sont
+les clauses 9 et 12, les gardes déclarées.
+
+⚠️ **Relevé précédent, avant l'attaque, 2026-09-09 à 20 h 37 :** 11 failed / 2 521 passed
+(2 532 tests, 132 fichiers), 62,77 s · typecheck propre · build ✓ 2,62 s · stress 20/20. Le tour
+de correction ajoute **trois tests** et **trois rouges** ; aucun autre fichier n'a bougé.
+
+
+#### ✅ La livraison — ce qui a changé par rapport au brief, 2026-09-09 à 21 h 53
+
+⛔ **LA v19 LIVRÉE N'EST PAS CELLE QUE LE BRIEF DÉCRIT, ET C'EST UNE MESURE QUI L'A IMPOSÉ.** Le
+brief annonçait `ALTER TABLE meal_plan_entry ADD COLUMN motif_vide TEXT CHECK (…)` puis un `UPDATE`
+de rattrapage, sur le précédent de la v9 de `hors_catalogue`. **SQLite valide le `CHECK` d'un
+`ADD COLUMN` contre les LIGNES DÉJÀ EN BASE.** La migration meurt donc sur `CHECK constraint
+failed` dès qu'une case vide existe : la colonne neuve y arrive à `NULL`, l'équivalence est violée
+**avant** que l'`UPDATE` n'ait pu tourner. La v9 ne s'en apercevait pas — son `CHECK` est une
+implication à sens unique, qu'un `NULL` satisfait toujours ; une équivalence, non.
+✅ **La v19 livrée RECONSTRUIT la table** (le motif de la v2 : table neuve, `INSERT … SELECT`,
+`DROP`, `RENAME`, index recréé) et pose `indetermine` **dans le `SELECT` de recopie**, pas dans un
+`UPDATE` d'après. Mesuré, pas déduit : la clause 9 bis monte une vraie base v18 et n'est passée
+qu'après ce changement de forme. ⚠️ **Le brief reste écrit tel qu'il a été scellé** — c'est
+l'implémentation qui a trouvé le défaut, pas le brief ni le critique.
+
+⛔ **TROIS CLAUSES SCELLÉES D'ANCIENS LOTS ONT DÛ ÊTRE CORRIGÉES — décision de l'auteur, sceau levé
+au cran `libre sceau` puis remis.** `retour-2` clause 7, `retour-3` clause 8 et `retour-4`
+clause 10 disaient « aucune migration » en écrivant `USER_SCHEMA_VERSION === 18`, **en valeur
+absolue**. Elles sont devenues rouges le jour où un AUTRE lot a migré la base, alors que rien de ce
+qu'elles gardent n'avait bougé — **exactement le défaut des dix compteurs éteints par
+`retour-5c`**. Elles mesurent désormais ce qu'elles voulaient dire : `retour-3` et `retour-4`
+relèvent `app_meta.schema_version` **avant** leur geste et vérifient qu'elle n'a pas bougé
+**pendant**, puis qu'elle vaut celle du code ; `retour-2` vérifie que **seule la v15**, celle qui
+l'a créée, touche à `user_excluded_group`. Aucune des trois n'est devenue vide : chacune échoue
+encore si la chose qu'elle garde bouge.
+
+#### ⚠️ Ce que le « Fini quand » NE démontre pas, et qu'il faut lire comme tel
+
+Les clauses 5 et 11 exigent que **la couche dominante** suive la configuration et que le texte
+affiché change avec elle. **Trois couches sur sept** sont sous témoin exécuté : `allergenes`,
+`regime`, `exclusions`. Les quatre autres phrases — `requis`, `temps`, `equipement`, `favoris` —
+sont écrites et atteignables, et **aucun test ne les exerce**. Un libellé faux y passerait
+inaperçu. → `ETAT.md` §8.
+
+#### Les quatre commandes qui font foi, sur l'arbre livré — 2026-09-09 à 21 h 53
+
+| Commande | Résultat |
+|---|---|
+| `npm test` | **2 535 passed / 0 failed** (2 535 tests, **132 fichiers**), 61,50 s |
+| `npm run typecheck` | propre |
+| `npx vite build` | ✓ 2,54 s |
+| `npm run engine:plan-stress` | **20/20 configurations saines** |
+| `node catalog/build.mjs` | non lancé — le catalogue n'est pas touché, ce n'est pas un témoin de ce lot |
+
+Les **seize** clauses scellées passent, dont les trois nées du tour d'attaque (5 ter, 5 quater,
+9 bis). Le compte de tests ne bouge pas (2 535 avant et après) : le lot n'ajoute aucun fichier de
+test, il fait passer au vert les seize clauses déjà comptées, plus les trois anciennes corrigées.
+
+---
+
 ### Les lots suivants — non ouverts
 
 Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETAT.md` §4) :
@@ -2553,7 +2904,7 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 | `retour-3` | « je mange dehors » étiquette le créneau (décision 76) | ✅ **LIVRÉ le 2026-08-22** — section ci-dessus |
 | `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | ✅ **LIVRÉ le 2026-08-26** (`7642492`) — section ci-dessus |
 | `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | ✅ **LIVRÉ** — codé le 2026-08-27 (24/24 clauses), commité le 2026-09-06 (`d0dd712`), clôturé le 2026-09-09 · ⛔ **l'arbre reste rouge**, 10 compteurs pour `retour-5c` |
-| `retour-5b` | la case vide dit **pourquoi** elle est vide (décision de l'auteur, 2026-08-26) | **`retour-5`** |
+| `retour-5b` | la case vide dit **pourquoi** elle est vide (décision de l'auteur, 2026-08-26) | **`retour-5`** — ⏳ **BRIEF ÉCRIT le 2026-09-09, ATTAQUÉ UNE FOIS, CORRIGÉ, TOUJOURS NON SCELLÉ** — section ci-dessus · ⛔ **le diagnostic d'août est périmé** : il annonçait deux causes, il y en a **trois**, et celle qui tombe sur la configuration de référence est celle que **`retour-5` a créée le 2026-08-27** — elle **masque** la deuxième · ⛔ **VERDICT DU CRITIQUE : « NE TIENT PAS »** — implémentation fausse exhibée, passant les 12 clauses d'alors en devinant la cause sur la **forme de la demande** (`diet`, puis un seuil sur `excludedFoodIds.length`) **sans jamais lire `RejectionSummary.byLayer`** · ✅ **CORRIGÉ EN UN TOUR** : un **oracle indépendant** qui recalcule la cause de chaque case vide depuis `byLayer` et les suggestions rendues, **dix** configurations au lieu de trois, dont **E qui porte deux causes dans une seule demande** · **16 clauses**, `tests/scelles/retour-5b.test.tsx` **rouge 14 sur 16** (les 2 vertes sont des gardes déclarées) · ✅ **migration `user.db` v18 → v19 VALIDÉE par l'auteur le 2026-09-09**, `CHECK` rendu **symétrique** + ligne de rattrapage `indetermine`, sous témoin exécuté (clause 9 bis) · ⏳ **dette : 3 des 7 couches de `EXCLUSION_LAYERS` exercées** |
 | `retour-5c` | rebaser les **onze** valeurs scellées que les neuf bases nues font mentir (décision de l'auteur, 2026-08-27) | **`retour-5`** — ✅ **LIVRÉ le 2026-09-09** (`3e56937`, poussé) — section ci-dessus · les 11 valeurs et 27 lignes de prose et de titres rebasées dans les 6 fichiers · ⚠️ **10 rouges éteints sur 11** : le onzième n'était pas un compteur, il est renvoyé à `retour-5d` · ⛔ le brief annonçait l'arbre vert, il ne l'est pas — clause 6 réécrite une seconde fois à la clôture |
 | `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1` | **`retour-5`** — ✅ **LIVRÉ le 2026-09-09** (`157bf45`) — section ci-dessus : **14 clauses sur 14 vertes**, `retour-1` passe de **9 à 11** clauses, **aucune ligne de production touchée** · ✅ **LA CAUSE ÉTAIT L'HEURE DE LA MACHINE** : l'écran déduit son créneau de `new Date().getHours()`, bascule à **14 h** ; les relevés d'août l'attribuaient à la croissance du catalogue **sans contrôler l'heure** · **PISTE (d) APPLIQUÉE** : le test épingle sa pastille par `aria-pressed`, fige l'horloge et vérifie le titre affiché avant de collecter · les **deux** repas sont mesurés, **plancher « Froid » à 0,9 aux DEUX**, re-mesuré après `retour-5e` — 12/12 à midi, 12/12 le soir, contre 7/12 au brief · ⛔ **`retour-5c` a rougi comme son en-tête l'annonçait**, empreinte rebasée sur décision de l'auteur · décision **82 FERMÉE le 2026-09-09** |
 | `retour-5e` | rendre le dîner aux 36 recettes froides que `types_repas` en exclut | ✅ **LIVRÉ le 2026-09-09** (`80b29ec`, poussé) — ✅ **DÉFAUT MESURÉ le 2026-09-09** en écrivant `retour-5d` : le dîner ne compte que **8 froides sur 214 (3,7 %)** contre 44 sur 194 au déjeuner ; hors plats du matin, **83,7 % des froides du déjeuner** sont barrées du dîner contre **1,4 % des chaudes**. Le moteur remonte 7 des 8 qui existent — il vide le rayon, il ne classe pas mal · ✅ **LIVRÉ le 2026-09-09 à 17 h 20** — section ci-dessus : **10 clauses sur 10 vertes**, 36 fichiers YAML, **une ligne chacun**, `catalog.db` régénéré, **aucune ligne de code de production** · le dîner passe de **214 à 250 recettes** et de **8 froides (3,7 %) à 44 (17,6 %)** · ⛔ **UN TOUR D'ATTAQUE A ÉTÉ PAYÉ** : le critique a exhibé une implémentation fausse passant 9 clauses sur 9 (patch SQL direct de `catalog.db` + `# diner` en commentaire dans le YAML) — base reconstruite depuis les sources, YAML analysé au lieu d'être cherché, clause 10 neuve qui apparie base livrée et sources · ⭐ **EFFET DE BORD MESURÉ : la clause « 6 froides sur 10 » de `retour-1` redevient VERTE à 17 h** — le rouge mesurait le rayon vide · un seul rebasage, `tests/exclusion-real-catalog.test.ts`, témoin dérivé au lieu d'un identifiant en dur |
