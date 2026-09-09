@@ -2067,7 +2067,7 @@ dans `retour-5d`.
 
 ---
 
-### Lot `retour-5d` — la clause qui mesurait l'heure ⏳ **BRIEF ÉCRIT le 2026-09-09**, non scellé
+### Lot `retour-5d` — la clause qui mesurait l'heure ✅ **LIVRÉ le 2026-09-09** (`157bf45`)
 
 ⛔ **CE LOT MODIFIE UN FICHIER SCELLÉ, ET C'EST TOUT CE QU'IL FAIT.** `tests/scelles/retour-1.test.tsx`,
 et rien d'autre. Comme `retour-5c`, il ne peut pas s'exécuter sceau posé : le sceau se lève par
@@ -2246,6 +2246,40 @@ est **8/12 = 0,67** ; le plancher scellé en exige 0,60. `retour-6` (filtre dur)
 il rendrait une liste de 8, sous le minimum de 10 propositions. **La cause est dans le contenu**, et
 c'est `retour-5e` ci-dessous. ▶ **Conséquence sur ce lot** : les planchers de la clause 3 sont
 **provisoires** et doivent être **re-mesurés après `retour-5e`**, qui passe donc devant.
+
+#### Ce que la livraison a rendu — 2026-09-09, 19 h 32
+
+`retour-1.test.tsx` monte l'écran par `monter(creneau)`, dont le paramètre est **obligatoire** : la
+pastille est cherchée par son `aria-pressed`, l'horloge est figée à 9 h 30 en ceinture, et chaque
+clause vérifie que **le titre affiché est le créneau demandé** avant de collecter la moindre liste.
+Les deux clauses « Froid » et « Chaud » sont devenues **quatre** — une par pastille et par repas —
+avec leurs assertions écrites en clair dans le corps de chacune, jamais dans une aide partagée.
+
+| Pastille | « Ce midi » | « Ce soir » |
+|---|---|---|
+| Froid | −0,825 · **12/12** | −0,783 · **12/12** |
+| Chaud | +0,842 · 12/12 | +0,842 · 12/12 |
+
+**Le plancher du dîner est écrit à 0,9, et non à 0,5.** Les 7/12 du brief mesuraient un rayon vide ;
+`retour-5e` passé, le dîner rend 12/12 comme le déjeuner. **0,9 et non 1,0** : un plancher au ras de
+sa mesure rougit au premier plat chaud. Les **14** clauses du test d'acceptation sont vertes, dont
+les **6** qui lisaient le texte source de `retour-1` et rougissaient le matin même.
+
+⛔ **UN TEST SCELLÉ TIERS A ROUGI, ET SON EN-TÊTE L'AVAIT ANNONCÉ.** `retour-5c.test.ts` photographie
+six fichiers scellés, `retour-1.test.tsx` compris : 9 clauses → **11**, 23 `expect(` → **30**, sha et
+nombre de lignes changés. **L'empreinte a été rebasée sur décision de l'auteur** — deux entrées,
+commentées sur place avec l'ancienne valeur. Le lot ne l'a ni contournée ni doublée.
+
+⚠️ **Une clause de `retour-1` a changé de titre** : « envoie +1 quand on demande « Chaud » » est
+devenue « … quand on demande **le chaud** », en minuscules. La règle scellée de `retour-5d` exige que
+toute clause titrée `Chaud` porte le plancher de 0,9 ; celle-ci mesure un **signe d'axe**, pas une
+proportion. Le renommage est commenté sur place, et il a été signalé avant d'être fait.
+
+⚠️ **CE QUE LA LIVRAISON NE DÉMONTRE PAS** : que l'écran de production nomme son créneau. Il le
+déduit toujours de `new Date().getHours()` — c'est le comportement voulu d'un écran qui s'ouvre sans
+qu'on ait rien choisi. La clause 6 du « Fini quand » garde ce fait **sous témoin exécuté**, pour
+qu'il ne redevienne pas invisible. La forme lourde écartée plus haut (un montage partagé à créneau
+obligatoire, `retour-3` compris) part en dette : `ETAT.md` §8.
 
 ---
 
@@ -2521,9 +2555,9 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 | `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | ✅ **LIVRÉ** — codé le 2026-08-27 (24/24 clauses), commité le 2026-09-06 (`d0dd712`), clôturé le 2026-09-09 · ⛔ **l'arbre reste rouge**, 10 compteurs pour `retour-5c` |
 | `retour-5b` | la case vide dit **pourquoi** elle est vide (décision de l'auteur, 2026-08-26) | **`retour-5`** |
 | `retour-5c` | rebaser les **onze** valeurs scellées que les neuf bases nues font mentir (décision de l'auteur, 2026-08-27) | **`retour-5`** — ✅ **LIVRÉ le 2026-09-09** (`3e56937`, poussé) — section ci-dessus · les 11 valeurs et 27 lignes de prose et de titres rebasées dans les 6 fichiers · ⚠️ **10 rouges éteints sur 11** : le onzième n'était pas un compteur, il est renvoyé à `retour-5d` · ⛔ le brief annonçait l'arbre vert, il ne l'est pas — clause 6 réécrite une seconde fois à la clôture |
-| `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1` | **`retour-5`** — ✅ **LA CAUSE EST TROUVÉE le 2026-09-09** : la clause dépend de **l'heure de la machine**. L'écran déduit son créneau de `new Date().getHours()`, la bascule est à **14 h** ; même arbre, **12/12 froides à 12 h** contre **7/12 à 14 h**. Les relevés d'août l'attribuaient à la croissance du catalogue **sans contrôler l'heure** · **PISTE (d) RETENUE par l'auteur le 2026-09-09** · ⏳ **BRIEF ÉCRIT le 2026-09-09**, non scellé — section ci-dessus : 7 clauses, test d'acceptation **6 rouges sur 14**, **aucune ligne de production touchée** · ⛔ **PASSE APRÈS `retour-5e`, ordre CONFIRMÉ PAR L'AUTEUR le 2026-09-09** : le plancher du dîner proposé à 0,5 scellait une lacune de catalogue (8 froides au dîner sur 214), il est **à re-mesurer après** · décision **82** |
+| `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1` | **`retour-5`** — ✅ **LIVRÉ le 2026-09-09** (`157bf45`) — section ci-dessus : **14 clauses sur 14 vertes**, `retour-1` passe de **9 à 11** clauses, **aucune ligne de production touchée** · ✅ **LA CAUSE ÉTAIT L'HEURE DE LA MACHINE** : l'écran déduit son créneau de `new Date().getHours()`, bascule à **14 h** ; les relevés d'août l'attribuaient à la croissance du catalogue **sans contrôler l'heure** · **PISTE (d) APPLIQUÉE** : le test épingle sa pastille par `aria-pressed`, fige l'horloge et vérifie le titre affiché avant de collecter · les **deux** repas sont mesurés, **plancher « Froid » à 0,9 aux DEUX**, re-mesuré après `retour-5e` — 12/12 à midi, 12/12 le soir, contre 7/12 au brief · ⛔ **`retour-5c` a rougi comme son en-tête l'annonçait**, empreinte rebasée sur décision de l'auteur · décision **82** : cause et piste closes, **sa fermeture reste à trancher** |
 | `retour-5e` | rendre le dîner aux 36 recettes froides que `types_repas` en exclut | ✅ **LIVRÉ le 2026-09-09** (`80b29ec`, poussé) — ✅ **DÉFAUT MESURÉ le 2026-09-09** en écrivant `retour-5d` : le dîner ne compte que **8 froides sur 214 (3,7 %)** contre 44 sur 194 au déjeuner ; hors plats du matin, **83,7 % des froides du déjeuner** sont barrées du dîner contre **1,4 % des chaudes**. Le moteur remonte 7 des 8 qui existent — il vide le rayon, il ne classe pas mal · ✅ **LIVRÉ le 2026-09-09 à 17 h 20** — section ci-dessus : **10 clauses sur 10 vertes**, 36 fichiers YAML, **une ligne chacun**, `catalog.db` régénéré, **aucune ligne de code de production** · le dîner passe de **214 à 250 recettes** et de **8 froides (3,7 %) à 44 (17,6 %)** · ⛔ **UN TOUR D'ATTAQUE A ÉTÉ PAYÉ** : le critique a exhibé une implémentation fausse passant 9 clauses sur 9 (patch SQL direct de `catalog.db` + `# diner` en commentaire dans le YAML) — base reconstruite depuis les sources, YAML analysé au lieu d'être cherché, clause 10 neuve qui apparie base livrée et sources · ⭐ **EFFET DE BORD MESURÉ : la clause « 6 froides sur 10 » de `retour-1` redevient VERTE à 17 h** — le rouge mesurait le rayon vide · un seul rebasage, `tests/exclusion-real-catalog.test.ts`, témoin dérivé au lieu d'un identifiant en dur |
-| `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | **`retour-1`** et **décision 79** |
+| `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | **`retour-1`** — ✅ **décision 79 TRANCHÉE le 2026-09-09** : relâcher l'axe le plus général et le dire |
 | `retour-7` | le frigo ne vaut plus que pour un repas (décision 74) | **décision 80** |
 | `retour-8` | effacer un repas passé (décision 75) | le sort des restes orphelins |
 
