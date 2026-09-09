@@ -42,8 +42,7 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-09 à 21 h 53, arbre complet, livraison de `retour-5b`, `HEAD` = `0a616e6`,
-travail NON COMMITÉ) : 2 535 passed / 0 failed (2 535 tests, 132 fichiers)** en 61,5 s · typecheck
+⛔ **Dernier relevé (2026-09-09 à 21 h 53, arbre complet, livraison de `retour-5b`, `HEAD` = `d1f11ff`) : 2 535 passed / 0 failed (2 535 tests, 132 fichiers)** en 61,5 s · typecheck
 propre · `vite build` ✓ 2,54 s · `engine:plan-stress` 20/20 · catalogue 339 recettes, **dîner 250**
 dont 44 froides. `USER_SCHEMA_VERSION` = **19** (le motif de case vide, migration par reconstruction
 de table). ⚠️ **SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES** — la forme

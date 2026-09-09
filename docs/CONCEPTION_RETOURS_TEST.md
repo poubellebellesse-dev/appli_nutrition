@@ -2543,7 +2543,7 @@ se fixera **après**, sur une mesure d'après-lot, dans `retour-5d`.
 
 ---
 
-### Lot `retour-5b` — la case vide dit **pourquoi** elle est vide ✅ **LIVRÉ le 2026-09-09 à 21 h 53** — brief écrit à 20 h 22, attaqué et corrigé, scellé à 21 h 05, **non commité à cette heure : aucun hash**
+### Lot `retour-5b` — la case vide dit **pourquoi** elle est vide ✅ **LIVRÉ le 2026-09-09 à 21 h 53** — brief écrit à 20 h 22, attaqué et corrigé, scellé à 21 h 05, commité le 2026-09-09 (`d1f11ff`)
 
 Découpé de `retour-5` le 2026-08-26 (« Le texte qui expliquera la case vide SORT de ce lot »).
 Périmètre arrêté par l'auteur le 2026-09-09 : **l'écran Semaine ET le bouton « Changer »**, les deux

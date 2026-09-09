@@ -67,7 +67,9 @@
       "id": "retour-5b",
       "chantier": "retours test",
       "titre": "la case vide dit pourquoi elle est vide",
-      "etat": "a_faire",
+      "etat": "fait",
+      "le": "2026-09-09",
+      "commit": "d1f11ff",
       "bloque_par": "retour-5"
     },
     {
