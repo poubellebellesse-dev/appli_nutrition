@@ -52,3 +52,11 @@ photo maquette/
 
 # repère du chemin des lots (.claude/chemin.mjs) — propre à la machine
 .claude/chemin.json
+
+# Copies de secours prises À LA MAIN avant une bascule d'outillage (2026-09-08/09). Elles ont servi
+# de filet le temps de la migration ; les suivre versionnerait deux fois le même outil, dont une
+# version morte. Un état qu'on veut GARDER se commite sous son vrai nom, pas sous un suffixe.
+.claude/*.avant-*
+.claude/hooks/*.old-*
+# journal d'ouverture/fermeture des lots, écrit par la garde — local, comme etat-garde.json
+.claude/journal-lots.jsonl
