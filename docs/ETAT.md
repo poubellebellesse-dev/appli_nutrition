@@ -35,7 +35,7 @@ dure, aucune donnée sans source) et le n° 6 : informer, jamais juger.
   socle d'accessibilité, routage par fragment, tutoriel qui traverse les menus.
 - **Chantiers livrés** (chacun a son `CONCEPTION_*.md`) : mode cuisine, photos, gestes illustrés
   (clips), invariant origine animale (66/66b/66c), réservation matériel (65a-c), régime personnalisé,
-  retours du test téléphone (`retour-1` → `retour-6` ; `retour-6` livré le 2026-09-10, non commité :
+  retours du test téléphone (`retour-1` → `retour-6` ; `retour-6` livré le 2026-09-10 (`be02116`) :
   les pastilles d'envie retirent les plats sur Aujourd'hui, et l'écran dit ce qu'il a lâché).
 
 ```
@@ -50,10 +50,12 @@ thème). Toute référence « `ETAT.md` §3 » antérieure pointe là.
 ## 4. Décisions encore ouvertes → `decisions/registre.md`
 
 Questions numérotées 1 → 82, barrées quand fermées : [decisions/registre.md](./decisions/registre.md).
-**Ouvertes au 2026-09-09 : 2, 5, 6, 11, 52, 58, 65, 68, 70, 80 — dix**, comptées sur les numéros
-non barrés (72 barrées sur 82). **Deux** bloquent quelque chose : 65 (feux possédés), 68 (budget P6).
+**Ouvertes au 2026-09-10 : 2, 5, 6, 11, 52, 58, 65, 68, 70 — neuf**, comptées sur les numéros
+non barrés (73 barrées sur 82). **Deux** bloquent quelque chose : 65 (feux possédés), 68 (budget P6).
 ✅ **La 79 est FERMÉE le 2026-09-09** et codée par `retour-6` le 2026-09-10 ; déclencheur « vide »,
 tranché par l'auteur le même jour.
+✅ **La 80 est FERMÉE le 2026-09-10** : la déclaration de frigo s'efface **à la fin du repas en cours**,
+sans geste. Débloque `retour-7`.
 ✅ **La 82 est FERMÉE le 2026-09-09**, sur la cause et sur la piste (d), livrée par `retour-5d` : la
 clause « 6 froides sur 10 » de `retour-1` dépendait de **l'heure de la machine** — l'écran déduit son
 créneau de `new Date().getHours()`, bascule à **14 h**, d'où **12/12 froides à 12 h** et **7/12 à

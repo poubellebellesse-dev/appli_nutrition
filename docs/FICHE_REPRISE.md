@@ -49,9 +49,9 @@ questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RET
   ajouté de quoi voir (affichages, attente de chargement, champ de recherche et famille de 74
   lignes), **qu'aucun test jsdom ne sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3.
   **Tant qu'elle n'est pas faite, on sait seulement que rien n'est cassé** — pas que ça marche.
-- ▶ **PROCHAIN LOT : `retour-7`** (le frigo ne vaut plus que pour un repas), **bloqué par la
-  décision 80, ouverte** — la trancher d'abord ; puis `retour-8`, bloqué par le sort des restes
-  orphelins. `retour-6` est livré le 2026-09-10, **non commité**. ▶ `ETAT.md` §2 et §4.
+- ▶ **PROCHAIN LOT : `retour-7`** (le frigo ne vaut plus que pour un repas), **débloqué** : la
+  décision 80 est tranchée le 2026-09-10 ▶ `/brief retour-7`. Puis `retour-8`, bloqué par le sort
+  des restes orphelins. ▶ `ETAT.md` §4.
   ⚠️ **En ouvrant un brief : nommer les réglages persistants que l'écran lit, et dire lesquels
   les clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.
 
