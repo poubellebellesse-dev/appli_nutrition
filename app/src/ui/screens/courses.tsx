@@ -37,7 +37,6 @@ import {
   addExtraItem,
   readAllergies,
   readLatestPlan,
-  readPantryEntries,
   readSaucesChoisies,
   readShoppingList,
   removeExtraItem,
@@ -45,7 +44,6 @@ import {
   setCoche,
   setExtraCoche,
   type StoredExtraItem,
-  type StoredPantryEntry,
   type StoredShoppingList,
 } from '../../data/user-store.js'
 import { LIBELLE_COURT } from '../champs-profil.js'
@@ -57,7 +55,6 @@ import {
   cleCreneau,
   formaterJour,
   profilCourant,
-  type Socle,
 } from '../socle.js'
 import { hashDe, hashDuFrigo } from '../router.js'
 import {
@@ -72,7 +69,7 @@ import {
 } from '../export-courses.js'
 import { Panneau } from '../panneau.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
-import { ConfirmerFrigo, alimentsAConfirmer } from '../confirmer-frigo.js'
+import { alimentsValables } from '../frigo-valable.js'
 import { BoutonParcourir, ParcoursAliments } from '../parcours-aliments.js'
 
 /** Les dix rayons de §4.3 — texte libre côté base, liste fermée côté saisie pour rester rangeable. */
@@ -120,10 +117,6 @@ interface Vue {
    */
   readonly dejaChezVous: readonly ShoppingListItem[]
   /**
-   * Le garde-manger quand il a trop vieilli pour qu'on s'y fie — VIDE le reste du temps. Non
-   * appliqué à `liste` : voir le bloc de `calculerVue` et le bandeau `ConfirmerFrigo`.
-   */
-  /**
    * Les créneaux que le planning a couverts avec un reste — ils n'ont rien coûté à cette liste.
    *
    * ⚠️ LU SUR `isLeftover`, PAS CALCULÉ PAR DIFFÉRENCE, et c'est l'inverse de `dejaChezVous`
@@ -133,11 +126,6 @@ interface Vue {
    * source, donc le cuisiner à part n'ajouterait aucun article — ça doublerait des quantités.
    */
   readonly couvertsParUnReste: readonly CreneauCouvert[]
-  readonly gardeAConfirmer: readonly FoodId[]
-  /** Le garde-manger entier, dates comprises — `ConfirmerFrigo` réécrit la table et en a besoin. */
-  readonly entreesFrigo: readonly StoredPantryEntry[]
-  /** Pour `ConfirmerFrigo`, qui réécrit `user_pantry` quand l'utilisateur répond. */
-  readonly socle: Socle
   readonly enregistree: StoredShoppingList
   readonly nomAliment: (id: FoodId) => string
   /**
@@ -185,21 +173,11 @@ async function calculerVue(): Promise<Etat> {
 
   profilCourant(socle.db, aujourdhuiIso())
   let enregistree = readShoppingList(socle.db)
-  const entreesFrigo = readPantryEntries(socle.db)
-  const pantryFoodIds = entreesFrigo.map((e) => e.foodId)
-  // ⚠️ PÉRIMÉ SE JUGE ALIMENT PAR ALIMENT, pas garde-manger par garde-manger : une crème déclarée ce
-  // matin reste appliquée même si un oignon traîne depuis trois semaines. Seul l'oignon est remis en
-  // question, et seule sa ligne reste dans les courses.
-  const aConfirmer = alimentsAConfirmer(entreesFrigo, aujourdhuiIso())
-
-  // ⚠️ UN GARDE-MANGER PÉRIMÉ N'EST PAS APPLIQUÉ ICI, et c'est l'inverse de « Choisir un plat ».
-  // Là-bas la question RETIENT les résultats ; ici elle n'empêche rien. La différence n'est pas
-  // cosmétique : `pantryFoodIds` ne fait jamais qu'ENLEVER des lignes de cette liste, donc ignorer un
-  // garde-manger douteux fait acheter en double, tandis que l'appliquer à tort fait rentrer SANS —
-  // et on ne s'en aperçoit qu'au moment de cuisiner. On échoue du côté de la ligne en trop, qui se
-  // raye. Même raison que « Déjà chez vous » plus bas : un article qui disparaît en silence est un
-  // défaut pire que celui qu'on voit et qu'on barre.
-  const applique = pantryFoodIds.filter((id) => !aConfirmer.includes(id))
+  // ⚠️ SEUL LE FRIGO DU REPAS EN COURS EST APPLIQUÉ (décision 80), jugé aliment par aliment. Une
+  // déclaration dont le repas est fini remet sa ligne dans les courses, sans question : `pantryFoodIds`
+  // ne fait jamais qu'ENLEVER des lignes, donc l'appliquer à tort fait rentrer du magasin SANS — et on
+  // ne s'en aperçoit qu'au moment de cuisiner. On échoue du côté de la ligne en trop, qui se raye.
+  const applique = alimentsValables(socle.db, new Date())
   // Les sauces retenues (`user_recipe_sauce`, v14) : leurs ingrédients entrent dans la liste chaque
   // fois que leur plat est prévu. Le moteur ne connaît pas `user.db` — sans cette option, aucune
   // sauce n'est achetée, ce qui est exactement le comportement d'avant la v14.
@@ -271,9 +249,6 @@ async function calculerVue(): Promise<Etat> {
       liste,
       dejaChezVous,
       couvertsParUnReste,
-      gardeAConfirmer: aConfirmer,
-      entreesFrigo,
-      socle,
       enregistree,
       nomAliment: (id) => socle.catalogue.foods.get(id)?.nom ?? id,
       quantiteDe: (item) =>
@@ -540,26 +515,6 @@ export function Courses() {
       <p className="mt-1 text-courant leading-relaxed text-attenue">
         {faits} sur {total} cochés
       </p>
-
-      {/* ⚠️ CE BANDEAU N'EST PAS UN MUR, contrairement à celui de « Choisir un plat ». Retenir une
-          liste de courses derrière douze cases à cocher pendant que quelqu'un est debout dans le
-          magasin coûterait plus cher que les deux lignes en trop qu'elle contient. Il DIT ce qui a
-          été fait — rien n'a été retiré — et offre de corriger. L'ignorer laisse l'état sûr. */}
-      {vue.gardeAConfirmer.length > 0 && (
-        <div className="mt-4">
-          <p className="mb-2 text-courant leading-relaxed text-texte-doux">
-            {vue.gardeAConfirmer.length === 1
-              ? 'Un aliment de votre garde-manger date trop pour qu’on s’y fie : il est resté sur la liste.'
-              : `${vue.gardeAConfirmer.length} aliments de votre garde-manger datent trop pour qu’on s’y fie : ils sont restés sur la liste.`}
-          </p>
-          <ConfirmerFrigo
-            socle={vue.socle}
-            entrees={vue.entreesFrigo}
-            aujourdhui={aujourdhuiIso()}
-            onConfirme={rafraichir}
-          />
-        </div>
-      )}
 
       {/* ⚠️ LES RESTES N'ÉTAIENT NOMMÉS NULLE PART ICI, alors que cette liste est calculée pour en
           produire : les quantités ne sont PAS divisées par le nombre de convives, exprès (voir

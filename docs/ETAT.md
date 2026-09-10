@@ -35,8 +35,8 @@ dure, aucune donnée sans source) et le n° 6 : informer, jamais juger.
   socle d'accessibilité, routage par fragment, tutoriel qui traverse les menus.
 - **Chantiers livrés** (chacun a son `CONCEPTION_*.md`) : mode cuisine, photos, gestes illustrés
   (clips), invariant origine animale (66/66b/66c), réservation matériel (65a-c), régime personnalisé,
-  retours du test téléphone (`retour-1` → `retour-6` ; `retour-6` livré le 2026-09-10 (`be02116`) :
-  les pastilles d'envie retirent les plats sur Aujourd'hui, et l'écran dit ce qu'il a lâché).
+  retours du test téléphone (`retour-1` → `retour-7` ; `retour-7` livré le 2026-09-11, non commité :
+  le frigo ne vaut plus que pour le repas en cours et s'efface seul à sa fin).
 
 ```
 Concept ✅ ─ Architecture ✅ ─ Moteur ✅ ─ Contenu ✅ ─ user.db ✅ ─ Design ✅ ─ 12 écrans ✅ ─▶ CONTENU & DISTRIBUTION ⬅ ICI
@@ -55,7 +55,7 @@ non barrés (73 barrées sur 82). **Deux** bloquent quelque chose : 65 (feux pos
 ✅ **La 79 est FERMÉE le 2026-09-09** et codée par `retour-6` le 2026-09-10 ; déclencheur « vide »,
 tranché par l'auteur le même jour.
 ✅ **La 80 est FERMÉE le 2026-09-10** : la déclaration de frigo s'efface **à la fin du repas en cours**,
-sans geste. Débloque `retour-7`.
+sans geste ; codée par `retour-7` le 2026-09-11.
 ✅ **La 82 est FERMÉE le 2026-09-09**, sur la cause et sur la piste (d), livrée par `retour-5d` : la
 clause « 6 froides sur 10 » de `retour-1` dépendait de **l'heure de la machine** — l'écran déduit son
 créneau de `new Date().getHours()`, bascule à **14 h**, d'où **12/12 froides à 12 h** et **7/12 à
@@ -149,6 +149,7 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - Le bouton « Froid » est passé à gauche de « Chaud » sans qu'aucun test ne le sache ; le placement du retour sur la fiche recette n'est verrouillé par aucun test.
 - Écran Recettes : un re-rendu de trop après la première peinture ; le chrono de `#/recettes` (décision 61) n'a jamais été pris.
 - Une mise à jour n'atteint l'utilisateur qu'après fermeture complète, sans le lui dire.
+- Frigo (`retour-7`) : un écran resté monté à la fin d'un repas garde l'ancienne liste jusqu'au geste ou remontage suivant (aucune minuterie) ; entre minuit et 2 h, « Choisir un plat » compare une case datée en UTC au jour local ; un rythme changé après la déclaration n'est couvert par aucune clause.
 - Décocher un ustensile filtre allumé ne repasse par aucun garde-fou (choix) ; le sceau du 65b n'interdit pas d'oublier l'interrupteur à la fermeture ; `readOwnedEquipmentIds` rend `null` sur table vide ; champ « Combien en avez-vous ? » sans clause scellée.
 - Mode cuisine : la formulation « de 17 à 3 min avant le service » n'est pas scellée ; 94 recettes exigent la plaque sans qu'une étape l'occupe ; 18 `dorer` ne tiennent que par trois cas nommés.
 - Drapeaux : 7 cuisines sur 26 sans drapeau (voulu) ; non rendus sous Windows.
@@ -156,7 +157,8 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - Photos : goulot = la récolte, pas le tri ; les neuf bases de `retour-5` (végétaliennes, chaudes) n'en ont pas.
 
 **Tests et preuve**
-- **Arbre VERT au 2026-09-10 à 17 h 44 (livraison de `retour-6`), zéro rouge** : la clause « 6 froides sur 10 » de `retour-1` ne lit plus l'heure (`retour-5d`), les 10 compteurs de recettes sont éteints depuis `retour-5c`.
+- Les tests d'écran non scellés du frigo (`frigo.test.tsx`, `courses.test.tsx`) déclarent à l'horloge réelle : lancés à cheval sur 10 h, 14 h, 17 h ou minuit, ils peuvent rougir sans défaut (`retour-7`). **Un rouge NON IDENTIFIÉ le 2026-09-11 à 0 h 04** (1 sur 2 588, code inchangé depuis le relevé vert de 0 h 00), absent des deux relances de 0 h 05 et 0 h 07 : son nom n'a pas été capturé.
+- **Arbre VERT au 2026-09-11 à 0 h 00 (livraison de `retour-7`), zéro rouge** : la clause « 6 froides sur 10 » de `retour-1` ne lit plus l'heure (`retour-5d`), les 10 compteurs de recettes sont éteints depuis `retour-5c`.
 - **Trois clauses scellées figeaient `USER_SCHEMA_VERSION` en valeur absolue** (`retour-2` 7, `retour-3` 8, `retour-4` 10) : rouges dès qu'un AUTRE lot migre la base, sans que ce qu'elles gardent ait bougé. Corrigées le 2026-09-09 sur décision de l'auteur (cran `libre sceau`, remis ensuite) — **même défaut que les 10 compteurs de `retour-5c`, et le balayage des autres valeurs absolues survivantes n'a pas été fait.**
 - Le piège « SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES » (payé par la v19) n'est écrit que dans `CONCEPTION_RETOURS_TEST.md` — pas encore dans `reference/PIEGES.md`.
 - **Trois harnais séparés montent l'écran « Aujourd'hui »** : `retour-1` (créneau obligatoire depuis `retour-5d`), `retour-3` (le sien, antérieur), `aujourdhui.test.tsx`. Un montage partagé à créneau obligatoire rendrait l'oubli inexprimable — écarté du lot pour ne pas réécrire le harnais d'un fichier scellé.

@@ -3158,6 +3158,271 @@ agents de relecture étaient introuvables à la livraison.
 
 ---
 
+### Lot `retour-7` — le frigo ne vaut plus que pour un repas · ✅ **LIVRÉ le 2026-09-11, non commité** (scellé le 2026-09-10 après deux tours d'attaque)
+
+Décisions **74** (la déclaration du frigo vaut pour UN repas, celui qu'on s'apprête à manger) et
+**80** (tranchée le 2026-09-10 : elle s'efface **sans geste** à la fin du repas en cours, au sens de
+`creneauDuMoment`, heure locale — 10 h, 14 h, 17 h, minuit — et l'écran Frigo dit pour quel repas
+elle vaut).
+
+**Ce que le lot fait.** Un aliment déclaré au frigo cesse d'exister pour l'application quand le
+repas pour lequel il a été déclaré se termine. Tous les écrans qui lisent le frigo obéissent à la
+même règle, et la question « Vous les avez toujours ? » disparaît avec la raison qui la justifiait.
+
+#### Ce qui est vrai aujourd'hui — mesuré dans le code le 2026-09-10, pas supposé
+
+1. ⛔ **La date enregistrée ne dit pas pour quel repas on a déclaré.** `declare_le` (v8) reçoit
+   `aujourdhuiIso()`, une **date UTC sans heure** : une déclaration de 9 h (pour midi) et une de
+   15 h (pour le soir) portent la même valeur. Réponse à la question (1) laissée par la 80 :
+   **non, elle ne suffit pas** — il faut conserver un instant ou une échéance. Deux montages : un
+   instant dans la colonne TEXT existante (**sans migration**) ou une colonne neuve (migration,
+   accord de l'auteur requis). **Le brief ne scelle ni l'un ni l'autre** : les tests remplissent le
+   frigo par le geste, jamais par `writePantry`.
+2. ⚠️ **Deux fuseaux se croisent.** Les dates du projet sont en UTC, l'heure du repas est locale
+   (`creneauDuMoment` lit `getHours()`). À Paris, une déclaration de 0 h 30 porte la date UTC **de la
+   veille** : comparer des dates UTC l'effacerait avant le déjeuner qu'elle vise.
+3. **Cinq écrans lisent le frigo, et ils ne sont pas d'accord entre eux** (question (2) de la 80) :
+
+| Écran | Ce qu'il applique | Péremption |
+|---|---|---|
+| Frigo | toutes les lignes (`readUserState`) | aucune |
+| Fiche recette (« · à acheter ») | toutes les lignes | aucune |
+| Aujourd'hui (couche de score `pantry`) | toutes les lignes | aucune |
+| Courses (« Déjà chez vous ») | les lignes de moins de 7 jours ; au-delà, bandeau de confirmation | 7 jours |
+| « Choisir un plat » → « Avec ce que j'ai » (Semaine) | idem ; onglet vide tant que la question n'est pas répondue | 7 jours |
+
+   Un frigo déclaré il y a trois semaines pèse donc encore sur Aujourd'hui et marque la fiche
+   recette, pendant que les courses le mettent en doute.
+   **Il n'y en a pas de sixième** — mesuré le 2026-09-10 : Recettes et la composition de Semaine
+   appellent `readUserState` mais ne lisent pas `pantryFoodIds` ; `planWeek` et `reroll` passent
+   un frigo vide au moteur. Les cinq sont tous sous clause (6a à 6d, et l'écran Frigo lui-même).
+4. ⚠️ **Le goûter est inatteignable dans l'application.** `creneau.ts` sait lire 4 repas par jour,
+   mais `user_rythme` refuse `repas_par_jour` hors de **1 à 3** (`CHECK` du schéma) — mesuré en
+   écrivant les tests, qui tombaient sur la contrainte. Aucune clause ne porte donc sur le goûter.
+   Ce n'est pas le défaut de ce lot.
+
+**Réglages persistants que ces écrans lisent** : `user_pantry` — l'objet du lot ;
+`user_rythme.repas_par_jour` — **les clauses le font varier (1, 2, 3)**, il décide des fenêtres ;
+`user_plan` — Courses et Semaine, composé par le moteur à graine fixe. Tous les autres (allergies,
+régime, exclusions, historique, affichage) restent **à leur défaut** et ne varient dans aucune
+clause.
+
+#### **Fini quand**
+
+Sur `catalog.db` réel, écrans montés en entier, horloge figée au **jeudi 10 septembre 2026, heure
+locale**, frigo rempli **par le geste sur l'écran Frigo** — jamais par écriture directe en base, sauf
+la clause 7. Entre deux montages d'un même test, **l'horloge avance et l'écran est remonté, rien
+d'autre** : aucun module rechargé. Rythme à **2 repas** sauf mention. Chaque clause est suivie de ce
+qui la rendrait fausse.
+
+1. **L'écran Frigo dit pour quel repas vaut ce qui est déclaré.** Dès qu'un aliment est déclaré,
+   l'écran porte **une et une seule** des mentions « valable pour ce matin / ce midi / le goûter / ce
+   soir », celle du repas en cours : 2 repas à 12 h → **ce midi** ; 2 repas à 20 h → **ce soir** ;
+   3 repas à 8 h → **ce matin** ; 3 repas à 12 h → **ce midi** ; 3 repas à 15 h → **ce soir** ;
+   1 repas à 12 h → **ce soir**. ▶ *Faux si la mention manque, si elle est constante, si l'écran en
+   porte deux, ou si elle ignore le rythme (« ce midi » à 12 h sur 1 repas).*
+2. **La déclaration tient tant que le repas n'est pas fini.** Déclaré à 8 h 00, toujours là à
+   **13 h 59** ; déclaré à 14 h 00, toujours là à **23 h 59**. ⚠️ **Verte aujourd'hui** — une garde :
+   elle tue la purge au remontage et toute durée fixe de moins de dix heures. ▶ *Faux si l'aliment a
+   disparu.*
+3. ⭐ **Elle s'efface à la fin du repas, sans geste.** Déclaré à **13 h 55**, **absent à 14 h 05** —
+   l'écran Frigo ne montre plus d'aliment et dit « Ajoutez au moins un aliment » ; déclaré à 23 h 50,
+   absent le lendemain à 0 h 05. ▶ *Faux si l'aliment est encore là. Avec la clause 2 — 5 h 59
+   tiennent, 10 minutes effacent —, aucune durée fixe ne passe les deux.*
+   **3 bis. Un aliment effacé ne revient pas quand on en déclare un autre.** Oignon déclaré à
+   13 h 55 ; à 14 h 05 on déclare le riz : l'écran montre **le riz seul**, et encore le riz seul
+   remonté à 14 h 10. ▶ *Faux si l'oignon réapparaît — `writePantry` efface tout et réinsère, et une
+   réécriture partie des lignes brutes le ressusciterait.*
+4. **Le jour compte, pas seulement le nom du repas.** Déclaré à 12 h, **absent le lendemain à
+   11 h** — deux déjeuners, deux jours. ▶ *Faux si l'aliment est encore là : on compare le créneau
+   sans la date.*
+   **4 bis. Le jour est local.** Déclaré à **0 h 30** (le repas en cours est alors le déjeuner),
+   **toujours là à 13 h**. ⚠️ **Verte aujourd'hui**, et elle **ne discrimine qu'à l'est de
+   Greenwich** : sur la machine (Europe/Paris), 0 h 30 est la veille en UTC. Le test **vérifie
+   d'abord** que 0 h 30 locale tombe la veille en UTC, et **rougit sinon** — il ne passe pas sans
+   rien prouver. ▶ *Faux si l'aliment a disparu : la date comparée est la date UTC.*
+   **4 ter. L'année compte.** Déclaré le **10 septembre 2026** à 12 h, **absent le 10 septembre
+   2027** à 12 h — même jour du mois, même mois, même repas. ▶ *Faux si l'aliment est encore là : on
+   compare le jour du mois (ou le jour et le mois) sans l'année.*
+5. **Le rythme compte.** Déclaré à 9 h : regardé à 10 h 30 sur **3 repas** → **absent** (le
+   petit-déjeuner est fini) ; regardé à 15 h sur **2 repas** → **absent** ; regardé à 15 h sur
+   **1 repas** → **présent** (le seul repas est le dîner). ⚠️ Le cas à 1 repas est **vert
+   aujourd'hui**. ▶ *Faux si le rythme est ignoré — deux repas en dur font échouer le premier cas ou
+   le troisième.*
+6. ⭐ **Les autres écrans obéissent à la même règle, sans repasser par l'écran Frigo.** Chaque cas
+   déclare par le geste, démonte l'écran Frigo, avance l'horloge et monte **directement** l'écran lu.
+   - **6a — Courses.** Un aliment de la liste (le premier que rend `buildShoppingList`), déclaré à
+     14 h 02 et regardé à 14 h 05, est sous « Déjà chez vous (1) » et n'est pas cochable (**témoin,
+     vert aujourd'hui**). Déclaré à **13 h 55**, regardé à 14 h 05 : il est **dans la liste à
+     acheter** et la section « Déjà chez vous » **n'existe pas**. Déclaré le **2 septembre** à 12 h,
+     regardé le 10 à 12 h : pareil, et **ni** « Vous les avez toujours ? » **ni** « date trop pour
+     qu'on s'y fie ». ▶ *Faux si l'article manque à la liste, si la section existe, ou si une
+     confirmation apparaît.*
+   - **6b — « Choisir un plat » depuis Semaine, onglet « Avec ce que j'ai ».** Déclaré à 13 h 55,
+     **dîner du jour** ouvert à 14 h 05 — puis déclaré le 2 septembre, **déjeuner du 10** ouvert le
+     10 à 12 h : l'onglet dit « Vous n'avez rien déclaré dans le frigo », **sans** « Vous les avez
+     toujours ? » **ni** « D'après les N aliments ». Dans les deux cas la case ouverte **est** le
+     repas en cours : seul l'effacement peut vider l'onglet. ▶ *Faux si l'onglet classe d'après un
+     frigo effacé ou pose la question.*
+   - **6b bis — le frigo ne sert qu'à la case du repas en cours** (tranché par l'auteur le
+     2026-09-10). Riz déclaré à 12 h, fenêtre ouverte à 12 h 05 : sur le **déjeuner du jour**,
+     l'onglet classe « D'après les 1 aliment déclaré au frigo » (**témoin, vert aujourd'hui**) ;
+     sur le **dîner du jour** et sur le **déjeuner du lendemain**, il dit « Vous n'avez rien déclaré
+     dans le frigo ». Chaque cas vérifie par le titre de la fenêtre quelle case est ouverte.
+     ▶ *Faux si le dîner du jour est classé d'après le frigo (on ne compare que la date), si le
+     déjeuner du lendemain l'est (on ne compare que le nom du repas), ou si le témoin dit « rien
+     déclaré » (l'onglet ignore le frigo partout).*
+   - **6c — Fiche recette.** La première recette du catalogue où l'oignon est obligatoire parmi au
+     moins trois aliments obligatoires : oignon déclaré à 14 h 02, fiche à 14 h 05 → des lignes
+     « · à acheter » (**témoin, vert aujourd'hui**) ; déclaré à 13 h 55 → **aucune** (7 aujourd'hui).
+     ▶ *Faux si « à acheter » s'affiche d'après un frigo effacé.*
+   - **6d — Aujourd'hui.** À 14 h 05 (« Ce soir »), la liste complète des plats proposés, frigo de
+     huit aliments courants déclaré à 13 h 55, est **identique plat pour plat et dans l'ordre** à la
+     liste sans frigo. Deux témoins, **verts aujourd'hui** : deux montages sans frigo rendent la même
+     liste, et le même frigo déclaré à **14 h 02** la **change** — sans eux l'égalité ne prouverait
+     rien. ▶ *Faux si la liste diffère : la couche `pantry` a lu un frigo effacé.* ⚠️ L'écart
+     produit par le frigo valable est mesuré non nul, **pas chiffré**.
+   - **Et chacun des quatre lit le rythme** (ajouté au second tour d'attaque). Sur **3 repas**,
+     déclaré à **9 h**, regardé à **10 h 30** : Courses remet l'article dans la liste sans « Déjà chez
+     vous » ; « Choisir un plat » ouvert sur le **déjeuner du jour** dit « Vous n'avez rien déclaré
+     dans le frigo » ; la fiche n'a **aucune** ligne « à acheter » ; la liste d'Aujourd'hui (« Ce
+     midi ») est identique à celle sans frigo — et le même frigo déclaré à **10 h 05** la **change**
+     (**témoin, vert aujourd'hui**). À 2 repas, 9 h et 10 h 30 tombent dans le même déjeuner.
+     ▶ *Faux si l'un des quatre garde l'aliment : il retombe sur le rythme par défaut. Mesuré le
+     2026-09-10 : Courses, « Choisir un plat » et la fiche recette ne lisent `user_rythme` nulle
+     part, et toutes les autres clauses 6 tournent à 2 repas — le défaut.*
+7. **Une déclaration dont on ne sait pas pour quel repas elle a été faite ne vaut pour aucun.** Une
+   ligne telle que l'a laissée une version antérieure (`INSERT INTO user_pantry (food_id)`, rien
+   d'autre) n'apparaît pas sur l'écran Frigo. ▶ *Faux si elle apparaît : « pas d'instant » est lu
+   comme « toujours valable ».*
+   **7 bis. Une date sans heure non plus.** La forme qu'écrit toute version depuis la v8 — une ligne
+   dont `declare_le` vaut la date du jour, « 2026-09-10 », sans heure — n'apparaît pas sur l'écran
+   Frigo à 12 h le même jour. C'est le frigo de **tout utilisateur qui a déclaré avant la mise à
+   jour** : il est vide au premier lancement. ▶ *Faux si elle apparaît : la date seule est lue comme
+   « valable toute la journée », ou comme un instant (minuit UTC, soit 2 h à Paris, donc « pour le
+   déjeuner »).*
+
+#### Ce que le lot NE TOUCHE PAS
+
+- **Le moteur.** La couche `pantry` et son poids, `searchByPantry`, `buildShoppingList` et
+  `ShoppingOptions.pantryFoodIds`, `planWeek`, `reroll`. Le lot décide **quels** aliments on leur
+  passe, pas ce qu'ils en font.
+- **`creneau.ts`** — fenêtres 10/14/17/24, `CRENEAUX_PAR_NOMBRE`, `creneauDuMoment`. Lus, pas
+  modifiés. Le `CHECK` 1 à 3 de `user_rythme` non plus.
+- **La table `user_pantry`** (elle survit, décision 74), **la section « Déjà chez vous »** (libellé,
+  lien vers le frigo), la recherche, les raccourcis, les résultats et la bascule de l'écran Frigo.
+- **Le catalogue.** Aucun YAML, aucune régénération.
+- **Le mode cuisine** (`manquants` à `null`, inchangé).
+- **Pas de migration prévue.** Si le code en démontre la nécessité : arrêt et question, pas de v20
+  décidée seul. ⚠️ La clause 7 bis écrit dans la colonne `declare_le` telle qu'elle existe en v19 :
+  une migration qui la supprimerait est une question, pas une conséquence.
+
+**Ce que le lot CHANGE de forme, et c'est prévu** : la fenêtre « Choisir un plat » ne reçoit
+aujourd'hui de Semaine qu'un libellé déjà formaté (`libelleCreneau`). Pour la clause 6b bis elle
+devra connaître **la date et le repas de la case ouverte** — sa signature change.
+
+**Ce que le lot RETIRE** (décision 74) — des suppressions de fichiers, donc montrées avant d'être
+faites : `ui/confirmer-frigo.tsx` et `confirmer-frigo.test.ts`, les deux points d'appel
+(`courses.tsx`, `choisir-plat.tsx`), le seuil de 7 jours, et `readPantryDeclareLe`
+(`user-store.ts`) — **mesuré le 2026-09-10 : aucun appelant en production**, seul un commentaire la
+cite. Les tests **non scellés** qui gardent
+l'ancienne règle seront réécrits : `semaine.test.tsx` (bloc « garde-manger périmé »),
+`courses.test.tsx` (bloc de confirmation, et les tests « garde-manger » qui écrivent par
+`writePantry` une date du jour), `frigo.test.tsx` (dates par aliment), `user-store.test.ts`.
+
+#### Ce qu'aucune clause ne scelle — déclaré
+
+- un rythme **changé après** la déclaration ;
+- un écran **resté monté** pendant la bascule de 14 h (aucune minuterie n'est exigée) ;
+- l'absence de toute ligne `user_rythme` (le défaut, 2 repas) ;
+- la mention de portée quand le frigo est vide ;
+- un fuseau à l'ouest de Greenwich ;
+- « Choisir un plat » ouvert entre minuit et 2 h (heure de Paris) : les dates de la grille Semaine
+  sont en UTC, la case « aujourd'hui » y est encore celle de la veille.
+
+#### Les témoins d'avant — pris le 2026-09-10 à 21 h 02, `HEAD` = `c83d717`
+
+| Témoin | Avant `retour-7` | Avec le fichier de tests, avant code |
+|---|---|---|
+| `npm test` | **2 569 passed / 0 failed**, 134 fichiers, 54,7 s | **2 579 passed / 27 failed** (2 606), 135 fichiers, 61,5 s — relevé à 23 h 06, après le second tour d'attaque ; un seul fichier rouge, `retour-7`, +37 tests = 10 verts + 27 rouges |
+| `npm run typecheck` | propre | propre |
+| `npx vite build` | non relancé (aucune ligne de production) | ✓ 2,46 s |
+| `npm run engine:plan-stress` | **20/20** | inchangé — aucune ligne du moteur |
+| `node catalog/build.mjs` | **hors périmètre** | non relancé |
+
+⚠️ **`retour-7` est en `.tsx`**, pas en `.ts` comme le gabarit du brief l'écrit : il monte cinq écrans.
+
+⛔ **Sortie rouge : 27 échecs sur 37, et les 10 verts sont déclarés.** Rouges : clause 1 (6), clause 3
+(2 + 3 bis), clause 4 (1 + 4 ter), clause 5 (2), 6a (3), 6b (3), 6b bis (2), 6c (2), 6d (2),
+clause 7 (1 + 7 bis) — 4 ter et 7 bis ajoutés au premier tour d'attaque, chacun rouge sur son
+assertion (`expected [ 'Riz blanc, cru' ] to deeply equal []`), pas sur une erreur de montage ; les
+quatre cas « 3 repas » ajoutés au second, rouges sur leur assertion aussi (article absent de la
+liste, onglet sans « rien déclaré », `expected 7 to be +0`, listes différentes).
+Verts : clause 2 (2 gardes), 4 bis (garde de fuseau, son témoin de fuseau compris), clause 5 à 1 repas (garde), témoins 6a,
+6b bis, 6c et les trois de 6d. Les titres de fenêtre de 6b et 6b bis sont vérifiés avant l'onglet :
+chaque rouge porte sur le contenu de l'onglet, pas sur la case ouverte. **Chaque rouge est une assertion, aucun n'est une erreur de montage** — deux erreurs de
+test ont été vues et corrigées en écrivant (le rythme à 4 repas refusé par la base, « Sel fin »
+présent deux fois à l'écran). Aucune ligne de production n'existe encore.
+
+```
+ Test Files  1 failed (1)
+      Tests  27 failed | 10 passed (37)
+   Duration  38.16s
+```
+
+#### Ce qui reste ouvert
+
+Rien. ✅ La question du brief — « Choisir un plat » depuis Semaine vise souvent un autre repas que
+celui en cours — est **tranchée par l'auteur le 2026-09-10** : le frigo ne sert qu'à la case du
+repas en cours. Scellé en **6b bis** ; la décision vit au registre, **~~80~~**.
+
+#### Livraison — 2026-09-11, non commité (`HEAD` = `c83d717`)
+
+**37 tests scellés sur 37 verts**, arbre entier vert.
+
+| Témoin | Avant `retour-7` | À la livraison (2026-09-11 à 0 h 00) |
+|---|---|---|
+| `npm test` | 2 569 passed / 0 failed, 134 fichiers | **2 588 passed / 0 failed**, 134 fichiers, 62,2 s |
+| `npm run typecheck` | propre | propre |
+| `npx vite build` | — | ✓ 2,44 s |
+| `npm run engine:plan-stress` | 20/20 | 20/20 |
+
+**Le compte, attribué** : 2 569 + 37 (fichier scellé) − 7 tests d'écran de l'ancienne règle
+(`semaine.test.tsx` 3, `courses.test.tsx` 4) − 11 (`confirmer-frigo.test.ts`, supprimé) = **2 588** ;
+fichiers 134 + 1 − 1 = 134.
+
+**Ce que le code fait.**
+- `ui/frigo-valable.ts` (neuf) porte la seule règle : une ligne vaut si son `declare_le` est un
+  instant **avec heure**, du même jour local et du même créneau (`creneauDuMoment`, rythme lu en base)
+  que maintenant. Tous les lecteurs passent par elle : Frigo, fiche recette, Courses, Aujourd'hui
+  (seulement quand le créneau affiché est le repas en cours), « Choisir un plat » (seulement sur la
+  case du repas en cours — la fenêtre reçoit désormais `date` et `creneau`).
+- **Sans migration** : `declare_le` reçoit `new Date().toISOString()`. Une ligne vide ou datée sans
+  heure ne vaut pour aucun repas (clauses 7, 7 bis).
+- L'écran Frigo réécrit le frigo en ne gardant que les lignes encore valables et en ne datant que
+  l'aliment ajouté : un aliment effacé ne ressuscite pas (3 bis), les autres ne sont pas redatés.
+- Supprimés, sur accord de l'auteur : `ui/confirmer-frigo.tsx`, `confirmer-frigo.test.ts`,
+  `readPantryDeclareLe`, le bandeau de Courses et la question de « Choisir un plat ».
+
+**Écarts avec le brief.**
+- Les deux tests de `user-store.test.ts` annoncés « à réécrire » sont **gardés**, amputés de leurs
+  assertions sur `readPantryDeclareLe` : ils gardent encore l'instant par ligne et la ligne sans date.
+- Le test d'écran « aucune ligne n'est retirée » de `courses.test.tsx` est retiré, pas réécrit : la
+  clause 6a le scelle.
+- « Choisir un plat » compare la case au **jour local**, la grille Semaine date ses cases en UTC :
+  entre minuit et 2 h (Paris) la case « aujourd'hui » de la grille ne reçoit pas le frigo. Déclaré
+  non scellé au brief ; porté en dette.
+- Aucune minuterie : un écran resté monté pendant la fin d'un repas garde l'ancienne liste jusqu'au
+  prochain geste ou remontage. Déclaré non scellé au brief.
+- Les tests d'écran **non scellés** du frigo déclarent à l'horloge réelle : lancés à cheval sur une
+  fin de créneau, ils peuvent rougir sans défaut. Le relevé ci-dessus, pris à 0 h 00, est vert. Dette.
+- ⛔ **Un rouge non identifié** : relancée à 0 h 04 après les seules écritures de documents, la suite a
+  rendu **1 failed / 2 587 passed** ; relancée à 0 h 05 et 0 h 07, **2 588 verts**. Le nom du test
+  n'a pas été capturé. Instable, pas expliqué — `ETAT.md` §8.
+- **Aucune relecture indépendante** : les agents de relecture étaient introuvables pendant le lot.
+
+---
+
 ### Les lots suivants — non ouverts
 
 Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETAT.md` §4) :
@@ -3173,7 +3438,7 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 | `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1` | **`retour-5`** — ✅ **LIVRÉ le 2026-09-09** (`157bf45`) — section ci-dessus : **14 clauses sur 14 vertes**, `retour-1` passe de **9 à 11** clauses, **aucune ligne de production touchée** · ✅ **LA CAUSE ÉTAIT L'HEURE DE LA MACHINE** : l'écran déduit son créneau de `new Date().getHours()`, bascule à **14 h** ; les relevés d'août l'attribuaient à la croissance du catalogue **sans contrôler l'heure** · **PISTE (d) APPLIQUÉE** : le test épingle sa pastille par `aria-pressed`, fige l'horloge et vérifie le titre affiché avant de collecter · les **deux** repas sont mesurés, **plancher « Froid » à 0,9 aux DEUX**, re-mesuré après `retour-5e` — 12/12 à midi, 12/12 le soir, contre 7/12 au brief · ⛔ **`retour-5c` a rougi comme son en-tête l'annonçait**, empreinte rebasée sur décision de l'auteur · décision **82 FERMÉE le 2026-09-09** |
 | `retour-5e` | rendre le dîner aux 36 recettes froides que `types_repas` en exclut | ✅ **LIVRÉ le 2026-09-09** (`80b29ec`, poussé) — ✅ **DÉFAUT MESURÉ le 2026-09-09** en écrivant `retour-5d` : le dîner ne compte que **8 froides sur 214 (3,7 %)** contre 44 sur 194 au déjeuner ; hors plats du matin, **83,7 % des froides du déjeuner** sont barrées du dîner contre **1,4 % des chaudes**. Le moteur remonte 7 des 8 qui existent — il vide le rayon, il ne classe pas mal · ✅ **LIVRÉ le 2026-09-09 à 17 h 20** — section ci-dessus : **10 clauses sur 10 vertes**, 36 fichiers YAML, **une ligne chacun**, `catalog.db` régénéré, **aucune ligne de code de production** · le dîner passe de **214 à 250 recettes** et de **8 froides (3,7 %) à 44 (17,6 %)** · ⛔ **UN TOUR D'ATTAQUE A ÉTÉ PAYÉ** : le critique a exhibé une implémentation fausse passant 9 clauses sur 9 (patch SQL direct de `catalog.db` + `# diner` en commentaire dans le YAML) — base reconstruite depuis les sources, YAML analysé au lieu d'être cherché, clause 10 neuve qui apparie base livrée et sources · ⭐ **EFFET DE BORD MESURÉ : la clause « 6 froides sur 10 » de `retour-1` redevient VERTE à 17 h** — le rouge mesurait le rayon vide · un seul rebasage, `tests/exclusion-real-catalog.test.ts`, témoin dérivé au lieu d'un identifiant en dur |
 | `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | ✅ **LIVRÉ le 2026-09-10** (`be02116`) — section ci-dessus : **31 clauses sur 31 vertes**, arbre entier à 2 569 verts, 8ᵉ couche d'exclusion `envie`, relâchement cumulatif « tant que vide » dans l'écran · ⛔ l'introduction du brief et l'en-tête scellé disent encore « UN axe » · *historique :* **`retour-1`** — blocage LEVÉ (`retour-5e`) · ✅ **décision 79 TRANCHÉE le 2026-09-09** · ⏳ **BRIEF ÉCRIT le 2026-09-09, PAS SCELLÉ** — section ci-dessus : « Fini quand » en 6 clauses, mesuré 4 profils × 2 créneaux × 8 combinaisons contre `catalog.db` réel (**10 cases vides sur 64, toutes rendues non vides par UN seul relâchement**) · ⏳ **TESTS D'ACCEPTATION ÉCRITS le 2026-09-09 à 23 h 26** — `tests/scelles/retour-6.test.tsx`, **28 tests, 15 ROUGES**, les 13 verts déclarés en en-tête (2 témoins de catalogue, 2 gardes d'allergène, 8 gardes de silence, 1 vert parasite mesuré) · **oracle SQL indépendant du moteur**, les deux chemins confrontés en écrivant le brief · ⛔ **une question ouverte pour l'auteur : « vide » ou « moins de douze » ?** |
-| `retour-7` | le frigo ne vaut plus que pour un repas (décision 74) | ~~décision 80~~ — ✅ **tranchée le 2026-09-10** : la déclaration s'efface à la fin du repas en cours, sans geste · brief non écrit |
+| `retour-7` | le frigo ne vaut plus que pour un repas (décision 74) | ~~décision 80~~ — ✅ **tranchée le 2026-09-10** : la déclaration s'efface à la fin du repas en cours, sans geste · ✅ **LIVRÉ le 2026-09-11, non commité** — section ci-dessus : **37 tests scellés sur 37 verts**, arbre entier à 2 588 verts, question « Vous les avez toujours ? » supprimée · *historique :* 🔒 scellé le 2026-09-10 : 7 clauses, `tests/scelles/retour-7.test.tsx` **37 tests, 27 rouges**, les 10 verts déclarés · la question du frigo depuis Semaine est tranchée par l'auteur (clause 6b bis) · attaque 1 : 2 trous fermés (4 ter, 7 bis) · attaque 2 : implémentation fausse exhibée (rythme à 2 repas par défaut hors de l'écran Frigo), fermée par un cas « 3 repas » sur chacun des quatre autres écrans · **plus de tour d'attaque** |
 | `retour-8` | effacer un repas passé (décision 75) | le sort des restes orphelins |
 
 ⚠️ **`retour-6` est bloqué par `retour-1` pour une raison de fond, pas de confort** : voir plus haut.

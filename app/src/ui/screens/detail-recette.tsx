@@ -43,6 +43,7 @@ import {
 } from '../../data/user-store.js'
 import type { Socle } from '../socle.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
+import { alimentsValables } from '../frigo-valable.js'
 import type { OrigineRecette } from '../router.js'
 import { hashDe, hashDeLAliment, hashDeLEditeur, hashDeLaCuisine, hashDeRecette, hashDuFrigo } from '../router.js'
 import { estRecettePerso, readUserRecipe } from '../../data/user-recipe.js'
@@ -182,6 +183,9 @@ export function DetailRecette({
           { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() },
           socle.catalogue.foods
         )
+        // Le frigo du repas en cours seulement (décision 80) : une déclaration dont le repas est fini
+        // ne dit plus rien de ce qu'il y a à acheter.
+        const frigo = alimentsValables(socle.db, new Date())
         setEtat({
           phase: 'pret',
           vue: {
@@ -207,9 +211,9 @@ export function DetailRecette({
               recette.ingredients
                 .filter((i) => !i.optionnel)
                 .map((i) => i.foodId as string)
-                .filter((foodId) => !utilisateur.pantryFoodIds.includes(foodId as never))
+                .filter((foodId) => !frigo.includes(foodId as never))
             ),
-            gardeManger: utilisateur.pantryFoodIds.length > 0,
+            gardeManger: frigo.length > 0,
             afficherMacros: readDisplay(socle.db).afficherMacros,
             energiePortion: energieParPortion(socle.catalogue, id),
             sourcePerso: estRecettePerso(recetteId) ? (readUserRecipe(socle.db, recetteId)?.source ?? 'perso') : null,

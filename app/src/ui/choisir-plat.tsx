@@ -30,10 +30,10 @@
 // ce qu'on a chez soi.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { FoodId, HardConstraints, RecipeId } from '../engine/domain/index.js'
-import { readPantryEntries, readUserState, type StoredPantryEntry } from '../data/user-store.js'
+import type { FoodId, HardConstraints, MealSlot, RecipeId } from '../engine/domain/index.js'
+import { readUserState } from '../data/user-store.js'
 import { Panneau } from './panneau.js'
-import { ConfirmerFrigo, alimentsAConfirmer } from './confirmer-frigo.js'
+import { alimentsValables, repasEnCours } from './frigo-valable.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, type Socle } from './socle.js'
 
 /** Combien de résultats on montre. Au-delà, on demande de préciser plutôt que de dérouler 200 lignes. */
@@ -52,12 +52,17 @@ interface Ligne {
 
 export function ChoisirPlat({
   socle,
+  date,
+  creneau,
   libelleCreneau,
   onPoser,
   onPoserHorsCatalogue,
   onFermer,
 }: {
   readonly socle: Socle
+  /** La case à remplir. Le frigo ne sert qu'à celle du repas en cours (décision 80). */
+  readonly date: string
+  readonly creneau: MealSlot
   /** « lundi · Déjeuner » — le titre doit dire OÙ le plat va se poser, sinon le geste est aveugle. */
   readonly libelleCreneau: string
   readonly onPoser: (recipeId: RecipeId) => void
@@ -67,10 +72,9 @@ export function ChoisirPlat({
 }) {
   const [onglet, setOnglet] = useState<Onglet>('catalogue')
   const [texte, setTexte] = useState('')
-  const [entrees, setEntrees] = useState<readonly StoredPantryEntry[]>([])
-  const garde = useMemo(() => entrees.map((e) => e.foodId), [entrees])
-  /** Passe à vrai dès que l'utilisateur a répondu — la question ne se repose pas dans la session. */
-  const [frigoConfirme, setFrigoConfirme] = useState(false)
+  const [garde, setGarde] = useState<readonly FoodId[]>([])
+  /** Faux quand la case ouverte n'est pas le repas en cours : le frigo ne lui sert pas. */
+  const [pourLeRepasEnCours, setPourLeRepasEnCours] = useState(true)
   const [contraintes, setContraintes] = useState<HardConstraints | null>(null)
 
   // Lus UNE fois à l'ouverture. Cette fenêtre ne modifie NI le garde-manger NI les contraintes,
@@ -81,13 +85,21 @@ export function ChoisirPlat({
   // semaine était affichée doit s'appliquer ICI — c'est le seul endroit du produit où l'utilisateur
   // désigne un plat à la main, donc le seul où un filtre périmé se traduirait par une assiette
   // dangereuse posée de sa propre main.
+  //
+  // ⚠️ LE FRIGO NE SERT QU'À LA CASE DU REPAS EN COURS (décision 80, tranché par l'auteur le
+  // 2026-09-10). Ce qu'on a déclaré à midi vaut pour CE déjeuner : classer le dîner ou le déjeuner du
+  // lendemain d'après lui proposerait des plats fondés sur des aliments qui auront été mangés.
   useEffect(() => {
-    setEntrees(readPantryEntries(socle.db))
+    const maintenant = new Date()
+    const enCours = repasEnCours(socle.db, maintenant)
+    const cetteCase = enCours.jour === date && enCours.creneau === creneau
+    setPourLeRepasEnCours(cetteCase)
+    setGarde(cetteCase ? alimentsValables(socle.db, maintenant) : [])
     setContraintes(
       readUserState(socle.db, { windowDays: FENETRE_HISTORIQUE_JOURS, today: aujourdhuiIso() }, socle.catalogue.foods)
         .constraints
     )
-  }, [socle])
+  }, [socle, date, creneau])
 
   const lignes = useMemo((): readonly Ligne[] => {
     if (contraintes === null) return [] // pas encore lues : ne RIEN proposer plutôt que du non filtré
@@ -95,11 +107,7 @@ export function ChoisirPlat({
     const nomDe = (id: RecipeId): string => socle.catalogue.recipes.get(id)?.nom ?? id
 
     if (onglet === 'frigo') {
-      // Tant que la confirmation n'a pas été donnée, on ne propose RIEN : une recette fondée sur un
-      // garde-manger périmé est plus nuisible que pas de recette du tout.
-      if (garde.length === 0 || alimentsAConfirmer(entrees, aujourdhuiIso()).length > 0) {
-        if (!frigoConfirme) return []
-      }
+      if (garde.length === 0) return []
       const res = socle.moteur.searchByPantry({ constraints: contraintes, pantryFoodIds: garde })
       return res.matches.slice(0, MAX_RESULTATS).map((m) => ({
         recipeId: m.recipeId,
@@ -119,16 +127,12 @@ export function ChoisirPlat({
       manquants: [],
       couverture: null,
     }))
-  }, [socle, onglet, texte, garde, entrees, contraintes, frigoConfirme])
+  }, [socle, onglet, texte, garde, contraintes])
 
   const poser = useCallback((recipeId: RecipeId) => onPoser(recipeId), [onPoser])
 
   /** Onglet « plat préparé » : le libellé libre, seule chose que l'application saura de ce repas. */
   const [libellePrepare, setLibellePrepare] = useState('')
-
-  /** Le garde-manger a vieilli et l'utilisateur n'a pas encore répondu — voir `confirmer-frigo.tsx`. */
-  const aConfirmer =
-    onglet === 'frigo' && !frigoConfirme && alimentsAConfirmer(entrees, aujourdhuiIso()).length > 0
 
   return (
     <Panneau titre={`Choisir un plat — ${libelleCreneau}`} onFermer={onFermer}>
@@ -194,32 +198,17 @@ export function ChoisirPlat({
             className="mt-1 min-h-tactile w-full rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-lecture text-texte"
           />
         </label>
-      ) : aConfirmer ? (
-        // ⚠️ LA CONFIRMATION PASSE AVANT LES RÉSULTATS, elle ne s'affiche pas à côté. Proposer des
-        // recettes ET demander si la donnée est juste, en même temps, laisserait croire que les
-        // recettes tiennent. Elles ne tiennent pas tant qu'on n'a pas répondu.
-        <div className="mt-4">
-          <ConfirmerFrigo
-            socle={socle}
-            entrees={entrees}
-            aujourdhui={aujourdhuiIso()}
-            onConfirme={() => {
-              // Relu en base plutôt que reconstruit ici : `ConfirmerFrigo` vient de réécrire la
-              // table avec les dates par ligne, et c'est elle qui fait foi.
-              setEntrees(readPantryEntries(socle.db))
-              setFrigoConfirme(true)
-            }}
-          />
-        </div>
       ) : (
         <p className="mt-4 text-courant leading-relaxed text-texte-doux">
-          {garde.length === 0
+          {!pourLeRepasEnCours
+            ? 'Vous n’avez rien déclaré dans le frigo pour ce repas : ce qu’on y déclare ne vaut que pour le repas en cours.'
+            : garde.length === 0
             ? 'Vous n’avez rien déclaré dans le frigo. L’écran Frigo sert à dire ce que vous avez ; cette liste s’en servira.'
             : `D’après les ${garde.length} aliment${garde.length > 1 ? 's' : ''} déclaré${garde.length > 1 ? 's' : ''} au frigo, du mieux couvert au moins couvert.`}
         </p>
       )}
 
-      {onglet === 'prepare' || aConfirmer ? null : lignes.length === 0 ? (
+      {onglet === 'prepare' ? null : lignes.length === 0 ? (
         // ⚠️ NE DIT JAMAIS « aucun résultat » TOUT COURT. Une liste vide après une recherche a deux
         // causes très différentes — le mot cherché, ou les contraintes déclarées — et l'utilisateur
         // ne peut pas les distinguer seul.

@@ -25,6 +25,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type {
   CravingAxes,
+  FoodId,
   MealPlanEntry,
   MealSlot,
   Minutes,
@@ -52,6 +53,7 @@ import {
 } from '../socle.js'
 import { hashDe, hashDeRecette, hashDuFrigo } from '../router.js'
 import { REPAS_PAR_DEFAUT, TITRE_CRENEAU, creneauDuMoment, creneauxDuRythme } from '../creneau.js'
+import { alimentsValables } from '../frigo-valable.js'
 // ⚠️ `PALIERS_TEMPS` est IMPORTÉ, pas recopié. Il l'était — même valeurs, mot pour mot — alors que
 // `champs-profil.tsx` l'exportait déjà sans que personne le lise. Le réglage de temps de cet écran
 // et celui du profil répondent à la même question ; deux tables jumelles ne restent jumelles que
@@ -196,7 +198,8 @@ function construireRequete(
   tempsDisponibleMin: Minutes | null,
   envie: CravingAxes | null,
   graine: number,
-  margePlatsSimples: number
+  margePlatsSimples: number,
+  frigo: readonly FoodId[]
 ): SuggestionRequest {
   return {
     profile,
@@ -209,7 +212,7 @@ function construireRequete(
       tempsDisponibleMin,
       // Exigence ponctuelle « je veux ça » : par construction jamais persistée (§6.5 ter ENGINE).
       requiredFoodIds: [],
-      pantryFoodIds: etat.pantryFoodIds,
+      pantryFoodIds: frigo,
     },
     history: etat.history,
     preferences: etat.preferences,
@@ -302,6 +305,9 @@ async function calculerVue(
   // créneau choisi À L'ÉCRAN prime sur l'heure, mais reste borné aux créneaux du rythme déclaré :
   // `creneauChoisi` ne peut venir que d'un bouton généré depuis `creneaux` lui-même.
   const creneau = creneauChoisi ?? creneauDuMoment(new Date().getHours(), creneaux)
+  // ⚠️ LE FRIGO NE VAUT QUE POUR LE REPAS EN COURS (décision 80) : ni une déclaration dont le repas
+  // est fini, ni le frigo de midi appliqué au dîner qu'on a choisi de regarder à l'écran.
+  const frigo = creneau === creneauDuMoment(new Date().getHours(), creneaux) ? alimentsValables(socle.db, new Date()) : []
 
   // ⛔ UNE BASE NUE N'EST PAS UN REPAS, ET CET ÉCRAN EST LE TROISIÈME ENDROIT OÙ LA MACHINE DÉCIDE
   // SEULE (lot `retour-5`, découverte du 2026-08-27, trouvée par un test scellé qui ne la visait
@@ -344,11 +350,11 @@ async function calculerVue(
   const crans = cransDEnvie(reglages.envie)
   const temps = minutes === null ? null : min(minutes)
   let cran = 0
-  let requete = construireRequete(etat, profil, date, creneau, temps, crans[0]!, graine, margePlatsSimples)
+  let requete = construireRequete(etat, profil, date, creneau, temps, crans[0]!, graine, margePlatsSimples, frigo)
   let tirage = tirer(requete)
   while (tirage.suggestions.length === 0 && cran < crans.length - 1) {
     cran++
-    requete = construireRequete(etat, profil, date, creneau, temps, crans[cran]!, graine, margePlatsSimples)
+    requete = construireRequete(etat, profil, date, creneau, temps, crans[cran]!, graine, margePlatsSimples, frigo)
     tirage = tirer(requete)
   }
   // Tout lâché et toujours rien : l'envie n'y était pour rien. L'écran réagit comme avant ce lot.

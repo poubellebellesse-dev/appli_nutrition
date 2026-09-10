@@ -58,7 +58,6 @@ import {
   writeGroupExceptionFoodIds,
   readFavorites,
   readHistory,
-  readPantryDeclareLe,
   readPantryEntries,
   readPantryFoodIds,
   readPreferences,
@@ -672,8 +671,6 @@ describe('user-store — goûts et favoris', () => {
     const lues = new Map(readPantryEntries(db).map((e) => [e.foodId, e.declareLe]))
     expect(lues.get('creme_fraiche' as FoodId)).toBe('2026-07-01')
     expect(lues.get('riz_blanc' as FoodId)).toBe('2026-08-04')
-    // La plus ancienne fait foi — c'est elle qui décide s'il faut reposer la question.
-    expect(readPantryDeclareLe(db)).toBe('2026-07-01')
   })
 
   it('une ligne sans date lisible ressort SANS `declareLe`, jamais avec une date inventée', () => {
@@ -681,7 +678,6 @@ describe('user-store — goûts et favoris', () => {
     // information — la remonter comme chaîne vide ferait un `Date.parse` silencieusement faux.
     db.run("INSERT INTO user_pantry (food_id, quantite_approx, declare_le) VALUES ('oeuf', NULL, '')")
     expect(readPantryEntries(db)).toEqual([{ foodId: 'oeuf', quantiteApprox: null }])
-    expect(readPantryDeclareLe(db)).toBeNull()
   })
 })
 

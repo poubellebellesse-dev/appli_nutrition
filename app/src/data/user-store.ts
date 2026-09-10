@@ -59,14 +59,15 @@ export interface StoredPantryEntry {
   /** Indicatif : le garde-manger est du tout-ou-rien côté courses (§7.4 ENGINE), jamais décompté. */
   readonly quantiteApprox: string | null
   /**
-   * Date ISO à laquelle CET aliment a été déclaré. Absent = prendre le `declareLe` global de
-   * `writePantry`.
+   * Instant ISO (AVEC l'heure) auquel CET aliment a été déclaré. Absent = prendre le `declareLe`
+   * global de `writePantry`.
    *
-   * ⚠️ ELLE EXISTE PAR LIGNE, ET C'EST TOUT L'INTÉRÊT. `writePantry` réécrit le garde-manger entier
-   * à chaque geste : sans date par ligne, ajouter du riz aujourd'hui redatait d'aujourd'hui la crème
-   * déclarée il y a trois semaines — un geste qui ne la concernait pas la certifiait fraîche, et la
-   * question de `confirmer-frigo.tsx` ne se posait plus jamais. `declare_le` doit dire QUAND
-   * L'UTILISATEUR A RÉPONDU DE CET ALIMENT, pas quand la ligne a été écrite.
+   * ⚠️ IL EXISTE PAR LIGNE, ET C'EST TOUT L'INTÉRÊT. `writePantry` réécrit le garde-manger entier à
+   * chaque geste : sans instant par ligne, ajouter du riz redéclarait un aliment déclaré plus tôt — un
+   * geste qui ne le concernait pas le faisait survivre à son repas. `declare_le` doit dire QUAND
+   * L'UTILISATEUR A RÉPONDU DE CET ALIMENT, pas quand la ligne a été écrite. Le repas pour lequel il
+   * vaut s'en déduit dans `ui/frigo-valable.ts` (décision 80) ; une date sans heure, forme écrite par
+   * les versions d'avant, ne vaut pour aucun.
    */
   readonly declareLe?: string
 }
@@ -645,31 +646,11 @@ export function readPantryEntries(db: UserDb): readonly StoredPantryEntry[] {
 }
 
 /**
- * Date ISO de la dernière déclaration du garde-manger, ou `null`.
- *
- * ⚠️ `null` A DEUX CAUSES ET UNE SEULE LECTURE. Garde-manger vide (rien à dater) ou lignes d'avant
- * la migration v8 (`declare_le = ''`, date inconnue) : dans les deux cas l'appelant ne sait PAS
- * quand ça a été déclaré, et doit traiter la donnée comme non datée — jamais comme fraîche.
- * L'absence d'information n'est pas une information.
- *
- * ⚠️ LA PLUS ANCIENNE DES LIGNES, pas la plus récente. `writePantry` réécrit tout d'un coup, donc
- * elles partagent normalement la même date ; prendre le MIN garantit qu'une ligne rescapée d'une
- * base v7 ne se fasse pas blanchir par une ligne saisie ce matin.
- */
-export function readPantryDeclareLe(db: UserDb): string | null {
-  const lignes = db.all<{ readonly plus_ancienne: string | null }>(
-    'SELECT MIN(declare_le) AS plus_ancienne FROM user_pantry'
-  )
-  const valeur = lignes[0]?.plus_ancienne ?? null
-  return valeur === null || valeur === '' ? null : valeur
-}
-
-/**
  * Remplace le garde-manger entier — il s'efface à volonté, c'est un état ponctuel (§4.3).
  *
- * `declareLe` est la date ISO du jour, INJECTÉE : ce module ne lit jamais l'horloge (même règle que
- * le moteur, §3 ENGINE). Elle sert à dire depuis quand la déclaration tient — voir
- * `readPantryDeclareLe` et `ui/confirmer-frigo.tsx`.
+ * `declareLe` est l'instant ISO de la déclaration, INJECTÉ : ce module ne lit jamais l'horloge (même
+ * règle que le moteur, §3 ENGINE). Il dit pour quel repas la déclaration vaut — voir
+ * `ui/frigo-valable.ts`.
  */
 export function writePantry(
   db: UserDb,

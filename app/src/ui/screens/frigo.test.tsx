@@ -15,14 +15,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { AllergenId, FoodId, RecipeId } from '../../engine/domain/index.js'
-import {
-  readPantryDeclareLe,
-  readPantryEntries,
-  readPantryFoodIds,
-  writeAllergies,
-  writePantry,
-} from '../../data/user-store.js'
-import { aujourdhuiIso } from '../socle.js'
+import { readPantryEntries, readPantryFoodIds, writeAllergies, writePantry } from '../../data/user-store.js'
 import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
 
 vi.mock('../catalog-source.js', () => ({
@@ -91,7 +84,8 @@ const PANTRY_RICHE = [
   'sucre_blanc',
 ] as const
 
-function seedPantry(foodIds: readonly string[], declareLe = '2026-08-04'): void {
+/** Déclaré MAINTENANT par défaut : une déclaration ne vaut que pour le repas en cours (décision 80). */
+function seedPantry(foodIds: readonly string[], declareLe = new Date().toISOString()): void {
   writePantry(
     baseCourante(),
     foodIds.map((foodId) => ({ foodId: foodId as FoodId, quantiteApprox: null })),
@@ -177,37 +171,38 @@ describe('frigo — la persistance', () => {
 })
 
 /**
- * ⚠️ BUG TROUVÉ ET CORRIGÉ LE 2026-08-04, et il vidait la migration v8 de son sens dès le deuxième
- * aliment. `writePantry` réécrit la table ENTIÈRE à chaque geste ; l'écran passait `aujourdhuiIso()`
- * pour toutes les lignes. Ajouter du riz ce matin redatait donc d'aujourd'hui une crème déclarée il
- * y a trois semaines : un geste qui ne la concernait pas la certifiait fraîche, et la question de
- * `confirmer-frigo.tsx` ne se posait plus jamais. Rien n'aurait planté — le champ était déclaré,
- * rempli et lu, il contenait simplement autre chose que ce que son nom dit.
+ * ⚠️ BUG TROUVÉ ET CORRIGÉ LE 2026-08-04. `writePantry` réécrit la table ENTIÈRE à chaque geste ;
+ * l'écran passait la même date pour toutes les lignes, et ajouter du riz redatait un aliment déclaré
+ * plus tôt. Depuis la décision 80 l'instant dit pour quel repas vaut chaque aliment : le redater le
+ * ferait survivre à son repas. Rien n'aurait planté — le champ aurait simplement contenu autre chose
+ * que ce que son nom dit.
  */
-describe('frigo — chaque aliment garde SA date de déclaration', () => {
+describe('frigo — chaque aliment garde SON instant de déclaration', () => {
   it('⛔ AJOUTER UN ALIMENT NE REDATE PAS LES AUTRES', async () => {
-    seedPantry(['oeuf'], '2026-07-01')
+    const avant = new Date().toISOString()
+    seedPantry(['oeuf'], avant)
     await monter()
 
     fireEvent.change(screen.getByLabelText('Ajouter un aliment'), { target: { value: 'riz' } })
     fireEvent.click(await screen.findByText('Riz blanc, cru'))
     await waitFor(() => expect(readPantryFoodIds(baseCourante())).toEqual(['oeuf', 'riz_blanc']))
 
-    const dates = new Map(readPantryEntries(baseCourante()).map((e) => [e.foodId, e.declareLe]))
-    expect(dates.get('oeuf' as FoodId)).toBe('2026-07-01')
-    expect(dates.get('riz_blanc' as FoodId)).toBe(aujourdhuiIso())
-    // Et la conséquence qui compte : le vieil aliment est toujours questionnable.
-    expect(readPantryDeclareLe(baseCourante())).toBe('2026-07-01')
+    const instants = new Map(readPantryEntries(baseCourante()).map((e) => [e.foodId, e.declareLe]))
+    expect(instants.get('oeuf' as FoodId)).toBe(avant)
+    // Le nouvel aliment reçoit l'instant de SON geste, heure comprise — pas une date du jour.
+    expect(instants.get('riz_blanc' as FoodId)).not.toBe(avant)
+    expect(instants.get('riz_blanc' as FoodId)).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/)
   })
 
   it('retirer un aliment ne redate pas non plus ceux qui restent', async () => {
-    seedPantry(['oeuf', 'riz_blanc'], '2026-07-01')
+    const avant = new Date().toISOString()
+    seedPantry(['oeuf', 'riz_blanc'], avant)
     await monter()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Retirer Riz blanc, cru' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Retirer Riz blanc, cru' }))
     await waitFor(() => expect(readPantryFoodIds(baseCourante())).toEqual(['oeuf']))
 
-    expect(readPantryEntries(baseCourante())[0]?.declareLe).toBe('2026-07-01')
+    expect(readPantryEntries(baseCourante())[0]?.declareLe).toBe(avant)
   })
 })
 

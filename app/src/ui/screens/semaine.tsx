@@ -645,6 +645,8 @@ export function Semaine() {
       {aChoisir !== null && socleCharge !== null && (
         <ChoisirPlat
           socle={socleCharge}
+          date={aChoisir.date}
+          creneau={aChoisir.creneau}
           libelleCreneau={`${formaterJour(aChoisir.date)} · ${LIBELLE_CRENEAU[aChoisir.creneau]}`}
           onPoser={(recipeId) => poser(aChoisir, recipeId)}
           onPoserHorsCatalogue={(libelle) => poserHorsCatalogue(aChoisir, libelle)}

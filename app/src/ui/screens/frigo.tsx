@@ -21,11 +21,18 @@
 // `suggestSubstitutions` n'est pas câblée et la table `substitution` est vide par décision 27.
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { Catalog, FacetteKind, FoodId, RecipeId } from '../../engine/domain/index.js'
+import type { Catalog, FacetteKind, FoodId, MealSlot, RecipeId } from '../../engine/domain/index.js'
 import type { Engine, PantryMatch, PantryResult } from '../../engine/api/index.js'
 import { chercherParNom, normaliser } from '../../engine/search/index.js'
 import { readPantryEntries, readUserState, writePantry } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
+import {
+  PORTEE_CRENEAU,
+  alimentsValables,
+  creneauxDeclares,
+  declarationValable,
+  repasDeLInstant,
+} from '../frigo-valable.js'
 import { hashDe, hashDeRecette } from '../router.js'
 import {
   COMPTES_VIDES,
@@ -59,6 +66,8 @@ interface Socle {
   readonly catalogue: Catalog
   readonly moteur: Engine
   readonly contraintes: ReturnType<typeof readUserState>['constraints']
+  /** Les créneaux du rythme déclaré — pour dire à quel repas la déclaration s'applique. */
+  readonly creneaux: readonly MealSlot[]
 }
 
 type Etat =
@@ -130,9 +139,15 @@ export function Frigo() {
         )
         setEtat({
           phase: 'pret',
-          socle: { catalogue: s.catalogue, moteur: s.moteur, contraintes: utilisateur.constraints },
+          socle: {
+            catalogue: s.catalogue,
+            moteur: s.moteur,
+            contraintes: utilisateur.constraints,
+            creneaux: creneauxDeclares(s.db),
+          },
         })
-        setGarde(utilisateur.pantryFoodIds)
+        // Ce qui vaut ENCORE : une déclaration dont le repas est fini n'apparaît plus (décision 80).
+        setGarde(alimentsValables(s.db, new Date()))
       })
       .catch((erreur: unknown) => {
         if (!annule) {
@@ -144,28 +159,35 @@ export function Frigo() {
     }
   }, [])
 
-  /** Le garde-manger est PERSISTÉ : on le retrouve au prochain lancement (table `user_pantry`). */
-  const enregistrer = useCallback((suivant: readonly FoodId[]) => {
+  /**
+   * Le garde-manger est PERSISTÉ, pour le repas en cours seulement (table `user_pantry`, décision 80).
+   *
+   * `ajoute` est l'aliment que CE geste déclare — le seul à recevoir l'instant présent.
+   */
+  const enregistrer = useCallback((suivant: readonly FoodId[], ajoute: FoodId | null) => {
     setGarde(suivant)
     chargerSocle()
-      // ⚠️ LA DATE EST INJECTÉE, jamais `Date.now()` — et elle sert : un garde-manger non daté ne
-      // peut pas se faire questionner quand il vieillit (`ui/confirmer-frigo.tsx`, migration v8).
+      // ⚠️ CHAQUE ALIMENT GARDE SON PROPRE INSTANT, ET C'EST UN BUG DÉJÀ PAYÉ. `writePantry` réécrit
+      // la table ENTIÈRE à chaque ajout et à chaque retrait : dater tout le monde de maintenant
+      // faisait qu'ajouter du riz à midi redéclarait pour midi un oignon déclaré ce matin.
       //
-      // ⚠️ CHAQUE ALIMENT GARDE SA PROPRE DATE, ET C'EST UN BUG DÉJÀ PAYÉ. `writePantry` réécrit la
-      // table ENTIÈRE à chaque ajout et à chaque retrait : dater tout le monde d'aujourd'hui faisait
-      // qu'ajouter du riz ce matin certifiait fraîche une crème déclarée il y a trois semaines. Un
-      // geste qui ne la concernait pas la blanchissait, et la question ne se posait plus jamais —
-      // c'est-à-dire que la migration v8 ne servait à rien dès le deuxième aliment.
+      // ⚠️ ET LA RÉÉCRITURE NE RESSUSCITE RIEN. Une ligne dont le repas est fini est encore en base
+      // tant que personne n'a réécrit la table ; la recopier telle quelle la garderait, la redater la
+      // ferait revenir. Elle est donc laissée de côté — y compris quand un écran resté ouvert depuis
+      // le repas précédent l'affiche encore : le garde affiché est aussitôt corrigé.
       .then((s) => {
+        const maintenant = new Date()
+        const creneaux = creneauxDeclares(s.db)
         const connues = new Map(readPantryEntries(s.db).map((e) => [e.foodId, e.declareLe]))
-        writePantry(
-          s.db,
-          suivant.map((foodId) => {
-            const date = connues.get(foodId)
-            return { foodId, quantiteApprox: null, ...(date === undefined ? {} : { declareLe: date }) }
-          }),
-          aujourdhuiIso()
-        )
+        const ecrites = suivant.flatMap((foodId) => {
+          if (foodId === ajoute) return [{ foodId, quantiteApprox: null, declareLe: maintenant.toISOString() }]
+          const declareLe = connues.get(foodId)
+          return declareLe !== undefined && declarationValable(declareLe, maintenant, creneaux)
+            ? [{ foodId, quantiteApprox: null, declareLe }]
+            : []
+        })
+        writePantry(s.db, ecrites, maintenant.toISOString())
+        if (ecrites.length !== suivant.length) setGarde(ecrites.map((e) => e.foodId))
       })
       .catch(() => undefined)
   }, [])
@@ -173,14 +195,18 @@ export function Frigo() {
   const ajouter = useCallback(
     (foodId: FoodId) => {
       if (garde.includes(foodId)) return
-      enregistrer([...garde, foodId])
+      enregistrer([...garde, foodId], foodId)
       setSaisie('')
     },
     [garde, enregistrer]
   )
 
   const retirer = useCallback(
-    (foodId: FoodId) => enregistrer(garde.filter((id) => id !== foodId)),
+    (foodId: FoodId) =>
+      enregistrer(
+        garde.filter((id) => id !== foodId),
+        null
+      ),
     [garde, enregistrer]
   )
 
@@ -270,6 +296,12 @@ export function Frigo() {
       {garde.length > 0 && (
         <div className="mt-4">
           <h2 className="text-courant text-texte-doux">Chez vous · {garde.length}</h2>
+          {/* ⚠️ DIT, PAS DEVINÉ (décision 80). La liste s'efface sans geste à la fin du repas : sans
+              cette ligne, la retrouver vide après le déjeuner se lirait comme une perte de données. */}
+          <p className="mt-1 text-courant leading-relaxed text-attenue">
+            Valable pour {PORTEE_CRENEAU[repasDeLInstant(new Date(), socle.creneaux).creneau]} : la liste
+            s’efface d’elle-même à la fin du repas.
+          </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {garde.map((foodId) => (
               <li key={foodId}>

@@ -40,16 +40,13 @@ garde-manger est « FACULTATIF ET PONCTUEL, jamais un inventaire à tenir : l'ap
 La recherche valide cette ligne plus fort que prévu — c'est exactement le piège des autres. La
 « gestion du garde-manger » reste en v3, distincte et non engagée.
 
-**Ce qui a été ajouté le 2026-08-04** (décision utilisateur) : `user_pantry.declare_le` (migration
-v8) et `ui/confirmer-frigo.tsx`. Au-delà de **7 jours**, la liste s'affiche à cocher ; décocher
-retire pour de bon. La question n'est posée qu'au **moment de l'usage** — jamais en rappel, jamais en
-notification, jamais en badge : le produit s'interdit de réclamer l'entretien d'un inventaire.
-
-⚠️ **Les deux écrans concernés ne réagissent PAS pareil, et c'est délibéré.** Dans « Choisir un
-plat », la question retient les résultats : un garde-manger périmé y rend la proposition *fausse*.
-Dans Courses, elle n'empêche rien — le garde-manger ne fait qu'*enlever* des lignes, donc un
-garde-manger douteux n'est pas appliqué du tout et la liste sort entière. Acheter une crème en double
-se raye d'un trait ; rentrer sans gâche le repas. Voir décision 57 (`ETAT.md`).
+**Ce qui a été ajouté le 2026-08-04, puis remplacé le 2026-09-11.** La décision ~~57~~ avait posé
+`user_pantry.declare_le` (migration v8) et une question « Vous les avez toujours ? » au-delà de
+7 jours. Les décisions ~~74~~ et ~~80~~, nées du test sur téléphone, l'ont remplacée par une portée :
+**la déclaration ne vaut que pour le repas en cours et s'efface seule à sa fin** — sans question,
+sans rappel, sans notification, sans badge ; l'écran Frigo dit seulement pour quel repas elle vaut.
+Le produit s'interdit toujours de réclamer l'entretien d'un inventaire, et n'a même plus de
+péremption à surveiller. Lot `retour-7`, `CONCEPTION_RETOURS_TEST.md`.
 
 ## 2. « Il me manque toujours un ou deux ingrédients »
 
