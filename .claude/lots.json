@@ -102,14 +102,18 @@
       "id": "retour-6",
       "chantier": "retours test",
       "titre": "les filtres d'envie deviennent durs sur Aujourd'hui",
-      "etat": "a_faire",
+      "etat": "fait",
+      "le": "2026-09-10",
+      "commit": "be02116",
       "bloque_par": "retour-1"
     },
     {
       "id": "retour-7",
       "chantier": "retours test",
       "titre": "le frigo ne vaut plus que pour un repas",
-      "etat": "a_faire"
+      "etat": "fait",
+      "le": "2026-09-11",
+      "commit": "159e8ea"
     },
     {
       "id": "retour-8",

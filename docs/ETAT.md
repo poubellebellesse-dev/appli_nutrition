@@ -35,7 +35,7 @@ dure, aucune donnée sans source) et le n° 6 : informer, jamais juger.
   socle d'accessibilité, routage par fragment, tutoriel qui traverse les menus.
 - **Chantiers livrés** (chacun a son `CONCEPTION_*.md`) : mode cuisine, photos, gestes illustrés
   (clips), invariant origine animale (66/66b/66c), réservation matériel (65a-c), régime personnalisé,
-  retours du test téléphone (`retour-1` → `retour-7` ; `retour-7` livré le 2026-09-11, non commité :
+  retours du test téléphone (`retour-1` → `retour-7` ; `retour-7` livré le 2026-09-11 (`159e8ea`) :
   le frigo ne vaut plus que pour le repas en cours et s'efface seul à sa fin).
 
 ```
