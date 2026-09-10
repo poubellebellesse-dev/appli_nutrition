@@ -6,8 +6,8 @@
 // rencontré = motif retenu (§6.3, §6.4 ENGINE). Point de départ : les recettes du créneau demandé
 // (`catalog.indexes.recipesBySlot`), comme le pseudo-code de §6.4.
 //
-// Portée P1a : seules les 6 couches d'exclusion sont câblées ici (`EXCLUSION_LAYERS`). Aucun
-// scoring, aucune agrégation en `SuggestionResult` — voir engine/api/index.ts (stub, P1b/P2).
+// Les 8 couches d'exclusion sont câblées ici (`EXCLUSION_LAYERS`). Aucun scoring, aucune
+// agrégation en `SuggestionResult` — voir engine/api/index.ts.
 // `layers` reste paramétrable (au lieu de coder `EXCLUSION_LAYERS` en dur dans le corps de la
 // fonction) pour permettre des tests unitaires ciblés sur un sous-ensemble de couches.
 //
@@ -22,14 +22,16 @@ import { requiredFoodLayer } from './requis.js'
 import { timeLayer } from './temps.js'
 import { equipmentLayer } from './equipement.js'
 import { favoriteLayer } from './favoris.js'
+import { envieLayer } from './envie.js'
 
 /**
  * Registre des couches d'exclusion, dans l'ordre de priorité de motif (§6.3 ENGINE) : allergènes
  * puis régime (toutes deux 🔒 `critical`), puis exclusions (rejet personnel), puis requis (miroir
- * dur — « je veux ça »), puis temps, puis équipement, puis favoris.
+ * dur — « je veux ça »), puis temps, puis équipement, puis favoris, puis envie.
  *
- * `favoris` est DERNIÈRE volontairement : « hors favoris » est le motif le moins informatif du
- * registre, il ne doit masquer aucun autre (voir l'en-tête de favoris.ts).
+ * `favoris` puis `envie` ferment la marche volontairement : « hors favoris » et « pas froid » sont
+ * les motifs les moins informatifs du registre, ils ne doivent masquer aucun autre (voir les
+ * en-têtes de favoris.ts et envie.ts).
  *
  * Chaque couche est déclarée ci-dessus avec son `Config` propre (`SelectionLayer<XConfig>`), ce
  * qui garde `configure`/`apply` entièrement typés pour qui l'utilise seule (§6.8 ENGINE). Le
@@ -48,6 +50,7 @@ export const EXCLUSION_LAYERS: readonly SelectionLayer[] = [
   timeLayer as SelectionLayer,
   equipmentLayer as SelectionLayer,
   favoriteLayer as SelectionLayer,
+  envieLayer as SelectionLayer,
 ]
 
 export interface ExclusionPassResult {

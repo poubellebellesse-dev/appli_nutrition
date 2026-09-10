@@ -33,7 +33,7 @@
 ¶ **Tranché et CODÉ (session du 2026-07-25) : `speed` EST une couche du registre à part entière**
 (la 11ᵉ et dernière couche de SCORE implémentée — `LAYER_DESCRIPTORS`,
 `app/src/engine/selection/index.ts` ; l'ordinal absolu n'est plus cité, il a changé à chaque
-ajout de couche d'exclusion — le registre est à 18 entrées depuis `favoris`, P1c lot 4 ;
+ajout de couche d'exclusion — le registre est à 20 entrées depuis `envie`, lot `retour-6` ;
 implémentation `app/src/engine/selection/scoring/speed.ts`), distincte du filtre dur `temps` (§6.3,
 exclusion) ; poids nul par défaut, **activée par l'archétype « Rapide »** (§6.3 bis, poids brut
 0.30). La précédente affirmation « `speed` n'est pas une 17ᵉ couche du registre » est **fausse** et

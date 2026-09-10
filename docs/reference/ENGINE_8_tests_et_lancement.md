@@ -174,7 +174,7 @@ le plus cher dans le plus incertain.
 
 | # | Décision | Retenu |
 |---|---|---|
-| 1 | Pipeline en dur ou registre de couches ? | **Registre de 18 couches** à contrat commun (§6.2) |
+| 1 | Pipeline en dur ou registre de couches ? | **Registre de 20 couches** à contrat commun (§6.2) |
 | 2 | « Vider le frigo » : filtre ou score ? | **Score**, avec un mode où son poids devient dominant |
 | 3 | Suivi des préférences | **Signaux uniquement**, jamais un journal alimentaire (§6.5 ARCHI) |
 | 4 | Média du lexique | **WebP animée**, boucle muette ~3 s, ~80 Ko (§8.5 ARCHI) |

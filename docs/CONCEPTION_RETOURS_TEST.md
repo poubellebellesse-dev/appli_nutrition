@@ -2894,6 +2894,270 @@ test, il fait passer au vert les seize clauses déjà comptées, plus les trois 
 
 ---
 
+### Lot `retour-6` — les filtres d'envie deviennent durs sur Aujourd'hui ✅ **LIVRÉ le 2026-09-10** (**non commité**, `HEAD` = `812bc57`) · brief écrit le 2026-09-09 à 23 h 10 · attaqué le 2026-09-10 (tour 1 sur 2), corrigé, scellé le 2026-09-10
+
+Décisions **71** (le filtre retire, et seulement sur Aujourd'hui) et **79** (quand la pile ne laisse
+rien : on relâche **un** axe, dans un ordre fixé, **et on le dit**). Le blocage par `retour-1` est
+levé : sa cause était le rayon vide du dîner, refermé par `retour-5e` le 2026-09-09.
+
+**Ce que le lot fait.** Sur l'écran Aujourd'hui, et là seulement, les trois pastilles d'envie
+cessent de classer et se mettent à **retirer**. Si la pile — allergènes, régime, exclusions, temps,
+matériel, favoris, **plus les pastilles** — ne laisse plus aucune recette, l'écran **lâche un seul
+axe**, dans l'ordre `legerConsistant` → `chaudFroid` → `sucreSale`, et **nomme celui qu'il a lâché**
+dans une phrase visible.
+
+**Le montage est imposé, il ne se rediscute pas.** Une **8ᵉ couche d'EXCLUSION** lisant
+`context.envie` ; `craving` reste une couche de **score**, inchangée. `assertScoringLayersNeverExclude`
+lève dès qu'une couche de score retire un candidat, et on ne fait pas tomber un garde-fou de sécurité
+pour un confort d'ergonomie (décision 71, borne (c) de la 79).
+
+#### Ce que ça vaut sur `catalog.db` réel — mesuré le 2026-09-09, pas estimé
+
+Quatre profils × deux créneaux × les huit combinaisons de signes, **par le moteur lui-même**
+(`suggestMeals`, `limit: 500`, diversification coupée), puis recoupé par SQL direct sur
+`catalog.db` : **les deux chemins donnent les mêmes nombres**. Convention de signe scellée par
+`retour-1` : `< 0` = froide / légère / salée, `> 0` = chaude / consistante / sucrée.
+
+`0→n` = combinaison **vide**, puis ce que rend le relâchement du **premier** axe de l'ordre 79.
+
+| Combinaison demandée | sans contrainte<br>déj / dîn | végétarien<br>déj / dîn | sans gluten + sans lait<br>déj / dîn | végétalien + 5 allergènes<br>déj / dîn |
+|---|---|---|---|---|
+| Léger + Froid + Salé | 23 / 22 | 18 / 17 | 12 / 12 | 4 / 4 |
+| Léger + Froid + Sucré | 6 / 7 | 5 / 6 | 4 / 5 | 2 / 2 |
+| Léger + Chaud + Salé | 14 / 33 | 10 / 22 | 9 / 13 | 7 / 7 |
+| Léger + Chaud + Sucré | 2 / 5 | 2 / 5 | **0→2 / 0→3** | **0→1 / 0→1** |
+| Consistant + Froid + Salé | 11 / 11 | 5 / 5 | 7 / 7 | **0→4 / 0→4** |
+| Consistant + Froid + Sucré | **1 / 1** | 1 / 1 | **0→4 / 0→5** | **0→2 / 0→2** |
+| Consistant + Chaud + Salé | 124 / 152 | 83 / 97 | 67 / 76 | 40 / 44 |
+| Consistant + Chaud + Sucré | 4 / 8 | 1 / 3 | 1 / 2 | **0→1 / 0→1** |
+| *recettes au créneau, avant toute pastille* | *194 / 250* | *131 / 163* | *104 / 120* | *56 / 60* |
+
+**Trois faits sortent de ce tableau, et ils commandent le lot.**
+
+1. ⭐ **Le relâchement se déclenche pour de vrai, et il peut tourner DEUX fois.** **10** des 64
+   cases sont vides, et **les dix** redeviennent non vides en lâchant **un seul** axe — sur ces
+   quatre profils. ⛔ **C'est une propriété des profils choisis, pas du catalogue** : le tour
+   d'attaque du 2026-09-10 en a trouvé un cinquième, **fruits à coque + gluten + sulfites**, où
+   `Consistant + Chaud + Sucré` au déjeuner reste vide après le premier cran et ne se remplit qu'au
+   second — **0 → 0 → 4**, quatre plats tous sucrés ; lâcher `sucré` à la place en rendrait **64**.
+   Mesuré par le moteur (`suggestMeals`, `limit: 500`, diversification coupée) et recoupé en SQL :
+   mêmes nombres. Au dîner, le même profil ne demande qu'un cran (0 → 6). La boucle de la 79 n'est
+   pas un « si », c'est un « tant que ».
+2. ⛔ **Sur un profil SANS contrainte, aucune case n'est vide** : le déclencheur littéral de la 79
+   (« jusqu'à ce que la liste cesse d'être vide ») **ne s'y arme jamais**. Le relâchement est un
+   dispositif pour utilisateurs contraints, pas pour tout le monde. ⚠️ Cela veut aussi dire
+   qu'**aucun test ne peut exercer le relâchement sans déclarer d'allergie ou de régime**.
+3. ⚠️ **ET POURTANT, CINQ CASES SUR HUIT Y TOMBENT SOUS `PROFONDEUR = 12`, JUSQU'À 1.** Aujourd'hui
+   l'écran affiche douze cartes mal classées ; demain il en affichera **une**. Une liste de 1 n'est
+   pas vide : la 79 ne la couvre pas, et ce lot ne la couvre pas non plus. ▶ **Tranché par
+   l'auteur le 2026-09-10 : le déclencheur reste « vide »** — voir « Ce qui était ouvert » plus bas.
+
+⚠️ **`Sucré` est l'axe rare, et c'est lui qui fabrique les cases vides** : 14 recettes au déjeuner
+et 22 au dîner sur un catalogue de 339, contre 178 et 226 pour `Salé`. Les dix cases vides portent
+toutes `Sucré`.
+
+#### **Fini quand**
+
+Sur `catalog.db` réel, les **sept** faits ci-dessous sont vrais — les six premiers sur l'écran
+Aujourd'hui monté en entier, le septième sur le moteur appelé seul. Chacun est suivi de **ce qui le rendrait faux** — s'il n'y a rien à écrire là, ce n'est pas
+un critère.
+
+1. **Le filtre retire.** Profil sans contrainte, déjeuner, pastilles `Consistant + Froid + Salé` :
+   **tout** plat affiché vérifie `axe_leger_consistant > 0` ET `axe_chaud_froid < 0` ET
+   `axe_sucre_sale < 0`, chaque plat relu **par son nom** en SQL direct sur le catalogue. **Zéro
+   intrus**, et le catalogue en porte **11** — la liste est donc plus courte que les douze cartes
+   d'aujourd'hui. ▶ *Faux si un seul plat affiché tombe du mauvais côté d'un des trois axes.*
+2. **La rareté est assumée, jamais comblée.** Même profil, `Consistant + Froid + Sucré` : le
+   catalogue n'en porte **qu'une**, au déjeuner comme au dîner (« Roquefort, poire et noix »).
+   L'écran affiche **exactement celle-là**, et **aucune phrase de relâchement** — la liste n'est
+   pas vide. ▶ *Faux si l'écran complète à douze avec des plats hors filtre, s'il n'affiche rien
+   (« au plus une » l'aurait laissé passer — corrigé au tour d'attaque), ou s'il relâche alors
+   qu'il restait quelque chose.*
+3. **Le relâchement se déclenche, et il se lit.** Profil `sans gluten + sans lait`,
+   `Léger + Chaud + Sucré` — **0 recette** au déjeuner comme au dîner. La liste rendue est **non
+   vide** (**2** au déjeuner, **3** au dîner), et l'écran porte une phrase **au modèle de la 79** :
+   « Aucun plat [demande] — voici des plats [ce qui tient encore] ». Avant « voici », elle nomme les
+   trois pôles demandés ; après « voici », elle nomme « chauds » et « sucrés », et **ni « léger » ni
+   « consistant »**. ⛔ **Cette phrase est portée par un `role="status"`, et
+   pas par une `<p>` muette** — elle apparaît APRÈS coup, en réponse à un geste, et un lecteur
+   d'écran doit l'entendre ; c'est l'idiome déjà posé cinq fois dans l'interface
+   (`mesure-montage.tsx`, `visite.tsx`, `main.tsx`), pas une invention du test. Elle est **hors de
+   tout bouton** : la borne (b) demande une information, pas une commande de plus. ▶ *Faux si la
+   liste est vide, si rien n'est écrit, si la phrase ne suit pas le modèle, si elle nomme après
+   « voici » l'axe lâché, si elle est enfermée dans un bouton, ou si elle est
+   posée sans région annoncée — c'est la borne (b) de la 79 : « aucun plat hors filtre n'est rendu
+   en silence ».*
+4. ⭐ **Un seul cran, et c'est le PREMIER DE L'ORDRE, pas le plus rentable.** Même profil,
+   `Consistant + Froid + Sucré` — **0 recette** aux deux créneaux. La phrase, au même modèle, nomme
+   après « voici » « froids » et « sucrés », et **ni « consistant » ni « léger »** ; tout plat affiché est **encore**
+   `axe_chaud_froid < 0` ET `axe_sucre_sale > 0` ; la liste compte **4** plats au déjeuner et **5**
+   au dîner. ▶ *Faux si l'implémentation lâche l'axe le plus rentable — lâcher `sucreSale` rendrait
+   **7** plats contre 4 —, si elle lâche le dernier de la liste, si elle en lâche deux d'un coup,
+   ou si elle lâche `chaudFroid` (qui n'en rendrait qu'**1**). Les trois chemins faux rendent trois
+   nombres différents de 4 : le compte suffit à les séparer.*
+   ⛔ **Corrigé au tour d'attaque du 2026-09-10.** La première écriture exigeait que la phrase ne
+   contienne **ni « froid » ni « sucré »**, nulle part. Or l'exemple même de la 79, « aucun plat
+   chaud et léger — voici des plats chauds », nomme l'axe **gardé** : la clause contredisait la
+   décision qu'elle scelle. Le modèle en deux moitiés la remplace, et c'est lui qui tue la phrase
+   constante — les clauses 3 et 4 gardent les deux pôles **opposés** de `chaudFroid`.
+
+**4 bis.** ⭐ **Quand un cran ne suffit pas, l'écran en lâche un second — dans l'ordre.** Profil
+   **fruits à coque + gluten + sulfites**, déjeuner, `Consistant + Chaud + Sucré` : **0 recette**, et
+   **0 encore** après avoir lâché `legerConsistant`. La liste compte **4** plats, tous
+   `axe_sucre_sale > 0`, aucun porteur de l'un des trois allergènes (traces comprises) ; la phrase
+   nomme la demande entière avant « voici », et après « voici » **« sucrés » seul** — ni
+   léger/consistant, ni chaud/froid. ▶ *Faux si la boucle s'arrête après un cran (liste vide), si
+   elle lâche `sucreSale` (64 recettes, donc douze cartes), si elle lâche aussi `sucreSale` après
+   les deux autres, ou si la phrase nomme après « voici » un axe lâché.* ⚠️ Au dîner, le même profil
+   ne demande qu'un cran : la clause porte sur le déjeuner seul.
+
+5. **La sécurité ne se relâche JAMAIS.** Dans les clauses 3 et 4, **aucun** plat affiché ne
+   porte de gluten ni de lait, vérifié par jointure `recipe_ingredient × food_allergen` sur le
+   catalogue, **traces comprises** — le même critère que la couche de production. ▶ *Faux au
+   premier plat porteur. C'est la borne (a) de la 79, principe 1.*
+6. **Rien d'autre ne bouge, et surtout pas en silence.** Trois faits distincts, séparés parce
+   qu'un seul d'entre eux est une garde et que mêler une garde à un défaut rend leurs échecs
+   illisibles :
+   - **6a — l'écran se tait quand rien n'était vide.** Sur les **huit** combinaisons du profil sans
+     contrainte au déjeuner, dont aucune n'est vide, **l'écran ne porte AUCUN `role="status"`**.
+     ⚠️ **Verte aujourd'hui** : l'écran n'annonce rien du tout. ▶ *Faux si une phrase apparaît
+     alors qu'il restait des plats — la 79 armée à tort, et la 71 prise à l'envers : exactement le
+     défaut signalé sur téléphone, « les filtres ne marchent pas ??? chaud = salade ».*
+   - **6b — les huit combinaisons rendent zéro intrus.** La clause 1 mesure la case à 11 recettes,
+     la 2 celle à 1 ; celle-ci étend le contrôle aux huit. ⚠️ **Une seule des huit passera par
+     abondance avant tout code — `Consistant + Chaud + Salé`, qui porte 124 des 194 recettes du
+     créneau** : les douze premières y tombent du bon côté sans qu'aucun filtre existe. C'est
+     mesuré, déclaré dans l'en-tête du fichier de tests, et c'est le rappel que **seules les cases
+     pauvres discriminent**. ▶ *Faux au premier plat du mauvais côté d'un axe demandé.*
+   - **6c — le registre.** `craving` est toujours une couche de **score**, la passe d'exclusion
+     compte désormais **8** couches, et les sept existantes gardent leur ordre et leur nom. Les
+     quatre commandes qui font foi sont vertes. ▶ *Faux si `craving` migre en exclusion — alors
+     `assertScoringLayersNeverExclude` (`guards/index.ts:118`) lève, et c'est un garde-fou de
+     sécurité qui ne se contourne pas pour un confort d'ergonomie.*
+7. ⭐ **C'est le moteur qui retire, pas l'écran après coup.** `suggestMeals` appelé **seul**, sans
+   écran monté — profil sans contrainte, déjeuner, `context.envie` = `Consistant + Froid + Salé`,
+   `limit: 500` — rend **exactement les 11** recettes que le SQL désigne, et aucune autre.
+   Aujourd'hui il en rend **194**, dont **183** intrus. Aucune des 11 n'est un plat simple
+   (mesuré) : le filtre `estPlatSimple` de l'écran ne peut pas brouiller la mesure. ▶ *Faux si le
+   filtre vit dans l'écran — un `.filter` après `suggestMeals`, à côté de celui qui écarte déjà les
+   plats simples (`aujourdhui.tsx:273-276`) — pendant qu'une 8ᵉ couche vide gonfle le registre à
+   huit. C'est la triche exhibée au tour d'attaque : les clauses 1 à 6 la laissaient passer, parce
+   qu'elles ne regardent que l'écran et que 6c ne lit que la forme du registre.*
+
+⚠️ **Les comptes 11, 1, 2, 3, 4, 5, 7, 64 et 194 sont ceux du catalogue du 2026-09-09** (339 recettes,
+déjeuner 194, dîner 250), remesurés par le moteur le 2026-09-10. Ils bougeront si le catalogue bouge. **Un compte qui bougera est signalé,
+il n'est pas retiré** — l'en-tête du fichier de tests le déclare.
+
+#### Ce que le lot NE TOUCHE PAS
+
+- **Le plan de semaine.** `planWeek` ne reçoit pas d'envie et n'en recevra pas : *Aujourd'hui =
+  envie, Semaine = équilibre* (décision 71). Aucune ligne de `planning/` n'est concernée.
+- **`craving`** — la couche de score, ses poids, `DEFAULT_MMR_LAMBDA`, l'archétype. Le classement
+  à l'intérieur de la liste filtrée reste exactement celui d'aujourd'hui.
+- **Les sept couches d'exclusion existantes**, leur ordre, leurs motifs, et le motif de case vide
+  livré par `retour-5b`.
+- **Le catalogue.** Aucun fichier YAML, aucune régénération de `catalog.db`. Les axes sensoriels
+  des 339 recettes sont pris tels quels, y compris les **14** recettes sucrées du déjeuner qui
+  fabriquent presque toutes les cases vides.
+- **`user.db` et son schéma.** L'envie n'est pas persistée — elle vit dans l'état de l'écran. Pas
+  de migration, `USER_SCHEMA_VERSION` reste à **19**.
+- **Le sélecteur de créneau et l'horloge** (`retour-5d`, décision 82 fermée).
+
+#### Les témoins d'avant — pris le 2026-09-09 à 23 h 26, `HEAD` = `812bc57`
+
+| Témoin | Avant `retour-6` | Avec le fichier de tests scellé |
+|---|---|---|
+| `npm test` | **2 535 passed / 0 failed**, 132 fichiers | **2 548 passed / 15 failed** (2 563 tests, 133 fichiers), 60,9 s — après le tour d'attaque (2026-09-10) : **2 549 passed / 17 failed** (2 566 tests, 133 fichiers), 65,3 s |
+| `npm run typecheck` | propre | propre (idem le 2026-09-10) |
+| `npx vite build` | ✓ | ✓ 2,50 s — 2,52 s le 2026-09-10 |
+| `npm run engine:plan-stress` | 20/20 | 20/20 (idem le 2026-09-10) |
+| `node catalog/build.mjs` | **hors périmètre** — le lot ne touche pas au catalogue | non relancé |
+
+⛔ **LE RELEVÉ DE `CLAUDE.md` ÉTAIT PÉRIMÉ DE 16 TESTS ET D'UN FICHIER** : il annonce
+**2 519 / 131 fichiers** au 2026-09-09 à 19 h 47 (`bb79e04`), pris **avant** la livraison de
+`retour-5b`, qui a ajouté `tests/scelles/retour-5b.test.tsx` (`d1f11ff`). L'écart est attribué par
+`git log --name-only bb79e04..HEAD`, pas par déduction. **La ligne de `CLAUDE.md` reste à corriger
+au `/fin` du lot.**
+
+⚠️ **`retour-6` est en `.tsx`, pas en `.ts`** comme le gabarit du brief l'écrit : le fichier monte
+l'écran Aujourd'hui, il porte donc du JSX. Même choix que `retour-1`, `retour-3`, `retour-5b`
+et `retour-5d`.
+
+⛔ **Sortie rouge après le tour d'attaque (2026-09-10) : 17 échecs sur 31, et les 14 verts sont
+déclarés.** Les 17 rouges se répartissent en clause 1 (1), clause 2 (2), clause 3 (2), clause 4 (2),
+clause 4 bis (1), clause 6b (7 des 8), clause 6c (1) et clause 7 (1). Les 14 verts : clause 0
+(3 témoins de catalogue, dont celui du profil à deux crans), clause 5 (2 gardes de sécurité),
+clause 6a (8 gardes de silence) et **le vert parasite mesuré de la clause 6b**
+(`Consistant + Chaud + Salé`). Aucun rouge hors de ce fichier. Aucune ligne de production n'existe
+encore. *(Relevé du brief initial, 2026-09-09 : 15 échecs sur 28.)*
+
+#### Ce qui était ouvert — tranché par l'auteur le 2026-09-10
+
+✅ **Le déclencheur du relâchement est « vide »**, la lettre de la 79 (« jusqu'à ce que la liste
+cesse d'être **vide** »), pas « moins de douze ». Conséquence assumée : un utilisateur sans allergie
+ni régime n'entend **jamais** de phrase de relâchement, et peut voir une carte unique
+(`Consistant + Froid + Sucré` → « Roquefort, poire et noix »). La clause 2 le scelle tel quel :
+**celle-là, et pas de phrase**. Relever le seuil serait une modification de la 79, donc un lot
+séparé — pas une retouche de celui-ci.
+
+#### Tour d'attaque n° 1 — 2026-09-10 · il en reste un
+
+Le critique a exhibé **deux implémentations fausses qui passaient tous les tests** : le brief est
+rouvert, une fois.
+
+| Trouvé | Pourquoi ça passait | Corrigé par |
+|---|---|---|
+| **Triche A** — le filtre vit dans l'écran, la 8ᵉ couche ne fait rien | 6c ne lit que la forme du registre ; aucune clause n'appelle le moteur sans l'écran | **clause 7** |
+| **Triche B** — un cran, jamais deux | « aucune ne descend à deux crans » n'était vrai que sur les quatre profils du tableau | **clause 4 bis**, fait 1 corrigé, témoin de la clause 0 étendu (0 → 0 → 4, chemin faux 64) |
+| La clause 2 acceptait une liste **vide** sans phrase (« au plus une ») | `≤ 1` accepte 0 | clause 2 exige **exactement** « Roquefort, poire et noix » |
+| La clause 4 **contredisait la 79** (« froid » et « sucré » interdits dans toute la phrase) — vu en corrigeant, pas par le critique | l'exemple de la 79 nomme l'axe gardé | modèle « Aucun plat [demande] — voici des plats [ce qui tient] », lu en deux moitiés — clauses 3, 4, 4 bis |
+
+Laissé hors du lot, **sans rouvrir** : les balayages 6a et 6b ne couvrent que le déjeuner. Du
+périmètre en plus, porté en dette (`ETAT.md` §8).
+
+#### Livraison — 2026-09-10 à 17 h 44, arbre non commité sur `HEAD` = `812bc57`
+
+**Montage.** Une 8ᵉ couche d'exclusion `envie` (`engine/selection/envie.ts`), placée après
+`favoris` : signe strict, inerte sans envie ou sur un axe à 0, motif « pas <pôle> » nommant le
+premier axe non tenu dans l'ordre 79. Le relâchement vit dans l'écran (`aujourdhui.tsx`) : il
+redemande au moteur en retirant les axes **cumulativement**, `legerConsistant` → `chaudFroid` →
+`sucreSale`, **tant que** la liste est vide, et pose la phrase sous `role="status"`. Si tout est
+lâché et que rien ne vient, l'écran retombe sur ce qu'il faisait avant (erreur du moteur ou case
+vide), sans phrase.
+
+| Témoin | Scellé, avant code | Livré |
+|---|---|---|
+| `tests/scelles/retour-6.test.tsx` | 14 passed / 17 failed (31) | **31 passed / 0 failed** |
+| `npm test` | 2 549 passed / 17 failed (2 566 tests, 133 fichiers) | **2 569 passed / 0 failed (2 569 tests, 134 fichiers)**, 55,6 s |
+| `npm run typecheck` | propre | propre |
+| `npx vite build` | ✓ 2,52 s | ✓ 2,63 s |
+| `npm run engine:plan-stress` | 20/20 | 20/20 |
+
+**Écart de compte attribué** : +3 tests et +1 fichier = `engine/selection/envie.test.ts` (inertie,
+signe strict, ordre du motif — ce que le catalogue réel ne montre pas). Aucun autre fichier de test
+ajouté.
+
+**Écarts entre le brief et le diff — à lire.**
+- ⚠️ **L'introduction de cette section et l'en-tête du fichier scellé disent encore « l'écran lâche
+  UN axe » et « nomme celui qu'il a lâché ».** Le « Fini quand » corrigé au tour d'attaque dit
+  l'inverse — plusieurs crans (4 bis), phrase qui nomme ce qui **tient** (3, 4) — et c'est lui que le
+  code suit. Le texte scellé n'est pas retouché : décision de l'auteur.
+- **« Ne touche pas le motif de case vide de `retour-5b` »** : une phrase `aucune_recette:envie` y
+  est ajoutée, imposée par le type (chaque couche d'exclusion doit en avoir une). Elle est
+  **inatteignable** : un plan de semaine ne porte pas d'envie.
+- **Le registre passe à 20, pas à 19.** Les documents du moteur annonçaient 18 (7 + 11) ; le code en
+  portait déjà 19 (7 + 12) depuis `piquant`, décision 35. Deux tests unitaires non scellés qui
+  comptent le registre (`api/index.test.ts`, `scoring-layers.test.ts`) passent de 19 à 20 ; les
+  documents du moteur sont réalignés sur 20 (8 + 12).
+
+**Ce qu'aucun test ne démontre.** La phrase de dernier recours « voici d'autres plats » (les trois
+axes lâchés, liste non vide) ; l'issue « tout lâché, toujours vide » ; les plats proches, calculés
+sur la requête relâchée. Porté en dette (`ETAT.md` §8). **Aucune relecture indépendante** : les
+agents de relecture étaient introuvables à la livraison.
+
+
+---
+
 ### Les lots suivants — non ouverts
 
 Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETAT.md` §4) :
@@ -2904,11 +3168,11 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 | `retour-3` | « je mange dehors » étiquette le créneau (décision 76) | ✅ **LIVRÉ le 2026-08-22** — section ci-dessus |
 | `retour-4` | l'action « les restes de… » et le décalage émergent (décision 78) | ✅ **LIVRÉ le 2026-08-26** (`7642492`) — section ci-dessus |
 | `retour-5` | la catégorie « plat simple » au catalogue (décision 72) | ✅ **LIVRÉ** — codé le 2026-08-27 (24/24 clauses), commité le 2026-09-06 (`d0dd712`), clôturé le 2026-09-09 · ⛔ **l'arbre reste rouge**, 10 compteurs pour `retour-5c` |
-| `retour-5b` | la case vide dit **pourquoi** elle est vide (décision de l'auteur, 2026-08-26) | **`retour-5`** — ⏳ **BRIEF ÉCRIT le 2026-09-09, ATTAQUÉ UNE FOIS, CORRIGÉ, TOUJOURS NON SCELLÉ** — section ci-dessus · ⛔ **le diagnostic d'août est périmé** : il annonçait deux causes, il y en a **trois**, et celle qui tombe sur la configuration de référence est celle que **`retour-5` a créée le 2026-08-27** — elle **masque** la deuxième · ⛔ **VERDICT DU CRITIQUE : « NE TIENT PAS »** — implémentation fausse exhibée, passant les 12 clauses d'alors en devinant la cause sur la **forme de la demande** (`diet`, puis un seuil sur `excludedFoodIds.length`) **sans jamais lire `RejectionSummary.byLayer`** · ✅ **CORRIGÉ EN UN TOUR** : un **oracle indépendant** qui recalcule la cause de chaque case vide depuis `byLayer` et les suggestions rendues, **dix** configurations au lieu de trois, dont **E qui porte deux causes dans une seule demande** · **16 clauses**, `tests/scelles/retour-5b.test.tsx` **rouge 14 sur 16** (les 2 vertes sont des gardes déclarées) · ✅ **migration `user.db` v18 → v19 VALIDÉE par l'auteur le 2026-09-09**, `CHECK` rendu **symétrique** + ligne de rattrapage `indetermine`, sous témoin exécuté (clause 9 bis) · ⏳ **dette : 3 des 7 couches de `EXCLUSION_LAYERS` exercées** |
+| `retour-5b` | la case vide dit **pourquoi** elle est vide (décision de l'auteur, 2026-08-26) | **`retour-5`** — ✅ **LIVRÉ le 2026-09-09** (`d1f11ff`, poussé) — section ci-dessus : **16 clauses sur 16 vertes**, arbre entier à 2 535 verts · ⛔ **LA v19 N'A PAS LA FORME DU BRIEF** : SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES, la table est donc **reconstruite** (motif de la v2) · ⛔ **trois clauses scellées d'anciens lots figeaient `USER_SCHEMA_VERSION` en valeur absolue** (`retour-2` 7, `retour-3` 8, `retour-4` 10), corrigées sur décision de l'auteur · ⛔ **le diagnostic d'août est périmé** : il annonçait deux causes, il y en a **trois**, et celle qui tombe sur la configuration de référence est celle que **`retour-5` a créée le 2026-08-27** — elle **masque** la deuxième · ⛔ **VERDICT DU CRITIQUE : « NE TIENT PAS »** — implémentation fausse exhibée, passant les 12 clauses d'alors en devinant la cause sur la **forme de la demande** (`diet`, puis un seuil sur `excludedFoodIds.length`) **sans jamais lire `RejectionSummary.byLayer`** · ✅ **CORRIGÉ EN UN TOUR** : un **oracle indépendant** qui recalcule la cause de chaque case vide depuis `byLayer` et les suggestions rendues, **dix** configurations au lieu de trois, dont **E qui porte deux causes dans une seule demande** · **16 clauses**, `tests/scelles/retour-5b.test.tsx` **rouge 14 sur 16** (les 2 vertes sont des gardes déclarées) · ✅ **migration `user.db` v18 → v19 VALIDÉE par l'auteur le 2026-09-09**, `CHECK` rendu **symétrique** + ligne de rattrapage `indetermine`, sous témoin exécuté (clause 9 bis) · ⏳ **dette : 3 des 7 couches de `EXCLUSION_LAYERS` exercées** |
 | `retour-5c` | rebaser les **onze** valeurs scellées que les neuf bases nues font mentir (décision de l'auteur, 2026-08-27) | **`retour-5`** — ✅ **LIVRÉ le 2026-09-09** (`3e56937`, poussé) — section ci-dessus · les 11 valeurs et 27 lignes de prose et de titres rebasées dans les 6 fichiers · ⚠️ **10 rouges éteints sur 11** : le onzième n'était pas un compteur, il est renvoyé à `retour-5d` · ⛔ le brief annonçait l'arbre vert, il ne l'est pas — clause 6 réécrite une seconde fois à la clôture |
 | `retour-5d` | trancher le sort de la clause « 6 froides sur 10 » de `retour-1` | **`retour-5`** — ✅ **LIVRÉ le 2026-09-09** (`157bf45`) — section ci-dessus : **14 clauses sur 14 vertes**, `retour-1` passe de **9 à 11** clauses, **aucune ligne de production touchée** · ✅ **LA CAUSE ÉTAIT L'HEURE DE LA MACHINE** : l'écran déduit son créneau de `new Date().getHours()`, bascule à **14 h** ; les relevés d'août l'attribuaient à la croissance du catalogue **sans contrôler l'heure** · **PISTE (d) APPLIQUÉE** : le test épingle sa pastille par `aria-pressed`, fige l'horloge et vérifie le titre affiché avant de collecter · les **deux** repas sont mesurés, **plancher « Froid » à 0,9 aux DEUX**, re-mesuré après `retour-5e` — 12/12 à midi, 12/12 le soir, contre 7/12 au brief · ⛔ **`retour-5c` a rougi comme son en-tête l'annonçait**, empreinte rebasée sur décision de l'auteur · décision **82 FERMÉE le 2026-09-09** |
 | `retour-5e` | rendre le dîner aux 36 recettes froides que `types_repas` en exclut | ✅ **LIVRÉ le 2026-09-09** (`80b29ec`, poussé) — ✅ **DÉFAUT MESURÉ le 2026-09-09** en écrivant `retour-5d` : le dîner ne compte que **8 froides sur 214 (3,7 %)** contre 44 sur 194 au déjeuner ; hors plats du matin, **83,7 % des froides du déjeuner** sont barrées du dîner contre **1,4 % des chaudes**. Le moteur remonte 7 des 8 qui existent — il vide le rayon, il ne classe pas mal · ✅ **LIVRÉ le 2026-09-09 à 17 h 20** — section ci-dessus : **10 clauses sur 10 vertes**, 36 fichiers YAML, **une ligne chacun**, `catalog.db` régénéré, **aucune ligne de code de production** · le dîner passe de **214 à 250 recettes** et de **8 froides (3,7 %) à 44 (17,6 %)** · ⛔ **UN TOUR D'ATTAQUE A ÉTÉ PAYÉ** : le critique a exhibé une implémentation fausse passant 9 clauses sur 9 (patch SQL direct de `catalog.db` + `# diner` en commentaire dans le YAML) — base reconstruite depuis les sources, YAML analysé au lieu d'être cherché, clause 10 neuve qui apparie base livrée et sources · ⭐ **EFFET DE BORD MESURÉ : la clause « 6 froides sur 10 » de `retour-1` redevient VERTE à 17 h** — le rouge mesurait le rayon vide · un seul rebasage, `tests/exclusion-real-catalog.test.ts`, témoin dérivé au lieu d'un identifiant en dur |
-| `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | **`retour-1`** — ✅ **décision 79 TRANCHÉE le 2026-09-09** : relâcher l'axe le plus général et le dire |
+| `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | ✅ **LIVRÉ le 2026-09-10** (non commité) — section ci-dessus : **31 clauses sur 31 vertes**, arbre entier à 2 569 verts, 8ᵉ couche d'exclusion `envie`, relâchement cumulatif « tant que vide » dans l'écran · ⛔ l'introduction du brief et l'en-tête scellé disent encore « UN axe » · *historique :* **`retour-1`** — blocage LEVÉ (`retour-5e`) · ✅ **décision 79 TRANCHÉE le 2026-09-09** · ⏳ **BRIEF ÉCRIT le 2026-09-09, PAS SCELLÉ** — section ci-dessus : « Fini quand » en 6 clauses, mesuré 4 profils × 2 créneaux × 8 combinaisons contre `catalog.db` réel (**10 cases vides sur 64, toutes rendues non vides par UN seul relâchement**) · ⏳ **TESTS D'ACCEPTATION ÉCRITS le 2026-09-09 à 23 h 26** — `tests/scelles/retour-6.test.tsx`, **28 tests, 15 ROUGES**, les 13 verts déclarés en en-tête (2 témoins de catalogue, 2 gardes d'allergène, 8 gardes de silence, 1 vert parasite mesuré) · **oracle SQL indépendant du moteur**, les deux chemins confrontés en écrivant le brief · ⛔ **une question ouverte pour l'auteur : « vide » ou « moins de douze » ?** |
 | `retour-7` | le frigo ne vaut plus que pour un repas (décision 74) | **décision 80** |
 | `retour-8` | effacer un repas passé (décision 75) | le sort des restes orphelins |
 

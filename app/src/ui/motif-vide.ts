@@ -43,6 +43,9 @@ const PHRASES: Readonly<Record<MotifVide, string>> = {
   'aucune_recette:temps': 'Aucune recette de ce repas ne tient dans le temps disponible.',
   'aucune_recette:equipement': 'Aucune recette de ce repas ne se fait avec l’équipement déclaré.',
   'aucune_recette:favoris': 'Aucun de vos favoris ne convient à ce repas.',
+  // ⚠️ INATTEIGNABLE AUJOURD'HUI : un plan de semaine ne porte pas d'envie. La clé existe parce que
+  // le type la fabrique à partir du registre ; la phrase reste au constat si un geste l'y portait.
+  'aucune_recette:envie': 'Aucune recette de ce repas ne correspond à l’envie indiquée.',
   aucune_recette: 'Aucune recette disponible pour ce repas.',
 
   // --- Cause 2 : le vivier était bon, il est déjà servi -----------------------------------------

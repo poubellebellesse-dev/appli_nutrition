@@ -83,6 +83,7 @@ const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
   temps: 'temps',
   equipement: 'équipement',
   favoris: 'favoris',
+  envie: 'envie',
 }
 
 /** Les quatre facettes filtrables — celles qu'il faut compter dynamiquement. Service et envergure

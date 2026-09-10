@@ -85,7 +85,8 @@ export const LAYERS: readonly SelectionLayer[] = [
   requiredFoodLayer,      // miroir dur — MealContext.requiredFoodIds, contexte Aujourd'hui seulement
   timeLayer,
   equipmentLayer,    // seulement l'équipement `requis`
-  favoriteLayer,     // inerte hors `onlyFavorites` — motif le moins informatif, donc en DERNIER
+  favoriteLayer,     // inerte hors `onlyFavorites` — motif peu informatif
+  envieLayer,        // inerte sans pastille d'envie (décision 71) — motif le moins informatif, donc en DERNIER
 
   // — score —
   nutriLayer,        // 0.25
@@ -102,7 +103,7 @@ export const LAYERS: readonly SelectionLayer[] = [
 ]
 ```
 
-**18 couches au registre (7 exclusion + 11 score), dont `topic` (v2) et `cost` (v3) en réserve à
+**20 couches au registre (8 exclusion + 12 score), dont `topic` (v2) et `cost` (v3) en réserve à
 poids nul — mais six couches de score réellement actives au premier lancement** : `topic`,
 `cost`, `habit` et `speed` démarrent à 0, `occasion` est nul hors période. La complexité perçue
 n'augmente pas avec le nombre de couches.
@@ -129,6 +130,15 @@ n'augmente pas avec le nombre de couches.
 > initial : en faire une couche fait tomber son motif de rejet dans `RejectionSummary`, donc dans
 > l'entonnoir du banc d'essai. Couche INERTE tant qu'`onlyFavorites` n'est pas explicitement levé
 > — les favoris restent un marque-page, conformément à §10.1. Le code fait foi.
+> Mise à jour (2026-09-10, lot `retour-6`, décision 71) : une 8ᵉ couche d'exclusion `envie` (lit
+> `MealContext.envie`) a été ajoutée après `favoris` — le registre est désormais à **20**
+> (8 exclusion + 12 score ; la 12ᵉ couche de score, `piquant`, décision 35, n'avait jamais été
+> reportée ici — le code et `scoring-layers.test.ts` la comptaient déjà). Les pastilles d'envie RETIRENT les plats du mauvais côté d'un axe
+> demandé (signe strict, un axe à 0 n'est d'aucun côté). `craving` reste une couche de SCORE et
+> classe à l'intérieur de ce qui reste : `assertScoringLayersNeverExclude` n'est pas contourné.
+> La couche ne relâche rien — quand la pile ne laisse aucun plat, lâcher un axe (décision 79) est
+> un geste de l'écran Aujourd'hui, annoncé. Inerte hors Aujourd'hui (un plan de semaine ne porte
+> pas d'envie). Le code fait foi.
 
 #### 6.3 ter — Chaîne d'inclusion des régimes (couche `regime` 🔒) — **CODÉ (2026-07-26)**
 

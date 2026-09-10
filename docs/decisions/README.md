@@ -8,7 +8,7 @@
 |---|---|---|
 | [01-produit-architecture.md](./01-produit-architecture.md) | Local, sans IA, sans compte, PWA | §3 |
 | [02-sante.md](./02-sante.md) | Le choix structurant : aucune collecte de santé, évictions par régime déclaré, allergènes sourcés | §3 |
-| [03-moteur.md](./03-moteur.md) | Registre à 18 couches, garde-fous, poids, mesures | §3 |
+| [03-moteur.md](./03-moteur.md) | Registre à 20 couches, garde-fous, poids, mesures | §3 |
 | [04-design.md](./04-design.md) | Écrans, parcours, jetons, accessibilité, mode cuisine | §3 |
 | [05-media-stockage-modele.md](./05-media-stockage-modele.md) | Photos, clips, cache, `user.db`, OPFS, schéma | §3 |
 | [06-communaute-contenu.md](./06-communaute-contenu.md) | Partage sans serveur, contenu Savoir | §3 |

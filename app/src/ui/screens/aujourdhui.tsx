@@ -34,7 +34,7 @@ import type {
   SuggestionRequest,
   WeekPlan,
 } from '../../engine/domain/index.js'
-import { min } from '../../engine/domain/index.js'
+import { NoViableRecipeError, min } from '../../engine/domain/index.js'
 import {
   readDisplay,
   readLatestPlan,
@@ -119,6 +119,62 @@ const AXES_ENVIE: readonly {
   { cle: 'sucreSale', question: 'Salé ou sucré ?', bas: 'Salé', haut: 'Sucré' },
 ]
 
+/** Chaque pôle en adjectif, au singulier (« aucun plat froid ») puis au pluriel (« des plats froids »). */
+const ADJECTIFS: Readonly<
+  Record<keyof CravingAxes, { readonly bas: readonly [string, string]; readonly haut: readonly [string, string] }>
+> = {
+  legerConsistant: { bas: ['léger', 'légers'], haut: ['consistant', 'consistants'] },
+  chaudFroid: { bas: ['froid', 'froids'], haut: ['chaud', 'chauds'] },
+  sucreSale: { bas: ['salé', 'salés'], haut: ['sucré', 'sucrés'] },
+}
+
+/**
+ * Les envies à essayer quand la pile ne laisse aucun plat (décision 79) : la demande entière, puis un
+ * axe de moins à chaque cran, CUMULATIVEMENT, dans l'ordre d'`AXES_ENVIE`.
+ *
+ * ⛔ L'ORDRE EST CELUI DE LA 79, PAS CELUI QUI RAPPORTE LE PLUS. Lâcher l'axe qui rend la liste la
+ * plus longue est le réflexe naturel ; il donne des listes plus longues et il contredit la décision.
+ * ⚠️ Un axe non demandé ne coûte pas de cran : relancer sans lui rendrait la même liste vide.
+ */
+function cransDEnvie(envie: CravingAxes | null): readonly (CravingAxes | null)[] {
+  if (envie === null) return [null]
+  const crans: CravingAxes[] = [envie]
+  let courante = envie
+  for (const { cle } of AXES_ENVIE) {
+    if (courante[cle] === null) continue
+    courante = { ...courante, [cle]: null }
+    crans.push(courante)
+  }
+  return crans
+}
+
+function enumerer(mots: readonly string[]): string {
+  if (mots.length <= 1) return mots.join('')
+  return `${mots.slice(0, -1).join(', ')} et ${mots[mots.length - 1]}`
+}
+
+function adjectifsDe(envie: CravingAxes | null, nombre: 0 | 1): readonly string[] {
+  if (envie === null) return []
+  return AXES_ENVIE.flatMap(({ cle }) => {
+    const valeur = envie[cle]
+    if (valeur === null || valeur === 0) return []
+    return [ADJECTIFS[cle][valeur > 0 ? 'haut' : 'bas'][nombre]]
+  })
+}
+
+/**
+ * « Aucun plat [demande] — voici des plats [ce qui tient encore] » — le modèle de la décision 79.
+ *
+ * ⚠️ APRÈS « voici », LES AXES GARDÉS ET EUX SEULS. Un axe lâché n'y figure sous aucun de ses deux
+ * pôles : « voici des plats froids » pour une demande « chaud » ferait croire à un contresens. Une
+ * phrase constante (« nous avons élargi la recherche ») ne nommerait rien de ce qui a changé.
+ */
+function phraseDeRelachement(demande: CravingAxes, tenue: CravingAxes | null): string {
+  const gardes = adjectifsDe(tenue, 1)
+  const suite = gardes.length === 0 ? "voici d'autres plats" : `voici des plats ${enumerer(gardes)}`
+  return `Aucun plat ${enumerer(adjectifsDe(demande, 0))} — ${suite}.`
+}
+
 /** Est-on samedi ou dimanche ? `getUTCDay` : une date de plan est un JOUR, pas un instant. */
 function estWeekend(isoDate: string): boolean {
   const jour = new Date(`${isoDate}T00:00:00Z`).getUTCDay()
@@ -191,6 +247,8 @@ function surLeCreneau(entree: MealPlanEntry, slot: SlotRef): boolean {
 
 interface Vue {
   readonly suggestions: readonly ScoredSuggestion[]
+  /** La phrase qui dit quel axe d'envie a été lâché (décision 79), ou `null` si rien ne l'a été. */
+  readonly annonce: string | null
   readonly nomDe: (id: string) => string
   /** Le chemin de la photo d'un plat, ou `null` s'il n'en a pas. Même forme que `nomDe` exprès : ce
    *  sont les deux seules choses que l'écran demande au catalogue à partir d'un identifiant. */
@@ -260,20 +318,46 @@ async function calculerVue(
     if (recette.estPlatSimple) margePlatsSimples++
   }
 
-  const requete = construireRequete(
-    etat,
-    profil,
-    date,
-    creneau,
-    minutes === null ? null : min(minutes),
-    reglages.envie,
-    graine,
-    margePlatsSimples
-  )
-  const suggestions = socle.moteur
-    .suggestMeals(requete)
-    .suggestions.filter((suggestion) => !estPlatSimple(suggestion.recipeId))
-    .slice(0, PROFONDEUR)
+  const tirer = (
+    requete: SuggestionRequest
+  ): { readonly suggestions: readonly ScoredSuggestion[]; readonly echec: NoViableRecipeError | null } => {
+    try {
+      const suggestions = socle.moteur
+        .suggestMeals(requete)
+        .suggestions.filter((suggestion) => !estPlatSimple(suggestion.recipeId))
+        .slice(0, PROFONDEUR)
+      return { suggestions, echec: null }
+    } catch (erreur) {
+      if (erreur instanceof NoViableRecipeError) return { suggestions: [], echec: erreur }
+      throw erreur
+    }
+  }
+
+  // ⛔ LES PASTILLES RETIRENT (couche `envie`, décision 71), DONC LA PILE PEUT NE RIEN LAISSER — et
+  // l'écran ne rend jamais ce vide en silence (décision 79). On lâche UN axe, le premier de l'ordre,
+  // et on recommence TANT QUE c'est vide. Chaque cran est une requête entière au moteur : c'est lui
+  // qui filtre, jamais cet écran après coup.
+  // ⚠️ SEULS LES AXES D'ENVIE SE LÂCHENT. Allergènes, régime, exclusions et temps sont repris
+  // identiques à chaque cran (borne (a) de la 79).
+  // ⚠️ LE DÉCLENCHEUR EST LE VIDE, PAS UNE LISTE COURTE. Un seul plat qui tient toute la demande se
+  // montre seul, sans annonce.
+  const crans = cransDEnvie(reglages.envie)
+  const temps = minutes === null ? null : min(minutes)
+  let cran = 0
+  let requete = construireRequete(etat, profil, date, creneau, temps, crans[0]!, graine, margePlatsSimples)
+  let tirage = tirer(requete)
+  while (tirage.suggestions.length === 0 && cran < crans.length - 1) {
+    cran++
+    requete = construireRequete(etat, profil, date, creneau, temps, crans[cran]!, graine, margePlatsSimples)
+    tirage = tirer(requete)
+  }
+  // Tout lâché et toujours rien : l'envie n'y était pour rien. L'écran réagit comme avant ce lot.
+  if (tirage.echec !== null) throw tirage.echec
+  const suggestions = tirage.suggestions
+  const annonce =
+    cran > 0 && suggestions.length > 0 && reglages.envie !== null
+      ? phraseDeRelachement(reglages.envie, crans[cran]!)
+      : null
 
   // Mémorisation : `similarRecipes` repasse toute la passe d'exclusion, et l'écran le redemanderait
   // à chaque rendu de React sinon.
@@ -281,6 +365,7 @@ async function calculerVue(
 
   return {
     suggestions,
+    annonce,
     nomDe: (id) => socle.catalogue.recipes.get(id as never)?.nom ?? id,
     // `?? null` et non `?? ''` : l'absence de photo est un CAS, pas une chaîne vide à tester. C'est
     // ce `null` qui déclenche l'aplat, sur 201 des 330 recettes.
@@ -655,6 +740,14 @@ export function Aujourdhui() {
         />
       ) : (
         <>
+          {/* ⛔ UN AXE LÂCHÉ SE DIT (borne (b) de la décision 79). `role="status"` : la phrase arrive
+              en réponse à un geste, un lecteur d'écran doit l'entendre. Une information, pas une
+              commande — jamais dans un bouton. Rendue SEULEMENT quand un axe a été lâché. */}
+          {vue.annonce !== null && (
+            <p role="status" className="mt-4 text-courant leading-relaxed text-texte-doux">
+              {vue.annonce}
+            </p>
+          )}
           <CarteRepas
             suggestion={courante}
             nom={vue.nomDe(courante.recipeId)}
@@ -923,7 +1016,8 @@ function BoutonNavigation({
 // --- L'encart d'aide ------------------------------------------------------------------------------
 
 /**
- * « Dites-moi ce que vous cherchez » — alimente la couche `craving` (§4.1, §6.5 ENGINE).
+ * « Dites-moi ce que vous cherchez » — alimente la couche d'exclusion `envie` (décision 71) et la
+ * couche de score `craving` (§4.1, §6.5 ENGINE).
  *
  * ⚠️ CHAQUE PASTILLE PILOTE UN AXE RÉEL DE `CravingAxes`. Une pastille qui ne changerait aucune
  * suggestion serait pire qu'absente : elle donnerait le sentiment d'avoir été écouté sans l'être.

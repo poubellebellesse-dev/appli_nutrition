@@ -101,6 +101,7 @@ const EXCLUSION_LAYER_LABELS: Readonly<Record<ExclusionLayerId, string>> = {
   temps: 'temps',
   equipement: 'équipement',
   favoris: 'favoris',
+  envie: 'envie',
 }
 
 /** Libellés humains des couches de score effectivement implémentées (voir SCORING_LAYERS). */

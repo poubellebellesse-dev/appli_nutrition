@@ -4,7 +4,7 @@
 > Index : [README.md](./README.md) · questions numérotées : [registre.md](./registre.md).
 
 ## Moteur
-- **Registre de 18 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (le code
+- **Registre de 20 couches** à contrat commun (`SelectionLayer`), pas un pipeline figé (le code
   fait foi, voir `app/src/engine/domain/layer-ids.ts`). Une 5ᵉ couche d'exclusion `exclusions`
   (rejet perso, `excludedFoodIds`) a été ajoutée en session 2, une 6ᵉ couche `requis` (miroir
   dur, `MealContext.requiredFoodIds`) en session 3, puis `speed` a rejoint le registre comme 11ᵉ

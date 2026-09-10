@@ -18,7 +18,7 @@ dure, aucune donnée sans source) et le n° 6 : informer, jamais juger.
 
 ## 2. Ce qui est construit
 
-- **Moteur — complet.** Registre à 18 couches (7 exclusion + 11 score ; `occasion`, `topic`, `cost`
+- **Moteur — complet.** Registre à 20 couches (8 exclusion + 12 score ; `occasion`, `topic`, `cost`
   déclarées non codées). `suggestMeals` avec diversification MMR et explication, `suggestAlternatives`,
   `planWeek`, `rerollSlot`, `planLeftovers`, `buildShoppingList`, `scaleRecipe`, 5 garde-fous.
   Quatre défauts corrigés **par mesure** (ingrédient caractéristique, pondération de similarité,
@@ -35,7 +35,8 @@ dure, aucune donnée sans source) et le n° 6 : informer, jamais juger.
   socle d'accessibilité, routage par fragment, tutoriel qui traverse les menus.
 - **Chantiers livrés** (chacun a son `CONCEPTION_*.md`) : mode cuisine, photos, gestes illustrés
   (clips), invariant origine animale (66/66b/66c), réservation matériel (65a-c), régime personnalisé,
-  retours du test téléphone (`retour-1` → `retour-5`, `retour-5` clôturé le 2026-09-09).
+  retours du test téléphone (`retour-1` → `retour-6` ; `retour-6` livré le 2026-09-10, non commité :
+  les pastilles d'envie retirent les plats sur Aujourd'hui, et l'écran dit ce qu'il a lâché).
 
 ```
 Concept ✅ ─ Architecture ✅ ─ Moteur ✅ ─ Contenu ✅ ─ user.db ✅ ─ Design ✅ ─ 12 écrans ✅ ─▶ CONTENU & DISTRIBUTION ⬅ ICI
@@ -51,7 +52,8 @@ thème). Toute référence « `ETAT.md` §3 » antérieure pointe là.
 Questions numérotées 1 → 82, barrées quand fermées : [decisions/registre.md](./decisions/registre.md).
 **Ouvertes au 2026-09-09 : 2, 5, 6, 11, 52, 58, 65, 68, 70, 80 — dix**, comptées sur les numéros
 non barrés (72 barrées sur 82). **Deux** bloquent quelque chose : 65 (feux possédés), 68 (budget P6).
-✅ **La 79 est FERMÉE le 2026-09-09** : `retour-6` n'attend plus qu'une place dans la file.
+✅ **La 79 est FERMÉE le 2026-09-09** et codée par `retour-6` le 2026-09-10 ; déclencheur « vide »,
+tranché par l'auteur le même jour.
 ✅ **La 82 est FERMÉE le 2026-09-09**, sur la cause et sur la piste (d), livrée par `retour-5d` : la
 clause « 6 froides sur 10 » de `retour-1` dépendait de **l'heure de la machine** — l'écran déduit son
 créneau de `new Date().getHours()`, bascule à **14 h**, d'où **12/12 froides à 12 h** et **7/12 à
@@ -127,7 +129,9 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - `NUTRI_MIN_COVERAGE = 0,7` est un seuil de jugement, jamais calibré.
 - Marge de borne `+ margePlatsSimples` dans `planWeek`/`rerollSlot` : coût de calcul non mesuré (`plan-stress` n'a pas de budget de durée).
 - `recetteDepuisStockee` pose `estPlatSimple: false` en dur (choix : catégorie éditoriale).
-- Motif de case vide (`retour-5b`) : **trois couches d'exclusion sur sept** sont sous témoin exécuté (`allergenes`, `regime`, `exclusions`) ; les phrases `requis`, `temps`, `equipement`, `favoris` sont écrites et atteignables, **aucun test ne les exerce** — un libellé faux y passerait inaperçu.
+- Motif de case vide (`retour-5b`) : **trois couches d'exclusion sur huit** sont sous témoin exécuté (`allergenes`, `regime`, `exclusions`) ; les phrases `requis`, `temps`, `equipement`, `favoris` sont écrites et atteignables, **aucun test ne les exerce** — un libellé faux y passerait inaperçu ; celle d'`envie` (`retour-6`) est écrite et **inatteignable** (un plan de semaine ne porte pas d'envie).
+- Relâchement d'envie (`retour-6`) : la phrase de dernier recours « voici d'autres plats » (trois axes lâchés, liste non vide), l'issue « tout lâché, toujours vide » et les plats proches calculés sur la requête relâchée ne sont exercés par **aucun test**.
+- `CONCEPTION_B_VIN_REPAS.md` annonce encore « 18 couches » dans son schéma ; le registre en compte 20. Les documents du moteur avaient oublié `piquant` (décision 35) jusqu'au 2026-09-10.
 - Restes orphelins possibles entre le geste « en reste » et la recomposition ; mesuré en mémoire, jamais à l'écran ; deux issues non tranchées (clause 3 de `retour-4`).
 - La promesse de portions d'un reste n'est pas rejouée quand le réglage des convives change.
 - Défaire « je mange dehors » / « en reste » meurt au rechargement (rien en base ne garde l'occupant précédent) ; un créneau qui portait un reste ne se défait pas (refus délibéré).
@@ -150,7 +154,7 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - Photos : goulot = la récolte, pas le tri ; les neuf bases de `retour-5` (végétaliennes, chaudes) n'en ont pas.
 
 **Tests et preuve**
-- **Arbre VERT au 2026-09-09 à 21 h 53, zéro rouge** : la clause « 6 froides sur 10 » de `retour-1` ne lit plus l'heure (`retour-5d`), les 10 compteurs de recettes sont éteints depuis `retour-5c`.
+- **Arbre VERT au 2026-09-10 à 17 h 44 (livraison de `retour-6`), zéro rouge** : la clause « 6 froides sur 10 » de `retour-1` ne lit plus l'heure (`retour-5d`), les 10 compteurs de recettes sont éteints depuis `retour-5c`.
 - **Trois clauses scellées figeaient `USER_SCHEMA_VERSION` en valeur absolue** (`retour-2` 7, `retour-3` 8, `retour-4` 10) : rouges dès qu'un AUTRE lot migre la base, sans que ce qu'elles gardent ait bougé. Corrigées le 2026-09-09 sur décision de l'auteur (cran `libre sceau`, remis ensuite) — **même défaut que les 10 compteurs de `retour-5c`, et le balayage des autres valeurs absolues survivantes n'a pas été fait.**
 - Le piège « SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES » (payé par la v19) n'est écrit que dans `CONCEPTION_RETOURS_TEST.md` — pas encore dans `reference/PIEGES.md`.
 - **Trois harnais séparés montent l'écran « Aujourd'hui »** : `retour-1` (créneau obligatoire depuis `retour-5d`), `retour-3` (le sien, antérieur), `aujourdhui.test.tsx`. Un montage partagé à créneau obligatoire rendrait l'oubli inexprimable — écarté du lot pour ne pas réécrire le harnais d'un fichier scellé.
@@ -167,6 +171,8 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - `65b-bis` n'a pas de commit à lui (parti dans `d0c4bb3`).
 - `vite-plugin-sw.ts` est classé binaire par git (`\0` littéral) ; un commentaire d'`export-recette.ts` est faux depuis les photos.
 - `flan_oeufs_caramel` fond cuisson et repos en une étape ; le build ne vérifie que la forme d'une source.
+- `retour-6` : les balayages 6a (silence) et 6b (zéro intrus) ne couvrent que le **déjeuner** — le dîner (250 recettes) n'est balayé par aucune clause. Vu au tour d'attaque du 2026-09-10, laissé hors du lot.
+- `retour-6` : l'en-tête de son test scellé et l'introduction de son brief disent encore « l'écran lâche UN axe » ; la clause 4 bis et le code en lâchent autant qu'il faut tant que la liste est vide. Texte scellé : ne se corrige que sur décision de l'auteur.
 
 **Avant publication**
 - Relecture par un tiers du contenu Savoir (73 tips, 8 fiches) — bloquante.

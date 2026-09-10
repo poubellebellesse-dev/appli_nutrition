@@ -100,6 +100,9 @@ export interface LayerDescriptor {
 // (`SuggestionRequest.onlyFavorites`, §8.1 ENGINE — voir favoris.ts). Couche inerte tant que le
 // flag n'est pas explicitement levé : les favoris restent un marque-page, pas un signal de score.
 //
+// Registre étendu à 20 entrées (8 exclusion + 12 score) par l'ajout d'`envie` (décision 71, lot
+// `retour-6` — voir envie.ts) : les pastilles d'envie retirent, `craving` continue de classer.
+//
 // L'ordre suit §6.3 : pour l'exclusion, l'ordre encode la priorité de MOTIF affiché en cas de
 // rejets multiples (§6.3 "Sur l'ordre des couches") ; pour le score, l'ordre est indifférent
 // (seuls les poids comptent, §6.3).
@@ -113,7 +116,8 @@ export const LAYER_DESCRIPTORS: readonly LayerDescriptor[] = [
   { id: 'requis', kind: 'exclusion', critical: false, defaultWeight: 0 }, // miroir dur, contexte Aujourd'hui seulement (§6.5 ter)
   { id: 'temps', kind: 'exclusion', critical: false, defaultWeight: 0 },
   { id: 'equipement', kind: 'exclusion', critical: false, defaultWeight: 0 }, // seulement l'équipement `requis` (§6.5 ENGINE)
-  { id: 'favoris', kind: 'exclusion', critical: false, defaultWeight: 0 }, // inerte hors `onlyFavorites` (§8.1 ENGINE) — motif le moins informatif, donc en dernier
+  { id: 'favoris', kind: 'exclusion', critical: false, defaultWeight: 0 }, // inerte hors `onlyFavorites` (§8.1 ENGINE) — motif peu informatif
+  { id: 'envie', kind: 'exclusion', critical: false, defaultWeight: 0 }, // inerte sans pastille d'envie (décision 71) — après `favoris` : un allergène se reproche avant un « pas froid »
 
   // --- score — l'ordre n'a aucun effet sur le résultat, seuls les poids comptent ---------
   { id: 'nutri', kind: 'scoring', critical: false, defaultWeight: 0.25 },
@@ -162,6 +166,8 @@ export { equipmentLayer } from './equipement.js'
 export type { EquipmentLayerConfig } from './equipement.js'
 export { favoriteLayer } from './favoris.js'
 export type { FavoriteLayerConfig } from './favoris.js'
+export { envieLayer } from './envie.js'
+export type { EnvieLayerConfig } from './envie.js'
 export { EXCLUSION_LAYERS, runExclusionPass } from './exclusion-pass.js'
 export type { ExclusionPassResult } from './exclusion-pass.js'
 

@@ -34,6 +34,11 @@
 // (données de requête, filtre dur, désactivable) et fait tomber gratuitement le motif de rejet
 // dans `RejectionSummary` — sans quoi l'entonnoir du banc d'essai afficherait une chute de
 // candidats sans cause lisible. Voir selection/favoris.ts.
+//
+// Registre étendu à 20 entrées (8 exclusion + 12 score) par l'ajout de la couche `envie` (décision
+// 71, lot `retour-6`) : les pastilles d'envie RETIRENT. `craving` reste une couche de score, sous
+// son nom ; le filtre est une couche distincte qui lit le même `MealContext.envie`. Voir
+// selection/envie.ts.
 
 export type ExclusionLayerId =
   | 'allergenes'
@@ -43,6 +48,7 @@ export type ExclusionLayerId =
   | 'temps'
   | 'equipement'
   | 'favoris'
+  | 'envie'
 
 export type ScoringLayerId =
   | 'nutri'

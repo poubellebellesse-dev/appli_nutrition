@@ -97,7 +97,7 @@ describe('selection/favoris — place dans la passe d’exclusion (§6.4 ENGINE)
     ])
   })
 
-  it('`favoris` figure bien en dernier dans EXCLUSION_LAYERS', () => {
-    expect(EXCLUSION_LAYERS[EXCLUSION_LAYERS.length - 1]?.id).toBe('favoris')
+  it('`favoris` ne précède plus que `envie` dans EXCLUSION_LAYERS (lot `retour-6`)', () => {
+    expect(EXCLUSION_LAYERS.slice(-2).map((layer) => layer.id)).toEqual(['favoris', 'envie'])
   })
 })

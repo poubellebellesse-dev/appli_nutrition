@@ -51,9 +51,10 @@ describe('scoring/ — les 7 couches livrées restent alignées avec LAYER_DESCR
     expect(layer.defaultWeight).toBe(descriptor.defaultWeight)
   })
 
-  it('LAYER_DESCRIPTORS est à 19 entrées (7 exclusion + 12 score) — `favoris` a rejoint le registre', () => {
+  it('LAYER_DESCRIPTORS est à 20 entrées (8 exclusion + 12 score) — `envie` a rejoint le registre', () => {
     // 19 depuis la décision 35 : `piquant` est la 12ᵉ couche de score du registre.
-    expect(LAYER_DESCRIPTORS).toHaveLength(19)
+    // 20 depuis la décision 71 : `envie` est la 8ᵉ couche d'exclusion (lot `retour-6`).
+    expect(LAYER_DESCRIPTORS).toHaveLength(20)
   })
 })
 

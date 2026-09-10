@@ -280,11 +280,12 @@ describe("engine/api — createEngine (§8 ENGINE)", () => {
     expect(engine.catalogVersion).toBe("catalog-test-1.2.3");
   });
 
-  it("layers expose les 18 descripteurs du registre (LAYER_DESCRIPTORS)", () => {
+  it("layers expose les 20 descripteurs du registre (LAYER_DESCRIPTORS)", () => {
     const engine = createEngine(makeCatalog());
     expect(engine.layers).toBe(LAYER_DESCRIPTORS);
-    // 19 depuis la décision 35 (`piquant`, 12ᵉ couche de score).
-    expect(engine.layers).toHaveLength(19);
+    // 19 depuis la décision 35 (`piquant`, 12ᵉ couche de score), 20 depuis `envie`
+    // (8ᵉ couche d'exclusion, décision 71, lot `retour-6`).
+    expect(engine.layers).toHaveLength(20);
   });
 
   it("layer('nutri') retourne la couche implémentée correspondante", () => {

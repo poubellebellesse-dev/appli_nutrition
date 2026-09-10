@@ -112,7 +112,8 @@ export interface SuggestionRequest {
 > « favori = marque-page, n'influence pas le moteur par défaut » (§10.1 : c'est un opt-in
 > explicite, pas un poids ajouté en continu). Implémenté comme la 7ᵉ couche d'EXCLUSION `favoris`
 > (`selection/favoris.ts`), placée **en dernier** dans `EXCLUSION_LAYERS` : « hors favoris » est le
-> motif de rejet le moins informatif du registre, il ne doit en masquer aucun autre.
+> motif de rejet le moins informatif du registre, il ne doit en masquer aucun autre. Depuis le lot
+> `retour-6` (2026-09-10), seule la couche `envie` la suit.
 >
 > **`favoriteRecipeIds` est un ajout à la conception initiale**, du même ordre que `preferences`
 > ci-dessus : §8.1 ne spécifiait qu'un booléen `onlyFavorites`, sans jamais dire d'où venait la
@@ -223,7 +224,7 @@ refondues :
 > l'inverse du service rendu. Le piège était déjà noté quand le poids valait 0,5 ; il s'est aggravé.
 
 > ⚠️ **Signature révisée.** `(recipeId, dislikedFoodId)` est insuffisant : les alternatives passent
-> par `runExclusionPass`, donc par les mêmes sept couches d'exclusion que `suggestMeals`.
+> par `runExclusionPass`, donc par les mêmes huit couches d'exclusion que `suggestMeals`.
 
 #### L'ingrédient CARACTÉRISTIQUE — troisième notion, troisième mesure
 
