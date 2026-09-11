@@ -49,6 +49,12 @@ export type MotifVide =
   | 'catalogue_epuise'
   | 'bases_nues'
   | 'indetermine'
+  /**
+   * Pas une cause de tirage : la case a été LIBÉRÉE par « Décaler ce plat ? » (lot `retour-8`,
+   * décision 75). C'est la case du repas passé, ou un reste du plat décalé qui ne pouvait plus être
+   * mangé là où il était. Posé par `decalerPlat`, jamais par un tirage.
+   */
+  | 'decale'
 
 /** Fenêtre glissante de 2 à 14 jours, à partir de n'importe quel jour (§7.1, §9 décision 9 ENGINE). */
 export interface WeekPlanRequest {

@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 19
+export const USER_SCHEMA_VERSION = 20
 
 export interface Migration {
   readonly version: number
@@ -931,6 +931,33 @@ const V19_STATEMENTS: readonly string[] = [
      ON meal_plan_entry (plan_id, date, creneau, COALESCE(service, ''))`,
 ]
 
+/**
+ * v20 — « NON » À « DÉCALER CE PLAT ? ». Lot `retour-8`, décision 75 révisée le 2026-09-11 ; migration
+ * accordée par l'auteur le même jour.
+ *
+ * ⛔ UNE TABLE À PART, PAS UNE COLONNE DE `meal_plan_entry`. `savePlan` efface et réécrit les entrées
+ * à chaque geste : une colonne y serait perdue au premier « Garder » venu, sauf à la faire transiter
+ * par `MealPlanEntry` — donc par le moteur, qui n'a rien à savoir d'une réponse donnée à l'écran.
+ * `meal_plan`, lui, est écrit en UPSERT : la cascade ne part que si le planning est supprimé.
+ *
+ * ⚠️ LA CLÉ PORTE LA RECETTE. « Non » répond pour CE plat à CE repas : si la case reçoit un autre
+ * plat, la question peut se poser pour lui.
+ *
+ * ⛔ AUCUNE TRACE DE CE QUI A ÉTÉ MANGÉ. Ni `meal_history`, ni `user_signal` : « Non » veut dire « ne
+ * me repose pas la question », jamais « je l'ai mangé » (§6.5 ARCHITECTURE).
+ *
+ * Ajout pur : aucune ligne existante n'est lue ni réécrite.
+ */
+const V20_STATEMENTS: readonly string[] = [
+  `CREATE TABLE meal_plan_sans_decalage (
+     plan_id TEXT NOT NULL REFERENCES meal_plan(id) ON DELETE CASCADE,
+     date TEXT NOT NULL,
+     creneau TEXT NOT NULL CHECK (creneau IN ('petit_dejeuner','dejeuner','gouter','diner')),
+     recipe_id TEXT NOT NULL,
+     PRIMARY KEY (plan_id, date, creneau, recipe_id)
+   )`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -951,6 +978,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 17, statements: V17_STATEMENTS },
   { version: 18, statements: V18_STATEMENTS },
   { version: 19, statements: V19_STATEMENTS },
+  { version: 20, statements: V20_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

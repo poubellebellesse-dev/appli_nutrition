@@ -42,10 +42,9 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-11 à 0 h 00, arbre complet, livraison de `retour-7`, `159e8ea`) : 2 588 passed / 0 failed (2 588 tests, 134 fichiers)** en 62,2 s · typecheck
-propre · `vite build` ✓ 2,44 s · `engine:plan-stress` 20/20 · catalogue non touché depuis le relevé
-du 2026-09-09 (339 recettes, **dîner 250** dont 44 froides — non remesuré). `USER_SCHEMA_VERSION` = **19** (le motif de case vide, migration par reconstruction
-de table). ⚠️ **SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES** — la forme
+⛔ **Dernier relevé (2026-09-11 à 12 h 49, arbre complet, livraison de `retour-8`, pas encore commité) : 2 631 passed / 0 failed (2 631 tests, 135 fichiers)** en 65,7 s · typecheck
+propre · `vite build` ✓ 2,47 s · `engine:plan-stress` 20/20 · catalogue non touché depuis le relevé
+du 2026-09-09 (339 recettes, **dîner 250** dont 44 froides — non remesuré). `USER_SCHEMA_VERSION` = **20** (le « Non » à « Décaler ce plat ? », table neuve, ajout pur). ⚠️ **SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES** — la forme
 de la v9 ne se recopie pas pour une équivalence.
 ⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** **Arbre entièrement vert** — les trois derniers
 rouges étaient des clauses scellées qui figeaient `USER_SCHEMA_VERSION` **en valeur absolue**,

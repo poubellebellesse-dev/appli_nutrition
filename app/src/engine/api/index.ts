@@ -68,6 +68,8 @@ import {
   unsetSlotLeftover as runUnsetSlotLeftover,
 } from '../planning/set-slot-leftover.js'
 import type { ResteDefait, SourceDeReste } from '../planning/set-slot-leftover.js'
+import { decalerPlat as runDecalerPlat, peutDecaler as runPeutDecaler } from '../planning/decaler-plat.js'
+import type { EstPasse } from '../planning/decaler-plat.js'
 import type { LayerId } from '../domain/index.js'
 import { NoViableRecipeError, proposerUneSauce, saucesProposees, toutesLesSauces } from '../domain/index.js'
 import type { ExclusionPassResult, LayerDescriptor, SelectionLayer } from '../selection/index.js'
@@ -238,6 +240,20 @@ export interface Engine {
     memoire: ResteDefait,
     profile: UserProfile
   ): WeekPlan
+  /**
+   * « Décaler ce plat ? » (décision 75, lot `retour-8`) : vrai si ce créneau porte la question — un
+   * plat cuisiné, passé, ni reste ni gardé, qui a au moins un reste à venir non gardé.
+   *
+   * ⚠️ `estPasse` EST INJECTÉ : le moteur ne lit pas l'horloge, et « passé » dépend des fenêtres de
+   * repas de l'écran. Lecture seule.
+   */
+  peutDecaler(plan: WeekPlan, slot: SlotRef, estPasse: EstPasse): boolean
+  /**
+   * « Décaler » : le plat, portions et accompagnement compris, prend la place de son premier reste à
+   * venir non gardé ; sa case se vide (motif `decale`), et les restes devenus impossibles aussi.
+   * Rien d'autre ne bouge. Créneau qui ne porte pas la question : plan rendu inchangé.
+   */
+  decalerPlat(plan: WeekPlan, slot: SlotRef, estPasse: EstPasse, profile: UserProfile): WeekPlan
   buildShoppingList(plan: WeekPlan, opts?: ShoppingOptions): ShoppingList
   /**
    * Recalcule les avertissements d'un plan — §6.5, cinquième garde-fou.
@@ -945,6 +961,13 @@ export function createEngine(catalog: Catalog, opts: CreateEngineOptions = {}): 
     },
     unsetSlotLeftover: (plan, slot, memoire, profile) => {
       const apres = runUnsetSlotLeftover(plan, slot, memoire)
+      if (apres === plan) return plan
+      return { ...apres, warnings: checkCalorieFloor(apres, profile, enrichedCatalog) }
+    },
+    peutDecaler: (plan, slot, estPasse) => runPeutDecaler(plan, slot, estPasse),
+    // Le plancher repasse : un plat quitte un jour pour un autre, les totaux des deux changent.
+    decalerPlat: (plan, slot, estPasse, profile) => {
+      const apres = runDecalerPlat(enrichedCatalog, plan, slot, estPasse)
       if (apres === plan) return plan
       return { ...apres, warnings: checkCalorieFloor(apres, profile, enrichedCatalog) }
     },

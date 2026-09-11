@@ -3423,6 +3423,224 @@ fichiers 134 + 1 − 1 = 134.
 
 ---
 
+### Lot `retour-8` — « Décaler ce plat ? » sur un repas passé · ✅ **LIVRÉ le 2026-09-11**, commit à rattacher — attaqué deux tours, v20 accordée le même jour
+
+> **À la livraison.** Test scellé 43/43. Les quatre clauses sont démontrées par test. ⚠️ Trois
+> choses qu'aucun test ne démontre : la **clé** du « Non » (case ET plat, décision de l'auteur)
+> n'est distinguée d'aucune autre ; « Proposer une autre semaine » réécrit **le même planning** en
+> base, donc un « Non » survit si le même plat retombe sur la même case ; la question n'apparaît sur
+> un écran **resté ouvert** qu'au rendu suivant (aucune minuterie, déclaré).
+
+Décision **75**, précisée le 2026-09-11 : l'application ne sait pas et ne cherche pas à savoir si un
+repas a été mangé. Sur un repas passé, elle pose une question **de planning**, « Décaler ce plat ? ».
+**Oui** : le plat prend la place de son **premier reste à venir** ; le reste de la semaine ne bouge
+pas (révisé le même jour : « on ne va pas tout décaler la semaine »). **« Non » ne change rien.**
+**Un plat sans reste à venir ne porte pas la question.** Quatre conditions : (1) jamais « pas
+fait », « pas mangé », « manqué » ; (2) rien n'est enregistré sur ce qui a été mangé, seul le
+planning change ; (3) une fois par repas, jamais revenue après « Non » ; (4) dans la carte du repas
+passé, jamais une fenêtre ni une notification qui s'ouvre seule.
+
+**Ce que le lot fait.** Sur l'écran Semaine, la carte d'un plat cuisiné dont le repas est fini, et
+qui a encore un reste à venir, porte la question et deux réponses. « Décaler » met le plat (avec ses
+portions et son accompagnement) à la place de ce reste, vide la case passée, et vide les restes du
+même plat qui ne peuvent plus être mangés, en disant pourquoi. « Non » range la question pour de bon.
+
+#### Ce qui est vrai aujourd'hui — mesuré dans le code le 2026-09-11, pas supposé
+
+1. **Rien n'existe.** Aucune carte ne porte de question ; aucune primitive de décalage dans
+   `engine/planning/` ; aucune colonne où poser une réponse.
+2. ⛔ **Une semaine réelle est surtout faite de restes, et c'est ce qui rend le décalage difficile.**
+   Graine 1, lundi 7 septembre, 1 convive : à **2 repas**, **5 plats cuisinés pour 9 restes**, dont
+   **5 servis à l'autre repas** que celui de leur plat (salade de pâtes du lundi midi mangée mardi
+   soir, par exemple). À 3 repas, 8 plats et 13 restes ; à 1 repas, 2 plats et 5 restes. Déplacer
+   un plat sans ses restes laisse des restes d'un plat pas encore cuisiné.
+3. **La règle retenue par l'auteur, et ce qu'elle coûte** (mesure sur **137 décalages** : rythmes
+   1, 2, 3, graines 1 à 5, chaque plat passé, juste après son repas ou le lendemain) :
+
+| Règle | Cases changées | Restes vidés | Plats sortis de la semaine |
+|---|---|---|---|
+| A — la ligne glisse : chaque case du même repas passe à la suivante, le dernier plat sort (écartée) | 575 | 93 | 54 |
+| **C — le plat prend la place de son premier reste à venir** (retenue, 2026-09-11) | **131** | **27** | **0** |
+
+   C ne s'applique qu'à **104** des 137 : **33** plats passés n'ont pas de reste à venir (**20** plats
+   sans reste, **13** dont tous les restes sont passés) — ceux-là ne portent pas la question.
+   ⚠️ **Un plat cuisiné porte ses portions de cuisson** (4 pour la salade de pâtes, 2 pour le
+   porridge), son reste en porte **une** : le plat arrive avec les siennes.
+4. **Le motif de case vide n'a pas de `CHECK` sur sa valeur** (`meal_plan_entry.motif_vide`, TEXT,
+   v19 — le seul `CHECK` lie sa présence à la case vide) : **pas de migration** pour un motif neuf.
+   ⚠️ **Mais le type est fermé** : `MotifVide` est une union dans `engine/domain/planning.ts`. Une
+   valeur neuve s'y ajoute (TypeScript pur, permis), avec sa phrase dans `ui/motif-vide.ts`.
+5. ⚠️ **« Non » doit survivre au remontage et au lendemain, et rien ne sait le garder aujourd'hui.**
+   Probablement une colonne ou une table neuve, donc une **v20** — accord de l'auteur requis avant
+   la première ligne. Les tests ne prescrivent pas où : ils remontent l'écran et relisent.
+6. ⚠️ **Deux fuseaux.** Les dates du plan sont des jours `YYYY-MM-DD` ; « passé » se juge à l'heure
+   **locale** (fins de repas de `creneau.ts` : 10 h, 14 h, 17 h, minuit). À 0 h 05 le mardi à Paris,
+   il est encore lundi en UTC.
+7. ⚠️ **Le goûter est inatteignable** (`CHECK` 1 à 3 de `user_rythme`, mesuré par `retour-7`). Aucune
+   clause ne le porte.
+
+**Réglages persistants que l'écran lit** : `user_rythme.repas_par_jour` — **les clauses le font
+varier (1, 2, 3)** ; `user_meal_time` — fixé (8 h, 12 h, 19 h), jamais varié ; `meal_plan` /
+`meal_plan_entry` — composés par le moteur (`planWeek` puis `planLeftovers`), **graine 1 pour
+l'essentiel, graines 2 à 5 pour onze cas** — même lundi, autres plats —, puis, dans
+quatre variantes, des restes gardés ou un reste « dehors ». Tout le reste (allergies, régime,
+exclusions, historique, affichage) **à son défaut**. `convives` n'est pas persistant : 1.
+
+#### **Fini quand**
+
+Sur `catalog.db` réel, écran Semaine monté en entier, plan semé en base pour **lundi 7 → dimanche 13
+septembre 2026**, horloge figée à une **heure locale** donnée. Entre deux montages d'un même test,
+l'horloge avance et l'écran est remonté, rien d'autre. Deux définitions servent toutes les clauses :
+
+- **Repas passé** : jour local antérieur, ou jour même une fois l'heure de fin du repas atteinte.
+- **Les restes à venir d'un plat** : les cases qui portent un **reste de la même recette**, **pas
+  passées** et **pas gardées**, à **n'importe quel repas**, dans l'ordre du temps. Une case « dehors »
+  n'en est pas un.
+
+1. **La question est exactement sur les bons repas.** Une carte porte « Décaler ce plat ? » si et
+   seulement si son repas est passé, qu'elle porte un **plat cuisiné** (ni reste, ni case vide, ni
+   « dehors »), qu'elle n'est **pas gardée**, et que ce plat a **au moins un reste à venir**. Vérifié
+   sur **toutes** les cartes, **vingt et une configurations**, la graine 1 sauf mention. 2 repas :
+   lundi **13 h 59** (aucune — garde),
+   **14 h 05** (déjeuner du 7), **mardi 0 h 05** (déjeuner du 7 seul, la pizza du dîner n'a pas de
+   reste — le test vérifie d'abord que la machine est à l'est de Greenwich et rougit sinon), mardi
+   14 h 05 (déjeuner du 7), **jeudi 14 h 05** (dîner du 9 seul : la salade du 7 a tous ses restes
+   passés, la pizza n'en a pas — le test vérifie ces deux plats sans question), **vendredi 23 h 59**
+   (aucune — garde : trois plats passés, aucun reste à venir). 3 repas : mardi 14 h 05 (déjeuner et
+   dîner du 7, petit-déjeuner du 8), **mercredi 9 h 55** (les mêmes trois) et **10 h 05** (plus que
+   deux : le seul reste du petit-déjeuner du 8 vient de passer), jeudi 14 h 05 (dîner du 7,
+   petit-déjeuner du 10). 1 repas : mardi 9 h, jeudi 23 h 59 (dîner du 7). 2 repas le **20
+   septembre** (aucune — garde). 2 repas lundi 14 h 05 avec le premier reste de la salade **gardé**
+   (déjeuner du 7), **ses trois restes gardés** (aucune — garde), le premier reste **« dehors »**
+   (déjeuner du 7). **Autres semaines** (attaque du 2026-09-11) : graine 2 à 1 repas jeudi 14 h 05
+   (dîner du 9) ; graine 4 à 2 repas mardi 14 h 05 (déjeuner **et dîner** du 7) ; graine 3 à 2 repas
+   jeudi 14 h 05 (déjeuner du 10) ; graine 5 à 3 repas mardi 14 h 05 (déjeuner du 7 et petit-déjeuner
+   du 8 — son dîner du 7 n'a pas de reste) ; graine 3 à 3 repas jeudi 14 h 05 (déjeuner du 10).
+   ▶ *Faux si une question manque ou est en trop : « passé » jugé à la date seule, en UTC, sans
+   l'heure de fin ; question sur un plat sans reste, sur un plat dont les restes sont passés ou tous
+   gardés, sur un reste, un gardé, un « dehors » ; réponses recopiées d'une seule semaine.*
+2. **La question reste une question de planning.** Lundi, 2 repas : ce que la carte du déjeuner
+   **gagne** entre 11 h et 14 h 05 contient la question, et **aucun** de ses textes (y compris
+   `aria-label` et `title`) ne contient « mang », « pas fait », « pas cuisin », « manqu », « oubli »,
+   « consomm ». La question n'existe **qu'une fois** à l'écran, dans la carte ; aucune fenêtre
+   (`role="dialog"`, `alertdialog`, `aria-modal`, `dialog[open]`) n'est ouverte au montage.
+   ▶ *Faux si la question parle de manger, s'affiche dans un bandeau ou une fenêtre, ou s'ouvre
+   seule.* (Les textes déjà présents — « Je mange dehors » — ne comptent pas : seul le neuf est lu.)
+3. **« Non » ne change rien, et la question ne revient pas.** 3 repas, mardi 14 h 05, dîner du 7
+   (le goulash). Sans réponse, la question est encore là **au second montage** et **le lendemain à
+   10 h 05**. Après un clic sur le bouton « Non » **de la carte** : le planning relu en base est
+   **identique**, motif des cases vides compris ; `meal_history` et `user_signal` ont **0 ligne** ;
+   la question a disparu, et reste absente **remontée**, puis **le lendemain à 10 h 05** et **le
+   surlendemain à 14 h 05** — où la règle la poserait encore, le test le vérifie. Le déjeuner du 7 (même jour, autre repas) et le
+   petit-déjeuner du 8 (autre jour, autre repas) **gardent** la leur. ▶ *Faux si « Non » vit dans
+   l'état de l'écran, ferme d'autres questions, verrouille, vide ou marque le plat, enregistre quoi
+   que ce soit — ou si la question disparaît sans réponse.*
+4. ⭐ **« Décaler », en un seul clic et sans confirmation, met le plat à la place de son premier
+   reste à venir.** La règle, pas à pas : (i) le plat — recette, **portions de cuisson** et
+   accompagnement — prend la case de son **premier reste à venir** ; (ii) la case du repas passé
+   devient **vide** ; (iii) tout **reste à venir, non gardé**, qui ne peut plus être mangé là où il
+   est — la recette ne se sert pas à ce repas, ou aucune cuisson du même plat n'a lieu entre **1 jour
+   et sa durée de conservation** avant — devient **vide**. **Rien d'autre ne bouge.** Dix-huit
+   décalages, la graine 1 sauf mention. 2 repas : lundi 14 h 05 (déjeuner du jour), mardi 14 h 05 (déjeuner du 7 → son reste
+   du mardi **soir**), jeudi 14 h 05 (dîner du 9). 3 repas : lundi 14 h 05 (déjeuner du jour), mardi
+   14 h 05 (déjeuner du 7, dîner du 7, petit-déjeuner du 8), jeudi 14 h 05 (dîner du 7, trois jours
+   plus tard). 1 repas : mardi 9 h (dîner du 7). Variantes : 2 repas lundi 14 h 05, premier reste de
+   la salade **gardé**, puis **« dehors »** ; 3 repas mardi 14 h 05, reste du mardi soir **gardé**
+   (déjeuner du 7). **Autres semaines** : graine 3 à 2 repas mardi 14 h 05 (dîner du 7, dont
+   l'accompagnement a **6 portions pour un plat à 4**) et jeudi 14 h 05 (déjeuner du 10, qui vide le
+   reste du soir même) ; graine 5 à 3 repas mardi 14 h 05 (déjeuner du 7, plat à 6 portions,
+   accompagnement à 4) ; graine 2 à 1 repas jeudi 14 h 05 (dîner du 9) ; graine 4 à 2 repas mardi
+   14 h 05 (dîner du 7) ; graine 5 à 2 repas jeudi 14 h 05 (déjeuner du 10). Un témoin, **vert
+   aujourd'hui**, vérifie que ces dix-huit couvrent : les cinq graines, un reste vidé hors de la
+   graine 1, deux accompagnements qui n'ont pas les portions du plat, et au moins deux
+   décalages qui vident un reste, deux où le plat change de repas, deux où il reste au même repas,
+   deux restes gardés sautés, un « dehors » sauté, un reste d'**un autre plat** placé avant la cible,
+   trois où un autre reste du plat **reste en place**, un plat passé depuis trois jours, trois où
+   les portions du plat diffèrent de celles du reste, avec et sans accompagnement, les trois repas.
+   Pour chaque décalage, **relu en base** : (a) la case du repas passé est vide ; (b) la case du
+   premier reste à venir porte le plat, **portions et accompagnement compris** (recette, portions et
+   verrou de l'accompagnement) ; (c) les repas passés, les gardés et les « dehors » sont
+   **identiques** ; (d) **aucun** reste à venir impossible ; (e) **chaque case** du planning est celle
+   que donne la règle (plat, reste ou vide, gardé, « dehors », portions, accompagnement avec ses
+   portions et son verrou) ; (f) chaque case vidée (celle du repas passé, et chaque reste vidé) n'a
+   plus d'accompagnement, porte un **motif**, ne pose plus la question, et sa carte dit, **sans
+   remontage**, une phrase contenant « décal » — hors question et hors bouton — et aucun des mots
+   interdits de la clause 2 ; (g) la carte de la case d'arrivée montre le **nom du plat, sans
+   remontage** ; (h) `meal_history` et `user_signal` ont **0 ligne**. ▶ *Faux si le plat va à la
+   case suivante du même repas, au premier reste de n'importe quel plat, à un reste gardé ou
+   « dehors » ; si la semaine glisse ; si le plat arrive avec une portion ou sans accompagnement ;
+   s'il laisse un reste impossible ou vide tous les restes ; s'il laisse une case vidée muette ou qui
+   parle de manger, écrit en base sans que l'écran suive, ou enregistre un repas.*
+
+#### Ce que le lot NE TOUCHE PAS
+
+- **La composition** : `planWeek`, `planLeftovers`, `rerollSlot`, `sourcesDeReste` /
+  `setSlotLeftover`, `setSlotHorsCatalogue`. Le décalage est un geste neuf ; il ne recompose rien.
+- **`creneau.ts`** — fenêtres 10/14/17/24, lues, pas modifiées ; le `CHECK` 1 à 3 de `user_rythme`.
+- **Aujourd'hui, `recordMeal`, `meal_history`, `user_signal`** — la décision 75 interdit d'y écrire.
+- **`notifications.ts` et les rappels** — condition (4).
+- **Le catalogue** : aucun YAML, aucune régénération.
+- **Les phrases de motif existantes** de `ui/motif-vide.ts`, et **les valeurs existantes** de
+  `MotifVide` (`engine/domain/planning.ts`) : une valeur neuve s'ajoute aux deux, aucune ne change.
+- **Les boutons existants de la carte** (« Changer », « Choisir », « Garder », « Manger un reste »,
+  « Je mange dehors », « Remettre le plat prévu », « Finalement je mange ici »).
+
+**Migration** : aucune pour le motif. Pour garder « Non » : **v20, accordée par l'auteur le
+2026-09-11** — table neuve `meal_plan_sans_decalage` (planning, jour, repas, recette), effacée avec
+son planning. Une table et pas une colonne de `meal_plan_entry` : `savePlan` réécrit les entrées à
+chaque geste.
+
+#### Ce qu'aucune clause ne scelle — déclaré
+
+- « Non » face à « Proposer une autre semaine » (le nouveau plan a d'autres cases) ;
+- la liste de courses et les rappels **après** un décalage ;
+- plus d'un convive ; le goûter ; un fuseau à l'ouest de Greenwich ;
+- un écran **resté monté** pendant la fin d'un repas (aucune minuterie exigée) ;
+- un décalage **défait** (aucun « annuler » exigé) ;
+- un plat passé qui a lui-même été **choisi** ou **changé** par l'utilisateur (seul le plan du moteur
+  est semé) ;
+- **la clé sous laquelle « Non » est gardé** — tranchée le 2026-09-11 par l'auteur : **la case ET
+  le plat** (un autre plat posé là peut porter la question). Aucune clause ne distingue cette clé
+  d'une autre : sur ces semaines, `planWeek` ne cuisine un plat qu'une fois (critique, 2026-09-11) ;
+- un changement de rythme en cours de semaine ;
+- « Manger un reste » posé sur une case qui vient de recevoir un plat décalé.
+
+#### Les témoins d'avant — repris le 2026-09-11 à 12 h 06, après le tour 1 d'attaque, `HEAD` = `3c96e85`
+
+| Témoin | Avant `retour-8` | Avec le fichier de tests, avant code |
+|---|---|---|
+| `npm test` | **2 588 passed / 0 failed**, 134 fichiers (relevé de livraison de `retour-7`) | **2 593 passed / 38 failed** (2 631), 135 fichiers, 68,9 s — un seul fichier rouge, `retour-8` : +43 tests = 5 verts + 38 rouges |
+| `npm run typecheck` | propre | propre |
+| `npx vite build` | ✓ 2,44 s | ✓ 2,51 s |
+| `npm run engine:plan-stress` | **20/20** | **20/20** — aucune ligne du moteur |
+| `node catalog/build.mjs` | **hors périmètre** | non relancé |
+
+⛔ **Sortie rouge : 38 échecs sur 43, et les 5 verts sont déclarés.** Rouges : clause 1 (17), clause 2
+(1), clause 3 (2), clause 4 (18). Verts : les quatre gardes de la clause 1 (lundi 13 h 59 et
+vendredi 23 h 59 à 2 repas, semaine toute passée, restes tous gardés) et le témoin de couverture de
+la clause 4. **Chaque rouge est une assertion, aucun n'est une erreur de semis ou de montage** :
+`expected [] to deeply equal [ '07 dejeuner' ]`, `expected 'DéjeunerSalade de pâtes au pesto et t…'
+to match /Décaler ce plat\s*\?/`, « il faut exactement un bouton /^non\b/i dans la case. Boutons
+vus : Changer / Choisir / Garder / Je mange dehors ». Aucune ligne de production n'existe.
+
+```
+ Test Files  1 failed (1)
+      Tests  38 failed | 5 passed (43)
+   Duration  22.30s
+```
+
+#### Ce qui reste ouvert — à trancher par l'auteur avant de sceller
+
+~~La règle du décalage~~ — **tranchée le 2026-09-11** : le plat prend la place de son premier reste
+à venir, et un plat sans reste à venir ne porte pas la question (décision 75).
+
+1. **Où et sous quelle clé garder « Non »** (la case, ou la recette) : probablement une v20 — accord
+   requis avant la première ligne.
+2. **Le texte des boutons** : le brief accepte « Oui » ou « Décaler » pour accepter, « Non » pour
+   refuser, et une phrase de case vidée contenant « décal ».
+
+---
+
 ### Les lots suivants — non ouverts
 
 Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETAT.md` §4) :
@@ -3439,6 +3657,6 @@ Dans l'ordre des dépendances, tels qu'ils sortent des décisions 71 à 80 (`ETA
 | `retour-5e` | rendre le dîner aux 36 recettes froides que `types_repas` en exclut | ✅ **LIVRÉ le 2026-09-09** (`80b29ec`, poussé) — ✅ **DÉFAUT MESURÉ le 2026-09-09** en écrivant `retour-5d` : le dîner ne compte que **8 froides sur 214 (3,7 %)** contre 44 sur 194 au déjeuner ; hors plats du matin, **83,7 % des froides du déjeuner** sont barrées du dîner contre **1,4 % des chaudes**. Le moteur remonte 7 des 8 qui existent — il vide le rayon, il ne classe pas mal · ✅ **LIVRÉ le 2026-09-09 à 17 h 20** — section ci-dessus : **10 clauses sur 10 vertes**, 36 fichiers YAML, **une ligne chacun**, `catalog.db` régénéré, **aucune ligne de code de production** · le dîner passe de **214 à 250 recettes** et de **8 froides (3,7 %) à 44 (17,6 %)** · ⛔ **UN TOUR D'ATTAQUE A ÉTÉ PAYÉ** : le critique a exhibé une implémentation fausse passant 9 clauses sur 9 (patch SQL direct de `catalog.db` + `# diner` en commentaire dans le YAML) — base reconstruite depuis les sources, YAML analysé au lieu d'être cherché, clause 10 neuve qui apparie base livrée et sources · ⭐ **EFFET DE BORD MESURÉ : la clause « 6 froides sur 10 » de `retour-1` redevient VERTE à 17 h** — le rouge mesurait le rayon vide · un seul rebasage, `tests/exclusion-real-catalog.test.ts`, témoin dérivé au lieu d'un identifiant en dur |
 | `retour-6` | les filtres d'envie deviennent durs sur Aujourd'hui (décision 71) | ✅ **LIVRÉ le 2026-09-10** (`be02116`) — section ci-dessus : **31 clauses sur 31 vertes**, arbre entier à 2 569 verts, 8ᵉ couche d'exclusion `envie`, relâchement cumulatif « tant que vide » dans l'écran · ⛔ l'introduction du brief et l'en-tête scellé disent encore « UN axe » · *historique :* **`retour-1`** — blocage LEVÉ (`retour-5e`) · ✅ **décision 79 TRANCHÉE le 2026-09-09** · ⏳ **BRIEF ÉCRIT le 2026-09-09, PAS SCELLÉ** — section ci-dessus : « Fini quand » en 6 clauses, mesuré 4 profils × 2 créneaux × 8 combinaisons contre `catalog.db` réel (**10 cases vides sur 64, toutes rendues non vides par UN seul relâchement**) · ⏳ **TESTS D'ACCEPTATION ÉCRITS le 2026-09-09 à 23 h 26** — `tests/scelles/retour-6.test.tsx`, **28 tests, 15 ROUGES**, les 13 verts déclarés en en-tête (2 témoins de catalogue, 2 gardes d'allergène, 8 gardes de silence, 1 vert parasite mesuré) · **oracle SQL indépendant du moteur**, les deux chemins confrontés en écrivant le brief · ⛔ **une question ouverte pour l'auteur : « vide » ou « moins de douze » ?** |
 | `retour-7` | le frigo ne vaut plus que pour un repas (décision 74) | ~~décision 80~~ — ✅ **tranchée le 2026-09-10** : la déclaration s'efface à la fin du repas en cours, sans geste · ✅ **LIVRÉ le 2026-09-11** (`159e8ea`) — section ci-dessus : **37 tests scellés sur 37 verts**, arbre entier à 2 588 verts, question « Vous les avez toujours ? » supprimée · *historique :* 🔒 scellé le 2026-09-10 : 7 clauses, `tests/scelles/retour-7.test.tsx` **37 tests, 27 rouges**, les 10 verts déclarés · la question du frigo depuis Semaine est tranchée par l'auteur (clause 6b bis) · attaque 1 : 2 trous fermés (4 ter, 7 bis) · attaque 2 : implémentation fausse exhibée (rythme à 2 repas par défaut hors de l'écran Frigo), fermée par un cas « 3 repas » sur chacun des quatre autres écrans · **plus de tour d'attaque** |
-| `retour-8` | effacer un repas passé (décision 75) | le sort des restes orphelins |
+| `retour-8` | « Décaler ce plat ? » sur un repas passé : le plat prend la place de son premier reste à venir ; « Non » ne change rien (décision 75 précisée) | ~~le sort des restes orphelins~~ tranché le 2026-09-11, décision 75 · ✅ **LIVRÉ le 2026-09-11** — section ci-dessus |
 
 ⚠️ **`retour-6` est bloqué par `retour-1` pour une raison de fond, pas de confort** : voir plus haut.

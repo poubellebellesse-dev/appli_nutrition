@@ -35,8 +35,9 @@ dure, aucune donnée sans source) et le n° 6 : informer, jamais juger.
   socle d'accessibilité, routage par fragment, tutoriel qui traverse les menus.
 - **Chantiers livrés** (chacun a son `CONCEPTION_*.md`) : mode cuisine, photos, gestes illustrés
   (clips), invariant origine animale (66/66b/66c), réservation matériel (65a-c), régime personnalisé,
-  retours du test téléphone (`retour-1` → `retour-7` ; `retour-7` livré le 2026-09-11 (`159e8ea`) :
-  le frigo ne vaut plus que pour le repas en cours et s'efface seul à sa fin).
+  retours du test téléphone (`retour-1` → `retour-8` ; `retour-8` livré le 2026-09-11 : un plat
+  cuisiné dont le repas est passé peut prendre la place de son premier reste, « Non » est gardé en
+  base, v20).
 
 ```
 Concept ✅ ─ Architecture ✅ ─ Moteur ✅ ─ Contenu ✅ ─ user.db ✅ ─ Design ✅ ─ 12 écrans ✅ ─▶ CONTENU & DISTRIBUTION ⬅ ICI
@@ -140,6 +141,7 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - L'écriture en base part même si l'écran a changé de créneau entre le clic et la réponse (l'affichage est gardé, pas l'écriture).
 - « Changer » sur Semaine écrit le plan sans reprogrammer les rappels de préparation.
 - Retrait posé avant un régime plus strict : les croisements porte × régime ne sont couverts par aucune clause (leçon `retour-2`).
+- « Décaler ce plat ? » (`retour-8`) : « Proposer une autre semaine » garde le même `meal_plan.id`, donc un « Non » survit si le même plat retombe sur la même case ; la clé case + plat n'est distinguée par aucun test ; courses et rappels après un décalage, décalage défait, plus d'un convive : aucune clause.
 
 **Interface et appareil**
 - **La passe à l'œil sur téléphone n'est pas faite** — due par `retour-1`, `1b`, `2`, `3`, `4` ; une seule passe, protocole `CONCEPTION_RETOURS_TEST.md` §3. Le tutoriel n'a jamais été vu tourner hors jsdom ; son garde-fou de 4 s est posé au jugé.
@@ -157,7 +159,7 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - Photos : goulot = la récolte, pas le tri ; les neuf bases de `retour-5` (végétaliennes, chaudes) n'en ont pas.
 
 **Tests et preuve**
-- Les tests d'écran non scellés du frigo (`frigo.test.tsx`, `courses.test.tsx`) déclarent à l'horloge réelle : lancés à cheval sur 10 h, 14 h, 17 h ou minuit, ils peuvent rougir sans défaut (`retour-7`). **Un rouge NON IDENTIFIÉ le 2026-09-11 à 0 h 04** (1 sur 2 588, code inchangé depuis le relevé vert de 0 h 00), absent des deux relances de 0 h 05 et 0 h 07 : son nom n'a pas été capturé.
+- Les tests d'écran non scellés du frigo (`frigo.test.tsx`, `courses.test.tsx`) déclarent à l'horloge réelle : lancés à cheval sur 10 h, 14 h, 17 h ou minuit, ils peuvent rougir sans défaut (`retour-7`). `semaine.test.tsx` « changer le nombre de jours » a rougi une fois le 2026-09-11 (7 jours au lieu de 3) pendant que build et `plan-stress` tournaient en parallèle, vert aux trois relances suivantes : son `waitFor` de 1 s lâche sous charge. **Un rouge NON IDENTIFIÉ le 2026-09-11 à 0 h 04** (1 sur 2 588, code inchangé depuis le relevé vert de 0 h 00), absent des deux relances de 0 h 05 et 0 h 07 : son nom n'a pas été capturé.
 - **Arbre VERT au 2026-09-11 à 0 h 00 (livraison de `retour-7`), zéro rouge** : la clause « 6 froides sur 10 » de `retour-1` ne lit plus l'heure (`retour-5d`), les 10 compteurs de recettes sont éteints depuis `retour-5c`.
 - **Trois clauses scellées figeaient `USER_SCHEMA_VERSION` en valeur absolue** (`retour-2` 7, `retour-3` 8, `retour-4` 10) : rouges dès qu'un AUTRE lot migre la base, sans que ce qu'elles gardent ait bougé. Corrigées le 2026-09-09 sur décision de l'auteur (cran `libre sceau`, remis ensuite) — **même défaut que les 10 compteurs de `retour-5c`, et le balayage des autres valeurs absolues survivantes n'a pas été fait.**
 - Le piège « SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES » (payé par la v19) n'est écrit que dans `CONCEPTION_RETOURS_TEST.md` — pas encore dans `reference/PIEGES.md`.

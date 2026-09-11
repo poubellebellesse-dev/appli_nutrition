@@ -56,6 +56,11 @@ const PHRASES: Readonly<Record<MotifVide, string>> = {
   // --- Cause 3 : il ne restait que des bases nues (lot `retour-5`) ------------------------------
   bases_nues: 'Il ne restait que des accompagnements, qui ne font pas un repas à eux seuls.',
 
+  // --- Pas une cause de tirage : un geste de l'utilisateur (lot `retour-8`) ---------------------
+  // ⛔ AUCUN MOT SUR CE QUI A ÉTÉ MANGÉ OU NON (décision 75). La case constate un déplacement de
+  // planning, rien de plus.
+  decale: 'Case libérée : le plat a été décalé.',
+
   // --- La valeur de la migration, jamais produite par le moteur ---------------------------------
   indetermine: 'Ce planning a été fait avant que l’application ne sache dire pourquoi.',
 }

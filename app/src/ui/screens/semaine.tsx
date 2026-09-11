@@ -24,7 +24,16 @@ import type {
   WeekPlan,
 } from '../../engine/domain/index.js'
 import { DEFAULT_PLAN_DAYS, MAX_PLAN_DAYS, MIN_PLAN_DAYS } from '../../engine/planning/plan-week.js'
-import { readDisplay, readLatestPlan, readRythme, readUserState, savePlan } from '../../data/user-store.js'
+import {
+  cleSansDecalage,
+  readDisplay,
+  readLatestPlan,
+  readRythme,
+  readSansDecalage,
+  readUserState,
+  savePlan,
+  writeSansDecalage,
+} from '../../data/user-store.js'
 import {
   FENETRE_HISTORIQUE_JOURS,
   LIBELLE_CRENEAU,
@@ -38,7 +47,7 @@ import {
 } from '../socle.js'
 import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { Panneau } from '../panneau.js'
-import { REPAS_PAR_DEFAUT, creneauxDuRythme } from '../creneau.js'
+import { REPAS_PAR_DEFAUT, creneauxDuRythme, estPasse } from '../creneau.js'
 import { reprogrammerLesRappels } from '../ecrire-plan.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
 import { phraseDuMotif } from '../motif-vide.js'
@@ -215,6 +224,8 @@ export function Semaine() {
   const [premierRendu, setPremierRendu] = useState(true)
   /** Mode avancé (Paramètres, `afficher_macros`) : gouverne aussi l'avertissement de plancher — §6.5 ARCHITECTURE. */
   const [modeAvance, setModeAvance] = useState(false)
+  /** « Non » à « Décaler ce plat ? » sur le plan affiché, relu de `user.db` (lot `retour-8`). */
+  const [sansDecalage, setSansDecalage] = useState<ReadonlySet<string>>(new Set())
 
   const echouer = useCallback((erreur: unknown) => {
     setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
@@ -231,6 +242,7 @@ export function Semaine() {
         setReglages(repris.reglages)
         setSocleCharge(socle)
         setModeAvance(readDisplay(socle.db).afficherMacros)
+        setSansDecalage(repris.vue === null ? new Set() : readSansDecalage(socle.db, repris.vue.plan.id))
         setEtat(repris.vue === null ? { phase: 'vide' } : { phase: 'pret', vue: repris.vue })
         setPremierRendu(false)
       })
@@ -255,7 +267,10 @@ export function Semaine() {
           // ailleurs dans la semaine, et le rendre le poserait deux fois. Le reste survit — ses
           // deux créneaux sont gardés —, seul le raccourci pour le défaire disparaît.
           oublierTousLesGestes()
-          setEtat({ phase: 'pret', vue: planifier(socle, suivants, verrous) })
+          const vue = planifier(socle, suivants, verrous)
+          // Le « Non » est rangé par planning : un autre nombre de jours est un autre planning.
+          setSansDecalage(readSansDecalage(socle.db, vue.plan.id))
+          setEtat({ phase: 'pret', vue })
         })
         .catch(echouer)
     },
@@ -518,6 +533,56 @@ export function Semaine() {
     [poser]
   )
 
+  /**
+   * « Décaler ce plat ? » → Décaler (décision 75, lot `retour-8`) : le plat prend la place de son
+   * premier reste à venir. Un seul geste, écrit en base comme tous les autres.
+   *
+   * ⚠️ L'HEURE SE LIT AU CLIC, pas au rendu : une carte affichée à 13 h 59 et cliquée à 14 h 01 doit
+   * décider avec l'heure du geste.
+   */
+  const decaler = useCallback(
+    (slot: SlotRef) => {
+      if (etat.phase !== 'pret') return
+      const { plan, profil } = etat.vue
+      const maintenant = new Date()
+
+      chargerSocle()
+        .then((socle) => {
+          const suivant = socle.moteur.decalerPlat(plan, slot, (s) => estPasse(s, maintenant), profil)
+          if (suivant === plan) return
+          savePlan(socle.db, suivant, maintenantIso())
+          // ⚠️ LES RAPPELS SUIVENT LE PLAT, comme pour « Choisir » : il a changé de jour.
+          reprogrammerLesRappels(socle, suivant)
+          setEtat({ phase: 'pret', vue: { ...etat.vue, plan: suivant } })
+        })
+        .catch(echouer)
+    },
+    [etat, echouer]
+  )
+
+  /**
+   * « Non » : RIEN ne change au planning, rien n'est enregistré sur ce qui a été mangé. La question
+   * ne revient plus pour ce repas — et seulement pour lui.
+   */
+  const refuserDecalage = useCallback(
+    (slot: SlotRef) => {
+      if (etat.phase !== 'pret') return
+      const { plan } = etat.vue
+      const recipeId = plan.entries.find((e) => memeCreneau(e, slot) && e.service !== 'accompagnement')?.recipeId
+      if (recipeId === undefined || recipeId === null) return
+
+      chargerSocle()
+        .then((socle) => {
+          // ⚠️ EN BASE, PAS DANS L'ÉTAT DE L'ÉCRAN : la question ne doit revenir ni au rechargement,
+          // ni le lendemain.
+          writeSansDecalage(socle.db, plan.id, slot, recipeId)
+          setSansDecalage((avant) => new Set(avant).add(cleSansDecalage(slot, recipeId)))
+        })
+        .catch(echouer)
+    },
+    [etat, echouer]
+  )
+
   if (etat.phase === 'chargement') return <p className="text-attenue">Construction de la semaine…</p>
   if (etat.phase === 'erreur') {
     return (
@@ -540,6 +605,8 @@ export function Semaine() {
   const { plan, nomDe } = etat.vue
   const creneaux = creneauxDuPlan(plan)
   const dates = [...new Set(plan.entries.map((e) => e.slot.date))]
+  const maintenant = new Date()
+  const passe = (s: SlotRef): boolean => estPasse(s, maintenant)
 
   return (
     <section>
@@ -603,10 +670,22 @@ export function Semaine() {
                           !e.isLeftover &&
                           e.service !== 'accompagnement'
                       )
+                // « Décaler ce plat ? » — DANS la carte, jamais en bandeau ni en fenêtre (décision 75).
+                const question =
+                  socleCharge === null ||
+                  entry?.recipeId == null ||
+                  sansDecalage.has(cleSansDecalage({ date, creneau }, entry.recipeId)) ||
+                  !socleCharge.moteur.peutDecaler(plan, { date, creneau }, passe)
+                    ? null
+                    : {
+                        onDecaler: () => decaler({ date, creneau }),
+                        onNon: () => refuserDecalage({ date, creneau }),
+                      }
                 return entry === undefined ? null : (
                   <Creneau
                     key={creneau}
                     entry={entry}
+                    question={question}
                     nom={entry.recipeId === null ? null : nomDe(entry.recipeId)}
                     accompagnement={
                       accompagnement?.recipeId == null
@@ -966,8 +1045,11 @@ function Creneau({
   resteDepuis,
   onRestes,
   onDefaireReste,
+  question,
 }: {
   readonly entry: MealPlanEntry
+  /** « Décaler ce plat ? » et ses deux réponses, ou `null` quand ce repas ne porte pas la question. */
+  readonly question: { readonly onDecaler: () => void; readonly onNon: () => void } | null
   readonly nom: string | null
   /** L'accompagnement posé sur le MÊME créneau, ou `null` en mode recette (un plat seul). */
   readonly accompagnement: { readonly recipeId: RecipeId; readonly nom: string } | null
@@ -1077,6 +1159,31 @@ function Creneau({
             .filter((mention) => mention !== null)
             .join(' · ')}
         </p>
+      )}
+
+      {/* ⛔ UNE QUESTION DE PLANNING, PAS DE REPAS (décision 75) : aucun mot sur ce qui a été mangé,
+          et rien ne s'ouvre seul. Sans réponse, elle reste là ; « Non » ne change rien au planning. */}
+      {question !== null && (
+        <div className="mt-3 rounded-[0.7rem] border border-bordure-forte bg-fond p-2">
+          <p className="text-courant font-semibold text-texte">Décaler ce plat ?</p>
+          <p className="mt-1 text-mention leading-snug text-attenue">Il prendra la place de son prochain reste.</p>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={question.onDecaler}
+              className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] bg-accent-plein px-3 text-courant font-semibold text-white"
+            >
+              Décaler
+            </button>
+            <button
+              type="button"
+              onClick={question.onNon}
+              className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux"
+            >
+              Non
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ⚠️ DEUX BOUTONS PARCE QUE CE SONT DEUX GESTES — décision 49, et c'est la correction d'un

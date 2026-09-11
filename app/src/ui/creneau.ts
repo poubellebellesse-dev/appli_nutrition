@@ -14,7 +14,7 @@
 // Ce fichier ne lit PAS l'horloge : elle est injectée par l'appelant, comme partout ailleurs (§3
 // ENGINE). C'est ce qui rend la règle testable heure par heure.
 
-import type { MealSlot } from '../engine/domain/index.js'
+import type { MealSlot, SlotRef } from '../engine/domain/index.js'
 
 /**
  * « Nombre de repas/jour réglable (1-4) » (§4.2 DESIGN).
@@ -77,4 +77,20 @@ export function creneauxDuRythme(repasParJour: number): readonly MealSlot[] {
 export function creneauDuMoment(heure: number, creneaux: readonly MealSlot[]): MealSlot {
   const prochain = creneaux.find((creneau) => heure < FIN_DE_CRENEAU[creneau])
   return prochain ?? creneaux[creneaux.length - 1]!
+}
+
+const deuxChiffres = (n: number): string => String(n).padStart(2, '0')
+
+/**
+ * Le repas de `slot` est-il passé à `maintenant` ? Jour antérieur, ou jour même une fois sa fenêtre
+ * close (lot `retour-8`, « Décaler ce plat ? »).
+ *
+ * ⚠️ LE JOUR EST LOCAL, PAS `aujourdhuiIso()`, qui est en UTC. À 0 h 05 à Paris, UTC est encore la
+ * veille : le dîner d'hier ne serait pas encore « passé » et sa question arriverait deux heures en
+ * retard. Même raison que l'heure locale en tête de ce fichier.
+ */
+export function estPasse(slot: SlotRef, maintenant: Date): boolean {
+  const jour = `${maintenant.getFullYear()}-${deuxChiffres(maintenant.getMonth() + 1)}-${deuxChiffres(maintenant.getDate())}`
+  if (slot.date !== jour) return slot.date < jour
+  return maintenant.getHours() >= FIN_DE_CRENEAU[slot.creneau]
 }

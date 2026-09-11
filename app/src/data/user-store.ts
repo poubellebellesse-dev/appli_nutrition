@@ -33,6 +33,7 @@ import type {
   MotifVide,
   PiquantTolerance,
   RecipeId,
+  SlotRef,
   TopicId,
   ShoppingList,
   UserProfile,
@@ -880,6 +881,38 @@ export function readLatestPlan(db: UserDb): WeekPlan | null {
     'SELECT id FROM meal_plan ORDER BY mis_a_jour_le DESC, date_debut DESC, id DESC LIMIT 1'
   )[0]
   return row ? readPlan(db, row.id) : null
+}
+
+/** Clé d'un « Non » à « Décaler ce plat ? » : un repas ET le plat qu'il portait. */
+export function cleSansDecalage(slot: SlotRef, recipeId: RecipeId): string {
+  return `${slot.date}|${slot.creneau}|${recipeId}`
+}
+
+/**
+ * Les « Non » donnés sur le plan `planId`, en clés `cleSansDecalage` (v20, lot `retour-8`).
+ *
+ * ⚠️ RANGÉS PAR PLANNING : un plan d'un autre nombre de jours est une autre ligne de `meal_plan`, et
+ * la cascade efface ses réponses avec lui.
+ */
+export function readSansDecalage(db: UserDb, planId: string): ReadonlySet<string> {
+  const rows = db.all<{ readonly date: string; readonly creneau: MealSlot; readonly recipe_id: RecipeId }>(
+    'SELECT date, creneau, recipe_id FROM meal_plan_sans_decalage WHERE plan_id = ?',
+    [planId]
+  )
+  return new Set(rows.map((r) => cleSansDecalage({ date: r.date, creneau: r.creneau }, r.recipe_id)))
+}
+
+/**
+ * Retient « Non » pour ce plat à ce repas. Dire « Non » deux fois ne change rien.
+ *
+ * ⛔ N'ÉCRIT RIEN D'AUTRE : ni le plan, ni l'historique. « Non » n'est pas « je l'ai mangé ».
+ */
+export function writeSansDecalage(db: UserDb, planId: string, slot: SlotRef, recipeId: RecipeId): void {
+  db.run(
+    `INSERT INTO meal_plan_sans_decalage (plan_id, date, creneau, recipe_id) VALUES (?, ?, ?, ?)
+     ON CONFLICT DO NOTHING`,
+    [planId, slot.date, slot.creneau, recipeId]
+  )
 }
 
 // --- Courses ----------------------------------------------------------------------------------
