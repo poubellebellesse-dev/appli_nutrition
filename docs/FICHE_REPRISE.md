@@ -49,7 +49,7 @@ questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RET
   ajouté de quoi voir (affichages, attente de chargement, champ de recherche et famille de 74
   lignes), **qu'aucun test jsdom ne sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3.
   **Tant qu'elle n'est pas faite, on sait seulement que rien n'est cassé** — pas que ça marche.
-- ▶ **AUCUN LOT OUVERT, AUCUN LOT `retour-` EN FILE** — `retour-8` est livré (commit à rattacher).
+- ▶ **AUCUN LOT OUVERT, AUCUN LOT `retour-` EN FILE** — `retour-8` est livré (`6d26fef`).
   La prochaine étape est la passe à l'œil ci-dessus.
   ⚠️ **En ouvrant un brief : nommer les réglages persistants que l'écran lit, et dire lesquels
   les clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.

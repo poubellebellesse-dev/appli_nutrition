@@ -3423,7 +3423,7 @@ fichiers 134 + 1 − 1 = 134.
 
 ---
 
-### Lot `retour-8` — « Décaler ce plat ? » sur un repas passé · ✅ **LIVRÉ le 2026-09-11**, commit à rattacher — attaqué deux tours, v20 accordée le même jour
+### Lot `retour-8` — « Décaler ce plat ? » sur un repas passé · ✅ **LIVRÉ le 2026-09-11** (`6d26fef`) — attaqué deux tours, v20 accordée le même jour
 
 > **À la livraison.** Test scellé 43/43. Les quatre clauses sont démontrées par test. ⚠️ Trois
 > choses qu'aucun test ne démontre : la **clé** du « Non » (case ET plat, décision de l'auteur)
