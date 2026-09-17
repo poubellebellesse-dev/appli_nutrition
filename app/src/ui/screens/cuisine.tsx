@@ -69,6 +69,7 @@ import {
   QuantitesDeLEtape,
   SelecteurPortions,
   TexteEtape,
+  premieresMentions,
   preparerTexteEtape,
 } from '../ingredients-recette.js'
 import { formesDeLAliment } from '../texte-etape.js'
@@ -403,6 +404,25 @@ export function Cuisine({
   const etape = gestes[rang]
   const derniere = rang >= gestes.length - 1
 
+  // ⛔ CE QUE CETTE ÉTAPE ANNONCE : les ingrédients qu'elle emploie pour la PREMIÈRE fois de la
+  // cuisson. Les autres ont déjà été dits plus haut — au fourneau, une quantité redite trois fois
+  // se relit trois fois. Rien ne disparaît : la liste entière reste derrière « Voir les
+  // ingrédients », un tap, et c'est ce qui tient la décision 60.
+  //
+  // ⛔ ON RETIRE L'INGRÉDIENT ICI, AVANT D'INJECTER, JAMAIS LE SEGMENT APRÈS COUP. L'injection ne
+  // pose pas la quantité à côté du groupe nominal, elle le REMPLACE — « l'oignon » → « 1 gros
+  // oignon ». Vider après coup le segment d'une quantité déjà dite emporterait donc le NOM de
+  // l'aliment avec le nombre, et « Faire fondre l'oignon et les poivrons rouges » deviendrait
+  // « Faire fondre et dans ». Le raccourci est plus court à écrire que la bonne version.
+  //
+  // ⚠️ LA MÊME LISTE PART AUX DEUX ENDROITS, phrase et badges. C'est ce qui garde l'invariant de la
+  // décision 60 : leur union vaut exactement ce que l'étape annonce.
+  const premieres = premieresMentions(gestes)
+  const aDire =
+    etape === undefined
+      ? []
+      : etape.foodIds.filter((foodId) => premieres.get(foodId as string) === rang)
+
   // La quantité DANS la phrase, et la liste de ce qu'elle a servi — pour ne pas le répéter en badge
   // juste en dessous. Les deux sortent du même appel : voir `preparerTexteEtape`.
   const redaction =
@@ -411,7 +431,7 @@ export function Cuisine({
       : preparerTexteEtape({
           texte: etape.texte,
           ingredients: recette.ingredients,
-          foodIds: etape.foodIds,
+          foodIds: aDire,
           quantites,
           facteur,
           formesAliment: (foodId) => formesDeLAliment(catalogue.foods.get(foodId as never), foodId),
@@ -631,10 +651,14 @@ export function Cuisine({
               goût ») le garde. L'union des deux couvre toujours `foodIds`.
 
               ⚠️ `foodIds` EST DÉRIVÉ AU BUILD (93,7 % des gestes), jamais saisi à la main. Une étape
-              qui n'emploie aucun ingrédient — « Préchauffer le four » — ne rend rien du tout. */}
+              qui n'emploie aucun ingrédient — « Préchauffer le four » — ne rend rien du tout.
+
+              ⚠️ CE QUI ENTRE ICI, C'EST `aDire`, PAS `etape.foodIds` : les ingrédients que cette
+              étape emploie pour la première fois. Une étape qui ne fait que reprendre ce qui a
+              déjà été dit plus haut ne rend donc rien — voir le calcul de `aDire`. */}
           <QuantitesDeLEtape
             ingredients={recette.ingredients}
-            foodIds={etape.foodIds}
+            foodIds={aDire}
             quantites={quantites}
             facteur={facteur}
             nomAliment={(foodId) => catalogue.foods.get(foodId as never)?.nom ?? foodId}

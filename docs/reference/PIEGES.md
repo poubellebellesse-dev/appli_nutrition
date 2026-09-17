@@ -40,6 +40,19 @@
   « unable to find element », ce qui se lit comme « le composant ne rend rien » — l'inverse du
   défaut. ➡️ Lire l'élément porteur : `getByText((_, el) => el?.tagName === 'P' && …el.textContent)`.
   Le cas est fréquent dès qu'un nombre porte `tabular-nums`, ce que le produit fait partout.
+- ⛔ **`textContent` COLLE LES ÉLÉMENTS FRÈRES SANS AUCUNE ESPACE, DONC `\b` NE TOMBE PAS OÙ L'ŒIL
+  LE CROIT. Payé TROIS fois** : « 336 recettesAnanas rôti… » (un `\b` final ne matche jamais),
+  « 4 artichautsArtichaut, cru », et « Tout retirer**0** recette » — là c'est un `\b` **initial** qui
+  meurt, le zéro étant précédé d'une lettre. Le troisième cas est le plus cher : la clause cherchait
+  l'absence de « 0 », `(?<!\()\b0\b(?!\))` ne trouvait rien, **et le filet aurait été vert avant que
+  la moindre ligne de code existe**. ➡️ **Pour interdire un nombre dans du texte rendu, se borner sur
+  les CHIFFRES, jamais sur les mots** : `(?<![\d(])336(?!\d)(?!\))`. ➡️ Et corollaire général, payé
+  par deux tours d'attaque sur le lot C : **une clause d'absence qui cherche un MOT ne prouve que
+  l'absence de ce mot.** Un renommage (« Niveau : 2/3 » pour « Difficulté », « 336 résultats
+  trouvés » pour « 336 recettes ») passait 11 clauses sur 11. On mesure la **donnée** — forcer le
+  champ à deux valeurs et exiger un rendu identique — ou le **nombre** lui-même. ⚠️ Le différentiel
+  se paie : 678 montages de fiche, **28,5 s** pour une seule clause. Et **tirer une sonde jetable
+  avant d'écrire le filet** : sur cinq sondes, trois filets auraient menti.
 - ⚠️ **Une valeur de style écrite au jugé se relit comme une décision.** 30 tailles de texte
   distinctes vivaient dans `app/src`, chacune arrivée en réponse à un écran précis. Le ménage seul
   ne sert à rien : le mécanisme qui les a produites (hésiter entre deux pas, trancher par un nombre

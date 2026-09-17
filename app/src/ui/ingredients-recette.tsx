@@ -12,7 +12,7 @@
 // session persistée (schéma v11).
 
 import { Fragment } from 'react'
-import type { Recipe } from '../engine/domain/index.js'
+import type { Recipe, RecipeStep } from '../engine/domain/index.js'
 import { quantiteAffichee } from './quantites.js'
 import { injecterQuantites, type EtapeInjectee, type SegmentEtape } from './texte-etape.js'
 
@@ -180,6 +180,32 @@ export function QuantitesDeLEtape({
       })}
     </p>
   )
+}
+
+/**
+ * À quel rang chaque ingrédient est employé pour la PREMIÈRE fois.
+ *
+ * Sert au mode cuisine à ne dire une quantité qu'une fois : une étape n'annonce que les ingrédients
+ * dont le rang de première mention est le sien. Rien ne disparaît — la liste entière reste à un tap.
+ *
+ * ⛔ « DÉJÀ DIT » SE CALCULE DEPUIS LE RANG, JAMAIS DEPUIS L'HISTORIQUE DE NAVIGATION. Les deux
+ * lectures donnent le même écran à l'aller, et c'est ce qui rend le piège invisible : un
+ * accumulateur — `useRef`, store, colonne en base — perdrait la première mention dès qu'on recule
+ * d'une étape pour revérifier une quantité, ce qui est *le* geste du fourneau. L'étape 3 doit
+ * écrire la même chose qu'on y arrive par la 2 ou par la 4. Cette fonction est pure : elle ne peut
+ * pas s'en souvenir autrement.
+ *
+ * ⚠️ LE RANG EST CELUI DE LA LISTE REÇUE. L'appelant ne passe que les GESTES (`nature === 'geste'`),
+ * comme l'écran qui les numérote : compter les avertissements décalerait tous les rangs d'un cran.
+ */
+export function premieresMentions(gestes: readonly RecipeStep[]): ReadonlyMap<string, number> {
+  const premieres = new Map<string, number>()
+  gestes.forEach((etape, rang) => {
+    for (const foodId of etape.foodIds) {
+      if (!premieres.has(foodId as string)) premieres.set(foodId as string, rang)
+    }
+  })
+  return premieres
 }
 
 /**

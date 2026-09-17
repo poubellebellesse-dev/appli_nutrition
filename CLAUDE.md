@@ -42,13 +42,27 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-11 à 12 h 49, arbre complet, livraison de `retour-8`, `6d26fef`) : 2 631 passed / 0 failed (2 631 tests, 135 fichiers)** en 65,7 s · typecheck
-propre · `vite build` ✓ 2,47 s · `engine:plan-stress` 20/20 · catalogue non touché depuis le relevé
-du 2026-09-09 (339 recettes, **dîner 250** dont 44 froides — non remesuré). `USER_SCHEMA_VERSION` = **20** (le « Non » à « Décaler ce plat ? », table neuve, ajout pur). ⚠️ **SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES** — la forme
+⛔ **Dernier relevé (2026-09-17 à 17 h 20, arbre complet, livraison du `lot-E`, non commité) : 2 685 passed / 0 failed (2 685 tests, 139 fichiers)** en 150,08 s · typecheck
+propre (17 h 23) · `vite build` ✓ 2,59 s (17 h 23) · `engine:plan-stress` 20/20 (17 h 24) ·
+**l'écart avec le relevé précédent (2 677 sur 138, le 2026-09-14 à 12 h 45, non commité) est
++8 tests et +1 fichier** : `tests/scelles/lot-E.test.tsx` et ses 8 clauses, attribué par
+`git status` · ⛔ **LA SUITE A DOUBLÉ DE DURÉE POUR 8 TESTS — 70,0 s → 150,08 s.** Ce fichier en
+prend **147,2 s** à lui seul : son balayage monte les **deux** écrans de chacune des 339 recettes et
+parcourt toutes leurs étapes à l'aller puis au retour. Le prix est assumé, il est le pendant d'un
+« Fini quand » qui porte sur le catalogue entier et non sur douze recettes (le lot C avait payé
+28,5 s pour la même raison) · catalogue non touché depuis le relevé
+du 2026-09-09 (339 recettes, **dîner 250** dont 44 froides — non remesuré). `USER_SCHEMA_VERSION` = **21** (le réglage « Afficher les explications », `ALTER TABLE … ADD COLUMN`, forme de la v4). ⚠️ **SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES** — la forme
 de la v9 ne se recopie pas pour une équivalence.
-⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** **Arbre entièrement vert** — les trois derniers
-rouges étaient des clauses scellées qui figeaient `USER_SCHEMA_VERSION` **en valeur absolue**,
-corrigées sur décision de l'auteur (`ETAT.md` §8).
+⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** **Arbre entièrement vert.**
+⭐ **LE LOT B A OUVERT 42 ROUGES DANS TROIS FICHIERS SCELLÉS, ET ILS SONT FERMÉS** (2026-09-14, sceau
+levé puis remis). `retour-1` (8), `retour-5d` (8) et `retour-6` (26) ouvraient l'encart d'envie en
+attendant « Rien n'est obligatoire… », que le lot B éteint : ils mouraient dans leur `ouvrirEncart()`
+avant de mesurer quoi que ce soit. Repère devenu « Combien de temps devant vous ? » — structurel,
+sous aucun interrupteur. ⚠️ **Une phrase que l'on retire peut être la POIGNÉE dont un autre test se
+sert pour ouvrir l'écran.** Avant de masquer un texte, chercher qui le lit comme repère.
+⚠️ **`retour-5c` photographie `retour-1` : son empreinte a été rebasée** (`8806528362af02e5` →
+`31c347329503e523`), le compte de lignes restant à **324** — c'est lui, pas le sha, qui atteste que
+l'édition s'est arrêtée à deux lignes.
 ⭐ **`retour-1` « au moins 6 plats sur 10 » EST VERTE, ET DEUX CAUSES DISTINCTES ONT ÉTÉ PAYÉES
 POUR ÇA.** (1) **Le rayon était vide** : le dîner ne portait que **8 recettes froides sur 214
 (3,7 %)** contre 44 sur 194 au déjeuner, et le moteur en remontait 7 sur 8 ; `retour-5e` y a fait

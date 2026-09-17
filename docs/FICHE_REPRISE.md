@@ -41,16 +41,15 @@ committe, l'utilisateur pousse. ▶ Méthode complète : **[reference/PIEGES.md]
 ## ▶ La prochaine étape
 
 ⛔ **LE HORS-LIGNE EST FERMÉ. CE QUI BLOQUE MAINTENANT, C'EST LE CONTENU.**
-⭐ **PASSE AVANT TOUT LE RESTE DEPUIS LE 2026-08-21 : LE TEST SUR TÉLÉPHONE.** Une session d'usage
-réel a produit une quarantaine d'observations, neuf arbitrages (71 à 78, plus la 81) et deux
-questions ouvertes (79, 80). ▶ **[CONCEPTION_RETOURS_TEST.md](./CONCEPTION_RETOURS_TEST.md)**.
+⭐ **LA PASSE À L'ŒIL SUR TÉLÉPHONE A EU LIEU LE 2026-09-12**, en APK natif — elle était due depuis
+le 2026-08-21. Ce qu'elle a trouvé est trié en lots A → G dans
+▶ **[CONCEPTION_RETOURS_APK.md](./CONCEPTION_RETOURS_APK.md)**, qui fait foi pour ce chantier.
+(La passe de 2026-08-21, faite au navigateur, est close : `CONCEPTION_RETOURS_TEST.md`.)
 
-- ⛔ **LA PASSE À L'ŒIL SUR LE TÉLÉPHONE — NEUF cases, et rien ne la remplacera.** Trois lots y ont
-  ajouté de quoi voir (affichages, attente de chargement, champ de recherche et famille de 74
-  lignes), **qu'aucun test jsdom ne sait vérifier**. Protocole : `CONCEPTION_RETOURS_TEST.md` §3.
-  **Tant qu'elle n'est pas faite, on sait seulement que rien n'est cassé** — pas que ça marche.
-- ▶ **AUCUN LOT OUVERT, AUCUN LOT `retour-` EN FILE** — `retour-8` est livré (`6d26fef`).
-  La prochaine étape est la passe à l'œil ci-dessus.
+- ▶ **AUCUN LOT OUVERT. Les lots A, B, C et E sont livrés ; la suite est le lot D**, puis le H. Le F
+  attend une séance de design, le G se juge à l'œil et vient en dernier.
+- ⚠️ **Rebâtir l'APK après les lots B → E et refaire une passe à l'œil** : ce que les tests jsdom ne
+  savent pas voir ne se voit que là, et le lot A en est la démonstration.
   ⚠️ **En ouvrant un brief : nommer les réglages persistants que l'écran lit, et dire lesquels
   les clauses font varier.** C'est ce qui a manqué à `retour-2` — `ETAT.md` §8.
 
@@ -63,11 +62,11 @@ photos (129/339, source), origine animale (66c), matériel (65c), retours test (
 
 1. **⛔ Relecture par un tiers du contenu Savoir** (`ETAT.md` §8.2 bis) — **bloquante avant
    publication**. 73 tips et 8 fiches sourcés un par un, **aucun relu**.
-2. **Vérifier sur un vrai téléphone** — protocole et seuil fixés à l'avance :
+2. **Les mesures que seul un téléphone donne** — protocole et seuils :
    [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) §0. ⚠️ Le chrono de `#/recettes`, seul
    chiffre qui manque pour fermer la décision 61, **n'a toujours pas été pris** — jamais en jsdom.
-3. **Empaquetage Capacitor, puis Play** — `capacitor.config.ts` en place, `npx cap add android`
-   jamais lancé (pas de SDK). Le web reste le seul chemin vers un iPhone sans Mac.
+3. **Play Store** — l'APK de débogage se fabrique et s'installe (`ETAT.md` §8) ; ce qui reste est la
+   signature, la fiche et la publication. Le web demeure le seul chemin vers un iPhone sans Mac.
 
 ⚠️ **Deux trous sanitaires bloquent la publication au même titre que la relecture** : céphalopodes et
 cuisson de l'œuf, qu'aucune autorité lue ne donne — le principe 3 interdit d'écrire sans source.

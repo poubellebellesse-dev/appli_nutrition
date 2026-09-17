@@ -1,9 +1,10 @@
 {
   "avertissement": "CACHE DÉRIVÉ, jamais une source. La vérité est dans les fichiers listés sous « sources ». Toute édition à la main sera écrasée à la prochaine réconciliation (/plan). « genere_le » date la dernière lecture des documents ; les états ont pu bouger depuis, par /sceller ou /fin.",
-  "genere_le": "2026-09-09T17:49:10",
+  "genere_le": "2026-09-17T13:20:29",
   "sources": [
     "docs/FICHE_REPRISE.md",
     "docs/ETAT.md",
+    "docs/CONCEPTION_RETOURS_APK.md",
     "docs/CONCEPTION_RETOURS_TEST.md",
     "docs/CONCEPTION_GESTES_ILLUSTRES.md",
     "docs/CONCEPTION_PHOTOS_RECETTES.md",
@@ -12,116 +13,62 @@
     "docs/CONCEPTION_B_VIN_REPAS.md",
     "docs/CONCEPTION_MODE_CUISINE.md",
     "docs/CONCEPTION_REGIME_PERSONNALISE.md",
-    ".claude/etat-garde.json"
+    ".claude/etat-garde.json",
+    ".claude/lots.mjs"
   ],
   "lots": [
     {
-      "id": "retour-1",
-      "chantier": "retours test",
-      "titre": "l'axe retourné, et les écrans qui mentent",
+      "id": "lot-A",
+      "chantier": "retours apk",
+      "titre": "le bandeau du téléphone",
       "etat": "fait",
-      "le": "2026-08-21",
-      "commit": "3ce17d7"
+      "le": "2026-09-12"
     },
     {
-      "id": "retour-1b",
-      "chantier": "retours test",
-      "titre": "le tutoriel qui traverse les menus",
+      "id": "lot-B",
+      "chantier": "retours apk",
+      "titre": "épurer : les quatre interrupteurs",
       "etat": "fait",
-      "le": "2026-08-21",
-      "commit": "42491ea"
+      "le": "2026-09-14"
     },
     {
-      "id": "retour-2",
-      "chantier": "retours test",
-      "titre": "le sélecteur s'ouvre aux 451 aliments",
+      "id": "lot-C",
+      "chantier": "retours apk",
+      "titre": "la fiche recette, et le compte brut de l'écran « Recettes »",
       "etat": "fait",
-      "le": "2026-08-22",
-      "commit": "6aad49c"
+      "le": "2026-09-14"
     },
     {
-      "id": "retour-3",
-      "chantier": "retours test",
-      "titre": "« je mange dehors », et l'écran qui ne connaît pas la semaine",
-      "etat": "fait",
-      "le": "2026-08-22",
-      "commit": "166aa32"
+      "id": "lot-D",
+      "chantier": "retours apk",
+      "titre": "Navigation et retour",
+      "etat": "a_faire"
     },
     {
-      "id": "retour-4",
-      "chantier": "retours test",
-      "titre": "« les restes de… », et le reste dont le plat n'est jamais cuisiné",
+      "id": "lot-E",
+      "chantier": "retours apk",
+      "titre": "Mode cuisine : une quantité dite une fois",
       "etat": "fait",
-      "le": "2026-08-26",
-      "commit": "7642492"
+      "le": "2026-09-17"
     },
     {
-      "id": "retour-5",
-      "chantier": "retours test",
-      "titre": "le riz nature entre au catalogue, et il ne fait pas un dîner",
-      "etat": "fait",
-      "le": "2026-09-09",
-      "commit": "d0dd712"
+      "id": "lot-F",
+      "chantier": "retours apk",
+      "titre": "La semaine, refaite",
+      "etat": "bloque"
     },
     {
-      "id": "retour-5b",
-      "chantier": "retours test",
-      "titre": "la case vide dit pourquoi elle est vide",
-      "etat": "fait",
-      "le": "2026-09-09",
-      "commit": "d1f11ff",
-      "bloque_par": "retour-5"
+      "id": "lot-G",
+      "chantier": "retours apk",
+      "titre": "Apparence : justification, police, logo, transitions",
+      "etat": "a_faire",
+      "bloque_par": "lot-F"
     },
     {
-      "id": "retour-5c",
-      "chantier": "retours test",
-      "titre": "rebaser les compteurs que les neuf bases nues font rougir",
-      "etat": "fait",
-      "le": "2026-09-09",
-      "commit": "3e56937",
-      "bloque_par": "retour-5"
-    },
-    {
-      "id": "retour-5d",
-      "chantier": "retours test",
-      "titre": "la clause qui mesurait l'heure",
-      "etat": "fait",
-      "le": "2026-09-09",
-      "commit": "157bf45",
-      "bloque_par": "retour-5"
-    },
-    {
-      "id": "retour-5e",
-      "chantier": "retours test",
-      "titre": "les plats froids n'ont pas le droit de dîner",
-      "etat": "fait",
-      "le": "2026-09-09",
-      "commit": "80b29ec"
-    },
-    {
-      "id": "retour-6",
-      "chantier": "retours test",
-      "titre": "les filtres d'envie deviennent durs sur Aujourd'hui",
-      "etat": "fait",
-      "le": "2026-09-10",
-      "commit": "be02116",
-      "bloque_par": "retour-1"
-    },
-    {
-      "id": "retour-7",
-      "chantier": "retours test",
-      "titre": "le frigo ne vaut plus que pour un repas",
-      "etat": "fait",
-      "le": "2026-09-11",
-      "commit": "159e8ea"
-    },
-    {
-      "id": "retour-8",
-      "chantier": "retours test",
-      "titre": "effacer un repas passé",
-      "etat": "fait",
-      "le": "2026-09-11",
-      "commit": "6d26fef"
+      "id": "lot-H",
+      "chantier": "retours apk",
+      "titre": "La quantité injectée mange le nom de l'aliment",
+      "etat": "a_faire"
     },
     {
       "id": "Lot geste 1",
@@ -158,7 +105,7 @@
     },
     {
       "id": "clips-7-gestes",
-      "chantier": "clips",
+      "chantier": "gestes illustrés",
       "titre": "7 gestes sans candidat",
       "etat": "a_faire"
     },
@@ -189,24 +136,6 @@
       "id": "photos-source",
       "chantier": "photos recettes",
       "titre": "201 recettes sans photo, et le bac est épuisé — le goulot est la source, pas le tri",
-      "etat": "a_faire"
-    },
-    {
-      "id": "relecture-savoir",
-      "chantier": "avant publication",
-      "titre": "Relecture par un tiers du contenu Savoir — bloquante avant publication",
-      "etat": "a_faire"
-    },
-    {
-      "id": "essai-telephone",
-      "chantier": "avant publication",
-      "titre": "Vérifier sur un vrai téléphone",
-      "etat": "a_faire"
-    },
-    {
-      "id": "capacitor",
-      "chantier": "avant publication",
-      "titre": "Empaquetage Capacitor, puis Play",
       "etat": "a_faire"
     },
     {
@@ -265,6 +194,132 @@
       "etat": "fait",
       "le": "2026-08-20",
       "commit": "4a9f373"
+    },
+    {
+      "id": "retour-1",
+      "chantier": "retours test",
+      "titre": "l'axe retourné, et les écrans qui mentent",
+      "etat": "fait",
+      "le": "2026-08-21",
+      "commit": "3ce17d7"
+    },
+    {
+      "id": "retour-1b",
+      "chantier": "retours test",
+      "titre": "le tutoriel qui traverse les menus",
+      "etat": "fait",
+      "le": "2026-08-21",
+      "commit": "42491ea"
+    },
+    {
+      "id": "retour-2",
+      "chantier": "retours test",
+      "titre": "le sélecteur s'ouvre aux 451 aliments",
+      "etat": "fait",
+      "le": "2026-08-22",
+      "commit": "6aad49c"
+    },
+    {
+      "id": "retour-3",
+      "chantier": "retours test",
+      "titre": "« je mange dehors », et l'écran qui ne connaît pas la semaine",
+      "etat": "fait",
+      "le": "2026-08-22",
+      "commit": "166aa32"
+    },
+    {
+      "id": "retour-4",
+      "chantier": "retours test",
+      "titre": "« les restes de… », et le reste dont le plat n'est jamais cuisiné",
+      "etat": "fait",
+      "le": "2026-08-26",
+      "commit": "7642492"
+    },
+    {
+      "id": "retour-5",
+      "chantier": "retours test",
+      "titre": "le riz nature entre au catalogue, et il ne fait pas un dîner",
+      "etat": "fait",
+      "le": "2026-09-09",
+      "commit": "d0dd712"
+    },
+    {
+      "id": "retour-5c",
+      "chantier": "retours test",
+      "titre": "rebaser les compteurs que les neuf bases nues font rougir",
+      "etat": "fait",
+      "le": "2026-09-09",
+      "commit": "3e56937",
+      "bloque_par": "retour-5"
+    },
+    {
+      "id": "retour-5d",
+      "chantier": "retours test",
+      "titre": "la clause qui mesurait l'heure",
+      "etat": "fait",
+      "le": "2026-09-09",
+      "commit": "157bf45",
+      "bloque_par": "retour-5"
+    },
+    {
+      "id": "retour-5e",
+      "chantier": "retours test",
+      "titre": "les plats froids n'ont pas le droit de dîner",
+      "etat": "fait",
+      "le": "2026-09-09",
+      "commit": "80b29ec"
+    },
+    {
+      "id": "retour-5b",
+      "chantier": "retours test",
+      "titre": "la case vide dit pourquoi elle est vide",
+      "etat": "fait",
+      "le": "2026-09-09",
+      "commit": "d1f11ff",
+      "bloque_par": "retour-5"
+    },
+    {
+      "id": "retour-6",
+      "chantier": "retours test",
+      "titre": "les filtres d'envie deviennent durs sur Aujourd'hui",
+      "etat": "fait",
+      "le": "2026-09-10",
+      "commit": "be02116",
+      "bloque_par": "retour-1"
+    },
+    {
+      "id": "retour-7",
+      "chantier": "retours test",
+      "titre": "le frigo ne vaut plus que pour un repas",
+      "etat": "fait",
+      "le": "2026-09-11",
+      "commit": "159e8ea"
+    },
+    {
+      "id": "retour-8",
+      "chantier": "retours test",
+      "titre": "« Décaler ce plat ? » sur un repas passé",
+      "etat": "fait",
+      "le": "2026-09-11",
+      "commit": "6d26fef"
+    },
+    {
+      "id": "relecture-savoir",
+      "chantier": "avant publication",
+      "titre": "Relecture par un tiers du contenu Savoir — bloquante avant publication",
+      "etat": "a_faire"
+    },
+    {
+      "id": "essai-telephone",
+      "chantier": "avant publication",
+      "titre": "Les mesures que seul un téléphone donne",
+      "etat": "a_faire"
+    },
+    {
+      "id": "capacitor",
+      "chantier": "avant publication",
+      "titre": "Play Store",
+      "etat": "a_faire"
     },
     {
       "id": "rang 0",
