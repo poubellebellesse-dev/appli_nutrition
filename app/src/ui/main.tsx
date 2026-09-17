@@ -311,9 +311,16 @@ function Coquille() {
   // ⚠️ PAS DE BARRE DE NAVIGATION PENDANT L'ACCUEIL. §4.8 est un parcours linéaire jusqu'à une
   // première suggestion utile ; laisser les cinq onglets accessibles permettrait d'atterrir sur
   // « Semaine » sans avoir déclaré ses allergies, c'est-à-dire exactement le trou qu'on referme.
+  // ⚠️ LA RÉSERVE DU HAUT REMPLACE `pt-8`, elle ne s'y ajoute pas : deux `padding-top` sur le même
+  // élément, c'est l'ordre de la feuille compilée qui tranche, et il n'est pas garanti. Le `max()`
+  // n'est pas décoratif — l'inset du haut vaut **0** sur un écran sans encoche, et une réserve nue
+  // supprimerait alors les 2rem de respiration. Même forme que la réserve du bas de
+  // `navigation.tsx`, pour la même raison. Voir lot A.
+  // ⛔ Ne pas citer le nom de l'inset en clair dans un commentaire : une clause scellée compte ses
+  // occurrences dans le FICHIER entier, pas dans le seul JSX. Deux, pas plus.
   if (!consenti) {
     return (
-      <div className="mx-auto max-w-3xl px-5 pb-10 pt-8">
+      <div className="mx-auto max-w-3xl px-5 pb-10 pt-[max(env(safe-area-inset-top),2rem)]">
         {/* ⚠️ ON ATTERRIT EXPLICITEMENT SUR « Aujourd'hui », on ne laisse pas l'adresse décider.
             L'accueil ne touchait pas au fragment d'URL : en sortant, la coquille rendait l'onglet
             que le fragment désignait encore. Sur une première installation il est vide, donc le
@@ -354,8 +361,11 @@ function Coquille() {
       </button>
       <Navigation courante={route.onglet} />
       {/* `pb-28` réserve la hauteur de la barre du bas sur mobile ; sur bureau la barre passe à
-          gauche (`lg:pl-56`) et la réserve disparaît. Marges en rem, jamais de hauteur figée. */}
-      <div className="mx-auto max-w-3xl px-5 pb-28 pt-6 lg:pb-10 lg:pl-64 lg:pr-8">
+          gauche (`lg:pl-56`) et la réserve disparaît. Marges en rem, jamais de hauteur figée.
+          ⚠️ En haut, la réserve du bandeau REMPLACE `pt-6` — voir le conteneur d'accueil ci-dessus
+          pour le pourquoi du `max()` et du remplacement. Et pas de préfixe `lg:` : le bandeau à
+          compenser est celui du téléphone, pas celui du bureau. */}
+      <div className="mx-auto max-w-3xl px-5 pb-28 pt-[max(env(safe-area-inset-top),1.5rem)] lg:pb-10 lg:pl-64 lg:pr-8">
         <LienParametres actif={route.sousVue.type === 'parametres'} />
         {alerte !== 'aucune' && (
           <div
