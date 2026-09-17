@@ -42,9 +42,9 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-17 à 17 h 20, arbre complet, livraison du `lot-E`, non commité) : 2 685 passed / 0 failed (2 685 tests, 139 fichiers)** en 150,08 s · typecheck
+⛔ **Dernier relevé (2026-09-17 à 17 h 20, arbre complet, livraison du `lot-E`, commité en `2d8fcfd`) : 2 685 passed / 0 failed (2 685 tests, 139 fichiers)** en 150,08 s · typecheck
 propre (17 h 23) · `vite build` ✓ 2,59 s (17 h 23) · `engine:plan-stress` 20/20 (17 h 24) ·
-**l'écart avec le relevé précédent (2 677 sur 138, le 2026-09-14 à 12 h 45, non commité) est
+**l'écart avec le relevé précédent (2 677 sur 138, le 2026-09-14 à 12 h 45) est
 +8 tests et +1 fichier** : `tests/scelles/lot-E.test.tsx` et ses 8 clauses, attribué par
 `git status` · ⛔ **LA SUITE A DOUBLÉ DE DURÉE POUR 8 TESTS — 70,0 s → 150,08 s.** Ce fichier en
 prend **147,2 s** à lui seul : son balayage monte les **deux** écrans de chacune des 339 recettes et

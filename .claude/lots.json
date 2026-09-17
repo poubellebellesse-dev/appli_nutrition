@@ -22,21 +22,24 @@
       "chantier": "retours apk",
       "titre": "le bandeau du téléphone",
       "etat": "fait",
-      "le": "2026-09-12"
+      "le": "2026-09-12",
+      "commit": "dfb8811"
     },
     {
       "id": "lot-B",
       "chantier": "retours apk",
       "titre": "épurer : les quatre interrupteurs",
       "etat": "fait",
-      "le": "2026-09-14"
+      "le": "2026-09-14",
+      "commit": "cd328ad"
     },
     {
       "id": "lot-C",
       "chantier": "retours apk",
       "titre": "la fiche recette, et le compte brut de l'écran « Recettes »",
       "etat": "fait",
-      "le": "2026-09-14"
+      "le": "2026-09-14",
+      "commit": "28dfea8"
     },
     {
       "id": "lot-D",
@@ -49,7 +52,8 @@
       "chantier": "retours apk",
       "titre": "Mode cuisine : une quantité dite une fois",
       "etat": "fait",
-      "le": "2026-09-17"
+      "le": "2026-09-17",
+      "commit": "2d8fcfd"
     },
     {
       "id": "lot-F",

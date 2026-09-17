@@ -63,11 +63,11 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 
 | Lot | Objet | État |
 |---|---|---|
-| **A** | Le bandeau du téléphone | ✅ **LIVRÉ le 2026-09-12** (non commité) |
-| **B** | Épurer : les quatre interrupteurs | ✅ **LIVRÉ le 2026-09-14** (non commité) |
-| **C** | La fiche recette, et le compte brut de l'écran « Recettes » | ✅ **LIVRÉ le 2026-09-14** (non commité) |
+| **A** | Le bandeau du téléphone | ✅ **LIVRÉ le 2026-09-12** (`dfb8811`) |
+| **B** | Épurer : les quatre interrupteurs | ✅ **LIVRÉ le 2026-09-14** (`cd328ad`) |
+| **C** | La fiche recette, et le compte brut de l'écran « Recettes » | ✅ **LIVRÉ le 2026-09-14** (`28dfea8`) |
 | **D** | Navigation et retour | à écrire |
-| **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (non commité) |
+| **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`) |
 | **F** | La semaine, refaite | **bloqué** — forme à trancher en séance de design |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
 | **H** | La quantité injectée mange le nom de l'aliment | à écrire — **défaut existant**, trouvé en attaquant le lot E |
@@ -76,8 +76,8 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 
 **État à la livraison.** Les deux conteneurs de `ui/main.tsx` portent la réserve ; `lot-A.test.tsx`
 rend 5/5 ; l'arbre entier rend **2 636 tests sur 136 fichiers, zéro rouge** (contre 2 631 sur 135
-avant le lot — l'écart est exactement ce fichier). **Pas de hash : le lot n'est pas commité**, les
-commits de ce dépôt appartiennent à l'auteur.
+avant le lot — l'écart est exactement ce fichier). **Commité le 2026-09-17 : `dfb8811`**, avec les
+trois autres lots livrés, chacun dans son commit.
 
 ⭐ **La moitié du « Fini quand » que le test déclarait ne pas pouvoir démontrer a été démontrée
 autrement** : la feuille compilée par `vite build` contient les deux règles, **hors de toute
@@ -166,8 +166,8 @@ l'affichage bord à bord elle se colle elle aussi sous la barre d'état. Même d
 **État à la livraison (relevé du 2026-09-14 à 09 h 59, arbre complet).** **2 666 passed / 0 failed
 (2 666 tests, 137 fichiers)** en 60,7 s ; `lot-B.test.tsx` rend **29/29**, les dix points du « Fini
 quand » sont couverts par une clause au moins. `typecheck` propre · `vite build` ✓ 2,48 s ·
-`engine:plan-stress` 20/20. **Pas de hash : le lot n'est pas commité**, les commits de ce dépôt
-appartiennent à l'auteur.
+`engine:plan-stress` 20/20. **Commité le 2026-09-17 : `cd328ad`** — les deux écrans partagés avec
+les lots C et E n'y portent que leurs parties « épure ».
 
 ⭐ **CE LOT A OUVERT 42 ROUGES DANS TROIS FICHIERS SCELLÉS ANTÉRIEURS, ET C'EST SA LEÇON.**
 `retour-1.test.tsx` (8), `retour-5d.test.tsx` (8) et `retour-6.test.tsx` (26) — **une cause unique**,
@@ -418,7 +418,8 @@ cherchaient quelque chose qui n'était pas là.** C'est le défaut du lot A, sou
 sept points du « Fini quand » est couvert par une clause au moins. `typecheck` propre (12 h 46) ·
 `vite build` ✓ 2,46 s (12 h 46) · `engine:plan-stress` **20/20** (12 h 47). L'écart avec le témoin
 d'avant le lot (2 666 sur 137, le 2026-09-14 à 09 h 59) est **exactement ce fichier** : +11 tests,
-+1 fichier. **Pas de hash : le lot n'est pas commité.**
++1 fichier. **Commité le 2026-09-17 : `28dfea8`** — `ingredients-recette.tsx` n'y porte que l'ordre
+nom/quantité, sa part du lot E est dans `2d8fcfd`.
 ⚠️ **`node .claude/lots.mjs etat "lot-C" …` répond « Lot « lot-C » absent de l'index »** — au sceau
 comme à la fermeture. L'index `.claude/lots.json` est un cache et il est en retard sur ce document ;
 la ligne n'a pas été inventée, `/plan` réconciliera.
@@ -745,7 +746,7 @@ au modèle, le lien porté par le nom seul, les mentions et les étapes de la fi
 est la **seconde moitié** du point 3 : prise seule elle ne prouve rien, appariée à la clause 3 elle
 sépare « retiré de l'affichage » de « supprimé du modèle ».
 
-### Lot E — mode cuisine : une quantité dite une fois — ✅ **LIVRÉ le 2026-09-17** (non commité)
+### Lot E — mode cuisine : une quantité dite une fois — ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`)
 
 Ce que le lot fait, c'est la décision **2.b** ci-dessus : « en mode cuisine, la ligne de quantités
 sous une étape ne répète plus une quantité déjà donnée à une étape précédente ». Rien ne disparaît —
