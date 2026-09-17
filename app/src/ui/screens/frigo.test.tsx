@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { AllergenId, FoodId, RecipeId } from '../../engine/domain/index.js'
 import { readPantryEntries, readPantryFoodIds, writeAllergies, writePantry } from '../../data/user-store.js'
-import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
+import { baseCourante, catalogueDeTest, rallumerEpure, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
 
 vi.mock('../catalog-source.js', () => ({
   chargerCatalogue: () => Promise.resolve(catalogueDeTest()),
@@ -259,6 +259,12 @@ describe('frigo — le classement suit la couverture en masse, pas le compte d�
   // classement qui reviendrait au compte brut romprait ce contrat sans que rien ne le dise à
   // l'écran — seul le pourcentage, affiché, permet de le vérifier de l'extérieur.
   it('les recettes affichées sont triées par pourcentage de couverture décroissant', async () => {
+    // ⚠️ LE LOT B A ÉTEINT LA JAUGE (`ui/epure.ts`, interrupteur 4), pas le classement. Le
+    // pourcentage reste la SEULE façon de vérifier de l'extérieur que l'ordre suit bien la masse :
+    // on rallume l'interrupteur — après le `resetModules` du `beforeEach`, avant le rendu — pour
+    // pouvoir le lire. Un écran qui aurait supprimé la jauge au lieu de la masquer rougirait ici.
+    await rallumerEpure('jaugesEtCompteurs')
+
     seedPantry(PANTRY_RICHE)
     await monter()
     await waitFor(() => expect(lignesResultats().length).toBeGreaterThan(1))

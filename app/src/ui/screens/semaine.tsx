@@ -47,6 +47,7 @@ import {
 } from '../socle.js'
 import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { Panneau } from '../panneau.js'
+import { epure } from '../epure.js'
 import { REPAS_PAR_DEFAUT, creneauxDuRythme, estPasse } from '../creneau.js'
 import { reprogrammerLesRappels } from '../ecrire-plan.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
@@ -634,8 +635,13 @@ export function Semaine() {
       >
         Proposer une autre semaine
       </button>
-      <p className="mt-2 text-courant text-attenue">Vos repas gardés ne changeront pas.</p>
+      {epure.phrasesRassurantes && (
+        <p className="mt-2 text-courant text-attenue">Vos repas gardés ne changeront pas.</p>
+      )}
 
+      {/* ⛔ L'ALERTE D'ÉNERGIE NE PART PAS AVEC L'ÉPURE. Ce n'est pas de la réassurance : §6.5
+          ARCHITECTURE veut qu'un plan qui sous-alimente le dise. Elle a déjà son propre réglage
+          (`alertes_discretes`), et même discrète elle ne disparaît jamais. */}
       {modeAvance && <AlerteEnergie warnings={plan.warnings} />}
 
       <Legende />

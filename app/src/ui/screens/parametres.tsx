@@ -104,6 +104,7 @@ import { ChoixPiquant } from '../champs-profil.js'
 import { PARCOURS } from '../parcours.js'
 import { useLancerParcours } from '../lancer-parcours.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { epure } from '../epure.js'
 
 /**
  * ⚠️ LA VUE RÉUTILISE `ChoixProfil`, elle n'en redéclare pas une variante. Cet écran portait sa
@@ -330,7 +331,11 @@ function resumePiquant(tolerance: PiquantTolerance | null): string {
 }
 
 function resumeAffichage(affichage: StoredDisplay): string {
-  const reglages = [affichage.gestesBalayage, affichage.afficherMacros]
+  const reglages = [
+    affichage.gestesBalayage,
+    affichage.afficherMacros,
+    affichage.afficherExplications,
+  ]
   const actifs = reglages.filter(Boolean).length
   return `${actifs} activé${actifs === 1 ? '' : 's'} sur ${reglages.length}`
 }
@@ -511,9 +516,11 @@ export function Parametres() {
         Paramètres
       </h1>
       <LienTutoriel parcoursId="reglages" />
-      <p className="mt-2 text-courant leading-relaxed text-attenue">
-        Tout se modifie à tout moment. Rien n'est envoyé nulle part.
-      </p>
+      {epure.phrasesRassurantes && (
+        <p className="mt-2 text-courant leading-relaxed text-attenue">
+          Tout se modifie à tout moment. Rien n'est envoyé nulle part.
+        </p>
+      )}
 
       <Section titre="Options nutrition">
         <div className="space-y-2">
@@ -807,6 +814,21 @@ export function Parametres() {
               cochee={vue.affichage.afficherMacros}
               onBasculer={() => {
                 const affichage = { ...vue.affichage, afficherMacros: !vue.affichage.afficherMacros }
+                appliquer({ ...vue, affichage }, (db) => writeDisplay(db, affichage))
+              }}
+            />
+            {/* Le seul des quatre interrupteurs d'`ui/epure.ts` que l'utilisateur peut rallumer
+                lui-même (décision 2.a). Les trois autres s'éditent dans le code : ils n'ont pas
+                mérité une ligne de plus ici. */}
+            <Case
+              libelle="Afficher les explications sous chaque plat"
+              description="Pourquoi ce plat vous est proposé, et ce que vous avez déjà pour le faire."
+              cochee={vue.affichage.afficherExplications}
+              onBasculer={() => {
+                const affichage = {
+                  ...vue.affichage,
+                  afficherExplications: !vue.affichage.afficherExplications,
+                }
                 appliquer({ ...vue, affichage }, (db) => writeDisplay(db, affichage))
               }}
             />

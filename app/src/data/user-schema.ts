@@ -32,7 +32,7 @@
 import { withTransaction, type UserDb } from './user-db.js'
 
 /** Version courante du schéma. Incrémenter EN MÊME TEMPS qu'on ajoute une entrée à `MIGRATIONS`. */
-export const USER_SCHEMA_VERSION = 20
+export const USER_SCHEMA_VERSION = 21
 
 export interface Migration {
   readonly version: number
@@ -958,6 +958,26 @@ const V20_STATEMENTS: readonly string[] = [
    )`,
 ]
 
+/**
+ * v21 — « afficher les explications », le seul des quatre interrupteurs de l'épure que l'utilisateur
+ * peut rallumer lui-même. Lot `lot-B`, décision 2.a de `CONCEPTION_RETOURS_APK.md`.
+ *
+ * ⭐ LA FORME DE LA v4, PAS CELLE DES v19/v20. Un `ADD COLUMN` sur une table existante : aucune ligne
+ * n'est lue, aucune n'est réécrite, rien n'est recréé. Les réglages déjà posés par l'utilisateur
+ * survivent par construction, et non parce qu'un test de migration l'aura vérifié après coup. La
+ * clause 6c du test scellé refuse d'ailleurs tout `DROP TABLE`, `CREATE TABLE` ou `DELETE FROM` ici.
+ *
+ * ⚠️ SQLite VALIDE LE `CHECK` D'UN `ADD COLUMN` CONTRE LES LIGNES EXISTANTES — piège payé sur la v9.
+ * Ici il n'y a rien à craindre : `DEFAULT 0` remplit les lignes déjà là, et 0 est dans `(0,1)`.
+ *
+ * À 0 PAR DÉFAUT, y compris pour qui utilisait déjà l'application. L'épure est le comportement
+ * voulu ; revoir les explications est un choix qu'on fait, pas un état qu'on subit.
+ */
+const V21_STATEMENTS: readonly string[] = [
+  `ALTER TABLE user_display
+     ADD COLUMN afficher_explications INTEGER NOT NULL DEFAULT 0 CHECK (afficher_explications IN (0,1))`,
+]
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, statements: V1_STATEMENTS },
   { version: 2, statements: V2_STATEMENTS },
@@ -979,6 +999,7 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 18, statements: V18_STATEMENTS },
   { version: 19, statements: V19_STATEMENTS },
   { version: 20, statements: V20_STATEMENTS },
+  { version: 21, statements: V21_STATEMENTS },
 ]
 
 /** Version du schéma présente en base. `0` = base vide, aucune migration jouée. */

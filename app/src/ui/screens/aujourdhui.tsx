@@ -61,6 +61,7 @@ import { alimentsValables } from '../frigo-valable.js'
 import { PALIERS_TEMPS, Segment } from '../champs-profil.js'
 import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { epure } from '../epure.js'
 import { RepriseCuisine } from '../reprise-cuisine.js'
 import { enregistrerLePlan } from '../ecrire-plan.js'
 import { LIBELLE_DEHORS, oublierLePlat, platDAvant, retenirLePlat } from '../dehors.js'
@@ -275,6 +276,8 @@ interface Vue {
    *  distingue le sélecteur de repas de `TITRE_CRENEAU`, qui couvre le vocabulaire complet. */
   readonly creneaux: readonly MealSlot[]
   readonly balayageActif: boolean
+  /** Le réglage « Afficher les explications sous chaque plat » (lot B), lu au calcul de la vue. */
+  readonly afficherExplications: boolean
   /** Les plats proches, par identifiant de plat regardé — calculés à la demande, mémorisés. */
   readonly prochesDe: (id: RecipeId) => readonly RecipeId[]
 }
@@ -383,6 +386,7 @@ async function calculerVue(
     creneau,
     creneaux,
     balayageActif: readDisplay(socle.db).gestesBalayage,
+    afficherExplications: readDisplay(socle.db).afficherExplications,
     prochesDe: (id) => {
       const connu = cache.get(id)
       if (connu !== undefined) return connu
@@ -759,6 +763,7 @@ export function Aujourdhui() {
             nom={vue.nomDe(courante.recipeId)}
             photo={vue.photoDe(courante.recipeId)}
             balayageActif={vue.balayageActif}
+            expliquer={vue.afficherExplications}
             surPrecedent={position > 0 ? () => deplacer(-1, total) : null}
             surSuivant={position < total - 1 ? () => deplacer(1, total) : null}
             surRetenir={() => retenir(courante.recipeId, vue.creneau)}
@@ -785,7 +790,10 @@ export function Aujourdhui() {
         </>
       )}
 
-      {vue.nbRetenus > 0 && (
+      {/* ⛔ COMPTEUR D'HISTORIQUE : même interrupteur que les explications (lot B). Il ne dit rien
+          d'actionnable, il dit que la machine compte — c'est ce que le retour d'usage a reproché à
+          l'écran. Il revient avec le même réglage, pour la même raison. */}
+      {(epure.explicationsMoteur || vue.afficherExplications) && vue.nbRetenus > 0 && (
         <p className="mt-4 text-courant leading-relaxed text-attenue">
           {vue.nbRetenus} plat{vue.nbRetenus > 1 ? 's' : ''} retenu{vue.nbRetenus > 1 ? 's' : ''} ces{' '}
           {FENETRE_HISTORIQUE_JOURS} derniers jours.
@@ -856,6 +864,7 @@ function CarteRepas({
   nom,
   photo,
   balayageActif,
+  expliquer,
   surPrecedent,
   surSuivant,
   surRetenir,
@@ -866,6 +875,8 @@ function CarteRepas({
   /** Le chemin de la photo, ou `null` — auquel cas l'aplat de `ui/vignette.ts` tient la place. */
   readonly photo: string | null
   readonly balayageActif: boolean
+  /** Le réglage utilisateur, qui rallume à lui seul les explications du moteur (lot B). */
+  readonly expliquer: boolean
   readonly surPrecedent: (() => void) | null
   readonly surSuivant: (() => void) | null
   readonly surRetenir: () => void
@@ -945,7 +956,10 @@ function CarteRepas({
             Rendu CONDITIONNEL : une couche peut être délibérément muette (`EXPLANATION_LABELS`,
             selection/explain.ts) et la liste revenir vide — un `<p>` vide laisserait une marge
             inexpliquée sous le titre. */}
-        {suggestion.explanations.length > 0 && (
+        {/* ⛔ ÉTEINTES PAR DÉFAUT (lot B) : c'est le retour d'usage qui les a fait taire, pas un
+            doute sur leur justesse. Elles ne sont pas supprimées — `epure.explicationsMoteur` les
+            rend au code, le réglage d'affichage les rend à l'utilisateur. */}
+        {(epure.explicationsMoteur || expliquer) && suggestion.explanations.length > 0 && (
           <p className="mt-2 text-courant leading-relaxed text-texte-doux">
             {suggestion.explanations.map((e) => e.label).join(' · ')}
           </p>
@@ -1045,9 +1059,15 @@ function EncartEnvie({
   return (
     <div className="mt-4 rounded-[--radius-carte] border border-bordure-forte bg-surface p-4">
       <h2 className="font-titre text-titre-s text-texte">Dites-moi ce que vous cherchez</h2>
-      <p className="mt-1 text-courant leading-relaxed text-attenue">
-        Rien n'est obligatoire. Ce que vous indiquez ne vaut que pour ce repas.
-      </p>
+      {/* ⛔ RÉASSURANCE, INTERRUPTEUR 2 (lot B). Celle-ci n'apprend rien à qui a déjà ouvert
+          l'encart une fois : tous les champs y sont facultatifs par construction. À ne pas
+          confondre avec son homonyme de `parametres.tsx`, qui dit une RÈGLE de fonctionnement des
+          rappels et reste affichée. */}
+      {epure.phrasesRassurantes && (
+        <p className="mt-1 text-courant leading-relaxed text-attenue">
+          Rien n'est obligatoire. Ce que vous indiquez ne vaut que pour ce repas.
+        </p>
+      )}
 
       {/* Le temps d'abord : c'est le critère le plus général, et le plus souvent décisif. */}
       <fieldset className="mt-4">

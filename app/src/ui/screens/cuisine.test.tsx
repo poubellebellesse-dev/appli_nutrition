@@ -18,7 +18,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { readCuissons, writeCuisson } from '../../data/user-store.js'
-import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest } from '../test-socle.js'
+import {
+  baseCourante,
+  catalogueDeTest,
+  rallumerEpure,
+  reinitialiserBase,
+  sessionDeTest,
+} from '../test-socle.js'
 import { hashDeRecette } from '../router.js'
 import type { RecipeId } from '../../engine/domain/index.js'
 import { dureeEcouleeMin } from '../../engine/cuisine/duree.js'
@@ -361,8 +367,21 @@ describe('cuisine — garde-fous', () => {
   // `jsdom` n'a pas `navigator.wakeLock` : c'est exactement le cas d'un navigateur sans l'API, ou
   // d'une page servie en `http://`. L'écran doit fonctionner et le DIRE, jamais promettre à vide.
   it('⛔ l’absence de Wake Lock ne casse rien et n’est pas promise', async () => {
+    // ⚠️ LE LOT B A ÉTEINT CETTE PHRASE PAR DÉFAUT (`ui/epure.ts`, interrupteur 2), mais ce qui est
+    // mesuré ici n'a pas changé : l'écran fonctionne sans l'API, et il ne PROMET pas un écran
+    // allumé. On rallume donc l'interrupteur pour lire la phrase qui serait dite — c'est la seule
+    // façon de vérifier que c'est la bonne des trois branches, et non la promesse.
+    await rallumerEpure('phrasesRassurantes')
     await monter()
     expect(screen.getByText(/L'écran peut s'éteindre/)).toBeTruthy()
+    expect(screen.queryByText(/L'écran reste allumé/)).toBeNull()
+    expect(screen.getByText(/Étape 1 sur 5/)).toBeTruthy()
+  })
+
+  it('⛔ épure en place, l’écran ne parle plus du tout de l’écran allumé', async () => {
+    // Le pendant du test ci-dessus dans la configuration RÉELLE de l'application.
+    await monter()
+    expect(screen.queryByText(/L'écran peut s'éteindre/)).toBeNull()
     expect(screen.queryByText(/L'écran reste allumé/)).toBeNull()
     expect(screen.getByText(/Étape 1 sur 5/)).toBeTruthy()
   })

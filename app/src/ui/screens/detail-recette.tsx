@@ -58,6 +58,7 @@ import {
 import { formesDeLAliment } from '../texte-etape.js'
 import { origineDeCuisine } from '../drapeaux.js'
 import { LigneOuvrante, Panneau } from '../panneau.js'
+import { epure } from '../epure.js'
 import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
 
 /**
@@ -407,7 +408,10 @@ export function DetailRecette({
           déjà le détail des sources `provenance` — cette phrase n'est qu'une amorce, jamais une
           duplication. Voir docs/SOURCES_RECETTES.md §5.
           PAS pour les recettes perso : leur bandeau ci-dessus dit déjà la même chose, en mieux. */}
-      {!estRecettePerso(recetteId) && mention !== null && (
+      {/* ⛔ LE BLOC `Sources` EN BAS DE FICHE N'EST PAS TOUCHÉ, et c'est le principe 3 qui l'exige :
+          toute affirmation santé reste rattachée à sa source citée. Cette mention-là n'était qu'une
+          amorce — le crédit complet, lui, ne bouge pas. */}
+      {epure.phrasesRassurantes && !estRecettePerso(recetteId) && mention !== null && (
         <p className="mt-2 text-courant leading-relaxed text-attenue">{mention}</p>
       )}
 
@@ -850,6 +854,16 @@ function ValeursNutritionnelles({
   readonly onBasculer: () => void
 }) {
   const [ouvert, setOuvert] = useState(false)
+
+  // ⚠️ APRÈS LE `useState`, JAMAIS AVANT : l'ordre des hooks ne se conditionne pas.
+  //
+  // ⭐ L'ÉPURE NE RETIRE QUE LA LIGNE VIDE. Tant que `afficherMacros` est décoché, cette section
+  //    n'annonçait que sa propre absence — « Valeurs nutritionnelles · Non affichées » — et c'est
+  //    ce qui a été remonté à l'œil. Macros cochées, elle reste : sinon le réglage n'aurait plus
+  //    rien à commander sur la fiche, et le seul endroit où l'on voit ses chiffres disparaîtrait.
+  //    Les deux conditions sont distinctes, et la clause 8e du test scellé le vérifie en allumant
+  //    l'interrupteur macros DÉCOCHÉES.
+  if (!epure.valeursNutritionnelles && !affiche) return null
 
   const valeur = !affiche
     ? 'Non affichées'

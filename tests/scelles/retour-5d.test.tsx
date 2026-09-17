@@ -169,7 +169,15 @@ const compteur = (): string => screen.getByText(/^\d+ sur \d+$/).textContent!
 const tailleListe = (): number => Number(compteur().split(' sur ')[1])
 const bouton = (texte: string | RegExp) =>
   screen.getByText(texte).closest('button') as HTMLButtonElement
-const encart = () => screen.queryByText(/Rien n'est obligatoire/)
+/**
+ * ⚠️ REPÈRE CHANGÉ LE 2026-09-14, SUR DÉCISION DE L'AUTEUR. Ce fichier repérait l'encart d'envie par
+ * « Rien n'est obligatoire… », que le lot B éteint par défaut (`ui/epure.ts`, `phrasesRassurantes`).
+ * Le nouveau repère est la légende du premier groupe de pastilles : structurelle, commandée par
+ * aucun interrupteur, présente une seule fois à l'écran. Ce que ce fichier MESURE n'a pas bougé —
+ * aucune assertion, aucun seuil. Ne pas reprendre « Dites-moi ce que vous cherchez » : deux éléments
+ * le portent, `getByText` lèverait.
+ */
+const encart = () => screen.queryByText('Combien de temps devant vous ?')
 
 async function laisserRecalculer(): Promise<void> {
   await act(async () => {
@@ -200,7 +208,7 @@ async function epingler(titre: string): Promise<void> {
 async function ouvrirEncart(): Promise<void> {
   const plafond = tailleListe() * 2
   for (let i = 0; i < plafond && encart() === null; i++) fireEvent.click(bouton(/Suivant/))
-  await screen.findByText(/Rien n'est obligatoire/)
+  await screen.findByText('Combien de temps devant vous ?')
 }
 
 /** Tous les plats de la liste courante, dans l'ordre du classement, depuis la première carte. */

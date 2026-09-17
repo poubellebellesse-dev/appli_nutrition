@@ -24,7 +24,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Catalog, FacetteKind, FoodId, MealSlot, RecipeId } from '../../engine/domain/index.js'
 import type { Engine, PantryMatch, PantryResult } from '../../engine/api/index.js'
 import { chercherParNom, normaliser } from '../../engine/search/index.js'
-import { readPantryEntries, readUserState, writePantry } from '../../data/user-store.js'
+import { readDisplay, readPantryEntries, readUserState, writePantry } from '../../data/user-store.js'
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle } from '../socle.js'
 import {
   PORTEE_CRENEAU,
@@ -52,6 +52,7 @@ import {
   type FiltresRecette,
 } from '../filtres-recettes.js'
 import { LienTutoriel } from '../lien-tutoriel.js'
+import { epure } from '../epure.js'
 import { BoutonParcourir, ParcoursAliments } from '../parcours-aliments.js'
 
 /** Combien de raccourcis par famille. Au-delà, la grille devient une liste et ne rend plus service. */
@@ -68,6 +69,8 @@ interface Socle {
   readonly contraintes: ReturnType<typeof readUserState>['constraints']
   /** Les créneaux du rythme déclaré — pour dire à quel repas la déclaration s'applique. */
   readonly creneaux: readonly MealSlot[]
+  /** Le réglage « Afficher les explications sous chaque plat » (lot B), lu une fois au chargement. */
+  readonly afficherExplications: boolean
 }
 
 type Etat =
@@ -144,6 +147,7 @@ export function Frigo() {
             moteur: s.moteur,
             contraintes: utilisateur.constraints,
             creneaux: creneauxDeclares(s.db),
+            afficherExplications: readDisplay(s.db).afficherExplications,
           },
         })
         // Ce qui vaut ENCORE : une déclaration dont le repas est fini n'apparaît plus (décision 80).
@@ -281,9 +285,11 @@ export function Frigo() {
         Qu'avez-vous sous la main ?
       </h1>
       <LienTutoriel parcoursId="frigo" />
-      <p className="mt-2 text-lecture leading-relaxed text-texte-doux">
-        Ajoutez ce qu'il vous reste. On cherche des plats à faire avec.
-      </p>
+      {epure.phrasesRassurantes && (
+        <p className="mt-2 text-lecture leading-relaxed text-texte-doux">
+          Ajoutez ce qu'il vous reste. On cherche des plats à faire avec.
+        </p>
+      )}
 
       <Recherche
         catalogue={socle.catalogue}
@@ -363,24 +369,43 @@ export function Frigo() {
               sans un mot ressemble à un bug d'affichage — c'était le cas. La liste est classée par
               couverture : au-delà des premières, la couverture devient dérisoire, mais c'est à
               l'écran de le dire, pas à l'utilisateur de le deviner. */}
-          <p className="mt-4 text-courant text-attenue">
-            {resultats.matches.length} recette{resultats.matches.length > 1 ? 's' : ''}
-            {resultats.matches.length > RESULTATS_AFFICHES && (
-              <> — les {RESULTATS_AFFICHES} mieux couvertes sont affichées</>
-            )}
-            {/* ⚠️ « Aucune recette » PEUT ARRIVER MAINTENANT même en « Tout montrer », depuis que
-                `searchByPantry` écarte les recettes sans ingrédient commun (§10.2) — un
-                garde-manger de condiments seuls n'a plus rien à proposer. Une liste vide muette
-                laisserait croire à un bug ; le message dit quoi faire. */}
-            {resultats.matches.length === 0 && (
-              <>
-                {' — '}
-                {realisablesSeules
-                  ? <>rien n'est réalisable en l'état. Essayez « Tout montrer ».</>
-                  : <>aucune recette ne correspond à ce que vous avez. Ajoutez un autre aliment.</>}
-              </>
-            )}
-          </p>
+          {/* ⛔ SEUL LE NOMBRE BRUT PART DERRIÈRE L'INTERRUPTEUR 4 (lot B). Ce qui dit à
+              l'utilisateur ce que l'écran FAIT — la liste est coupée, plus rien ne correspond —
+              reste affiché en toutes circonstances : ce n'est pas un compteur, c'est une
+              explication. Le tiret qui les reliait au nombre part avec lui, sinon la ligne
+              commence par un tiret orphelin.
+              `first-letter:uppercase` met la majuscule à ce qui se retrouve en tête de phrase
+              quand le nombre n'est plus là — sans écrire deux fois les mêmes mots dans deux
+              casses différentes. Sur un chiffre, elle ne change rien. */}
+          {(epure.jaugesEtCompteurs ||
+            resultats.matches.length === 0 ||
+            resultats.matches.length > RESULTATS_AFFICHES) && (
+            <p className="mt-4 text-courant text-attenue first-letter:uppercase">
+              {epure.jaugesEtCompteurs && (
+                <>
+                  {resultats.matches.length} recette{resultats.matches.length > 1 ? 's' : ''}
+                </>
+              )}
+              {resultats.matches.length > RESULTATS_AFFICHES && (
+                <>
+                  {epure.jaugesEtCompteurs && ' — '}les {RESULTATS_AFFICHES} mieux couvertes sont
+                  affichées
+                </>
+              )}
+              {/* ⚠️ « Aucune recette » PEUT ARRIVER MAINTENANT même en « Tout montrer », depuis que
+                  `searchByPantry` écarte les recettes sans ingrédient commun (§10.2) — un
+                  garde-manger de condiments seuls n'a plus rien à proposer. Une liste vide muette
+                  laisserait croire à un bug ; le message dit quoi faire. */}
+              {resultats.matches.length === 0 && (
+                <>
+                  {epure.jaugesEtCompteurs && ' — '}
+                  {realisablesSeules
+                    ? <>rien n'est réalisable en l'état. Essayez « Tout montrer ».</>
+                    : <>aucune recette ne correspond à ce que vous avez. Ajoutez un autre aliment.</>}
+                </>
+              )}
+            </p>
+          )}
 
           <ul className="mt-3 space-y-3">
             {resultats.matches.slice(0, RESULTATS_AFFICHES).map((match) => (
@@ -389,6 +414,7 @@ export function Frigo() {
                 match={match}
                 catalogue={socle.catalogue}
                 nomDe={nomDe}
+                expliquer={socle.afficherExplications}
               />
             ))}
           </ul>
@@ -580,10 +606,13 @@ function Resultat({
   match,
   catalogue,
   nomDe,
+  expliquer,
 }: {
   readonly match: PantryMatch
   readonly catalogue: Catalog
   readonly nomDe: (id: FoodId) => string
+  /** Le réglage utilisateur, qui rallume à lui seul la phrase de couverture (lot B). */
+  readonly expliquer: boolean
 }) {
   const recette = catalogue.recipes.get(match.recipeId as RecipeId)
   if (recette === undefined) return null
@@ -604,22 +633,30 @@ function Resultat({
           nombre : un seul ingrédient sur cinq peut représenter les trois quarts du plat si c'est la
           pièce de viande. Sans cette phrase, la barre aux trois quarts en face d'un « 1 sur 5 »
           passe pour un bug — c'est le retour d'usage qui a motivé ce texte. */}
-      <p className="mt-2 text-courant text-texte-doux">
-        {presents} ingrédient{presents > 1 ? 's' : ''} sur {requis} déjà chez vous — soit {pourcent} %
-        du poids du plat
-      </p>
+      {/* ⛔ CETTE PHRASE EST UNE EXPLICATION DU MOTEUR (lot B) : elle dit POURQUOI ce plat est là et
+          à quel rang. Deux choses la rallument, et c'est voulu — l'interrupteur de code, et le
+          réglage que l'utilisateur possède. C'est le seul des quatre interrupteurs qui soit doublé
+          par un réglage visible : les trois autres n'ont que leur ligne dans `ui/epure.ts`. */}
+      {(epure.explicationsMoteur || expliquer) && (
+        <p className="mt-2 text-courant text-texte-doux">
+          {presents} ingrédient{presents > 1 ? 's' : ''} sur {requis} déjà chez vous — soit {pourcent} %
+          du poids du plat
+        </p>
+      )}
 
       {/* ⚠️ La jauge affiche la couverture EN MASSE, pas le « x sur y » ci-dessus : les deux
           diffèrent, et c'est voulu. Le compte parle à l'utilisateur, la masse ordonne la liste.
           Couleur ACCENT et non verte comme la maquette : le thème n'a qu'une couleur d'accent, et
           un vert « ça va » réinstallerait un code couleur de jugement (§5 DESIGN). */}
-      <div
-        role="img"
-        aria-label={`${pourcent} % du poids du plat`}
-        className="mt-2 h-2 overflow-hidden rounded-full bg-bordure"
-      >
-        <span className="block h-full rounded-full bg-accent" style={{ width: `${pourcent}%` }} />
-      </div>
+      {epure.jaugesEtCompteurs && (
+        <div
+          role="img"
+          aria-label={`${pourcent} % du poids du plat`}
+          className="mt-2 h-2 overflow-hidden rounded-full bg-bordure"
+        >
+          <span className="block h-full rounded-full bg-accent" style={{ width: `${pourcent}%` }} />
+        </div>
+      )}
 
       {match.manquants.length > 0 && (
         // « Écrit en clair » (§4.5) : afficher ce qui manque est la contrepartie directe du choix

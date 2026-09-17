@@ -1282,6 +1282,8 @@ describe('user-store — réglages d’affichage (v4)', () => {
       bandeauStockageMasque: false,
       rappelsActifs: false,
       visiteProposee: false,
+      // v21 (lot B) : les explications du moteur sont éteintes à l'installation.
+      afficherExplications: false,
     })
   })
 
@@ -1293,6 +1295,7 @@ describe('user-store — réglages d’affichage (v4)', () => {
       bandeauStockageMasque: true,
       rappelsActifs: true,
       visiteProposee: true,
+      afficherExplications: true,
     }
     writeDisplay(db, tout)
     expect(readDisplay(db)).toEqual(tout)
@@ -1316,6 +1319,7 @@ describe('user-store — réglages d’affichage (v4)', () => {
       bandeauStockageMasque: true,
       rappelsActifs: false,
       visiteProposee: false,
+      afficherExplications: false,
     })
     writeDisplay(db, { ...readDisplay(db), gestesBalayage: true })
     expect(readDisplay(db).afficherMacros).toBe(true)

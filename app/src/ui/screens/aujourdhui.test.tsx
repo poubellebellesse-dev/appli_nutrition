@@ -54,7 +54,16 @@ async function monter() {
 const platAffiche = (): string => document.querySelector('article h2')!.textContent!
 const compteur = (): string => screen.getByText(/^\d+ sur \d+$/).textContent!
 const bouton = (texte: string | RegExp) => screen.getByText(texte).closest('button') as HTMLButtonElement
-const encart = () => screen.queryByText(/Rien n'est obligatoire/)
+/**
+ * L'encart d'envie DÉPLIÉ, ou `null`.
+ *
+ * ⚠️ ON REPÈRE L'ENCART PAR SA PREMIÈRE QUESTION, plus par « Rien n'est obligatoire » : le lot B a
+ * éteint cette phrase de réassurance (`ui/epure.ts`, interrupteur 2), et un repère qui n'existe
+ * plus rend le helper d'ouverture muet. ⛔ NE PAS REPRENDRE « Dites-moi ce que vous cherchez » :
+ * ces mots sont portés par DEUX éléments, le bouton qui ouvre l'encart et le titre de l'encart
+ * ouvert — le repère serait vrai avant même le premier clic.
+ */
+const encart = () => screen.queryByText('Combien de temps devant vous ?')
 /** Nombre de suggestions annoncé par « X sur N ». */
 const tailleListe = (): number => Number(compteur().split(' sur ')[1])
 
@@ -74,7 +83,7 @@ const tailleListe = (): number => Number(compteur().split(' sur ')[1])
 async function ouvrirEncartParIndecision() {
   const plafond = tailleListe() * 2 // un tour complet de la liste suffit largement
   for (let i = 0; i < plafond && encart() === null; i++) fireEvent.click(bouton(/Suivant/))
-  await screen.findByText(/Rien n'est obligatoire/)
+  await screen.findByText('Combien de temps devant vous ?')
 }
 
 /** L'image de la carte, ou `null` si c'est l'aplat qui tient la place. Enfants DIRECTS de la carte. */
@@ -202,7 +211,7 @@ describe('aujourdhui — les flèches', () => {
 describe('aujourdhui — l’encart d’aide', () => {
   it('reste fermé au départ — « détecter l’indécision PUIS proposer »', async () => {
     await monter()
-    expect(screen.queryByText(/Rien n'est obligatoire/)).toBeNull()
+    expect(encart()).toBeNull()
   })
 
   it('s’ouvre quand on a vu assez de plats distincts sans en choisir aucun', async () => {
@@ -222,7 +231,7 @@ describe('aujourdhui — l’encart d’aide', () => {
     await waitFor(() => expect(screen.getByText('Léger').getAttribute('aria-pressed')).toBe('true'))
 
     // L'encart est toujours là…
-    expect(screen.queryByText(/Rien n'est obligatoire/)).not.toBeNull()
+    expect(encart()).not.toBeNull()
     // …et on peut en choisir une seconde, ce qui était impossible.
     fireEvent.click(screen.getByText('20 min'))
     await waitFor(() => expect(screen.getByText('20 min').getAttribute('aria-pressed')).toBe('true'))
@@ -240,7 +249,7 @@ describe('aujourdhui — l’encart d’aide', () => {
       await waitFor(() => expect(compteur()).toMatch(/^1 sur /))
     }
     expect(screen.queryByText(/^Dites-moi ce que vous cherchez$/)).not.toBeNull()
-    expect(screen.queryByText(/Rien n'est obligatoire/)).toBeNull()
+    expect(encart()).toBeNull()
   })
 
   it('choisir un plat remet le compteur d’indécision à zéro', async () => {
@@ -260,7 +269,7 @@ describe('aujourdhui — l’encart d’aide', () => {
     // l'être. Les trois axes sont exactement ceux de `CravingAxes`.
     await monter()
     fireEvent.click(screen.getByText('Dites-moi ce que vous cherchez'))
-    await screen.findByText(/Rien n'est obligatoire/)
+    await screen.findByText('Combien de temps devant vous ?')
     const questions = [...document.querySelectorAll('legend')].map((l) => l.textContent)
     expect(questions).toEqual([
       'Combien de temps devant vous ?',

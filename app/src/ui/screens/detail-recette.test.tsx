@@ -26,7 +26,7 @@ import type { RecipeId } from '../../engine/domain/index.js'
 import { readDisplay, readFavorites, readSaucesChoisies, writeDisplay } from '../../data/user-store.js'
 import { AXES_PAR_DEFAUT, saveUserRecipe, type StoredUserRecipe } from '../../data/user-recipe.js'
 import type { OrigineRecette } from '../router.js'
-import { baseCourante, catalogueDeTest, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
+import { baseCourante, catalogueDeTest, rallumerEpure, reinitialiserBase, sessionDeTest, confianceDeTest} from '../test-socle.js'
 import { preparerTexteEtape } from '../ingredients-recette.js'
 import { formesDeLAliment } from '../texte-etape.js'
 
@@ -60,6 +60,12 @@ async function monter(recetteId: string, origine: OrigineRecette = 'recettes') {
   return resultat
 }
 
+// Deux choses de cette fiche sont éteintes par défaut depuis le lot B : la ligne « Valeurs
+// nutritionnelles » tant que les macros sont décochées, et la mention d'origine. Les tests qui
+// appellent `rallumerEpure` (`ui/test-socle.ts`) ne mesurent pas l'épure — ils mesurent ce que la
+// fiche DIT quand elle les affiche, et cette exigence-là n'a pas bougé. À appeler APRÈS le
+// `vi.resetModules()` du `beforeEach` et AVANT `monter`.
+
 /**
  * Recette de référence : cuisine française (drapeau connu), un ingrédient compté à la pièce
  * (« 4 artichauts », pour la mise à l'échelle), un fond de placard (« sel fin, au goût »), sept
@@ -86,6 +92,7 @@ describe('detail-recette — la bascule des macros', () => {
     // nouveau reçu un objet partiel.
     writeDisplay(baseCourante(), { ...readDisplay(baseCourante()), gestesBalayage: true })
 
+    await rallumerEpure('valeursNutritionnelles')
     await monter(recetteDeReference().id)
     fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
     const dialogue = screen.getByRole('dialog')
@@ -96,6 +103,7 @@ describe('detail-recette — la bascule des macros', () => {
   })
 
   it('persiste en base : un écran remonté de zéro retrouve l’état, pas seulement React', async () => {
+    await rallumerEpure('valeursNutritionnelles')
     await monter(recetteDeReference().id)
     fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
     fireEvent.click(within(screen.getByRole('dialog')).getByText(/Afficher ces valeurs/))
@@ -118,6 +126,7 @@ describe('detail-recette — la bascule des macros', () => {
     // Verrouille le correctif (voir l'en-tête) : 288,6 kcal pour `artichauts_vinaigrette`, vérifiés
     // à la main via `attachDerivedIndexes`. Un retour au catalogue brut (`socle.catalogue` non
     // enrichi) ferait retomber cette assertion à `null`.
+    await rallumerEpure('valeursNutritionnelles')
     await monter(recetteDeReference().id)
     fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
     const dialogue = screen.getByRole('dialog')
@@ -140,6 +149,7 @@ describe('detail-recette — la bascule des macros', () => {
       nutrients: catalogueDeTest().nutrients.filter((n) => n.code !== 'energie'),
     }
 
+    await rallumerEpure('valeursNutritionnelles')
     await monter(recetteDeReference().id)
     fireEvent.click(screen.getByText('Valeurs nutritionnelles').closest('button')!)
     const dialogue = screen.getByRole('dialog')
@@ -154,6 +164,7 @@ describe('detail-recette — la bascule des macros', () => {
     // grandir `container` — l'arbre DOM de la fiche elle-même — pour y loger son contenu. Un
     // portail vers `document.body` ne touche pas à cet arbre : la fenêtre est un ENFANT DIRECT de
     // `document.body`, pas de la fiche.
+    await rallumerEpure('valeursNutritionnelles')
     const { container } = await monter(recetteDeReference().id)
     const nombreNoeudsAvant = container.querySelectorAll('*').length
 
@@ -383,6 +394,7 @@ describe('detail-recette — les origines', () => {
       recipes: new Map(catalogueDeTest().recipes).set(reference.id, { ...reference, origine }),
     }
 
+    await rallumerEpure('phrasesRassurantes')
     await monter(reference.id)
 
     expect(screen.getByText(libelle)).toBeTruthy()
@@ -421,6 +433,7 @@ describe('detail-recette — les sources', () => {
 
   it('dit qu’une recette sans source n’a pas été testée, plutôt que de se taire', async () => {
     // Le silence laisserait SUPPOSER une provenance sourcée que le catalogue n'a pas.
+    await rallumerEpure('phrasesRassurantes')
     await monter(recetteDeReference().id)
     expect(screen.getByText('Recette écrite pour cette application, non encore testée.')).toBeTruthy()
   })
@@ -434,6 +447,7 @@ describe('detail-recette — les sources', () => {
     if (recette === undefined) throw new Error('recette sourcée absente du catalogue réel')
     expect(recette.sources.length).toBeGreaterThan(0)
 
+    await rallumerEpure('phrasesRassurantes')
     await monter(RECETTE_SOURCEE)
     expect(screen.getByText('Recette écrite pour cette application, non encore testée.')).toBeTruthy()
   })

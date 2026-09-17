@@ -319,7 +319,14 @@ const EMPREINTES: Readonly<Record<string, { readonly sha: string; readonly ligne
   // Même raison qu'au-dessus. ⛔ CETTE LIGNE NE SE REBASE PAS « PARCE QUE LE TEST EST ROUGE » :
   // elle se rebase quand un lot a le droit d'avoir changé le fichier, et seulement là. Sans ce
   // droit, un sha qu'on recopie depuis la sortie d'échec ne garde plus rien du tout.
-  'retour-1.test.tsx': { sha: '8806528362af02e5', lignes: 324 },
+  // ⚠️ REPHOTOGRAPHIÉ LE 2026-09-14 APRÈS LE LOT B (était `8806528362af02e5`), sur décision de
+  // l'auteur, sceau levé puis remis. LE DROIT EST ÉTABLI, pas supposé : le lot B éteint « Rien
+  // n'est obligatoire… », que ce fichier utilisait comme repère d'ouverture de l'encart d'envie ;
+  // ses 8 tests mouraient dans `ouvrirEncart()` avant de mesurer quoi que ce soit. Le repère est
+  // devenu « Combien de temps devant vous ? ». ⭐ **`lignes` N'A PAS BOUGÉ (324)** — c'est ce qui
+  // atteste que l'édition s'est arrêtée à DEUX lignes de code : un squelette à 324 lignes ne peut
+  // pas absorber une assertion ajoutée ou retirée. Le sha seul ne l'aurait pas dit.
+  'retour-1.test.tsx': { sha: '31c347329503e523', lignes: 324 },
 }
 
 describe('retour-5c — clause 2 : aucun capteur n’a disparu', () => {

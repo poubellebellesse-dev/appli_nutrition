@@ -1167,6 +1167,12 @@ export interface StoredDisplay {
   readonly rappelsActifs: boolean
   /** La visite guidée a-t-elle déjà été PROPOSÉE (acceptée ou refusée) ? On ne la propose qu'une fois. */
   readonly visiteProposee: boolean
+  /**
+   * Revoir les explications du moteur sous chaque plat (lot B, v21). FAUX par défaut : l'épure est
+   * le comportement voulu. Double l'interrupteur `epure.explicationsMoteur` — c'est le seul des
+   * quatre que l'utilisateur peut rallumer sans éditer le code.
+   */
+  readonly afficherExplications: boolean
 }
 
 export function readDisplay(db: UserDb): StoredDisplay {
@@ -1177,9 +1183,10 @@ export function readDisplay(db: UserDb): StoredDisplay {
     readonly bandeau_stockage_masque: number
     readonly rappels_actifs: number
     readonly visite_proposee: number
+    readonly afficher_explications: number
   }>(
     `SELECT afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque,
-            rappels_actifs, visite_proposee
+            rappels_actifs, visite_proposee, afficher_explications
      FROM user_display WHERE id = 1`
   )[0]
   // Absent = jamais réglé = le défaut du schéma. Rendre `null` obligerait chaque appelant à traiter
@@ -1191,6 +1198,7 @@ export function readDisplay(db: UserDb): StoredDisplay {
     bandeauStockageMasque: row?.bandeau_stockage_masque === 1,
     rappelsActifs: row?.rappels_actifs === 1,
     visiteProposee: row?.visite_proposee === 1,
+    afficherExplications: row?.afficher_explications === 1,
   }
 }
 
@@ -1203,8 +1211,8 @@ export function writeDisplay(db: UserDb, display: StoredDisplay): void {
   db.run(
     `INSERT OR REPLACE INTO user_display
        (id, afficher_macros, gestes_balayage, alertes_discretes, bandeau_stockage_masque,
-        rappels_actifs, visite_proposee)
-     VALUES (1, ?, ?, ?, ?, ?, ?)`,
+        rappels_actifs, visite_proposee, afficher_explications)
+     VALUES (1, ?, ?, ?, ?, ?, ?, ?)`,
     [
       display.afficherMacros ? 1 : 0,
       display.gestesBalayage ? 1 : 0,
@@ -1212,6 +1220,7 @@ export function writeDisplay(db: UserDb, display: StoredDisplay): void {
       display.bandeauStockageMasque ? 1 : 0,
       display.rappelsActifs ? 1 : 0,
       display.visiteProposee ? 1 : 0,
+      display.afficherExplications ? 1 : 0,
     ]
   )
 }

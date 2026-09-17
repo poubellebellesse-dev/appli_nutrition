@@ -27,6 +27,7 @@ import type { ConfianceParAliment } from '../data/catalog-loader.js'
 import { loadCatalog, loadConfiance } from '../data/catalog-loader-node.js'
 import { openUserDb } from '../data/user-store-node.js'
 import type { UserDb } from '../data/user-db.js'
+import type { Epure } from './epure.js'
 import type { EtatVerrou } from './user-source.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -86,4 +87,20 @@ export function sessionDeTest(): {
   verrou: EtatVerrou
 } {
   return { db: baseCourante(), stockage: 'memoire', persistant: true, verrou: 'exclusif' }
+}
+
+/**
+ * Rallume un interrupteur de l'épure (lot B) pour le test courant, avant de monter l'écran.
+ *
+ * ⚠️ L'IMPORT EST DYNAMIQUE ET LE NOM PASSE PAR UNE VARIABLE, LES DEUX EXPRÈS. Dynamique parce que
+ * l'objet doit être celui du registre de modules courant, donc pris APRÈS le `vi.resetModules()` du
+ * `beforeEach` — sinon on éteint une copie que l'écran ne lit pas. Par variable parce que la clause
+ * 1b de `tests/scelles/lot-B.test.tsx` refuse qu'un fichier de `app/src` autre que `ui/epure.ts`
+ * écrive `<interrupteur> = true` : un interrupteur se déclare à un seul endroit.
+ *
+ * Rien à remettre en place ensuite : le `resetModules` du test suivant rend l'objet à son `false`.
+ */
+export async function rallumerEpure(nom: keyof Epure): Promise<void> {
+  const { epure } = await import('./epure.js')
+  epure[nom] = true
 }

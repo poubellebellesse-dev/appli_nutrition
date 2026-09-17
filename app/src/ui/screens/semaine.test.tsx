@@ -284,6 +284,7 @@ describe('semaine — les alertes d’énergie', () => {
       bandeauStockageMasque: false,
       rappelsActifs: false,
       visiteProposee: false,
+      afficherExplications: false,
     })
   }
 

@@ -73,6 +73,7 @@ import {
 } from '../ingredients-recette.js'
 import { formesDeLAliment } from '../texte-etape.js'
 import { Panneau } from '../panneau.js'
+import { epure } from '../epure.js'
 
 /** Une recette en cours de cuisson, résolue et prête à afficher. */
 interface PlatEnCuisine {
@@ -550,13 +551,20 @@ export function Cuisine({
 
       <h1 className="mt-3 font-titre text-[1.6rem] leading-tight text-texte">{recette.nom}</h1>
 
-      <p className="mt-1 text-[0.95rem] text-attenue">
-        {ecranTenu
-          ? "L'écran reste allumé pendant la cuisson."
-          : veillePossible()
-            ? "L'écran peut s'éteindre : cet appareil n'a pas accordé le maintien."
-            : "L'écran peut s'éteindre : cet appareil ne sait pas le maintenir allumé."}
-      </p>
+      {/* ⚠️ LES TROIS BRANCHES PARTENT ENSEMBLE, y compris les deux qui annoncent que l'écran PEUT
+          s'éteindre. Ce n'est pas un avertissement à protéger : l'écran s'éteint comme n'importe
+          quel autre écran du téléphone, et le dire ne change rien à ce que l'utilisateur peut
+          faire. Le maintien reste tenté quand l'appareil le permet — c'est la phrase qui se tait,
+          pas le comportement. */}
+      {epure.phrasesRassurantes && (
+        <p className="mt-1 text-[0.95rem] text-attenue">
+          {ecranTenu
+            ? "L'écran reste allumé pendant la cuisson."
+            : veillePossible()
+              ? "L'écran peut s'éteindre : cet appareil n'a pas accordé le maintien."
+              : "L'écran peut s'éteindre : cet appareil ne sait pas le maintenir allumé."}
+        </p>
+      )}
 
       {/* ⚠️ LES INGRÉDIENTS SONT ICI, ET C'EST TOUT L'OBJET DE CE LOT. Sans eux, « c'était combien
           d'ail ? » en pleine cuisson obligeait à QUITTER le mode cuisine pour rouvrir la fiche, en
