@@ -71,10 +71,13 @@ export function ListeIngredients({
         })
         return (
           <li key={foodId} className="flex flex-wrap items-baseline gap-x-2 py-1 text-lecture text-texte">
-            {/* Le LIBELLÉ est mis à l'échelle, pas converti en grammes : il porte déjà la bonne
-                unité (pièces, cuillères, centilitres), que le catalogue, lui, ignore. Voir
-                ui/quantites.ts pour la règle et ses limites. */}
-            <span className="tabular-nums text-texte-doux">{quantite.texte}</span>
+            {/* ⭐ LE NOM D'ABORD, LA QUANTITÉ APRÈS. Passe à l'œil du 2026-09-12 : on cherche un
+                aliment dans une liste, pas un nombre — « 4 artichauts » avant « Artichaut, cru »
+                oblige à lire la ligne entière pour savoir de quoi elle parle. La quantité reste,
+                elle se déplace : « nom d'abord » obtenu en la supprimant serait une perte
+                d'information, pas le lot.
+                ⚠️ CE COMPOSANT EST PARTAGÉ AVEC LE MODE CUISINE (cuisine.tsx, derrière « Voir les
+                ingrédients ») : l'ordre change aux DEUX écrans, et c'est voulu. */}
             {/* Le nom porte le lien, pas la ligne entière : « à acheter » et « non ajustée » sont
                 des mentions du contexte, pas de l'aliment, et les inclure dans la zone cliquable
                 ferait un lien dont le libellé lu à voix haute ne désigne plus sa destination. */}
@@ -85,6 +88,10 @@ export function ListeIngredients({
                 {nomAliment(foodId)}
               </a>
             )}
+            {/* Le LIBELLÉ est mis à l'échelle, pas converti en grammes : il porte déjà la bonne
+                unité (pièces, cuillères, centilitres), que le catalogue, lui, ignore. Voir
+                ui/quantites.ts pour la règle et ses limites. */}
+            <span className="tabular-nums text-texte-doux">{quantite.texte}</span>
             {ingredient.optionnel && <span className="text-courant text-attenue">(facultatif)</span>}
             {/* Dire QUAND une quantité ne suit pas les portions, sinon on croit à un bug — c'est
                 précisément ce qui a été signalé quand tout partait en grammes. */}

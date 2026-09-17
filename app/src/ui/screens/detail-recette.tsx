@@ -443,9 +443,18 @@ export function DetailRecette({
       </a>
 
       <p className="mt-2 text-lecture leading-relaxed text-texte-doux">{recette.description}</p>
+      {/* ⭐ LE TOTAL EN PREMIER, ET LA DIFFICULTÉ NULLE PART. Passe à l'œil du 2026-09-12 : « combien
+          de temps ça me prend » est la question qu'on se pose devant une fiche, et elle se lisait en
+          faisant une addition de tête. La difficulté, elle, est un nombre sur 3 à côté d'un plat —
+          ça se lit comme une note, que le principe 6 interdit. Le CHAMP ne bouge pas pour autant :
+          `recette.difficulte` reste en base, dans `Recipe` et dans le chargeur ; c'était son unique
+          lieu d'affichage dans tout `app/src`.
+          ⚠️ Une cuisson nulle n'affiche QU'UN temps : redire le même nombre et annoncer
+          « 0 min de cuisson » n'apprend rien. 57 recettes du catalogue sont dans ce cas. */}
       <p className="mt-3 text-lecture text-attenue">
-        {recette.tempsPrepMin} min de préparation · {recette.tempsCuissonMin} min de cuisson ·
-        difficulté {recette.difficulte}/3
+        {recette.tempsPrepMin + recette.tempsCuissonMin} min en tout
+        {recette.tempsCuissonMin > 0 &&
+          ` · ${recette.tempsPrepMin} min de préparation · ${recette.tempsCuissonMin} min de cuisson`}
       </p>
 
       <Origines recette={recette} />

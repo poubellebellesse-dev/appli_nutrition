@@ -69,6 +69,7 @@ import { nouvelIdRecette, readUserRecipes, saveUserRecipe, type StoredUserRecipe
 import { FENETRE_HISTORIQUE_JOURS, aujourdhuiIso, chargerSocle, rebatirCatalogue } from '../socle.js'
 import { hashDeLEditeur, hashDeRecette, hashDuFrigo } from '../router.js'
 import { origineDeCuisine } from '../drapeaux.js'
+import { epure } from '../epure.js'
 import { Panneau } from '../panneau.js'
 import { MesureMontage, mesureDemandee } from '../mesure-montage.js'
 import { exporterRecette } from '../export-recette.js'
@@ -363,10 +364,23 @@ export function Recettes() {
         />
       )}
 
-      <p className="mt-5 text-courant text-attenue">
-        {trouvees.length} recette{trouvees.length > 1 ? 's' : ''}
-        {trouvees.length === 0 && ' — essayez de retirer un filtre.'}
-      </p>
+      {/* ⭐ LE COMPTE BRUT PASSE DERRIÈRE `jaugesEtCompteurs`, ET C'EST L'INTERRUPTEUR QUI EXISTAIT
+          DÉJÀ : `ui/epure.ts` le décrit depuis le lot B comme couvrant « la barre de couverture du
+          frigo ET le nombre brut de recettes trouvées ». Le lot B avait câblé la moitié frigo. Un
+          nombre à trois chiffres au-dessus d'une liste qu'on va faire défiler n'apprend rien, et
+          l'entonnoir, lui, reste : il EXPLIQUE, il ne jauge pas.
+          ⚠️ LA PHRASE DE LISTE VIDE, ELLE, N'EST SOUS AUCUN INTERRUPTEUR ET SE TIENT SEULE. Une
+          liste vide muette passe pour un bug — même raisonnement que l'avertissement de troncature
+          du frigo, que `ui/epure.ts` exclut explicitement de cet interrupteur. */}
+      {trouvees.length === 0 ? (
+        <p className="mt-5 text-courant text-attenue">Essayez de retirer un filtre.</p>
+      ) : (
+        epure.jaugesEtCompteurs && (
+          <p className="mt-5 text-courant text-attenue">
+            {trouvees.length} recette{trouvees.length > 1 ? 's' : ''}
+          </p>
+        )
+      )}
 
       {/* Décision 61 : n'apparaît QUE derrière `?perf` dans `location.search`. Rend `null` sinon. */}
       <MesureMontage depuis={debutMontage} depuisRendu={debutRendu} nbCartes={trouvees.length} />

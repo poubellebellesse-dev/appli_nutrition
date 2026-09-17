@@ -422,12 +422,14 @@ describe('recettes — la recherche textuelle', () => {
 
   it('dit qu’il n’y a rien plutôt que de laisser la liste rétrécir en silence', async () => {
     // `Entonnoir` ne compte que les exclusions dures (allergènes, régime…) — voir l'en-tête de
-    // recettes.tsx : une recherche sans résultat n'y figure pas. C'est la phrase de compte, juste en
-    // dessous de la liste, qui porte l'explication (« … essayez de retirer un filtre »).
+    // recettes.tsx : une recherche sans résultat n'y figure pas. C'est la phrase posée juste au
+    // dessus de la liste qui porte l'explication.
+    // ⚠️ ELLE DISAIT « 0 recette — essayez de retirer un filtre. » JUSQU'AU LOT C, qui a retiré le
+    //    compte brut et laissé la phrase se tenir seule (`tests/scelles/lot-C.test.tsx`, clause 7b).
     await monter()
     const champ = document.querySelector('input[type="search"]') as HTMLInputElement
     fireEvent.change(champ, { target: { value: 'zzzzznexistepasdutoutducatalogue' } })
-    await screen.findByText(/0 recette — essayez de retirer un filtre\./)
+    await screen.findByText(/Essayez de retirer un filtre\./)
     expect(idsAffiches().length).toBe(0)
   })
 })
@@ -505,7 +507,8 @@ describe('recettes — « Pourquoi pas ce plat ? »', () => {
     await monter()
     chercher('zzzzznexistepasdutoutducatalogue')
 
-    await screen.findByText(/0 recette — essayez de retirer un filtre\./)
+    // ⚠️ MÊME PHRASE QU'AU-DESSUS, ET ELLE A PERDU SON COMPTE AU LOT C (clause 7b du scellé).
+    await screen.findByText(/Essayez de retirer un filtre\./)
     expect(screen.queryByText(/Écartée/)).toBeNull()
   })
 })
