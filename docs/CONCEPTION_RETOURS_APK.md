@@ -70,7 +70,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`) |
 | **F** | La semaine, refaite | **bloqué** — forme à trancher en séance de design |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
-| **H** | La quantité injectée mange le nom de l'aliment | à écrire — **défaut existant**, trouvé en attaquant le lot E |
+| **H** | La quantité injectée mange le nom de l'aliment | ✅ **LIVRÉ le 2026-09-19** (`c22f03c`) |
 
 ### Lot A — le bandeau du téléphone ✅ LIVRÉ le 2026-09-12
 
@@ -935,7 +935,26 @@ dans un texte — toujours dans la liste complète, du plus long au plus court.
 Les 8 clauses passent sur le catalogue réel. Le compte relevé au brief — **3 001 couples affichés pour
 2 217 attendus** — est ramené à l'égalité par la clause 1, qui recalcule l'attendu recette par recette.
 
-### Lot H — la quantité injectée mange le nom de l'aliment — à écrire
+### Lot H — la quantité injectée mange le nom de l'aliment — ✅ **LIVRÉ le 2026-09-19** (`c22f03c`)
+
+> ✅ **LIVRÉ LE 2026-09-19, COMMITÉ EN `c22f03c`.** Les 8 clauses sont vertes, et les quatre
+> mesures du « Fini quand » sont tombées ensemble : **31 → 0** mots perdus en fiche, **20 → 0** au
+> fourneau sur 10 439 mots relus, **11 → 0** bégaiements, et **1 984 / 1 492** couples injectés pour
+> **2 187** nommables — **exactement les comptes d'avant le lot**, donc la réparation n'a retiré
+> l'injection d'aucun couple, ce que la décision du 2026-09-17 avait annoncé et qui est le seul
+> moyen de vérifier qu'on n'a pas acheté le point 1 avec le point 2.
+>
+> ⭐ **LA SECONDE FAMILLE DE BÉGAIEMENT A ÉTÉ TRAITÉE DANS CE LOT, ET LE BRIEF LA DONNAIT POUR UN
+> LOT SÉPARÉ POSSIBLE.** « Incorporer 50 g fondu de beurre **fondu** » ne vient pas du groupe
+> nominal effacé mais du texte **non consommé** ; il n'a pourtant demandé aucune décision neuve, une
+> règle mécanique a suffi — on prolonge la zone effacée sur les mots que le libellé écrit déjà
+> (`avalerCeQueLeLibellePorte`). Le brief avait raison de nommer le trou et tort de prévoir son prix.
+>
+> ⚠️ **CE QUE LE LOT NE RÉPARE PAS, ET QUI SE VOIT À L'ŒIL** : « Beurrer la face extérieure **2
+> tranches** » (le `de chaque` est remplacé au lieu d'être accordé — `extérieure` finit par `-re`,
+> `estInfinitif` en fait un verbe, c'est le piège « la chair de la courge » déjà documenté) et
+> « Faire rendre leur gras **aux 200 g en lardons** ». Les deux sont **antérieurs au lot** : ils
+> viennent du calcul du déterminant, que ce lot n'a pas touché. → `ETAT.md` §8.
 
 **Ce lot n'est pas du lot E, et il ne l'a jamais été.** Le défaut existe **aujourd'hui**, sur les deux
 écrans, avant la moindre ligne du lot E. Il a seulement été *vu* en écrivant la clause 8, qui a dû
@@ -970,5 +989,172 @@ recettes et en relisant chaque phrase affichée contre le texte du YAML (sonde j
 `cuisse_poulet` compté en « 6 cuisses », `comte` compté en « 60 g râpé ». Ce n'est pas un défaut du
 catalogue : « 6 cuisses » est la bonne quantité de cuisine, c'est le remplacement qui est trop large.
 
-**Ce que ce lot ne fera pas** : rouvrir la décision 60, ni toucher aux libellés du catalogue. Le
-`Fini quand` reste à écrire — `/brief lot-H`.
+**Ce que ce lot ne fera pas** : rouvrir la décision 60, ni toucher aux libellés du catalogue.
+
+⚠️ **LA MESURE DU BRIEF NE DONNE PAS EXACTEMENT CELLE DU 17/09 AU MATIN, ET L'ÉCART N'EST PAS
+EXPLIQUÉ.** La sonde du brief relit la même matière par le module partagé au lieu de monter la
+fiche : elle retrouve **31 mots perdus, 31 étapes, 22 recettes, 10 439 mots relus** — les quatre
+nombres du tableau ci-dessus — mais compte `poulet` **14** fois là où la première sonde en comptait
+12. Les deux sondes sont jetables, aucune des deux ne fait foi : c'est la clause scellée qui
+comptera. Le nombre de tête, lui, est confirmé deux fois par deux chemins différents.
+
+#### Fini quand
+
+**Les quatre points suivants sont vrais ensemble, sur les 339 recettes de `catalog.db` réel.** Les
+nombres datent du **2026-09-17** ; les clauses les recalculent à l'exécution et n'en scellent aucun
+en valeur absolue.
+
+1. **Aucun mot porteur ne disparaît.** Pour chaque geste de chaque recette, tout mot du texte YAML
+   d'au moins **5 lettres** (pluriel replié, `chaque` excepté — l'accord l'avale à dessein) se relit
+   dans la phrase affichée, **sauf s'il est écrit dans le libellé de quantité injecté à sa place**.
+   Aujourd'hui : **31 mots perdus sur 10 439 relus** en configuration fiche (tous les ingrédients de
+   l'étape), **20** en configuration mode cuisine (première mention seule, lot E). Attendu : **0 et
+   0**. ⚠️ Le vocabulaire de l'aliment n'exempte plus rien — c'est exactement l'exemption que la
+   clause 8 du lot E a dû s'accorder pour rester verte, et ce lot est ce qui la retire.
+2. **La quantité continue d'être dite dans la phrase.** Le nombre de couples (étape, ingrédient)
+   effectivement injectés reste **≥ 90 %** (fiche) et **≥ 68 %** (mode cuisine) des couples
+   *nommables* — libellé commençant par un nombre **et** aliment nommé dans le texte de l'étape —
+   dénombrés à l'exécution depuis le catalogue, sans référence à ce que le code fait. Aujourd'hui :
+   **1 984** et **1 492** pour **2 187** nommables, soit **90,7 %** et **68,2 %**. ⛔ Sans ce point,
+   « ne plus jamais injecter » satisfait le point 1 en trois lignes. ⭐ **Le plancher est serré
+   exprès** — 0,85 et 0,60 quand les deux réparations étaient ouvertes, relevés à **0,90 et 0,68** le
+   jour où l'on a tranché pour « garder le nom » : cette réparation-là ne retire l'injection de
+   **aucun** couple, donc le taux du jour doit se retrouver intact. La marge restante vaut ~15
+   couples sur la fiche et ~5 au fourneau. ⚠️ C'est un **plancher en ratio contre un dénominateur
+   recalculé**, jamais un compte absolu (leçon `retour-5c`, précédent du plancher 0,9 de
+   `retour-5d`). ⚠️ **Les deux ratios partagent le même dénominateur, celui de la fiche** (2 187) :
+   le plancher du fourneau est donc mesuré contre des couples que la configuration cuisine ne peut
+   structurellement jamais tenter — les mentions qui ne sont pas les premières. C'est voulu, c'est ce
+   qui rend 0,68 comparable d'un relevé à l'autre, et ce n'est pas un dénominateur propre à chaque
+   configuration.
+3. **La phrase ne bégaie pas.** Aucun des **trois mots** qui suivent immédiatement une quantité
+   injectée ne répète un mot porteur de cette quantité. Aujourd'hui : **11** — « Incorporer **50 g
+   fondu** de beurre **fondu** », « Ajouter **120 g froid** de beurre **froid** », « Tailler
+   **2 betteraves cuites** **cuite** en dés ». Attendu : **0**. ⛔ C'est le défaut symétrique du mot
+   perdu, et il est dans le même lot : là où le libellé porte un qualificatif, la phrase le dit deux
+   fois au lieu de l'avaler. ⛔ **C'est aussi ce qui force la granularité de la réparation** : une
+   couverture calculée sur le groupe nominal entier laisserait ces 11 cas debout ou les
+   aggraverait — **la couverture se calcule mot à mot**, et on ne recolle que les mots que le
+   libellé ne porte pas. ⚠️ Un budget global de comptage ne sait pas faire cette mesure : deux
+   écritures ont échoué avant celle-ci, l'une en finançant la triche qu'elle interdisait, l'autre en
+   refusant « couper **8 tranches** de baguette **en tranches** », qui est correct. Le détail est
+   dans l'en-tête de la clause 5.
+4. **L'invariant de la décision 60 tient sur les DEUX recettes montées** — `poulet_basquaise` et
+   `quiche_lorraine`, nommées, pas « les écrans » en général : l'union de ce que la phrase écrit et
+   de ce que les badges écrivent vaut exactement ce que l'étape annonce, et la phrase rendue par
+   l'écran est celle que le module produit. ⚠️ **CE POINT NE PORTE QUE SUR 2 RECETTES SUR 339, ET
+   C'EST ASSUMÉ** : un montage coûte ~0,3 s contre ~0,4 ms par le module, et le lot E paie déjà
+   147 s pour avoir balayé le catalogue entier à l'écran. Les deux recettes montées sont les deux
+   témoins du défaut, pas un échantillon : ce point démontre que l'écran ne fabrique pas sa phrase
+   ailleurs, il ne démontre rien sur les 337 autres.
+
+**Ce qui le rendrait faux, en une ligne chacun** : une seule étape du catalogue dont un mot de la
+recette manque à l'écran ; une injection qui s'effondre pour acheter le point 1 ; un mot recollé
+juste derrière la quantité qui l'écrivait déjà ; un ingrédient qui n'est plus dit ni dans la phrase
+ni en badge ; un écran qui se met à fabriquer sa phrase ailleurs que dans le module partagé.
+
+⛔ **DEUX GARDES DE FORME, AJOUTÉES LE 2026-09-18 APRÈS ATTAQUE.** Elles ne décrivent aucun défaut à
+réparer — elles sont vertes sur les 1 545 gestes du jour. Elles interdisent deux façons d'atteindre
+les quatre points sans faire le travail, parce que **les points 1, 3 et 4 ne lisent que la PRÉSENCE
+d'un mot, jamais sa PLACE** :
+
+- **La réparation efface, elle ne déménage pas** (clause 7). La suite des mots porteurs qui restent
+  hors des libellés injectés est une **sous-suite, dans l'ordre**, des mots porteurs du texte YAML.
+  Sans elle, une implémentation peut laisser le nom disparaître de son groupe nominal et le recoller
+  en bloc à la fin — « … dans la cocotte (poulet) » — en passant les points 1, 3 et 4.
+- **La quantité n'est pas posée à côté du nom qu'elle devait remplacer** (clause 8). Le mot qui
+  précède immédiatement une quantité n'est pas un nom de l'aliment que cette quantité compte, sauf
+  s'il nomme aussi un autre ingrédient de la même étape — « 2 cuillères à soupe de concentré de
+  **tomate**, 3 tomates » est une énumération, pas une redite. Sans elle, « Colorer le poulet
+  4 cuisses dans la cocotte » passe les sept autres clauses : il ne perd aucun mot, n'en déplace
+  aucun, et ne bégaie pas vers l'aval — la clause 3 ne lit que ce qui **suit** la quantité.
+
+⚠️ **CE QUE LE BRIEF NE DÉMONTRE PAS, ET QUI SE VERRA EN CODANT** : il tient pour acquis qu'**un
+seul** mécanisme explique les 31 et les 20 mots perdus — le critère de recouvrement trop large. Si
+l'un des cas a une autre cause, le plus petit changement décrit n'atteindra pas 0 et il faudra le
+dire plutôt que d'élargir le critère jusqu'à ce que le compte tombe. Les clauses mesurent le
+résultat, pas la cause.
+
+⛔ **ET LE POINT 3 A DÉJÀ, LUI, UNE SECONDE CAUSE CONNUE.** « Incorporer **50 g fondu** de beurre
+**fondu** » : le second « fondu » vient du **texte que l'injection ne consomme pas**, il n'est jamais
+dans la portée de ce qu'on efface. Le critère du point suivant — « le libellé couvre-t-il les mots
+qu'on s'apprête à effacer » — ne le voit donc pas, et ne le fera pas tomber. Le codeur qui
+n'appliquerait que ce critère restera rouge en clause 5 sur cette famille-là. **Ce n'est pas un trou
+du test, c'est un second mécanisme, et il est dû** : les qualificatifs que le libellé porte déjà
+(`fondu`, `froid`, `cuite`) doivent être retirés du texte quand ils suivent la quantité qui les
+écrit. Si ce second mécanisme se révèle être une décision de conception et non une règle mécanique,
+**il devient un lot séparé et la clause 5 est ce qui l'aura nommé**.
+
+⚠️ **TROIS CHOSES QUE LE CODEUR DEVRA TRANCHER, ÉCRITES ICI POUR QU'IL NE LES DEVINE PAS** :
+
+- **La normalisation de la comparaison est celle de la production, `memeMot` de `ui/texte-etape.ts`**
+  — pas le repli systématique du test. Les deux ne coïncident pas (`memeMot` ne replie `s|x` qu'au
+  delà de 2 lettres, des deux côtés). Le test mesure le résultat visible, il n'impose pas sa
+  mécanique interne ; changer `memeMot` est hors du lot.
+- **Couverture partielle : on n'efface que les mots couverts, on garde les autres.** C'est la
+  conséquence directe du « mot à mot » du point 3, pas une décision neuve. « 60 g râpé » face à
+  « comté râpé » efface `râpé` et garde `comté`.
+- **La branche `estPortion` n'est pas touchée**, et `cuisse` n'est pas dans `PORTIONS` : le motif
+  dominant du lot ressemble à un nom de portion sans en être un. Si la réparation demande de toucher
+  à `PORTIONS`, c'est le signe qu'on a quitté le lot.
+
+⚠️ **LE MOTIF DOMINANT EST UN LIBELLÉ QUI COMPTE UNE AUTRE UNITÉ QUE L'ALIMENT.** `cuisse_poulet`
+compté « 4 cuisses », `comte` compté « 60 g râpé », `celeri_branche` compté « 4 branches » : le
+libellé se reconnaît dans une de ses propres formes (`libelleNommeLAliment`), l'injection en conclut
+qu'il nomme l'aliment et n'ajoute rien derrière — mais le mot que la phrase avait choisi, lui, est
+parti. **Le critère qui manque n'est pas « le libellé nomme-t-il l'aliment » mais « le libellé
+couvre-t-il les mots qu'on s'apprête à effacer ».**
+
+⭐ **LA RÉPARATION EST TRANCHÉE : ON GARDE LE NOM.** « colorer **4 cuisses de poulet** dans la
+cocotte ». Deux réparations étaient recevables — garder le nom, ou renoncer à l'injection sur ces
+étapes-là en laissant la quantité repartir en badge. C'est la première, décidée le **2026-09-17**,
+pour trois raisons :
+
+- **Elle ne recule pas sur l'écran.** Renoncer à l'injection rendrait au badge ce que le lot E vient
+  de poser dans la phrase : la quantité au point d'usage, lue dans le geste et non deux centimètres
+  plus bas. On corrigerait un défaut de lecture en en rouvrant un autre.
+- **Elle ne déplace aucun couple**, donc aucune clause de canal d'un test scellé antérieur ne bouge.
+  La seconde réparation en aurait fait changer de canal une trentaine — et un test scellé qui rougit
+  arrête le lot, il ne se corrige pas.
+- **Elle est le plus petit changement correct.** Le critère change (« le libellé nomme-t-il
+  l'aliment » → « le libellé couvre-t-il les mots qu'on s'apprête à effacer »), la mécanique ne
+  change pas : la branche qui recolle le groupe nominal existe déjà, elle écrit « 50 g de beurre »
+  depuis le premier jour. Il s'agit de la rendre joignable, pas de l'écrire.
+
+⚠️ **CE QUE CETTE DÉCISION COÛTE, ET QUI EST ASSUMÉ** : quelques phrases resteront gauches là où le
+libellé porte déjà un qualificatif — « Parsemer de **60 g râpé de comté** ». C'est lisible et non
+ambigu, ce que la phrase d'aujourd'hui n'est pas. Réordonner le libellé demanderait de toucher au
+catalogue, que ce lot ne touche pas : ce qui reste gauche part en dette à l'œil (`ETAT.md` §8), pas
+en changement de réparation.
+
+⛔ **RENONCER À L'INJECTION N'EST PLUS UNE RÉPONSE RECEVABLE, ET LE POINT 2 LE MESURE.** Son plancher
+est relevé à ce que la réparation retenue doit exactement préserver.
+
+#### Ce que le lot ne touche pas
+
+- **Le catalogue** : aucun YAML, aucun libellé, aucun `build.mjs`, aucune migration. « 4 cuisses »
+  est la bonne quantité de cuisine — c'est le remplacement qui est trop large, pas la donnée.
+- **`engine/`** : rien. C'est un choix d'affichage.
+- **La décision 60** et la règle « déjà dit » du lot E : ni l'une ni l'autre n'est rouverte. Ce lot
+  s'applique **avant** le filtre de première mention, sur la même liste que lui.
+- **`ui/quantites.ts`** et le sélecteur de portions : la quantité affichée ne change pas, c'est
+  l'endroit où elle est posée qui change.
+- **La branche `estPortion`** de `localiser` : elle avale le groupe nominal à dessein (« 2 parts »),
+  aucun des cas mesurés n'en vient, et le lot n'y touche pas. Si un mot perdu s'avérait venir de là,
+  c'est un lot séparé — pas une rallonge de celui-ci.
+- **Les fichiers scellés antérieurs**, aucun. Ceux à surveiller pendant le codage, nommément :
+  `tests/scelles/lot-E.test.tsx` (canal et compte par étape), `retour-1`, `retour-5c`, `retour-5d`,
+  `retour-6`. Ils se relancent, ils ne se retouchent pas.
+
+⭐ **AUCUN TEST SCELLÉ ANTÉRIEUR NE DEVRAIT ROUGIR, ET C'EST DEVENU UN DÉTECTEUR.** La réparation
+retenue ne fait changer de canal à aucun couple : les clauses du lot E qui mesurent le **canal** (6)
+et le **compte par étape** (1, 2) lisent ce déplacement, et elles n'ont rien à lire. ⛔ **Donc si
+l'une d'elles rougit, ce n'est pas un dommage collatéral attendu : c'est le signe que la réparation a
+dérapé vers celle qu'on n'a pas retenue.** On s'arrête et on le dit — un test scellé ne se corrige
+pas, ne se contourne pas, ne se double pas.
+
+⚠️ **Une clause du lot E restera plus faible que la vérité qu'elle mesure** : sa clause 8 exempte le
+vocabulaire de l'aliment, exemption que le lot H retire. Elle ne rougira pas — une clause plus
+permissive reste verte quand l'écran s'améliore. **Ce lot ne la réécrit pas** : deux mesures du même
+fait coexisteront, la plus stricte étant celle du lot H. À noter en dette (`ETAT.md` §8) plutôt qu'à
+corriger sous sceau.

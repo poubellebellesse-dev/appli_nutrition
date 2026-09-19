@@ -42,15 +42,17 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-17 à 17 h 20, arbre complet, livraison du `lot-E`, commité en `2d8fcfd`) : 2 685 passed / 0 failed (2 685 tests, 139 fichiers)** en 150,08 s · typecheck
-propre (17 h 23) · `vite build` ✓ 2,59 s (17 h 23) · `engine:plan-stress` 20/20 (17 h 24) ·
-**l'écart avec le relevé précédent (2 677 sur 138, le 2026-09-14 à 12 h 45) est
-+8 tests et +1 fichier** : `tests/scelles/lot-E.test.tsx` et ses 8 clauses, attribué par
-`git status` · ⛔ **LA SUITE A DOUBLÉ DE DURÉE POUR 8 TESTS — 70,0 s → 150,08 s.** Ce fichier en
-prend **147,2 s** à lui seul : son balayage monte les **deux** écrans de chacune des 339 recettes et
-parcourt toutes leurs étapes à l'aller puis au retour. Le prix est assumé, il est le pendant d'un
-« Fini quand » qui porte sur le catalogue entier et non sur douze recettes (le lot C avait payé
-28,5 s pour la même raison) · catalogue non touché depuis le relevé
+⛔ **Dernier relevé (2026-09-19 à 12 h 09, arbre complet, livraison du `lot-H`, commité en `c22f03c`) : 2 693 passed / 0 failed (2 693 tests, 140 fichiers)** en 160,93 s · typecheck
+propre (12 h 12) · `vite build` ✓ 2,60 s (12 h 12) · `engine:plan-stress` 20/20 (12 h 12) ·
+**l'écart avec le relevé précédent (2 685 sur 139, le 2026-09-17 à 17 h 20, `2d8fcfd`) est
++8 tests et +1 fichier** : `tests/scelles/lot-H.test.tsx` et ses 8 clauses, attribué par
+`git status` · ⚠️ **LA DURÉE DE LA SUITE N'EST PAS ATTRIBUABLE À SON CONTENU À ±20 s PRÈS, ET C'EST
+MESURÉ** : le même arbre, augmenté de trois sondes temporaires (143 fichiers, 2 698 tests), a rendu
+**140,19 s** trois heures plus tôt, soit **plus de tests en moins de temps**. Ne pas lire une
+variation de cet ordre comme un coût de lot. Ce qui reste vrai et attribué : `lot-E.test.tsx` prend
+**137,5 s** à lui seul (mesuré au même run), parce que son balayage monte les **deux** écrans de
+chacune des 339 recettes ; `lot-H.test.tsx` mesure par le module et ne monte que **2** recettes,
+pour **1,3 s** · catalogue non touché depuis le relevé
 du 2026-09-09 (339 recettes, **dîner 250** dont 44 froides — non remesuré). `USER_SCHEMA_VERSION` = **21** (le réglage « Afficher les explications », `ALTER TABLE … ADD COLUMN`, forme de la v4). ⚠️ **SQLite valide le `CHECK` d'un `ADD COLUMN` contre les lignes EXISTANTES** — la forme
 de la v9 ne se recopie pas pour une équivalence.
 ⛔ **L'HEURE FAIT PARTIE DU RELEVÉ SUR CE PROJET.** **Arbre entièrement vert.**
