@@ -313,14 +313,65 @@ function motsDuLibelle(quantite: string): readonly string[] {
     .filter((m) => m.length > 1)
 }
 
-/** Le libellé nomme-t-il déjà l'ingrédient ? « 2 poivrons rouges » oui, « 50 g » non. */
-function libelleNommeLAliment(
-  quantite: string,
-  formes: readonly (readonly string[])[]
-): boolean {
-  return motsDuLibelle(quantite).some((m) =>
-    formes.some((forme) => forme.some((f) => memeMot(m, f)))
-  )
+/** Le libellé écrit-il ce mot-là ? Seule question qui vaille avant d'effacer le mot en question. */
+function porteLeMot(motsLibelle: readonly string[], mot: string): boolean {
+  return motsLibelle.some((l) => memeMot(mot, l))
+}
+
+/**
+ * Les rangs des mots du groupe nominal que le libellé NE PORTE PAS.
+ *
+ * ⛔ C'EST LE CRITÈRE QUI A REMPLACÉ « LE LIBELLÉ NOMME-T-IL L'ALIMENT » (lot H, 2026-09-18), ET LA
+ * DIFFÉRENCE EST ENTIÈRE. L'ancien répondait oui dès qu'UN mot du libellé reconnaissait UNE forme
+ * QUELCONQUE de l'aliment, puis n'écrivait plus rien derrière la quantité — donc « colorer le
+ * poulet » + « 4 cuisses » rendait « colorer 4 cuisses » : `cuisses` est bien une forme de
+ * `cuisse_poulet`, mais le mot que la RECETTE avait choisi, lui, était parti. 31 mots du catalogue
+ * disparaissaient ainsi.
+ *
+ * La bonne question n'est pas « ce libellé parle-t-il de cet aliment » — il en parle toujours — mais
+ * « ce libellé couvre-t-il les mots que je m'apprête à effacer ». Elle se pose MOT À MOT : « 1 gros
+ * oignon » couvre `oignon` et n'a rien à recoller, « 4 cuisses » ne couvre pas `poulet` et doit le
+ * rendre à la phrase.
+ */
+function motsNonPortes(
+  jetons: readonly Jeton[],
+  debut: number,
+  fin: number,
+  motsLibelle: readonly string[]
+): readonly number[] {
+  const rangs: number[] = []
+  for (let j = debut; j <= fin; j++) {
+    const mot = jetons[j]!.mot
+    if (VIDES.has(mot) || porteLeMot(motsLibelle, mot)) continue
+    rangs.push(j)
+  }
+  return rangs
+}
+
+/**
+ * Prolonge la zone effacée sur les mots suivants que le libellé écrit DÉJÀ.
+ *
+ * ⚠️ SANS ÇA, LE QUALIFICATIF SE DIT DEUX FOIS. « Incorporer le beurre **fondu** » + « 50 g
+ * **fondu** » : le groupe nominal s'arrête à `beurre`, `fondu` reste du texte ordinaire, et la
+ * phrase rend « Incorporer 50 g fondu de beurre **fondu** ». Même défaut pour « 120 g froid » et
+ * « 2 betteraves cuites ». Ces mots-là appartiennent au libellé : on les efface avec le nom.
+ *
+ * Aucun saut de liaison ici, contrairement à `etendre` : on n'avale que ce qui touche le groupe, et
+ * une ponctuation le ferme — un mot séparé par une virgule appartient déjà à la suite de la phrase.
+ */
+function avalerCeQueLeLibellePorte(
+  texte: string,
+  jetons: readonly Jeton[],
+  dernier: number,
+  motsLibelle: readonly string[]
+): number {
+  let fin = dernier
+  for (let j = dernier + 1; j < jetons.length; j++) {
+    if (/\S/.test(texte.slice(jetons[j - 1]!.fin, jetons[j]!.debut))) break
+    if (!porteLeMot(motsLibelle, jetons[j]!.mot)) break
+    fin = j
+  }
+  return fin
 }
 
 /**
@@ -637,7 +688,15 @@ function localiser(
         // de nommer le poisson, on ne le lui retire pas. `etendre` engloberait « de saumon », qui
         // est dans le vocabulaire de l'aliment — d'où l'arrêt net sur le mot de portion.
         const suivi = estPortion && estSuiviDuNom(jetons, brut, vocabulaire)
-        const dernier = suivi ? brut : etendre(texte, jetons, brut, vocabulaire)
+        const motsLibelle = motsDuLibelle(ingredient.quantite)
+        const dernier = suivi
+          ? brut
+          : avalerCeQueLeLibellePorte(
+              texte,
+              jetons,
+              etendre(texte, jetons, brut, vocabulaire),
+              motsLibelle
+            )
 
         const groupe = groupeDeterminant(jetons, i)
         if (groupe === null) continue
@@ -645,16 +704,23 @@ function localiser(
         const prefixe = accorder(groupe, ingredient.quantite, formes)
         if (prefixe === null) continue
 
-        const nomDansLaPhrase = texte.slice(jetons[i]!.debut, jetons[dernier]!.fin)
-        // ⚠️ `estPortion` EST DANS CE TEST, ET C'EST LUI QUI SÉPARE LA PORTION DE LA MESURE. Le
+        // ⚠️ `estPortion` RESTE DANS CE TEST, ET C'EST LUI QUI SÉPARE LA PORTION DE LA MESURE. Le
         // libellé « 4 pavés » nomme l'aliment quand c'est « pavé » qui a été trouvé dans la phrase —
         // sans quoi le rendu recollerait « 4 pavés DE PAVÉ ». Mais le libellé « 1 filet » d'une
         // huile ne nomme rien du tout quand c'est « huile » qui a été trouvé : là le complément est
         // l'information, et « Ajouter 1 filet » sans « d'huile » perd le nom de l'ingrédient.
-        const suite =
-          estPortion || libelleNommeLAliment(ingredient.quantite, formes)
+        //
+        // Le reste du test est devenu MOT À MOT : on ne recolle que ce que le libellé ne porte pas,
+        // et rien quand il porte tout. Voir `motsNonPortes`.
+        const restants = estPortion ? [] : motsNonPortes(jetons, i, dernier, motsLibelle)
+        const premier = restants[0]
+        const ultime = restants[restants.length - 1]
+        const nomDansLaPhrase =
+          premier === undefined || ultime === undefined
             ? ''
-            : ` ${liaison(nomDansLaPhrase)}${nomDansLaPhrase}`
+            : texte.slice(jetons[premier]!.debut, jetons[ultime]!.fin)
+        const suite =
+          nomDansLaPhrase === '' ? '' : ` ${liaison(nomDansLaPhrase)}${nomDansLaPhrase}`
 
         return {
           debut: groupe.debut,
