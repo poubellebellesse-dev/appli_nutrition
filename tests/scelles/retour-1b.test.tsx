@@ -353,13 +353,15 @@ describe('retour-1b — l’enchaînement ne saute aucun écran', () => {
 // --- 2. Le premier lancement joue le composé -----------------------------------------------------
 
 describe('retour-1b — le premier lancement joue le tutoriel qui traverse', () => {
-  it('annonce « Étape 1 sur 29 » dès la première bulle', async () => {
+  it('annonce « Étape 1 sur 27 » dès la première bulle', async () => {
     await monterEtLancerLeTutoriel()
     await screen.findByRole('dialog', { name: 'La navigation' })
 
     // ▶ Faux s'il annonce « sur 5 » : le tutoriel de première ouverture est resté celui de la barre
-    //   d'onglets. 29 = 5 (menus) + 23 (les cinq écrans) + 1 (toucher Aujourd'hui).
-    expect(compteur()).toEqual([1, 29])
+    //   d'onglets. 27 = 5 (menus) + 21 (les cinq écrans) + 1 (toucher Aujourd'hui).
+    // ⚠️ REBASÉ 29 → 27 LE 2026-09-26, décision de l'auteur (lot I, option a) : l'onglet « Gestes »
+    //    perd les étapes « Le saviez-vous ? » et « Ce qui est solide », dont les cibles disparaissent.
+    expect(compteur()).toEqual([1, 27])
   })
 })
 
@@ -431,7 +433,8 @@ describe('retour-1b — le composé réutilise les étapes existantes', () => {
       for (const [i, e] of source.entries()) expect(etapes[positions[i] as number]).toBe(e)
     }
 
-    expect(etapes.length).toBe(29)
+    // Rebasé 29 → 27 le 2026-09-26 (lot I, option a) — voir la clause « Étape 1 sur 27 ».
+    expect(etapes.length).toBe(27)
   })
 })
 

@@ -73,7 +73,7 @@ const ONGLETS: readonly EntreeOnglet[] = [
   },
   {
     route: 'savoir',
-    libelle: 'Savoir',
+    libelle: 'Gestes',
     icone: (
       <>
         <path d="M9.2 17.5h5.6" />

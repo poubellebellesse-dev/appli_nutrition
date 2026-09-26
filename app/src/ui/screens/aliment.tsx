@@ -94,7 +94,7 @@ const LIBELLE_ONGLET: Readonly<Record<Onglet, string>> = {
   semaine: '← Cette semaine',
   courses: '← Ma liste de courses',
   recettes: '← Toutes les recettes',
-  savoir: '← Savoir',
+  savoir: '← Gestes',
 }
 
 const LIBELLE_ORIGINE: Readonly<Record<AnimalOrigin, string>> = {

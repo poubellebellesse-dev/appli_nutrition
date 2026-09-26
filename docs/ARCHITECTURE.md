@@ -742,6 +742,9 @@ deux familles.
 
 ### 6.3 Thématiques — liste blanche
 
+⚠️ **Depuis le lot I (2026-09-26), « Comprendre » n'est plus affiché** : les fiches restent dans le
+catalogue et sous les règles ci-dessous, mais aucun écran ne les rend (`CONCEPTION_RETOURS_APK.md`).
+
 Seuls sont acceptés les sujets disposant de **recommandations nutritionnelles publiées par une
 autorité de santé** (ANSES, EFSA, HAS, OMS) : intolérances (lactose, gluten), diabète de type 2,
 hypertension, hypercholestérolémie, insuffisance rénale, goutte, grossesse.

@@ -42,11 +42,15 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-19 à 12 h 09, arbre complet, livraison du `lot-H`, commité en `c22f03c`) : 2 693 passed / 0 failed (2 693 tests, 140 fichiers)** en 160,93 s · typecheck
-propre (12 h 12) · `vite build` ✓ 2,60 s (12 h 12) · `engine:plan-stress` 20/20 (12 h 12) ·
-**l'écart avec le relevé précédent (2 685 sur 139, le 2026-09-17 à 17 h 20, `2d8fcfd`) est
-+8 tests et +1 fichier** : `tests/scelles/lot-H.test.tsx` et ses 8 clauses, attribué par
-`git status` · ⚠️ **LA DURÉE DE LA SUITE N'EST PAS ATTRIBUABLE À SON CONTENU À ±20 s PRÈS, ET C'EST
+⛔ **Dernier relevé (2026-09-26 à 15 h 28, arbre complet, livraison du `lot-I`, non commité) : 2 689 passed / 1 failed (2 690 tests, 141 fichiers)** en 570,67 s, + 1 erreur `Timeout calling "onTaskUpdate"` · le rouge est
+`retour-8` clause 4 « semis » à 15,2 s pour un plafond de 15 s, **déjà rouge à 13 h 33 avant tout code
+du lot**, vert seul (43/43, 10,8 s à 15 h 39) ; une suite de 15 h 05 était à 2 690 / 0 failed · typecheck
+propre (15 h 38) · `vite build` ✓ 7,10 s (15 h 38) · `engine:plan-stress` 20/20 (15 h 39) ·
+**l'écart avec le relevé précédent (2 693 sur 140, 2026-09-19, `c22f03c`) est −3 tests et +1
+fichier** : +11 `tests/scelles/lot-I.test.tsx`, −14 `parcours.test.tsx` (deux étapes de tutoriel
+retirées, présentes dans deux parcours), attribué par `vitest list` contre HEAD · ⚠️ **les suites du
+2026-09-26 durent 560-645 s contre 161 s le 2026-09-19, dès avant le lot : machine chargée, cause non
+établie** · relevé du 2026-09-19 : 2 693 / 0 en 160,93 s · ⚠️ **LA DURÉE DE LA SUITE N'EST PAS ATTRIBUABLE À SON CONTENU À ±20 s PRÈS, ET C'EST
 MESURÉ** : le même arbre, augmenté de trois sondes temporaires (143 fichiers, 2 698 tests), a rendu
 **140,19 s** trois heures plus tôt, soit **plus de tests en moins de temps**. Ne pas lire une
 variation de cet ordre comme un coût de lot. Ce qui reste vrai et attribué : `lot-E.test.tsx` prend

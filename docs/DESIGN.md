@@ -101,7 +101,7 @@ sur les deux — l'utilisateur ne réapprend rien en changeant d'appareil.
 
 ```mermaid
 flowchart LR
-    A["📅 Aujourd'hui"] --- S["🗓 Semaine"] --- C["🛒 Courses"] --- R["📖 Recettes"] --- V["💡 Savoir"]
+    A["📅 Aujourd'hui"] --- S["🗓 Semaine"] --- C["🛒 Courses"] --- R["📖 Recettes"] --- V["💡 Gestes"]
     style A fill:#bd6a48,stroke:#a3542f,color:#fff
 ```
 
@@ -111,7 +111,7 @@ flowchart LR
 | **Semaine** | Planning 2-14 jours, états, reroll | — |
 | **Courses** | Liste rangeable, ajout manuel, partage | — |
 | **Recettes** | Catalogue, recherche, filtres, entonnoir | — |
-| **Savoir** | Le saviez-vous, gestes de cuisine, Comprendre (amorce) | **Bibliothèque santé complète** |
+| **Gestes** (ex-Savoir) | Gestes de cuisine, sources et limites — « Le saviez-vous ? » et « Comprendre » retirés de l'écran au lot I (2026-09-26), gardés en base | **Bibliothèque santé complète** |
 
 Le 5ᵉ onglet a du contenu dès le premier jour et **absorbe les chapitres santé sans déplacer les
 autres** — d'où le choix de 5 onglets plutôt que 4 (§ décisions).
@@ -130,7 +130,6 @@ Chaque interaction gestuelle des maquettes est **doublée d'un contrôle visible
 | Aujourd'hui | Glisser pour changer de plat | Flèches ◀ ▶ de part et d'autre |
 | Aujourd'hui | Tirer « le reste de la journée » | Poignée avec libellé + chevron |
 | Semaine | Glisser dans « Changer » | Flèches du carrousel |
-| Savoir | Glisser « Le saviez-vous ? » | Flèches du carrousel |
 | Premier lancement | Glisser j'aime/j'aime pas | Deux gros boutons |
 
 Un geste invisible n'existe pas pour une partie des utilisateurs. Cette règle prime sur l'élégance.
@@ -300,15 +299,16 @@ Conçu pour être **lu debout, mains occupées, parfois de loin** — gros carac
   s'exporte en carte-image partageable (conçu session 2 — `archive/RECAP_SESSION_2.md`)
 - Bas : « Ajouter à ma semaine »
 
-### 4.7 Savoir
+### 4.7 Gestes (ex-Savoir)
 
-- **« Le saviez-vous ? »** en carrousel (flèches + glissement)
+⚠️ **Renommé « Gestes » et épuré au lot I (2026-09-26, décision de l'auteur)** — détail et arbitrages :
+`CONCEPTION_RETOURS_APK.md`, lot I. L'identifiant interne reste `savoir` (route `#/savoir`).
+
 - **« Gestes de cuisine »** : grille de vignettes → définition simple + animation muette en boucle
-- **« Comprendre »** en deux niveaux (familles → chapitres, voir §6.3 ARCHITECTURE)
-  - chapitre = titre-question → affirmations courtes, chacune avec **badge de preuve**, dépliables
-    en résumé long + sources cliquables
-  - filtre en tête : « preuve forte seulement » ou tout voir
 - Lien permanent « Sources et limites »
+- ⛔ **Retirés de l'écran, gardés dans `catalog.db`** : « Le saviez-vous ? » (carrousel de faits) et
+  « Comprendre » (familles → chapitres, badges de preuve, filtre « preuve forte seulement », §6.3
+  ARCHITECTURE). Les réafficher est un lot d'écran, et suppose la relecture par un tiers.
 
 ### 4.8 Premier lancement — 5 écrans, rien d'obligatoire sauf les allergies
 

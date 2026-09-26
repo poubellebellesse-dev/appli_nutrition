@@ -98,7 +98,7 @@
 |---|---|---|
 | ~~1~~ | Restes en v1 ou v2 ? | **Tranché — v1**, structurant et coûteux à greffer après. **CODÉ** : `planLeftovers` (§7.3 ENGINE) ; l'affichage côté Courses est la décision 50 |
 | 2 | Choix final du badge de preuve | Variantes maquettées, à trancher à l'intégration |
-| ~~3~~ | Libellé onglet « Savoir » | ✅ **FERMÉE le 2026-08-07 — c'est « Savoir », et ça le reste.** Le libellé n'était provisoire que parce que personne ne l'avait confirmé ; « Apprendre » et « Comprendre » sont écartés. ⚠️ **Rien à coder : le code dit déjà « Savoir » partout** — cette ligne ne demandait qu'un arbitrage, pas un chantier |
+| ~~3~~ | Libellé onglet « Savoir » | ✅ **FERMÉE le 2026-08-07 (« Savoir »), ROUVERTE ET REFERMÉE le 2026-09-26 : c'est « Gestes ».** Décision de l'auteur, avec le retrait de « Le saviez-vous ? » et de « Comprendre » de l'écran (lot I, `CONCEPTION_RETOURS_APK.md`) : l'onglet ne garde que le lexique et « Sources et limites ». Le libellé est codé (barre, titre, retour de la fiche aliment, tutoriel) ; l'identifiant interne reste `savoir`. |
 | ~~4~~ | Nb de recettes et d'aliments v1 | **Revu à la hausse (2026-07-27)** — **200-300 recettes** (au lieu de 150-200) et **~200 aliments**. **Les deux cibles sont DÉPASSÉES** : 199 aliments, 241 recettes (2026-07-29). Conséquence à surveiller : le poids du `.db` et le critère de sortie P6 « bundle < 15 Mo » — 300 recettes sans média restent légères, ce sont les photos qui pèseront |
 | 5 | Écran d'humeur → envie | Principe validé, pas maquetté |
 | 6 | Hébergement PWA | Cloudflare / Netlify / GitHub Pages (statique, indifférent) |

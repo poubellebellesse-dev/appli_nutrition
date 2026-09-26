@@ -71,6 +71,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **F** | La semaine, refaite | **bloqué** — forme à trancher en séance de design |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
 | **H** | La quantité injectée mange le nom de l'aliment | ✅ **LIVRÉ le 2026-09-19** (`c22f03c`) |
+| **I** | « Savoir » devient « Gestes » : l'onglet ne garde que le lexique | ✅ **LIVRÉ le 2026-09-26** (non commité — hash à poser au commit) |
 
 ### Lot A — le bandeau du téléphone ✅ LIVRÉ le 2026-09-12
 
@@ -1158,3 +1159,148 @@ vocabulaire de l'aliment, exemption que le lot H retire. Elle ne rougira pas —
 permissive reste verte quand l'écran s'améliore. **Ce lot ne la réécrit pas** : deux mesures du même
 fait coexisteront, la plus stricte étant celle du lot H. À noter en dette (`ETAT.md` §8) plutôt qu'à
 corriger sous sceau.
+
+### Lot I — « Savoir » devient « Gestes » : l'onglet ne garde que le lexique — ✅ **LIVRÉ le 2026-09-26** (non commité)
+
+> ✅ **LIVRÉ LE 2026-09-26, NON COMMITÉ À L'ÉCRITURE DE CETTE LIGNE.** Scellé après deux tours
+> d'attaque ; les 11 clauses sont vertes, `retour-1b` (rebasé 29 → 27) et `lot-B` aussi, sans qu'aucun
+> fichier scellé ait été touché après le sceau. `savoir.tsx` passe de 713 à 305 lignes.
+>
+> ⚠️ **ÉCART ENTRE LE BRIEF ET LE DIFF** : le brief annonçait trois tests non scellés à réécrire
+> (`savoir.test.tsx`, `parcours.test.tsx`, `visite.test.tsx`). **Aucun n'a été touché** : aucun ne lisait
+> les blocs retirés. `parcours.test.tsx` perd pourtant **14 tests** (234 → 220, mesuré par
+> `vitest list` contre HEAD) : ses `it.each` sont nourris par les étapes, et les deux étapes retirées
+> vivaient dans **deux** parcours (`savoir` et `decouverte`, le composé). Compte de l'arbre :
+> 2 693 → 2 690 = +11 (`lot-I`) − 14.
+>
+> ⚠️ **Ce que le « Fini quand » ne démontre pas** : l'ordre des trois étapes du tutoriel de l'onglet
+> (seule la cardinalité et le texte de l'ouverture sont scellés) ; le contenu des tips et des fiches
+> gardés en base (la clause 3 ne compte que leur nombre) ; une lecture par clé calculée contourne la
+> clause 2, qui est un grep. En dette, `ETAT.md` §8.
+
+
+**D'où vient le lot.** Analyse de viabilité du 2026-09-26 (session, pas de document) : le contenu
+éditorial est le point faible du projet, et **la relecture par un tiers des 73 tips et des 8 fiches
+« Comprendre » bloque la publication** (`ETAT.md` §8, « Avant publication »). Décision de l'auteur, le
+même jour : **ne plus montrer ce contenu**, épurer l'onglet jusqu'au lexique des gestes.
+
+**Deux arbitrages de l'auteur, 2026-09-26 :**
+1. **Retirer de l'écran, pas masquer derrière un interrupteur.** Les deux blocs et leurs composants
+   sortent de `savoir.tsx`. ⚠️ C'est une **exception assumée** à la décision 2.c (« masquer, jamais
+   supprimer ») : un cinquième interrupteur aurait exigé de lever le sceau du lot B (clause 1,
+   « exactement quatre »). **Les données restent** : `catalog.db` garde ses tips et ses fiches, le
+   chargeur les lit toujours — les rallumer est un lot d'écran, pas un chantier de contenu.
+2. **L'onglet s'appelle « Gestes ».** ⛔ **Cela rouvre la décision 3** (`decisions/registre.md` : « c'est
+   « Savoir », et ça le reste », fermée le 2026-08-07). ✅ **Reconfirmé par l'auteur le 2026-09-26** :
+   la ligne 3 du registre est réécrite à la livraison.
+
+**Ce que le lot gagne, et ce qu'il ne gagne pas.** Il retire de l'écran **tout** le contenu soumis à
+relecture (73 tips, 8 fiches, 33 positions) : la relecture cesse d'être bloquante tant que ce contenu
+n'est pas rallumé. ⛔ **Il ne ferme PAS les deux trous sanitaires** (céphalopodes, cuisson de l'œuf) :
+ils portent sur les **recettes** (`SOURCES_RECETTES.md`), pas sur Savoir.
+
+**Mesuré le 2026-09-26 sur `catalog.db` réel** (`app/public/catalog/catalog.db`) : `tip` **73**
+lignes (texte le plus court : 156 caractères), `evidence_sheet` **8**, `evidence_position` **33**,
+`evidence_source` **33**, `lexicon_entry` **62**, `lexicon_clip` **6**. Seul `ui/screens/savoir.tsx`
+lit `catalogue.tips` et `catalogue.evidence` dans `app/src/ui` (grep du même jour).
+
+#### Fini quand
+
+Toutes les mesures se font sur l'écran monté avec **`catalog.db` réel** (`catalogueDeTest()`), jamais
+sur une fixture. Aucun compte absolu du catalogue n'est scellé : les attendus se recalculent depuis la
+base.
+
+1. **Aucun texte des tips ni des fiches n'atteint l'écran, même après avoir tout touché.** Sur l'écran
+   monté, puis après un clic sur **chaque** bouton hors de la liste des gestes et sur chaque geste
+   dépliable : aucun `texte` de tip, aucun `titre`, `resume_vulgarise` ni `affirmation` de fiche n'est
+   contenu dans `document.body.textContent` ; aucun lien ne pointe vers une `source_url` de tip ou
+   une `url` de source de fiche ; il n'existe ni titre « Le saviez-vous ? » ni titre « Comprendre »,
+   ni bouton « Fait suivant » / « Fait précédent », ni élément `[data-visite="preuve-forte"]`.
+   *Faux si* : un bloc est caché par CSS, replié derrière un bouton, ou renommé.
+2. **Aucun autre écran ne les reprend, et le code des deux blocs est effacé, pas mis en sommeil.**
+   Aucun fichier non-test de `app/src/ui` ne contient, commentaires compris : le mot `tips` ni le
+   mot `evidence` ; les types `Tip`, `TipCategorie`, `EvidenceSheet`, `EvidencePosition`,
+   `EvidenceSource`, `EvidenceCategorie`, `NiveauPreuve`, `TypeEtude` ; les chaînes « Fait
+   suivant », « Fait précédent », `preuve-forte`. *Faux si* : le carrousel est déplacé vers
+   « Aujourd'hui » ou la fiche recette, ou les composants restent derrière un `false &&`.
+   ⛔ **Premier tour d'attaque, 2026-09-26** : la première forme (`\.(?:tips|evidence)\b`) laissait
+   passer `{false && <LeSaviezVous tips={[]} />}`, composants gardés morts — un masquage non
+   déclaré, l'inverse de l'arbitrage 1. D'où la forme ci-dessus.
+3. **Les données restent.** `catalogueDeTest().tips.length` égale `SELECT COUNT(*) FROM tip` et
+   est > 0 ; `catalogueDeTest().evidence.size` égale `SELECT COUNT(*) FROM evidence_sheet` et est > 0.
+   *Faux si* : le lot vide la table ou débranche le chargeur au lieu de l'écran.
+4. **Le lexique est entier et cherchable.** Chaque `terme` du lexique réel est le texte d'un bouton
+   de l'écran ; la ligne de compte dit `N gestes` avec `N = lexicon.size` ; taper le terme d'une entrée
+   réduit le compte à un nombre ≥ 1 et < N, et cette entrée reste affichée.
+5. **« Sources et limites » est intact** (principe 1 avant l'épure) : ses quatre paragraphes — CIQUAL
+   2025, « ne remplace pas un professionnel de santé », « Ce qu'elle ne fait pas », « Tout reste sur
+   cet appareil. » — sont à l'écran.
+6. **L'onglet s'appelle « Gestes » partout où l'utilisateur le lit.** Le titre de niveau 1 de l'écran
+   est exactement « Gestes » ; le lien de `Navigation` vers `hashDe('savoir')` a pour texte « Gestes »
+   et aucun lien de la barre ne dit « Savoir » ; la fiche aliment ouverte avec `retour =
+   hashDe('savoir')` affiche le retour « ← Gestes ».
+7. **Le tutoriel ne parle plus de ce qui n'existe plus.** Le parcours `savoir` a pour titre « Gestes » ;
+   **chaque** `cible` de ses étapes existe dans l'écran monté ; aucun `titre` ni `texte` d'aucune étape
+   d'aucun parcours, ni aucun titre de parcours, ne contient le mot `Savoir` (mot entier, casse
+   respectée — le verbe « savoir » reste permis). Chaque étape du parcours `savoir` a un texte de
+   plus de 30 caractères, celui de l'ouverture contient « geste » ; toute étape qui mène à l'onglet
+   s'intitule « Le coin Gestes » et dit, mot pour mot, le texte prescrit plus bas.
+   ⛔ **Second tour d'attaque, 2026-09-26** : aucune clause ne lisait `texte` — trois étapes à
+   `texte: 'x'` passaient tout. D'où la clause 7c.
+
+#### Ce que le lot ne touche pas
+
+- **Le catalogue** : ni YAML, ni `build.mjs`, ni `catalog.db`, ni `catalog-loader*.ts`, ni les types
+  `Tip` / `EvidenceSheet` de `engine/domain`. **`engine/`** : rien.
+- **Les identifiants internes** : l'onglet reste `'savoir'` dans `Onglet`, `ParcoursId`, le hash
+  `#/savoir`, `data-visite="titre-savoir"` et le nom de fichier `savoir.tsx`. Renommer un identifiant
+  ne change rien à ce que l'utilisateur lit et toucherait le routeur et une dizaine de tests.
+- **Le sous-titre « Gestes de cuisine »** reste : c'est la **poignée** de `monterSavoir()` dans
+  `tests/scelles/lot-B.test.tsx`. Un titre « Gestes » au-dessus d'un sous-titre « Gestes de cuisine »
+  est une redite assumée.
+- **Le titre de la première étape du parcours** (« Pour comprendre, pas pour décider à votre place »)
+  reste : c'est la poignée `DERNIERE_OUVERTURE` de `tests/scelles/retour-1b.test.tsx`. Son texte
+  peut changer.
+- **`ui/epure.ts`** : les quatre interrupteurs restent quatre.
+- **Aucun fichier scellé antérieur n'est modifié par le code.** ⛔ **SAUF UN CONFLIT CONNU, TRANCHÉ
+  AVANT LE SCEAU** : `retour-1b` scellait `29` étapes pour le tutoriel composé, qui reprend les 5
+  étapes du parcours `savoir`. En retirer deux (le carrousel et `preuve-forte`, dont les cibles
+  disparaissent) donne **27**. ✅ **Option (a) retenue par l'auteur le 2026-09-26** : `retour-1b` est
+  **rebasé à 27** pendant le brief, à ses deux assertions (« Étape 1 sur 27 », `etapes.length`) —
+  même défaut de valeur absolue que les compteurs éteints par `retour-5c`. Il est donc **rouge
+  jusqu'à la livraison du code**, comme les clauses du lot. L'option (b), deux étapes de remplissage
+  pour tenir le compte, est écartée.
+- **Les documents** (`DESIGN.md` §4.7, `ARCHITECTURE.md` §6.3, `ETAT.md`, `FICHE_REPRISE.md`,
+  `decisions/registre.md` ligne 3) sont mis à jour à la livraison, par `/fin`.
+- **Les types du moteur** (`Tip`, `EvidenceSheet`, `NiveauPreuve`…) restent dans
+  `engine/domain/catalog.ts` : le chargeur les produit toujours. Seul `app/src/ui` doit les perdre.
+
+#### Ce que le codeur n'a pas à deviner
+
+- **L'en-tête de `savoir.tsx` est réécrit** : il annonce « quatre sections » et « 73 tips ». La
+  clause 2 lit les commentaires et le fera rougir sinon.
+- **Tout ce qui devient orphelin est effacé**, pas seulement ce que la clause 2 nomme : `domaine()`,
+  `formaterDate()`, `estAReviser()`, `BadgePreuve`, `Chapitre`, `Position`, `Source`, `CATEGORIE`,
+  `FAMILLES`, `NIVEAU_LIBELLE`, `TYPE_ETUDE_LIBELLE`, et les imports devenus inutiles.
+  `tsconfig.json` n'active pas `noUnusedLocals` : rien d'autre ne le rattrapera. `CadreClip` et les
+  clips du lexique **restent**.
+- **Les étapes du tutoriel.** `ETAPES_SAVOIR` garde, dans cet ordre, l'ouverture (titre inchangé,
+  texte réécrit pour parler des gestes), « Les gestes de cuisine », « D'où vient tout ça ». Dans
+  `ETAPES_MENUS`, l'étape vers l'onglet devient : titre « Les gestes de cuisine » est déjà pris —
+  donc **« Le coin Gestes »**, texte **« Touchez « Gestes » pour retrouver ce que veut dire un mot
+  croisé dans une recette. »** (vouvoiement, une phrase, charte de `parcours.ts`). ⚠️ Relire
+  `engine/guards/banned-terms.ts` avant toute reformulation : le lexique banni est une sous-chaîne.
+- **Les tests NON scellés qui vont rougir ou perdre leur objet**, à réécrire dans le lot :
+  `app/src/ui/screens/savoir.test.tsx` (carrousel, « Comprendre », filtre de preuve),
+  `app/src/ui/parcours.test.tsx` (montage de l'écran, contenu soumis à §6), `app/src/ui/visite.test.tsx`
+  (lien « Savoir » en dur dans son gabarit), et tout compte d'étapes qu'ils portent.
+
+**Ce que l'attaque a vu et qui va en dette, pas dans le lot** (deux tours, 2026-09-26) : la clause 3
+ne prouve qu'une cardinalité (un chargeur qui rendrait 73 tips vides passerait) ; l'ordre narratif
+des trois étapes restantes n'est scellé par aucune clause ; la clause 2 est un grep, qu'une clé
+calculée (`catalogue['ti' + 'ps']`) contourne — **triche délibérée**, classée comme telle par le
+critique, hors de portée d'un grep ; les tests non scellés réécrits n'ont aucun critère minimal
+d'assertion. Le fonctionnement orphelin résiduel sans mot interdit (`domaine()`…) est prescrit
+ci-dessus, sans clause.
+
+**Témoins d'avant** : relevés au lancement du brief, collés dans le compte rendu du 2026-09-26.

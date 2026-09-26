@@ -46,7 +46,7 @@ le 2026-08-21. Ce qu'elle a trouvé est trié en lots A → G dans
 ▶ **[CONCEPTION_RETOURS_APK.md](./CONCEPTION_RETOURS_APK.md)**, qui fait foi pour ce chantier.
 (La passe de 2026-08-21, faite au navigateur, est close : `CONCEPTION_RETOURS_TEST.md`.)
 
-- ▶ **AUCUN LOT OUVERT. Les lots A, B, C, E et H sont livrés ; la suite est le lot D.** Le F attend
+- ▶ **AUCUN LOT OUVERT. Les lots A, B, C, E, H et I sont livrés ; la suite est le lot D.** Le F attend
   une séance de design, le G se juge à l'œil et vient en dernier.
 - ⚠️ **Rebâtir l'APK après les lots B → H et refaire une passe à l'œil** : ce que les tests jsdom ne
   savent pas voir ne se voit que là, et le lot A en est la démonstration.
@@ -60,15 +60,13 @@ photos (129/339, source), origine animale (66c), matériel (65c), retours test (
 
 **Ce qui reste à faire, et qui n'attend que d'être commencé :**
 
-1. **⛔ Relecture par un tiers du contenu Savoir** (`ETAT.md` §8.2 bis) — **bloquante avant
-   publication**. 73 tips et 8 fiches sourcés un par un, **aucun relu**.
-2. **Les mesures que seul un téléphone donne** — protocole et seuils :
+1. **Les mesures que seul un téléphone donne** — protocole et seuils :
    [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) §0. ⚠️ Le chrono de `#/recettes`, seul
    chiffre qui manque pour fermer la décision 61, **n'a toujours pas été pris** — jamais en jsdom.
-3. **Play Store** — l'APK de débogage se fabrique et s'installe (`ETAT.md` §8) ; ce qui reste est la
+2. **Play Store** — l'APK de débogage se fabrique et s'installe (`ETAT.md` §8) ; ce qui reste est la
    signature, la fiche et la publication. Le web demeure le seul chemin vers un iPhone sans Mac.
 
-⚠️ **Deux trous sanitaires bloquent la publication au même titre que la relecture** : céphalopodes et
+⚠️ **Deux trous sanitaires bloquent la publication** (la relecture ne bloque plus depuis le lot I, `ETAT.md` §8) : céphalopodes et
 cuisson de l'œuf, qu'aucune autorité lue ne donne — le principe 3 interdit d'écrire sans source.
 ⚠️ **Les questions ouvertes se comptent dans [decisions/registre.md](./decisions/registre.md) et se
 résument en `ETAT.md` §4 — jamais ici.** Cette ligne en a annoncé NEUF pour DOUZE pendant six jours.

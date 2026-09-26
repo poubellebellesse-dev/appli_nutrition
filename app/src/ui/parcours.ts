@@ -128,8 +128,8 @@ const ETAPES_MENUS: readonly EtapeVisite[] = [
   },
   {
     cible: `a[href="${hashDe('savoir')}"]`,
-    titre: 'Le coin Savoir',
-    texte: 'Touchez « Savoir » pour les explications et les conseils.',
+    titre: 'Le coin Gestes',
+    texte: 'Touchez « Gestes » pour retrouver ce que veut dire un mot croisé dans une recette.',
     attendu: { type: 'route', hash: hashDe('savoir') },
   },
 ]
@@ -342,7 +342,7 @@ const ETAPES_FRIGO: readonly EtapeVisite[] = [
   },
 ]
 
-// --- 7. Savoir ----------------------------------------------------------------------------------
+// --- 7. Gestes ----------------------------------------------------------------------------------
 
 /**
  * ⚠️ LE SEUL PARCOURS QUI DÉCRIT UN CONTENU SOUMIS À §6 ARCHITECTURE, section contraignante. Chaque
@@ -356,30 +356,14 @@ const ETAPES_SAVOIR: readonly EtapeVisite[] = [
     cible: titre('savoir'),
     titre: 'Pour comprendre, pas pour décider à votre place',
     texte:
-      "Cet onglet explique. Il ne vous dira jamais quoi manger, ne vous fixe aucun objectif et ne suit rien de ce que vous faites.",
+      "Cet onglet rassemble les gestes de cuisine et dit d'où viennent les chiffres. Il ne vous dira jamais quoi manger, ne vous fixe aucun objectif et ne suit rien de ce que vous faites.",
     attendu: { type: 'lecture' },
-  },
-  {
-    // ⚠️ Cible RÉELLE et déjà stable (`aria-label`) : inutile d'y poser un `data-visite` de plus.
-    // Conditionnelle en théorie — sautée si le catalogue n'a aucun fait —, mais il en compte 73.
-    cible: 'button[aria-label="Fait suivant"]',
-    titre: 'Le saviez-vous ?',
-    texte:
-      "Des faits courts sur les aliments, un par un. Touchez la flèche pour passer au suivant — il y en a plusieurs dizaines.",
-    attendu: { type: 'clic', cible: 'button[aria-label="Fait suivant"]' },
   },
   {
     cible: cible('recherche-gestes'),
     titre: 'Les gestes de cuisine',
     texte:
       "« Chemiser », « blanchir », « émincer » : cherchez un mot croisé dans une recette et vous aurez ce qu'il veut dire. La recherche regarde aussi les définitions, si vous ne connaissez pas le mot.",
-    attendu: { type: 'lecture' },
-  },
-  {
-    cible: cible('preuve-forte'),
-    titre: 'Ce qui est solide, ce qui l’est moins',
-    texte:
-      "Chaque affirmation dit sur quoi elle repose. Cochez cette case pour ne garder que les mieux établies — l'application vous dit alors combien de chapitres elle a masqués.",
     attendu: { type: 'lecture' },
   },
   {
@@ -536,7 +520,7 @@ export const PARCOURS: readonly Parcours[] = [
   { id: 'semaine', titre: 'Cette semaine', ecran: hashDe('semaine'), etapes: ETAPES_SEMAINE },
   { id: 'courses', titre: 'Mes courses', ecran: hashDe('courses'), etapes: ETAPES_COURSES },
   { id: 'recettes', titre: 'Recettes', ecran: hashDe('recettes'), etapes: ETAPES_RECETTES },
-  { id: 'savoir', titre: 'Savoir', ecran: hashDe('savoir'), etapes: ETAPES_SAVOIR },
+  { id: 'savoir', titre: 'Gestes', ecran: hashDe('savoir'), etapes: ETAPES_SAVOIR },
   { id: 'frigo', titre: 'Vider le frigo', ecran: hashDuFrigo(), etapes: ETAPES_FRIGO },
   { id: 'composer', titre: 'Composer une recette', ecran: hashDeLEditeur(null), etapes: ETAPES_COMPOSER },
   { id: 'reglages', titre: 'Réglages', ecran: hashDesParametres(), etapes: ETAPES_REGLAGES },
