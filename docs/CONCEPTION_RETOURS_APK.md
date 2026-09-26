@@ -71,7 +71,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **F** | La semaine, refaite | **bloqué** — forme à trancher en séance de design |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
 | **H** | La quantité injectée mange le nom de l'aliment | ✅ **LIVRÉ le 2026-09-19** (`c22f03c`) |
-| **I** | « Savoir » devient « Gestes » : l'onglet ne garde que le lexique | ✅ **LIVRÉ le 2026-09-26** (non commité — hash à poser au commit) |
+| **I** | « Savoir » devient « Gestes » : l'onglet ne garde que le lexique | ✅ **LIVRÉ le 2026-09-26** (`6c60e5a`) |
 
 ### Lot A — le bandeau du téléphone ✅ LIVRÉ le 2026-09-12
 
@@ -1160,9 +1160,9 @@ permissive reste verte quand l'écran s'améliore. **Ce lot ne la réécrit pas*
 fait coexisteront, la plus stricte étant celle du lot H. À noter en dette (`ETAT.md` §8) plutôt qu'à
 corriger sous sceau.
 
-### Lot I — « Savoir » devient « Gestes » : l'onglet ne garde que le lexique — ✅ **LIVRÉ le 2026-09-26** (non commité)
+### Lot I — « Savoir » devient « Gestes » : l'onglet ne garde que le lexique — ✅ **LIVRÉ le 2026-09-26** (`6c60e5a`)
 
-> ✅ **LIVRÉ LE 2026-09-26, NON COMMITÉ À L'ÉCRITURE DE CETTE LIGNE.** Scellé après deux tours
+> ✅ **LIVRÉ LE 2026-09-26, COMMITÉ EN `6c60e5a`.** Scellé après deux tours
 > d'attaque ; les 11 clauses sont vertes, `retour-1b` (rebasé 29 → 27) et `lot-B` aussi, sans qu'aucun
 > fichier scellé ait été touché après le sceau. `savoir.tsx` passe de 713 à 305 lignes.
 >
