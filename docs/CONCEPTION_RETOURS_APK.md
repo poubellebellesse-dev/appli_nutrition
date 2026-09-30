@@ -72,6 +72,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
 | **H** | La quantité injectée mange le nom de l'aliment | ✅ **LIVRÉ le 2026-09-19** (`c22f03c`) |
 | **I** | « Savoir » devient « Gestes » : l'onglet ne garde que le lexique | ✅ **LIVRÉ le 2026-09-26** (`6c60e5a`) |
+| **J** | Corrections rapides de la passe du 2026-09-30 | ✅ **LIVRÉ le 2026-09-30** (non commité au relevé) |
 
 ### Lot A — le bandeau du téléphone ✅ LIVRÉ le 2026-09-12
 
@@ -1304,3 +1305,141 @@ d'assertion. Le fonctionnement orphelin résiduel sans mot interdit (`domaine()`
 ci-dessus, sans clause.
 
 **Témoins d'avant** : relevés au lancement du brief, collés dans le compte rendu du 2026-09-26.
+
+### Lot J — corrections rapides de la passe du 2026-09-30 — ✅ **LIVRÉ le 2026-09-30** (non commité)
+
+> ✅ **LIVRÉ LE 2026-09-30, NON COMMITÉ** (aucun ordre de commit sur ce dépôt au moment du relevé ;
+> rattacher le hash ici quand il existera). Scellé après deux tours d'attaque ; **17/17 verts**.
+> Sceaux levés, chacun sur accord de l'auteur : `lot-A` clause 4 (au brief) et `lot-J` clause 6
+> (pendant le codage, défaut du test — voir plus bas). `parametres.test.tsx` (non scellé) adapté :
+> poignée « Voir l'aliment », petit-déjeuner listé à 3 repas.
+> ⚠️ **Ce qu'aucun test ne démontre** : que le contenu qui défile ne passe plus sous l'heure, et
+> que « Retour » de Paramètres est atteignable — jsdom ne rend pas le CSS, **à voir sur APK** ;
+> les deux autres gabarits « Voir les N » (familles, « Mes exceptions ») sont corrigés mais non
+> mesurés ; « Imprimer » reste inerte en natif (lot courses, export PDF demandé).
+
+> **Brief ouvert le 2026-09-30.** Source : seconde passe à l'œil sur APK natif, retours verbatim
+> dans `/srv/apk/retours-2026-09-30.md` (hors dépôt), captures du même jour. Arbitrages de l'auteur
+> du même jour : Q2 « en natif, l'étape d'installation et le bandeau `non_persistant` disparaissent »
+> — **oui** ; Q4 « retirer « Comment ça marche ? » des sept écrans, les tutoriels ne vivent plus que
+> dans Paramètres » — **oui** ; « combien de repas par jour → par défaut 3 ».
+
+#### Ce que les captures montrent, et ce que le code dit
+
+| Observation | Cause mesurée |
+|---|---|
+| L'heure et la batterie s'impriment sur « ← Retour » et le titre de **chaque** fenêtre (« Le piquant », « Mon régime », « Aliments que je ne veux pas ») ; « le bouton retour de Paramètres est trop haut » | `ui/panneau.tsx` : l'en-tête collant de `Panneau` porte `py-2` et **aucune** réserve du haut. Le lot A n'a traité que les deux conteneurs de `ui/main.tsx` ; `Panneau` passe par un portail vers `document.body`, **hors** de ces conteneurs. |
+| Page défilée : « Ce soir », « Comment ça marche ? » et « 3 sur 12 » passent **sous** l'heure | Bord à bord imposé (`targetSdk` 36) : la réserve du lot A **pousse** le contenu au chargement, mais rien d'opaque ne **couvre** la barre d'état quand la page défile. |
+| « Installez l'application sur votre écran d'accueil » dans l'APK | `accueil.tsx` : `ETAPES` est une constante de module, sans cas natif. |
+| « Ajoutez l'application à votre écran d'accueil pour ne rien perdre » peut s'afficher dans l'APK | `main.tsx` : `non_persistant` ne dépend que de `socle.persistant`. Dans une WebView, `navigator.storage.persist()` n'a pas de sens ; le conseil est inexécutable. |
+| « Voir les 1 aliments » (Miel) | `parametres.tsx` : trois gabarits `Voir les ${n}…` sans cas singulier. |
+| « Comment ça marche ? » jugé « chiant » sur chaque écran | `ui/lien-tutoriel.tsx`, monté par sept écrans. Les huit parcours restent dans Paramètres › Aide › « Revoir un tutoriel ». |
+
+#### Fini quand
+
+Écrans montés par la coquille réelle (`ui/main.js`) ou l'écran seul, avec **`catalog.db` réel**
+(`catalogueDeTest()`). Le natif se simule en remplaçant **`Capacitor.isNativePlatform`** de
+`@capacitor/core` — c'est **le seul signal natif** du code (`ui/notifications.ts`), le lot n'en
+invente pas un second.
+
+1. **Les fenêtres réservent la barre d'état.** L'en-tête collant de `Panneau` (le parent du bouton
+   « Retour ») porte un jeton entier `pt-[max(env(safe-area-inset-top),<n>rem|px)]` de repli
+   **≥ 0,5rem** (sa marge actuelle), **aucun autre** jeton qui pose un `padding-top` (`pt-`, `py-`,
+   `p-`, variantes comprises), et reste `sticky top-0` sur un fond `bg-surface`.
+   *Faux si* : `py-2` gardé à côté (deux `padding-top`, l'ordre de la feuille tranche) ; réserve
+   posée sur le corps de la fenêtre au lieu de l'en-tête (le « Retour » reste sous l'heure) ; repli à 0.
+2. **Un bandeau opaque couvre la barre d'état, sur les deux branches de la coquille.** Avant et après
+   consentement, le DOM contient **un et un seul** élément `aria-hidden="true"` portant `fixed`,
+   `inset-x-0`, `top-0`, `bg-fond`, un `z-` **strictement entre 10** (barre d'onglets) **et 50**
+   (fenêtres, tutoriel), et le jeton `pt-[max(env(safe-area-inset-top),0px)]` — hauteur nulle sur un
+   écran sans encoche. Il n'est l'ancêtre d'aucun contenu.
+   *Faux si* : bandeau sous la barre d'onglets ou au-dessus des fenêtres ; présent sur une seule
+   branche ; `h-[env(...)]` (forme que le lot A interdit).
+3. **En natif, pas d'étape d'installation.** Natif simulé, accueil traversé : après « J'ai compris »,
+   le titre suivant est « Des allergies ? » ; le titre « Installez l'application sur votre écran
+   d'accueil » n'apparaît **à aucun moment** ; « Retour » depuis « Des allergies ? » ramène à
+   l'engagement. **Témoin** : sans natif, l'étape est toujours là, entre les deux.
+   *Faux si* : l'étape est retirée partout ; le natif est lu une fois au chargement du module (la
+   clause monte deux fois, natif puis web, dans le même fichier).
+4. **En natif, pas de bandeau `non_persistant`.** Socle `opfs`, `persistant: false`, verrou
+   exclusif : natif simulé, le texte « ne garantit pas de les conserver » est absent de la coquille ;
+   **témoin** : sans natif, il est présent. Les trois autres alertes ne changent pas (`memoire` reste
+   affichée en natif — **témoin**).
+5. **Trois repas par jour par défaut.** `RYTHME_PAR_DEFAUT.repasParJour === 3` ; accueil traversé
+   sans toucher au rythme, `readRythme(db).repasParJour === 3`. *Faux si* : seul l'affichage change.
+   Un profil **déjà enregistré** à 2 reste à 2 (**témoin** : `writeRythme` à 2, relu à 2).
+6. **« Voir l'aliment » au singulier.** Paramètres › « Aliments que je ne veux pas », tous les groupes
+   : un groupe de **1** aliment a pour bouton exactement « Voir l'aliment » ; un groupe de N > 1,
+   « Voir les N aliments » (**témoin**). Nulle part dans l'écran, fenêtres ouvertes, le texte ne
+   correspond à `/Voir les 1\b/`. Le groupe à un aliment se **cherche** dans le catalogue réel, il
+   n'est pas écrit en dur ; s'il n'en existe aucun, la clause échoue au lieu de passer à vide.
+7. **« Comment ça marche ? » a disparu des écrans, les tutoriels restent.** Aucun fichier non-test
+   de `app/src` ne contient la chaîne `Comment ça marche` ni n'importe `lien-tutoriel` ; sur les cinq
+   onglets montés par la coquille, le texte est absent. **Témoin** : Paramètres › « Revoir un
+   tutoriel » liste **autant** de lignes que `PARCOURS.length`, et toucher la première lance son
+   parcours (« Étape 1 sur » à l'écran).
+
+#### Ce que le lot ne touche pas
+
+- **`engine/`, le catalogue, `user-schema`** : rien. Pas de migration : un profil existant garde son
+  nombre de repas.
+- **« Imprimer » et les exports de la liste de courses**, inertes en natif : ils relèvent du lot
+  courses (PDF, texte, partage — décision à prendre, et une dépendance `@capacitor/share` probable à
+  signaler). Pas ici.
+- **Le tutoriel lui-même** (bulle, « Précédent », étape 3 hors écran) : lot tutoriel, après F.
+- **La semaine** (lot F), **le bouton retour Android** (lot D), **les valeurs nutritionnelles à
+  l'écran** (lot de recentrage).
+- **Aucune dépendance nouvelle** : `@capacitor/core` est déjà là.
+
+⛔ **UN CONFLIT CONNU AVEC UN SCEAU, À TRANCHER AVANT LE SCEAU DE J.** `tests/scelles/lot-A.test.tsx`
+clause 4 borne `safe-area-inset-top` à **2 occurrences** dans `app/src`. Les clauses 1 et 2 de J en
+ajoutent **2** (`ui/panneau.tsx`, et le bandeau dans `ui/main.tsx`) : lot-A rougirait. Proposition :
+lever le sceau de lot-A **pour la seule clause 4**, dont la borne devient « au plus 4, dans
+`ui/main.tsx` et `ui/panneau.tsx` seulement, jamais dans `ui/screens/` » — l'esprit (la réserve ne
+se disperse pas dans les écrans) est gardé. Les clauses 1 à 3 de lot-A ne changent pas, et les
+nouveaux jetons en respectent la forme.
+✅ **Tranché par l'auteur le 2026-09-30 : oui.** `lot-A` clause 4 est amendée pendant le brief (borne
+4, fichiers limités à `ui/main.tsx` et `ui/panneau.tsx`). Même jour : **`ui/lien-tutoriel.tsx`
+supprimé — oui** ; **« Imprimer » laissé tel quel** jusqu'au lot courses, qui **mettra en place
+l'export PDF** (demande de l'auteur).
+
+#### Ce que le codeur n'a pas à deviner
+
+**Après le 1er tour d'attaque (2026-09-30)** — trois points qui étaient à deviner :
+- le signal natif vit dans **`ui/natif.ts`** et nulle part ailleurs (`notifications.ts` l'importe) ;
+  testé par la clause 3-4 bis, qui refuse aussi `getPlatform` et `window.Capacitor` ;
+- le bandeau opaque porte **`z-40`** (au-dessus de la navigation `z-10`, sous `Panneau` et la visite `z-50`) ;
+- « Imprimer » reste **visible et inerte en natif** jusqu'au lot courses ;
+- `ui/lien-tutoriel.tsx` est **supprimé**, pas vidé : clause 7a bis.
+
+**Après le 2e tour d'attaque (2026-09-30, dernier)** :
+- un bouton de tutoriel réécrit en place dans Frigo ou l'éditeur (sous-vues que 7b ne visite pas)
+  passait 7a → **clause 7a ter** : `useLancerParcours` n'est appelé que dans
+  `ui/screens/parametres.tsx` (et défini dans `ui/lancer-parcours.tsx`) ;
+- le bandeau opaque reste **inline dans `ui/main.tsx`** : l'extraire dans un troisième fichier ferait
+  rougir `lot-A` clause 4 amendée ;
+- le module natif s'appelle **`ui/natif.ts`**, exigé par la clause 3-4 bis ;
+- les **trois** gabarits « Voir les N » de `parametres.tsx` suivent la même règle singulier/pluriel ;
+  seul « Aliments que je ne veux pas » est mesuré — **limite déclarée**.
+
+**Pendant le codage (2026-09-30)** — ⚠️ **clause 6 amendée sous sceau levé, choix A de l'auteur** :
+le test comptait tout libellé « … (N) » comme un groupe, dont le titre « Ou parcourez les familles
+(14) » — 14 familles valaient un faux groupe de 14. Il écarte désormais ce titre et « Vos retraits
+(N) ». Le code n'a pas été plié au test. Sceau remis aussitôt.
+- **Limite déclarée, non fermée** : la clause 6 lit le catalogue du jour ; un singulier écrit en dur
+  par nom de groupe passerait tant que le catalogue ne bouge pas. Défilement réel, rotation et
+  pliables ne se rejouent pas sous jsdom : vérification à l'œil sur APK.
+
+- **Une seule fonction « natif ? »**, extraite de `ui/notifications.ts` (`enNatif`) vers un module de
+  `ui/`, lue par `notifications.ts`, `accueil.tsx` et `main.tsx`. Lue **au rendu**, pas au chargement
+  du module (`ETAPES` devient calculé).
+- **`ui/lien-tutoriel.tsx` est supprimé** (confirmé par la validation de ce brief), avec ses sept
+  montages et les commentaires qui le nomment (`main.tsx`, `parcours.ts`).
+- **Les tests NON scellés à réécrire dans le lot** : les huit qui nomment `LienTutoriel` ou « Comment
+  ça marche » (`parcours.test.tsx`, et les tests d'écran `aujourdhui`, `semaine`, `courses`,
+  `recettes`, `frigo`, `savoir`, `editeur-recette`) ; `profil-enregistre.test.ts` (défaut à 2) ; tout
+  test qui compte des créneaux en supposant 2 repas par défaut — **à attribuer par la sortie de
+  vitest**, jamais par grep.
+- **Les poignées** : « Comment ça marche ? » n'est lu par **aucun** test scellé (grep du
+  2026-09-30). « Plus tard » et le titre de l'étape d'installation sont lus par lot-A et d'autres —
+  ils restent, **en web**.

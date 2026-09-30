@@ -40,7 +40,7 @@ export interface ChoixProfil {
  * feraient qu'ouvrir un écran sans rien y toucher CHANGERAIT les suggestions de l'autre.
  */
 export const RYTHME_PAR_DEFAUT: StoredRythme = {
-  repasParJour: 2,
+  repasParJour: 3,
   tempsSemaineMin: 30,
   tempsWeekendMin: null,
 }

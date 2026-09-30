@@ -68,7 +68,6 @@ import {
   type LigneCourses,
 } from '../export-courses.js'
 import { Panneau } from '../panneau.js'
-import { LienTutoriel } from '../lien-tutoriel.js'
 import { alimentsValables } from '../frigo-valable.js'
 import { BoutonParcourir, ParcoursAliments } from '../parcours-aliments.js'
 
@@ -471,7 +470,6 @@ export function Courses() {
         <h1 data-visite="titre-courses" className="text-titre-l text-texte">
           Mes courses
         </h1>
-        <LienTutoriel parcoursId="courses" />
         <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
           La liste se construit à partir de votre semaine.
         </p>
@@ -504,11 +502,6 @@ export function Courses() {
       <h1 data-visite="titre-courses" className="text-titre-l text-texte">
         Mes courses
       </h1>
-      {/* Enveloppé plutôt que marqué à la source : `LienTutoriel` sert cinq écrans, et le masquer
-          pour tous serait une décision sur des écrans dont personne n'a réglé l'impression. */}
-      <div className="sans-impression">
-        <LienTutoriel parcoursId="courses" />
-      </div>
       {/* La semaine d'abord, le compteur EN DESSOUS et sur sa propre ligne : accolés par un point
           médian, on lisait « du 3 au 9 août · 12 sur 40 » comme une seule information. */}
       <p className="mt-2 text-courant leading-relaxed text-attenue">{plageDuPlan(vue.liste)}</p>

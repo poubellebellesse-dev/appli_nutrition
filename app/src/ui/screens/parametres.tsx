@@ -103,7 +103,6 @@ import { famillesDuCatalogue } from '../parcours-aliments.js'
 import { ChoixPiquant } from '../champs-profil.js'
 import { PARCOURS } from '../parcours.js'
 import { useLancerParcours } from '../lancer-parcours.js'
-import { LienTutoriel } from '../lien-tutoriel.js'
 import { epure } from '../epure.js'
 
 /**
@@ -344,6 +343,12 @@ function resumeRappels(actifs: boolean): string {
   return actifs ? 'Activés' : 'Désactivés'
 }
 
+/** « Voir l’aliment » pour un seul, « Voir les N aliments » au-delà (lot J) : « Voir les 1
+ * aliments » se lisait comme une faute. Une seule règle pour les deux panneaux qui l’affichent. */
+function voirLesAliments(n: number): string {
+  return n === 1 ? 'Voir l’aliment' : `Voir les ${n} aliments`
+}
+
 export function Parametres() {
   const lancerParcours = useLancerParcours()
   const [etat, setEtat] = useState<Etat>({ phase: 'chargement' })
@@ -515,7 +520,6 @@ export function Parametres() {
       <h1 data-visite="titre-parametres" className="text-titre-l text-texte">
         Paramètres
       </h1>
-      <LienTutoriel parcoursId="reglages" />
       {epure.phrasesRassurantes && (
         <p className="mt-2 text-courant leading-relaxed text-attenue">
           Tout se modifie à tout moment. Rien n'est envoyé nulle part.
@@ -1687,7 +1691,7 @@ function AlimentsEcartes({
                 aria-expanded={ouvert}
                 className="mt-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
               >
-                {ouvert ? 'Masquer le détail' : `Voir les ${groupe.aliments.length} aliments`}
+                {ouvert ? 'Masquer le détail' : voirLesAliments(groupe.aliments.length)}
               </button>
 
               {ouvert && (
@@ -1728,7 +1732,7 @@ function AlimentsEcartes({
               >
                 <span>{famille.groupe}</span>
                 <span className="text-mention font-normal text-attenue">
-                  {ouvert ? 'Masquer' : `Voir les ${famille.aliments.length}`}
+                  {ouvert ? 'Masquer' : (famille.aliments.length === 1 ? 'Voir l’aliment' : `Voir les ${famille.aliments.length}`)}
                 </span>
               </button>
 
@@ -1833,7 +1837,7 @@ function ExceptionsRegime({
                 aria-expanded={ouvert}
                 className="mt-1 flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-4 text-courant font-semibold text-texte-doux"
               >
-                {ouvert ? 'Masquer le détail' : `Voir les ${groupe.aliments.length} aliments`}
+                {ouvert ? 'Masquer le détail' : voirLesAliments(groupe.aliments.length)}
               </button>
 
               {ouvert && (

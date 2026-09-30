@@ -292,7 +292,15 @@ describe('lot A — le bandeau du téléphone', () => {
     expect(
       total,
       `réserve recopiée ${total} fois : ${mentions.map((m) => m.chemin).join(', ')}`
-    ).toBeLessThanOrEqual(2)
+    ).toBeLessThanOrEqual(4)
+
+    // ⚠️ AMENDÉ AU LOT J (2026-09-30, sceau levé sur cette seule clause, accord de l'auteur) : la
+    // borne passe de 2 à 4 — l'en-tête de `Panneau` (portail hors des conteneurs) et le bandeau
+    // opaque de la coquille. L'esprit reste : deux fichiers de structure, jamais un écran.
+    expect(
+      mentions.map((m) => m.chemin).filter((chemin) => chemin !== 'ui/main.tsx' && chemin !== 'ui/panneau.tsx'),
+      'la réserve ne vit que dans ui/main.tsx et ui/panneau.tsx'
+    ).toEqual([])
 
     expect(
       mentions.map((m) => m.chemin).filter((chemin) => chemin.startsWith('ui/screens/')),

@@ -60,7 +60,6 @@ import { alimentsValables } from '../frigo-valable.js'
 // jusqu'à la première retouche de l'une des deux.
 import { PALIERS_TEMPS, Segment } from '../champs-profil.js'
 import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
-import { LienTutoriel } from '../lien-tutoriel.js'
 import { epure } from '../epure.js'
 import { RepriseCuisine } from '../reprise-cuisine.js'
 import { enregistrerLePlan } from '../ecrire-plan.js'
@@ -689,7 +688,6 @@ export function Aujourdhui() {
             {position + 1} sur {total}
           </p>
         </div>
-        <LienTutoriel parcoursId="aujourdhui" />
 
         {/* Un seul créneau au rythme déclaré → rien à choisir, un sélecteur inerte serait pire
             qu'absent. Pastilles côte à côte (`Segment`, comme `ChoixRythme`) : jamais de menu

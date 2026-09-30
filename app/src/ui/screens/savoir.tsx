@@ -23,7 +23,6 @@ import type {
 } from '../../engine/domain/index.js'
 import { normaliser } from '../../engine/search/index.js'
 import { chargerSocle } from '../socle.js'
-import { LienTutoriel } from '../lien-tutoriel.js'
 
 type Etat =
   | { readonly phase: 'chargement' }
@@ -65,7 +64,6 @@ export function Savoir() {
       <h1 data-visite="titre-savoir" className="text-titre-l text-texte">
         Gestes
       </h1>
-      <LienTutoriel parcoursId="savoir" />
 
       <Gestes lexique={[...etat.catalogue.lexicon.values()]} />
       <SourcesEtLimites />

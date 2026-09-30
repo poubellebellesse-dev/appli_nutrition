@@ -29,6 +29,7 @@ import { Visite } from './visite.js'
 import { PARCOURS, etapesDuParcours } from './parcours.js'
 import { ProvenanceLancerParcours } from './lancer-parcours.js'
 import { chargerSocle } from './socle.js'
+import { enNatif } from './natif.js'
 import { aConsenti, readDisplay, writeDisplay } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
 import { hashDe, hashDesParametres, useRoute, type Onglet, type SousVue } from './router.js'
@@ -85,8 +86,8 @@ function Ecran({
   // aussi depuis la semaine, les courses ou Aujourd'hui.
   if (sousVue.type === 'recette') return <DetailRecette recetteId={sousVue.id} origine={sousVue.origine} />
   if (sousVue.type === 'frigo') return <Frigo />
-  // ⚠️ `Parametres` ne reçoit plus `onLancerVisite` en prop : il lance ses parcours via
-  // `useLancerParcours()` (voir `ui/lancer-parcours.tsx`), exactement comme les six autres écrans.
+  // ⚠️ `Parametres` ne reçoit plus `onLancerVisite` en prop : il lance ses parcours par le contexte
+  // de `ui/lancer-parcours.tsx`. Depuis le lot J, c'est le seul écran qui en lance.
   if (sousVue.type === 'parametres') return <Parametres />
   if (sousVue.type === 'editeur') return <EditeurRecette baseId={sousVue.baseId} />
   if (sousVue.type === 'cuisine') return <Cuisine plats={sousVue.plats} />
@@ -113,6 +114,22 @@ function Ecran({
  * En tête de contenu plutôt qu'en barre fixe : une seconde barre flottante mangerait la hauteur
  * utile sur un petit écran, et l'écran Paramètres n'est pas une destination fréquente.
  */
+/**
+ * Bandeau opaque sous la barre d'état (lot J). En bord à bord (Android, cible 36), la barre d'état
+ * est transparente : le contenu qui défile passait dessous et se lisait à travers l'heure.
+ * Hauteur = l'encoche, nulle sur un écran qui n'en a pas. `z-40` : au-dessus de la navigation
+ * (`z-10`), sous `Panneau` et la visite (`z-50`), qui portent leur propre réserve.
+ * ⚠️ Reste DANS ce fichier : lot A clause 4 borne les fichiers qui citent l'encoche.
+ */
+function BandeauBarreEtat() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-x-0 top-0 z-40 bg-fond pt-[max(env(safe-area-inset-top),0px)]"
+    />
+  )
+}
+
 function LienParametres({ actif }: { readonly actif: boolean }) {
   return (
     <div className="mb-4 flex justify-end">
@@ -219,8 +236,8 @@ function Coquille() {
    * ⚠️ NAVIGUE D'ABORD SI LE PARCOURS APPARTIENT À UN AUTRE ÉCRAN. C'est le cas depuis la fenêtre
    * « Revoir un tutoriel » de Réglages (`parametres.tsx`), qui liste TOUS les parcours : en choisir
    * un qui concerne Semaine depuis Réglages doit d'abord y aller, pas afficher une visite muette.
-   * Lancé depuis l'écran auquel le parcours appartient déjà (le cas courant, via `LienTutoriel`),
-   * la navigation est un no-op — le hash ne change pas.
+   * Si le parcours appartient à l'écran courant, la navigation est un no-op — le hash ne change pas.
+   * Depuis le lot J, c'est la SEULE entrée : le lien d'aide par écran a été retiré.
    */
   const lancerParcours = (id: string) => {
     const parcours = PARCOURS.find((p) => p.id === id)
@@ -266,7 +283,9 @@ function Coquille() {
         // décrit une perte EN COURS, `non_persistant` un risque futur. La plus grave se dit.
         else if (socle.verrou === 'partage') setAlerte('autre_onglet')
         // Le bandeau écarté une fois ne revient pas — mais seulement celui-là (voir `ECARTABLE`).
-        else if (!socle.persistant && !readDisplay(socle.db).bandeauStockageMasque) {
+        // ⚠️ PAS EN NATIF (lot J) : le conseil « ajoutez l'application à votre écran d'accueil » n'a
+        // pas de sens dans une appli déjà installée. L'alerte `memoire`, elle, reste partout.
+        else if (!socle.persistant && !enNatif() && !readDisplay(socle.db).bandeauStockageMasque) {
           setAlerte('non_persistant')
         }
         setConsenti(aConsenti(socle.db, VERSION_CONSENTEMENT))
@@ -317,9 +336,12 @@ function Coquille() {
   // supprimerait alors les 2rem de respiration. Même forme que la réserve du bas de
   // `navigation.tsx`, pour la même raison. Voir lot A.
   // ⛔ Ne pas citer le nom de l'inset en clair dans un commentaire : une clause scellée compte ses
-  // occurrences dans le FICHIER entier, pas dans le seul JSX. Deux, pas plus.
+  // occurrences dans le FICHIER entier, pas dans le seul JSX. Trois ici (avec `BandeauBarreEtat`),
+  // une dans `panneau.tsx` : quatre, pas plus (lot A clause 4, amendée au lot J).
   if (!consenti) {
     return (
+      <>
+      <BandeauBarreEtat />
       <div className="mx-auto max-w-3xl px-5 pb-10 pt-[max(env(safe-area-inset-top),2rem)]">
         {/* ⚠️ ON ATTERRIT EXPLICITEMENT SUR « Aujourd'hui », on ne laisse pas l'adresse décider.
             L'accueil ne touchait pas au fragment d'URL : en sortant, la coquille rendait l'onglet
@@ -342,11 +364,13 @@ function Coquille() {
           }}
         />
       </div>
+      </>
     )
   }
 
   return (
     <ProvenanceLancerParcours value={lancerParcours}>
+      <BandeauBarreEtat />
       {/* Premier élément focusable du document. ⚠️ UN `<button>`, JAMAIS UNE ANCRE `#contenu` : le
           routeur est par hash (voir `router.tsx`), une ancre déclencherait `hashchange` et
           `ONGLET_PAR_HASH` ne reconnaîtrait pas `#contenu` — le repli renverrait sur « Aujourd'hui »,

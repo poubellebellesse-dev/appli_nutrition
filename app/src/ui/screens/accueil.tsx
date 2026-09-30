@@ -29,6 +29,7 @@ import {
   VERSION_CONSENTEMENT as VERSION,
   type PointConsentement,
 } from '../texte-consentement.js'
+import { enNatif } from '../natif.js'
 import { aujourdhuiIso, chargerSocle } from '../socle.js'
 import { ChoixAllergenes, ChoixRegime, ChoixRythme } from '../champs-profil.js'
 import {
@@ -73,9 +74,15 @@ const ETAPE_INSTALLATION = true
  * ailleurs dans la numérotation. Une liste explicite dit la même chose sans rien supposer, et
  * désactiver une étape devient une ligne au lieu d'une relecture de tous les décalages.
  */
-const ETAPES: readonly Etape[] = ETAPE_INSTALLATION ? [1, 2, 3, 5] : [1, 3, 5]
+//
+// ⚠️ LU À L'APPEL, PAS AU CHARGEMENT (lot J) : dans le conteneur natif, l'appli EST déjà installée —
+// l'étape 2 n'a rien à proposer et disparaît, à l'aller comme au retour.
+const etapes = (): readonly Etape[] => (ETAPE_INSTALLATION && !enNatif() ? [1, 2, 3, 5] : [1, 3, 5])
 
-const voisine = (etape: Etape, pas: 1 | -1): Etape => ETAPES[ETAPES.indexOf(etape) + pas] ?? etape
+const voisine = (etape: Etape, pas: 1 | -1): Etape => {
+  const liste = etapes()
+  return liste[liste.indexOf(etape) + pas] ?? etape
+}
 
 const CHOIX_INITIAL: ChoixProfil = {
   allergenes: new Set(),

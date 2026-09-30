@@ -262,10 +262,11 @@ describe('parametres — « Aliments que je ne veux pas »', () => {
       '../../data/user-store.js'
     )
     // ⚠️ SCOPÉ AU GROUPE, pas au panneau : les sept groupes portent tous un bouton « Voir les N
-    // aliments », et prendre le premier venu déplierait les produits laitiers.
+    // aliments » (« Voir l’aliment » pour un seul, lot J), et prendre le premier venu déplierait
+    // les produits laitiers.
     const groupe = within(panneau.getByText(ligneDuGroupe('Œufs')).closest('div')!)
     // Le dépliant est INTERNE au panneau : il pousse du contenu, il n'ouvre pas de fenêtre.
-    fireEvent.click(groupe.getByText(/^Voir les \d+ aliments$/))
+    fireEvent.click(groupe.getByText(/^Voir (?:les \d+ aliments|l[’']aliment)$/))
 
     // Un aliment du groupe, quel qu'il soit — on ne parie pas sur le contenu du catalogue.
     const catalogue = catalogueDeTest()
@@ -374,11 +375,12 @@ describe('parametres — « Aliments que je ne veux pas »', () => {
     const panneau = ouvrir('Aliments que je ne veux pas')
     const lignes = lignesDuCompteur(panneau)
 
-    // Rythme par défaut : deux repas par jour → déjeuner et dîner, pas les quatre créneaux.
+    // Rythme par défaut : trois repas par jour depuis le lot J → petit-déjeuner, déjeuner et dîner,
+    // pas les quatre créneaux.
     expect(lignes.some((l) => l.startsWith('Déjeuner'))).toBe(true)
     expect(lignes.some((l) => l.startsWith('Dîner'))).toBe(true)
     expect(lignes.some((l) => l.startsWith('Goûter'))).toBe(false)
-    expect(lignes.some((l) => l.startsWith('Petit-déjeuner'))).toBe(false)
+    expect(lignes.some((l) => l.startsWith('Petit-déjeuner'))).toBe(true)
   })
 
   it('le compteur SUIT le rythme déclaré', async () => {
@@ -524,7 +526,7 @@ describe('parametres — « Mes exceptions »', () => {
   /** Déplie un groupe DEPUIS SA PROPRE LIGNE — tous les groupes portent le même bouton. */
   function deplier(panneau: ReturnType<typeof within>, libelle: string) {
     const groupe = within(panneau.getByText(ligneDuGroupe(libelle)).closest('div')!)
-    fireEvent.click(groupe.getByText(/^Voir les \d+ aliments$/))
+    fireEvent.click(groupe.getByText(/^Voir (?:les \d+ aliments|l[’']aliment)$/))
   }
 
   /**

@@ -36,7 +36,6 @@ import {
 } from '../../data/user-recipe.js'
 import { LIBELLE_CRENEAU, aujourdhuiIso, chargerSocle, rebatirCatalogue } from '../socle.js'
 import { hashDe, hashDeRecette } from '../router.js'
-import { LienTutoriel } from '../lien-tutoriel.js'
 import { BoutonParcourir, ParcoursAliments } from '../parcours-aliments.js'
 
 const SAISIE_VIDE: SaisieRecette = {
@@ -251,7 +250,6 @@ export function EditeurRecette({ baseId }: { readonly baseId: string | null }) {
               ? 'Ma sauce'
               : 'Ma recette'}
       </h1>
-      <LienTutoriel parcoursId="composer" />
       <p className="mt-2 text-courant leading-relaxed text-attenue">
         {variante
           ? 'Changez ce que vous voulez. Le reste — texture, conservation, moment du repas — est repris de la recette d’origine.'

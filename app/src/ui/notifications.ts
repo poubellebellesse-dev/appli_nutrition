@@ -10,8 +10,8 @@
 // minute. Ce fichier ne fait que parler à la plateforme — c'est la seule partie qu'on ne peut pas
 // vérifier sans appareil, et elle est donc réduite au strict minimum.
 
-import { Capacitor } from '@capacitor/core'
 import { LocalNotifications } from '@capacitor/local-notifications'
+import { enNatif } from './natif.js'
 import type { Rappel } from './rappel.js'
 
 export interface EtatNotifications {
@@ -19,11 +19,6 @@ export interface EtatNotifications {
   readonly disponible: boolean
   /** L'utilisateur a accordé la permission système. */
   readonly autorise: boolean
-}
-
-/** Le conteneur natif est-il là ? Toute la suite en dépend. */
-function enNatif(): boolean {
-  return Capacitor.isNativePlatform()
 }
 
 export async function etatNotifications(): Promise<EtatNotifications> {

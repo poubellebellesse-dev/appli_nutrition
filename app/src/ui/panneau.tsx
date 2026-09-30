@@ -129,8 +129,10 @@ export function Panneau({
       className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-fond outline-none"
     >
       {/* L'en-tête ne défile pas : le retour reste atteignable quel que soit le contenu, sans
-          remonter. C'est la seule sortie, elle ne doit jamais être hors de portée. */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-bordure bg-surface px-4 py-2">
+          remonter. C'est la seule sortie, elle ne doit jamais être hors de portée.
+          ⚠️ La fenêtre passe par un portail, hors des conteneurs de la coquille qui réservent la
+          barre d'état : sa réserve vit donc ici (lot J), sinon « Retour » tombe sous l'heure. */}
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-bordure bg-surface px-4 pb-2 pt-[max(env(safe-area-inset-top),0.5rem)]">
         <button
           type="button"
           onClick={onFermer}

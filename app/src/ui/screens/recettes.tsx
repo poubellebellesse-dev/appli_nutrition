@@ -74,7 +74,6 @@ import { Panneau } from '../panneau.js'
 import { MesureMontage, mesureDemandee } from '../mesure-montage.js'
 import { exporterRecette } from '../export-recette.js'
 import { importerRecette } from '../import-recette.js'
-import { LienTutoriel } from '../lien-tutoriel.js'
 
 const LIBELLE_COUCHE: Readonly<Record<ExclusionLayerId, string>> = {
   allergenes: 'allergènes',
@@ -246,7 +245,6 @@ export function Recettes() {
       <h1 data-visite="titre-recettes" className="text-titre-l text-texte">
         Recettes
       </h1>
-      <LienTutoriel parcoursId="recettes" />
 
       <Recherche
         catalogue={socle.catalogue}

@@ -50,7 +50,6 @@ import { Panneau } from '../panneau.js'
 import { epure } from '../epure.js'
 import { REPAS_PAR_DEFAUT, creneauxDuRythme, estPasse } from '../creneau.js'
 import { reprogrammerLesRappels } from '../ecrire-plan.js'
-import { LienTutoriel } from '../lien-tutoriel.js'
 import { phraseDuMotif } from '../motif-vide.js'
 import { LIBELLE_DEHORS, oublierLePlat, platDAvant, retenirLePlat } from '../dehors.js'
 import {
@@ -614,7 +613,6 @@ export function Semaine() {
       <h1 data-visite="titre-semaine" className="text-titre-l text-texte">
         Ma semaine
       </h1>
-      <LienTutoriel parcoursId="semaine" />
       <p className="mt-2 text-courant leading-relaxed text-attenue">
         {/* ⚠️ DES REPAS, PAS DES ENTRÉES. Compter les lignes du plan doublerait le total depuis que
             le déjeuner porte un plat ET son accompagnement : « 28 repas prévus » pour quatorze
@@ -773,7 +771,6 @@ function SemaineVide({
       <h1 data-visite="titre-semaine" className="text-titre-l text-texte">
         Ma semaine
       </h1>
-      <LienTutoriel parcoursId="semaine" />
       <p className="mt-3 text-lecture leading-relaxed text-texte-doux">
         Rien de prévu pour l'instant. Composez une semaine quand vous voulez — vous pourrez changer
         chaque repas ensuite.

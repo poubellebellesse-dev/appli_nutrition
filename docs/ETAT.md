@@ -186,6 +186,7 @@ mesures dans l'archive. Fermer une ligne = la retirer d'ici et le dire dans le l
 - `flan_oeufs_caramel` fond cuisson et repos en une étape ; le build ne vérifie que la forme d'une source.
 - `retour-6` : les balayages 6a (silence) et 6b (zéro intrus) ne couvrent que le **déjeuner** — le dîner (250 recettes) n'est balayé par aucune clause. Vu au tour d'attaque du 2026-09-10, laissé hors du lot.
 - `retour-6` : l'en-tête de son test scellé et l'introduction de son brief disent encore « l'écran lâche UN axe » ; la clause 4 bis et le code en lâchent autant qu'il faut tant que la liste est vide. Texte scellé : ne se corrige que sur décision de l'auteur.
+- **Lot J (2026-09-30)** : barre d'état, installation masquée en natif, 3 repas par défaut, « Comment ça marche ? » retiré des écrans (seul Paramètres lance un tutoriel) — clauses dans [CONCEPTION_RETOURS_APK.md](./CONCEPTION_RETOURS_APK.md) § Lot J. Dette : défilement sous la barre d'état et « Retour » de Paramètres prouvés par aucun test (jsdom) → **passe APK** ; « Imprimer » inerte en natif → lot courses (export PDF, dépendance native à signaler) ; 8 tests d'écran non scellés citent encore `LienTutoriel` en commentaire ; `lot-J` absent de `.claude/lots.json` (→ `/plan`).
 
 **Avant publication**
 - Relecture par un tiers des 73 tips et 8 fiches : **plus bloquante depuis le lot I** (plus rien n'est affiché) ; redevient bloquante le jour où un lot les rallume.

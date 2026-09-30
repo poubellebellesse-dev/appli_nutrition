@@ -51,7 +51,6 @@ import {
   type Comptes,
   type FiltresRecette,
 } from '../filtres-recettes.js'
-import { LienTutoriel } from '../lien-tutoriel.js'
 import { epure } from '../epure.js'
 import { BoutonParcourir, ParcoursAliments } from '../parcours-aliments.js'
 
@@ -284,7 +283,6 @@ export function Frigo() {
       <h1 data-visite="titre-frigo" className="mt-2 text-titre-l leading-tight text-texte">
         Qu'avez-vous sous la main ?
       </h1>
-      <LienTutoriel parcoursId="frigo" />
       {epure.phrasesRassurantes && (
         <p className="mt-2 text-lecture leading-relaxed text-texte-doux">
           Ajoutez ce qu'il vous reste. On cherche des plats à faire avec.

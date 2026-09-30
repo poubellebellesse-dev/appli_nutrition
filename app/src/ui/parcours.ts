@@ -45,7 +45,7 @@ import type { EtapeVisite } from './visite.js'
 /**
  * Les identifiants de parcours, en union littérale.
  *
- * ⚠️ PAS `string`, ET C'EST LE POINT. `LienTutoriel` reçoit un identifiant depuis chaque écran ;
+ * ⚠️ PAS `string`, ET C'EST LE POINT. « Revoir un tutoriel » (Paramètres) lance un identifiant ;
  * avec `string`, une faute de frappe (`'aujourdhuii'`) rendrait un bouton parfaitement normal qui ne
  * ferait RIEN au toucher — `etapesDuParcours` rend un tableau vide et la visite se termine aussitôt.
  * Aucun test d'écran ne verrait la différence. L'union déplace ce défaut du silence vers le
@@ -541,5 +541,6 @@ export function etapesDuParcours(id: string): readonly EtapeVisite[] {
 // n'appelle se lit comme une API, et elle était un `find` sur `ecran`, donc fausse par construction
 // dès que deux parcours partagent un écran (ce qui est le cas depuis `retour-1b` : `menus` et
 // `decouverte` valent tous deux `ecran: null`). Elle aurait rendu le premier, en silence.
-// ▶ La déduction du parcours depuis la route est un choix DÉJÀ ÉCARTÉ — `lien-tutoriel.tsx` dit
-// pourquoi : chaque écran sait quel est le sien et le passe explicitement.
+// ▶ La déduction du parcours depuis la route est un choix DÉJÀ ÉCARTÉ : l'identifiant est toujours
+// passé explicitement. Depuis le lot J, seul Paramètres lance un tutoriel (le lien d'aide par
+// écran a été retiré, et son fichier avec lui).
