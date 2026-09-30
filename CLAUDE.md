@@ -42,7 +42,8 @@ npx vite build                # SEUL à attraper les imports Node hoistés
 npm run engine:plan-stress    # attendu : 20/20 configurations saines
 ```
 
-⛔ **Dernier relevé (2026-09-30 à 19 h 41, arbre complet, livraison du `lot-J`, commité en `94a2d8f`) : 2 706 passed / 1 failed (2 707 tests, 142 fichiers)** en 598,79 s · le rouge est encore `retour-8` clause 4 « semis » (timeout 15 s sous charge), vert seul à 19 h 51 (43/43, 53,69 s) · typecheck propre (19 h 52) · `vite build` ✓ 6,09 s (19 h 52) · `engine:plan-stress` 20/20 (19 h 53) · **écart +17 tests et +1 fichier = `tests/scelles/lot-J.test.tsx`** (17 tests), attribué par `git status` · `USER_SCHEMA_VERSION` inchangé.
+⛔ **Dernier relevé (2026-09-30 à 20 h 34, arbre complet, livraison du `lot-D`, non commité) : 2 721 passed / 0 failed (2 721 tests, 143 fichiers)** en 604,52 s · `retour-8` « semis » vert cette fois · typecheck propre (20 h 34) · `vite build` ✓ 13,47 s · `engine:plan-stress` 20/20 (20 h 35) · **écart +14 tests et +1 fichier = `tests/scelles/lot-D.test.tsx`** (14 tests) · dépendance ajoutée : `@capacitor/app` 8.1.1 · `USER_SCHEMA_VERSION` inchangé.
+Relevé du lot J (2026-09-30 à 19 h 41, `94a2d8f`) : 2 706 passed / 1 failed (2 707, 142 fichiers), le rouge étant `retour-8` « semis » (timeout sous charge, vert seul).
 ⛔ **Relevé précédent (2026-09-26 à 15 h 28, arbre complet, livraison du `lot-I`, commité en `6c60e5a`) : 2 689 passed / 1 failed (2 690 tests, 141 fichiers)** en 570,67 s, + 1 erreur `Timeout calling "onTaskUpdate"` · le rouge est
 `retour-8` clause 4 « semis » à 15,2 s pour un plafond de 15 s, **déjà rouge à 13 h 33 avant tout code
 du lot**, vert seul (43/43, 10,8 s à 15 h 39) ; une suite de 15 h 05 était à 2 690 / 0 failed · typecheck

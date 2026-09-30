@@ -25,6 +25,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { useRetourAndroid } from './retour-android.js'
 
 /**
  * Le titre est OBLIGATOIRE et sert d'étiquette accessible : une fenêtre modale sans nom annonce
@@ -41,6 +42,8 @@ export function Panneau({
   readonly children: ReactNode
 }) {
   const contenu = useRef<HTMLDivElement>(null)
+  // Le bouton retour du téléphone ferme la fenêtre la plus récente, et elle seule (lot D).
+  useRetourAndroid(onFermer)
 
   // Échap ferme. Le clavier n'est pas l'usage principal du produit, mais c'est trois lignes et ça
   // évite le piège classique d'une modale dont on ne sort qu'à la souris.

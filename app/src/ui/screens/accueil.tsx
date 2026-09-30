@@ -30,6 +30,7 @@ import {
   type PointConsentement,
 } from '../texte-consentement.js'
 import { enNatif } from '../natif.js'
+import { quitterLAppli, useRetourAndroid } from '../retour-android.js'
 import { aujourdhuiIso, chargerSocle } from '../socle.js'
 import { ChoixAllergenes, ChoixRegime, ChoixRythme } from '../champs-profil.js'
 import {
@@ -96,6 +97,9 @@ export function Accueil({ onTermine }: { readonly onTermine: () => void }) {
   const [catalogue, setCatalogue] = useState<Catalog | null>(null)
   /** Case « J'ai lu et compris » — ici et non dans `Engagement`, voir l'en-tête de ce composant. */
   const [compris, setCompris] = useState(false)
+  // Le bouton retour du téléphone recule d'une étape, comme « Revenir en arrière » ; à la première,
+  // il quitte (lot D) — les étapes ne sont pas dans l'historique, `history.back()` n'y ferait rien.
+  useRetourAndroid(() => (etape > 1 ? setEtape(voisine(etape, -1)) : quitterLAppli()))
 
   useEffect(() => {
     let annule = false

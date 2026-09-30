@@ -46,8 +46,8 @@ le 2026-08-21. Ce qu'elle a trouvé est trié en lots A → G dans
 ▶ **[CONCEPTION_RETOURS_APK.md](./CONCEPTION_RETOURS_APK.md)**, qui fait foi pour ce chantier.
 (La passe de 2026-08-21, faite au navigateur, est close : `CONCEPTION_RETOURS_TEST.md`.)
 
-- ▶ **AUCUN LOT OUVERT. Les lots A, B, C, E, H, I et J sont livrés ; la suite est le lot D** (bouton
-  retour Android), puis F1 → F2 → F3 (semaine), puis le tutoriel — ordre tranché le 2026-09-30 dans
+- ▶ **AUCUN LOT OUVERT. Les lots A, B, C, D, E, H, I et J sont livrés ; la suite est F1 → F2 → F3**
+  (semaine), puis le tutoriel — ordre tranché le 2026-09-30 dans
   [CONCEPTION_RETOURS_APK.md](./CONCEPTION_RETOURS_APK.md). Le G se juge à l'œil et vient en dernier.
 - ⚠️ **Rebâtir l'APK après les lots B → H et refaire une passe à l'œil** : ce que les tests jsdom ne
   savent pas voir ne se voit que là, et le lot A en est la démonstration.

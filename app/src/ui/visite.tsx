@@ -60,6 +60,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type JSX } from 'react'
 import { createPortal } from 'react-dom'
 import { hashDe, useRoute } from './router.js'
+import { useRetourAndroid } from './retour-android.js'
 // Note : aucun import de `./parcours.js` ici — voir l'en-tête, ce fichier ignore délibérément ce
 // qu'est un parcours.
 
@@ -234,6 +235,9 @@ export function Visite({
       document.body.style.overflow = precedent
     }
   }, [])
+
+  // Le bouton retour du téléphone = « Passer », comme Échap (lot D).
+  useRetourAndroid(onTerminer)
 
   // Échap = « Passer ».
   useEffect(() => {

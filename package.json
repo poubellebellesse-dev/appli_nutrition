@@ -43,6 +43,7 @@
     "yaml": "^2.7.0"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.0",
     "@capacitor/local-notifications": "^8.2.1",
     "@sqlite.org/sqlite-wasm": "^3.53.0-build1",

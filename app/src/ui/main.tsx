@@ -30,6 +30,7 @@ import { PARCOURS, etapesDuParcours } from './parcours.js'
 import { ProvenanceLancerParcours } from './lancer-parcours.js'
 import { chargerSocle } from './socle.js'
 import { enNatif } from './natif.js'
+import { installerRetourAndroid } from './retour-android.js'
 import { aConsenti, readDisplay, writeDisplay } from '../data/user-store.js'
 import { surErreurDePersistance } from './user-source.js'
 import { hashDe, hashDesParametres, useRoute, type Onglet, type SousVue } from './router.js'
@@ -519,3 +520,7 @@ racine.render(
 // Hors du rendu : l'installation du service worker ne concerne pas React, et l'attacher à un
 // composant la relancerait à chaque montage.
 enregistrerServiceWorker()
+
+// Même raison, et une seule fois (lot D) : un écouteur par montage d'écran en poserait plusieurs, et
+// chacun agirait au même appui.
+if (enNatif()) installerRetourAndroid()

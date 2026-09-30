@@ -66,7 +66,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **A** | Le bandeau du téléphone | ✅ **LIVRÉ le 2026-09-12** (`dfb8811`) |
 | **B** | Épurer : les quatre interrupteurs | ✅ **LIVRÉ le 2026-09-14** (`cd328ad`) |
 | **C** | La fiche recette, et le compte brut de l'écran « Recettes » | ✅ **LIVRÉ le 2026-09-14** (`28dfea8`) |
-| **D** | Navigation et retour | à écrire |
+| **D** | Navigation et retour : le bouton retour d’Android | ✅ **LIVRÉ le 2026-09-30** (non commité) |
 | **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`) |
 | **F** | La semaine, refaite | **bloqué** — forme à trancher en séance de design |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
@@ -747,6 +747,114 @@ décrivent aucun défaut, elles disent ce qu'un correctif trop large casserait (
 au modèle, le lien porté par le nom seul, les mentions et les étapes de la fiche). ⚠️ La clause 3b
 est la **seconde moitié** du point 3 : prise seule elle ne prouve rien, appariée à la clause 3 elle
 sépare « retiré de l'affichage » de « supprimé du modèle ».
+
+### Lot D — le bouton retour d'Android remonte, il ne quitte plus — ✅ **LIVRÉ le 2026-09-30** (non commité)
+
+> ✅ **LIVRÉ LE 2026-09-30.** Scellé après deux tours d'attaque ; **14/14 verts**, suite complète 2 721 / 0.
+> ⚠️ **Ce qu'aucun test ne démontre** : le vrai bouton d'un téléphone — le plugin est remplacé par un
+> double en jsdom → **à voir sur APK**. Non couverts : appuis rapides répétés, lien profond avec
+> `canGoBack` vrai sans historique propre à l'appli. « Aujourd'hui » se lit par `routeDepuisHash`
+> (exigence du brief vérifiée à la relecture, aucun test ne la distingue d'une table complète).
+
+> **Brief ouvert le 2026-09-30.** Source : passe APK du même jour, verbatim « le bouton retour
+> quitte l'écran au lieu de revenir à l'écran précédent ». Arbitrage de l'auteur (Q1, même jour) :
+> **le retour remonte l'historique, et ferme l'appli sur l'accueil**. Dépendance signalée puis
+> **acceptée le 2026-09-30** : `@capacitor/app` 8.1.1 installé, `npx cap sync android` fait.
+
+#### Ce que le code dit
+
+| Observation | Cause mesurée |
+|---|---|
+| Un appui sur retour ferme l'appli, quel que soit l'écran | Capacitor 8 : **sans écouteur `backButton`** (plugin `@capacitor/app`), l'activité se termine. Aucun plugin, aucun écouteur dans l'arbre. |
+| Rien ne dirait aujourd'hui quoi fermer d'abord | Les fenêtres (`Panneau`, ~35 montages) et la visite ne vivent **pas** dans l'historique : elles se ferment par Échap ou leur bouton. Deux fenêtres empilées (« Aucun ustensile coché » dans « Matériel ») ferment **toutes les deux** sur un Échap — chacune écoute `document`. |
+| L'accueil n'a pas d'adresse | Ses étapes sont un état React (`accueil.tsx`), pas un hash : `history.back()` n'y remonte rien. |
+
+#### Fini quand
+
+Coquille réelle (`ui/main.js`), **`catalog.db` réel**, natif simulé par `Capacitor.isNativePlatform`
+(le signal de `ui/natif.ts`, lot J). `@capacitor/app` est remplacé par un double qui **enregistre**
+les écouteurs (`addListener` rend une poignée dont `remove()` est comptée) et compte `exitApp`.
+« Appuyer sur retour » = appeler **tous** les écouteurs `backButton` actifs avec `{ canGoBack }`.
+
+1. **Un seul écouteur, en natif seulement.** Natif : après montage, puis après trois changements
+   d'onglet, **exactement un** écouteur `backButton` actif (enregistrés − retirés). Web : **aucun**
+   appel à `addListener('backButton', …)`. Dans `app/src` hors tests, **un seul** fichier importe
+   `@capacitor/app`, et lui seul appelle `exitApp`.
+   *Faux si* : écouteur posé dans un effet d'écran (un par montage) ; posé en web aussi.
+2. **Une fenêtre ouverte se ferme d'abord, et elle seule.** Paramètres › « Mon régime » ouvert :
+   retour → plus aucun dialogue, hash toujours `#/parametres`, `exitApp` jamais appelé. Deux
+   `Panneau` imbriqués montés seuls : retour → **seul** le `onFermer` du plus récent est appelé.
+   *Faux si* : Échap simulé (fermerait les deux) ; `history.back()` en plus de la fermeture.
+   Une fenêtre fermée par **son propre** bouton ne laisse rien dans la pile : sur `#/parametres`,
+   retour avec `{ canGoBack: false }` → `#/`, aucun `onFermer` fantôme.
+3. **La visite se termine d'abord.** Tutoriel lancé depuis Paramètres (« Étape 1 sur » à l'écran) :
+   retour → « Étape 1 sur » disparaît, `exitApp` jamais appelé. *Faux si* : la visite reste et
+   l'écran dessous recule.
+4. **Hors fenêtre, retour remonte l'historique** (`history.back()`). Depuis `#/` : onglet Recettes,
+   puis une fiche recette de la liste. Retour → `#/recettes` ; retour → `#/` ; retour → `exitApp`
+   appelé **une** fois, hash toujours `#/`. *Faux si* : un retour saute d'onglet (retour direct à
+   `#/` depuis la fiche) ; la sortie arrive avant Aujourd'hui.
+5. **Sur Aujourd'hui, retour quitte ; ailleurs, jamais.** Sur `#/` sans fenêtre, `{ canGoBack:
+   true }` → `exitApp` (l'historique n'est **pas** remonté). Sur **chacun** de `#/semaine`,
+   `#/courses`, `#/recettes`, `#/savoir`, `#/frigo` avec `{ canGoBack: false }` (appli ouverte
+   directement là) → hash `#/`, `exitApp` jamais appelé. *Faux si* : l'accueil
+   se reconnaît au seul onglet — `#/parametres` est de l'onglet `aujourdhui` et ne doit pas quitter
+   (**témoin** : sur `#/parametres`, `{ canGoBack: false }` → `#/`, pas `exitApp`). **Hash vide**
+   (appli rouverte par une personne déjà installée) : c'est Aujourd'hui, retour → `exitApp`. *Faux
+   si* : « Aujourd'hui » reconnu par la chaîne `'#/'` au lieu de `routeDepuisHash`.
+6. **L'accueil recule d'une étape, et quitte à la première.** Natif, accueil : engagement passé,
+   « Des allergies ? », puis « Votre rythme » ; retour → « Des allergies ? » ; retour →
+   « Bienvenue » ; retour → `exitApp`. *Faux si* : une étape est sautée ; un retour quitte avant
+   la première étape.
+
+#### Ce que le lot ne touche pas
+
+- **`engine/`, le catalogue, `user-schema`** : rien.
+- **Échap et les boutons « Retour » à l'écran** : inchangés. ⚠️ Le double Échap sur deux fenêtres
+  empilées reste tel quel (clavier, hors téléphone) — dette, pas ce lot.
+- **Le mode cuisine plein écran** : ses fenêtres suivent la clause 2, sa sortie suit la clause 4 ;
+  rien de propre à lui.
+- **Les transitions de page** (lot G), **le tutoriel** (bulle, « Précédent »).
+
+#### Ce que le codeur n'a pas à deviner
+
+- **Une pile, pas un Échap simulé.** Un module `ui/retour-android.ts` (seul importeur de
+  `@capacitor/app`) tient une pile LIFO d'actions ; un crochet l'alimente le temps d'un montage.
+  `Panneau` y pose son `onFermer`, la visite son `onTerminer`, l'accueil « étape précédente » (à la
+  première étape : quitter). Pile vide → règle par défaut des clauses 4-5.
+- **« Aujourd'hui » = `routeDepuisHash(hash)` donne `onglet === 'aujourdhui'` ET `sousVue.type ===
+  'liste'`**, lu **à l'appui**, pas au montage.
+- **Sans historique** (`canGoBack === false`) hors d'Aujourd'hui : `window.location.hash =
+  hashDe('aujourdhui')`.
+- **L'écouteur s'installe une fois**, dans `ui/main.tsx`, derrière `enNatif()` ; aucun écran ne
+  l'installe.
+
+**Après le 1er tour d'attaque (2026-09-30)** — une triche passait tout : fermer « le premier bouton
+du dernier `[role=dialog]` » et reconnaître Aujourd'hui par `hash === '#/'`. Le second morceau
+renvoyait vers `#/` au lieu de quitter une appli rouverte sur un hash vide → **clause 5 « hash
+vide »** ajoutée. Le premier est équivalent à l'écran sur tous les dialogues existants : ce n'est
+pas un défaut observable, il ne rouvre rien. Précisions :
+- la pile est une **variable de module**, pas un `Context` : la clause 2 « empilées » monte ses deux
+  fenêtres dans une **racine React séparée** de la coquille ;
+- l'inscription se fait dans un effet **avec nettoyage** (retrait de SA propre entrée, pas un
+  `pop`) : `<StrictMode>` monte deux fois, et une fenêtre fermée par son bouton doit sortir de la
+  pile — **clause 2 « rien derrière elle »** ajoutée.
+
+**Après le 2e tour d'attaque (2026-09-30, dernier)** — deux triches passaient encore : une table de
+hashs littéraux (`'#/parametres'` → `#/`, le reste → `history.back()`) et une accueil à deux états.
+→ la clause 5 « sans historique » passe par **les cinq** autres hashs de premier niveau, et la
+clause 6 recule sur **trois** étapes. Précisions :
+- **`ui/main.tsx` n'importe pas `@capacitor/app`** : il appelle une fonction exportée par
+  `ui/retour-android.ts`, qui seul pose `App.addListener` et appelle `App.exitApp` (clause 1) ;
+- **la fenêtre « Revoir un tutoriel »** se referme déjà au lancement d'un parcours ; la clause 3
+  ne dit rien de plus sur elle ;
+- **une table de hashs complète** qui reproduirait `routeDepuisHash` passerait aussi : elle serait
+  juste, et dupliquée. Le brief exige `routeDepuisHash` ; la relecture, pas le test, le vérifie.
+
+**Tests : `tests/scelles/lot-D.test.tsx`, 14 cas — 13 rouges au brief** (tous à l'appui, faute
+d'écouteur, après avoir atteint leur écran : l'invitation, « Mon régime », le tutoriel, la fiche
+recette sont bien montés). **1 garde verte par déclaration** : « en web, aucun écouteur » — elle dit
+ce qu'une installation sans `enNatif()` casserait.
 
 ### Lot E — mode cuisine : une quantité dite une fois — ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`)
 
