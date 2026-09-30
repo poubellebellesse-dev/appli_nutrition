@@ -66,7 +66,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **A** | Le bandeau du téléphone | ✅ **LIVRÉ le 2026-09-12** (`dfb8811`) |
 | **B** | Épurer : les quatre interrupteurs | ✅ **LIVRÉ le 2026-09-14** (`cd328ad`) |
 | **C** | La fiche recette, et le compte brut de l'écran « Recettes » | ✅ **LIVRÉ le 2026-09-14** (`28dfea8`) |
-| **D** | Navigation et retour : le bouton retour d’Android | ✅ **LIVRÉ le 2026-09-30** (non commité) |
+| **D** | Navigation et retour : le bouton retour d’Android | ✅ **LIVRÉ le 2026-09-30** (`c155a1c`) |
 | **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`) |
 | **F** | La semaine, refaite | **bloqué** — forme à trancher en séance de design |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
@@ -748,7 +748,7 @@ au modèle, le lien porté par le nom seul, les mentions et les étapes de la fi
 est la **seconde moitié** du point 3 : prise seule elle ne prouve rien, appariée à la clause 3 elle
 sépare « retiré de l'affichage » de « supprimé du modèle ».
 
-### Lot D — le bouton retour d'Android remonte, il ne quitte plus — ✅ **LIVRÉ le 2026-09-30** (non commité)
+### Lot D — le bouton retour d'Android remonte, il ne quitte plus — ✅ **LIVRÉ le 2026-09-30** (`c155a1c`)
 
 > ✅ **LIVRÉ LE 2026-09-30.** Scellé après deux tours d'attaque ; **14/14 verts**, suite complète 2 721 / 0.
 > ⚠️ **Ce qu'aucun test ne démontre** : le vrai bouton d'un téléphone — le plugin est remplacé par un
