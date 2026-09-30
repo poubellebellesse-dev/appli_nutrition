@@ -72,7 +72,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
 | **H** | La quantité injectée mange le nom de l'aliment | ✅ **LIVRÉ le 2026-09-19** (`c22f03c`) |
 | **I** | « Savoir » devient « Gestes » : l'onglet ne garde que le lexique | ✅ **LIVRÉ le 2026-09-26** (`6c60e5a`) |
-| **J** | Corrections rapides de la passe du 2026-09-30 | ✅ **LIVRÉ le 2026-09-30** (non commité au relevé) |
+| **J** | Corrections rapides de la passe du 2026-09-30 | ✅ **LIVRÉ le 2026-09-30** (`94a2d8f`) |
 
 ### Lot A — le bandeau du téléphone ✅ LIVRÉ le 2026-09-12
 
@@ -1306,10 +1306,9 @@ ci-dessus, sans clause.
 
 **Témoins d'avant** : relevés au lancement du brief, collés dans le compte rendu du 2026-09-26.
 
-### Lot J — corrections rapides de la passe du 2026-09-30 — ✅ **LIVRÉ le 2026-09-30** (non commité)
+### Lot J — corrections rapides de la passe du 2026-09-30 — ✅ **LIVRÉ le 2026-09-30** (`94a2d8f`)
 
-> ✅ **LIVRÉ LE 2026-09-30, NON COMMITÉ** (aucun ordre de commit sur ce dépôt au moment du relevé ;
-> rattacher le hash ici quand il existera). Scellé après deux tours d'attaque ; **17/17 verts**.
+> ✅ **LIVRÉ LE 2026-09-30, COMMITÉ EN `94a2d8f`.** Scellé après deux tours d'attaque ; **17/17 verts**.
 > Sceaux levés, chacun sur accord de l'auteur : `lot-A` clause 4 (au brief) et `lot-J` clause 6
 > (pendant le codage, défaut du test — voir plus bas). `parametres.test.tsx` (non scellé) adapté :
 > poignée « Voir l'aliment », petit-déjeuner listé à 3 repas.
