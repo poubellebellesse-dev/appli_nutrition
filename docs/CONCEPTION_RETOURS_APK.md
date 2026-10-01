@@ -68,7 +68,9 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **C** | La fiche recette, et le compte brut de l'écran « Recettes » | ✅ **LIVRÉ le 2026-09-14** (`28dfea8`) |
 | **D** | Navigation et retour : le bouton retour d’Android | ✅ **LIVRÉ le 2026-09-30** (`c155a1c`) |
 | **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`) |
-| **F** | La semaine, refaite | **bloqué** — forme à trancher en séance de design |
+| **F1** | La semaine en frise, les gestes dans une fenêtre | ✅ **codé le 2026-09-30**, non commité |
+| **F2** | Semaine à la main (＋ par case) et « Vider la semaine » | à écrire, après F1 |
+| **F3** | « Proposer une autre semaine » ne marche pas une deuxième fois | à écrire, après F2 — reproduire d'abord |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
 | **H** | La quantité injectée mange le nom de l'aliment | ✅ **LIVRÉ le 2026-09-19** (`c22f03c`) |
 | **I** | « Savoir » devient « Gestes » : l'onglet ne garde que le lexique | ✅ **LIVRÉ le 2026-09-26** (`6c60e5a`) |
@@ -1044,6 +1046,134 @@ dans un texte — toujours dans la liste complète, du plus long au plus court.
 
 Les 8 clauses passent sur le catalogue réel. Le compte relevé au brief — **3 001 couples affichés pour
 2 217 attendus** — est ramené à l'égalité par la clause 1, qui recalcule l'attendu recette par recette.
+
+### Lot F1 — la semaine en frise, les gestes dans une fenêtre
+
+> ✅ **CODÉ LE 2026-09-30, NON COMMITÉ.** `lot-F1` **11/11 verts**. Sceaux levés sur décision de
+> l'auteur puis remis : `retour-7` et `retour-8` ouvrent la fenêtre avant de chercher leur bouton ;
+> `retour-4` cherche un chemin d'**au plus 3 clics** (au lieu de 2) — le toucher de la vignette,
+> rien d'autre de ce qu'il vérifie ne change. `semaine.test.tsx` réécrit (18/18). Suite complète à
+> 21 h 48 : **2 731 / 1 failed** (2 732, 144 fichiers), le rouge étant `retour-8` « semis » à
+> 15,1 s (plafond 15 s, déjà connu sous charge), vert seul à 22 h 08 (10,7 s, 43/43).
+
+> **Brief ouvert le 2026-09-30.** Source : passes APK du 2026-09-12 (« la semaine, refaite ») et du
+> 2026-09-30 (« toujours pas la chronologie »). Arbitrages de l'auteur, même jour :
+> **(1)** la frise montre **toute la semaine**, une ligne par jour, les repas du matin au soir en
+> vignettes (photo ou aplat à initiale, nom sur deux lignes au plus, marques 📌 gardé, ↺ reste,
+> 🚶 dehors), **aucun bouton sur les repas** ; **(2)** toucher une vignette ouvre **une fenêtre** qui
+> porte tous les gestes ; **(3)** les six anciens tests scellés qui cliquent dans la case sont
+> **adaptés sous sceau levé** — ils ouvrent la fenêtre avant de cliquer, sans rien changer à ce
+> qu'ils vérifient ; **(4)** la semaine passe avant le tutoriel. En-tête réduit : titre, « Proposer
+> une autre semaine », et un bouton ⚙ qui ouvre Jours, Repas par jour, Convives et la légende.
+> Découpage : F1 (ce lot), F2 (semaine à la main, « Vider la semaine »), F3 (le second tirage).
+
+#### Ce que le code dit
+
+| Observation | Cause mesurée |
+|---|---|
+| Une case porte **jusqu'à six boutons** (Remettre le plat prévu / Finalement je mange ici / Changer / Choisir / Garder / Manger un reste / Je mange dehors), plus la question « Décaler ce plat ? » et ses deux réponses | `semaine.tsx`, `Creneau` : chaque geste livré depuis `retour-3` a ajouté son bouton **dans** la carte. À 3 repas × 7 jours, cela fait 21 cases à 4 boutons au moins (compte exact non mesuré). |
+| Une journée est une carte **verticale** ; la semaine se lit en faisant défiler sept cartes | `grid gap-2 sm:grid-cols-3` : sur téléphone, **une colonne** — les repas d'un jour s'empilent. |
+| Réglages et légende occupent le haut de l'écran en permanence | `Reglage` et `Legende` sont dans le flux, avant la semaine. |
+| Aucune photo sur la semaine | `Creneau` ne lit pas `imagePath` ; **129 recettes sur 339** en portent une — l'aplat de `ui/vignette.ts` (`couleurDeRecette`, `initialeDeRecette`) sert de repli sur `aujourdhui.tsx`. |
+
+Réglages persistants que l'écran lit : le plan (`user.db`), le rythme (`writeRythme`), les heures
+de repas (pour « Décaler ce plat ? »), `afficher_macros` (alerte d'énergie), `phrasesRassurantes`
+(lot B). **Les clauses ne font varier que le plan et l'heure** ; les autres restent aux défauts.
+
+#### La forme — ce que les anciens tests lisent, et qui ne bouge pas
+
+- Un **`<article>` par jour**, qui contient le texte `formaterJour(date)`.
+- Une **case** par repas, dans l'article : l'élément dont le libellé du repas (`LIBELLE_CRENEAU`)
+  est un **enfant direct** (lecture de `retour-3`, `retour-4`, `retour-5b`, `retour-8`).
+- Dans la case, **un seul contrôle** : un `<button aria-haspopup="dialog">` qui ouvre la fenêtre.
+  ⚠️ Nom du plat, marques, motif de case vide et « Décaler ce plat ? » sont du texte **de la case,
+  hors de ce bouton** : `retour-4` et `retour-5b` retirent les contrôles avant de lire les mentions.
+  ⚠️ Le texte du bouton est **le même sur toutes les cases** : `retour-3` clause 4 rejoue le même
+  chemin sur trois journées.
+- La fenêtre est un `Panneau` intitulé `formaterJour(date) · LIBELLE_CRENEAU[creneau]`. Un geste qui
+  ouvre une autre fenêtre (« Choisir moi-même », « Manger un reste ») **ferme celle-ci d'abord** :
+  il n'y a jamais deux dialogues (`retour-7` fait `findByRole('dialog')`).
+- « Décaler ce plat ? » (décision 75) : la **question** reste écrite dans la case, sans bouton ; ses
+  réponses « Décaler » et « Non » passent dans la fenêtre. La condition (4) de la décision — jamais
+  de fenêtre qui s'ouvre **seule** — tient : c'est le toucher qui l'ouvre.
+
+#### Fini quand
+
+Écran `Semaine` monté seul (comme `retour-8`), **`catalog.db` réel**, plan composé par le moteur
+(`planWeek` + `planLeftovers`, lundi 2026-09-07, graine 1) et écrit en base ; horloge figée
+(`Date` seul). Aucun identifiant de recette en dur : les cases visées se déduisent du plan, et si
+le catalogue ne fournit plus le cas, le message dit « SEMIS », pas « clause ».
+
+1. **La frise.** 3 repas, 7 jours : **7** `article`, dans l'ordre des dates ; dans chacun, les
+   libellés Petit-déjeuner, Déjeuner, Dîner dans cet ordre ; chaque case porte le nom de son plat
+   (ou « Repas pris dehors ») et **exactement un** contrôle (`button, a, input, select,
+   [role="button"]`), un bouton `aria-haspopup="dialog"` ; l'article ne contient **aucun autre**
+   contrôle. *Faux si* : un bouton « Changer », « Garder »… reste dans la case ; le nom est un lien.
+2. **La vignette.** Une case dont la recette a une photo contient un `img` dont la source finit par
+   son `imagePath` ; une case sans photo n'a **aucun** `img` et affiche `initialeDeRecette(nom)`.
+   Le semis exige au moins une case de chaque sorte. *Faux si* : aucune photo ; une photo
+   générique posée sur un plat qui n'en a pas.
+3. **Les marques.** Case gardée : « 📌 » et « Gardé ». Reste : « ↺ » et « Reste ». Dehors : « 🚶 »
+   et « Repas pris dehors ». Une case ni gardée, ni reste, ni dehors n'en porte **aucune** des trois.
+   *Faux si* : l'état n'est dit que par la couleur ; les trois marques partout.
+4. **La fenêtre.** Avant tout toucher : aucun dialogue. Toucher la vignette d'une case proposée →
+   **un** dialogue, nommé `jour · repas`, qui contient un lien « Voir la recette » vers
+   `hashDeRecette(id, 'semaine')`, et les boutons « Changer », « Choisir moi-même », « Garder »,
+   « Je mange dehors » ; « Manger un reste » **si et seulement si** `sourcesDeReste` n'est pas vide
+   (mesuré sur une case de chaque sorte). Ni « Remettre le plat prévu » ni « Finalement je mange
+   ici » sur une case fraîche. Si la case a un accompagnement, son nom se lit dans la fenêtre.
+   *Faux si* : une même liste figée sur toutes les cases.
+5. **Chaque geste agit, et referme.** Mesuré **en base**, jamais dans le DOM, et après chaque geste
+   plus aucun dialogue :
+   (a) « Changer » : la case reçoit **le plat que `rerollSlot` tire** (même état, même graine, plat
+   refusé exclu — recalculé par le test), **toutes les autres cases** sont identiques ;
+   (b) « Garder » : la case est gardée ; rouverte, la fenêtre dit « Relâcher » (`aria-pressed`
+   vrai) et « Changer » y est désactivé ;
+   (c) « Je mange dehors » : la case porte « Repas pris dehors » ; rouverte, « Finalement je mange
+   ici » rend **la même recette** ;
+   (d) « Manger un reste » : **seul** dialogue ouvert, « Manger un reste — jour · repas » ; choisir
+   la première ligne rend la case `isLeftover` ; rouverte, « Remettre le plat prévu » rend la
+   recette d'avant ;
+   (e) « Choisir moi-même » : **seul** dialogue ouvert, « Choisir un plat — jour · repas » ; y
+   toucher un plat l'écrit sur la case et referme.
+   *Faux si* : des boutons qui ferment sans écrire ; une fenêtre empilée sur l'autre.
+6. **L'en-tête réduit.** Hors dialogue : le titre « Ma semaine », « Proposer une autre semaine », un
+   bouton `aria-haspopup="dialog"` nommé /Réglages/ ; **aucun** champ (nombre, liste) et aucun des
+   mots de la légende (« Proposé », « Vide »). Toucher ⚙ → un dialogue qui contient « Nombre de
+   jours », « Repas par jour », « Convives » et les quatre mots de la légende ; y passer « Repas par
+   jour » à 2 recompose : le plan en base n'a plus que Déjeuner et Dîner. *Faux si* : réglages
+   laissés dans le flux ; un ⚙ qui ouvre une fenêtre inerte.
+7. **« Décaler ce plat ? » sans bouton dans la case.** 2 repas, mardi 14 h 05 (cas non garde de
+   `retour-8`) : la case qui porte la question n'a **qu'un** contrôle ; sa fenêtre porte « Décaler »
+   et « Non » ; « Non » → le plan en base est inchangé et la question a quitté la case.
+
+**Attaque 1 (2026-09-30)** : deux implémentations fausses passaient — « Changer » posant n'importe
+quel autre plat sans le moteur, « Choisir moi-même » ouvrant une fenêtre vide. Fermées : 5(a)
+exige le tirage exact du moteur, 5(e) exige le plat touché en base (mécaniques vérifiées par une
+sonde jetable contre l'écran actuel). Le reste du verdict (réglages « Jours »/« Convives »,
+double-toucher, agencement des boutons) est du périmètre en plus, non repris.
+
+**Examen :** `tests/scelles/lot-F1.test.tsx`, 11 tests, **11 rouges** au 2026-09-30 à 21 h 05,
+chacun sur sa clause (5 à 8 contrôles par case, pas d'initiale, pas de 📌, champ « Jours » dans le
+flux) — **aucun « SEMIS »** : le catalogue fournit tous les cas visés. **Comptes avant** : suite
+entière 2 721 / 0 sur 143 fichiers (20 h 34), `engine:plan-stress` 20/20.
+
+#### Ce que le lot ne touche pas
+
+Le moteur (aucun fichier de `engine/`), `user.db` (`USER_SCHEMA_VERSION` inchangé), l'écran vide
+« Composer ma semaine » (c'est F2), le tirage de « Proposer une autre semaine » (c'est F3),
+`choisir-plat.tsx`, l'alerte d'énergie (reste dans le flux, §6.5), les ancres de la visite
+(`titre-semaine`, `autre-semaine`, `composer-semaine`).
+
+**Sceaux à lever au codage (accord de l'auteur, Q3 du 2026-09-30)** : `retour-7` (ouvrir la
+vignette puis « Choisir moi-même » au lieu de `getAllByText('Choisir')`) et `retour-8` (chercher
+« Décaler » / « Non » dans la fenêtre au lieu de la case). `retour-3`, `retour-4`, `retour-5b` et
+`lot-A` **ne devraient pas bouger** si la forme ci-dessus est tenue ; s'ils rougissent, je m'arrête
+et je le dis. `semaine.test.tsx` (non scellé) sera réécrit.
+
+⚠️ **Ce qu'aucun test ne démontrera** : que la frise tienne sur la largeur d'un téléphone à
+3 repas, que le nom sur deux lignes reste lisible, que la vignette se touche au pouce — jsdom ne
+rend pas le CSS. **À voir sur APK.**
 
 ### Lot H — la quantité injectée mange le nom de l'aliment — ✅ **LIVRÉ le 2026-09-19** (`c22f03c`)
 

@@ -411,7 +411,9 @@ async function composerSemaine(): Promise<void> {
  * visée — l'ordre de la grille n'est pas scellé, le titre l'est.
  */
 async function ouvrirOngletFrigo(rang: number, jour: number, repas: 'Déjeuner' | 'Dîner'): Promise<HTMLElement> {
-  fireEvent.click(screen.getAllByText('Choisir')[rang]!.closest('button')!)
+  // Lot F1 (2026-09-30, sceau levé sur décision de l'auteur) : la case ouvre d'abord ses gestes.
+  fireEvent.click(screen.getAllByText('Voir les gestes de ce repas')[rang]!.closest('button')!)
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: /Choisir moi-même/ }))
   const dialogue = await screen.findByRole('dialog')
   expect(dialogue.textContent ?? '').toMatch(new RegExp(`Choisir un plat — \\D*\\b${jour} [^·]*· ${repas}`))
   fireEvent.click(within(dialogue).getByRole('tab', { name: /Avec ce que j.ai/ }))

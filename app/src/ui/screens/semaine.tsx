@@ -48,6 +48,7 @@ import {
 import { hashDeRecette, hashDuFrigo } from '../router.js'
 import { Panneau } from '../panneau.js'
 import { epure } from '../epure.js'
+import { couleurDeRecette, initialeDeRecette } from '../vignette.js'
 import { REPAS_PAR_DEFAUT, creneauxDuRythme, estPasse } from '../creneau.js'
 import { reprogrammerLesRappels } from '../ecrire-plan.js'
 import { phraseDuMotif } from '../motif-vide.js'
@@ -226,6 +227,10 @@ export function Semaine() {
   const [modeAvance, setModeAvance] = useState(false)
   /** « Non » à « Décaler ce plat ? » sur le plan affiché, relu de `user.db` (lot `retour-8`). */
   const [sansDecalage, setSansDecalage] = useState<ReadonlySet<string>>(new Set())
+  /** Le créneau dont la fenêtre des gestes est ouverte, ou `null` (lot F1). */
+  const [ouvert, setOuvert] = useState<SlotRef | null>(null)
+  /** La fenêtre ⚙ : jours, repas, convives et légende (lot F1). */
+  const [reglagesOuverts, setReglagesOuverts] = useState(false)
 
   const echouer = useCallback((erreur: unknown) => {
     setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
@@ -608,6 +613,56 @@ export function Semaine() {
   const maintenant = new Date()
   const passe = (s: SlotRef): boolean => estPasse(s, maintenant)
 
+  /** Tout ce que la case ET sa fenêtre montrent d'un créneau — calculé à un seul endroit. */
+  const decrire = (slot: SlotRef): Description | null => {
+    // ⚠️ DEUX ENTRÉES POSSIBLES PAR CRÉNEAU depuis le mode repas — `find` seul rendait le plat et
+    // faisait DISPARAÎTRE l'accompagnement de l'écran alors qu'il est bien au plan, compté dans
+    // l'énergie du jour et acheté dans les courses. Le défaut n'aurait rien cassé : il aurait menti.
+    const duCreneau = plan.entries.filter((e) => memeCreneau(e, slot))
+    const entry = duCreneau.find((e) => e.service !== 'accompagnement')
+    if (entry === undefined) return null
+    const accompagnement = duCreneau.find((e) => e.service === 'accompagnement')
+    // ⚠️ LE JOUR DE LA CUISSON, PAS « la veille ». Mesuré : 4 des 13 restes que le moteur pose à
+    // 3 repas/jour ont DEUX jours ou plus — la carte annonçait la veille pour tous.
+    const cuissonDuReste =
+      !entry.isLeftover || entry.recipeId === null
+        ? undefined
+        : plan.entries.find(
+            (e) => e.recipeId === entry.recipeId && !e.isLeftover && e.service !== 'accompagnement'
+          )
+    return {
+      entry,
+      nom: entry.recipeId === null ? null : nomDe(entry.recipeId),
+      photo:
+        entry.recipeId === null || socleCharge === null
+          ? null
+          : socleCharge.catalogue.recipes.get(entry.recipeId)?.imagePath || null,
+      accompagnement:
+        accompagnement?.recipeId == null
+          ? null
+          : { recipeId: accompagnement.recipeId, nom: nomDe(accompagnement.recipeId) },
+      resteDepuis: cuissonDuReste === undefined ? null : formaterJour(cuissonDuReste.slot.date),
+      // Ce que le moteur accepterait de servir ici en reste. Vide = pas de bouton : un geste
+      // proposé là où il ne peut rien faire se paie en confiance, pas en clics.
+      sourcesReste:
+        socleCharge === null ? [] : socleCharge.moteur.sourcesDeReste(plan, slot, reglages.convives),
+      // « Décaler ce plat ? » — la QUESTION est écrite dans la case (décision 75) ; ses réponses
+      // vivent dans la fenêtre que l'utilisateur ouvre lui-même. Rien ne s'ouvre seul.
+      question:
+        socleCharge !== null &&
+        entry.recipeId !== null &&
+        !sansDecalage.has(cleSansDecalage(slot, entry.recipeId)) &&
+        socleCharge.moteur.peutDecaler(plan, slot, passe),
+    }
+  }
+
+  const descriptionOuverte = ouvert === null ? null : decrire(ouvert)
+  /** Un geste de la fenêtre la referme TOUJOURS d'abord : jamais deux fenêtres empilées. */
+  const puis = (geste: () => void) => () => {
+    setOuvert(null)
+    geste()
+  }
+
   return (
     <section>
       <h1 data-visite="titre-semaine" className="text-titre-l text-texte">
@@ -620,19 +675,28 @@ export function Semaine() {
         {formaterPlage(dates)} · {repasServis(plan)} repas prévus
       </p>
 
-      <Reglage reglages={reglages} onChange={(suivants) => replanifier(suivants)} />
-
-      {/* ⚠️ APRÈS les réglages, et c'est un changement voulu. Le bouton vivait dans l'en-tête, donc
-          AVANT les jours / repas / convives qu'il consomme : on relançait un tirage puis on
-          découvrait les réglages qu'on aurait voulu changer d'abord. On règle, puis on relance. */}
-      <button
-        type="button"
-        data-visite="autre-semaine"
-        onClick={() => replanifier({ ...reglages, graine: reglages.graine + 1 })}
-        className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
-      >
-        Proposer une autre semaine
-      </button>
+      {/* ⚠️ L'EN-TÊTE TIENT EN UNE LIGNE (lot F1). Jours, repas, convives et la légende occupaient
+          le haut de l'écran en permanence pour des réglages qu'on touche une fois : ils passent
+          derrière ⚙, et la semaine monte d'autant. */}
+      <div className="mt-4 flex gap-2">
+        <button
+          type="button"
+          data-visite="autre-semaine"
+          onClick={() => replanifier({ ...reglages, graine: reglages.graine + 1 })}
+          className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
+        >
+          Proposer une autre semaine
+        </button>
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          aria-label="Réglages de la semaine"
+          onClick={() => setReglagesOuverts(true)}
+          className="flex min-h-cta items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-surface px-4 text-titre-s text-texte-doux hover:bg-accent-doux"
+        >
+          ⚙
+        </button>
+      </div>
       {epure.phrasesRassurantes && (
         <p className="mt-2 text-courant text-attenue">Vos repas gardés ne changeront pas.</p>
       )}
@@ -642,78 +706,20 @@ export function Semaine() {
           (`alertes_discretes`), et même discrète elle ne disparaît jamais. */}
       {modeAvance && <AlerteEnergie warnings={plan.warnings} />}
 
-      <Legende />
-
-      <div className="mt-4 space-y-4">
+      {/* LA FRISE : une ligne par jour, les repas du matin au soir. Chaque case est une vignette
+          qu'on touche ; les gestes vivent dans la fenêtre qu'elle ouvre (lot F1). */}
+      <div className="mt-4 space-y-3">
         {dates.map((date) => (
-          <article key={date} className="rounded-[--radius-carte] border border-bordure bg-surface p-4">
+          <article key={date} className="rounded-[--radius-carte] border border-bordure bg-surface p-3">
             <h2 className="font-titre text-titre-s text-texte">{formaterJour(date)}</h2>
-            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            <div className={`mt-2 grid gap-2 ${COLONNES[creneaux.length] ?? 'grid-cols-3'}`}>
               {creneaux.map((creneau) => {
-                // ⚠️ DEUX ENTRÉES POSSIBLES PAR CRÉNEAU depuis le mode repas — `find` seul rendait
-                // le plat et faisait DISPARAÎTRE l'accompagnement de l'écran alors qu'il est bien
-                // au plan, compté dans l'énergie du jour et acheté dans les courses. Le défaut
-                // n'aurait rien cassé : il aurait juste menti.
-                const duCreneau = plan.entries.filter((e) => memeCreneau(e, { date, creneau }))
-                const entry = duCreneau.find((e) => e.service !== 'accompagnement')
-                const accompagnement = duCreneau.find((e) => e.service === 'accompagnement')
-                // Ce que le moteur accepterait de servir ici en reste. Vide = pas de bouton : un
-                // geste proposé là où il ne peut rien faire se paie en confiance, pas en clics.
-                const sourcesReste =
-                  socleCharge === null
-                    ? []
-                    : socleCharge.moteur.sourcesDeReste(plan, { date, creneau }, reglages.convives)
-                // ⚠️ LE JOUR DE LA CUISSON, PAS « la veille ». Mesuré : 4 des 13 restes que le moteur
-                // pose à 3 repas/jour ont DEUX jours ou plus — la carte annonçait la veille pour tous.
-                const cuissonDuReste =
-                  entry === undefined || !entry.isLeftover || entry.recipeId === null
-                    ? undefined
-                    : plan.entries.find(
-                        (e) =>
-                          e.recipeId === entry.recipeId &&
-                          !e.isLeftover &&
-                          e.service !== 'accompagnement'
-                      )
-                // « Décaler ce plat ? » — DANS la carte, jamais en bandeau ni en fenêtre (décision 75).
-                const question =
-                  socleCharge === null ||
-                  entry?.recipeId == null ||
-                  sansDecalage.has(cleSansDecalage({ date, creneau }, entry.recipeId)) ||
-                  !socleCharge.moteur.peutDecaler(plan, { date, creneau }, passe)
-                    ? null
-                    : {
-                        onDecaler: () => decaler({ date, creneau }),
-                        onNon: () => refuserDecalage({ date, creneau }),
-                      }
-                return entry === undefined ? null : (
+                const description = decrire({ date, creneau })
+                return description === null ? null : (
                   <Creneau
                     key={creneau}
-                    entry={entry}
-                    question={question}
-                    nom={entry.recipeId === null ? null : nomDe(entry.recipeId)}
-                    accompagnement={
-                      accompagnement?.recipeId == null
-                        ? null
-                        : { recipeId: accompagnement.recipeId, nom: nomDe(accompagnement.recipeId) }
-                    }
-                    onGarder={() => basculerVerrou({ date, creneau })}
-                    onChanger={() => changer({ date, creneau })}
-                    onChoisir={() => setAChoisir({ date, creneau })}
-                    onDehors={() => poserDehors({ date, creneau })}
-                    resteDepuis={
-                      cuissonDuReste === undefined ? null : formaterJour(cuissonDuReste.slot.date)
-                    }
-                    onRestes={sourcesReste.length === 0 ? null : () => setPourReste({ date, creneau })}
-                    onDefaireReste={
-                      gestePrecedent({ date, creneau }) === null
-                        ? null
-                        : () => defaireReste({ date, creneau })
-                    }
-                    onDefaire={
-                      platDAvant({ date, creneau }) === null
-                        ? null
-                        : () => defaireDehors({ date, creneau })
-                    }
+                    description={description}
+                    onOuvrir={() => setOuvert({ date, creneau })}
                   />
                 )
               })}
@@ -722,9 +728,38 @@ export function Semaine() {
         ))}
       </div>
 
-      {/* ⚠️ MONTÉE AU NIVEAU DE L'ÉCRAN, pas dans la carte du créneau. `Panneau` passe par un portail
-          vers `document.body` : la monter dans chaque carte donnerait 21 composants prêts à s'ouvrir
-          pour un seul qui s'ouvre jamais à la fois. */}
+      {reglagesOuverts && (
+        <Panneau titre="Réglages de la semaine" onFermer={() => setReglagesOuverts(false)}>
+          <Reglage reglages={reglages} onChange={(suivants) => replanifier(suivants)} />
+          <Legende />
+        </Panneau>
+      )}
+
+      {/* ⚠️ MONTÉES AU NIVEAU DE L'ÉCRAN, pas dans la case. `Panneau` passe par un portail vers
+          `document.body` : une par case donnerait 21 composants prêts à s'ouvrir pour un seul qui
+          s'ouvre jamais à la fois. */}
+      {ouvert !== null && descriptionOuverte !== null && (
+        <GestesDuRepas
+          titre={`${formaterJour(ouvert.date)} · ${LIBELLE_CRENEAU[ouvert.creneau]}`}
+          description={descriptionOuverte}
+          onFermer={() => setOuvert(null)}
+          onGarder={puis(() => basculerVerrou(ouvert))}
+          onChanger={puis(() => changer(ouvert))}
+          onChoisir={puis(() => setAChoisir(ouvert))}
+          onDehors={puis(() => poserDehors(ouvert))}
+          onRestes={
+            descriptionOuverte.sourcesReste.length === 0 ? null : puis(() => setPourReste(ouvert))
+          }
+          onDefaireReste={gestePrecedent(ouvert) === null ? null : puis(() => defaireReste(ouvert))}
+          onDefaire={platDAvant(ouvert) === null ? null : puis(() => defaireDehors(ouvert))}
+          question={
+            descriptionOuverte.question
+              ? { onDecaler: puis(() => decaler(ouvert)), onNon: puis(() => refuserDecalage(ouvert)) }
+              : null
+          }
+        />
+      )}
+
       {aChoisir !== null && socleCharge !== null && (
         <ChoisirPlat
           socle={socleCharge}
@@ -737,7 +772,6 @@ export function Semaine() {
         />
       )}
 
-      {/* Même raison que ci-dessus : une seule fenêtre montée, jamais une par carte. */}
       {pourReste !== null && socleCharge !== null && (
         <ChoisirUnReste
           libelleCreneau={`${formaterJour(pourReste.date)} · ${LIBELLE_CRENEAU[pourReste.creneau]}`}
@@ -1024,61 +1058,61 @@ function Legende() {
   )
 }
 
-/**
- * Un créneau, dans l'un des QUATRE ÉTATS que §4.2 exige « immédiatement distinguables ».
- *
- * ⚠️ AUCUN ÉTAT N'EST PORTÉ PAR LA SEULE COULEUR. Bordure, épaisseur, trait plein ou pointillé et
- * mention écrite se cumulent : un daltonien, un écran en plein soleil ou un mode sombre mal calibré
- * ne doivent pas faire disparaître l'information. C'est aussi pourquoi la légende affiche une
- * pastille ET son nom.
- *
- * ⚠️ AUCUNE COULEUR DE JUGEMENT (§5 DESIGN, principe 6 ARCHITECTURE) : pas de vert pour « bien »,
- * pas de rouge pour « à changer ». Un plat n'est ni bon ni mauvais — l'accent signale ce que
- * l'utilisateur a décidé, pas ce que l'application en pense.
- */
-function Creneau({
-  entry,
-  nom,
-  accompagnement,
-  onGarder,
-  onChanger,
-  onChoisir,
-  onDehors,
-  onDefaire,
-  resteDepuis,
-  onRestes,
-  onDefaireReste,
-  question,
-}: {
+/** Ce que la case ET sa fenêtre montrent d'un créneau. */
+interface Description {
   readonly entry: MealPlanEntry
-  /** « Décaler ce plat ? » et ses deux réponses, ou `null` quand ce repas ne porte pas la question. */
-  readonly question: { readonly onDecaler: () => void; readonly onNon: () => void } | null
   readonly nom: string | null
+  /** Le chemin de la photo, LU dans le catalogue — jamais fabriqué. `null` : l'aplat prend la place. */
+  readonly photo: string | null
   /** L'accompagnement posé sur le MÊME créneau, ou `null` en mode recette (un plat seul). */
   readonly accompagnement: { readonly recipeId: RecipeId; readonly nom: string } | null
-  readonly onGarder: () => void
-  /** Tirage : le moteur repropose. */
-  readonly onChanger: () => void
-  /** Choix : l'utilisateur désigne le plat lui-même (décision 49). */
-  readonly onChoisir: () => void
-  /** « Je mange dehors » : étiquette le créneau, sans frappe (décision 76). */
-  readonly onDehors: () => void
-  /** Se raviser. `null` quand plus rien n'est en mémoire — après un rechargement, notamment. */
-  readonly onDefaire: (() => void) | null
   /** Le jour où le plat de ce reste a été cuisiné, déjà formaté, ou `null` si on ne le sait pas. */
   readonly resteDepuis: string | null
-  /** Ouvrir le choix des restes servables ici. `null` quand aucun plat de la semaine ne l'est. */
-  readonly onRestes: (() => void) | null
-  /** Défaire le reste posé à la main. `null` quand plus rien n'est en mémoire. */
-  readonly onDefaireReste: (() => void) | null
+  readonly sourcesReste: readonly SourceDeReste[]
+  /** Ce repas porte « Décaler ce plat ? » (décision 75). */
+  readonly question: boolean
+}
+
+/** Une colonne par repas : la ligne du jour se lit du matin au soir, sans retour à la ligne. */
+const COLONNES: Readonly<Record<number, string>> = {
+  1: 'grid-cols-1',
+  2: 'grid-cols-2',
+  3: 'grid-cols-3',
+}
+
+/** Le mot « dehors » posé par le geste en un clic — c'est lui, et lui seul, qui porte 🚶. */
+const estDehors = (entry: MealPlanEntry): boolean => entry.horsCatalogue === LIBELLE_DEHORS
+
+/**
+ * Une case de la frise : une VIGNETTE, dans l'un des QUATRE ÉTATS que §4.2 exige « immédiatement
+ * distinguables ».
+ *
+ * ⛔ UN SEUL CONTRÔLE, qui ouvre la fenêtre des gestes (lot F1). La case portait jusqu'à six
+ * boutons : à 3 repas × 7 jours, la semaine se lisait comme un formulaire. Le bouton recouvre la
+ * case entière — on touche le repas, pas une zone de trois millimètres.
+ * ⛔ LE NOM, LES MARQUES, LE MOTIF ET LA QUESTION SONT DU TEXTE DE LA CASE, HORS DU BOUTON : des
+ * clauses scellées (`retour-4`, `retour-5b`) retirent les contrôles avant de lire les mentions.
+ *
+ * ⚠️ AUCUN ÉTAT N'EST PORTÉ PAR LA SEULE COULEUR. Bordure, épaisseur, trait plein ou pointillé,
+ * signe et mention écrite se cumulent : un daltonien, un écran en plein soleil ou un mode sombre mal
+ * calibré ne doivent pas faire disparaître l'information. Le signe (📌 ↺ 🚶) est `aria-hidden` :
+ * c'est le mot qui le suit qui parle au lecteur d'écran.
+ *
+ * ⚠️ AUCUNE COULEUR DE JUGEMENT (§5 DESIGN, principe 6 ARCHITECTURE) : l'accent signale ce que
+ * l'utilisateur a décidé, pas ce que l'application pense du plat.
+ */
+function Creneau({
+  description,
+  onOuvrir,
+}: {
+  readonly description: Description
+  readonly onOuvrir: () => void
 }) {
-  // ⚠️ « VIDE » N'EST PLUS « SANS RECETTE » depuis la décision 51. Un plat préparé porte
-  // `recipeId: null` ET un libellé : le créneau est REMPLI. S'en tenir à `recipeId === null` lui
-  // donnerait le cadre pointillé et le texte « Aucun plat » alors qu'il y a un dîner prévu — et le
-  // bouton dirait « Proposer » pour un créneau déjà occupé.
+  const { entry, nom, photo, resteDepuis, question } = description
+  // ⚠️ « VIDE » N'EST PAS « SANS RECETTE » depuis la décision 51. Un plat préparé porte
+  // `recipeId: null` ET un libellé : le créneau est REMPLI.
   const horsCatalogue = entry.horsCatalogue
   const vide = entry.recipeId === null && horsCatalogue === null
-  const recipeId = entry.recipeId
   const apparence = entry.locked
     ? 'border-2 border-accent bg-accent-doux'
     : vide
@@ -1088,51 +1122,136 @@ function Creneau({
         : 'border border-bordure-forte bg-surface'
 
   return (
-    <div className={`flex flex-col rounded-[--radius-carte] p-3 ${apparence}`}>
+    <div className={`relative flex min-w-0 flex-col rounded-[--radius-carte] p-2 ${apparence}`}>
       <p className="text-mention font-semibold uppercase tracking-wide text-attenue">
         {LIBELLE_CRENEAU[entry.slot.creneau]}
       </p>
 
-      <p className="mt-1 font-titre text-lecture leading-snug text-texte">
+      {/* ⛔ LE `src` SE LIT, IL NE SE FABRIQUE PAS (même règle que la fiche recette). Sans photo,
+          l'aplat et l'initiale — un motif, pas une fausse photo. */}
+      {photo !== null ? (
+        <img
+          src={photo}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+          className="mt-1 aspect-[4/3] w-full rounded-[0.6rem] object-cover"
+        />
+      ) : entry.recipeId !== null ? (
+        <div
+          aria-hidden="true"
+          style={{ backgroundColor: couleurDeRecette(entry.recipeId) }}
+          className="mt-1 flex aspect-[4/3] w-full items-center justify-center rounded-[0.6rem]"
+        >
+          <span className="font-titre text-titre-l leading-none text-white/70">
+            {initialeDeRecette(nom ?? '')}
+          </span>
+        </div>
+      ) : null}
+
+      <p className="mt-1 line-clamp-2 break-words font-titre text-courant leading-snug text-texte">
         {horsCatalogue !== null ? (
-          // Pas de lien : il n'y a aucune fiche derrière, et un lien mort se remarque plus tard.
-          <span className="text-texte">{horsCatalogue}</span>
-        ) : nom === null || recipeId === null ? (
+          <>
+            {estDehors(entry) && <span aria-hidden="true">🚶 </span>}
+            {horsCatalogue}
+          </>
+        ) : nom === null ? (
           <span className="text-attenue">Aucun plat</span>
         ) : (
-          <a href={hashDeRecette(recipeId, 'semaine')} className="text-texte no-underline">
-            {nom}
-          </a>
+          nom
         )}
       </p>
 
-      {/* ⚠️ DIRE POURQUOI L'APPLI SE TAIT SUR CE REPAS, sinon son silence passe pour un oubli.
-          C'est la contrepartie visible de la décision 51 : l'alerte de plancher calorique ne se
-          déclenche plus sur une journée qui contient ce créneau, et l'utilisateur ne peut pas le
-          deviner. Formulé comme un FAIT sur ce que l'application sait, jamais comme un reproche sur
-          ce qui est mangé (principe 6 : informer, jamais juger) — ni « non équilibré », ni
-          « pensez à », ni code couleur. */}
-      {horsCatalogue !== null && (
-        <p className="mt-1 text-mention leading-snug text-attenue">
-          Repas noté à la main — l’application ne connaît pas ce qu’il apporte.
-        </p>
-      )}
-
-      {/* ⚠️ LA CASE VIDE DIT POURQUOI ELLE EST VIDE (lot `retour-5b`). Sans cette phrase, le cadre
-          pointillé et « Aucun plat » se lisent comme une panne : l'utilisateur ne peut pas savoir
-          si l'application a renoncé, si elle n'a rien trouvé, ou si elle a déjà tout servi ailleurs
-          — trois situations qui ne se corrigent pas au même endroit. Le motif est CONSTATÉ par le
-          moteur au moment du tirage et relu tel quel : voir `engine/planning/motif-vide.ts`.
-          ⛔ HORS DE TOUT BOUTON, et ce n'est pas une question de mise en page : un motif se lit, il
-          ne se clique pas. Une clause scellée retire les actions avant de comparer les textes. */}
+      {/* ⚠️ LA CASE VIDE DIT POURQUOI ELLE EST VIDE (lot `retour-5b`) — constaté par le moteur au
+          tirage, relu tel quel (`engine/planning/motif-vide.ts`). */}
       {vide && phraseDuMotif(entry.motifVide) !== null && (
         <p className="mt-1 text-mention leading-snug text-attenue">{phraseDuMotif(entry.motifVide)}</p>
       )}
 
-      {/* ⚠️ « avec » EN TOUTES LETTRES, pas une simple seconde ligne. Deux noms empilés se lisent
-          comme deux plats au choix ; le mot dit que c'est UNE assiette. Pas de bouton propre non
-          plus : « Changer » rejoue le plat ET son accompagnement (`reroll-slot.ts`), ce qui est le
-          comportement attendu — on refuse une assiette, pas une garniture. */}
+      {/* ⛔ LES DEUX FAITS, PAS UN CHOIX ENTRE EUX : un reste qu'on garde reste un reste. ⛔ ET JAMAIS
+          « la veille » AU JUGÉ : le jour de la cuisson, lu dans le plan. */}
+      {entry.isLeftover && (
+        <p className="mt-1 text-mention font-medium text-accent-texte">
+          <span aria-hidden="true">↺ </span>
+          {resteDepuis === null ? 'Reste d’un plat déjà cuisiné' : `Reste du plat de ${resteDepuis}`}
+        </p>
+      )}
+      {entry.locked && (
+        <p className="mt-1 text-mention font-medium text-accent-texte">
+          <span aria-hidden="true">📌 </span>
+          Gardé
+        </p>
+      )}
+
+      {/* ⛔ UNE QUESTION DE PLANNING, PAS DE REPAS (décision 75) : aucun mot sur ce qui a été mangé,
+          et rien ne s'ouvre seul. Les réponses sont dans la fenêtre que l'on ouvre soi-même. */}
+      {question && <p className="mt-1 text-mention font-semibold text-texte">Décaler ce plat ?</p>}
+
+      <button
+        type="button"
+        aria-haspopup="dialog"
+        onClick={onOuvrir}
+        className="absolute inset-0 rounded-[--radius-carte] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        <span className="sr-only">Voir les gestes de ce repas</span>
+      </button>
+    </div>
+  )
+}
+
+/**
+ * La fenêtre d'un repas : tout ce qu'on peut faire de cette case, et rien d'autre (lot F1).
+ *
+ * ⛔ CHAQUE GESTE REFERME LA FENÊTRE AVANT D'AGIR — y compris ceux qui en ouvrent une autre
+ * (« Choisir moi-même », « Manger un reste ») : jamais deux fenêtres empilées.
+ */
+function GestesDuRepas({
+  titre,
+  description,
+  onFermer,
+  onGarder,
+  onChanger,
+  onChoisir,
+  onDehors,
+  onDefaire,
+  onRestes,
+  onDefaireReste,
+  question,
+}: {
+  readonly titre: string
+  readonly description: Description
+  readonly onFermer: () => void
+  readonly onGarder: () => void
+  /** Tirage : le moteur repropose. */
+  readonly onChanger: () => void
+  /** Choix : l'utilisateur désigne le plat lui-même (décision 49). */
+  readonly onChoisir: () => void
+  /** « Je mange dehors » : étiquette le créneau, sans frappe (décision 76). */
+  readonly onDehors: () => void
+  /** Se raviser. `null` quand plus rien n'est en mémoire — après un rechargement, notamment. */
+  readonly onDefaire: (() => void) | null
+  /** Ouvrir le choix des restes servables ici. `null` quand aucun plat de la semaine ne l'est. */
+  readonly onRestes: (() => void) | null
+  /** Défaire le reste posé à la main. `null` quand plus rien n'est en mémoire. */
+  readonly onDefaireReste: (() => void) | null
+  /** Les deux réponses à « Décaler ce plat ? », ou `null` quand ce repas ne porte pas la question. */
+  readonly question: { readonly onDecaler: () => void; readonly onNon: () => void } | null
+}) {
+  const { entry, nom, accompagnement } = description
+  const horsCatalogue = entry.horsCatalogue
+  const vide = entry.recipeId === null && horsCatalogue === null
+  const bouton =
+    'flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45'
+
+  return (
+    <Panneau titre={titre} onFermer={onFermer}>
+      <p className="font-titre text-lecture leading-snug text-texte">
+        {horsCatalogue ?? nom ?? <span className="text-attenue">Aucun plat</span>}
+      </p>
+      {/* ⚠️ « avec » EN TOUTES LETTRES : deux noms empilés se liraient comme deux plats au choix.
+          « Changer » rejoue le plat ET son accompagnement (`reroll-slot.ts`) — on refuse une
+          assiette, pas une garniture. */}
       {accompagnement !== null && (
         <p className="mt-1 text-courant leading-snug text-texte-doux">
           avec{' '}
@@ -1141,35 +1260,27 @@ function Creneau({
           </a>
         </p>
       )}
-
-      {/* Les états se disent AUSSI en toutes lettres — l'emoji seul serait invisible à un lecteur
-          d'écran, et le cadenas de la maquette ne suffit pas à expliquer ce qu'il signifie. */}
-      {/* ⛔ LES DEUX FAITS, PAS UN CHOIX ENTRE EUX. Cette ligne disait `locked ? 'Gardé' : 'Reste…'` :
-          un reste qu'on garde perdait le mot « reste » exactement quand il compte, et la carte ne
-          disait plus pourquoi ce repas ne se cuisine pas. ⛔ ET ELLE NE DIT PLUS « la veille » AU
-          JUGÉ : le reste d'un plat de dimanche servi mercredi ne vient pas de la veille, et le dire
-          fait douter de tout le reste de la carte. */}
-      {(entry.locked || entry.isLeftover) && (
-        <p className="mt-1 text-mention font-medium text-accent-texte">
-          {[
-            entry.isLeftover
-              ? resteDepuis === null
-                ? 'Reste d’un plat déjà cuisiné'
-                : `Reste du plat de ${resteDepuis}`
-              : null,
-            entry.locked ? 'Gardé' : null,
-          ]
-            .filter((mention) => mention !== null)
-            .join(' · ')}
+      {/* ⚠️ DIRE POURQUOI L'APPLI SE TAIT SUR CE REPAS (décision 51) — un FAIT sur ce qu'elle sait,
+          jamais un reproche sur ce qui est mangé (principe 6). */}
+      {horsCatalogue !== null && (
+        <p className="mt-1 text-mention leading-snug text-attenue">
+          Repas noté à la main — l’application ne connaît pas ce qu’il apporte.
         </p>
       )}
+      {entry.recipeId !== null && (
+        <a
+          href={hashDeRecette(entry.recipeId, 'semaine')}
+          className="mt-3 flex min-h-tactile items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-courant font-semibold text-accent-texte no-underline"
+        >
+          Voir la recette
+        </a>
+      )}
 
-      {/* ⛔ UNE QUESTION DE PLANNING, PAS DE REPAS (décision 75) : aucun mot sur ce qui a été mangé,
-          et rien ne s'ouvre seul. Sans réponse, elle reste là ; « Non » ne change rien au planning. */}
       {question !== null && (
-        <div className="mt-3 rounded-[0.7rem] border border-bordure-forte bg-fond p-2">
-          <p className="text-courant font-semibold text-texte">Décaler ce plat ?</p>
-          <p className="mt-1 text-mention leading-snug text-attenue">Il prendra la place de son prochain reste.</p>
+        <div className="mt-4 rounded-[0.7rem] border border-bordure-forte bg-fond p-3">
+          <p className="text-courant leading-snug text-texte">
+            Ce plat peut prendre la place de son prochain reste.
+          </p>
           <div className="mt-2 flex gap-2">
             <button
               type="button"
@@ -1178,54 +1289,28 @@ function Creneau({
             >
               Décaler
             </button>
-            <button
-              type="button"
-              onClick={question.onNon}
-              className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-surface px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux"
-            >
+            <button type="button" onClick={question.onNon} className={`${bouton} flex-1`}>
               Non
             </button>
           </div>
         </div>
       )}
 
-      {/* ⚠️ DEUX BOUTONS PARCE QUE CE SONT DEUX GESTES — décision 49, et c'est la correction d'un
-          MENSONGE. Un seul bouton portait les deux : il s'appelait « Choisir » sur un créneau vide
-          et appelait `rerollSlot`, donc un TIRAGE. Le libellé promettait un choix et rendait un
-          hasard. Même classe de défaut que `note_allergene` ou `Recipe.service` déclaré et jamais
-          lu : l'écart entre ce qui est annoncé et ce qui est branché.
-          « Proposer » tire, « Choisir » ouvre la fenêtre de sélection. Les mots disent l'acte. */}
-      {/* ⛔ L'ANNULATION PASSE EN PREMIER SUR UN CRÉNEAU QU'ON VIENT DE MARQUER, et ce n'est pas
-          cosmétique : c'est le geste qu'on cherche quand on regarde cette carte-là. Les trois
-          autres boutons continuent de faire ce qu'ils faisaient — « Changer » retire l'étiquette
-          en tirant un plat, « Choisir » en désignant le sien. */}
-      <div className="mt-3 flex flex-wrap gap-2">
-        {/* ⛔ L'ANNULATION D'ABORD, comme pour « je mange dehors » : c'est le geste qu'on cherche
-            quand on regarde cette carte-là. Elle rend le plat ET relâche la cuisson. */}
+      <div className="mt-4 grid gap-2">
+        {/* ⛔ L'ANNULATION D'ABORD : c'est le geste qu'on cherche quand on vient de marquer ce repas. */}
         {onDefaireReste !== null && entry.isLeftover && (
-          <button
-            type="button"
-            onClick={onDefaireReste}
-            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux"
-          >
+          <button type="button" onClick={onDefaireReste} className={bouton}>
             Remettre le plat prévu
           </button>
         )}
         {onDefaire !== null && horsCatalogue !== null && (
-          <button
-            type="button"
-            onClick={onDefaire}
-            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux"
-          >
+          <button type="button" onClick={onDefaire} className={bouton}>
             Finalement je mange ici
           </button>
         )}
-        <button
-          type="button"
-          onClick={onChanger}
-          disabled={entry.locked}
-          className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
-        >
+        {/* ⚠️ DEUX BOUTONS PARCE QUE CE SONT DEUX GESTES (décision 49) : « Changer » tire,
+            « Choisir moi-même » ouvre la sélection. Les mots disent l'acte. */}
+        <button type="button" onClick={onChanger} disabled={entry.locked} className={bouton}>
           {vide ? 'Proposer' : 'Changer'}
         </button>
         <button
@@ -1233,9 +1318,9 @@ function Creneau({
           onClick={onChoisir}
           disabled={entry.locked}
           aria-haspopup="dialog"
-          className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
+          className={bouton}
         >
-          Choisir
+          Choisir moi-même
         </button>
         <button
           type="button"
@@ -1243,43 +1328,28 @@ function Creneau({
           disabled={vide && !entry.locked}
           aria-pressed={entry.locked}
           className={
-            'flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] px-3 text-courant font-semibold disabled:opacity-45 ' +
-            (entry.locked
-              ? 'border-2 border-accent bg-surface text-accent-texte'
-              : 'border border-bordure-forte bg-fond text-texte-doux hover:bg-accent-doux')
+            entry.locked
+              ? 'flex min-h-tactile w-full items-center justify-center rounded-[0.7rem] border-2 border-accent bg-surface px-3 text-courant font-semibold text-accent-texte'
+              : bouton
           }
         >
           {entry.locked ? 'Relâcher' : 'Garder'}
         </button>
-        {/* ⚠️ UN SEUL CLIC, ET LE MOT « DEHORS » EN TOUTES LETTRES. Le geste écrit directement : le
-            faire passer par la fenêtre de choix coûterait un clic pour ouvrir et un pour valider,
-            et le champ y attend une frappe. Absent d'un créneau déjà marqué — il n'y aurait rien à
-            marquer — et d'un créneau gardé, comme les trois autres boutons. */}
-        {/* ⚠️ ABSENT QUAND RIEN N'EST SERVABLE, et c'est la moitié du geste. Un bouton toujours là
-            qui ouvre une fenêtre vide apprend à ne plus cliquer dessus. Le moteur décide : un plat
-            cuisiné plus tôt, encore bon, servi à ce créneau-là, et en quantité suffisante. */}
+        {/* ⚠️ ABSENT QUAND RIEN N'EST SERVABLE : un bouton qui ouvre une fenêtre vide apprend à ne
+            plus cliquer dessus. */}
         {onRestes !== null && (
-          <button
-            type="button"
-            onClick={onRestes}
-            aria-haspopup="dialog"
-            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux"
-          >
+          <button type="button" onClick={onRestes} aria-haspopup="dialog" className={bouton}>
             Manger un reste
           </button>
         )}
+        {/* ⚠️ UN SEUL CLIC, ET LE MOT « DEHORS » EN TOUTES LETTRES (décision 76). */}
         {horsCatalogue === null && (
-          <button
-            type="button"
-            onClick={onDehors}
-            disabled={entry.locked}
-            className="flex min-h-tactile flex-1 items-center justify-center rounded-[0.7rem] border border-bordure-forte bg-fond px-3 text-courant font-semibold text-texte-doux hover:bg-accent-doux disabled:opacity-45"
-          >
+          <button type="button" onClick={onDehors} disabled={entry.locked} className={bouton}>
             Je mange dehors
           </button>
         )}
       </div>
-    </div>
+    </Panneau>
   )
 }
 

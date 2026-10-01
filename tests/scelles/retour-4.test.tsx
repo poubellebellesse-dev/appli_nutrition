@@ -20,7 +20,7 @@
 //
 // ⛔ IL NE PRESCRIT AUCUN LIBELLÉ, AUCUN EMPLACEMENT, AUCUN COMPOSANT, AUCUN NOM DE FONCTION. Le
 // « Fini quand » borne le COÛT du geste et mesure CE QUI ATTERRIT EN BASE. Le fichier CHERCHE un
-// chemin d'au plus 2 clics parmi les contrôles VISIBLES, en remontant l'écran à neuf entre chaque
+// chemin d'au plus 3 clics parmi les contrôles VISIBLES, en remontant l'écran à neuf entre chaque
 // sonde. Ce qui est imposé, et c'est la seule chose, c'est que le mot « restes » soit AFFICHÉ sur
 // le chemin : sans lui le geste existe et personne ne le trouve.
 //
@@ -422,8 +422,10 @@ type Resultat =
   | { readonly ok: false; readonly essayes: readonly string[]; readonly tronque: boolean }
 
 /**
- * Cherche une suite d'AU PLUS DEUX clics sur des contrôles visibles qui amène `atteint()` à vrai.
+ * Cherche une suite d'AU PLUS TROIS clics sur des contrôles visibles qui amène `atteint()` à vrai.
  * L'écran est remonté à neuf avant chaque sonde : un clic exploratoire ne pollue jamais le suivant.
+ * Budget porté de 2 à 3 le 2026-09-30 (lot F1, décision de l'auteur) : la case de la semaine ne
+ * porte plus de boutons, un premier toucher ouvre la fenêtre des gestes. Rien d'autre ne change.
  */
 async function chercherChemin(sonde: Sonde): Promise<Resultat> {
   const essayes: string[] = []
@@ -449,17 +451,32 @@ async function chercherChemin(sonde: Sonde): Promise<Resultat> {
     if (candidats.length > LARGEUR_MAX) tronque = true
 
     for (const e2 of candidats.slice(0, LARGEUR_MAX).map(etiquetteDe)) {
-      const r2 = await sonde.racine()
-      const a = controles(r2).find((x) => etiquetteDe(x) === e1)
-      if (a === undefined) break
-      fireEvent.click(a)
-      await tick()
+      if (!(await rejouer([e1], sonde.racine))) break
+      const avant2 = controles(document.body).map(etiquetteDe)
       const b = controles(document.body).find((x) => etiquetteDe(x) === e2)
       if (b === undefined) continue
       essayes.push(`${e1} › ${e2}`)
       fireEvent.click(b)
       await tick()
       if (sonde.atteint()) return { ok: true, clics: [e1, e2] }
+
+      // Le troisième, de même, parmi ce que le second a fait apparaître.
+      const apparus2 = controles(document.body).filter((x) => !avant2.includes(etiquetteDe(x)))
+      const candidats3 =
+        mot !== null && !mot.test(e1) && !mot.test(e2)
+          ? apparus2.filter((x) => mot.test(etiquetteDe(x)))
+          : apparus2
+      if (candidats3.length > LARGEUR_MAX) tronque = true
+
+      for (const e3 of candidats3.slice(0, LARGEUR_MAX).map(etiquetteDe)) {
+        if (!(await rejouer([e1, e2], sonde.racine))) break
+        const c = controles(document.body).find((x) => etiquetteDe(x) === e3)
+        if (c === undefined) continue
+        essayes.push(`${e1} › ${e2} › ${e3}`)
+        fireEvent.click(c)
+        await tick()
+        if (sonde.atteint()) return { ok: true, clics: [e1, e2, e3] }
+      }
     }
   }
   return { ok: false, essayes, tronque }
@@ -484,10 +501,10 @@ async function rejouer(
 function exigerChemin(sujet: string, sonde: Sonde, resultat: Resultat): readonly string[] {
   if (resultat.ok) return resultat.clics
   throw new Error(
-    `retour-4 · ${sujet} : AUCUN chemin d’au plus 2 clics` +
+    `retour-4 · ${sujet} : AUCUN chemin d’au plus 3 clics` +
       `${sonde.mot === null ? '' : ' affichant « restes »'} n’atteint l’état visé depuis ` +
       `${sonde.ecran}. ${resultat.essayes.length} chemin(s) sondé(s)` +
-      `${resultat.tronque ? ` (largeur bornée à ${LARGEUR_MAX} au 2ᵉ clic)` : ''} : ` +
+      `${resultat.tronque ? ` (largeur bornée à ${LARGEUR_MAX} aux 2ᵉ et 3ᵉ clics)` : ''} : ` +
       `${resultat.essayes.join(' | ') || '(aucun contrôle visible)'}`
   )
 }
@@ -549,17 +566,17 @@ function exigerSourceEligible(sujet: string, cible: Cible, source: RecipeId): vo
 }
 
 // =============================================================================================
-// Clause 1 — le geste existe, au plus deux clics, aucune frappe, le mot « restes » sur le chemin
+// Clause 1 — le geste existe, au plus trois clics, aucune frappe, le mot « restes » sur le chemin
 // =============================================================================================
 
 describe.each([2, 3])('retour-4 · clause 1 — le geste, à %i repas par jour', (repasParJour) => {
-  it('⛔ au plus 2 clics, aucune frappe, le mot « restes » affiché, et un reste écrit en base', async () => {
+  it('⛔ au plus 3 clics, aucune frappe, le mot « restes » affiché, et un reste écrit en base', async () => {
     const pristine = semer(repasParJour)
     const [cible] = exigerCibles(pristine, 1, false)
     const sujet = `clause 1 (${repasParJour} repas/jour)`
     const pose = await poserResteDepuisSemaine(sujet, cible!, pristine)
 
-    expect(pose.clics.length).toBeLessThanOrEqual(2)
+    expect(pose.clics.length).toBeLessThanOrEqual(3)
     expect(
       pose.clics.some((c) => RESTES.test(c)),
       `${sujet} : le chemin « ${pose.clics.join(' › ')} » n’affiche jamais le mot « restes ».`
@@ -918,7 +935,7 @@ describe.each([2, 3])('retour-4 · clause 7 — l’annuler, à %i repas par jou
       },
     }
     const clics = exigerChemin(`${sujet} — le geste se défait`, sonde, await chercherChemin(sonde))
-    expect(clics.length).toBeLessThanOrEqual(2)
+    expect(clics.length).toBeLessThanOrEqual(3)
 
     // 2. Le REJOUER à l'identique sur l'autre journée, sur un autre plat. Un chemin qui nommait le
     //    plat d'origine ne survit pas à ce rejeu — c'est tout l'objet de l'étape.

@@ -430,12 +430,21 @@ const porteQuestion = (slot: SlotRef): boolean => QUESTION.test(carteDuCreneau(s
 const libelleDe = (el: Element): string =>
   (el.getAttribute('aria-label') ?? el.textContent ?? '').replace(/\s+/g, ' ').trim()
 
+/**
+ * Depuis le lot F1 (2026-09-30, sceau levé sur décision de l'auteur), la case ne porte plus de
+ * boutons : un toucher sur la case ouvre la fenêtre de ses gestes, où vit la réponse. La question,
+ * elle, reste lue sur la carte.
+ */
 function bouton(carte: HTMLElement, motif: RegExp, sujet: string): HTMLButtonElement {
-  const tous = [...carte.querySelectorAll('button')]
+  const ouvreurs = [...carte.querySelectorAll('button[aria-haspopup="dialog"]')]
+  expect(ouvreurs.length, `${sujet} : la case doit porter un seul toucher qui ouvre ses gestes`).toBe(1)
+  fireEvent.click(ouvreurs[0]!)
+  const fenetre = screen.getByRole('dialog')
+  const tous = [...fenetre.querySelectorAll('button')]
   const trouves = tous.filter((b) => motif.test(libelleDe(b)))
   expect(
     trouves.length,
-    `${sujet} : il faut exactement un bouton ${motif} dans la case. Boutons vus : ` +
+    `${sujet} : il faut exactement un bouton ${motif} dans la fenêtre de la case. Boutons vus : ` +
       tous.map(libelleDe).join(' / ')
   ).toBe(1)
   return trouves[0]!

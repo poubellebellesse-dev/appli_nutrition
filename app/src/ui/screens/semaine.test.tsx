@@ -74,9 +74,25 @@ async function composerSemaine() {
   await screen.findByText('Proposer une autre semaine')
 }
 
-/** La carte d'un créneau, à partir d'un de ses deux boutons (« Changer »/« Choisir » ou « Garder »). */
-function carteDuBouton(bouton: HTMLElement): HTMLElement {
-  return bouton.parentElement!.parentElement!
+/**
+ * Ouvre la fenêtre des gestes de la case n° `rang` de la frise (lot F1) : la case ne porte plus
+ * aucun bouton, un toucher ouvre la fenêtre où vivent tous les gestes du repas.
+ */
+function ouvrirGestes(rang = 0): HTMLElement {
+  fireEvent.click(screen.getAllByText('Voir les gestes de ce repas')[rang]!.closest('button')!)
+  return screen.getByRole('dialog')
+}
+
+/** Ouvre « Choisir moi-même » depuis la fenêtre des gestes de la première case. */
+async function ouvrirChoix(): Promise<HTMLElement> {
+  fireEvent.click(within(ouvrirGestes()).getByText('Choisir moi-même'))
+  return screen.findByRole('dialog')
+}
+
+/** Ouvre la fenêtre des réglages de la semaine (⚙ de l'en-tête, lot F1). */
+function ouvrirReglages(): HTMLElement {
+  fireEvent.click(screen.getByRole('button', { name: 'Réglages de la semaine' }))
+  return screen.getByRole('dialog')
 }
 
 describe('semaine — au premier lancement', () => {
@@ -104,19 +120,26 @@ describe('semaine — composer un plan', () => {
     const creneauxServis = new Set(enregistre!.entries.map((e) => `${e.slot.date}|${e.slot.creneau}`))
     expect(creneauxServis.size).toBe(14)
     expect(enregistre!.entries.some((e) => e.recipeId !== null)).toBe(true)
-    expect(document.querySelectorAll('a[href^="#/recette/"]').length).toBeGreaterThan(0)
+    // Une case par créneau servi, chacune un seul toucher (lot F1).
+    expect(screen.getAllByText('Voir les gestes de ce repas')).toHaveLength(14)
   })
 })
 
 describe('semaine — les réglages', () => {
-  it('sont AU-DESSUS de « Proposer une autre semaine » — ordre réel du DOM', async () => {
-    // Le sujet de la correction : le bouton vivait dans l'en-tête, AVANT les réglages qu'il
-    // consomme. On vérifie la position relative des nœuds, pas seulement leur présence.
+  it('s’ouvrent en fenêtre depuis ⚙, à côté de « Proposer une autre semaine » (lot F1)', async () => {
+    // L'ancien défaut — le bouton vivait AVANT les réglages qu'il consomme — ne peut plus se
+    // reproduire : les deux sont côte à côte dans l'en-tête, et les réglages ne prennent plus de
+    // place au-dessus de la frise tant qu'on ne les a pas ouverts.
     await composerSemaine()
-    const champJours = screen.getByLabelText(/Nombre de jours/)
-    const bouton = screen.getByText('Proposer une autre semaine')
-    const relation = champJours.compareDocumentPosition(bouton)
-    expect(Boolean(relation & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true)
+    expect(screen.queryByLabelText(/Nombre de jours/)).toBeNull()
+    const engrenage = screen.getByRole('button', { name: 'Réglages de la semaine' })
+    expect(engrenage.getAttribute('aria-haspopup')).toBe('dialog')
+    expect(engrenage.parentElement).toBe(
+      screen.getByText('Proposer une autre semaine').closest('button')!.parentElement
+    )
+    const fenetre = ouvrirReglages()
+    expect(within(fenetre).getByLabelText(/Nombre de jours/)).toBeDefined()
+    expect(within(fenetre).getByLabelText('Repas par jour')).toBeDefined()
   })
 
   it('changer le nombre de jours réplanifie l’écran ET le plan enregistré', async () => {
@@ -130,6 +153,7 @@ describe('semaine — les réglages', () => {
     // ▶ Le test suivant lit `readLatestPlan` sans difficulté : celui-ci n'avait aucune raison de
     // s'en priver. On attend le PLAN ENREGISTRÉ, puis on vérifie que l'écran le suit.
     await composerSemaine()
+    ouvrirReglages()
     const champJours = screen.getByLabelText(/Nombre de jours/) as HTMLInputElement
     fireEvent.change(champJours, { target: { value: '3' } })
     fireEvent.blur(champJours)
@@ -142,6 +166,7 @@ describe('semaine — les réglages', () => {
 
   it('changer « Repas par jour » ajoute les créneaux correspondants au plan enregistré', async () => {
     await composerSemaine()
+    ouvrirReglages()
     const selectRepas = screen.getByLabelText('Repas par jour') as HTMLSelectElement
     fireEvent.change(selectRepas, { target: { value: '3' } })
     await waitFor(() => {
@@ -177,7 +202,7 @@ describe('semaine — changer un plat', () => {
     // dont le résultat dépend de la TAILLE du catalogue ne vérifiait pas ce qu'il annonçait.
     const creneauCible = `${premier.slot.date}|${premier.slot.creneau}|`
 
-    fireEvent.click(screen.getAllByText('Changer')[0]!)
+    fireEvent.click(within(ouvrirGestes()).getByText('Changer'))
 
     await waitFor(() => {
       const apres = new Map(readLatestPlan(baseCourante())!.entries.map((e) => [cle(e), e.recipeId]))
@@ -206,16 +231,15 @@ describe('semaine — les verrous', () => {
     // « Changer » lui reste interdit.
     await composerSemaine()
 
-    const boutonGarder = screen.getAllByText('Garder')[0]!.closest('button') as HTMLButtonElement
-    const carte = carteDuBouton(boutonGarder)
-
-    fireEvent.click(boutonGarder)
-    await waitFor(() => expect(boutonGarder.getAttribute('aria-pressed')).toBe('true'))
+    fireEvent.click(within(ouvrirGestes()).getByText('Garder'))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    const fenetre = ouvrirGestes()
+    expect(within(fenetre).getByText('Relâcher').closest('button')!.getAttribute('aria-pressed')).toBe('true')
 
     // Un créneau verrouillé est aussi invisible pour « Changer » — sinon on pourrait remplacer à la
     // main ce qu'on vient de dire vouloir garder.
-    const boutonChanger = [...carte.querySelectorAll('button')].find((b) => b.textContent === 'Changer')!
-    expect(boutonChanger.disabled).toBe(true)
+    expect((within(fenetre).getByText('Changer').closest('button') as HTMLButtonElement).disabled).toBe(true)
+    fireEvent.click(within(fenetre).getByText(/Retour/))
 
     // ⚠️ MÊME PIÈGE QUE PLUS HAUT : on retrouve le créneau gardé par sa (date, créneau), pas par
     // son indice. Une régénération ne rend pas forcément le même NOMBRE d'entrées — un plat sans
@@ -371,19 +395,16 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     await composerSemaine()
 
     // « Changer » sur un créneau rempli, « Proposer » sur un vide : les deux tirent, et aucun des
-    // deux ne prétend choisir. « Choisir » existe à côté, et ouvre la fenêtre.
-    expect(screen.getAllByText('Changer').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Choisir').length).toBeGreaterThan(0)
-    for (const bouton of screen.getAllByText('Choisir')) {
-      expect(bouton.closest('button')!.getAttribute('aria-haspopup')).toBe('dialog')
-    }
+    // deux ne prétend choisir. « Choisir moi-même » existe à côté, et ouvre la fenêtre.
+    const fenetre = ouvrirGestes()
+    expect(within(fenetre).getByText('Changer')).toBeDefined()
+    expect(within(fenetre).queryByText('Choisir')).toBeNull()
+    expect(within(fenetre).getByText('Choisir moi-même').closest('button')!.getAttribute('aria-haspopup')).toBe('dialog')
   })
 
   it('ouvre une fenêtre à trois sources, et le titre dit OÙ le plat se posera', async () => {
     await composerSemaine()
-    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
-
-    const dialogue = await screen.findByRole('dialog')
+    const dialogue = await ouvrirChoix()
     expect(within(dialogue).getByText(/Choisir un plat —/)).toBeDefined()
     expect(within(dialogue).getByRole('tab', { name: 'Chercher une recette' })).toBeDefined()
     expect(within(dialogue).getByRole('tab', { name: 'Avec ce que j’ai' })).toBeDefined()
@@ -399,8 +420,7 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     const avant = readLatestPlan(baseCourante())!.entries
     const premier = avant.find((e) => e.service !== 'accompagnement')!
 
-    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
-    const dialogue = await screen.findByRole('dialog')
+    const dialogue = await ouvrirChoix()
 
     // La première recette proposée par la fenêtre, quelle qu'elle soit — on ne teste pas le
     // classement de `browseRecipes` ici, seulement que le clic pose CE plat-là.
@@ -430,8 +450,7 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     const avant = readLatestPlan(baseCourante())!.entries
     const premier = avant.find((e) => e.service !== 'accompagnement')!
 
-    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
-    const dialogue = await screen.findByRole('dialog')
+    const dialogue = await ouvrirChoix()
     fireEvent.click(within(dialogue).getByRole('tab', { name: 'Un plat préparé' }))
 
     const champ = within(dialogue).getByRole('textbox')
@@ -456,8 +475,7 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     // déclenche plus sur cette journée, et l'utilisateur ne peut pas le deviner. Formulé comme un
     // fait sur ce que l'application SAIT, jamais comme un reproche sur ce qui est mangé (principe 6).
     await composerSemaine()
-    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
-    const dialogue = await screen.findByRole('dialog')
+    const dialogue = await ouvrirChoix()
     fireEvent.click(within(dialogue).getByRole('tab', { name: 'Un plat préparé' }))
 
     // Annoncé AVANT le geste, dans la fenêtre.
@@ -466,8 +484,9 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     fireEvent.change(within(dialogue).getByRole('textbox'), { target: { value: 'Restaurant' } })
     fireEvent.click(within(dialogue).getByText('Poser ce plat'))
 
-    // Et rappelé APRÈS, sur la carte du créneau.
-    await waitFor(() => expect(screen.getByText(/l’application ne connaît pas ce qu’il apporte/)).toBeDefined())
+    // Et rappelé APRÈS, dans la fenêtre du créneau (lot F1 : la case ne porte que le nom).
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(within(ouvrirGestes()).getByText(/l’application ne connaît pas ce qu’il apporte/)).toBeDefined()
   })
 
   it('⛔ NE DEMANDE NI CALORIES NI QUANTITÉ — c’est l’arbitrage, pas un manque', async () => {
@@ -476,8 +495,7 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     // « quantité mangée » est en outre nommément interdit par §6.5 ARCHITECTURE. Si ce test rougit,
     // quelqu'un a rouvert une décision tranchée en ajoutant un champ « pendant qu'on y est ».
     await composerSemaine()
-    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
-    const dialogue = await screen.findByRole('dialog')
+    const dialogue = await ouvrirChoix()
     fireEvent.click(within(dialogue).getByRole('tab', { name: 'Un plat préparé' }))
 
     expect(within(dialogue).queryAllByRole('spinbutton')).toHaveLength(0)
@@ -486,8 +504,7 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
 
   it('un libellé blanc ne pose rien — un créneau occupé par rien éteindrait l’alerte en silence', async () => {
     await composerSemaine()
-    fireEvent.click(screen.getAllByText('Choisir')[0]!.closest('button')!)
-    const dialogue = await screen.findByRole('dialog')
+    const dialogue = await ouvrirChoix()
     fireEvent.click(within(dialogue).getByRole('tab', { name: 'Un plat préparé' }))
 
     fireEvent.change(within(dialogue).getByRole('textbox'), { target: { value: '   ' } })
@@ -498,13 +515,10 @@ describe('semaine — « Choisir » CHOISIT, il ne tire pas (décision 49)', () 
     // §7.2 : un créneau gardé est « invisible pour toute replanification ». Un geste manuel ne doit
     // pas être le chemin par lequel on écrase ce qu'on vient de dire vouloir garder.
     await composerSemaine()
-    const boutonGarder = screen.getAllByText('Garder')[0]!.closest('button') as HTMLButtonElement
-    const carte = carteDuBouton(boutonGarder)
+    fireEvent.click(within(ouvrirGestes()).getByText('Garder'))
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
 
-    fireEvent.click(boutonGarder)
-    await waitFor(() => expect(boutonGarder.getAttribute('aria-pressed')).toBe('true'))
-
-    const boutonChoisir = [...carte.querySelectorAll('button')].find((b) => b.textContent === 'Choisir')!
+    const boutonChoisir = within(ouvrirGestes()).getByText('Choisir moi-même').closest('button') as HTMLButtonElement
     expect(boutonChoisir.disabled).toBe(true)
   })
 })
