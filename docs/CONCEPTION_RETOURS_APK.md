@@ -71,7 +71,9 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **F1** | La semaine en frise, les gestes dans une fenêtre | ✅ **LIVRÉ le 2026-10-01** (`4d8e198`) |
 | **F2** | Semaine à la main (＋ par case) et « Vider la semaine » | ✅ **LIVRÉ le 2026-10-01** (`e729540`) |
 | **F3** | « Proposer une autre semaine » ne marche pas une deuxième fois | à écrire, après F2 — reproduire d'abord |
-| **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
+| **Tutoriel** | Le tutoriel lui-même : bulle, « Précédent », étape 3 hors écran | à écrire, après F3 |
+| **Courses** | « Imprimer » et les exports de la liste de courses : PDF, texte, partage | à écrire, après le tutoriel — dépendance `@capacitor/share` probable, à signaler |
+| **G** | Apparence : justification, police, logo, transitions | à écrire, en dernier (se juge à l'œil) |
 | **H** | La quantité injectée mange le nom de l'aliment | ✅ **LIVRÉ le 2026-09-19** (`c22f03c`) |
 | **I** | « Savoir » devient « Gestes » : l'onglet ne garde que le lexique | ✅ **LIVRÉ le 2026-09-26** (`6c60e5a`) |
 | **J** | Corrections rapides de la passe du 2026-09-30 | ✅ **LIVRÉ le 2026-09-30** (`94a2d8f`) |
