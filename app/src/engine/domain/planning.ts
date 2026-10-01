@@ -55,6 +55,12 @@ export type MotifVide =
    * mangé là où il était. Posé par `decalerPlat`, jamais par un tirage.
    */
   | 'decale'
+  /**
+   * Pas une cause de tirage : la case est vide parce que l'utilisateur la remplit lui-même — semaine
+   * ouverte par « Je la remplis moi-même », ou vidée par « Vider la semaine » (lot `F2`). Posé par
+   * l'écran, jamais par le moteur.
+   */
+  | 'a_remplir'
 
 /** Fenêtre glissante de 2 à 14 jours, à partir de n'importe quel jour (§7.1, §9 décision 9 ENGINE). */
 export interface WeekPlanRequest {

@@ -26,11 +26,13 @@ import type { MotifVide } from '../engine/domain/index.js'
  * le lot plutôt que d'afficher un texte de secours qui ne voudrait rien dire.
  */
 export function phraseDuMotif(motif: MotifVide | null): string | null {
-  if (motif === null) return null
+  // ⚠️ `a_remplir` N'A PAS DE PHRASE, EXPRÈS (lot `F2`) : la case n'est pas vide faute de candidat,
+  // elle attend son plat. Elle porte le ＋, et rien ne s'excuse sous lui.
+  if (motif === null || motif === 'a_remplir') return null
   return PHRASES[motif] ?? null
 }
 
-const PHRASES: Readonly<Record<MotifVide, string>> = {
+const PHRASES: Readonly<Record<Exclude<MotifVide, 'a_remplir'>, string>> = {
   // --- Cause 1 : les couches d'exclusion ont tout écarté ---------------------------------------
   // ⚠️ LA COUCHE DOMINANTE EST NOMMÉE PARCE QU'ELLE EST LA SEULE ACTIONNABLE. « Aucune recette ne
   // passe vos critères » est vrai et inutile : il y en a sept, et l'utilisateur ne saura pas

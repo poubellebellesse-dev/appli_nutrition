@@ -69,7 +69,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **D** | Navigation et retour : le bouton retour d’Android | ✅ **LIVRÉ le 2026-09-30** (`c155a1c`) |
 | **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`) |
 | **F1** | La semaine en frise, les gestes dans une fenêtre | ✅ **LIVRÉ le 2026-10-01** (`4d8e198`) |
-| **F2** | Semaine à la main (＋ par case) et « Vider la semaine » | à écrire, après F1 |
+| **F2** | Semaine à la main (＋ par case) et « Vider la semaine » | ✅ **LIVRÉ le 2026-10-01** (non commité) |
 | **F3** | « Proposer une autre semaine » ne marche pas une deuxième fois | à écrire, après F2 — reproduire d'abord |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
 | **H** | La quantité injectée mange le nom de l'aliment | ✅ **LIVRÉ le 2026-09-19** (`c22f03c`) |
@@ -1174,6 +1174,115 @@ et je le dis. `semaine.test.tsx` (non scellé) sera réécrit.
 ⚠️ **Ce qu'aucun test ne démontrera** : que la frise tienne sur la largeur d'un téléphone à
 3 repas, que le nom sur deux lignes reste lisible, que la vignette se touche au pouce — jsdom ne
 rend pas le CSS. **À voir sur APK.**
+
+### Lot F2 — la semaine à la main, et « Vider la semaine » — ✅ **LIVRÉ le 2026-10-01** (non commité)
+
+> ✅ **LIVRÉ LE 2026-10-01, PAS ENCORE COMMITÉ.** `lot-F2` **10/10 verts**, aucun sceau levé. Suite
+> complète à 17 h 23 → 17 h 33 : **2 741 / 1 failed** (2 742, 145 fichiers), le rouge étant
+> `retour-8` « semis » sous charge (20,1 s pour 15 s), vert seul à 17 h 33 (43/43). Écart avec F1 :
+> +10 tests, +1 fichier = `lot-F2.test.tsx`. Typecheck propre, `vite build` ✓ 7,43 s, `plan-stress`
+> 20/20 (17 h 18-17 h 20). ⚠️ Un passage antérieur (17 h 06-17 h 18, machine chargée par une suite
+> d'un autre projet) a rendu **5 fichiers en échec, 2 rouges, 20 sautés** — rouges : `retour-8` et
+> `retour-2` clause 1 (15,2 s, vert seul en 9,3 s) ; les trois autres fichiers n'ont pas été
+> nommés, la sortie était filtrée ; non reproduit au passage suivant. Cause non établie.
+> **La seconde moitié du lot ne se prouve pas en jsdom** : la visibilité du ＋ au pouce, à voir sur APK.
+
+> **Brief ouvert le 2026-10-01.** Source : passe APK du 2026-09-30, découpage F1 / F2 / F3 du lot F
+> (voir Lot F1). Arbitrages de l'auteur, 2026-10-01 :
+> **(1)** l'écran de départ ouvre **deux portes** — « Composer ma semaine » (le moteur remplit) et
+> « Je la remplis moi-même » (frise vide, un ＋ par case) ; **(2)** le ＋ d'une case vide ouvre
+> **directement** « Choisir un plat », sans passer par la fenêtre des gestes ; **(3)** « Vider la
+> semaine » vit **dans ⚙**, demande **confirmation**, et vide **tout**, repas gardés compris.
+
+#### Ce que le code dit
+
+| Observation | Cause mesurée |
+|---|---|
+| L'écran de départ n'a qu'un geste : « Composer ma semaine », qui appelle le moteur | `semaine.tsx`, écran vide : un bouton `composer-semaine` et le lien vers le frigo. |
+| Une case vide ne propose rien de direct : sa vignette ouvre la fenêtre des gestes (lot F1) | `Creneau` traite vide et rempli de la même façon. |
+| Aucun geste ne vide la semaine | Aucun appelant n'écrit un plan sans repas. |
+| Un plan sans repas se stocke : un créneau vide est une ligne `recipe_id NULL`, `portions 0` | `user-schema.ts`, `meal_plan_entry_v2`, `CHECK` de la v2. **Aucune migration nécessaire.** |
+| Supprimer la ligne `meal_plan` emporterait la liste de courses (`ON DELETE CASCADE`) | `shopping_list.plan_id`. D'où le choix ci-dessous : vider **réécrit** le plan, il ne le supprime pas. |
+
+#### Les choix que le brief tranche (pour que le codeur n'ait pas à deviner)
+
+- **Une semaine sans aucun repas, c'est l'écran de départ.** Après « Vider », et au remontage d'une
+  semaine manuelle restée vide. Juste après « Je la remplis moi-même », la frise vide s'affiche
+  (état de l'écran), même si elle ne contient encore rien.
+  **Précisé au codage (2026-10-01)** : le critère est « toutes les cases portent `a_remplir` », pas
+  « aucun repas servi » — une semaine que le moteur n'a pu remplir nulle part garde sa frise et ses
+  motifs (`retour-5b` clauses 10-11, rouges sous la première lecture).
+- **« Je la remplis moi-même » écrit le plan tout de suite** : jours × repas par jour, réglages de
+  l'écran de départ, chaque créneau vide. **Le moteur n'est pas appelé.**
+- **« Vider » garde le même plan** (même identifiant, mêmes jours, mêmes repas par jour) et met
+  chaque créneau à vide : ni `DELETE`, ni cascade, ni migration.
+- **La confirmation dit combien** : « N repas » où N = créneaux servis (plat du catalogue ou plat
+  préparé), gardés compris. Deux réponses : annuler, vider.
+
+#### Fini quand — `tests/scelles/lot-F2.test.tsx`
+
+1. **Deux portes.** Sans plan en base, l'écran montre « Composer ma semaine » **et** « Je la remplis
+   moi-même » ; rien n'est écrit en base au montage.
+2. **La porte manuelle.** Réglée à 3 jours et 3 repas, « Je la remplis moi-même » écrit en base un
+   plan de **9 créneaux, tous vides** (ni plat, ni plat préparé, ni gardé, ni reste), sur **trois
+   jours consécutifs à partir d'aujourd'hui** ; la frise montre 3 journées. Réglée à 4 jours et
+   1 repas (clause 6) : **4 créneaux**, un seul repas par jour. **Un autre jour** (horloge au
+   mercredi 2026-09-16), 5 jours × 2 repas : **10 créneaux vides, du 16 au 20**.
+3. **Le ＋.** Chaque case vide porte **un seul** contrôle, qui affiche « ＋ » (ou « + ») et annonce une
+   fenêtre. Le toucher ouvre **une seule** fenêtre, « Choisir un plat — <jour> · <repas> », avec ses
+   onglets. Y toucher un plat l'écrit **sur cette case seulement** (les 8 autres restent vides), la
+   fenêtre se ferme, la case montre le nom ; son contrôle ouvre alors la fenêtre des gestes, plus
+   le choix.
+4. **« Vider » demande.** Semaine composée (2 repas, une case gardée, **une case « dehors »** —
+   plat préparé sans recette ni accompagnement) : ⚙ porte « Vider la
+   semaine » ; le toucher ouvre une confirmation qui dit « N repas » (N recalculé du plan) avec deux
+   réponses. « Annuler » → plan en base **identique**, frise toujours là. **Second compte** : semaine
+   manuelle 3 × 2 avec **un** plat posé au ＋ → la confirmation dit « 1 repas » (le N de la semaine
+   composée est exigé > 1, pour que les deux comptes diffèrent). Le semis exige aussi que les deux
+   comptes naïfs — lignes avec recette, créneaux avec recette — tombent **à côté** de N.
+5. **« Vider » vide.** Confirmer → même identifiant de plan, **aucun** créneau servi, **aucun**
+   gardé ; l'écran revient aux deux portes.
+6. **Ça tient au remontage.** Après « Vider » : les deux portes. Après une semaine manuelle restée
+   vide : les deux portes. Après une semaine manuelle avec un plat : la frise, avec ce plat.
+7. **Rien d'autre ne bouge.** « Vider » ne touche ni `meal_history` ni `user_signal` (comptes de
+   lignes identiques) ; `USER_SCHEMA_VERSION` inchangé (21).
+
+#### Ce que le lot ne touche pas
+
+Le moteur, `choisir-plat.tsx` (la fenêtre de choix est réutilisée telle quelle), le tirage de
+« Proposer une autre semaine » (F3), la liste de courses (elle se recalcule depuis le plan), les
+ancres de la visite (`composer-semaine` reste sur « Composer ma semaine »).
+
+⚠️ **Ce qu'aucun test ne démontrera** : que le ＋ se voie et se touche au pouce dans une frise à
+3 repas — **à voir sur APK**.
+
+**Attaque 1 (2026-10-01)** : deux implémentations fausses passaient — « N repas » en constante (un
+seul plan semé), et la grille manuelle codée en dur pour (3,3) et (3,2) sans dates vérifiées.
+Fermées : clause 4 bis (« 1 repas » sur une semaine manuelle), dates consécutives depuis
+aujourd'hui en clause 2, géométrie 4 × 1 en clause 6. **Non repris, en dette** : la liste de
+courses après « Vider » (elle se recalcule depuis le plan, hors périmètre) ; les convives et ⚙ sur
+une semaine manuelle (F1 inchangé).
+
+**Décision de l'auteur (2026-10-01, après l'attaque 2)** : une case vide à la main — porte manuelle
+ou « Vider » — porte un **motif neuf, `a_remplir`**, ajouté au type `MotifVide` (une ligne de type
+dans `engine/domain`, aucun import ; aucune migration : `motif_vide` est un `TEXT` dont le `CHECK`
+ne teste que la présence). Clauses 2 et 5 l'exigent. Une telle case montre le ＋, jamais une
+phrase d'explication du moteur.
+
+**Attaque 2 (2026-10-01)** : deux implémentations fausses passaient encore — la grille manuelle en
+table (dates du 2026-09-07 en dur, trois géométries), et « N repas » compté par lignes ou sans le
+plat préparé. Fermées : clause 2 rejouée un autre jour (mercredi 16, 5 × 2) ; clause 4 semée avec
+un repas dehors et des comptes naïfs exigés différents de N. **Non repris, en dette** : changer
+« Repas par jour » dans ⚙ sur une semaine manuelle recompose par le moteur (comportement F1,
+inchangé) ; pluriel « repas » à N = 0 sans objet (la
+confirmation ne s'ouvre pas sur une semaine déjà vide, l'écran étant alors celui des portes).
+
+**Examen :** `tests/scelles/lot-F2.test.tsx`, 10 tests, **10 rouges** au 2026-10-01 à 16 h 45 (8 au
+premier passage, 9 après l'attaque 1),
+chacun sur l'absence du geste qu'il mesure (pas de « Je la remplis moi-même », pas de « Vider la
+semaine » dans ⚙) — montage, semis et ouverture de ⚙ passent avant ; **aucun « SEMIS »**.
+**Comptes avant** : suite entière 2 731 / 1 sur 144 fichiers (relevé du lot F1,
+2026-10-01 à 15 h 42 ; le rouge est `retour-8` « semis » sous charge), `USER_SCHEMA_VERSION` 21.
 
 ### Lot H — la quantité injectée mange le nom de l'aliment — ✅ **LIVRÉ le 2026-09-19** (`c22f03c`)
 

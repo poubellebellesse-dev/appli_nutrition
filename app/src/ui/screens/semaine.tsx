@@ -23,7 +23,7 @@ import type {
   UserProfile,
   WeekPlan,
 } from '../../engine/domain/index.js'
-import { DEFAULT_PLAN_DAYS, MAX_PLAN_DAYS, MIN_PLAN_DAYS } from '../../engine/planning/plan-week.js'
+import { DEFAULT_PLAN_DAYS, MAX_PLAN_DAYS, MIN_PLAN_DAYS, addDays } from '../../engine/planning/plan-week.js'
 import {
   cleSansDecalage,
   readDisplay,
@@ -171,6 +171,66 @@ function planifier(socle: Socle, reglages: Reglages, verrous: readonly MealPlanE
   return { plan, profil, nomDe: (id) => socle.catalogue.recipes.get(id)?.nom ?? id }
 }
 
+/** Une case vide que l'utilisateur remplira lui-même (lot F2) : ni plat, ni motif de tirage. */
+function caseARemplir(slot: SlotRef): MealPlanEntry {
+  return {
+    slot,
+    recipeId: null,
+    horsCatalogue: null,
+    motifVide: 'a_remplir',
+    portions: 0,
+    locked: false,
+    isLeftover: false,
+    service: null,
+  }
+}
+
+/**
+ * « Je la remplis moi-même » (lot F2) : jours × repas, chaque créneau vide, et rien d'autre.
+ *
+ * ⚠️ LE MOTEUR N'EST PAS APPELÉ, c'est la porte. L'identifiant suit la forme de `planWeek`
+ * (`plan-<début>-<jours>`) : une semaine manuelle et une semaine composée sur la même fenêtre sont
+ * le même planning, et `savePlan` le réécrit par `ON CONFLICT`, sans cascade.
+ */
+function semaineVierge(socle: Socle, reglages: Reglages): Vue {
+  const date = aujourdhuiIso()
+  const creneaux = creneauxDuRythme(reglages.repasParJour)
+  const entries: MealPlanEntry[] = []
+  for (let jour = 0; jour < reglages.jours; jour++) {
+    for (const creneau of creneaux) entries.push(caseARemplir({ date: addDays(date, jour), creneau }))
+  }
+  const plan: WeekPlan = {
+    id: `plan-${date}-${reglages.jours}`,
+    startDate: date,
+    days: reglages.jours,
+    seed: reglages.graine,
+    entries,
+    warnings: [],
+  }
+  savePlan(socle.db, plan, maintenantIso())
+  reprogrammerLesRappels(socle, plan)
+  return { plan, profil: profilCourant(socle.db, date), nomDe: (id) => socle.catalogue.recipes.get(id)?.nom ?? id }
+}
+
+/**
+ * « Vider la semaine » (lot F2) : MÊME plan, mêmes créneaux, tous vides — repas gardés compris.
+ *
+ * ⚠️ RÉÉCRIRE, JAMAIS SUPPRIMER. `shopping_list.plan_id` est en `ON DELETE CASCADE` : supprimer le
+ * plan emporterait la liste de courses. Les accompagnements partent avec leur plat — une case vide
+ * n'a qu'une ligne.
+ */
+function vider(plan: WeekPlan): WeekPlan {
+  const vus = new Set<string>()
+  const entries: MealPlanEntry[] = []
+  for (const e of plan.entries) {
+    const cle = `${e.slot.date}|${e.slot.creneau}`
+    if (vus.has(cle)) continue
+    vus.add(cle)
+    entries.push(caseARemplir(e.slot))
+  }
+  return { ...plan, entries, warnings: [] }
+}
+
 /**
  * Reprend le dernier plan enregistré — et RIEN d'autre s'il n'y en a pas.
  *
@@ -193,6 +253,14 @@ function reprendre(
     rythme === null ? reglages : { ...reglages, repasParJour: rythme.repasParJour }
 
   if (enregistre === null) return { vue: null, reglages: defauts }
+  // ⚠️ UNE SEMAINE VIDÉE, OU OUVERTE À LA MAIN ET LAISSÉE TELLE QUELLE, EST L'ÉCRAN DE DÉPART (lot
+  // F2). Ses jours et ses repas restent les réglages proposés.
+  // ⛔ « TOUTES À REMPLIR », PAS « AUCUN REPAS » : une semaine que le moteur n'a pu remplir nulle
+  // part est vide AUSSI, mais chacune de ses cases dit pourquoi (`retour-5b`) — les deux portes
+  // effaceraient ces motifs.
+  if (enregistre.entries.every((e) => e.motifVide === 'a_remplir')) {
+    return { vue: null, reglages: { ...defauts, jours: enregistre.days, repasParJour: nombreDeRepas(enregistre) } }
+  }
 
   return {
     // `warnings` est vide à la lecture — on le reconstitue ici, sinon l'alerte de §6.5
@@ -231,6 +299,8 @@ export function Semaine() {
   const [ouvert, setOuvert] = useState<SlotRef | null>(null)
   /** La fenêtre ⚙ : jours, repas, convives et légende (lot F1). */
   const [reglagesOuverts, setReglagesOuverts] = useState(false)
+  /** La confirmation de « Vider la semaine » (lot F2). */
+  const [aVider, setAVider] = useState(false)
 
   const echouer = useCallback((erreur: unknown) => {
     setEtat({ phase: 'erreur', message: erreur instanceof Error ? erreur.message : String(erreur) })
@@ -281,6 +351,39 @@ export function Semaine() {
     },
     [etat, echouer]
   )
+
+  /** « Je la remplis moi-même » : la frise vide s'affiche, un ＋ par case (lot F2). */
+  const remplirSoiMeme = useCallback(
+    (suivants: Reglages) => {
+      chargerSocle()
+        .then((socle) => {
+          setReglages(suivants)
+          setRefus(new Map())
+          oublierTousLesGestes()
+          const vue = semaineVierge(socle, suivants)
+          setSansDecalage(readSansDecalage(socle.db, vue.plan.id))
+          setEtat({ phase: 'pret', vue })
+        })
+        .catch(echouer)
+    },
+    [echouer]
+  )
+
+  /** « Vider la semaine », confirmé : retour aux deux portes (lot F2). */
+  const viderLaSemaine = useCallback(() => {
+    if (etat.phase !== 'pret') return
+    const suivant = vider(etat.vue.plan)
+    chargerSocle()
+      .then((socle) => {
+        savePlan(socle.db, suivant, maintenantIso())
+        reprogrammerLesRappels(socle, suivant)
+        setRefus(new Map())
+        oublierTousLesGestes()
+        setAVider(false)
+        setEtat({ phase: 'vide' })
+      })
+      .catch(echouer)
+  }, [etat, echouer])
 
   /** Garder / relâcher un créneau. La composition ne change pas : les avertissements non plus. */
   const basculerVerrou = useCallback(
@@ -603,6 +706,7 @@ export function Semaine() {
         reglages={reglages}
         onChange={setReglages}
         onComposer={() => replanifier(reglages)}
+        onRemplir={() => remplirSoiMeme(reglages)}
       />
     )
   }
@@ -720,6 +824,7 @@ export function Semaine() {
                     key={creneau}
                     description={description}
                     onOuvrir={() => setOuvert({ date, creneau })}
+                    onChoisir={() => setAChoisir({ date, creneau })}
                   />
                 )
               })}
@@ -732,6 +837,44 @@ export function Semaine() {
         <Panneau titre="Réglages de la semaine" onFermer={() => setReglagesOuverts(false)}>
           <Reglage reglages={reglages} onChange={(suivants) => replanifier(suivants)} />
           <Legende />
+          {/* ⚠️ LA FENÊTRE SE FERME AVANT LA CONFIRMATION : jamais deux fenêtres empilées. */}
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => {
+              setReglagesOuverts(false)
+              setAVider(true)
+            }}
+            className="mt-5 flex min-h-tactile w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-surface px-4 text-courant font-semibold text-texte"
+          >
+            Vider la semaine
+          </button>
+        </Panneau>
+      )}
+
+      {aVider && (
+        <Panneau titre="Vider la semaine ?" onFermer={() => setAVider(false)}>
+          {/* Le compte vient du plan : plat du catalogue ou plat préparé, un créneau = un repas. */}
+          <p className="text-lecture leading-relaxed text-texte">
+            {repasServis(plan)} repas prévus seront retirés, repas gardés compris. Les cases restent,
+            vides, à remplir.
+          </p>
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setAVider(false)}
+              className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-surface px-4 text-lecture font-semibold text-texte"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={viderLaSemaine}
+              className="flex min-h-cta flex-1 items-center justify-center rounded-[--radius-cta] bg-accent-plein px-4 text-lecture font-semibold text-white"
+            >
+              Vider
+            </button>
+          </div>
         </Panneau>
       )}
 
@@ -795,10 +938,13 @@ function SemaineVide({
   reglages,
   onChange,
   onComposer,
+  onRemplir,
 }: {
   readonly reglages: Reglages
   readonly onChange: (suivants: Reglages) => void
   readonly onComposer: () => void
+  /** La seconde porte (lot F2) : une frise vide, sans le moteur. */
+  readonly onRemplir: () => void
 }) {
   return (
     <section>
@@ -820,6 +966,14 @@ function SemaineVide({
         className="mt-4 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] bg-accent-plein px-5 text-lecture font-semibold text-white"
       >
         Composer ma semaine
+      </button>
+
+      <button
+        type="button"
+        onClick={onRemplir}
+        className="mt-3 flex min-h-cta w-full items-center justify-center rounded-[--radius-cta] border border-bordure-forte bg-surface px-5 text-lecture font-semibold text-texte"
+      >
+        Je la remplis moi-même
       </button>
 
       <a
@@ -1104,9 +1258,12 @@ const estDehors = (entry: MealPlanEntry): boolean => entry.horsCatalogue === LIB
 function Creneau({
   description,
   onOuvrir,
+  onChoisir,
 }: {
   readonly description: Description
   readonly onOuvrir: () => void
+  /** Case vide : le ＋ ouvre « Choisir un plat » directement (lot F2). */
+  readonly onChoisir: () => void
 }) {
   const { entry, nom, photo, resteDepuis, question } = description
   // ⚠️ « VIDE » N'EST PAS « SANS RECETTE » depuis la décision 51. Un plat préparé porte
@@ -1188,14 +1345,30 @@ function Creneau({
           et rien ne s'ouvre seul. Les réponses sont dans la fenêtre que l'on ouvre soi-même. */}
       {question && <p className="mt-1 text-mention font-semibold text-texte">Décaler ce plat ?</p>}
 
-      <button
-        type="button"
-        aria-haspopup="dialog"
-        onClick={onOuvrir}
-        className="absolute inset-0 rounded-[--radius-carte] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-      >
-        <span className="sr-only">Voir les gestes de ce repas</span>
-      </button>
+      {/* ⚠️ UNE CASE VIDE N'A QU'UN GESTE QUI VAILLE : la remplir (lot F2). Son ＋ ouvre « Choisir un
+          plat » sans passer par la fenêtre des gestes — toujours UN seul contrôle par case. */}
+      {vide ? (
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={onChoisir}
+          className="absolute inset-0 flex items-center justify-center rounded-[--radius-carte] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <span aria-hidden="true" className="text-titre-l leading-none text-texte-doux">
+            ＋
+          </span>
+          <span className="sr-only">Choisir un plat pour ce repas</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={onOuvrir}
+          className="absolute inset-0 rounded-[--radius-carte] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <span className="sr-only">Voir les gestes de ce repas</span>
+        </button>
+      )}
     </div>
   )
 }
