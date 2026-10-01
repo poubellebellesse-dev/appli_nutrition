@@ -69,7 +69,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **D** | Navigation et retour : le bouton retour d’Android | ✅ **LIVRÉ le 2026-09-30** (`c155a1c`) |
 | **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`) |
 | **F1** | La semaine en frise, les gestes dans une fenêtre | ✅ **LIVRÉ le 2026-10-01** (`4d8e198`) |
-| **F2** | Semaine à la main (＋ par case) et « Vider la semaine » | ✅ **LIVRÉ le 2026-10-01** (non commité) |
+| **F2** | Semaine à la main (＋ par case) et « Vider la semaine » | ✅ **LIVRÉ le 2026-10-01** (`e729540`) |
 | **F3** | « Proposer une autre semaine » ne marche pas une deuxième fois | à écrire, après F2 — reproduire d'abord |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
 | **H** | La quantité injectée mange le nom de l'aliment | ✅ **LIVRÉ le 2026-09-19** (`c22f03c`) |
@@ -1175,9 +1175,9 @@ et je le dis. `semaine.test.tsx` (non scellé) sera réécrit.
 3 repas, que le nom sur deux lignes reste lisible, que la vignette se touche au pouce — jsdom ne
 rend pas le CSS. **À voir sur APK.**
 
-### Lot F2 — la semaine à la main, et « Vider la semaine » — ✅ **LIVRÉ le 2026-10-01** (non commité)
+### Lot F2 — la semaine à la main, et « Vider la semaine » — ✅ **LIVRÉ le 2026-10-01** (`e729540`)
 
-> ✅ **LIVRÉ LE 2026-10-01, PAS ENCORE COMMITÉ.** `lot-F2` **10/10 verts**, aucun sceau levé. Suite
+> ✅ **LIVRÉ LE 2026-10-01, COMMITÉ EN `e729540`.** `lot-F2` **10/10 verts**, aucun sceau levé. Suite
 > complète à 17 h 23 → 17 h 33 : **2 741 / 1 failed** (2 742, 145 fichiers), le rouge étant
 > `retour-8` « semis » sous charge (20,1 s pour 15 s), vert seul à 17 h 33 (43/43). Écart avec F1 :
 > +10 tests, +1 fichier = `lot-F2.test.tsx`. Typecheck propre, `vite build` ✓ 7,43 s, `plan-stress`
