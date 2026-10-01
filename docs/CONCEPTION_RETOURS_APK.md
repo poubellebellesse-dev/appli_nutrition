@@ -68,7 +68,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **C** | La fiche recette, et le compte brut de l'écran « Recettes » | ✅ **LIVRÉ le 2026-09-14** (`28dfea8`) |
 | **D** | Navigation et retour : le bouton retour d’Android | ✅ **LIVRÉ le 2026-09-30** (`c155a1c`) |
 | **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`) |
-| **F1** | La semaine en frise, les gestes dans une fenêtre | ✅ **codé le 2026-09-30**, non commité |
+| **F1** | La semaine en frise, les gestes dans une fenêtre | ✅ **LIVRÉ le 2026-10-01** (`4d8e198`) |
 | **F2** | Semaine à la main (＋ par case) et « Vider la semaine » | à écrire, après F1 |
 | **F3** | « Proposer une autre semaine » ne marche pas une deuxième fois | à écrire, après F2 — reproduire d'abord |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, après F |
@@ -1047,9 +1047,9 @@ dans un texte — toujours dans la liste complète, du plus long au plus court.
 Les 8 clauses passent sur le catalogue réel. Le compte relevé au brief — **3 001 couples affichés pour
 2 217 attendus** — est ramené à l'égalité par la clause 1, qui recalcule l'attendu recette par recette.
 
-### Lot F1 — la semaine en frise, les gestes dans une fenêtre
+### Lot F1 — la semaine en frise, les gestes dans une fenêtre — ✅ **LIVRÉ le 2026-10-01** (`4d8e198`)
 
-> ✅ **CODÉ LE 2026-09-30, NON COMMITÉ.** `lot-F1` **11/11 verts**. Sceaux levés sur décision de
+> ✅ **LIVRÉ LE 2026-10-01, COMMITÉ EN `4d8e198`.** `lot-F1` **11/11 verts**. Sceaux levés sur décision de
 > l'auteur puis remis : `retour-7` et `retour-8` ouvrent la fenêtre avant de chercher leur bouton ;
 > `retour-4` cherche un chemin d'**au plus 3 clics** (au lieu de 2) — le toucher de la vignette,
 > rien d'autre de ce qu'il vérifie ne change. `semaine.test.tsx` réécrit (18/18). Suite complète à
