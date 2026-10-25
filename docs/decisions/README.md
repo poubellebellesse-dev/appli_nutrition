@@ -14,7 +14,7 @@
 | [06-communaute-contenu.md](./06-communaute-contenu.md) | Partage sans serveur, contenu Savoir | §3 |
 | [07-multi-langue.md](./07-multi-langue.md) | Structure maintenant, contenu plus tard | §3 |
 | [08-positionnement.md](./08-positionnement.md) | Analyse marché | §3 |
-| [registre.md](./registre.md) | **Questions numérotées 1 → 82**, barrées quand fermées | §4 |
+| [registre.md](./registre.md) | **Questions numérotées 1 → 84**, barrées quand fermées | §4 |
 
 Règles héritées de `ETAT.md` :
 

@@ -50,6 +50,11 @@ Le projet s'y refuse quand même — §8.7 ARCHITECTURE interdit déjà le scrap
 travail de quelqu'un parce que la loi ne l'en empêche pas n'est pas la même chose que le respecter.
 **C'est un choix, pas une obligation.** L'écrire évite de le redécouvrir comme une contrainte.
 
+✅ **AMENDÉ LE 2026-10-14, DÉCISION DE L'AUTEUR — UNE RECETTE PEUT ENTRER AVEC L'ACCORD ÉCRIT DE SON
+AUTEUR.** Le refus porte sur prendre **sans demander**. Une recette publiée sur X dont l'auteur a
+donné son accord écrit peut entrer au catalogue, créditée et sourcée ; ses photos, seulement si
+l'accord les cite. Règles et lots : [CONCEPTION_RECETTES_X.md](./CONCEPTION_RECETTES_X.md).
+
 ---
 
 ## 3. Les sources disponibles
@@ -685,7 +690,7 @@ citation de preuve qui ne le montrait pas.
 
 | Écarté | Motif |
 |---|---|
-| Scrap de blogs et de sites de recettes | §8.7 ARCHITECTURE (droit d'auteur, droit *sui generis* des bases UE, CGU), et refus assumé de prendre le travail d'autrui parce que la loi ne l'interdit pas |
+| Scrap de blogs et de sites de recettes | §8.7 ARCHITECTURE (droit d'auteur, droit *sui generis* des bases UE, CGU), et refus assumé de prendre le travail d'autrui parce que la loi ne l'interdit pas. ⚠️ **Ne vise pas une recette reprise avec l'accord écrit de son auteur** (amendement du 2026-10-14, §2) |
 | API payantes (Spoonacular, Edamam…) | Redistribution interdite et backend requis — incompatible avec « aucune donnée ne quitte l'appareil ». Déjà interdites en §8.7 |
 | Importer les 603 CC0 en bloc | 150 à 300 h de normalisation (§4). Le volume n'est pas le besoin |
 | Sourcer les 241 recettes existantes après coup | Fabriquerait une provenance (§1) |

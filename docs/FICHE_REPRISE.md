@@ -47,7 +47,8 @@ le 2026-08-21. Ce qu'elle a trouvé est trié en lots A → G dans
 (La passe de 2026-08-21, faite au navigateur, est close : `CONCEPTION_RETOURS_TEST.md`.)
 
 - ▶ **AUCUN LOT OUVERT. Les lots A, B, C, D, E, F1, F2, H, I et J sont livrés ; la suite est F3**
-  (« Proposer une autre semaine », reproduire d'abord), puis le tutoriel — ordre tranché le 2026-09-30 dans
+  (« Proposer une autre semaine » : non reproduit hors du téléphone, en attente du test de l'auteur
+  sur l'APK du 2026-10-01 — § Lot F3), puis le tutoriel — ordre tranché le 2026-09-30 dans
   [CONCEPTION_RETOURS_APK.md](./CONCEPTION_RETOURS_APK.md). Le G se juge à l'œil et vient en dernier.
 - ⚠️ **Rebâtir l'APK après les lots B → H et refaire une passe à l'œil** : ce que les tests jsdom ne
   savent pas voir ne se voit que là, et le lot A en est la démonstration.

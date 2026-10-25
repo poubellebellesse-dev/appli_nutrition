@@ -96,6 +96,8 @@ une piste a été écartée vaut souvent l'énoncé de celle qui a été retenue
 | [STRATEGIE_DISTRIBUTION.md](./STRATEGIE_DISTRIBUTION.md) | Positionnement, stores, modèle économique, marketing organique | Cadre posé, points « à confirmer » ouverts jusqu'à la publication |
 | [RETOUR_ESSAI_TELEPHONE.md](./RETOUR_ESSAI_TELEPHONE.md) | Backlog des retours utilisateur — l'essai sur un vrai appareil (2026-08-02) en §1 à §5, **et le lot `test appli.txt` de la session 8 en §6**, instruit le 2026-08-03 | 11 lots livrés ; reste bloqué par des DÉCISIONS et du CONTENU, plus par du code |
 | [SOURCES_RECETTES.md](./SOURCES_RECETTES.md) | D'où viennent les 241 recettes, quelles sources libres existent, ce que coûte un import | Sources vérifiées le 2026-08-02, aucune encore utilisée ; 4 décisions ouvertes |
+| [CONCEPTION_RECETTES_X.md](./CONCEPTION_RECETTES_X.md) | **Plan de montée** des recettes venues de X — ⛔ **elles n'entrent qu'avec l'accord écrit de leur auteur**, crédité et sourcé ; demande envoyée à la main, Grok ne fait jamais foi. 2 lots, RX1 (build) et RX2 (outil hors application) | Ouvert le 2026-10-14 ; rien de codé ; question 83 (images générées) ouverte |
+| [CONCEPTION_IMPORT_RECETTE.md](./CONCEPTION_IMPORT_RECETTE.md) | **Import d'une recette par l'utilisateur** (lien ou collage) : prototype mesuré, pourquoi aucun gabarit par site, conditions avant tout code (passe exacte, synonymes, confirmation obligatoire), 3 lots | Prototype hors dépôt, 2026-10-14/21 ; rien de codé ; mesure sur vrais posts à faire ; question 84 ouverte |
 
 > ⚠️ `RETOUR_ESSAI_TELEPHONE.md` est **un backlog, pas un état** — seule exception à la règle
 > d'unicité ci-dessus, et elle est temporaire. Ce qui s'y tranche part dans `decisions/` ; ce

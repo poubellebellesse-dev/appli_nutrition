@@ -70,7 +70,7 @@ l'auteur : on affiche le temps **non compressible**, le majorant, pas la durée 
 | **E** | Mode cuisine : une quantité dite une fois | ✅ **LIVRÉ le 2026-09-17** (`2d8fcfd`) |
 | **F1** | La semaine en frise, les gestes dans une fenêtre | ✅ **LIVRÉ le 2026-10-01** (`4d8e198`) |
 | **F2** | Semaine à la main (＋ par case) et « Vider la semaine » | ✅ **LIVRÉ le 2026-10-01** (`e729540`) |
-| **F3** | « Proposer une autre semaine » ne marche pas une deuxième fois | à écrire, après F2 — reproduire d'abord |
+| **F3** | « Proposer une autre semaine » ne marche pas une deuxième fois | non reproduit hors du téléphone (2026-10-01) — en attente du test sur l'APK du 2026-10-01, voir § Lot F3 |
 | **Tutoriel** | Le tutoriel lui-même : bulle, « Précédent », étape 3 hors écran | à écrire, après F3 |
 | **Courses** | « Imprimer » et les exports de la liste de courses : PDF, texte, partage | à écrire, après le tutoriel — dépendance `@capacitor/share` probable, à signaler |
 | **G** | Apparence : justification, police, logo, transitions | à écrire, en dernier (se juge à l'œil) |
@@ -1285,6 +1285,32 @@ chacun sur l'absence du geste qu'il mesure (pas de « Je la remplis moi-même »
 semaine » dans ⚙) — montage, semis et ouverture de ⚙ passent avant ; **aucun « SEMIS »**.
 **Comptes avant** : suite entière 2 731 / 1 sur 144 fichiers (relevé du lot F1,
 2026-10-01 à 15 h 42 ; le rouge est `retour-8` « semis » sous charge), `USER_SCHEMA_VERSION` 21.
+
+### Lot F3 — « Proposer une autre semaine » ne marche pas une deuxième fois — ⏳ **reproduction en cours, brief non écrit**
+
+**Source :** `/srv/apk/retours-2026-09-30.md` ligne 51 (« proposer une autre semaine -> ne marche
+pas une deuxième fois »), sur l'APK du 2026-09-26 (arbre du lot I, `6c60e5a`, bouton **sous** la
+liste). Précisé par l'auteur le 2026-10-01 : au second appui, **« rien ne bouge »** — pas la même
+semaine qui revient.
+
+**Non reproduit hors du téléphone (2026-10-01, arbre `5869af0`) :**
+- **écran, jsdom, `catalog.db` réel** (sonde temporaire `tests/sonde-f3.test.tsx`, non commitée) :
+  « Composer ma semaine » puis trois « Proposer une autre semaine » → graine 1 → 2 → 3 → 4, les plats
+  changent à chaque tirage, bouton jamais désactivé, ~0,7 s par tirage ;
+- **moteur seul** (`planWeek`, graines 1 à 6, cinq profils dont végétalien + gluten, 2 et 3 repas) :
+  **10 à 20 créneaux changent** d'un tirage au suivant, jamais zéro.
+- Le `onClick` (`replanifier({ ...reglages, graine: reglages.graine + 1 })`) est identique dans
+  l'APK testée et dans l'arbre courant.
+
+**Hypothèses restantes, toutes propres au téléphone :** (1) le changement était hors écran — le
+bouton était sous la liste avant F1 ; (2) `planifier` est synchrone et bloque le fil principal sans
+retour visuel, plus longtemps qu'en jsdom ; (3) l'état de l'utilisateur (repas gardés, restes) que
+la sonde ne porte pas.
+
+**Prochain geste :** l'auteur rejoue le geste sur `/srv/apk/nutrition-2026-10-01.apk` (arbre
+`5869af0`, F1 et F2 compris ; l'ancienne `nutrition.apk` est conservée). Vert → F3 se ferme
+« non reproduit sur l'arbre courant ». Rouge → mesurer sur le téléphone la durée du tirage et les
+repas gardés, puis écrire le brief.
 
 ### Lot H — la quantité injectée mange le nom de l'aliment — ✅ **LIVRÉ le 2026-09-19** (`c22f03c`)
 
