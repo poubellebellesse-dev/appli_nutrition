@@ -9,6 +9,15 @@
             "command": "node .claude/hooks/garde.mjs pre"
           }
         ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -s -d \"Nutrition : choix a faire\" https://ntfy.sh/nutri-1brqmx"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -31,7 +40,7 @@
           },
           {
             "type": "command",
-            "command": "curl.exe -s -d \"Nutrition : a toi\" https://ntfy.sh/nutri-1brqmx"
+            "command": "curl -s -d \"Nutrition : a toi\" https://ntfy.sh/nutri-1brqmx"
           }
         ]
       }
@@ -42,6 +51,17 @@
           {
             "type": "command",
             "command": "node .claude/hooks/garde.mjs reprise"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -s -d \"Nutrition : choix a faire\" https://ntfy.sh/nutri-1brqmx"
           }
         ]
       }

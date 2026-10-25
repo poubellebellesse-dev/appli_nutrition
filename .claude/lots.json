@@ -1,6 +1,6 @@
 {
   "avertissement": "CACHE DÉRIVÉ, jamais une source. La vérité est dans les fichiers listés sous « sources ». Toute édition à la main sera écrasée à la prochaine réconciliation (/plan). « genere_le » date la dernière lecture des documents ; les états ont pu bouger depuis, par /sceller ou /fin.",
-  "genere_le": "2026-09-17T13:20:29",
+  "genere_le": "2026-10-01T17:51:03",
   "sources": [
     "docs/FICHE_REPRISE.md",
     "docs/ETAT.md",
@@ -44,8 +44,10 @@
     {
       "id": "lot-D",
       "chantier": "retours apk",
-      "titre": "Navigation et retour",
-      "etat": "a_faire"
+      "titre": "Navigation et retour : le bouton retour d’Android",
+      "etat": "fait",
+      "le": "2026-09-30",
+      "commit": "c155a1c"
     },
     {
       "id": "lot-E",
@@ -56,17 +58,44 @@
       "commit": "2d8fcfd"
     },
     {
-      "id": "lot-F",
+      "id": "lot-F1",
       "chantier": "retours apk",
-      "titre": "La semaine, refaite",
-      "etat": "bloque"
+      "titre": "La semaine en frise, les gestes dans une fenêtre",
+      "etat": "fait",
+      "le": "2026-10-01",
+      "commit": "4d8e198"
+    },
+    {
+      "id": "lot-F2",
+      "chantier": "retours apk",
+      "titre": "Semaine à la main (＋ par case) et « Vider la semaine »",
+      "etat": "fait",
+      "le": "2026-10-01",
+      "commit": "e729540"
+    },
+    {
+      "id": "lot-F3",
+      "chantier": "retours apk",
+      "titre": "« Proposer une autre semaine » ne marche pas une deuxième fois",
+      "etat": "a_faire"
+    },
+    {
+      "id": "lot-Tutoriel",
+      "chantier": "retours apk",
+      "titre": "Le tutoriel lui-même : bulle, « Précédent », étape 3 hors écran",
+      "etat": "a_faire"
+    },
+    {
+      "id": "lot-Courses",
+      "chantier": "retours apk",
+      "titre": "« Imprimer » et les exports de la liste de courses : PDF, texte, partage",
+      "etat": "a_faire"
     },
     {
       "id": "lot-G",
       "chantier": "retours apk",
       "titre": "Apparence : justification, police, logo, transitions",
-      "etat": "a_faire",
-      "bloque_par": "lot-F"
+      "etat": "a_faire"
     },
     {
       "id": "lot-H",
@@ -75,6 +104,22 @@
       "etat": "fait",
       "le": "2026-09-19",
       "commit": "c22f03c"
+    },
+    {
+      "id": "lot-I",
+      "chantier": "retours apk",
+      "titre": "« Savoir » devient « Gestes » : l'onglet ne garde que le lexique",
+      "etat": "fait",
+      "le": "2026-09-26",
+      "commit": "6c60e5a"
+    },
+    {
+      "id": "lot-J",
+      "chantier": "retours apk",
+      "titre": "Corrections rapides de la passe du 2026-09-30",
+      "etat": "fait",
+      "le": "2026-09-30",
+      "commit": "94a2d8f"
     },
     {
       "id": "Lot geste 1",
@@ -312,7 +357,7 @@
     {
       "id": "relecture-savoir",
       "chantier": "avant publication",
-      "titre": "Relecture par un tiers du contenu Savoir — bloquante avant publication",
+      "titre": "Relecture par un tiers des 73 tips et 8 fiches",
       "etat": "a_faire"
     },
     {

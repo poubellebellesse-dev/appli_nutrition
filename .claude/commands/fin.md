@@ -84,10 +84,10 @@ la ligne** : dis-le-moi.
 
 ## 4. Le tableau
 
-Réécris le bloc `## Nutrition` de `F:\Claude\tableau\README.md` — cinq lignes (Où, Suite,
+Réécris le bloc `## Nutrition` de `/srv/tableau/README.md` — cinq lignes (Où, Suite,
 Bloqué, Leçon, Dernier), jamais six, les autres blocs intacts, la date du titre mise à jour.
 Puis, **dans ce dépôt-là uniquement** :
 
-    cd /d F:\Claude\tableau && git add README.md && git commit -m "Nutrition <date>" && git push
+    cd /srv/tableau && git add README.md && git commit -m "Nutrition <date>" && git push
 
 C'est le seul dépôt où tu commites : quinze lignes de texte, rien d'autre.

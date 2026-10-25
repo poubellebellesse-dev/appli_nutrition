@@ -885,7 +885,7 @@ function ecouter(port, restants) {
     console.error(`Impossible d'ouvrir le port ${port} : ${e.message}`);
     process.exit(1);
   });
-  serveur.listen(port, '127.0.0.1');
+  serveur.listen(port, drapeau('--hote', '127.0.0.1'));
 }
 
 ecouter(PORT, 10);
