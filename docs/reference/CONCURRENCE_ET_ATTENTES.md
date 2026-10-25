@@ -191,6 +191,15 @@ paliers de **2,99 €/mois à 34,99 €/an**, mais avec un contenu probablement 
 **À traiter comme un signal daté, pas comme un fait acquis** — et à revérifier à la main. Si ça se
 confirme, le leader français du meal-planning gratuit vient de faire payer.
 
+**Observation du réseau de Jow (Android) — en cours, AUCUN RÉSULTAT au 2026-10-25.** Question :
+Jow envoie-t-il des données à des traceurs avant l'accord ou après un refus (critère CNIL) ? Méthode :
+émulateur derrière mitmproxy sur pve2 (VM 900 `android-obs`), sans décompiler l'APK (CPI L122-6-1).
+Poste prêt (tests T1-T9 verts, protocole v3, format de relevé v1 figé), séance non faite : l'APK
+reste à récupérer, et la VM 900 est à reconstruire après la migration du 2026-10-25. Tout vit sur le
+dépôt : `atelier/appli_nutrition/2026-10-20_poste-obs-version-finale.md`, `pve2/*poste-obs*`,
+`pve2/2026-10-23_format-releve-obs.md` ; le relevé attendu est `pve2/AAAA-MM-JJ_releve-jow.md`,
+dépouillé par l'agent `analyste-flux` (`.claude/agents/`).
+
 ### 6.6 Sources ajoutées le 2026-08-16
 
 - Paprika — [avis App Store (flux RSS officiel)](https://itunes.apple.com/us/rss/customerreviews/id=1303222868/sortBy=mostRecent/json)
