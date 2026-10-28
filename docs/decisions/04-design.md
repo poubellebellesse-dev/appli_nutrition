@@ -169,7 +169,7 @@
   (`pain-perdu.yaml`, `chocolat-chaud-avoine-tartine.yaml`). **Aucun nombre n'a été écrit dans aucun
   YAML** — c'est la contrainte qui commande tout ce chantier.
   ▶ Tests : `catalog/lien-etape-ingredient.test.ts` (21) et `app/src/ui/texte-etape.test.ts` (47).
-  Récit : [archive/…_quantites-portions.md](./archive/RECAP_SESSION_2026-08-09_quantites-portions.md).
+  Récit : [archive/…_quantites-portions.md](../archive/RECAP_SESSION_2026-08-09_quantites-portions.md).
 - ✅ **L'antécédent d'un pronom n'est ni un verbe ni un fond de placard — 2026-08-08.** Deux défauts
   de `liensDeLaRecette`, trouvés par la RELECTURE HUMAINE des étapes à réécrire, pas par une sonde :
   aucune mesure ne les voyait, parce que tous deux produisent un lien **plausible**.
@@ -304,7 +304,7 @@
   affirmation mesurable.* ⚠️ **Deux tests REDISAIENT la formule au lieu de l'appeler** et attendaient
   « 1 h 55 » pour le coq au vin ; ils n'ont protesté que parce que la frise affiche le nombre en
   toutes lettres. Récit complet, pièges d'horloge compris :
-  [archive/RECAP_SESSION_2026-08-09_cuisine-multi-plats.md](./archive/RECAP_SESSION_2026-08-09_cuisine-multi-plats.md).
+  [archive/RECAP_SESSION_2026-08-09_cuisine-multi-plats.md](../archive/RECAP_SESSION_2026-08-09_cuisine-multi-plats.md).
 - **Le minuteur sonne au premier plan, pas en arrière-plan** (2026-08-04) — et **la reprise remplace
   la notification** : l'étape atteinte et les minuteurs survivent à la fermeture (schéma **v10**), un
   bandeau les ramène. ⚠️ **Échéance absolue (`fin_ms`), jamais un temps restant** : un restant se
